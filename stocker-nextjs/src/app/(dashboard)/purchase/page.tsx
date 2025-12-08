@@ -17,6 +17,7 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
   DollarOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import {
   useSupplierSummary,
@@ -122,6 +123,7 @@ export default function PurchaseDashboardPage() {
     { icon: <FileTextOutlined />, label: 'Yeni Fatura', path: '/purchase/invoices/new', color: '#f59e0b' },
     { icon: <WalletOutlined />, label: 'Yeni Ödeme', path: '/purchase/payments/new', color: '#06b6d4' },
     { icon: <RollbackOutlined />, label: 'Yeni İade', path: '/purchase/returns/new', color: '#ef4444' },
+    { icon: <BarChartOutlined />, label: 'Raporlar', path: '/purchase/reports', color: '#0ea5e9' },
   ];
 
   return (

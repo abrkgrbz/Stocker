@@ -44,6 +44,8 @@ import {
   useCompletePurchaseOrder,
 } from '@/lib/api/hooks/usePurchase';
 import { PurchaseOrderPrint } from '@/components/print';
+import { ApprovalWorkflow } from '@/components/purchase/workflow';
+import type { ApprovalStep, ApprovalHistory } from '@/components/purchase/workflow';
 import type { PurchaseOrderStatus, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -128,19 +130,79 @@ export default function PurchaseOrderDetailPage() {
     );
   }
 
-  const handleApprove = () => {
-    approveOrder.mutate({ id: orderId });
+  const handleApprove = (notes?: string) => {
+    approveOrder.mutate({ id: orderId, notes });
   };
 
-  const handleReject = () => {
-    Modal.confirm({
-      title: 'Siparişi Reddet',
-      content: 'Bu siparişi reddetmek istediğinizden emin misiniz?',
-      okText: 'Reddet',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => rejectOrder.mutate({ id: orderId, reason: 'Manual rejection' }),
-    });
+  const handleReject = (reason: string) => {
+    rejectOrder.mutate({ id: orderId, reason });
+  };
+
+  // Build approval workflow steps based on order status
+  const approvalSteps: ApprovalStep[] = [
+    {
+      id: '1',
+      order: 1,
+      name: 'Onay Talebi',
+      status: order.status === 'Draft' ? 'waiting' : 'approved',
+      approverRole: 'Talep Eden',
+    },
+    {
+      id: '2',
+      order: 2,
+      name: 'Yönetici Onayı',
+      status: order.status === 'PendingApproval' ? 'pending' :
+              order.status === 'Rejected' ? 'rejected' :
+              ['Confirmed', 'Sent', 'PartiallyReceived', 'Received', 'Completed', 'Closed'].includes(order.status) ? 'approved' : 'waiting',
+      approverName: order.approvedByName,
+      approverId: order.approvedById,
+      approvalDate: order.approvalDate,
+      approverRole: 'Satın Alma Yöneticisi',
+    },
+    {
+      id: '3',
+      order: 3,
+      name: 'Tedarikçi Onayı',
+      status: ['Sent', 'PartiallyReceived', 'Received', 'Completed', 'Closed'].includes(order.status) ? 'approved' :
+              order.status === 'Confirmed' ? 'pending' : 'waiting',
+      approverRole: 'Tedarikçi',
+    },
+  ];
+
+  // Build approval history (mock - in real app, this would come from API)
+  const approvalHistory: ApprovalHistory[] = [
+    ...(order.createdAt ? [{
+      id: 'h1',
+      action: 'submitted' as const,
+      actorName: 'Sistem',
+      actorId: 'system',
+      timestamp: order.createdAt,
+      stepName: 'Sipariş Oluşturuldu',
+    }] : []),
+    ...(order.approvalDate && order.approvedByName ? [{
+      id: 'h2',
+      action: 'approved' as const,
+      actorName: order.approvedByName,
+      actorId: order.approvedById || '',
+      timestamp: order.approvalDate,
+      stepName: 'Yönetici Onayı',
+    }] : []),
+    ...(order.sentDate ? [{
+      id: 'h3',
+      action: 'submitted' as const,
+      actorName: 'Sistem',
+      actorId: 'system',
+      timestamp: order.sentDate,
+      stepName: 'Tedarikçiye Gönderildi',
+    }] : []),
+  ];
+
+  // Determine current approval step
+  const getCurrentStep = (): number => {
+    if (order.status === 'Draft') return 0;
+    if (order.status === 'PendingApproval') return 1;
+    if (order.status === 'Confirmed') return 2;
+    return 2;
   };
 
   const handleSend = () => {
@@ -466,6 +528,29 @@ export default function PurchaseOrderDetailPage() {
 
           {/* Right Column */}
           <Col xs={24} lg={8}>
+            {/* Approval Workflow */}
+            {order.status !== 'Draft' && (
+              <div className="mb-4">
+                <ApprovalWorkflow
+                  documentType="order"
+                  documentNumber={order.orderNumber}
+                  documentStatus={order.status}
+                  totalAmount={order.totalAmount}
+                  currency={order.currency || 'TRY'}
+                  steps={approvalSteps}
+                  currentStep={getCurrentStep()}
+                  history={approvalHistory}
+                  canApprove={order.status === 'PendingApproval'}
+                  canReject={order.status === 'PendingApproval'}
+                  canCancel={!['Cancelled', 'Completed', 'Closed'].includes(order.status)}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onCancel={(reason) => cancelOrder.mutate({ id: orderId, reason })}
+                  showHistory={true}
+                />
+              </div>
+            )}
+
             {/* Supplier Info */}
             <Card title="Tedarikçi Bilgileri" size="small" className="mb-4">
               <Descriptions column={1} size="small">
