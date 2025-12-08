@@ -16,9 +16,11 @@ public class EmployeeDto
     public string? NationalId { get; set; }
     public DateTime? BirthDate { get; set; }
     public int? Age => BirthDate.HasValue ? (int)((DateTime.Today - BirthDate.Value).TotalDays / 365.25) : null;
+    public string? BirthPlace { get; set; }
     public Gender? Gender { get; set; }
     public string? MaritalStatus { get; set; }
     public string? Nationality { get; set; }
+    public string? BloodType { get; set; }
     public string? PhotoUrl { get; set; }
 
     // Contact Information

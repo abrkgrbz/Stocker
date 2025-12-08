@@ -68,6 +68,15 @@ export default function ProductDetailScreen({ navigation, route }: any) {
                 <View style={[styles.section, { backgroundColor: theme === 'dark' ? '#1e1e1e' : '#fff' }]}>
                     <Text style={[styles.productName, { color: colors.textPrimary }]}>{product.name}</Text>
                     <Text style={[styles.productCode, { color: colors.textSecondary }]}>{product.code}</Text>
+                    {product.barcode && (
+                        <View style={styles.barcodeContainer}>
+                            <Ionicons name="barcode-outline" size={16} color={colors.textSecondary} />
+                            <Text style={[styles.barcode, { color: colors.textSecondary }]}>{product.barcode}</Text>
+                        </View>
+                    )}
+                    {product.description && (
+                        <Text style={[styles.description, { color: colors.textSecondary }]}>{product.description}</Text>
+                    )}
 
                     <View style={styles.divider} />
 
@@ -94,6 +103,21 @@ export default function ProductDetailScreen({ navigation, route }: any) {
                             <Text style={[styles.value, { color: colors.textPrimary }]}>{product.brandName || '-'}</Text>
                         </View>
                     </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>Ürün Tipi</Text>
+                            <Text style={[styles.value, { color: colors.textPrimary }]}>{product.productType || '-'}</Text>
+                        </View>
+                        <View>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>Oluşturulma Tarihi</Text>
+                            <Text style={[styles.value, { color: colors.textPrimary }]}>
+                                {product.createdAt ? new Date(product.createdAt).toLocaleDateString('tr-TR') : '-'}
+                            </Text>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Stock Section */}
@@ -110,6 +134,29 @@ export default function ProductDetailScreen({ navigation, route }: any) {
                     <View style={styles.stockRow}>
                         <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>Min. Stok Seviyesi</Text>
                         <Text style={[styles.stockValue, { color: colors.textSecondary }]}>{product.minStockLevel} {product.unitName}</Text>
+                    </View>
+
+                    <View style={styles.stockRow}>
+                        <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>Maks. Stok Seviyesi</Text>
+                        <Text style={[styles.stockValue, { color: colors.textSecondary }]}>{product.maxStockLevel || '-'} {product.unitName}</Text>
+                    </View>
+
+                    <View style={styles.stockRow}>
+                        <Text style={[styles.stockLabel, { color: colors.textSecondary }]}>Sipariş Tetikleme</Text>
+                        <Text style={[styles.stockValue, { color: colors.textSecondary }]}>{product.reorderLevel || '-'} {product.unitName}</Text>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View style={styles.badge}>
+                            <Ionicons name={product.trackSerialNumbers ? "checkmark-circle" : "close-circle"} size={16} color={product.trackSerialNumbers ? "#10b981" : "#ef4444"} />
+                            <Text style={[styles.badgeText, { color: colors.textPrimary }]}>Seri No Takibi</Text>
+                        </View>
+                        <View style={styles.badge}>
+                            <Ionicons name={product.trackLotNumbers ? "checkmark-circle" : "close-circle"} size={16} color={product.trackLotNumbers ? "#10b981" : "#ef4444"} />
+                            <Text style={[styles.badgeText, { color: colors.textPrimary }]}>Lot Takibi</Text>
+                        </View>
                     </View>
                 </View>
             </ScrollView>
@@ -181,6 +228,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: spacing.m,
     },
+    barcodeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.s,
+        gap: 4,
+    },
+    barcode: {
+        fontSize: 14,
+    },
+    description: {
+        fontSize: 14,
+        marginBottom: spacing.m,
+        fontStyle: 'italic',
+    },
     divider: {
         height: 1,
         backgroundColor: '#eee',
@@ -215,5 +276,17 @@ const styles = StyleSheet.create({
     stockValue: {
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    badgeText: {
+        fontSize: 12,
+        fontWeight: '500',
     },
 });

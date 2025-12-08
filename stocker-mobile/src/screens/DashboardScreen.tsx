@@ -160,6 +160,26 @@ export default function DashboardScreen({ navigation }: any) {
             description: 'Envanter yönetimi',
             badge: 'Yeni',
         },
+        {
+            id: 'hr',
+            title: 'İnsan Kaynakları',
+            icon: 'people-circle',
+            color: '#8b5cf6',
+            gradient: ['#8b5cf6', '#a78bfa'],
+            path: 'HRDashboard',
+            description: 'Personel ve izin yönetimi',
+            badge: 'Yeni',
+        },
+        {
+            id: 'settings',
+            title: 'Ayarlar',
+            icon: 'settings',
+            color: '#64748b',
+            gradient: ['#64748b', '#94a3b8'],
+            path: 'Settings',
+            description: 'Uygulama ayarları',
+            badge: '',
+        },
     ];
 
     const handleModuleClick = (module: ModuleCard) => {
@@ -178,6 +198,16 @@ export default function DashboardScreen({ navigation }: any) {
 
         if (module.id === 'inventory') {
             navigation.navigate('InventoryDashboard');
+            return;
+        }
+
+        if (module.id === 'hr') {
+            navigation.navigate('HRDashboard');
+            return;
+        }
+
+        if (module.id === 'settings') {
+            navigation.navigate('Settings');
             return;
         }
 

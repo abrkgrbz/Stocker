@@ -21,6 +21,15 @@ export interface Product {
     maxStockLevel?: number;
     currentStock: number;
     imageUrl?: string;
+    // New fields
+    barcode?: string;
+    productType?: string;
+    reorderLevel?: number;
+    reorderQuantity?: number;
+    leadTimeDays?: number;
+    trackSerialNumbers?: boolean;
+    trackLotNumbers?: boolean;
+    createdAt?: string;
 }
 
 export interface Warehouse {
@@ -41,11 +50,26 @@ export interface InventoryStats {
     expiringCount: number;
 }
 
+export interface StockMovement {
+    id: number;
+    productId: number;
+    productName: string;
+    warehouseId: number;
+    warehouseName: string;
+    type: string;
+    quantity: number;
+    reference?: string;
+    description?: string;
+    createdAt: string;
+    createdByName: string;
+}
+
 interface InventoryState {
     products: Product[];
     warehouses: Warehouse[];
     lowStockProducts: Product[];
     expiringStock: any[]; // Define proper type if needed
+    stockMovements: StockMovement[];
     stats: InventoryStats | null;
 
     isLoading: boolean;
@@ -57,6 +81,7 @@ interface InventoryState {
     fetchProducts: (params?: any) => Promise<void>;
     fetchProductDetails: (id: number) => Promise<Product | null>;
     fetchWarehouses: () => Promise<void>;
+    fetchStockMovements: (params?: any) => Promise<void>;
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -64,6 +89,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     warehouses: [],
     lowStockProducts: [],
     expiringStock: [],
+    stockMovements: [],
     stats: null,
 
     isLoading: false,
@@ -118,11 +144,52 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await apiService.inventory.getProducts(params);
-            if (response.data?.success) {
-                set({ products: response.data.data, isLoading: false });
+            console.log('Fetch products response data:', response.data);
+
+            // Handle direct array response (which is what the API returns)
+            let productData = [];
+            if (Array.isArray(response.data)) {
+                productData = response.data;
+            } else if (response.data?.data && Array.isArray(response.data.data)) {
+                productData = response.data.data;
+            } else if (response.data?.success && Array.isArray(response.data.data)) {
+                productData = response.data.data;
             }
+
+            const mappedProducts = productData.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                code: p.code,
+                description: p.description,
+                categoryId: p.categoryId,
+                categoryName: p.categoryName,
+                brandId: p.brandId,
+                brandName: p.brandName,
+                unitId: p.unitId,
+                unitName: p.unitName,
+                purchasePrice: p.costPrice || 0,
+                salePrice: p.unitPrice || 0,
+                vatRate: p.vatRate || 18,
+                isActive: p.isActive,
+                minStockLevel: p.minStockLevel || 0,
+                maxStockLevel: p.maxStockLevel,
+                currentStock: p.totalStockQuantity || 0,
+                imageUrl: p.images?.[0] || null,
+                barcode: p.barcode,
+                productType: p.productType,
+                reorderLevel: p.reorderLevel,
+                reorderQuantity: p.reorderQuantity,
+                leadTimeDays: p.leadTimeDays,
+                trackSerialNumbers: p.trackSerialNumbers,
+                trackLotNumbers: p.trackLotNumbers,
+                createdAt: p.createdAt
+            }));
+
+            set({ products: mappedProducts, isLoading: false });
+
         } catch (error: any) {
-            set({ isLoading: false, error: error.message });
+            console.error('Fetch products error:', error);
+            set({ isLoading: false, error: error.message || 'Ürünler yüklenemedi' });
         }
     },
 
@@ -130,12 +197,48 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await apiService.inventory.getProduct(id);
+            console.log('Fetch product detail response:', response.data);
             set({ isLoading: false });
-            if (response.data?.success) {
-                return response.data.data;
+
+            // Handle direct object response
+            const p: any = response.data;
+
+            // Check if it's wrapped or direct
+            const rawData = p.success && p.data ? p.data : p;
+
+            if (rawData) {
+                return {
+                    id: rawData.id,
+                    name: rawData.name,
+                    code: rawData.code,
+                    description: rawData.description,
+                    categoryId: rawData.categoryId,
+                    categoryName: rawData.categoryName,
+                    brandId: rawData.brandId,
+                    brandName: rawData.brandName,
+                    unitId: rawData.unitId,
+                    unitName: rawData.unitName,
+                    purchasePrice: rawData.costPrice || 0,
+                    salePrice: rawData.unitPrice || 0,
+                    vatRate: rawData.vatRate || 18,
+                    isActive: rawData.isActive,
+                    minStockLevel: rawData.minStockLevel || 0,
+                    maxStockLevel: rawData.maxStockLevel,
+                    currentStock: rawData.totalStockQuantity || 0,
+                    imageUrl: rawData.images?.[0] || null,
+                    barcode: rawData.barcode,
+                    productType: rawData.productType,
+                    reorderLevel: rawData.reorderLevel,
+                    reorderQuantity: rawData.reorderQuantity,
+                    leadTimeDays: rawData.leadTimeDays,
+                    trackSerialNumbers: rawData.trackSerialNumbers,
+                    trackLotNumbers: rawData.trackLotNumbers,
+                    createdAt: rawData.createdAt
+                };
             }
             return null;
         } catch (error: any) {
+            console.error('Fetch product detail error:', error);
             set({ isLoading: false, error: error.message });
             return null;
         }
@@ -149,6 +252,18 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
             }
         } catch (error) {
             console.error('Fetch warehouses error:', error);
+        }
+    },
+
+    fetchStockMovements: async (params) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await apiService.inventory.getStockMovements(params);
+            if (response.data?.success) {
+                set({ stockMovements: response.data.data, isLoading: false });
+            }
+        } catch (error: any) {
+            set({ isLoading: false, error: error.message });
         }
     }
 }));

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
@@ -39,6 +39,7 @@ import {
   useMarkInvoiceAsPaid,
   useSubmitInvoiceForApproval,
 } from '@/lib/api/hooks/usePurchase';
+import { PurchaseInvoicePrint } from '@/components/print';
 import type { PurchaseInvoiceStatus, PurchaseInvoiceItemDto } from '@/lib/api/services/purchase.types';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -89,6 +90,8 @@ export default function PurchaseInvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const invoiceId = params.id as string;
+
+  const [printModalVisible, setPrintModalVisible] = useState(false);
 
   const { data: invoice, isLoading } = usePurchaseInvoice(invoiceId);
   const approveInvoice = useApprovePurchaseInvoice();
@@ -189,6 +192,7 @@ export default function PurchaseInvoiceDetailPage() {
       key: 'print',
       icon: <PrinterOutlined />,
       label: 'Yazdır',
+      onClick: () => setPrintModalVisible(true),
     },
     { type: 'divider' },
     !['Cancelled', 'Paid'].includes(invoice.status) && {
@@ -582,6 +586,44 @@ export default function PurchaseInvoiceDetailPage() {
           </Col>
         </Row>
       </div>
+
+      {/* Print Modal */}
+      {invoice && (
+        <PurchaseInvoicePrint
+          visible={printModalVisible}
+          onClose={() => setPrintModalVisible(false)}
+          invoice={{
+            invoiceNumber: invoice.invoiceNumber,
+            supplierInvoiceNumber: invoice.supplierInvoiceNumber,
+            invoiceDate: invoice.invoiceDate,
+            dueDate: invoice.dueDate,
+            supplierName: invoice.supplierName,
+            supplierTaxNumber: invoice.supplierTaxNumber,
+            status: invoice.status,
+            type: invoice.type,
+            items: (invoice.items || []).map((item) => ({
+              productCode: item.productCode,
+              productName: item.productName,
+              quantity: item.quantity,
+              unit: item.unit,
+              unitPrice: item.unitPrice,
+              vatRate: item.vatRate,
+              vatAmount: item.vatAmount,
+              totalAmount: item.totalAmount,
+            })),
+            subTotal: invoice.subTotal,
+            discountAmount: invoice.discountAmount,
+            vatAmount: invoice.vatAmount,
+            withholdingTaxAmount: invoice.withholdingTaxAmount,
+            totalAmount: invoice.totalAmount,
+            paidAmount: invoice.paidAmount,
+            remainingAmount: invoice.remainingAmount,
+            currency: invoice.currency || 'TRY',
+            notes: invoice.notes,
+            purchaseOrderNumber: invoice.purchaseOrderNumber,
+          }}
+        />
+      )}
     </div>
   );
 }

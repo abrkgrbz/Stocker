@@ -208,34 +208,41 @@ export function PrintTemplate({ children, title, visible, onClose }: PrintTempla
 
 // Purchase Order Print Template
 interface PurchaseOrderPrintProps {
+  visible: boolean;
+  onClose: () => void;
   order: {
     orderNumber: string;
     orderDate: string;
     status: string;
-    supplierName: string;
-    supplierAddress?: string;
-    supplierPhone?: string;
-    supplierEmail?: string;
-    expectedDeliveryDate?: string;
-    paymentTerms?: string;
-    shippingMethod?: string;
-    notes?: string;
+    supplierName?: string | null;
+    supplierCode?: string | null;
+    supplierAddress?: string | null;
+    supplierPhone?: string | null;
+    supplierEmail?: string | null;
+    expectedDeliveryDate?: string | null;
+    paymentTerms?: string | null;
+    shippingMethod?: string | null;
+    shippingAddress?: string | null;
+    notes?: string | null;
     items: Array<{
       productName: string;
-      productCode?: string;
+      productCode?: string | null;
       quantity: number;
       unit: string;
       unitPrice: number;
-      totalPrice: number;
+      discountPercent?: number | null;
+      taxRate?: number | null;
+      lineTotal: number;
     }>;
-    subtotal: number;
-    taxAmount: number;
+    subTotal: number;
+    discountAmount?: number | null;
+    vatAmount: number;
     totalAmount: number;
-    currency?: string;
+    currency?: string | null;
   };
 }
 
-export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
+export function PurchaseOrderPrint({ visible, onClose, order }: PurchaseOrderPrintProps) {
   const statusClass = {
     Draft: 'status-draft',
     PendingApproval: 'status-pending',
@@ -256,10 +263,10 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
     Cancelled: 'İptal',
   }[order.status] || order.status;
 
-  const currency = order.currency || '₺';
+  const currency = order.currency === 'TRY' ? '₺' : order.currency || '₺';
 
   return (
-    <div>
+    <PrintTemplate title="Satın Alma Siparişi" visible={visible} onClose={onClose}>
       {/* Header */}
       <div className="header">
         <div>
@@ -283,8 +290,14 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
           <h4>Tedarikçi Bilgileri</h4>
           <div className="info-row">
             <span className="info-label">Firma Adı:</span>
-            <span className="info-value">{order.supplierName}</span>
+            <span className="info-value">{order.supplierName || '-'}</span>
           </div>
+          {order.supplierCode && (
+            <div className="info-row">
+              <span className="info-label">Tedarikçi Kodu:</span>
+              <span className="info-value">{order.supplierCode}</span>
+            </div>
+          )}
           {order.supplierAddress && (
             <div className="info-row">
               <span className="info-label">Adres:</span>
@@ -328,6 +341,12 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
               <span className="info-value">{order.shippingMethod}</span>
             </div>
           )}
+          {order.shippingAddress && (
+            <div className="info-row">
+              <span className="info-label">Teslimat Adresi:</span>
+              <span className="info-value">{order.shippingAddress}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -337,10 +356,11 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
           <thead>
             <tr>
               <th style={{ width: '5%' }}>#</th>
-              <th style={{ width: '35%' }}>Ürün</th>
+              <th style={{ width: '30%' }}>Ürün</th>
               <th style={{ width: '10%', textAlign: 'center' }}>Miktar</th>
               <th style={{ width: '10%', textAlign: 'center' }}>Birim</th>
-              <th style={{ width: '20%', textAlign: 'right' }}>Birim Fiyat</th>
+              <th style={{ width: '15%', textAlign: 'right' }}>Birim Fiyat</th>
+              <th style={{ width: '10%', textAlign: 'center' }}>KDV</th>
               <th style={{ width: '20%', textAlign: 'right' }}>Toplam</th>
             </tr>
           </thead>
@@ -355,7 +375,8 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
                 <td style={{ textAlign: 'center' }}>{item.quantity}</td>
                 <td style={{ textAlign: 'center' }}>{item.unit}</td>
                 <td style={{ textAlign: 'right' }}>{item.unitPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
-                <td style={{ textAlign: 'right', fontWeight: 500 }}>{item.totalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
+                <td style={{ textAlign: 'center' }}>%{item.taxRate || 18}</td>
+                <td style={{ textAlign: 'right', fontWeight: 500 }}>{item.lineTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
               </tr>
             ))}
           </tbody>
@@ -367,11 +388,17 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
         <div className="total-box">
           <div className="total-row">
             <span>Ara Toplam:</span>
-            <span>{order.subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            <span>{order.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
           </div>
+          {(order.discountAmount || 0) > 0 && (
+            <div className="total-row">
+              <span>İskonto:</span>
+              <span style={{ color: '#cf1322' }}>-{(order.discountAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            </div>
+          )}
           <div className="total-row">
             <span>KDV:</span>
-            <span>{order.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            <span>{order.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
           </div>
           <div className="total-row grand-total">
             <span>Genel Toplam:</span>
@@ -406,42 +433,51 @@ export function PurchaseOrderPrint({ order }: PurchaseOrderPrintProps) {
         <div>Bu belge {new Date().toLocaleDateString('tr-TR')} tarihinde Stocker ERP Sistemi tarafından oluşturulmuştur.</div>
         <div>Sayfa 1 / 1</div>
       </div>
-    </div>
+    </PrintTemplate>
   );
 }
 
 // Purchase Invoice Print Template
 interface PurchaseInvoicePrintProps {
+  visible: boolean;
+  onClose: () => void;
   invoice: {
     invoiceNumber: string;
+    supplierInvoiceNumber?: string | null;
     invoiceDate: string;
-    dueDate?: string;
+    dueDate?: string | null;
     status: string;
-    supplierName: string;
-    supplierAddress?: string;
-    supplierTaxNumber?: string;
-    supplierTaxOffice?: string;
-    orderNumber?: string;
-    notes?: string;
+    type?: string | null;
+    supplierName?: string | null;
+    supplierAddress?: string | null;
+    supplierTaxNumber?: string | null;
+    supplierTaxOffice?: string | null;
+    purchaseOrderNumber?: string | null;
+    notes?: string | null;
     items: Array<{
+      productCode?: string | null;
       productName: string;
       quantity: number;
       unit: string;
       unitPrice: number;
-      taxRate: number;
-      taxAmount: number;
-      totalPrice: number;
+      discountRate?: number | null;
+      discountAmount?: number | null;
+      vatRate: number;
+      vatAmount: number;
+      totalAmount: number;
     }>;
-    subtotal: number;
-    taxAmount: number;
+    subTotal: number;
+    discountAmount?: number | null;
+    vatAmount: number;
+    withholdingTaxAmount?: number | null;
     totalAmount: number;
     paidAmount: number;
     remainingAmount: number;
-    currency?: string;
+    currency?: string | null;
   };
 }
 
-export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
+export function PurchaseInvoicePrint({ visible, onClose, invoice }: PurchaseInvoicePrintProps) {
   const statusLabel = {
     Draft: 'Taslak',
     PendingApproval: 'Onay Bekliyor',
@@ -452,10 +488,17 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
     Cancelled: 'İptal',
   }[invoice.status] || invoice.status;
 
-  const currency = invoice.currency || '₺';
+  const typeLabel = {
+    Standard: 'Standart',
+    Credit: 'Alacak Dekontu',
+    Proforma: 'Proforma',
+    Prepayment: 'Ön Ödeme',
+  }[invoice.type || 'Standard'] || invoice.type;
+
+  const currency = invoice.currency === 'TRY' ? '₺' : invoice.currency || '₺';
 
   return (
-    <div>
+    <PrintTemplate title="Satın Alma Faturası" visible={visible} onClose={onClose}>
       {/* Header */}
       <div className="header">
         <div>
@@ -467,8 +510,12 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
         <div>
           <div className="document-title">SATIN ALMA FATURASI</div>
           <div className="document-number">{invoice.invoiceNumber}</div>
+          {invoice.supplierInvoiceNumber && (
+            <div style={{ fontSize: 12, color: '#666' }}>Tedarikçi Fatura No: {invoice.supplierInvoiceNumber}</div>
+          )}
           <div style={{ marginTop: 10 }}>
             <span className="status-badge status-approved">{statusLabel}</span>
+            {typeLabel && <span className="status-badge status-draft" style={{ marginLeft: 8 }}>{typeLabel}</span>}
           </div>
         </div>
       </div>
@@ -479,7 +526,7 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
           <h4>Tedarikçi Bilgileri</h4>
           <div className="info-row">
             <span className="info-label">Firma Adı:</span>
-            <span className="info-value">{invoice.supplierName}</span>
+            <span className="info-value">{invoice.supplierName || '-'}</span>
           </div>
           {invoice.supplierTaxNumber && (
             <div className="info-row">
@@ -512,10 +559,10 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
               <span className="info-value">{new Date(invoice.dueDate).toLocaleDateString('tr-TR')}</span>
             </div>
           )}
-          {invoice.orderNumber && (
+          {invoice.purchaseOrderNumber && (
             <div className="info-row">
               <span className="info-label">Sipariş No:</span>
-              <span className="info-value">{invoice.orderNumber}</span>
+              <span className="info-value">{invoice.purchaseOrderNumber}</span>
             </div>
           )}
         </div>
@@ -527,7 +574,7 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
           <thead>
             <tr>
               <th style={{ width: '5%' }}>#</th>
-              <th style={{ width: '30%' }}>Ürün</th>
+              <th style={{ width: '25%' }}>Ürün</th>
               <th style={{ width: '10%', textAlign: 'center' }}>Miktar</th>
               <th style={{ width: '15%', textAlign: 'right' }}>Birim Fiyat</th>
               <th style={{ width: '10%', textAlign: 'center' }}>KDV %</th>
@@ -539,12 +586,15 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
             {invoice.items.map((item, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
-                <td>{item.productName}</td>
+                <td>
+                  <div style={{ fontWeight: 500 }}>{item.productName}</div>
+                  {item.productCode && <div style={{ fontSize: 11, color: '#666' }}>{item.productCode}</div>}
+                </td>
                 <td style={{ textAlign: 'center' }}>{item.quantity} {item.unit}</td>
                 <td style={{ textAlign: 'right' }}>{item.unitPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
-                <td style={{ textAlign: 'center' }}>%{item.taxRate}</td>
-                <td style={{ textAlign: 'right' }}>{item.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
-                <td style={{ textAlign: 'right', fontWeight: 500 }}>{item.totalPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
+                <td style={{ textAlign: 'center' }}>%{item.vatRate}</td>
+                <td style={{ textAlign: 'right' }}>{item.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
+                <td style={{ textAlign: 'right', fontWeight: 500 }}>{item.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</td>
               </tr>
             ))}
           </tbody>
@@ -556,12 +606,24 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
         <div className="total-box">
           <div className="total-row">
             <span>Ara Toplam:</span>
-            <span>{invoice.subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            <span>{invoice.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
           </div>
+          {(invoice.discountAmount || 0) > 0 && (
+            <div className="total-row">
+              <span>İskonto:</span>
+              <span style={{ color: '#cf1322' }}>-{(invoice.discountAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            </div>
+          )}
           <div className="total-row">
             <span>KDV Toplam:</span>
-            <span>{invoice.taxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            <span>{invoice.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
           </div>
+          {(invoice.withholdingTaxAmount || 0) > 0 && (
+            <div className="total-row">
+              <span>Stopaj:</span>
+              <span style={{ color: '#cf1322' }}>-{(invoice.withholdingTaxAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
+            </div>
+          )}
           <div className="total-row grand-total">
             <span>Genel Toplam:</span>
             <span>{invoice.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currency}</span>
@@ -589,7 +651,7 @@ export function PurchaseInvoicePrint({ invoice }: PurchaseInvoicePrintProps) {
       <div className="footer">
         <div>Bu belge {new Date().toLocaleDateString('tr-TR')} tarihinde Stocker ERP Sistemi tarafından oluşturulmuştur.</div>
       </div>
-    </div>
+    </PrintTemplate>
   );
 }
 

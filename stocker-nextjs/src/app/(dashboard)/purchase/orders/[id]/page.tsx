@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
@@ -43,6 +43,7 @@ import {
   useCancelPurchaseOrder,
   useCompletePurchaseOrder,
 } from '@/lib/api/hooks/usePurchase';
+import { PurchaseOrderPrint } from '@/components/print';
 import type { PurchaseOrderStatus, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -95,6 +96,8 @@ export default function PurchaseOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
+
+  const [printModalVisible, setPrintModalVisible] = useState(false);
 
   const { data: order, isLoading } = usePurchaseOrder(orderId);
   const approveOrder = useApprovePurchaseOrder();
@@ -193,6 +196,7 @@ export default function PurchaseOrderDetailPage() {
       key: 'print',
       icon: <PrinterOutlined />,
       label: 'Yazdır',
+      onClick: () => setPrintModalVisible(true),
     },
     { type: 'divider' },
     !['Cancelled', 'Completed', 'Closed'].includes(order.status) && {
@@ -512,6 +516,38 @@ export default function PurchaseOrderDetailPage() {
           </Col>
         </Row>
       </div>
+
+      {/* Print Modal */}
+      {order && (
+        <PurchaseOrderPrint
+          visible={printModalVisible}
+          onClose={() => setPrintModalVisible(false)}
+          order={{
+            orderNumber: order.orderNumber,
+            orderDate: order.orderDate,
+            expectedDeliveryDate: order.expectedDeliveryDate,
+            supplierName: order.supplierName,
+            supplierCode: order.supplierCode,
+            status: order.status,
+            items: (order.items || []).map((item) => ({
+              productCode: item.productCode,
+              productName: item.productName,
+              quantity: item.quantity,
+              unit: item.unit,
+              unitPrice: item.unitPrice,
+              taxRate: item.vatRate,
+              lineTotal: item.totalAmount,
+            })),
+            subTotal: order.subTotal || 0,
+            discountAmount: order.discountAmount || 0,
+            vatAmount: order.vatAmount || 0,
+            totalAmount: order.totalAmount || 0,
+            currency: order.currency || 'TRY',
+            notes: order.notes,
+            shippingAddress: order.shippingAddress,
+          }}
+        />
+      )}
     </div>
   );
 }

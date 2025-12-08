@@ -32,6 +32,7 @@ interface AuthState {
     checkAuth: () => Promise<void>;
     setLoading: (loading: boolean) => void;
     updateUser: (user: User) => void;
+    updateProfile: (data: { firstName: string; lastName: string; email: string }) => Promise<void>;
 
     // Biometrics
     biometricEnabled: boolean;
@@ -123,6 +124,27 @@ export const useAuthStore = create<AuthState>()(
                     refreshToken: null,
                     isAuthenticated: false,
                 });
+            },
+
+            updateProfile: async (data) => {
+                set({ isLoading: true });
+                try {
+                    const response = await apiService.auth.updateProfile(data);
+                    if (response.data?.success) {
+                        const updatedUser = response.data.data;
+                        set((state) => ({
+                            user: {
+                                ...state.user!,
+                                ...updatedUser
+                            },
+                            isLoading: false
+                        }));
+                    }
+                } catch (error) {
+                    set({ isLoading: false });
+                    console.error('Update profile error:', error);
+                    throw error;
+                }
             },
 
             checkAuth: async () => {

@@ -23,6 +23,24 @@ public class SalesDbContext : DbContext
     // Payments
     public DbSet<Payment> Payments { get; set; } = null!;
 
+    // Quotations
+    public DbSet<Quotation> Quotations { get; set; } = null!;
+    public DbSet<QuotationItem> QuotationItems { get; set; } = null!;
+
+    // Discounts & Promotions
+    public DbSet<Discount> Discounts { get; set; } = null!;
+    public DbSet<Promotion> Promotions { get; set; } = null!;
+    public DbSet<PromotionRule> PromotionRules { get; set; } = null!;
+
+    // Commissions
+    public DbSet<CommissionPlan> CommissionPlans { get; set; } = null!;
+    public DbSet<CommissionTier> CommissionTiers { get; set; } = null!;
+    public DbSet<SalesCommission> SalesCommissions { get; set; } = null!;
+
+    // Returns
+    public DbSet<SalesReturn> SalesReturns { get; set; } = null!;
+    public DbSet<SalesReturnItem> SalesReturnItems { get; set; } = null!;
+
     public SalesDbContext(
         DbContextOptions<SalesDbContext> options,
         ITenantService tenantService)
@@ -50,6 +68,14 @@ public class SalesDbContext : DbContext
             modelBuilder.Entity<Invoice>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<InvoiceItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<Payment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Quotation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<QuotationItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Discount>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Promotion>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CommissionPlan>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SalesCommission>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SalesReturn>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SalesReturnItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

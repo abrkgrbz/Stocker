@@ -163,6 +163,12 @@ export const apiService = {
 
         me: () =>
             api.get<ApiResponse>('/api/auth/me'),
+
+        updateProfile: (data: { firstName: string; lastName: string; email: string }) =>
+            api.put<ApiResponse>('/api/auth/profile', data),
+
+        changePassword: (data: any) =>
+            api.post<ApiResponse>('/api/auth/change-password', data),
     },
 
     // Master endpoints
@@ -296,6 +302,46 @@ export const apiService = {
 
         getProductStockSummary: (productId: number) =>
             api.get<ApiResponse>(`/api/inventory/stock/summary/${productId}`),
+
+        getStockMovements: (params?: any) =>
+            api.get<ApiResponse>('/api/inventory/stock-movements', { params }),
+    },
+
+    // HR endpoints
+    hr: {
+        // Employees
+        getEmployees: (params?: any) =>
+            api.get<ApiResponse>('/api/hr/employees', { params }),
+
+        getEmployee: (id: number) =>
+            api.get<ApiResponse>(`/api/hr/employees/${id}`),
+
+        // Attendance
+        getAttendance: (params?: any) =>
+            api.get<ApiResponse>('/api/hr/attendance', { params }),
+
+        checkIn: (data: any) =>
+            api.post<ApiResponse>('/api/hr/attendance/check-in', data),
+
+        checkOut: (data: any) =>
+            api.post<ApiResponse>('/api/hr/attendance/check-out', data),
+
+        getDailyAttendance: (date: string) =>
+            api.get<ApiResponse>('/api/hr/attendance/daily', { params: { date } }),
+
+        // Leaves
+        getLeaves: (params?: any) =>
+            api.get<ApiResponse>('/api/hr/leaves', { params }),
+
+        createLeave: (data: any) =>
+            api.post<ApiResponse>('/api/hr/leaves', data),
+
+        getLeaveTypes: () =>
+            api.get<ApiResponse>('/api/hr/leave-types'),
+
+        // Departments
+        getDepartments: () =>
+            api.get<ApiResponse>('/api/hr/departments'),
     },
 };
 

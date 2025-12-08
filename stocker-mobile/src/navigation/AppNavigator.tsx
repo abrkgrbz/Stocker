@@ -21,6 +21,14 @@ import InvoiceListScreen from '../screens/sales/InvoiceListScreen';
 import InventoryDashboardScreen from '../screens/inventory/InventoryDashboardScreen';
 import ProductListScreen from '../screens/inventory/ProductListScreen';
 import ProductDetailScreen from '../screens/inventory/ProductDetailScreen';
+import StockMovementScreen from '../screens/inventory/StockMovementScreen';
+import BarcodeScannerScreen from '../screens/inventory/BarcodeScannerScreen';
+import HRDashboardScreen from '../screens/hr/HRDashboardScreen';
+import EmployeeListScreen from '../screens/hr/EmployeeListScreen';
+import AttendanceScreen from '../screens/hr/AttendanceScreen';
+import LeaveRequestScreen from '../screens/hr/LeaveRequestScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -75,6 +83,16 @@ export default function AppNavigator() {
                             <Stack.Screen name="InventoryDashboard" component={InventoryDashboardScreen} />
                             <Stack.Screen name="ProductList" component={ProductListScreen} />
                             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+                            <Stack.Screen name="StockMovements" component={StockMovementScreen} />
+                            <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
+
+                            {/* HR Module */}
+                            <Stack.Screen name="HRDashboard" component={HRDashboardScreen} />
+                            <Stack.Screen name="EmployeeList" component={EmployeeListScreen} />
+                            <Stack.Screen name="Attendance" component={AttendanceScreen} />
+                            <Stack.Screen name="LeaveRequest" component={LeaveRequestScreen} />
+                            <Stack.Screen name="Settings" component={SettingsScreen} />
+                            <Stack.Screen name="Profile" component={ProfileScreen} />
                         </Stack.Group>
                     )
                 )}

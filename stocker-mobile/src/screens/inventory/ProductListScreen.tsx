@@ -12,6 +12,14 @@ export default function ProductListScreen({ navigation, route }: any) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
+    const handleScan = () => {
+        navigation.navigate('BarcodeScanner', {
+            onScan: (data: string) => {
+                setSearchQuery(data);
+            }
+        });
+    };
+
     const filterType = route.params?.filter; // 'lowStock', 'expiring', etc.
 
     useEffect(() => {
@@ -82,9 +90,13 @@ export default function ProductListScreen({ navigation, route }: any) {
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                     />
-                    {searchQuery.length > 0 && (
+                    {searchQuery.length > 0 ? (
                         <TouchableOpacity onPress={() => setSearchQuery('')}>
                             <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity onPress={handleScan}>
+                            <Ionicons name="qr-code-outline" size={20} color={colors.primary} />
                         </TouchableOpacity>
                     )}
                 </View>

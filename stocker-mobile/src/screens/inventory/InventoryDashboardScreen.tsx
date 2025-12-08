@@ -72,10 +72,10 @@ export default function InventoryDashboardScreen({ navigation }: any) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
-                            onPress={() => { /* Navigate to Stock Count or similar */ }}
+                            onPress={() => navigation.navigate('StockMovements')}
                         >
-                            <Ionicons name="scan-outline" size={24} color="#fff" />
-                            <Text style={styles.actionText}>Sayım Yap</Text>
+                            <Ionicons name="swap-horizontal-outline" size={24} color="#fff" />
+                            <Text style={styles.actionText}>Hareketler</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
