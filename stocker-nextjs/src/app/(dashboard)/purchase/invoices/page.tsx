@@ -33,6 +33,7 @@ import {
   ExportOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   usePurchaseInvoices,
   useDeletePurchaseInvoice,
@@ -49,30 +50,22 @@ const { confirm } = Modal;
 
 const statusColors: Record<PurchaseInvoiceStatus, string> = {
   Draft: 'default',
-  Received: 'blue',
-  Verified: 'cyan',
   PendingApproval: 'orange',
   Approved: 'purple',
   Rejected: 'red',
   PartiallyPaid: 'geekblue',
   Paid: 'green',
-  Overdue: 'red',
   Cancelled: 'default',
-  Disputed: 'volcano',
 };
 
 const statusLabels: Record<PurchaseInvoiceStatus, string> = {
   Draft: 'Taslak',
-  Received: 'Alındı',
-  Verified: 'Doğrulandı',
   PendingApproval: 'Onay Bekliyor',
   Approved: 'Onaylandı',
   Rejected: 'Reddedildi',
   PartiallyPaid: 'Kısmen Ödendi',
   Paid: 'Ödendi',
-  Overdue: 'Vadesi Geçmiş',
   Cancelled: 'İptal',
-  Disputed: 'İhtilaf',
 };
 
 export default function PurchaseInvoicesPage() {
@@ -83,10 +76,10 @@ export default function PurchaseInvoicesPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: invoicesData, isLoading, refetch } = usePurchaseInvoices({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
-    startDate: dateRange?.[0]?.toISOString(),
-    endDate: dateRange?.[1]?.toISOString(),
+    fromDate: dateRange?.[0]?.toISOString(),
+    toDate: dateRange?.[1]?.toISOString(),
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -229,7 +222,7 @@ export default function PurchaseInvoicesPage() {
                 danger: true,
                 onClick: () => handleDelete(record),
               },
-            ].filter(Boolean),
+            ].filter(Boolean) as MenuProps['items'],
           }}
           trigger={['click']}
         >

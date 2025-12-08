@@ -29,6 +29,7 @@ import {
   ExportOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   useGoodsReceipts,
   useDeleteGoodsReceipt,
@@ -44,24 +45,18 @@ const { confirm } = Modal;
 
 const statusColors: Record<GoodsReceiptStatus, string> = {
   Draft: 'default',
-  InProgress: 'blue',
-  PendingQualityCheck: 'orange',
-  QualityCheckPassed: 'cyan',
-  QualityCheckFailed: 'red',
+  Pending: 'blue',
+  Confirmed: 'cyan',
   Completed: 'green',
   Cancelled: 'default',
-  PartiallyReceived: 'geekblue',
 };
 
 const statusLabels: Record<GoodsReceiptStatus, string> = {
   Draft: 'Taslak',
-  InProgress: 'İşlemde',
-  PendingQualityCheck: 'Kalite Kontrol Bekliyor',
-  QualityCheckPassed: 'Kalite Kontrol Geçti',
-  QualityCheckFailed: 'Kalite Kontrol Başarısız',
+  Pending: 'Beklemede',
+  Confirmed: 'Onaylandı',
   Completed: 'Tamamlandı',
   Cancelled: 'İptal',
-  PartiallyReceived: 'Kısmen Alındı',
 };
 
 export default function GoodsReceiptsPage() {
@@ -72,10 +67,10 @@ export default function GoodsReceiptsPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: receiptsData, isLoading, refetch } = useGoodsReceipts({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
-    startDate: dateRange?.[0]?.toISOString(),
-    endDate: dateRange?.[1]?.toISOString(),
+    fromDate: dateRange?.[0]?.toISOString(),
+    toDate: dateRange?.[1]?.toISOString(),
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -198,7 +193,7 @@ export default function GoodsReceiptsPage() {
                 danger: true,
                 onClick: () => handleDelete(record),
               },
-            ].filter(Boolean),
+            ].filter(Boolean) as MenuProps['items'],
           }}
           trigger={['click']}
         >

@@ -16,6 +16,7 @@ import {
   ThunderboltOutlined,
   CrownOutlined,
   StarOutlined,
+  ReconciliationOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 
@@ -126,6 +127,28 @@ const modules = [
       'Performans Değerlendirme',
       'Eğitim Yönetimi',
       'Özlük Dosyası',
+    ],
+    stats: {
+      users: 0,
+      records: '0',
+      growth: '-',
+    },
+    tier: 'standard',
+  },
+  {
+    id: 'purchase',
+    name: 'Satın Alma',
+    description: 'Tedarik ve Satın Alma Yönetimi',
+    icon: <ReconciliationOutlined style={{ fontSize: 48, color: '#8b5cf6' }} />,
+    color: '#8b5cf6',
+    enabled: false,
+    features: [
+      'Tedarikçi Yönetimi',
+      'Satın Alma Siparişleri',
+      'Mal Alım Belgeleri',
+      'Satın Alma Faturaları',
+      'Tedarikçi Ödemeleri',
+      'İade Yönetimi',
     ],
     stats: {
       users: 0,

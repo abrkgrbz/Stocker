@@ -31,6 +31,7 @@ import {
   DollarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   usePurchaseReturns,
   useDeletePurchaseReturn,
@@ -98,11 +99,11 @@ export default function PurchaseReturnsPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: returnsData, isLoading, refetch } = usePurchaseReturns({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
     reason: reasonFilter,
-    startDate: dateRange?.[0]?.toISOString(),
-    endDate: dateRange?.[1]?.toISOString(),
+    fromDate: dateRange?.[0]?.toISOString(),
+    toDate: dateRange?.[1]?.toISOString(),
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -249,7 +250,7 @@ export default function PurchaseReturnsPage() {
                 key: 'approve',
                 icon: <CheckCircleOutlined />,
                 label: 'Onayla',
-                onClick: () => approveReturn.mutate(record.id),
+                onClick: () => approveReturn.mutate({ id: record.id }),
               },
               record.status === 'Pending' && {
                 key: 'reject',
@@ -264,10 +265,7 @@ export default function PurchaseReturnsPage() {
                 label: 'Gönder',
                 onClick: () => shipReturn.mutate({
                   id: record.id,
-                  data: {
-                    shippingCarrier: 'Manuel',
-                    trackingNumber: 'Manuel Gönderim',
-                  },
+                  trackingNumber: 'Manuel Gönderim',
                 }),
               },
               ['Shipped', 'Received'].includes(record.status) && {
@@ -284,7 +282,7 @@ export default function PurchaseReturnsPage() {
                 danger: true,
                 onClick: () => handleDelete(record),
               },
-            ].filter(Boolean),
+            ].filter(Boolean) as MenuProps['items'],
           }}
           trigger={['click']}
         >

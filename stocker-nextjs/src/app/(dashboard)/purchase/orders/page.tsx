@@ -35,6 +35,7 @@ import {
   FilterOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   usePurchaseOrders,
   useDeletePurchaseOrder,
@@ -53,12 +54,11 @@ const { confirm } = Modal;
 const statusColors: Record<PurchaseOrderStatus, string> = {
   Draft: 'default',
   PendingApproval: 'orange',
-  Approved: 'blue',
+  Confirmed: 'blue',
   Rejected: 'red',
   Sent: 'cyan',
-  Confirmed: 'purple',
   PartiallyReceived: 'geekblue',
-  Received: 'green',
+  Received: 'purple',
   Completed: 'green',
   Cancelled: 'default',
   Closed: 'default',
@@ -67,10 +67,9 @@ const statusColors: Record<PurchaseOrderStatus, string> = {
 const statusLabels: Record<PurchaseOrderStatus, string> = {
   Draft: 'Taslak',
   PendingApproval: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
+  Confirmed: 'Onaylandı',
   Rejected: 'Reddedildi',
   Sent: 'Gönderildi',
-  Confirmed: 'Onaylandı (T)',
   PartiallyReceived: 'Kısmen Alındı',
   Received: 'Teslim Alındı',
   Completed: 'Tamamlandı',
@@ -89,11 +88,11 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: ordersData, isLoading, refetch } = usePurchaseOrders({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
     supplierId: supplierIdFromUrl || undefined,
-    startDate: dateRange?.[0]?.toISOString(),
-    endDate: dateRange?.[1]?.toISOString(),
+    fromDate: dateRange?.[0]?.toISOString(),
+    toDate: dateRange?.[1]?.toISOString(),
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -186,7 +185,7 @@ export default function PurchaseOrdersPage() {
         danger: true,
         onClick: () => handleReject(record),
       },
-      record.status === 'Approved' && {
+      record.status === 'Confirmed' && {
         key: 'send',
         icon: <SendOutlined />,
         label: 'Tedarikçiye Gönder',
@@ -212,7 +211,7 @@ export default function PurchaseOrdersPage() {
         danger: true,
         onClick: () => handleDelete(record),
       },
-    ].filter(Boolean);
+    ].filter(Boolean) as MenuProps['items'];
 
     return { items };
   };
@@ -238,11 +237,8 @@ export default function PurchaseOrdersPage() {
       dataIndex: 'supplierName',
       key: 'supplierName',
       width: 200,
-      render: (_, record) => (
-        <div>
-          <div className="font-medium text-gray-900">{record.supplierName}</div>
-          <div className="text-xs text-gray-500">{record.supplierCode}</div>
-        </div>
+      render: (name) => (
+        <div className="font-medium text-gray-900">{name}</div>
       ),
     },
     {
@@ -282,27 +278,6 @@ export default function PurchaseOrdersPage() {
       key: 'expectedDeliveryDate',
       width: 130,
       render: (date) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
-    },
-    {
-      title: 'Teslim %',
-      dataIndex: 'receivedPercentage',
-      key: 'receivedPercentage',
-      width: 100,
-      align: 'center',
-      render: (percent) => {
-        const value = percent || 0;
-        return (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-500 rounded-full"
-                style={{ width: `${value}%` }}
-              />
-            </div>
-            <span className="text-xs text-gray-500">{value}%</span>
-          </div>
-        );
-      },
     },
     {
       title: '',

@@ -149,15 +149,15 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
             <div className="grid grid-cols-2 gap-3 mt-6">
               <div className="p-4 bg-gray-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.totalOrders || 0}
+                  {initialValues.creditLimit?.toLocaleString('tr-TR') || '0'}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Toplam Sipariş</div>
+                <div className="text-xs text-gray-500 mt-1">Kredi Limiti ({initialValues.currency})</div>
               </div>
               <div className="p-4 bg-gray-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.openOrderCount || 0}
+                  {initialValues.currentBalance?.toLocaleString('tr-TR') || '0'}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Açık Sipariş</div>
+                <div className="text-xs text-gray-500 mt-1">Güncel Bakiye ({initialValues.currency})</div>
               </div>
               <div className="p-4 bg-blue-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-blue-600">
@@ -167,9 +167,9 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               </div>
               <div className="p-4 bg-green-50/50 rounded-xl text-center">
                 <div className="text-2xl font-semibold text-green-600">
-                  {initialValues.totalPurchaseAmount?.toLocaleString('tr-TR') || '0'} ₺
+                  %{initialValues.discountRate || 0}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Toplam Alım</div>
+                <div className="text-xs text-gray-500 mt-1">İndirim Oranı</div>
               </div>
             </div>
           )}
@@ -458,34 +458,44 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                             placeholder="0"
                             variant="filled"
                             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={(value) => value?.replace(/,/g, '') as unknown as number}
+                            parser={(value: string | undefined) => Number(value?.replace(/,/g, '') ?? 0)}
                           />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">Minimum Sipariş Tutarı</div>
-                        <Form.Item name="minimumOrderAmount" className="mb-0">
+                        <div className="text-xs text-gray-400 mb-1">İndirim Oranı (%)</div>
+                        <Form.Item name="discountRate" className="mb-0">
                           <InputNumber
                             style={{ width: '100%' }}
                             min={0}
+                            max={100}
                             placeholder="0"
                             variant="filled"
-                            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={(value) => value?.replace(/,/g, '') as unknown as number}
                           />
                         </Form.Item>
                       </Col>
                     </Row>
 
                     <Row gutter={16}>
+                      <Col span={12}>
+                        <div className="text-xs text-gray-400 mb-1">Banka Adı</div>
+                        <Form.Item name="bankName" className="mb-0">
+                          <Input placeholder="Banka adı" variant="filled" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <div className="text-xs text-gray-400 mb-1">Hesap Numarası</div>
+                        <Form.Item name="bankAccountNumber" className="mb-0">
+                          <Input placeholder="Hesap numarası" variant="filled" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Row gutter={16}>
                       <Col span={24}>
-                        <div className="text-xs text-gray-400 mb-1">Banka Hesap Bilgileri</div>
-                        <Form.Item name="bankAccountInfo" className="mb-0">
-                          <TextArea
-                            placeholder="IBAN, Banka adı, Şube..."
-                            variant="filled"
-                            autoSize={{ minRows: 2, maxRows: 4 }}
-                          />
+                        <div className="text-xs text-gray-400 mb-1">IBAN</div>
+                        <Form.Item name="iban" className="mb-0">
+                          <Input placeholder="TR00 0000 0000 0000 0000 0000 00" variant="filled" />
                         </Form.Item>
                       </Col>
                     </Row>

@@ -45,13 +45,15 @@ export enum PurchaseRequestPriority {
 
 export enum PurchaseOrderStatus {
   Draft = 'Draft',
-  Pending = 'Pending',
-  Approved = 'Approved',
+  PendingApproval = 'PendingApproval',
   Confirmed = 'Confirmed',
+  Rejected = 'Rejected',
+  Sent = 'Sent',
   PartiallyReceived = 'PartiallyReceived',
   Received = 'Received',
   Completed = 'Completed',
-  Cancelled = 'Cancelled'
+  Cancelled = 'Cancelled',
+  Closed = 'Closed'
 }
 
 export enum PurchaseOrderType {
@@ -65,16 +67,17 @@ export enum PurchaseOrderType {
 export enum GoodsReceiptStatus {
   Draft = 'Draft',
   Pending = 'Pending',
-  PendingQualityCheck = 'PendingQualityCheck',
+  Confirmed = 'Confirmed',
   Completed = 'Completed',
   Cancelled = 'Cancelled'
 }
 
 export enum GoodsReceiptType {
   Standard = 'Standard',
-  Return = 'Return',
-  Transfer = 'Transfer',
-  Production = 'Production'
+  PartialDelivery = 'PartialDelivery',
+  ReturnReceipt = 'ReturnReceipt',
+  DirectDelivery = 'DirectDelivery',
+  Consignment = 'Consignment'
 }
 
 export enum ItemCondition {
@@ -87,12 +90,12 @@ export enum ItemCondition {
 
 export enum PurchaseInvoiceStatus {
   Draft = 'Draft',
-  Pending = 'Pending',
+  PendingApproval = 'PendingApproval',
   Approved = 'Approved',
+  Rejected = 'Rejected',
   PartiallyPaid = 'PartiallyPaid',
   Paid = 'Paid',
-  Cancelled = 'Cancelled',
-  Disputed = 'Disputed'
+  Cancelled = 'Cancelled'
 }
 
 export enum PurchaseInvoiceType {

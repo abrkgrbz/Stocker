@@ -25,6 +25,7 @@ import {
 } from '@ant-design/icons';
 import { useSuppliers } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseOrderDto, PurchaseOrderType, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
+import { SupplierStatus } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
@@ -67,7 +68,7 @@ interface OrderItem {
 
 export default function PurchaseOrderForm({ form, initialValues, onFinish, loading }: PurchaseOrderFormProps) {
   const [items, setItems] = useState<OrderItem[]>([]);
-  const { data: suppliersData } = useSuppliers({ pageSize: 1000, status: 'Active' });
+  const { data: suppliersData } = useSuppliers({ pageSize: 1000, status: SupplierStatus.Active });
   const suppliers = suppliersData?.items || [];
 
   useEffect(() => {
@@ -91,9 +92,9 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           productCode: item.productCode,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          discount: item.discountPercent || 0,
-          taxRate: item.taxRate || 18,
-          lineTotal: item.lineTotal,
+          discount: item.discountRate || 0,
+          taxRate: item.vatRate || 18,
+          lineTotal: item.totalAmount,
         })));
       }
     } else {

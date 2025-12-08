@@ -35,6 +35,7 @@ import {
   ExportOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   useSuppliers,
   useDeleteSupplier,
@@ -50,26 +51,26 @@ const { confirm } = Modal;
 const statusColors: Record<SupplierStatus, string> = {
   Active: 'green',
   Inactive: 'default',
-  Blocked: 'red',
-  PendingApproval: 'orange',
+  Pending: 'orange',
+  Blacklisted: 'red',
   OnHold: 'yellow',
 };
 
 const statusLabels: Record<SupplierStatus, string> = {
   Active: 'Aktif',
   Inactive: 'Pasif',
-  Blocked: 'Bloklu',
-  PendingApproval: 'Onay Bekliyor',
+  Pending: 'Onay Bekliyor',
+  Blacklisted: 'Bloklu',
   OnHold: 'Beklemede',
 };
 
 const typeLabels: Record<SupplierType, string> = {
   Manufacturer: 'Üretici',
-  Distributor: 'Distribütör',
   Wholesaler: 'Toptancı',
+  Distributor: 'Distribütör',
+  Importer: 'İthalatçı',
   Retailer: 'Perakendeci',
   ServiceProvider: 'Hizmet Sağlayıcı',
-  Contractor: 'Yüklenici',
   Other: 'Diğer',
 };
 
@@ -81,9 +82,9 @@ export default function SuppliersPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: suppliersData, isLoading, refetch } = useSuppliers({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
-    supplierType: typeFilter,
+    type: typeFilter,
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -159,11 +160,11 @@ export default function SuppliersPage() {
     },
     {
       title: 'Tip',
-      dataIndex: 'supplierType',
-      key: 'supplierType',
+      dataIndex: 'type',
+      key: 'type',
       width: 130,
-      render: (type: SupplierType) => (
-        <Tag>{typeLabels[type] || type}</Tag>
+      render: (type: string) => (
+        <Tag>{typeLabels[type as SupplierType] || type}</Tag>
       ),
     },
     {
@@ -172,9 +173,6 @@ export default function SuppliersPage() {
       width: 200,
       render: (_, record) => (
         <div className="space-y-1">
-          {record.contactPerson && (
-            <div className="text-sm text-gray-700">{record.contactPerson}</div>
-          )}
           {record.email && (
             <div className="flex items-center gap-1 text-xs text-gray-500">
               <MailOutlined />
@@ -198,26 +196,14 @@ export default function SuppliersPage() {
       render: (city) => city || '-',
     },
     {
-      title: 'Açık Sipariş',
-      dataIndex: 'openOrderCount',
-      key: 'openOrderCount',
-      width: 110,
-      align: 'center',
-      render: (count) => (
-        <span className={count > 0 ? 'text-blue-600 font-medium' : 'text-gray-400'}>
-          {count || 0}
-        </span>
-      ),
-    },
-    {
       title: 'Bakiye',
-      dataIndex: 'outstandingBalance',
-      key: 'outstandingBalance',
+      dataIndex: 'currentBalance',
+      key: 'currentBalance',
       width: 130,
       align: 'right',
-      render: (balance) => (
+      render: (balance, record) => (
         <span className={balance > 0 ? 'text-orange-600 font-medium' : 'text-gray-500'}>
-          {(balance || 0).toLocaleString('tr-TR')} ₺
+          {(balance || 0).toLocaleString('tr-TR')} {record.currency}
         </span>
       ),
     },
@@ -278,7 +264,7 @@ export default function SuppliersPage() {
                 label: 'Devre Dışı Bırak',
                 onClick: () => handleStatusChange(record, 'deactivate'),
               },
-              record.status !== 'Blocked' && {
+              record.status !== 'Blacklisted' && {
                 key: 'block',
                 icon: <StopOutlined />,
                 label: 'Blokla',
@@ -293,7 +279,7 @@ export default function SuppliersPage() {
                 danger: true,
                 onClick: () => handleDelete(record),
               },
-            ].filter(Boolean),
+            ].filter(Boolean) as MenuProps['items'],
           }}
           trigger={['click']}
         >

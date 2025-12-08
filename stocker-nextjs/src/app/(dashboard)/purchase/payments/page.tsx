@@ -34,6 +34,7 @@ import {
   DollarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   useSupplierPayments,
   useDeleteSupplierPayment,
@@ -99,12 +100,12 @@ export default function SupplierPaymentsPage() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
 
   const { data: paymentsData, isLoading, refetch } = useSupplierPayments({
-    search: searchText || undefined,
+    searchTerm: searchText || undefined,
     status: statusFilter,
     method: methodFilter,
     isReconciled: reconciledFilter,
-    startDate: dateRange?.[0]?.toISOString(),
-    endDate: dateRange?.[1]?.toISOString(),
+    fromDate: dateRange?.[0]?.toISOString(),
+    toDate: dateRange?.[1]?.toISOString(),
     page: pagination.current,
     pageSize: pagination.pageSize,
   });
@@ -248,7 +249,7 @@ export default function SupplierPaymentsPage() {
                 key: 'approve',
                 icon: <CheckCircleOutlined />,
                 label: 'Onayla',
-                onClick: () => approvePayment.mutate(record.id),
+                onClick: () => approvePayment.mutate({ id: record.id }),
               },
               record.status === 'PendingApproval' && {
                 key: 'reject',
@@ -267,7 +268,7 @@ export default function SupplierPaymentsPage() {
                 key: 'reconcile',
                 icon: <SyncOutlined />,
                 label: 'Mutabakat Yap',
-                onClick: () => reconcilePayment.mutate(record.id),
+                onClick: () => reconcilePayment.mutate({ id: record.id, bankTransactionId: `BANK-${record.paymentNumber}` }),
               },
               { type: 'divider' },
               record.status === 'Draft' && {
@@ -277,7 +278,7 @@ export default function SupplierPaymentsPage() {
                 danger: true,
                 onClick: () => handleDelete(record),
               },
-            ].filter(Boolean),
+            ].filter(Boolean) as MenuProps['items'],
           }}
           trigger={['click']}
         >

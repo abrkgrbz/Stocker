@@ -41,32 +41,33 @@ import {
   useUnblockSupplier,
 } from '@/lib/api/hooks/usePurchase';
 import type { SupplierStatus, SupplierType } from '@/lib/api/services/purchase.types';
+import type { MenuProps } from 'antd';
 
 const { Title, Text, Paragraph } = Typography;
 
 const statusColors: Record<SupplierStatus, string> = {
   Active: 'green',
   Inactive: 'default',
-  Blocked: 'red',
-  PendingApproval: 'orange',
+  Pending: 'orange',
+  Blacklisted: 'red',
   OnHold: 'yellow',
 };
 
 const statusLabels: Record<SupplierStatus, string> = {
   Active: 'Aktif',
   Inactive: 'Pasif',
-  Blocked: 'Bloklu',
-  PendingApproval: 'Onay Bekliyor',
+  Pending: 'Onay Bekliyor',
+  Blacklisted: 'Bloklu',
   OnHold: 'Beklemede',
 };
 
 const typeLabels: Record<SupplierType, string> = {
   Manufacturer: 'Üretici',
-  Distributor: 'Distribütör',
   Wholesaler: 'Toptancı',
+  Distributor: 'Distribütör',
+  Importer: 'İthalatçı',
   Retailer: 'Perakendeci',
   ServiceProvider: 'Hizmet Sağlayıcı',
-  Contractor: 'Yüklenici',
   Other: 'Diğer',
 };
 
@@ -115,20 +116,20 @@ export default function SupplierDetailPage() {
       label: 'Devre Dışı Bırak',
       onClick: () => deactivateSupplier.mutate(supplierId),
     },
-    supplier.status !== 'Blocked' && {
+    supplier.status !== 'Blacklisted' && {
       key: 'block',
       icon: <StopOutlined />,
       label: 'Blokla',
       danger: true,
       onClick: () => blockSupplier.mutate({ id: supplierId, reason: 'Manual block' }),
     },
-    supplier.status === 'Blocked' && {
+    supplier.status === 'Blacklisted' && {
       key: 'unblock',
       icon: <CheckCircleOutlined />,
       label: 'Bloğu Kaldır',
       onClick: () => unblockSupplier.mutate(supplierId),
     },
-  ].filter(Boolean);
+  ].filter(Boolean) as MenuProps['items'];
 
   return (
     <div className="min-h-screen bg-gray-50/30">
@@ -159,12 +160,12 @@ export default function SupplierDetailPage() {
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
                   {supplier.name}
-                  <Tag color={statusColors[supplier.status]}>
-                    {statusLabels[supplier.status]}
+                  <Tag color={statusColors[supplier.status as SupplierStatus]}>
+                    {statusLabels[supplier.status as SupplierStatus]}
                   </Tag>
                 </h1>
                 <p className="text-sm text-gray-500 m-0">
-                  {supplier.code} • {typeLabels[supplier.supplierType]}
+                  {supplier.code} • {typeLabels[supplier.type as SupplierType]}
                 </p>
               </div>
             </div>
@@ -192,17 +193,10 @@ export default function SupplierDetailPage() {
           <Col xs={12} sm={6}>
             <Card size="small">
               <Statistic
-                title="Toplam Sipariş"
-                value={supplier.totalOrders || 0}
-                prefix={<ShoppingCartOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Açık Sipariş"
-                value={supplier.openOrderCount || 0}
+                title="Kredi Limiti"
+                value={supplier.creditLimit || 0}
+                precision={2}
+                suffix={supplier.currency}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>
@@ -210,10 +204,21 @@ export default function SupplierDetailPage() {
           <Col xs={12} sm={6}>
             <Card size="small">
               <Statistic
-                title="Toplam Alım"
-                value={supplier.totalPurchaseAmount || 0}
+                title="Güncel Bakiye"
+                value={supplier.currentBalance || 0}
                 precision={2}
-                suffix="₺"
+                suffix={supplier.currency}
+                valueStyle={{ color: supplier.currentBalance > 0 ? '#faad14' : '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card size="small">
+              <Statistic
+                title="İndirim Oranı"
+                value={supplier.discountRate || 0}
+                precision={1}
+                suffix="%"
                 valueStyle={{ color: '#52c41a' }}
               />
             </Card>
@@ -221,11 +226,11 @@ export default function SupplierDetailPage() {
           <Col xs={12} sm={6}>
             <Card size="small">
               <Statistic
-                title="Bakiye"
-                value={supplier.outstandingBalance || 0}
-                precision={2}
-                suffix="₺"
-                valueStyle={{ color: supplier.outstandingBalance > 0 ? '#faad14' : '#52c41a' }}
+                title="Puan"
+                value={supplier.rating || 0}
+                precision={1}
+                suffix="/5"
+                valueStyle={{ color: '#faad14' }}
               />
             </Card>
           </Col>
@@ -260,7 +265,7 @@ export default function SupplierDetailPage() {
                           {supplier.code}
                         </Descriptions.Item>
                         <Descriptions.Item label="Tip">
-                          {typeLabels[supplier.supplierType]}
+                          {typeLabels[supplier.type as SupplierType]}
                         </Descriptions.Item>
                         <Descriptions.Item label="Vergi No">
                           {supplier.taxNumber || '-'}
@@ -299,7 +304,7 @@ export default function SupplierDetailPage() {
                           ) : '-'}
                         </Descriptions.Item>
                         <Descriptions.Item label="İlgili Kişi">
-                          {supplier.contactPerson || '-'}
+                          {supplier.contacts?.find(c => c.isPrimary)?.name || supplier.contacts?.[0]?.name || '-'}
                         </Descriptions.Item>
                       </Descriptions>
                     </Col>
@@ -351,15 +356,19 @@ export default function SupplierDetailPage() {
                       {supplier.currency || 'TRY'}
                     </Descriptions.Item>
                     <Descriptions.Item label="Kredi Limiti">
-                      {(supplier.creditLimit || 0).toLocaleString('tr-TR')} ₺
+                      {(supplier.creditLimit || 0).toLocaleString('tr-TR')} {supplier.currency}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Minimum Sipariş">
-                      {(supplier.minimumOrderAmount || 0).toLocaleString('tr-TR')} ₺
+                    <Descriptions.Item label="İndirim Oranı">
+                      %{supplier.discountRate || 0}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Banka Hesap Bilgileri" span={2}>
-                      <Paragraph className="mb-0 whitespace-pre-wrap">
-                        {supplier.bankAccountInfo || '-'}
-                      </Paragraph>
+                    <Descriptions.Item label="Banka" span={2}>
+                      {supplier.bankName || '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Hesap No">
+                      {supplier.bankAccountNumber || '-'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="IBAN">
+                      {supplier.iban || '-'}
                     </Descriptions.Item>
                   </Descriptions>
                 ),
@@ -374,12 +383,6 @@ export default function SupplierDetailPage() {
                 ),
                 children: (
                   <div className="space-y-6">
-                    <div>
-                      <Text strong className="block mb-2">Açıklama</Text>
-                      <Paragraph className="text-gray-600">
-                        {supplier.description || 'Açıklama bulunmuyor.'}
-                      </Paragraph>
-                    </div>
                     <div>
                       <Text strong className="block mb-2">Genel Notlar</Text>
                       <Paragraph className="text-gray-600 whitespace-pre-wrap">

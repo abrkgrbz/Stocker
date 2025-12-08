@@ -44,6 +44,7 @@ import {
   useCompletePurchaseOrder,
 } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseOrderStatus, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
+import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -51,12 +52,11 @@ const { Title, Text, Paragraph } = Typography;
 const statusColors: Record<PurchaseOrderStatus, string> = {
   Draft: 'default',
   PendingApproval: 'orange',
-  Approved: 'blue',
+  Confirmed: 'blue',
   Rejected: 'red',
   Sent: 'cyan',
-  Confirmed: 'purple',
   PartiallyReceived: 'geekblue',
-  Received: 'green',
+  Received: 'purple',
   Completed: 'green',
   Cancelled: 'default',
   Closed: 'default',
@@ -65,10 +65,9 @@ const statusColors: Record<PurchaseOrderStatus, string> = {
 const statusLabels: Record<PurchaseOrderStatus, string> = {
   Draft: 'Taslak',
   PendingApproval: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
+  Confirmed: 'Onaylandı',
   Rejected: 'Reddedildi',
   Sent: 'Gönderildi',
-  Confirmed: 'Tedarikçi Onayladı',
   PartiallyReceived: 'Kısmen Alındı',
   Received: 'Teslim Alındı',
   Completed: 'Tamamlandı',
@@ -77,18 +76,17 @@ const statusLabels: Record<PurchaseOrderStatus, string> = {
 };
 
 const getStatusStep = (status: PurchaseOrderStatus): number => {
-  const steps: Record<string, number> = {
+  const steps: Record<PurchaseOrderStatus, number> = {
     Draft: 0,
     PendingApproval: 1,
-    Approved: 2,
+    Confirmed: 2,
     Rejected: -1,
     Sent: 3,
-    Confirmed: 4,
-    PartiallyReceived: 5,
-    Received: 6,
-    Completed: 7,
+    PartiallyReceived: 4,
+    Received: 5,
+    Completed: 6,
     Cancelled: -1,
-    Closed: 7,
+    Closed: 6,
   };
   return steps[status] ?? 0;
 };
@@ -179,7 +177,7 @@ export default function PurchaseOrderDetailPage() {
       danger: true,
       onClick: handleReject,
     },
-    order.status === 'Approved' && {
+    order.status === 'Confirmed' && {
       key: 'send',
       icon: <SendOutlined />,
       label: 'Tedarikçiye Gönder',
@@ -210,7 +208,7 @@ export default function PurchaseOrderDetailPage() {
       label: 'Tamamla',
       onClick: handleComplete,
     },
-  ].filter(Boolean);
+  ].filter(Boolean) as MenuProps['items'];
 
   const itemColumns = [
     {
@@ -306,8 +304,8 @@ export default function PurchaseOrderDetailPage() {
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
                   {order.orderNumber}
-                  <Tag color={statusColors[order.status]}>
-                    {statusLabels[order.status]}
+                  <Tag color={statusColors[order.status as PurchaseOrderStatus]}>
+                    {statusLabels[order.status as PurchaseOrderStatus]}
                   </Tag>
                 </h1>
                 <p className="text-sm text-gray-500 m-0">
@@ -339,7 +337,7 @@ export default function PurchaseOrderDetailPage() {
         {/* Progress Steps */}
         <Card className="mb-6">
           <Steps
-            current={getStatusStep(order.status)}
+            current={getStatusStep(order.status as PurchaseOrderStatus)}
             status={['Rejected', 'Cancelled'].includes(order.status) ? 'error' : 'process'}
             items={[
               { title: 'Taslak', icon: <FileTextOutlined /> },
@@ -360,7 +358,7 @@ export default function PurchaseOrderDetailPage() {
             <Card size="small">
               <Statistic
                 title="Ara Toplam"
-                value={order.subtotal || 0}
+                value={order.subTotal || 0}
                 precision={2}
                 suffix="₺"
               />
@@ -381,7 +379,7 @@ export default function PurchaseOrderDetailPage() {
             <Card size="small">
               <Statistic
                 title="KDV"
-                value={order.taxAmount || 0}
+                value={order.vatAmount || 0}
                 precision={2}
                 suffix="₺"
               />
@@ -418,7 +416,7 @@ export default function PurchaseOrderDetailPage() {
                         <Text strong>Ara Toplam:</Text>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text>{(order.subtotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <Text>{(order.subTotal || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                     {order.discountAmount > 0 && (
@@ -436,7 +434,7 @@ export default function PurchaseOrderDetailPage() {
                         <Text>KDV:</Text>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text>{(order.taxAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <Text>{(order.vatAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                     <Table.Summary.Row>
@@ -488,40 +486,27 @@ export default function PurchaseOrderDetailPage() {
                     ? dayjs(order.expectedDeliveryDate).format('DD.MM.YYYY')
                     : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Sipariş Tipi">{order.orderType}</Descriptions.Item>
+                <Descriptions.Item label="Sipariş Tipi">{order.type}</Descriptions.Item>
                 <Descriptions.Item label="Para Birimi">{order.currency || 'TRY'}</Descriptions.Item>
-                {order.supplierReference && (
-                  <Descriptions.Item label="Tedarikçi Ref.">{order.supplierReference}</Descriptions.Item>
+                {order.supplierOrderNumber && (
+                  <Descriptions.Item label="Tedarikçi Ref.">{order.supplierOrderNumber}</Descriptions.Item>
                 )}
               </Descriptions>
             </Card>
 
-            {/* Delivery Info */}
-            {order.deliveryAddress && (
-              <Card title="Teslim Bilgileri" size="small" className="mb-4">
+            {/* Shipping Info */}
+            {order.shippingAddress && (
+              <Card title="Kargo Bilgileri" size="small" className="mb-4">
                 <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Teslim Adresi">
-                    {order.deliveryAddress}
+                  <Descriptions.Item label="Kargo Adresi">
+                    {order.shippingAddress}
                   </Descriptions.Item>
+                  {order.shippingMethod && (
+                    <Descriptions.Item label="Kargo Yöntemi">
+                      {order.shippingMethod}
+                    </Descriptions.Item>
+                  )}
                 </Descriptions>
-              </Card>
-            )}
-
-            {/* Receive Progress */}
-            {order.status !== 'Draft' && order.status !== 'Cancelled' && (
-              <Card title="Teslim Durumu" size="small">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Teslim Alınan</span>
-                    <span className="font-medium">{order.receivedPercentage || 0}%</span>
-                  </div>
-                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full transition-all"
-                      style={{ width: `${order.receivedPercentage || 0}%` }}
-                    />
-                  </div>
-                </div>
               </Card>
             )}
           </Col>
