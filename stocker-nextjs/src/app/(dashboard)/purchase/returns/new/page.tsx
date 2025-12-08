@@ -27,7 +27,8 @@ import {
 } from '@ant-design/icons';
 import { useCreatePurchaseReturn, useSuppliers, usePurchaseOrders, useGoodsReceipts, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
-import type { PurchaseReturnType, PurchaseReturnReason, PurchaseReturnItemReason, ItemCondition, RefundMethod } from '@/lib/api/services/purchase.types';
+import { PurchaseReturnItemReason, ItemCondition } from '@/lib/api/services/purchase.types';
+import type { PurchaseReturnType, PurchaseReturnReason, RefundMethod } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -109,7 +110,7 @@ export default function NewPurchaseReturnPage() {
   const { data: ordersData } = usePurchaseOrders({ pageSize: 1000 });
   const { data: receiptsData } = useGoodsReceipts({ pageSize: 1000 });
   const { data: invoicesData } = usePurchaseInvoices({ pageSize: 1000 });
-  const { data: productsData } = useProducts({ pageSize: 1000 });
+  const { data: productsData } = useProducts();
 
   const [items, setItems] = useState<ReturnItem[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
@@ -118,7 +119,7 @@ export default function NewPurchaseReturnPage() {
   const orders = ordersData?.items || [];
   const receipts = receiptsData?.items || [];
   const invoices = invoicesData?.items || [];
-  const products = productsData?.items || [];
+  const products = productsData || [];
 
   const addItem = () => {
     const newItem: ReturnItem = {
@@ -129,8 +130,8 @@ export default function NewPurchaseReturnPage() {
       quantity: 1,
       unitPrice: 0,
       vatRate: 20,
-      reason: 'Defective',
-      condition: 'Defective',
+      reason: PurchaseReturnItemReason.Defective,
+      condition: ItemCondition.Defective,
     };
     setItems([...items, newItem]);
   };
@@ -145,17 +146,17 @@ export default function NewPurchaseReturnPage() {
     ));
   };
 
-  const handleProductSelect = (key: string, productId: string) => {
+  const handleProductSelect = (key: string, productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       setItems(items.map(item =>
         item.key === key ? {
           ...item,
-          productId,
+          productId: String(productId),
           productCode: product.code,
           productName: product.name,
-          unit: product.unit || 'Adet',
-          unitPrice: product.purchasePrice || 0,
+          unit: product.unitSymbol || product.unitName || 'Adet',
+          unitPrice: product.costPrice || 0,
         } : item
       ));
     }
@@ -234,7 +235,7 @@ export default function NewPurchaseReturnPage() {
           showSearch
           optionFilterProp="children"
           value={record.productId}
-          onChange={(value) => handleProductSelect(record.key, value)}
+          onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
         >
           {products.map(product => (

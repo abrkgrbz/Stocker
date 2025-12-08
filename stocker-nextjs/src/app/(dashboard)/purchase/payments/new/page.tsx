@@ -27,7 +27,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { useCreateSupplierPayment, useSuppliers, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
-import type { PaymentMethod, SupplierPaymentType } from '@/lib/api/services/purchase.types';
+import { PaymentMethod, PurchaseInvoiceStatus } from '@/lib/api/services/purchase.types';
+import type { SupplierPaymentType } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -65,9 +66,9 @@ export default function NewSupplierPaymentPage() {
 
   const createPayment = useCreateSupplierPayment();
   const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
-  const { data: invoicesData } = usePurchaseInvoices({ pageSize: 1000, status: 'Approved' });
+  const { data: invoicesData } = usePurchaseInvoices({ pageSize: 1000, status: PurchaseInvoiceStatus.Approved });
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('BankTransfer');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethod.BankTransfer);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
 
   const suppliers = suppliersData?.items || [];

@@ -30,7 +30,7 @@ import {
   InboxOutlined,
 } from '@ant-design/icons';
 import { useGoodsReceipt, useUpdateGoodsReceipt, useSuppliers } from '@/lib/api/hooks/usePurchase';
-import { useProducts } from '@/lib/api/hooks/useInventory';
+import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { ItemCondition } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
@@ -71,12 +71,14 @@ export default function EditGoodsReceiptPage() {
   const { data: receipt, isLoading: receiptLoading } = useGoodsReceipt(receiptId);
   const updateReceipt = useUpdateGoodsReceipt();
   const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
-  const { data: productsData } = useProducts({ pageSize: 1000 });
+  const { data: productsData } = useProducts();
+  const { data: warehousesData } = useWarehouses();
 
   const [items, setItems] = useState<ReceiptItem[]>([]);
 
   const suppliers = suppliersData?.items || [];
-  const products = productsData?.items || [];
+  const products = productsData || [];
+  const warehouses = warehousesData || [];
 
   useEffect(() => {
     if (receipt) {
@@ -163,16 +165,16 @@ export default function EditGoodsReceiptPage() {
     ));
   };
 
-  const handleProductSelect = (key: string, productId: string) => {
+  const handleProductSelect = (key: string, productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       setItems(items.map(item =>
         item.key === key ? {
           ...item,
-          productId,
+          productId: String(productId),
           productCode: product.code,
           productName: product.name,
-          unit: product.unit || 'Adet',
+          unit: product.unitSymbol || product.unitName || 'Adet',
         } : item
       ));
     }
@@ -217,7 +219,7 @@ export default function EditGoodsReceiptPage() {
           showSearch
           optionFilterProp="children"
           value={record.productId}
-          onChange={(value) => handleProductSelect(record.key, value)}
+          onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
         >
           {products.map(product => (

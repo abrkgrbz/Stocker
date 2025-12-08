@@ -20,6 +20,7 @@ import {
 } from '@ant-design/icons';
 import {
   useSupplierSummary,
+  usePurchaseRequestSummary,
   usePurchaseOrderSummary,
   usePurchaseInvoiceSummary,
   useSupplierPaymentSummary,
@@ -33,6 +34,7 @@ export default function PurchaseDashboardPage() {
   const router = useRouter();
 
   const { data: supplierSummary } = useSupplierSummary();
+  const { data: requestSummary } = usePurchaseRequestSummary();
   const { data: orderSummary } = usePurchaseOrderSummary();
   const { data: invoiceSummary } = usePurchaseInvoiceSummary();
   const { data: paymentSummary } = useSupplierPaymentSummary();
@@ -49,6 +51,7 @@ export default function PurchaseDashboardPage() {
 
   const quickActions = [
     { icon: <ShopOutlined />, label: 'Yeni Tedarikçi', path: '/purchase/suppliers/new', color: '#8b5cf6' },
+    { icon: <FileTextOutlined />, label: 'Yeni Talep', path: '/purchase/requests/new', color: '#a855f7' },
     { icon: <ShoppingCartOutlined />, label: 'Yeni Sipariş', path: '/purchase/orders/new', color: '#3b82f6' },
     { icon: <InboxOutlined />, label: 'Mal Alımı', path: '/purchase/goods-receipts/new', color: '#10b981' },
     { icon: <FileTextOutlined />, label: 'Yeni Fatura', path: '/purchase/invoices/new', color: '#f59e0b' },
@@ -92,7 +95,7 @@ export default function PurchaseDashboardPage() {
 
       {/* Main Statistics */}
       <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} xl={6}>
           <Card
             hoverable
             onClick={() => router.push('/purchase/suppliers')}
@@ -127,7 +130,35 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} xl={6}>
+          <Card
+            hoverable
+            onClick={() => router.push('/purchase/requests')}
+            className="cursor-pointer"
+          >
+            <Statistic
+              title={
+                <span className="flex items-center gap-2">
+                  <FileTextOutlined style={{ color: '#a855f7' }} />
+                  Satın Alma Talepleri
+                </span>
+              }
+              value={requestSummary?.pendingRequests || 0}
+              valueStyle={{ color: '#a855f7' }}
+              suffix={
+                <span className="text-sm text-gray-500">
+                  bekleyen
+                </span>
+              }
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <Tag color="green">{requestSummary?.approvedRequests || 0} Onaylı</Tag>
+              <Tag color="purple">{requestSummary?.totalRequests || 0} Toplam</Tag>
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} xl={6}>
           <Card
             hoverable
             onClick={() => router.push('/purchase/orders')}
@@ -150,7 +181,7 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} xl={6}>
           <Card
             hoverable
             onClick={() => router.push('/purchase/invoices')}
@@ -175,7 +206,7 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} xl={6}>
           <Card
             hoverable
             onClick={() => router.push('/purchase/payments')}
@@ -297,7 +328,7 @@ export default function PurchaseDashboardPage() {
 
       {/* Status Overview */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8} xl={4}>
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
@@ -318,7 +349,28 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8} xl={4}>
+          <Card size="small">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center">
+                <FileTextOutlined className="text-xl text-violet-600" />
+              </div>
+              <div>
+                <div className="text-gray-500 text-sm">Talepler</div>
+                <div className="text-xl font-semibold">{requestSummary?.totalRequests || 0}</div>
+              </div>
+            </div>
+            <Button
+              type="link"
+              className="mt-3 p-0"
+              onClick={() => router.push('/purchase/requests')}
+            >
+              Tümünü Gör →
+            </Button>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={8} xl={4}>
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -339,7 +391,7 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8} xl={4}>
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
@@ -360,7 +412,7 @@ export default function PurchaseDashboardPage() {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8} xl={4}>
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">

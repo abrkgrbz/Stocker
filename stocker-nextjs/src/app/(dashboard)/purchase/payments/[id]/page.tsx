@@ -19,6 +19,7 @@ import {
   Modal,
   Timeline,
 } from 'antd';
+import type { TimelineItemProps } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -533,7 +534,7 @@ export default function SupplierPaymentDetailPage() {
                       </div>
                     ),
                   },
-                ].filter(Boolean)}
+                ].filter(Boolean) as TimelineItemProps[]}
               />
             </Card>
 

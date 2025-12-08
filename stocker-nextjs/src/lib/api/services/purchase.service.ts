@@ -208,6 +208,11 @@ export const PurchaseRequestService = {
   convertToOrder: async (id: string, supplierId: string): Promise<PurchaseOrderDto> => {
     return ApiService.post<PurchaseOrderDto>(`${BASE_URL}/requests/${id}/convert-to-order`, { supplierId });
   },
+
+  // Get purchase request summary
+  getSummary: async (): Promise<PurchaseRequestSummaryDto> => {
+    return ApiService.get<PurchaseRequestSummaryDto>(`${BASE_URL}/requests/summary`);
+  },
 };
 
 // =====================================

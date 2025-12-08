@@ -45,7 +45,7 @@ import {
   useSubmitReturnForApproval,
 } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseReturnStatus, PurchaseReturnReason, PurchaseReturnItemDto } from '@/lib/api/services/purchase.types';
-import type { MenuProps } from 'antd';
+import type { MenuProps, TimelineItemProps } from 'antd';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -193,7 +193,6 @@ export default function PurchaseReturnDetailPage() {
       onOk: () => shipReturn.mutate({
         id: returnId,
         trackingNumber: `TRK-${Date.now()}`,
-        shippingCarrier: 'Manuel',
       }),
     });
   };
@@ -205,8 +204,10 @@ export default function PurchaseReturnDetailPage() {
   const handleProcessRefund = () => {
     processRefund.mutate({
       id: returnId,
-      amount: purchaseReturn.totalAmount,
-      refundReference: `REF-${Date.now()}`,
+      refundDetails: {
+        amount: purchaseReturn.totalAmount,
+        refundReference: `REF-${Date.now()}`,
+      },
     });
   };
 
@@ -686,7 +687,7 @@ export default function PurchaseReturnDetailPage() {
                       </div>
                     ),
                   },
-                ].filter(Boolean)}
+                ].filter(Boolean) as TimelineItemProps[]}
               />
             </Card>
           </Col>

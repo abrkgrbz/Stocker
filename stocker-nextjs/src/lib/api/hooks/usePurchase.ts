@@ -414,6 +414,15 @@ export function useConvertRequestToOrder() {
   });
 }
 
+// Get purchase request summary
+export function usePurchaseRequestSummary() {
+  return useQuery({
+    queryKey: [...purchaseKeys.requests, 'summary'],
+    queryFn: () => PurchaseRequestService.getSummary(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // =====================================
 // PURCHASE ORDER HOOKS
 // =====================================
@@ -1591,5 +1600,78 @@ export function useSupplierPaymentSummary() {
     queryKey: [...purchaseKeys.payments, 'summary'],
     queryFn: () => SupplierPaymentService.getSummary(),
     staleTime: 60000,
+  });
+}
+
+// =====================================
+// ADDITIONAL WORKFLOW HOOKS
+// =====================================
+
+// Submit invoice for approval (alias for verify)
+export function useSubmitInvoiceForApproval() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseInvoiceService.verify(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.invoice(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.invoices });
+      showSuccess('Fatura onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fatura gönderilemedi');
+    },
+  });
+}
+
+// Submit payment for approval
+export function useSubmitPaymentForApproval() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SupplierPaymentService.submit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.payment(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.payments });
+      showSuccess('Ödeme onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ödeme gönderilemedi');
+    },
+  });
+}
+
+// Submit return for approval
+export function useSubmitReturnForApproval() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseReturnService.submit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.return(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.returns });
+      showSuccess('İade onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'İade gönderilemedi');
+    },
+  });
+}
+
+// Process purchase refund (complete return with refund)
+export function useProcessPurchaseRefund() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, refundDetails }: { id: string; refundDetails?: any }) =>
+      PurchaseReturnService.complete(id, refundDetails),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.return(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.returns });
+      showSuccess('İade işlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'İade işlenemedi');
+    },
   });
 }

@@ -28,7 +28,7 @@ import {
   InboxOutlined,
 } from '@ant-design/icons';
 import { useCreateGoodsReceipt, useSuppliers, usePurchaseOrders } from '@/lib/api/hooks/usePurchase';
-import { useProducts } from '@/lib/api/hooks/useInventory';
+import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { GoodsReceiptType, ItemCondition } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
@@ -75,22 +75,24 @@ export default function NewGoodsReceiptPage() {
 
   const createReceipt = useCreateGoodsReceipt();
   const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
-  const { data: ordersData } = usePurchaseOrders({ pageSize: 1000, status: 'Sent' });
-  const { data: productsData } = useProducts({ pageSize: 1000 });
+  const { data: ordersData } = usePurchaseOrders({ pageSize: 1000 });
+  const { data: productsData } = useProducts();
+  const { data: warehousesData } = useWarehouses();
 
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(orderId || undefined);
 
   const suppliers = suppliersData?.items || [];
-  const orders = ordersData?.items || [];
-  const products = productsData?.items || [];
+  const orders = (ordersData?.items || []).filter(o => o.status === 'Sent' || o.status === 'PartiallyReceived');
+  const products = productsData || [];
+  const warehouses = warehousesData || [];
 
   const handleOrderSelect = (orderId: string) => {
     setSelectedOrderId(orderId);
     const order = orders.find(o => o.id === orderId);
     if (order) {
       form.setFieldsValue({
-        supplierId: order.supplierId,
+        supplierId: order.supplierName ? order.id : undefined,
         purchaseOrderId: orderId,
       });
       // Note: Order items would need to be fetched separately in real implementation
@@ -120,16 +122,16 @@ export default function NewGoodsReceiptPage() {
     ));
   };
 
-  const handleProductSelect = (key: string, productId: string) => {
+  const handleProductSelect = (key: string, productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       setItems(items.map(item =>
         item.key === key ? {
           ...item,
-          productId,
+          productId: String(productId),
           productCode: product.code,
           productName: product.name,
-          unit: product.unit || 'Adet',
+          unit: product.unitSymbol || product.unitName || 'Adet',
         } : item
       ));
     }
@@ -185,7 +187,7 @@ export default function NewGoodsReceiptPage() {
           showSearch
           optionFilterProp="children"
           value={record.productId}
-          onChange={(value) => handleProductSelect(record.key, value)}
+          onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
         >
           {products.map(product => (
@@ -405,9 +407,21 @@ export default function NewGoodsReceiptPage() {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={8}>
-                    <Form.Item name="warehouseId" label="Depo">
-                      <Select placeholder="Depo seçin" allowClear>
-                        {/* Warehouses would be loaded here */}
+                    <Form.Item
+                      name="warehouseId"
+                      label="Depo"
+                      rules={[{ required: true, message: 'Depo seçin' }]}
+                    >
+                      <Select
+                        placeholder="Depo seçin"
+                        showSearch
+                        optionFilterProp="children"
+                      >
+                        {warehouses.map(warehouse => (
+                          <Select.Option key={warehouse.id} value={warehouse.id.toString()}>
+                            {warehouse.code} - {warehouse.name}
+                          </Select.Option>
+                        ))}
                       </Select>
                     </Form.Item>
                   </Col>

@@ -79,7 +79,7 @@ export default function NewPurchaseInvoicePage() {
   const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
   const { data: ordersData } = usePurchaseOrders({ pageSize: 1000 });
   const { data: receiptsData } = useGoodsReceipts({ pageSize: 1000 });
-  const { data: productsData } = useProducts({ pageSize: 1000 });
+  const { data: productsData } = useProducts();
 
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
@@ -87,7 +87,7 @@ export default function NewPurchaseInvoicePage() {
   const suppliers = suppliersData?.items || [];
   const orders = ordersData?.items || [];
   const receipts = receiptsData?.items || [];
-  const products = productsData?.items || [];
+  const products = productsData || [];
 
   const addItem = () => {
     const newItem: InvoiceItem = {
@@ -113,17 +113,17 @@ export default function NewPurchaseInvoicePage() {
     ));
   };
 
-  const handleProductSelect = (key: string, productId: string) => {
+  const handleProductSelect = (key: string, productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       setItems(items.map(item =>
         item.key === key ? {
           ...item,
-          productId,
+          productId: String(productId),
           productCode: product.code,
           productName: product.name,
-          unit: product.unit || 'Adet',
-          unitPrice: product.purchasePrice || 0,
+          unit: product.unitSymbol || product.unitName || 'Adet',
+          unitPrice: product.costPrice || 0,
         } : item
       ));
     }
@@ -206,7 +206,7 @@ export default function NewPurchaseInvoicePage() {
           showSearch
           optionFilterProp="children"
           value={record.productId}
-          onChange={(value) => handleProductSelect(record.key, value)}
+          onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
         >
           {products.map(product => (

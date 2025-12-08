@@ -24,7 +24,7 @@ import {
   WalletOutlined,
 } from '@ant-design/icons';
 import { useSupplierPayment, useUpdateSupplierPayment } from '@/lib/api/hooks/usePurchase';
-import type { PaymentMethod } from '@/lib/api/services/purchase.types';
+import { PaymentMethod } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -56,7 +56,7 @@ export default function EditSupplierPaymentPage() {
   const { data: payment, isLoading: paymentLoading } = useSupplierPayment(paymentId);
   const updatePayment = useUpdateSupplierPayment();
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('BankTransfer');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethod.BankTransfer);
 
   useEffect(() => {
     if (payment) {
