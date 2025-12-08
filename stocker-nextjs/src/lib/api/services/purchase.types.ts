@@ -1299,3 +1299,1485 @@ export interface SupplierPaymentQueryParams extends PurchaseQueryParams {
   fromDate?: DateTime;
   toDate?: DateTime;
 }
+
+// =====================================
+// QUOTATION / RFQ ENUMS
+// =====================================
+
+export enum QuotationStatus {
+  Draft = 'Draft',
+  Sent = 'Sent',
+  PartiallyResponded = 'PartiallyResponded',
+  FullyResponded = 'FullyResponded',
+  UnderReview = 'UnderReview',
+  Evaluated = 'Evaluated',
+  SupplierSelected = 'SupplierSelected',
+  Awarded = 'Awarded',
+  Converted = 'Converted',
+  Expired = 'Expired',
+  Cancelled = 'Cancelled',
+  Closed = 'Closed'
+}
+
+export enum QuotationType {
+  Standard = 'Standard',
+  Urgent = 'Urgent',
+  Framework = 'Framework',
+  Blanket = 'Blanket'
+}
+
+export enum QuotationPriority {
+  Low = 'Low',
+  Normal = 'Normal',
+  High = 'High',
+  Urgent = 'Urgent'
+}
+
+export enum SupplierResponseStatus {
+  Pending = 'Pending',
+  Responded = 'Responded',
+  Declined = 'Declined',
+  NoResponse = 'NoResponse'
+}
+
+// =====================================
+// QUOTATION / RFQ
+// =====================================
+
+export interface QuotationDto {
+  id: string;
+  quotationNumber: string;
+  title?: string;
+  description?: string;
+  status: string;
+  type: string;
+  priority: string;
+  quotationDate: DateTime;
+  responseDeadline?: DateTime;
+  validUntil?: DateTime;
+  validityPeriod?: string;
+  purchaseRequestId?: string;
+  purchaseRequestNumber?: string;
+  warehouseId?: string;
+  warehouseName?: string;
+  currency: string;
+  supplierCount: number;
+  respondedSupplierCount: number;
+  paymentTerms?: string;
+  deliveryLocation?: string;
+  notes?: string;
+  internalNotes?: string;
+  terms?: string;
+  selectedSupplierId?: string;
+  selectedSupplierName?: string;
+  selectionReason?: string;
+  selectionById?: string;
+  selectionByName?: string;
+  selectionDate?: DateTime;
+  convertedToOrderId?: string;
+  convertedOrderNumber?: string;
+  convertedDate?: DateTime;
+  createdById?: string;
+  createdByName?: string;
+  cancellationReason?: string;
+  cancelledDate?: DateTime;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  items: QuotationItemDto[];
+  suppliers: QuotationSupplierDto[];
+}
+
+export interface QuotationItemDto {
+  id: string;
+  quotationId: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  specifications?: string;
+  notes?: string;
+}
+
+export interface QuotationSupplierDto {
+  id: string;
+  quotationId: string;
+  supplierId: string;
+  supplierCode?: string;
+  supplierName: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  sentDate?: DateTime;
+  responseDate?: DateTime;
+  status: string;
+  responseStatus: string;
+  totalAmount: number;
+  currency?: string;
+  deliveryDays?: number;
+  paymentTerms?: string;
+  validUntil?: DateTime;
+  supplierNotes?: string;
+  internalEvaluation?: string;
+  evaluationScore: number;
+  isSelected: boolean;
+  items: QuotationSupplierItemDto[];
+}
+
+export interface QuotationSupplierItemDto {
+  id: string;
+  quotationSupplierId: string;
+  quotationItemId: string;
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  unit?: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountAmount: number;
+  vatRate: number;
+  vatAmount: number;
+  totalAmount: number;
+  currency?: string;
+  deliveryDays?: number;
+  notes?: string;
+  isAvailable: boolean;
+  alternativeProductCode?: string;
+  alternativeProductName?: string;
+}
+
+export interface QuotationListDto {
+  id: string;
+  quotationNumber: string;
+  title?: string;
+  status: string;
+  type: string;
+  priority: string;
+  quotationDate: DateTime;
+  responseDeadline?: DateTime;
+  purchaseRequestNumber?: string;
+  supplierCount: number;
+  respondedSupplierCount: number;
+  itemCount: number;
+  createdAt: DateTime;
+}
+
+export interface CreateQuotationDto {
+  title?: string;
+  description?: string;
+  type?: QuotationType;
+  priority?: QuotationPriority;
+  responseDeadline?: DateTime;
+  validityPeriod?: number;
+  validUntil?: DateTime;
+  purchaseRequestId?: string;
+  purchaseRequestNumber?: string;
+  warehouseId?: string;
+  warehouseName?: string;
+  currency?: string;
+  deliveryLocation?: string;
+  paymentTerms?: string;
+  notes?: string;
+  internalNotes?: string;
+  terms?: string;
+  items: CreateQuotationItemDto[];
+  supplierIds: string[];
+}
+
+export interface CreateQuotationItemDto {
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  unit?: string;
+  quantity: number;
+  specifications?: string;
+  notes?: string;
+}
+
+export interface UpdateQuotationDto {
+  title?: string;
+  priority?: QuotationPriority;
+  responseDeadline?: DateTime;
+  validUntil?: DateTime;
+  notes?: string;
+  internalNotes?: string;
+  terms?: string;
+}
+
+export interface SendQuotationDto {
+  supplierIds?: string[];
+  emailMessage?: string;
+}
+
+export interface ReceiveQuotationResponseDto {
+  supplierId: string;
+  totalAmount: number;
+  currency?: string;
+  deliveryDays?: number;
+  paymentTerms?: string;
+  validUntil?: DateTime;
+  supplierNotes?: string;
+  items: ReceiveQuotationResponseItemDto[];
+}
+
+export interface ReceiveQuotationResponseItemDto {
+  quotationItemId: string;
+  unitPrice: number;
+  discountRate?: number;
+  vatRate?: number;
+  deliveryDays?: number;
+  isAvailable: boolean;
+  alternativeProductCode?: string;
+  alternativeProductName?: string;
+  notes?: string;
+}
+
+export interface SelectSupplierDto {
+  supplierId: string;
+  selectionReason?: string;
+}
+
+export interface QuotationQueryParams extends PurchaseQueryParams {
+  status?: QuotationStatus;
+  type?: QuotationType;
+  priority?: QuotationPriority;
+  purchaseRequestId?: string;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+}
+
+// =====================================
+// PURCHASE CONTRACT ENUMS
+// =====================================
+
+export enum PurchaseContractStatus {
+  Draft = 'Draft',
+  PendingApproval = 'PendingApproval',
+  Active = 'Active',
+  Suspended = 'Suspended',
+  Expired = 'Expired',
+  Terminated = 'Terminated',
+  Renewed = 'Renewed',
+  Cancelled = 'Cancelled'
+}
+
+export enum PurchaseContractType {
+  Standard = 'Standard',
+  Blanket = 'Blanket',
+  Framework = 'Framework',
+  Volume = 'Volume',
+  ServiceLevel = 'ServiceLevel'
+}
+
+// =====================================
+// PURCHASE CONTRACT
+// =====================================
+
+export interface PurchaseContractDto {
+  id: string;
+  contractNumber: string;
+  title: string;
+  status: string;
+  type: string;
+  supplierId: string;
+  supplierCode?: string;
+  supplierName: string;
+  startDate: DateTime;
+  endDate: DateTime;
+  autoRenewal: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeDays?: number;
+  terminationNoticeDays: number;
+  minOrderValue: number;
+  maxOrderValue: number;
+  minOrderQuantity: number;
+  maxOrderQuantity: number;
+  totalContractValue: number;
+  usedValue: number;
+  remainingValue: number;
+  totalOrders: number;
+  currency: string;
+  paymentTerms?: string;
+  paymentTermDays: number;
+  discountRate: number;
+  additionalDiscount: number;
+  deliveryTerms?: string;
+  warrantyTerms?: string;
+  qualityStandards?: string;
+  penaltyTerms?: string;
+  approvedById?: string;
+  approvedByName?: string;
+  approvalDate?: DateTime;
+  signedById?: string;
+  signedByName?: string;
+  signedDate?: DateTime;
+  supplierSignedByName?: string;
+  supplierSignedDate?: DateTime;
+  previousContractId?: string;
+  renewedContractId?: string;
+  terminationReason?: string;
+  terminationDate?: DateTime;
+  notes?: string;
+  internalNotes?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  items: PurchaseContractItemDto[];
+}
+
+export interface PurchaseContractItemDto {
+  id: string;
+  purchaseContractId: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  unit?: string;
+  contractedQuantity: number;
+  orderedQuantity: number;
+  remainingQuantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountedPrice: number;
+  minOrderQuantity: number;
+  maxOrderQuantity: number;
+  deliveryLeadDays: number;
+  specifications?: string;
+  notes?: string;
+  priceBreaks: PurchaseContractPriceBreakDto[];
+}
+
+export interface PurchaseContractPriceBreakDto {
+  id: string;
+  purchaseContractItemId: string;
+  minQuantity: number;
+  maxQuantity?: number;
+  unitPrice: number;
+  discountRate: number;
+}
+
+export interface PurchaseContractListDto {
+  id: string;
+  contractNumber: string;
+  title: string;
+  status: string;
+  type: string;
+  supplierName: string;
+  startDate: DateTime;
+  endDate: DateTime;
+  totalContractValue: number;
+  usedValue: number;
+  remainingValue: number;
+  currency: string;
+  itemCount: number;
+  createdAt: DateTime;
+}
+
+export interface CreatePurchaseContractDto {
+  title: string;
+  type: PurchaseContractType;
+  supplierId: string;
+  supplierCode?: string;
+  supplierName: string;
+  startDate: DateTime;
+  endDate: DateTime;
+  autoRenewal?: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeDays?: number;
+  terminationNoticeDays?: number;
+  minOrderValue?: number;
+  maxOrderValue?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
+  totalContractValue?: number;
+  currency?: string;
+  paymentTerms?: string;
+  paymentTermDays?: number;
+  discountRate?: number;
+  additionalDiscount?: number;
+  deliveryTerms?: string;
+  warrantyTerms?: string;
+  qualityStandards?: string;
+  penaltyTerms?: string;
+  notes?: string;
+  internalNotes?: string;
+  items: CreatePurchaseContractItemDto[];
+}
+
+export interface CreatePurchaseContractItemDto {
+  productId?: string;
+  productCode: string;
+  productName: string;
+  unit?: string;
+  contractedQuantity: number;
+  unitPrice: number;
+  discountRate?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number;
+  deliveryLeadDays?: number;
+  specifications?: string;
+  notes?: string;
+  priceBreaks?: CreatePriceBreakDto[];
+}
+
+export interface CreatePriceBreakDto {
+  minQuantity: number;
+  maxQuantity?: number;
+  unitPrice: number;
+  discountRate?: number;
+}
+
+export interface UpdatePurchaseContractDto {
+  title?: string;
+  endDate?: DateTime;
+  autoRenewal?: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeDays?: number;
+  terminationNoticeDays?: number;
+  minOrderValue?: number;
+  maxOrderValue?: number;
+  paymentTerms?: string;
+  paymentTermDays?: number;
+  additionalDiscount?: number;
+  deliveryTerms?: string;
+  warrantyTerms?: string;
+  qualityStandards?: string;
+  penaltyTerms?: string;
+  notes?: string;
+  internalNotes?: string;
+}
+
+export interface TerminateContractDto {
+  terminationReason: string;
+}
+
+export interface RenewContractDto {
+  newEndDate: DateTime;
+  newTotalContractValue?: number;
+  priceAdjustmentPercent?: number;
+  notes?: string;
+}
+
+export interface CheckContractPriceDto {
+  productId: string;
+  quantity: number;
+}
+
+export interface ContractPriceResultDto {
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountedPrice: number;
+  totalAmount: number;
+  isWithinContractLimits: boolean;
+  message?: string;
+}
+
+export interface PurchaseContractQueryParams extends PurchaseQueryParams {
+  status?: PurchaseContractStatus;
+  type?: PurchaseContractType;
+  supplierId?: string;
+  isExpiringSoon?: boolean;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+}
+
+// =====================================
+// PRICE LIST ENUMS
+// =====================================
+
+export enum PriceListStatus {
+  Draft = 'Draft',
+  PendingApproval = 'PendingApproval',
+  Approved = 'Approved',
+  Active = 'Active',
+  Inactive = 'Inactive',
+  Expired = 'Expired',
+  Superseded = 'Superseded',
+  Rejected = 'Rejected'
+}
+
+export enum PriceListType {
+  Standard = 'Standard',
+  Promotional = 'Promotional',
+  Contract = 'Contract',
+  Seasonal = 'Seasonal',
+  Bulk = 'Bulk',
+  Supplier = 'Supplier'
+}
+
+// =====================================
+// PRICE LIST
+// =====================================
+
+export interface PriceListDto {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  status: string;
+  type: string;
+  supplierId?: string;
+  supplierCode?: string;
+  supplierName?: string;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  version: number;
+  previousVersionId?: string;
+  isDefault: boolean;
+  currency: string;
+  createdById?: string;
+  createdByName?: string;
+  approvedById?: string;
+  approvedByName?: string;
+  approvalDate?: DateTime;
+  notes?: string;
+  internalNotes?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  items: PriceListItemDto[];
+}
+
+export interface PriceListItemDto {
+  id: string;
+  priceListId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  productSku?: string;
+  unit?: string;
+  basePrice: number;
+  discountRate: number;
+  discountedPrice: number;
+  discountPercentage?: number;
+  currency?: string;
+  minQuantity: number;
+  maxQuantity?: number;
+  effectiveFrom?: DateTime;
+  effectiveTo?: DateTime;
+  notes?: string;
+  tiers: PriceListItemTierDto[];
+}
+
+export interface PriceListItemTierDto {
+  id: string;
+  priceListItemId: string;
+  minQuantity: number;
+  maxQuantity?: number;
+  unitPrice: number;
+  discountRate: number;
+}
+
+export interface PriceListListDto {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+  type: string;
+  supplierName?: string;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  version: number;
+  isDefault: boolean;
+  currency: string;
+  itemCount: number;
+  createdAt: DateTime;
+}
+
+export interface CreatePriceListDto {
+  code: string;
+  name: string;
+  description?: string;
+  type: PriceListType;
+  supplierId?: string;
+  supplierCode?: string;
+  supplierName?: string;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  isDefault?: boolean;
+  currency?: string;
+  notes?: string;
+  internalNotes?: string;
+  items: CreatePriceListItemDto[];
+}
+
+export interface CreatePriceListItemDto {
+  productId: string;
+  productCode?: string;
+  productName?: string;
+  unit?: string;
+  basePrice: number;
+  discountRate?: number;
+  discountPercentage?: number;
+  minQuantity?: number;
+  maxQuantity?: number;
+  effectiveFrom?: DateTime;
+  effectiveTo?: DateTime;
+  notes?: string;
+  tiers?: CreatePriceListTierDto[];
+}
+
+export interface CreatePriceListTierDto {
+  minQuantity: number;
+  maxQuantity?: number;
+  unitPrice: number;
+  discountRate?: number;
+}
+
+export interface UpdatePriceListDto {
+  name?: string;
+  description?: string;
+  effectiveTo?: DateTime;
+  isDefault?: boolean;
+  notes?: string;
+  internalNotes?: string;
+}
+
+export interface CreateNewVersionDto {
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  notes?: string;
+}
+
+export interface LookupPriceDto {
+  productId: string;
+  quantity: number;
+  supplierId?: string;
+}
+
+export interface PriceLookupResultDto {
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountedPrice: number;
+  totalAmount: number;
+  priceListId: string;
+  priceListName: string;
+  currency: string;
+  validUntil?: DateTime;
+}
+
+export interface PriceListQueryParams extends PurchaseQueryParams {
+  status?: PriceListStatus;
+  type?: PriceListType;
+  supplierId?: string;
+  isDefault?: boolean;
+  isActive?: boolean;
+  search?: string;
+  fromDate?: DateTime;
+  toDate?: DateTime;
+}
+
+// =====================================
+// PURCHASE BUDGET ENUMS
+// =====================================
+
+export enum PurchaseBudgetStatus {
+  Draft = 'Draft',
+  PendingApproval = 'PendingApproval',
+  Approved = 'Approved',
+  Active = 'Active',
+  Frozen = 'Frozen',
+  Exhausted = 'Exhausted',
+  Closed = 'Closed',
+  Rejected = 'Rejected',
+  Cancelled = 'Cancelled'
+}
+
+export enum PurchaseBudgetType {
+  Annual = 'Annual',
+  Quarterly = 'Quarterly',
+  Monthly = 'Monthly',
+  Project = 'Project',
+  Department = 'Department',
+  Category = 'Category',
+  CostCenter = 'CostCenter',
+  General = 'General'
+}
+
+export enum BudgetTransactionType {
+  Allocation = 'Allocation',
+  Commitment = 'Commitment',
+  Spend = 'Spend',
+  Release = 'Release',
+  Transfer = 'Transfer',
+  Adjustment = 'Adjustment'
+}
+
+// =====================================
+// PURCHASE BUDGET
+// =====================================
+
+export interface PurchaseBudgetDto {
+  id: string;
+  budgetCode: string;
+  code: string; // alias for budgetCode
+  name: string;
+  description?: string;
+  status: PurchaseBudgetStatus;
+  budgetType: string;
+  type: string;
+  year: number;
+  quarter?: number;
+  month?: number;
+  departmentId?: string;
+  departmentName?: string;
+  categoryId?: string;
+  categoryName?: string;
+  projectId?: string;
+  projectName?: string;
+  periodStart: DateTime;
+  periodEnd: DateTime;
+  startDate: DateTime;
+  endDate: DateTime;
+  totalAmount: number;
+  originalAmount: number;
+  currentAmount: number;
+  usedAmount: number;
+  committedAmount: number;
+  spentAmount: number;
+  remainingAmount: number;
+  availableAmount: number;
+  utilizationRate: number;
+  currency: string;
+  alertThreshold: number;
+  warningThreshold: number;
+  criticalThreshold: number;
+  isOverBudget: boolean;
+  allowOverBudget: boolean;
+  overBudgetLimit: number;
+  approvedById?: string;
+  approvedByName?: string;
+  approvalDate?: DateTime;
+  notes?: string;
+  internalNotes?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  revisions: PurchaseBudgetRevisionDto[];
+  transactions: BudgetTransactionDto[];
+}
+
+export interface PurchaseBudgetRevisionDto {
+  id: string;
+  purchaseBudgetId: string;
+  revisionNumber: number;
+  previousAmount: number;
+  newAmount: number;
+  changeAmount: number;
+  reason: string;
+  revisedById?: string;
+  revisedByName?: string;
+  revisionDate: DateTime;
+  approvedById?: string;
+  approvedByName?: string;
+  approvalDate?: DateTime;
+  notes?: string;
+}
+
+export interface PurchaseBudgetTransactionDto {
+  id: string;
+  purchaseBudgetId: string;
+  transactionType: string;
+  amount: number;
+  referenceType?: string;
+  referenceId?: string;
+  referenceNumber?: string;
+  description?: string;
+  transactionDate: DateTime;
+  createdById?: string;
+  createdByName?: string;
+  createdAt: DateTime;
+}
+
+// Alias for BudgetTransactionDto used in frontend
+export interface BudgetTransactionDto {
+  id: string;
+  transactionType: string;
+  amount: number;
+  referenceNumber?: string;
+  description?: string;
+  createdAt: DateTime;
+}
+
+export interface PurchaseBudgetListDto {
+  id: string;
+  budgetCode: string;
+  code: string; // alias for budgetCode
+  name: string;
+  status: PurchaseBudgetStatus;
+  budgetType: string;
+  type: string;
+  year: number;
+  quarter?: number;
+  departmentName?: string;
+  periodStart: DateTime;
+  periodEnd: DateTime;
+  totalAmount: number;
+  originalAmount: number;
+  currentAmount: number;
+  usedAmount: number;
+  committedAmount: number;
+  spentAmount: number;
+  remainingAmount: number;
+  availableAmount: number;
+  utilizationRate: number;
+  currency: string;
+  alertThreshold: number;
+  isOverBudget: boolean;
+  createdAt: DateTime;
+}
+
+export interface CreatePurchaseBudgetDto {
+  budgetCode?: string;
+  code?: string; // alias for budgetCode
+  name: string;
+  description?: string;
+  budgetType?: string;
+  type?: PurchaseBudgetType;
+  year?: number;
+  quarter?: number;
+  month?: number;
+  departmentId?: string;
+  departmentName?: string;
+  categoryId?: string;
+  categoryName?: string;
+  projectId?: string;
+  projectName?: string;
+  periodStart?: DateTime;
+  periodEnd?: DateTime;
+  startDate?: DateTime;
+  endDate?: DateTime;
+  totalAmount?: number;
+  originalAmount?: number;
+  currency?: string;
+  alertThreshold?: number;
+  warningThreshold?: number;
+  criticalThreshold?: number;
+  allowOverBudget?: boolean;
+  overBudgetLimit?: number;
+  notes?: string;
+  internalNotes?: string;
+}
+
+export interface UpdatePurchaseBudgetDto {
+  name?: string;
+  description?: string;
+  endDate?: DateTime;
+  warningThreshold?: number;
+  criticalThreshold?: number;
+  allowOverBudget?: boolean;
+  overBudgetLimit?: number;
+  notes?: string;
+  internalNotes?: string;
+}
+
+export interface ReviseBudgetDto {
+  newAmount: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface CheckBudgetDto {
+  amount: number;
+  departmentId?: string;
+  categoryId?: string;
+  projectId?: string;
+}
+
+export interface BudgetCheckResultDto {
+  budgetId: string;
+  budgetCode: string;
+  budgetName: string;
+  requestedAmount: number;
+  availableAmount: number;
+  isAvailable: boolean;
+  utilizationAfterCommitment: number;
+  warningLevel?: string;
+  message: string;
+}
+
+export interface CommitBudgetDto {
+  amount: number;
+  referenceType: string;
+  referenceId: string;
+  referenceNumber?: string;
+  description?: string;
+}
+
+export interface SpendBudgetDto {
+  amount: number;
+  referenceType: string;
+  referenceId: string;
+  referenceNumber?: string;
+  description?: string;
+}
+
+export interface ReleaseBudgetDto {
+  amount: number;
+  referenceType: string;
+  referenceId: string;
+  referenceNumber?: string;
+  description?: string;
+}
+
+export interface PurchaseBudgetQueryParams extends PurchaseQueryParams {
+  status?: PurchaseBudgetStatus;
+  type?: PurchaseBudgetType;
+  year?: number;
+  quarter?: number;
+  departmentId?: string;
+  isOverBudget?: boolean;
+  search?: string;
+}
+
+// =====================================
+// SUPPLIER EVALUATION ENUMS
+// =====================================
+
+export enum SupplierEvaluationStatus {
+  Draft = 'Draft',
+  Submitted = 'Submitted',
+  PendingReview = 'PendingReview',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Completed = 'Completed',
+  Archived = 'Archived'
+}
+
+// Alias for EvaluationStatus used in frontend
+export type EvaluationStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+
+export enum SupplierEvaluationType {
+  Periodic = 'Periodic',
+  Initial = 'Initial',
+  Incident = 'Incident',
+  Audit = 'Audit',
+  Recertification = 'Recertification',
+  PostDelivery = 'PostDelivery',
+  Annual = 'Annual',
+  Quarterly = 'Quarterly'
+}
+
+// Alias for EvaluationType used in frontend
+export type EvaluationType = 'Periodic' | 'PostDelivery' | 'Annual' | 'Quarterly' | 'Incident';
+
+export enum EvaluationPeriodType {
+  Monthly = 'Monthly',
+  Quarterly = 'Quarterly',
+  SemiAnnual = 'SemiAnnual',
+  Annual = 'Annual'
+}
+
+export enum SupplierRating {
+  Excellent = 'Excellent',
+  Good = 'Good',
+  Satisfactory = 'Satisfactory',
+  NeedsImprovement = 'NeedsImprovement',
+  Poor = 'Poor'
+}
+
+// =====================================
+// SUPPLIER EVALUATION
+// =====================================
+
+export interface SupplierEvaluationDto {
+  id: string;
+  evaluationNumber: string;
+  supplierId: string;
+  supplierCode?: string;
+  supplierName: string;
+  status: EvaluationStatus;
+  evaluationType: string;
+  type: string;
+  periodType: string;
+  evaluationPeriod?: string;
+  year: number;
+  quarter?: number;
+  month?: number;
+  startDate: DateTime;
+  endDate: DateTime;
+  evaluationDate: DateTime;
+  qualityScore: number;
+  deliveryScore: number;
+  priceScore: number;
+  serviceScore: number;
+  communicationScore: number;
+  responsiveness: number;
+  reliability: number;
+  flexibility: number;
+  documentation: number;
+  overallScore: number;
+  qualityWeight: number;
+  deliveryWeight: number;
+  priceWeight: number;
+  serviceWeight: number;
+  communicationWeight: number;
+  totalOrders: number;
+  onTimeDeliveries: number;
+  onTimeDeliveryRate: number;
+  totalItems: number;
+  acceptedItems: number;
+  rejectedItems: number;
+  acceptanceRate: number;
+  averageLeadTimeDays: number;
+  totalReturns: number;
+  returnRate: number;
+  totalPurchaseAmount: number;
+  averageOrderValue: number;
+  previousOverallScore?: number;
+  scoreChange?: number;
+  scoreTrend?: string;
+  rating: string;
+  rank?: number;
+  rankInCategory?: number;
+  totalSuppliersInCategory?: number;
+  evaluatedById?: string;
+  evaluatedByName?: string;
+  evaluatorName?: string;
+  strengths?: string;
+  weaknesses?: string;
+  improvementAreas?: string;
+  recommendations?: string;
+  notes?: string;
+  requiresFollowUp: boolean;
+  followUpDate?: DateTime;
+  followUpNotes?: string;
+  followUpCompleted: boolean;
+  approvedAt?: DateTime;
+  approverName?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  criteria: SupplierEvaluationCriteriaDto[];
+  history: SupplierEvaluationHistoryDto[];
+}
+
+export interface SupplierEvaluationCriteriaDto {
+  id: string;
+  evaluationId: string;
+  category: string;
+  name: string;
+  description?: string;
+  weight: number;
+  score: number;
+  weightedScore: number;
+  evidence?: string;
+  notes?: string;
+}
+
+export interface SupplierEvaluationHistoryDto {
+  id: string;
+  supplierId: string;
+  year: number;
+  quarter?: number;
+  month?: number;
+  overallScore: number;
+  qualityScore: number;
+  deliveryScore: number;
+  priceScore: number;
+  serviceScore: number;
+  communicationScore: number;
+  rating: string;
+  recordedAt: DateTime;
+}
+
+export interface SupplierEvaluationListDto {
+  id: string;
+  evaluationNumber: string;
+  supplierCode?: string;
+  supplierName: string;
+  status: EvaluationStatus;
+  evaluationType: string;
+  type: string;
+  periodType: string;
+  evaluationPeriod?: string;
+  year: number;
+  quarter?: number;
+  overallScore: number;
+  rating: string;
+  rank?: number;
+  scoreTrend?: string;
+  evaluationDate: DateTime;
+  createdAt: DateTime;
+}
+
+export interface CreateSupplierEvaluationDto {
+  supplierId: string;
+  supplierCode?: string;
+  supplierName?: string;
+  evaluationType?: string;
+  type?: SupplierEvaluationType;
+  periodType?: EvaluationPeriodType;
+  evaluationPeriod?: string;
+  evaluationDate?: DateTime;
+  year?: number;
+  quarter?: number;
+  month?: number;
+  startDate?: DateTime;
+  endDate?: DateTime;
+  qualityScore?: number;
+  deliveryScore?: number;
+  priceScore?: number;
+  serviceScore?: number;
+  responsiveness?: number;
+  reliability?: number;
+  flexibility?: number;
+  documentation?: number;
+  strengths?: string;
+  weaknesses?: string;
+  recommendations?: string;
+  notes?: string;
+}
+
+export interface UpdateSupplierEvaluationDto {
+  notes?: string;
+}
+
+export interface SetScoresDto {
+  qualityScore: number;
+  deliveryScore: number;
+  priceScore: number;
+  serviceScore: number;
+  communicationScore: number;
+}
+
+export interface SetWeightsDto {
+  qualityWeight: number;
+  deliveryWeight: number;
+  priceWeight: number;
+  serviceWeight: number;
+  communicationWeight: number;
+}
+
+export interface SetCommentsDto {
+  strengths?: string;
+  weaknesses?: string;
+  improvementAreas?: string;
+  recommendations?: string;
+  notes?: string;
+}
+
+export interface SetFollowUpDto {
+  requiresFollowUp: boolean;
+  followUpDate?: DateTime;
+  followUpNotes?: string;
+}
+
+export interface AddCriteriaDto {
+  category: string;
+  name: string;
+  description?: string;
+  weight: number;
+  score: number;
+  evidence?: string;
+  notes?: string;
+}
+
+export interface SupplierRankingDto {
+  supplierId: string;
+  supplierCode: string;
+  supplierName: string;
+  overallScore: number;
+  rating: string;
+  rank: number;
+  totalOrders: number;
+  onTimeDeliveryRate: number;
+  acceptanceRate: number;
+  scoreTrend?: string;
+}
+
+export interface SupplierEvaluationQueryParams extends PurchaseQueryParams {
+  status?: SupplierEvaluationStatus | EvaluationStatus;
+  type?: SupplierEvaluationType;
+  periodType?: EvaluationPeriodType;
+  supplierId?: string;
+  year?: number;
+  quarter?: number;
+  rating?: SupplierRating;
+  search?: string;
+}
+
+// =====================================
+// APPROVAL WORKFLOW ENUMS
+// =====================================
+
+export enum ApprovalWorkflowStatus {
+  Active = 'Active',
+  Inactive = 'Inactive',
+  Draft = 'Draft'
+}
+
+export enum ApprovalDocumentType {
+  PurchaseRequest = 'PurchaseRequest',
+  PurchaseOrder = 'PurchaseOrder',
+  PurchaseInvoice = 'PurchaseInvoice',
+  PurchaseReturn = 'PurchaseReturn',
+  SupplierPayment = 'SupplierPayment',
+  PurchaseContract = 'PurchaseContract',
+  PurchaseBudget = 'PurchaseBudget'
+}
+
+export enum ApprovalRuleType {
+  AmountBased = 'AmountBased',
+  DepartmentBased = 'DepartmentBased',
+  CategoryBased = 'CategoryBased',
+  SupplierBased = 'SupplierBased',
+  Combined = 'Combined'
+}
+
+export enum ApprovalConditionOperator {
+  GreaterThan = 'GreaterThan',
+  GreaterThanOrEqual = 'GreaterThanOrEqual',
+  LessThan = 'LessThan',
+  LessThanOrEqual = 'LessThanOrEqual',
+  Equal = 'Equal',
+  Between = 'Between'
+}
+
+export enum ApproverType {
+  User = 'User',
+  Role = 'Role',
+  Group = 'Group',
+  Manager = 'Manager'
+}
+
+// =====================================
+// APPROVAL WORKFLOW
+// =====================================
+
+export interface ApprovalWorkflowConfigDto {
+  id: string;
+  name: string;
+  description?: string;
+  documentType: string;
+  status: string;
+  isDefault: boolean;
+  priority: number;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  createdById?: string;
+  createdByName?: string;
+  notes?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  rules: ApprovalWorkflowRuleDto[];
+}
+
+export interface ApprovalWorkflowRuleDto {
+  id: string;
+  workflowConfigId: string;
+  name: string;
+  description?: string;
+  ruleType: string;
+  priority: number;
+  isActive: boolean;
+  conditionField?: string;
+  conditionOperator?: string;
+  conditionValue?: string;
+  conditionMinValue?: number;
+  conditionMaxValue?: number;
+  departmentId?: string;
+  departmentName?: string;
+  categoryId?: string;
+  categoryName?: string;
+  supplierId?: string;
+  supplierName?: string;
+  notes?: string;
+  steps: ApprovalWorkflowStepDto[];
+}
+
+export interface ApprovalWorkflowStepDto {
+  id: string;
+  workflowRuleId: string;
+  stepOrder: number;
+  name: string;
+  description?: string;
+  approverType: string;
+  approverId?: string;
+  approverName?: string;
+  approvalGroupId?: string;
+  approvalGroupName?: string;
+  requiredApprovals: number;
+  timeoutHours?: number;
+  canDelegate: boolean;
+  canSkip: boolean;
+  skipCondition?: string;
+  escalationHours?: number;
+  escalateToId?: string;
+  escalateToName?: string;
+  notes?: string;
+}
+
+export interface ApprovalGroupDto {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  members: ApprovalGroupMemberDto[];
+}
+
+export interface ApprovalGroupMemberDto {
+  id: string;
+  approvalGroupId: string;
+  userId: string;
+  userName: string;
+  email?: string;
+  canApprove: boolean;
+  canDelegate: boolean;
+  delegateToId?: string;
+  delegateToName?: string;
+  delegateFrom?: DateTime;
+  delegateTo?: DateTime;
+  isActive: boolean;
+}
+
+export interface ApprovalWorkflowConfigListDto {
+  id: string;
+  name: string;
+  documentType: string;
+  status: string;
+  isDefault: boolean;
+  priority: number;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  ruleCount: number;
+  createdAt: DateTime;
+}
+
+export interface CreateApprovalWorkflowConfigDto {
+  name: string;
+  description?: string;
+  documentType: ApprovalDocumentType;
+  isDefault?: boolean;
+  priority?: number;
+  effectiveFrom: DateTime;
+  effectiveTo?: DateTime;
+  notes?: string;
+  rules: CreateApprovalWorkflowRuleDto[];
+}
+
+export interface CreateApprovalWorkflowRuleDto {
+  name: string;
+  description?: string;
+  ruleType: ApprovalRuleType;
+  priority?: number;
+  conditionField?: string;
+  conditionOperator?: ApprovalConditionOperator;
+  conditionValue?: string;
+  conditionMinValue?: number;
+  conditionMaxValue?: number;
+  departmentId?: string;
+  departmentName?: string;
+  categoryId?: string;
+  categoryName?: string;
+  supplierId?: string;
+  supplierName?: string;
+  notes?: string;
+  steps: CreateApprovalWorkflowStepDto[];
+}
+
+export interface CreateApprovalWorkflowStepDto {
+  stepOrder: number;
+  name: string;
+  description?: string;
+  approverType: ApproverType;
+  approverId?: string;
+  approverName?: string;
+  approvalGroupId?: string;
+  approvalGroupName?: string;
+  requiredApprovals?: number;
+  timeoutHours?: number;
+  canDelegate?: boolean;
+  canSkip?: boolean;
+  skipCondition?: string;
+  escalationHours?: number;
+  escalateToId?: string;
+  escalateToName?: string;
+  notes?: string;
+}
+
+export interface UpdateApprovalWorkflowConfigDto {
+  name?: string;
+  description?: string;
+  isDefault?: boolean;
+  priority?: number;
+  effectiveTo?: DateTime;
+  notes?: string;
+}
+
+export interface CreateApprovalGroupDto {
+  name: string;
+  description?: string;
+  members: CreateApprovalGroupMemberDto[];
+}
+
+export interface CreateApprovalGroupMemberDto {
+  userId: string;
+  userName: string;
+  email?: string;
+  canApprove?: boolean;
+  canDelegate?: boolean;
+}
+
+export interface UpdateApprovalGroupDto {
+  name?: string;
+  description?: string;
+}
+
+export interface AddGroupMemberDto {
+  userId: string;
+  userName: string;
+  email?: string;
+  canApprove?: boolean;
+  canDelegate?: boolean;
+}
+
+export interface SetDelegationDto {
+  delegateToId: string;
+  delegateToName: string;
+  delegateFrom: DateTime;
+  delegateTo: DateTime;
+}
+
+export interface GetApplicableWorkflowDto {
+  documentType: ApprovalDocumentType;
+  amount?: number;
+  departmentId?: string;
+  categoryId?: string;
+  supplierId?: string;
+}
+
+export interface ApplicableWorkflowResultDto {
+  workflowConfigId: string;
+  workflowName: string;
+  ruleId: string;
+  ruleName: string;
+  steps: ApprovalWorkflowStepDto[];
+  totalSteps: number;
+  estimatedCompletionHours: number;
+}
+
+export interface ApprovalWorkflowQueryParams extends PurchaseQueryParams {
+  documentType?: ApprovalDocumentType;
+  status?: ApprovalWorkflowStatus;
+  isDefault?: boolean;
+}
+
+// =====================================
+// TYPE ALIASES FOR FRONTEND COMPATIBILITY
+// =====================================
+
+// Budget type alias for frontend pages
+export type BudgetType = 'Department' | 'Category' | 'Project' | 'CostCenter' | 'General';
+
+// Approval Workflow type aliases for hook compatibility
+export type ApprovalWorkflowDto = ApprovalWorkflowConfigDto;
+export type ApprovalWorkflowListDto = ApprovalWorkflowConfigListDto;
+export type CreateApprovalWorkflowDto = CreateApprovalWorkflowConfigDto;
+export type UpdateApprovalWorkflowDto = UpdateApprovalWorkflowConfigDto;

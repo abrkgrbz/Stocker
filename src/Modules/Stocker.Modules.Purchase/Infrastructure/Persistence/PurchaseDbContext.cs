@@ -43,6 +43,39 @@ public class PurchaseDbContext : DbContext
     // Payments
     public DbSet<SupplierPayment> SupplierPayments { get; set; } = null!;
 
+    // Quotations/RFQ
+    public DbSet<Quotation> Quotations { get; set; } = null!;
+    public DbSet<QuotationItem> QuotationItems { get; set; } = null!;
+    public DbSet<QuotationSupplier> QuotationSuppliers { get; set; } = null!;
+    public DbSet<QuotationSupplierItem> QuotationSupplierItems { get; set; } = null!;
+
+    // Contracts
+    public DbSet<PurchaseContract> PurchaseContracts { get; set; } = null!;
+    public DbSet<PurchaseContractItem> PurchaseContractItems { get; set; } = null!;
+    public DbSet<PurchaseContractPriceBreak> PurchaseContractPriceBreaks { get; set; } = null!;
+
+    // Price Lists
+    public DbSet<PriceList> PriceLists { get; set; } = null!;
+    public DbSet<PriceListItem> PriceListItems { get; set; } = null!;
+    public DbSet<PriceListItemTier> PriceListItemTiers { get; set; } = null!;
+
+    // Budgets
+    public DbSet<PurchaseBudget> PurchaseBudgets { get; set; } = null!;
+    public DbSet<PurchaseBudgetRevision> PurchaseBudgetRevisions { get; set; } = null!;
+    public DbSet<PurchaseBudgetTransaction> PurchaseBudgetTransactions { get; set; } = null!;
+
+    // Supplier Evaluations
+    public DbSet<SupplierEvaluation> SupplierEvaluations { get; set; } = null!;
+    public DbSet<SupplierEvaluationCriteria> SupplierEvaluationCriteria { get; set; } = null!;
+    public DbSet<SupplierEvaluationHistory> SupplierEvaluationHistory { get; set; } = null!;
+
+    // Approval Workflows
+    public DbSet<ApprovalWorkflowConfig> ApprovalWorkflowConfigs { get; set; } = null!;
+    public DbSet<ApprovalWorkflowRule> ApprovalWorkflowRules { get; set; } = null!;
+    public DbSet<ApprovalWorkflowStep> ApprovalWorkflowSteps { get; set; } = null!;
+    public DbSet<ApprovalGroup> ApprovalGroups { get; set; } = null!;
+    public DbSet<ApprovalGroupMember> ApprovalGroupMembers { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -70,6 +103,39 @@ public class PurchaseDbContext : DbContext
             modelBuilder.Entity<PurchaseReturn>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<PurchaseReturnItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<SupplierPayment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Quotations
+            modelBuilder.Entity<Quotation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<QuotationItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<QuotationSupplier>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<QuotationSupplierItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Contracts
+            modelBuilder.Entity<PurchaseContract>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PurchaseContractItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PurchaseContractPriceBreak>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Price Lists
+            modelBuilder.Entity<PriceList>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PriceListItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PriceListItemTier>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Budgets
+            modelBuilder.Entity<PurchaseBudget>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PurchaseBudgetRevision>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<PurchaseBudgetTransaction>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Supplier Evaluations
+            modelBuilder.Entity<SupplierEvaluation>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SupplierEvaluationCriteria>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SupplierEvaluationHistory>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Approval Workflows
+            modelBuilder.Entity<ApprovalWorkflowConfig>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ApprovalWorkflowRule>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ApprovalWorkflowStep>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ApprovalGroup>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ApprovalGroupMember>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

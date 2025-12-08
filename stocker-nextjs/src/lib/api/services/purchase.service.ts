@@ -54,6 +54,36 @@ import type {
   UpdateSupplierPaymentDto,
   SupplierPaymentQueryParams,
   SupplierPaymentSummaryDto,
+  // Quotation
+  QuotationDto,
+  QuotationListDto,
+  CreateQuotationDto,
+  UpdateQuotationDto,
+  QuotationQueryParams,
+  // PriceList
+  PriceListDto,
+  PriceListListDto,
+  CreatePriceListDto,
+  UpdatePriceListDto,
+  PriceListQueryParams,
+  // PurchaseBudget
+  PurchaseBudgetDto,
+  PurchaseBudgetListDto,
+  CreatePurchaseBudgetDto,
+  UpdatePurchaseBudgetDto,
+  PurchaseBudgetQueryParams,
+  // SupplierEvaluation
+  SupplierEvaluationDto,
+  SupplierEvaluationListDto,
+  CreateSupplierEvaluationDto,
+  UpdateSupplierEvaluationDto,
+  SupplierEvaluationQueryParams,
+  // ApprovalWorkflow
+  ApprovalWorkflowDto,
+  ApprovalWorkflowListDto,
+  CreateApprovalWorkflowDto,
+  UpdateApprovalWorkflowDto,
+  ApprovalWorkflowQueryParams,
   // Common
   PagedResult,
 } from './purchase.types';
@@ -650,6 +680,345 @@ export const SupplierPaymentService = {
 // UNIFIED PURCHASE SERVICE
 // =====================================
 
+// =====================================
+// QUOTATION SERVICE
+// =====================================
+
+export const QuotationService = {
+  // Get all quotations
+  getAll: async (params?: QuotationQueryParams): Promise<PagedResult<QuotationListDto>> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<PagedResult<QuotationListDto>>(`${BASE_URL}/quotations${query}`);
+  },
+
+  // Get quotation by ID
+  getById: async (id: string): Promise<QuotationDto> => {
+    return ApiService.get<QuotationDto>(`${BASE_URL}/quotations/${id}`);
+  },
+
+  // Create new quotation
+  create: async (data: CreateQuotationDto): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations`, data);
+  },
+
+  // Update quotation
+  update: async (id: string, data: UpdateQuotationDto): Promise<QuotationDto> => {
+    return ApiService.put<QuotationDto>(`${BASE_URL}/quotations/${id}`, data);
+  },
+
+  // Delete quotation
+  delete: async (id: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/quotations/${id}`);
+  },
+
+  // Submit for approval
+  submit: async (id: string): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/submit`);
+  },
+
+  // Send to suppliers
+  sendToSuppliers: async (id: string, supplierIds: string[]): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/send`, { supplierIds });
+  },
+
+  // Record supplier response
+  recordResponse: async (id: string, supplierId: string, response: any): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/suppliers/${supplierId}/respond`, response);
+  },
+
+  // Select winning supplier
+  selectSupplier: async (id: string, supplierId: string): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/select/${supplierId}`);
+  },
+
+  // Convert to purchase order
+  convertToOrder: async (id: string): Promise<PurchaseOrderDto> => {
+    return ApiService.post<PurchaseOrderDto>(`${BASE_URL}/quotations/${id}/convert-to-order`);
+  },
+
+  // Cancel quotation
+  cancel: async (id: string, reason: string): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/cancel`, { reason });
+  },
+
+  // Close quotation
+  close: async (id: string): Promise<QuotationDto> => {
+    return ApiService.post<QuotationDto>(`${BASE_URL}/quotations/${id}/close`);
+  },
+};
+
+// =====================================
+// PRICE LIST SERVICE
+// =====================================
+
+export const PriceListService = {
+  // Get all price lists
+  getAll: async (params?: PriceListQueryParams): Promise<PagedResult<PriceListListDto>> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<PagedResult<PriceListListDto>>(`${BASE_URL}/price-lists${query}`);
+  },
+
+  // Get price list by ID
+  getById: async (id: string): Promise<PriceListDto> => {
+    return ApiService.get<PriceListDto>(`${BASE_URL}/price-lists/${id}`);
+  },
+
+  // Create new price list
+  create: async (data: CreatePriceListDto): Promise<PriceListDto> => {
+    return ApiService.post<PriceListDto>(`${BASE_URL}/price-lists`, data);
+  },
+
+  // Update price list
+  update: async (id: string, data: UpdatePriceListDto): Promise<PriceListDto> => {
+    return ApiService.put<PriceListDto>(`${BASE_URL}/price-lists/${id}`, data);
+  },
+
+  // Delete price list
+  delete: async (id: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/price-lists/${id}`);
+  },
+
+  // Activate price list
+  activate: async (id: string): Promise<PriceListDto> => {
+    return ApiService.post<PriceListDto>(`${BASE_URL}/price-lists/${id}/activate`);
+  },
+
+  // Deactivate price list
+  deactivate: async (id: string): Promise<PriceListDto> => {
+    return ApiService.post<PriceListDto>(`${BASE_URL}/price-lists/${id}/deactivate`);
+  },
+
+  // Add item to price list
+  addItem: async (id: string, item: any): Promise<PriceListDto> => {
+    return ApiService.post<PriceListDto>(`${BASE_URL}/price-lists/${id}/items`, item);
+  },
+
+  // Update item in price list
+  updateItem: async (id: string, itemId: string, item: any): Promise<PriceListDto> => {
+    return ApiService.put<PriceListDto>(`${BASE_URL}/price-lists/${id}/items/${itemId}`, item);
+  },
+
+  // Remove item from price list
+  removeItem: async (id: string, itemId: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/price-lists/${id}/items/${itemId}`);
+  },
+
+  // Get price for product
+  getProductPrice: async (priceListId: string, productId: string, quantity: number): Promise<any> => {
+    return ApiService.get<any>(`${BASE_URL}/price-lists/${priceListId}/price?productId=${productId}&quantity=${quantity}`);
+  },
+};
+
+// =====================================
+// PURCHASE BUDGET SERVICE
+// =====================================
+
+export const PurchaseBudgetService = {
+  // Get all purchase budgets
+  getAll: async (params?: PurchaseBudgetQueryParams): Promise<PagedResult<PurchaseBudgetListDto>> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<PagedResult<PurchaseBudgetListDto>>(`${BASE_URL}/budgets${query}`);
+  },
+
+  // Get purchase budget by ID
+  getById: async (id: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.get<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}`);
+  },
+
+  // Create new purchase budget
+  create: async (data: CreatePurchaseBudgetDto): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets`, data);
+  },
+
+  // Update purchase budget
+  update: async (id: string, data: UpdatePurchaseBudgetDto): Promise<PurchaseBudgetDto> => {
+    return ApiService.put<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}`, data);
+  },
+
+  // Delete purchase budget
+  delete: async (id: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/budgets/${id}`);
+  },
+
+  // Submit for approval
+  submit: async (id: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/submit`);
+  },
+
+  // Approve budget
+  approve: async (id: string, notes?: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/approve`, { notes });
+  },
+
+  // Reject budget
+  reject: async (id: string, reason: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/reject`, { reason });
+  },
+
+  // Activate budget
+  activate: async (id: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/activate`);
+  },
+
+  // Freeze budget
+  freeze: async (id: string, reason: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/freeze`, { reason });
+  },
+
+  // Close budget
+  close: async (id: string): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/close`);
+  },
+
+  // Add revision
+  addRevision: async (id: string, revision: any): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/revisions`, revision);
+  },
+
+  // Record transaction
+  recordTransaction: async (id: string, transaction: any): Promise<PurchaseBudgetDto> => {
+    return ApiService.post<PurchaseBudgetDto>(`${BASE_URL}/budgets/${id}/transactions`, transaction);
+  },
+
+  // Check budget availability
+  checkAvailability: async (id: string, amount: number): Promise<{ available: boolean; remainingAmount: number }> => {
+    return ApiService.get<{ available: boolean; remainingAmount: number }>(
+      `${BASE_URL}/budgets/${id}/check-availability?amount=${amount}`
+    );
+  },
+};
+
+// =====================================
+// SUPPLIER EVALUATION SERVICE
+// =====================================
+
+export const SupplierEvaluationService = {
+  // Get all supplier evaluations
+  getAll: async (params?: SupplierEvaluationQueryParams): Promise<PagedResult<SupplierEvaluationListDto>> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<PagedResult<SupplierEvaluationListDto>>(`${BASE_URL}/evaluations${query}`);
+  },
+
+  // Get supplier evaluation by ID
+  getById: async (id: string): Promise<SupplierEvaluationDto> => {
+    return ApiService.get<SupplierEvaluationDto>(`${BASE_URL}/evaluations/${id}`);
+  },
+
+  // Create new supplier evaluation
+  create: async (data: CreateSupplierEvaluationDto): Promise<SupplierEvaluationDto> => {
+    return ApiService.post<SupplierEvaluationDto>(`${BASE_URL}/evaluations`, data);
+  },
+
+  // Update supplier evaluation
+  update: async (id: string, data: UpdateSupplierEvaluationDto): Promise<SupplierEvaluationDto> => {
+    return ApiService.put<SupplierEvaluationDto>(`${BASE_URL}/evaluations/${id}`, data);
+  },
+
+  // Delete supplier evaluation
+  delete: async (id: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/evaluations/${id}`);
+  },
+
+  // Submit for approval
+  submit: async (id: string): Promise<SupplierEvaluationDto> => {
+    return ApiService.post<SupplierEvaluationDto>(`${BASE_URL}/evaluations/${id}/submit`);
+  },
+
+  // Approve evaluation
+  approve: async (id: string, notes?: string): Promise<SupplierEvaluationDto> => {
+    return ApiService.post<SupplierEvaluationDto>(`${BASE_URL}/evaluations/${id}/approve`, { notes });
+  },
+
+  // Reject evaluation
+  reject: async (id: string, reason: string): Promise<SupplierEvaluationDto> => {
+    return ApiService.post<SupplierEvaluationDto>(`${BASE_URL}/evaluations/${id}/reject`, { reason });
+  },
+
+  // Get supplier rankings
+  getSupplierRankings: async (params?: { categoryId?: string; period?: string }): Promise<any[]> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<any[]>(`${BASE_URL}/evaluations/rankings${query}`);
+  },
+
+  // Get evaluation history for supplier
+  getSupplierHistory: async (supplierId: string): Promise<SupplierEvaluationDto[]> => {
+    return ApiService.get<SupplierEvaluationDto[]>(`${BASE_URL}/evaluations/supplier/${supplierId}/history`);
+  },
+};
+
+// =====================================
+// APPROVAL WORKFLOW SERVICE
+// =====================================
+
+export const ApprovalWorkflowService = {
+  // Get all approval workflows
+  getAll: async (params?: ApprovalWorkflowQueryParams): Promise<PagedResult<ApprovalWorkflowListDto>> => {
+    const query = params ? buildQueryString(params) : '';
+    return ApiService.get<PagedResult<ApprovalWorkflowListDto>>(`${BASE_URL}/workflows${query}`);
+  },
+
+  // Get approval workflow by ID
+  getById: async (id: string): Promise<ApprovalWorkflowDto> => {
+    return ApiService.get<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}`);
+  },
+
+  // Create new approval workflow
+  create: async (data: CreateApprovalWorkflowDto): Promise<ApprovalWorkflowDto> => {
+    return ApiService.post<ApprovalWorkflowDto>(`${BASE_URL}/workflows`, data);
+  },
+
+  // Update approval workflow
+  update: async (id: string, data: UpdateApprovalWorkflowDto): Promise<ApprovalWorkflowDto> => {
+    return ApiService.put<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}`, data);
+  },
+
+  // Delete approval workflow
+  delete: async (id: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/workflows/${id}`);
+  },
+
+  // Activate workflow
+  activate: async (id: string): Promise<ApprovalWorkflowDto> => {
+    return ApiService.post<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}/activate`);
+  },
+
+  // Deactivate workflow
+  deactivate: async (id: string): Promise<ApprovalWorkflowDto> => {
+    return ApiService.post<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}/deactivate`);
+  },
+
+  // Add step to workflow
+  addStep: async (id: string, step: any): Promise<ApprovalWorkflowDto> => {
+    return ApiService.post<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}/steps`, step);
+  },
+
+  // Update step in workflow
+  updateStep: async (id: string, stepId: string, step: any): Promise<ApprovalWorkflowDto> => {
+    return ApiService.put<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}/steps/${stepId}`, step);
+  },
+
+  // Remove step from workflow
+  removeStep: async (id: string, stepId: string): Promise<void> => {
+    return ApiService.delete<void>(`${BASE_URL}/workflows/${id}/steps/${stepId}`);
+  },
+
+  // Reorder steps
+  reorderSteps: async (id: string, stepIds: string[]): Promise<ApprovalWorkflowDto> => {
+    return ApiService.post<ApprovalWorkflowDto>(`${BASE_URL}/workflows/${id}/reorder`, { stepIds });
+  },
+
+  // Get applicable workflow for document
+  getApplicableWorkflow: async (documentType: string, amount: number): Promise<ApprovalWorkflowDto | null> => {
+    return ApiService.get<ApprovalWorkflowDto | null>(
+      `${BASE_URL}/workflows/applicable?documentType=${documentType}&amount=${amount}`
+    );
+  },
+};
+
+// =====================================
+// UNIFIED PURCHASE SERVICE
+// =====================================
+
 export const PurchaseService = {
   suppliers: SupplierService,
   requests: PurchaseRequestService,
@@ -658,6 +1027,11 @@ export const PurchaseService = {
   invoices: PurchaseInvoiceService,
   returns: PurchaseReturnService,
   payments: SupplierPaymentService,
+  quotations: QuotationService,
+  priceLists: PriceListService,
+  budgets: PurchaseBudgetService,
+  evaluations: SupplierEvaluationService,
+  workflows: ApprovalWorkflowService,
 };
 
 export default PurchaseService;

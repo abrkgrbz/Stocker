@@ -12,6 +12,11 @@ import {
   PurchaseInvoiceService,
   PurchaseReturnService,
   SupplierPaymentService,
+  QuotationService,
+  PriceListService,
+  PurchaseBudgetService,
+  SupplierEvaluationService,
+  ApprovalWorkflowService,
 } from '../services/purchase.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import type {
@@ -36,6 +41,21 @@ import type {
   CreateSupplierPaymentDto,
   UpdateSupplierPaymentDto,
   SupplierPaymentQueryParams,
+  CreateQuotationDto,
+  UpdateQuotationDto,
+  QuotationQueryParams,
+  CreatePriceListDto,
+  UpdatePriceListDto,
+  PriceListQueryParams,
+  CreatePurchaseBudgetDto,
+  UpdatePurchaseBudgetDto,
+  PurchaseBudgetQueryParams,
+  CreateSupplierEvaluationDto,
+  UpdateSupplierEvaluationDto,
+  SupplierEvaluationQueryParams,
+  CreateApprovalWorkflowDto,
+  UpdateApprovalWorkflowDto,
+  ApprovalWorkflowQueryParams,
 } from '../services/purchase.types';
 
 // =====================================
@@ -78,6 +98,27 @@ export const purchaseKeys = {
   payment: (id: string) => ['purchase', 'payments', id] as const,
   supplierPayments: (supplierId: string) => ['purchase', 'payments', 'supplier', supplierId] as const,
   supplierBalance: (supplierId: string) => ['purchase', 'payments', 'supplier', supplierId, 'balance'] as const,
+
+  // Quotations
+  quotations: ['purchase', 'quotations'] as const,
+  quotation: (id: string) => ['purchase', 'quotations', id] as const,
+
+  // Price Lists
+  priceLists: ['purchase', 'price-lists'] as const,
+  priceList: (id: string) => ['purchase', 'price-lists', id] as const,
+
+  // Purchase Budgets
+  budgets: ['purchase', 'budgets'] as const,
+  budget: (id: string) => ['purchase', 'budgets', id] as const,
+
+  // Supplier Evaluations
+  evaluations: ['purchase', 'evaluations'] as const,
+  evaluation: (id: string) => ['purchase', 'evaluations', id] as const,
+  supplierEvaluationHistory: (supplierId: string) => ['purchase', 'evaluations', 'supplier', supplierId] as const,
+
+  // Approval Workflows
+  workflows: ['purchase', 'workflows'] as const,
+  workflow: (id: string) => ['purchase', 'workflows', id] as const,
 };
 
 // =====================================
@@ -1672,6 +1713,662 @@ export function useProcessPurchaseRefund() {
     },
     onError: (error) => {
       showApiError(error, 'İade işlenemedi');
+    },
+  });
+}
+
+// =====================================
+// QUOTATION HOOKS
+// =====================================
+
+export function useQuotations(params?: QuotationQueryParams) {
+  return useQuery({
+    queryKey: [...purchaseKeys.quotations, params],
+    queryFn: () => QuotationService.getAll(params),
+    staleTime: 30000,
+  });
+}
+
+export function useQuotation(id: string) {
+  return useQuery({
+    queryKey: purchaseKeys.quotation(id),
+    queryFn: () => QuotationService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateQuotation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateQuotationDto) => QuotationService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Teklif talebi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateQuotation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateQuotationDto }) =>
+      QuotationService.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Teklif talebi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteQuotation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => QuotationService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Teklif talebi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi silinemedi');
+    },
+  });
+}
+
+export function useSubmitQuotation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => QuotationService.submit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Teklif talebi gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi gönderilemedi');
+    },
+  });
+}
+
+export function useSendQuotationToSuppliers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, supplierIds }: { id: string; supplierIds: string[] }) =>
+      QuotationService.sendToSuppliers(id, supplierIds),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Teklif talebi tedarikçilere gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi gönderilemedi');
+    },
+  });
+}
+
+export function useSelectQuotationSupplier() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, supplierId }: { id: string; supplierId: string }) =>
+      QuotationService.selectSupplier(id, supplierId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showSuccess('Tedarikçi seçildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Tedarikçi seçilemedi');
+    },
+  });
+}
+
+export function useConvertQuotationToOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => QuotationService.convertToOrder(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.orders });
+      showSuccess('Satın alma siparişi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sipariş oluşturulamadı');
+    },
+  });
+}
+
+export function useCancelQuotation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      QuotationService.cancel(id, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.quotations });
+      showInfo('Teklif talebi iptal edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Teklif talebi iptal edilemedi');
+    },
+  });
+}
+
+// =====================================
+// PRICE LIST HOOKS
+// =====================================
+
+export function usePriceLists(params?: PriceListQueryParams) {
+  return useQuery({
+    queryKey: [...purchaseKeys.priceLists, params],
+    queryFn: () => PriceListService.getAll(params),
+    staleTime: 30000,
+  });
+}
+
+export function usePriceList(id: string) {
+  return useQuery({
+    queryKey: purchaseKeys.priceList(id),
+    queryFn: () => PriceListService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreatePriceList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreatePriceListDto) => PriceListService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceLists });
+      showSuccess('Fiyat listesi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat listesi oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdatePriceList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdatePriceListDto }) =>
+      PriceListService.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceList(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceLists });
+      showSuccess('Fiyat listesi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat listesi güncellenemedi');
+    },
+  });
+}
+
+export function useDeletePriceList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PriceListService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceLists });
+      showSuccess('Fiyat listesi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat listesi silinemedi');
+    },
+  });
+}
+
+export function useActivatePriceList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PriceListService.activate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceList(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceLists });
+      showSuccess('Fiyat listesi aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat listesi aktifleştirilemedi');
+    },
+  });
+}
+
+export function useDeactivatePriceList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PriceListService.deactivate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceList(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.priceLists });
+      showInfo('Fiyat listesi devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat listesi devre dışı bırakılamadı');
+    },
+  });
+}
+
+// =====================================
+// PURCHASE BUDGET HOOKS
+// =====================================
+
+export function usePurchaseBudgets(params?: PurchaseBudgetQueryParams) {
+  return useQuery({
+    queryKey: [...purchaseKeys.budgets, params],
+    queryFn: () => PurchaseBudgetService.getAll(params),
+    staleTime: 30000,
+  });
+}
+
+export function usePurchaseBudget(id: string) {
+  return useQuery({
+    queryKey: purchaseKeys.budget(id),
+    queryFn: () => PurchaseBudgetService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreatePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreatePurchaseBudgetDto) => PurchaseBudgetService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdatePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdatePurchaseBudgetDto }) =>
+      PurchaseBudgetService.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe güncellenemedi');
+    },
+  });
+}
+
+export function useDeletePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseBudgetService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe silinemedi');
+    },
+  });
+}
+
+export function useSubmitPurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseBudgetService.submit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe gönderilemedi');
+    },
+  });
+}
+
+export function useApprovePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+      PurchaseBudgetService.approve(id, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe onaylanamadı');
+    },
+  });
+}
+
+export function useRejectPurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      PurchaseBudgetService.reject(id, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showInfo('Bütçe reddedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe reddedilemedi');
+    },
+  });
+}
+
+export function useActivatePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseBudgetService.activate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showSuccess('Bütçe aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe aktifleştirilemedi');
+    },
+  });
+}
+
+export function useFreezePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      PurchaseBudgetService.freeze(id, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showInfo('Bütçe donduruldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe dondurulamadı');
+    },
+  });
+}
+
+export function useClosePurchaseBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => PurchaseBudgetService.close(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budget(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.budgets });
+      showInfo('Bütçe kapatıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bütçe kapatılamadı');
+    },
+  });
+}
+
+// =====================================
+// SUPPLIER EVALUATION HOOKS
+// =====================================
+
+export function useSupplierEvaluations(params?: SupplierEvaluationQueryParams) {
+  return useQuery({
+    queryKey: [...purchaseKeys.evaluations, params],
+    queryFn: () => SupplierEvaluationService.getAll(params),
+    staleTime: 30000,
+  });
+}
+
+export function useSupplierEvaluation(id: string) {
+  return useQuery({
+    queryKey: purchaseKeys.evaluation(id),
+    queryFn: () => SupplierEvaluationService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useSupplierEvaluationHistory(supplierId: string) {
+  return useQuery({
+    queryKey: purchaseKeys.supplierEvaluationHistory(supplierId),
+    queryFn: () => SupplierEvaluationService.getSupplierHistory(supplierId),
+    enabled: !!supplierId,
+  });
+}
+
+export function useSupplierRankings(params?: { categoryId?: string; period?: string }) {
+  return useQuery({
+    queryKey: [...purchaseKeys.evaluations, 'rankings', params],
+    queryFn: () => SupplierEvaluationService.getSupplierRankings(params),
+    staleTime: 60000,
+  });
+}
+
+export function useCreateSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSupplierEvaluationDto) => SupplierEvaluationService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showSuccess('Değerlendirme oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSupplierEvaluationDto }) =>
+      SupplierEvaluationService.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showSuccess('Değerlendirme güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SupplierEvaluationService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showSuccess('Değerlendirme silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme silinemedi');
+    },
+  });
+}
+
+export function useSubmitSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SupplierEvaluationService.submit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluation(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showSuccess('Değerlendirme onaya gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme gönderilemedi');
+    },
+  });
+}
+
+export function useApproveSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+      SupplierEvaluationService.approve(id, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showSuccess('Değerlendirme onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme onaylanamadı');
+    },
+  });
+}
+
+export function useRejectSupplierEvaluation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      SupplierEvaluationService.reject(id, reason),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluation(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.evaluations });
+      showInfo('Değerlendirme reddedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Değerlendirme reddedilemedi');
+    },
+  });
+}
+
+// =====================================
+// APPROVAL WORKFLOW HOOKS
+// =====================================
+
+export function useApprovalWorkflows(params?: ApprovalWorkflowQueryParams) {
+  return useQuery({
+    queryKey: [...purchaseKeys.workflows, params],
+    queryFn: () => ApprovalWorkflowService.getAll(params),
+    staleTime: 30000,
+  });
+}
+
+export function useApprovalWorkflow(id: string) {
+  return useQuery({
+    queryKey: purchaseKeys.workflow(id),
+    queryFn: () => ApprovalWorkflowService.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useApplicableWorkflow(documentType: string, amount: number) {
+  return useQuery({
+    queryKey: [...purchaseKeys.workflows, 'applicable', documentType, amount],
+    queryFn: () => ApprovalWorkflowService.getApplicableWorkflow(documentType, amount),
+    enabled: !!documentType && amount > 0,
+  });
+}
+
+export function useCreateApprovalWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateApprovalWorkflowDto) => ApprovalWorkflowService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflows });
+      showSuccess('Onay akışı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Onay akışı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateApprovalWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateApprovalWorkflowDto }) =>
+      ApprovalWorkflowService.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflow(variables.id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflows });
+      showSuccess('Onay akışı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Onay akışı güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteApprovalWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => ApprovalWorkflowService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflows });
+      showSuccess('Onay akışı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Onay akışı silinemedi');
+    },
+  });
+}
+
+export function useActivateApprovalWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => ApprovalWorkflowService.activate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflow(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflows });
+      showSuccess('Onay akışı aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Onay akışı aktifleştirilemedi');
+    },
+  });
+}
+
+export function useDeactivateApprovalWorkflow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => ApprovalWorkflowService.deactivate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflow(id) });
+      queryClient.invalidateQueries({ queryKey: purchaseKeys.workflows });
+      showInfo('Onay akışı devre dışı bırakıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Onay akışı devre dışı bırakılamadı');
     },
   });
 }
