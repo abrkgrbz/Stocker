@@ -51,6 +51,9 @@ import {
   SkinOutlined,
   BarChartOutlined,
   IdcardOutlined,
+  ReconciliationOutlined,
+  RollbackOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -322,6 +325,50 @@ const MODULE_MENUS = {
       },
     ],
   },
+  purchase: {
+    title: 'Satın Alma',
+    icon: <ReconciliationOutlined />,
+    color: '#8b5cf6',
+    moduleCode: 'purchase',
+    description: 'Tedarik ve satın alma yönetimi',
+    items: [
+      { key: '/purchase', icon: <DashboardOutlined />, label: 'Dashboard' },
+      {
+        key: 'purchase-suppliers',
+        icon: <ShopOutlined />,
+        label: 'Tedarikçi Yönetimi',
+        children: [
+          { key: '/purchase/suppliers', icon: <ShopOutlined />, label: 'Tedarikçiler' },
+        ],
+      },
+      {
+        key: 'purchase-orders',
+        icon: <ShoppingCartOutlined />,
+        label: 'Siparişler',
+        children: [
+          { key: '/purchase/orders', icon: <ShoppingCartOutlined />, label: 'Satın Alma Siparişleri' },
+          { key: '/purchase/goods-receipts', icon: <InboxOutlined />, label: 'Mal Alım Belgeleri' },
+        ],
+      },
+      {
+        key: 'purchase-finance',
+        icon: <FileTextOutlined />,
+        label: 'Finans',
+        children: [
+          { key: '/purchase/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
+          { key: '/purchase/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
+        ],
+      },
+      {
+        key: 'purchase-returns',
+        icon: <RollbackOutlined />,
+        label: 'İadeler',
+        children: [
+          { key: '/purchase/returns', icon: <RollbackOutlined />, label: 'İade Belgeleri' },
+        ],
+      },
+    ],
+  },
   modules: {
     title: 'Modüller',
     icon: <AppstoreOutlined />,
@@ -339,6 +386,7 @@ function getCurrentModule(pathname: string): keyof typeof MODULE_MENUS | null {
   if (pathname.startsWith('/crm')) return 'crm';
   if (pathname.startsWith('/inventory')) return 'inventory';
   if (pathname.startsWith('/sales')) return 'sales';
+  if (pathname.startsWith('/purchase')) return 'purchase';
   if (pathname.startsWith('/hr')) return 'hr';
   if (pathname.startsWith('/settings')) return 'settings';
   if (pathname.startsWith('/notifications') || pathname.startsWith('/reminders')) return 'communication';
@@ -457,6 +505,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/shifts': '/hr/shifts',
       '/hr/work-schedules': '/hr/work-schedules',
       '/hr/work-locations': '/hr/work-locations',
+      // Purchase Module
+      '/purchase/suppliers': '/purchase/suppliers',
+      '/purchase/orders': '/purchase/orders',
+      '/purchase/goods-receipts': '/purchase/goods-receipts',
+      '/purchase/invoices': '/purchase/invoices',
+      '/purchase/payments': '/purchase/payments',
+      '/purchase/returns': '/purchase/returns',
     };
 
     for (const [prefix, key] of Object.entries(routeMappings)) {
