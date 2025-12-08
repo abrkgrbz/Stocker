@@ -5,19 +5,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Form,
   Button,
-  Card,
   Input,
   Select,
   DatePicker,
   InputNumber,
   Row,
   Col,
-  Typography,
   Table,
-  Space,
-  Divider,
   Switch,
+  Tabs,
   message,
+  Spin,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -26,13 +24,15 @@ import {
   PlusOutlined,
   DeleteOutlined,
   InboxOutlined,
+  InfoCircleOutlined,
+  CarOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useCreateGoodsReceipt, useSuppliers, usePurchaseOrders } from '@/lib/api/hooks/usePurchase';
 import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
-import type { GoodsReceiptType, ItemCondition } from '@/lib/api/services/purchase.types';
+import type { ItemCondition } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface ReceiptItem {
@@ -74,10 +74,10 @@ export default function NewGoodsReceiptPage() {
   const [form] = Form.useForm();
 
   const createReceipt = useCreateGoodsReceipt();
-  const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
-  const { data: ordersData } = usePurchaseOrders({ pageSize: 1000 });
-  const { data: productsData } = useProducts();
-  const { data: warehousesData } = useWarehouses();
+  const { data: suppliersData, isLoading: loadingSuppliers } = useSuppliers({ pageSize: 1000 });
+  const { data: ordersData, isLoading: loadingOrders } = usePurchaseOrders({ pageSize: 1000 });
+  const { data: productsData, isLoading: loadingProducts } = useProducts();
+  const { data: warehousesData, isLoading: loadingWarehouses } = useWarehouses();
 
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | undefined>(orderId || undefined);
@@ -87,6 +87,8 @@ export default function NewGoodsReceiptPage() {
   const products = productsData || [];
   const warehouses = warehousesData || [];
 
+  const isDataLoading = loadingSuppliers || loadingOrders || loadingProducts || loadingWarehouses;
+
   const handleOrderSelect = (orderId: string) => {
     setSelectedOrderId(orderId);
     const order = orders.find(o => o.id === orderId);
@@ -95,7 +97,6 @@ export default function NewGoodsReceiptPage() {
         supplierId: order.supplierName ? order.id : undefined,
         purchaseOrderId: orderId,
       });
-      // Note: Order items would need to be fetched separately in real implementation
     }
   };
 
@@ -137,6 +138,10 @@ export default function NewGoodsReceiptPage() {
     }
   };
 
+  const getTotalReceivedQuantity = () => {
+    return items.reduce((sum, item) => sum + item.receivedQuantity, 0);
+  };
+
   const handleSave = async (values: any) => {
     if (items.length === 0) {
       message.error('En az bir kalem eklemelisiniz');
@@ -164,6 +169,7 @@ export default function NewGoodsReceiptPage() {
           notes: item.notes,
         })),
       });
+      message.success('Mal alım belgesi başarıyla oluşturuldu');
       router.push('/purchase/goods-receipts');
     } catch (error) {
       // Error handled by hook
@@ -180,7 +186,7 @@ export default function NewGoodsReceiptPage() {
     {
       title: 'Ürün',
       key: 'product',
-      width: 250,
+      width: 220,
       render: (record: ReceiptItem) => (
         <Select
           placeholder="Ürün seçin"
@@ -189,6 +195,7 @@ export default function NewGoodsReceiptPage() {
           value={record.productId}
           onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {products.map(product => (
             <Select.Option key={product.id} value={product.id}>
@@ -202,43 +209,46 @@ export default function NewGoodsReceiptPage() {
       title: 'Birim',
       dataIndex: 'unit',
       key: 'unit',
-      width: 80,
+      width: 70,
     },
     {
-      title: 'Sipariş Miktarı',
+      title: 'Sipariş Mik.',
       key: 'orderedQuantity',
-      width: 120,
+      width: 100,
       render: (record: ReceiptItem) => (
         <InputNumber
           min={0}
           value={record.orderedQuantity}
           onChange={(value) => updateItem(record.key, 'orderedQuantity', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
     {
-      title: 'Alınan Miktar',
+      title: 'Alınan Mik.',
       key: 'receivedQuantity',
-      width: 120,
+      width: 100,
       render: (record: ReceiptItem) => (
         <InputNumber
           min={0}
           value={record.receivedQuantity}
           onChange={(value) => updateItem(record.key, 'receivedQuantity', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
     {
       title: 'Durum',
       key: 'condition',
-      width: 130,
+      width: 110,
       render: (record: ReceiptItem) => (
         <Select
           value={record.condition}
           onChange={(value) => updateItem(record.key, 'condition', value)}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {conditionOptions.map(opt => (
             <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
@@ -249,12 +259,13 @@ export default function NewGoodsReceiptPage() {
     {
       title: 'Lot No',
       key: 'lotNumber',
-      width: 120,
+      width: 110,
       render: (record: ReceiptItem) => (
         <Input
           value={record.lotNumber}
           onChange={(e) => updateItem(record.key, 'lotNumber', e.target.value)}
           placeholder="Lot no"
+          variant="filled"
         />
       ),
     },
@@ -273,6 +284,234 @@ export default function NewGoodsReceiptPage() {
     },
   ];
 
+  const tabItems = [
+    {
+      key: 'info',
+      label: (
+        <span>
+          <InfoCircleOutlined className="mr-1" />
+          Temel Bilgiler
+        </span>
+      ),
+      children: (
+        <div className="space-y-6">
+          {/* Basic Info Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Belge Bilgileri</span>
+            </div>
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">Satın Alma Siparişi</div>
+                <Form.Item name="purchaseOrderId" className="mb-4">
+                  <Select
+                    placeholder="Sipariş seçin (opsiyonel)"
+                    allowClear
+                    showSearch
+                    optionFilterProp="children"
+                    variant="filled"
+                    loading={loadingOrders}
+                    onChange={handleOrderSelect}
+                  >
+                    {orders.map(order => (
+                      <Select.Option key={order.id} value={order.id}>
+                        {order.orderNumber} - {order.supplierName}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+                <Form.Item
+                  name="supplierId"
+                  className="mb-4"
+                  rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+                >
+                  <Select
+                    placeholder="Tedarikçi seçin"
+                    showSearch
+                    optionFilterProp="children"
+                    variant="filled"
+                    loading={loadingSuppliers}
+                  >
+                    {suppliers.map(supplier => (
+                      <Select.Option key={supplier.id} value={supplier.id}>
+                        {supplier.code} - {supplier.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Belge Tarihi *</div>
+                <Form.Item
+                  name="receiptDate"
+                  className="mb-4"
+                  rules={[{ required: true, message: 'Tarih seçin' }]}
+                >
+                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Belge Tipi</div>
+                <Form.Item name="type" className="mb-4">
+                  <Select options={typeOptions} variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Depo *</div>
+                <Form.Item
+                  name="warehouseId"
+                  className="mb-4"
+                  rules={[{ required: true, message: 'Depo seçin' }]}
+                >
+                  <Select
+                    placeholder="Depo seçin"
+                    showSearch
+                    optionFilterProp="children"
+                    variant="filled"
+                    loading={loadingWarehouses}
+                  >
+                    {warehouses.map(warehouse => (
+                      <Select.Option key={warehouse.id} value={warehouse.id.toString()}>
+                        {warehouse.code} - {warehouse.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Gradient Divider */}
+          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent"></div>
+
+          {/* Quality Check */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Kalite Kontrol</span>
+            </div>
+            <Form.Item
+              name="requiresQualityCheck"
+              valuePropName="checked"
+              className="mb-0"
+            >
+              <div className="flex items-center gap-3">
+                <Switch />
+                <span className="text-sm text-gray-600">Kalite kontrolü gerekli</span>
+              </div>
+            </Form.Item>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'delivery',
+      label: (
+        <span>
+          <CarOutlined className="mr-1" />
+          Teslimat
+        </span>
+      ),
+      children: (
+        <div className="space-y-6">
+          {/* Delivery Info */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Teslimat Bilgileri</span>
+            </div>
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">İrsaliye No</div>
+                <Form.Item name="deliveryNoteNumber" className="mb-4">
+                  <Input placeholder="İrsaliye numarası" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">Teslimat Tarihi</div>
+                <Form.Item name="deliveryDate" className="mb-4">
+                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Taşıyıcı</div>
+                <Form.Item name="carrierName" className="mb-4">
+                  <Input placeholder="Kargo/taşıyıcı firma" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Şoför</div>
+                <Form.Item name="driverName" className="mb-4">
+                  <Input placeholder="Şoför adı" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Araç Plakası</div>
+                <Form.Item name="vehiclePlate" className="mb-4">
+                  <Input placeholder="Plaka" variant="filled" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Gradient Divider */}
+          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent"></div>
+
+          {/* Package Info */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Paket Bilgileri</span>
+            </div>
+            <Row gutter={16}>
+              <Col xs={12} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Toplam Paket</div>
+                <Form.Item name="totalPackages" className="mb-0">
+                  <InputNumber min={0} className="w-full" placeholder="0" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={12} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Toplam Ağırlık (kg)</div>
+                <Form.Item name="totalWeight" className="mb-0">
+                  <InputNumber min={0} step={0.1} className="w-full" placeholder="0.00" variant="filled" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'notes',
+      label: (
+        <span>
+          <FileTextOutlined className="mr-1" />
+          Notlar
+        </span>
+      ),
+      children: (
+        <div>
+          <div className="text-xs text-gray-400 mb-1">Genel Not</div>
+          <Form.Item name="notes" className="mb-0">
+            <TextArea rows={4} placeholder="Genel notlar..." variant="filled" />
+          </Form.Item>
+        </div>
+      ),
+    },
+  ];
+
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50/30 flex items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Sticky Header */}
@@ -284,7 +523,7 @@ export default function NewGoodsReceiptPage() {
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               type="text"
@@ -332,7 +571,7 @@ export default function NewGoodsReceiptPage() {
       </div>
 
       {/* Form Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-8">
         <Form
           form={form}
           layout="vertical"
@@ -343,162 +582,116 @@ export default function NewGoodsReceiptPage() {
             requiresQualityCheck: false,
           }}
         >
-          <Row gutter={24}>
-            {/* Left Column */}
-            <Col xs={24} lg={16}>
-              {/* Basic Info */}
-              <Card title="Temel Bilgiler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="purchaseOrderId"
-                      label="Satın Alma Siparişi"
+          <Row gutter={32}>
+            {/* Left Panel - Visual & Summary */}
+            <Col xs={24} lg={9}>
+              <div className="sticky top-28 space-y-6">
+                {/* Visual Card */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                  <div className="text-center mb-6">
+                    <div
+                      className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-4"
+                      style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                     >
-                      <Select
-                        placeholder="Sipariş seçin (opsiyonel)"
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                        onChange={handleOrderSelect}
-                      >
-                        {orders.map(order => (
-                          <Select.Option key={order.id} value={order.id}>
-                            {order.orderNumber} - {order.supplierName}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="supplierId"
-                      label="Tedarikçi"
-                      rules={[{ required: true, message: 'Tedarikçi seçin' }]}
-                    >
-                      <Select
-                        placeholder="Tedarikçi seçin"
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {suppliers.map(supplier => (
-                          <Select.Option key={supplier.id} value={supplier.id}>
-                            {supplier.code} - {supplier.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="receiptDate"
-                      label="Belge Tarihi"
-                      rules={[{ required: true, message: 'Tarih seçin' }]}
-                    >
-                      <DatePicker className="w-full" format="DD.MM.YYYY" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="type" label="Belge Tipi">
-                      <Select>
-                        {typeOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="warehouseId"
-                      label="Depo"
-                      rules={[{ required: true, message: 'Depo seçin' }]}
-                    >
-                      <Select
-                        placeholder="Depo seçin"
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {warehouses.map(warehouse => (
-                          <Select.Option key={warehouse.id} value={warehouse.id.toString()}>
-                            {warehouse.code} - {warehouse.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
+                      <InboxOutlined style={{ fontSize: 48, color: 'white' }} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      Mal Alım Belgesi
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Tedarikçiden alınan ürünler
+                    </p>
+                  </div>
 
-              {/* Items */}
-              <Card
-                title="Alınan Kalemler"
-                className="mb-6"
-                extra={
-                  <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
-                    Kalem Ekle
-                  </Button>
-                }
-              >
-                <Table
-                  dataSource={items}
-                  columns={itemColumns}
-                  rowKey="key"
-                  pagination={false}
-                  size="small"
-                  scroll={{ x: 900 }}
-                  locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
-                />
-              </Card>
+                  {/* Summary Stats */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-500">Kalem Sayısı</span>
+                      <span className="font-medium">{items.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-500">Toplam Alınan Miktar</span>
+                      <span className="font-medium">{getTotalReceivedQuantity()}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 bg-purple-50 rounded-lg px-3 -mx-3">
+                      <span className="text-sm font-medium text-purple-700">Durum</span>
+                      <span className="text-sm font-semibold text-purple-600">
+                        {items.length > 0 ? 'Kalem eklendi' : 'Kalem bekleniyor'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Notes */}
-              <Card title="Notlar" className="mb-6">
-                <Form.Item name="notes" noStyle>
-                  <TextArea rows={3} placeholder="Genel notlar..." />
-                </Form.Item>
-              </Card>
+                {/* Info Card */}
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100">
+                  <h4 className="text-sm font-semibold text-purple-800 mb-3">Mal Alım İşlem Akışı</h4>
+                  <ul className="space-y-2 text-sm text-purple-700">
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">1</span>
+                      <span>Sipariş ile ilişkilendirme (opsiyonel)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">2</span>
+                      <span>Alınan ürünlerin kaydedilmesi</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">3</span>
+                      <span>Stok miktarlarının otomatik güncellenmesi</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">4</span>
+                      <span>Kalite kontrolü (gerekirse)</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </Col>
 
-            {/* Right Column */}
-            <Col xs={24} lg={8}>
-              {/* Delivery Info */}
-              <Card title="Teslimat Bilgileri" className="mb-6">
-                <Form.Item name="deliveryNoteNumber" label="İrsaliye No">
-                  <Input placeholder="İrsaliye numarası" />
-                </Form.Item>
-                <Form.Item name="deliveryDate" label="Teslimat Tarihi">
-                  <DatePicker className="w-full" format="DD.MM.YYYY" />
-                </Form.Item>
-                <Divider />
-                <Form.Item name="carrierName" label="Taşıyıcı">
-                  <Input placeholder="Kargo/taşıyıcı firma" />
-                </Form.Item>
-                <Form.Item name="driverName" label="Şoför">
-                  <Input placeholder="Şoför adı" />
-                </Form.Item>
-                <Form.Item name="vehiclePlate" label="Araç Plakası">
-                  <Input placeholder="Plaka" />
-                </Form.Item>
-              </Card>
+            {/* Right Panel - Form Content */}
+            <Col xs={24} lg={15}>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <Tabs items={tabItems} className="supplier-form-tabs" />
 
-              {/* Package Info */}
-              <Card title="Paket Bilgileri" className="mb-6">
-                <Form.Item name="totalPackages" label="Toplam Paket">
-                  <InputNumber min={0} className="w-full" placeholder="0" />
-                </Form.Item>
-                <Form.Item name="totalWeight" label="Toplam Ağırlık (kg)">
-                  <InputNumber min={0} step={0.1} className="w-full" placeholder="0.00" />
-                </Form.Item>
-              </Card>
+                {/* Gradient Divider */}
+                <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent my-6"></div>
 
-              {/* Quality Check */}
-              <Card title="Kalite Kontrol" className="mb-6">
-                <Form.Item
-                  name="requiresQualityCheck"
-                  label="Kalite Kontrolü Gerekli"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-              </Card>
+                {/* Items Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700">Alınan Kalemler</span>
+                    </div>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+                      Kalem Ekle
+                    </Button>
+                  </div>
+
+                  <Table
+                    dataSource={items}
+                    columns={itemColumns}
+                    rowKey="key"
+                    pagination={false}
+                    size="small"
+                    scroll={{ x: 800 }}
+                    className="border border-gray-100 rounded-lg overflow-hidden"
+                    locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
+                    summary={() => items.length > 0 ? (
+                      <Table.Summary>
+                        <Table.Summary.Row className="bg-purple-50">
+                          <Table.Summary.Cell index={0} colSpan={3} align="right">
+                            <span className="font-semibold text-purple-700">Toplam Alınan</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={1} align="center">
+                            <span className="font-bold text-purple-600">{getTotalReceivedQuantity()}</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={2} colSpan={3} />
+                        </Table.Summary.Row>
+                      </Table.Summary>
+                    ) : null}
+                  />
+                </div>
+              </div>
             </Col>
           </Row>
         </Form>

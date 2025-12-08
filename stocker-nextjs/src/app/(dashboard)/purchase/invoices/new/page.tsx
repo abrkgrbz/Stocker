@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Form,
   Button,
-  Card,
   Input,
   Select,
   DatePicker,
@@ -14,8 +13,9 @@ import {
   Col,
   Typography,
   Table,
-  Space,
+  Spin,
   Divider,
+  Tabs,
   message,
 } from 'antd';
 import {
@@ -25,6 +25,11 @@ import {
   PlusOutlined,
   DeleteOutlined,
   FileTextOutlined,
+  ShopOutlined,
+  LinkOutlined,
+  DollarOutlined,
+  BankOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { useCreatePurchaseInvoice, useSuppliers, usePurchaseOrders, useGoodsReceipts } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
@@ -208,6 +213,7 @@ export default function NewPurchaseInvoicePage() {
           value={record.productId}
           onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {products.map(product => (
             <Select.Option key={product.id} value={product.id}>
@@ -234,6 +240,7 @@ export default function NewPurchaseInvoicePage() {
           value={record.quantity}
           onChange={(value) => updateItem(record.key, 'quantity', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
@@ -248,6 +255,7 @@ export default function NewPurchaseInvoicePage() {
           value={record.unitPrice}
           onChange={(value) => updateItem(record.key, 'unitPrice', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
           formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
         />
       ),
@@ -263,6 +271,7 @@ export default function NewPurchaseInvoicePage() {
           value={record.discountRate}
           onChange={(value) => updateItem(record.key, 'discountRate', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
@@ -275,6 +284,7 @@ export default function NewPurchaseInvoicePage() {
           value={record.vatRate}
           onChange={(value) => updateItem(record.key, 'vatRate', value)}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {vatRateOptions.map(opt => (
             <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
@@ -330,7 +340,7 @@ export default function NewPurchaseInvoicePage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
               >
                 <FileTextOutlined style={{ fontSize: 24 }} />
               </div>
@@ -368,261 +378,372 @@ export default function NewPurchaseInvoicePage() {
 
       {/* Form Content */}
       <div className="max-w-6xl mx-auto px-8 py-8">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-          initialValues={{
-            invoiceDate: dayjs(),
-            type: 'Standard',
-            currency: 'TRY',
-            exchangeRate: 1,
-            discountRate: 0,
-            withholdingTaxAmount: 0,
-          }}
-        >
-          <Row gutter={24}>
-            {/* Left Column */}
-            <Col xs={24} lg={16}>
-              {/* Basic Info */}
-              <Card title="Temel Bilgiler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="supplierId"
-                      label="Tedarikçi"
-                      rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+        <Spin spinning={isLoading}>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSave}
+              initialValues={{
+                invoiceDate: dayjs(),
+                type: 'Standard',
+                currency: 'TRY',
+                exchangeRate: 1,
+                discountRate: 0,
+                withholdingTaxAmount: 0,
+              }}
+            >
+              <Row gutter={48}>
+                {/* Left Panel - Visual & Summary */}
+                <Col xs={24} lg={10}>
+                  {/* Visual Representation */}
+                  <div className="mb-8">
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        borderRadius: '16px',
+                        padding: '40px 20px',
+                        minHeight: '200px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
                     >
-                      <Select
-                        placeholder="Tedarikçi seçin"
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {suppliers.map(supplier => (
-                          <Select.Option key={supplier.id} value={supplier.id}>
-                            {supplier.code} - {supplier.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="supplierInvoiceNumber" label="Tedarikçi Fatura No">
-                      <Input placeholder="Tedarikçi fatura numarası" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="invoiceDate"
-                      label="Fatura Tarihi"
-                      rules={[{ required: true, message: 'Tarih seçin' }]}
-                    >
-                      <DatePicker className="w-full" format="DD.MM.YYYY" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="dueDate" label="Vade Tarihi">
-                      <DatePicker className="w-full" format="DD.MM.YYYY" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="type" label="Fatura Tipi">
-                      <Select>
-                        {typeOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Related Documents */}
-              <Card title="İlişkili Belgeler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="purchaseOrderId" label="Satın Alma Siparişi">
-                      <Select
-                        placeholder="Sipariş seçin (opsiyonel)"
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {orders.map(order => (
-                          <Select.Option key={order.id} value={order.id}>
-                            {order.orderNumber} - {order.supplierName}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="goodsReceiptId" label="Mal Alım Belgesi">
-                      <Select
-                        placeholder="Mal alım belgesi seçin (opsiyonel)"
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {receipts.map(receipt => (
-                          <Select.Option key={receipt.id} value={receipt.id}>
-                            {receipt.receiptNumber} - {receipt.supplierName}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Items */}
-              <Card
-                title="Fatura Kalemleri"
-                className="mb-6"
-                extra={
-                  <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
-                    Kalem Ekle
-                  </Button>
-                }
-              >
-                <Table
-                  dataSource={items}
-                  columns={itemColumns}
-                  rowKey="key"
-                  pagination={false}
-                  size="small"
-                  scroll={{ x: 1000 }}
-                  locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
-                  summary={() => items.length > 0 ? (
-                    <Table.Summary>
-                      <Table.Summary.Row>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>Ara Toplam</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                      {totals.totalDiscount > 0 && (
-                        <Table.Summary.Row>
-                          <Table.Summary.Cell index={0} colSpan={6} align="right">
-                            <Text>Toplam İskonto</Text>
-                          </Table.Summary.Cell>
-                          <Table.Summary.Cell index={1} align="right">
-                            <Text type="success">-{totals.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                          </Table.Summary.Cell>
-                          <Table.Summary.Cell index={2} />
-                        </Table.Summary.Row>
-                      )}
-                      <Table.Summary.Row>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>Toplam KDV</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                      <Table.Summary.Row style={{ background: '#fafafa' }}>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text strong style={{ fontSize: 16 }}>Genel Toplam</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                            {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                          </Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                    </Table.Summary>
-                  ) : null}
-                />
-              </Card>
-
-              {/* Notes */}
-              <Card title="Notlar" className="mb-6">
-                <Form.Item name="notes" label="Genel Not">
-                  <TextArea rows={3} placeholder="Fatura notu..." />
-                </Form.Item>
-                <Form.Item name="internalNotes" label="Dahili Not">
-                  <TextArea rows={2} placeholder="Dahili not (müşteriye gösterilmez)..." />
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* Right Column */}
-            <Col xs={24} lg={8}>
-              {/* Currency Settings */}
-              <Card title="Para Birimi" className="mb-6">
-                <Form.Item name="currency" label="Para Birimi">
-                  <Select onChange={(value) => setSelectedCurrency(value)}>
-                    {currencyOptions.map(opt => (
-                      <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                {selectedCurrency !== 'TRY' && (
-                  <Form.Item name="exchangeRate" label="Döviz Kuru">
-                    <InputNumber
-                      min={0}
-                      step={0.0001}
-                      className="w-full"
-                      placeholder="1.00"
-                    />
-                  </Form.Item>
-                )}
-              </Card>
-
-              {/* Additional Discounts */}
-              <Card title="Ek İskonto ve Vergiler" className="mb-6">
-                <Form.Item name="discountRate" label="Genel İskonto (%)">
-                  <InputNumber min={0} max={100} className="w-full" placeholder="0" />
-                </Form.Item>
-                <Form.Item name="withholdingTaxAmount" label="Stopaj Tutarı">
-                  <InputNumber min={0} step={0.01} className="w-full" placeholder="0.00" />
-                </Form.Item>
-              </Card>
-
-              {/* E-Invoice */}
-              <Card title="E-Fatura Bilgileri" className="mb-6">
-                <Form.Item name="eInvoiceId" label="E-Fatura ID">
-                  <Input placeholder="E-Fatura ID" />
-                </Form.Item>
-                <Form.Item name="eInvoiceUUID" label="E-Fatura UUID">
-                  <Input placeholder="E-Fatura UUID" />
-                </Form.Item>
-              </Card>
-
-              {/* Summary */}
-              <Card title="Özet" className="mb-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Text type="secondary">Ara Toplam</Text>
-                    <Text>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                  </div>
-                  {totals.totalDiscount > 0 && (
-                    <div className="flex justify-between">
-                      <Text type="secondary">İskonto</Text>
-                      <Text type="success">-{totals.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                      <FileTextOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <p className="mt-4 text-lg font-medium text-white/90">
+                        Satın Alma Faturası
+                      </p>
+                      <p className="text-sm text-white/60">
+                        Tedarikçi faturası kaydedin
+                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <Text type="secondary">KDV</Text>
-                    <Text>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
                   </div>
-                  <Divider className="my-2" />
-                  <div className="flex justify-between">
-                    <Text strong style={{ fontSize: 16 }}>Genel Toplam</Text>
-                    <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                      {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </Text>
+
+                  {/* Summary Card */}
+                  <div className="bg-gray-50/50 rounded-xl p-4 mb-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Ara Toplam</span>
+                        <span>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                      </div>
+                      {totals.totalDiscount > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                          <span>İskonto</span>
+                          <span className="text-green-600">-{totals.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-gray-600">
+                        <span>KDV</span>
+                        <span>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                      </div>
+                      <Divider className="my-2" />
+                      <div className="flex justify-between text-lg font-semibold">
+                        <span>Genel Toplam</span>
+                        <span className="text-amber-600">{totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </Form>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 bg-amber-50/50 rounded-xl text-center">
+                      <div className="text-2xl font-semibold text-amber-600">
+                        {items.length}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Toplam Kalem</div>
+                    </div>
+                    <div className="p-4 bg-green-50/50 rounded-xl text-center">
+                      <div className="text-sm font-semibold text-green-600 truncate">
+                        {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Fatura Tutarı</div>
+                    </div>
+                  </div>
+
+                  {/* Currency & Tax Settings */}
+                  <div className="mt-6 space-y-4">
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      <DollarOutlined className="mr-1" />
+                      Para Birimi ve Vergiler
+                    </div>
+                    <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Para Birimi</div>
+                        <Form.Item name="currency" className="mb-0">
+                          <Select onChange={(value) => setSelectedCurrency(value)} variant="filled">
+                            {currencyOptions.map(opt => (
+                              <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </div>
+                      {selectedCurrency !== 'TRY' && (
+                        <div>
+                          <div className="text-xs text-gray-400 mb-1">Döviz Kuru</div>
+                          <Form.Item name="exchangeRate" className="mb-0">
+                            <InputNumber min={0} step={0.0001} className="w-full" placeholder="1.00" variant="filled" />
+                          </Form.Item>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Genel İskonto (%)</div>
+                        <Form.Item name="discountRate" className="mb-0">
+                          <InputNumber min={0} max={100} className="w-full" placeholder="0" variant="filled" />
+                        </Form.Item>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Stopaj Tutarı</div>
+                        <Form.Item name="withholdingTaxAmount" className="mb-0">
+                          <InputNumber min={0} step={0.01} className="w-full" placeholder="0.00" variant="filled" />
+                        </Form.Item>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Right Panel - Form Content */}
+                <Col xs={24} lg={14}>
+                  <Tabs
+                    defaultActiveKey="basic"
+                    items={[
+                      {
+                        key: 'basic',
+                        label: (
+                          <span>
+                            <ShopOutlined className="mr-1" />
+                            Temel Bilgiler
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+                                <Form.Item
+                                  name="supplierId"
+                                  rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+                                  className="mb-0"
+                                >
+                                  <Select placeholder="Tedarikçi seçin" showSearch optionFilterProp="children" variant="filled">
+                                    {suppliers.map(supplier => (
+                                      <Select.Option key={supplier.id} value={supplier.id}>
+                                        {supplier.code} - {supplier.name}
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Tedarikçi Fatura No</div>
+                                <Form.Item name="supplierInvoiceNumber" className="mb-0">
+                                  <Input placeholder="Tedarikçi fatura numarası" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Fatura Tarihi *</div>
+                                <Form.Item
+                                  name="invoiceDate"
+                                  rules={[{ required: true, message: 'Tarih seçin' }]}
+                                  className="mb-0"
+                                >
+                                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Vade Tarihi</div>
+                                <Form.Item name="dueDate" className="mb-0">
+                                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Fatura Tipi</div>
+                                <Form.Item name="type" className="mb-0">
+                                  <Select variant="filled">
+                                    {typeOptions.map(opt => (
+                                      <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'related',
+                        label: (
+                          <span>
+                            <LinkOutlined className="mr-1" />
+                            İlişkili Belgeler
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Satın Alma Siparişi</div>
+                                <Form.Item name="purchaseOrderId" className="mb-0">
+                                  <Select placeholder="Sipariş seçin (opsiyonel)" allowClear showSearch optionFilterProp="children" variant="filled">
+                                    {orders.map(order => (
+                                      <Select.Option key={order.id} value={order.id}>
+                                        {order.orderNumber} - {order.supplierName}
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Mal Alım Belgesi</div>
+                                <Form.Item name="goodsReceiptId" className="mb-0">
+                                  <Select placeholder="Mal alım belgesi seçin (opsiyonel)" allowClear showSearch optionFilterProp="children" variant="filled">
+                                    {receipts.map(receipt => (
+                                      <Select.Option key={receipt.id} value={receipt.id}>
+                                        {receipt.receiptNumber} - {receipt.supplierName}
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'einvoice',
+                        label: (
+                          <span>
+                            <BankOutlined className="mr-1" />
+                            E-Fatura
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">E-Fatura ID</div>
+                                <Form.Item name="eInvoiceId" className="mb-0">
+                                  <Input placeholder="E-Fatura ID" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">E-Fatura UUID</div>
+                                <Form.Item name="eInvoiceUUID" className="mb-0">
+                                  <Input placeholder="E-Fatura UUID" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'notes',
+                        label: (
+                          <span>
+                            <FileTextOutlined className="mr-1" />
+                            Notlar
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={24}>
+                                <div className="text-xs text-gray-400 mb-1">Genel Not</div>
+                                <Form.Item name="notes" className="mb-0">
+                                  <TextArea rows={3} placeholder="Fatura notu..." variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={24}>
+                                <div className="text-xs text-gray-400 mb-1">Dahili Not</div>
+                                <Form.Item name="internalNotes" className="mb-0">
+                                  <TextArea rows={2} placeholder="Dahili not (müşteriye gösterilmez)..." variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+
+                  {/* Divider */}
+                  <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent my-6" />
+
+                  {/* Invoice Items Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <UnorderedListOutlined className="mr-1" />
+                        Fatura Kalemleri
+                      </Text>
+                      <Button type="primary" icon={<PlusOutlined />} onClick={addItem} style={{ background: '#f59e0b' }}>
+                        Kalem Ekle
+                      </Button>
+                    </div>
+
+                    <Table
+                      dataSource={items}
+                      columns={itemColumns}
+                      rowKey="key"
+                      pagination={false}
+                      size="small"
+                      scroll={{ x: 1000 }}
+                      locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
+                      summary={() => items.length > 0 ? (
+                        <Table.Summary>
+                          <Table.Summary.Row>
+                            <Table.Summary.Cell index={0} colSpan={6} align="right">
+                              <Text>Ara Toplam</Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align="right">
+                              <Text>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} />
+                          </Table.Summary.Row>
+                          {totals.totalDiscount > 0 && (
+                            <Table.Summary.Row>
+                              <Table.Summary.Cell index={0} colSpan={6} align="right">
+                                <Text>Toplam İskonto</Text>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={1} align="right">
+                                <Text type="success">-{totals.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={2} />
+                            </Table.Summary.Row>
+                          )}
+                          <Table.Summary.Row>
+                            <Table.Summary.Cell index={0} colSpan={6} align="right">
+                              <Text>Toplam KDV</Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align="right">
+                              <Text>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} />
+                          </Table.Summary.Row>
+                          <Table.Summary.Row style={{ background: '#fffbeb' }}>
+                            <Table.Summary.Cell index={0} colSpan={6} align="right">
+                              <Text strong style={{ fontSize: 16 }}>Genel Toplam</Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={1} align="right">
+                              <Text strong style={{ fontSize: 16, color: '#f59e0b' }}>
+                                {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                              </Text>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={2} />
+                          </Table.Summary.Row>
+                        </Table.Summary>
+                      ) : null}
+                    />
+                  </div>
+                </Col>
+              </Row>
+            </Form>
+          </div>
+        </Spin>
       </div>
     </div>
   );

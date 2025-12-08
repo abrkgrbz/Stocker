@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Form,
   Button,
-  Card,
   Input,
   Select,
   DatePicker,
@@ -14,7 +13,8 @@ import {
   Col,
   Typography,
   Divider,
-  message,
+  Spin,
+  Tabs,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -25,13 +25,14 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   SyncOutlined,
+  ShopOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useCreateSupplierPayment, useSuppliers, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
 import { PaymentMethod, PurchaseInvoiceStatus } from '@/lib/api/services/purchase.types';
-import type { SupplierPaymentType } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 const typeOptions = [
@@ -70,21 +71,40 @@ export default function NewSupplierPaymentPage() {
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethod.BankTransfer);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   const suppliers = suppliersData?.items || [];
   const invoices = invoicesData?.items || [];
 
+  useEffect(() => {
+    if (invoiceId) {
+      const invoice = invoices.find(inv => inv.id === invoiceId);
+      if (invoice) {
+        setSelectedInvoice(invoice);
+        setPaymentAmount(invoice.remainingAmount);
+        const supplier = suppliers.find(s => s.name === invoice.supplierName);
+        form.setFieldsValue({
+          supplierId: supplier?.id,
+          purchaseInvoiceId: invoiceId,
+          amount: invoice.remainingAmount,
+        });
+      }
+    }
+  }, [invoiceId, invoices, suppliers, form]);
+
   const handleInvoiceSelect = (invoiceId: string) => {
     const invoice = invoices.find(inv => inv.id === invoiceId);
     if (invoice) {
-      // Find the supplier and set it
+      setSelectedInvoice(invoice);
+      setPaymentAmount(invoice.remainingAmount);
       const supplier = suppliers.find(s => s.name === invoice.supplierName);
       form.setFieldsValue({
         supplierId: supplier?.id,
         amount: invoice.remainingAmount,
-        purchaseInvoiceId: invoiceId,
-        purchaseInvoiceNumber: invoice.invoiceNumber,
       });
+    } else {
+      setSelectedInvoice(null);
     }
   };
 
@@ -97,7 +117,6 @@ export default function NewSupplierPaymentPage() {
         currency: selectedCurrency,
         method: selectedMethod,
       });
-      message.success('Ödeme başarıyla oluşturuldu');
       router.push('/purchase/payments');
     } catch (error) {
       // Error handled by hook
@@ -123,7 +142,7 @@ export default function NewSupplierPaymentPage() {
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               type="text"
@@ -134,7 +153,7 @@ export default function NewSupplierPaymentPage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}
               >
                 <WalletOutlined style={{ fontSize: 24 }} />
               </div>
@@ -171,248 +190,373 @@ export default function NewSupplierPaymentPage() {
       </div>
 
       {/* Form Content */}
-      <div className="max-w-4xl mx-auto px-8 py-8">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-          initialValues={{
-            paymentDate: dayjs(),
-            type: 'Standard',
-            method: 'BankTransfer',
-            currency: 'TRY',
-            exchangeRate: 1,
-            amount: 0,
-          }}
-        >
-          <Row gutter={24}>
-            {/* Left Column */}
-            <Col xs={24} lg={14}>
-              {/* Basic Info */}
-              <Card title="Temel Bilgiler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="supplierId"
-                      label="Tedarikçi"
-                      rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+      <div className="max-w-6xl mx-auto px-8 py-8">
+        <Spin spinning={isLoading}>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSave}
+              initialValues={{
+                paymentDate: dayjs(),
+                type: 'Standard',
+                method: 'BankTransfer',
+                currency: 'TRY',
+                exchangeRate: 1,
+                amount: 0,
+              }}
+            >
+              <Row gutter={48}>
+                {/* Left Panel - Visual & Summary */}
+                <Col xs={24} lg={10}>
+                  {/* Visual Representation */}
+                  <div className="mb-8">
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                        borderRadius: '16px',
+                        padding: '40px 20px',
+                        minHeight: '200px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
                     >
-                      <Select
-                        placeholder="Tedarikçi seçin"
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {suppliers.map(supplier => (
-                          <Select.Option key={supplier.id} value={supplier.id}>
-                            {supplier.code} - {supplier.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="purchaseInvoiceId" label="İlişkili Fatura">
-                      <Select
-                        placeholder="Fatura seçin (opsiyonel)"
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                        onChange={handleInvoiceSelect}
-                      >
-                        {invoices.map(invoice => (
-                          <Select.Option key={invoice.id} value={invoice.id}>
-                            {invoice.invoiceNumber} - {invoice.supplierName} ({invoice.remainingAmount.toLocaleString('tr-TR')} ₺)
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item
-                      name="paymentDate"
-                      label="Ödeme Tarihi"
-                      rules={[{ required: true, message: 'Tarih seçin' }]}
-                    >
-                      <DatePicker className="w-full" format="DD.MM.YYYY" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="type" label="Ödeme Tipi">
-                      <Select>
-                        {typeOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="method" label="Ödeme Yöntemi">
-                      <Select onChange={(value) => setSelectedMethod(value)}>
-                        {methodOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>
-                            <span className="flex items-center gap-2">
-                              {opt.icon} {opt.label}
-                            </span>
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Amount */}
-              <Card title="Tutar Bilgileri" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="amount"
-                      label="Ödeme Tutarı"
-                      rules={[{ required: true, message: 'Tutar girin' }]}
-                    >
-                      <InputNumber
-                        min={0}
-                        step={0.01}
-                        className="w-full"
-                        placeholder="0.00"
-                        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        style={{ width: '100%' }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={6}>
-                    <Form.Item name="currency" label="Para Birimi">
-                      <Select onChange={(value) => setSelectedCurrency(value)}>
-                        {currencyOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  {selectedCurrency !== 'TRY' && (
-                    <Col xs={24} md={6}>
-                      <Form.Item name="exchangeRate" label="Döviz Kuru">
-                        <InputNumber
-                          min={0}
-                          step={0.0001}
-                          className="w-full"
-                          placeholder="1.00"
-                        />
-                      </Form.Item>
-                    </Col>
-                  )}
-                </Row>
-              </Card>
-
-              {/* Bank Details */}
-              {showBankFields && (
-                <Card title="Banka Bilgileri" className="mb-6">
-                  <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="bankName" label="Banka Adı">
-                        <Input placeholder="Banka adı" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="bankAccountNumber" label="Hesap No">
-                        <Input placeholder="Hesap numarası" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24}>
-                      <Form.Item name="iban" label="IBAN">
-                        <Input placeholder="TR00 0000 0000 0000 0000 0000 00" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="swiftCode" label="SWIFT Kodu">
-                        <Input placeholder="SWIFT kodu" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Card>
-              )}
-
-              {/* Check Details */}
-              {showCheckFields && (
-                <Card title="Çek Bilgileri" className="mb-6">
-                  <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="checkNumber" label="Çek No">
-                        <Input placeholder="Çek numarası" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="checkDate" label="Çek Tarihi">
-                        <DatePicker className="w-full" format="DD.MM.YYYY" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item name="bankName" label="Banka">
-                        <Input placeholder="Çekin bankası" />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Card>
-              )}
-
-              {/* Notes */}
-              <Card title="Notlar" className="mb-6">
-                <Form.Item name="description" label="Açıklama">
-                  <TextArea rows={2} placeholder="Ödeme açıklaması..." />
-                </Form.Item>
-                <Form.Item name="notes" label="Genel Not">
-                  <TextArea rows={2} placeholder="Genel notlar..." />
-                </Form.Item>
-                <Form.Item name="internalNotes" label="Dahili Not">
-                  <TextArea rows={2} placeholder="Dahili not (müşteriye gösterilmez)..." />
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* Right Column - Summary */}
-            <Col xs={24} lg={10}>
-              <Card title="Özet" className="mb-6 sticky top-28">
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-sm text-gray-500 mb-1">Ödeme Tutarı</div>
-                    <div className="text-3xl font-bold text-green-600">
-                      {(form.getFieldValue('amount') || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {selectedCurrency === 'TRY' ? '₺' : selectedCurrency}
+                      <WalletOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <p className="mt-4 text-lg font-medium text-white/90">
+                        Tedarikçi Ödemesi
+                      </p>
+                      <p className="text-sm text-white/60">
+                        Ödeme detaylarını kaydedin
+                      </p>
                     </div>
                   </div>
 
-                  <Divider />
+                  {/* Summary Card */}
+                  <div className="bg-gray-50/50 rounded-xl p-4 mb-6">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Ödeme Tutarı</span>
+                        <span className="font-semibold text-cyan-600 text-lg">
+                          {paymentAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        </span>
+                      </div>
+                      {selectedInvoice && (
+                        <>
+                          <Divider className="my-2" />
+                          <div className="flex justify-between text-gray-600 text-sm">
+                            <span>Fatura Toplamı</span>
+                            <span>{selectedInvoice.totalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                          </div>
+                          <div className="flex justify-between text-gray-600 text-sm">
+                            <span>Ödenen</span>
+                            <span className="text-green-600">{selectedInvoice.paidAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                          </div>
+                          <div className="flex justify-between text-gray-600 text-sm">
+                            <span>Kalan Borç</span>
+                            <span className="text-red-500">{selectedInvoice.remainingAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Text type="secondary">Ödeme Yöntemi</Text>
-                      <Text strong>
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 bg-cyan-50/50 rounded-xl text-center">
+                      <div className="text-sm font-semibold text-cyan-600 truncate">
                         {methodOptions.find(m => m.value === selectedMethod)?.label || '-'}
-                      </Text>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Ödeme Yöntemi</div>
                     </div>
-                    <div className="flex justify-between">
-                      <Text type="secondary">Para Birimi</Text>
-                      <Text strong>{selectedCurrency}</Text>
+                    <div className="p-4 bg-green-50/50 rounded-xl text-center">
+                      <div className="text-sm font-semibold text-green-600 truncate">
+                        {selectedCurrency}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">Para Birimi</div>
                     </div>
                   </div>
 
-                  <Divider />
-
-                  <div className="text-xs text-gray-500">
-                    <p className="mb-2">
-                      • Ödeme kaydedildikten sonra onay sürecine gönderilecektir.
-                    </p>
-                    <p className="mb-2">
-                      • Onaylanan ödemeler işlendikten sonra tamamlanmış olarak işaretlenebilir.
-                    </p>
-                    <p>
-                      • Banka mutabakatı için işlendikten sonra mutabakat yapılması gerekir.
-                    </p>
+                  {/* Currency Settings */}
+                  <div className="mt-6 space-y-4">
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      <DollarOutlined className="mr-1" />
+                      Para Birimi
+                    </div>
+                    <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Para Birimi</div>
+                        <Form.Item name="currency" className="mb-0">
+                          <Select onChange={(value) => setSelectedCurrency(value)} variant="filled">
+                            {currencyOptions.map(opt => (
+                              <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </div>
+                      {selectedCurrency !== 'TRY' && (
+                        <div>
+                          <div className="text-xs text-gray-400 mb-1">Döviz Kuru</div>
+                          <Form.Item name="exchangeRate" className="mb-0">
+                            <InputNumber min={0} step={0.0001} className="w-full" placeholder="1.00" variant="filled" />
+                          </Form.Item>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </Form>
+
+                  {/* Info Box */}
+                  <div className="mt-6 p-4 bg-blue-50/50 rounded-xl">
+                    <div className="text-xs text-gray-600 space-y-2">
+                      <p>• Ödeme kaydedildikten sonra onay sürecine gönderilecektir.</p>
+                      <p>• Onaylanan ödemeler işlendikten sonra tamamlanmış olarak işaretlenebilir.</p>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Right Panel - Form Content */}
+                <Col xs={24} lg={14}>
+                  <Tabs
+                    defaultActiveKey="basic"
+                    items={[
+                      {
+                        key: 'basic',
+                        label: (
+                          <span>
+                            <ShopOutlined className="mr-1" />
+                            Ödeme Bilgileri
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+                                <Form.Item
+                                  name="supplierId"
+                                  rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+                                  className="mb-0"
+                                >
+                                  <Select
+                                    placeholder="Tedarikçi seçin"
+                                    showSearch
+                                    optionFilterProp="children"
+                                    variant="filled"
+                                  >
+                                    {suppliers.map(supplier => (
+                                      <Select.Option key={supplier.id} value={supplier.id}>
+                                        {supplier.code} - {supplier.name}
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">İlişkili Fatura</div>
+                                <Form.Item name="purchaseInvoiceId" className="mb-0">
+                                  <Select
+                                    placeholder="Fatura seçin (opsiyonel)"
+                                    allowClear
+                                    showSearch
+                                    optionFilterProp="children"
+                                    onChange={handleInvoiceSelect}
+                                    variant="filled"
+                                  >
+                                    {invoices.map(invoice => (
+                                      <Select.Option key={invoice.id} value={invoice.id}>
+                                        {invoice.invoiceNumber} - {invoice.remainingAmount?.toLocaleString('tr-TR')} ₺
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Ödeme Tarihi *</div>
+                                <Form.Item
+                                  name="paymentDate"
+                                  rules={[{ required: true, message: 'Tarih seçin' }]}
+                                  className="mb-0"
+                                >
+                                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Ödeme Tipi</div>
+                                <Form.Item name="type" className="mb-0">
+                                  <Select variant="filled">
+                                    {typeOptions.map(opt => (
+                                      <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                              <Col span={8}>
+                                <div className="text-xs text-gray-400 mb-1">Ödeme Yöntemi</div>
+                                <Form.Item name="method" className="mb-0">
+                                  <Select onChange={(value) => setSelectedMethod(value)} variant="filled">
+                                    {methodOptions.map(opt => (
+                                      <Select.Option key={opt.value} value={opt.value}>
+                                        <span className="flex items-center gap-2">
+                                          {opt.icon} {opt.label}
+                                        </span>
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Ödeme Tutarı *</div>
+                                <Form.Item
+                                  name="amount"
+                                  rules={[{ required: true, message: 'Tutar girin' }]}
+                                  className="mb-0"
+                                >
+                                  <InputNumber
+                                    min={0}
+                                    step={0.01}
+                                    className="w-full"
+                                    placeholder="0.00"
+                                    variant="filled"
+                                    onChange={(val) => setPaymentAmount(val || 0)}
+                                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                  />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <div className="text-xs text-gray-400 mb-1">Referans No</div>
+                                <Form.Item name="referenceNumber" className="mb-0">
+                                  <Input placeholder="Ödeme referans numarası" variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'bank',
+                        label: (
+                          <span>
+                            <BankOutlined className="mr-1" />
+                            Banka Bilgileri
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            {showBankFields ? (
+                              <>
+                                <Row gutter={16}>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">Banka Adı</div>
+                                    <Form.Item name="bankName" className="mb-0">
+                                      <Input placeholder="Banka adı" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">Hesap No</div>
+                                    <Form.Item name="bankAccountNumber" className="mb-0">
+                                      <Input placeholder="Hesap numarası" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                                <Row gutter={16}>
+                                  <Col span={24}>
+                                    <div className="text-xs text-gray-400 mb-1">IBAN</div>
+                                    <Form.Item name="iban" className="mb-0">
+                                      <Input placeholder="TR00 0000 0000 0000 0000 0000 00" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                                <Row gutter={16}>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">SWIFT Kodu</div>
+                                    <Form.Item name="swiftCode" className="mb-0">
+                                      <Input placeholder="SWIFT kodu" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                              </>
+                            ) : showCheckFields ? (
+                              <>
+                                <Row gutter={16}>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">Çek No</div>
+                                    <Form.Item name="checkNumber" className="mb-0">
+                                      <Input placeholder="Çek numarası" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">Çek Tarihi</div>
+                                    <Form.Item name="checkDate" className="mb-0">
+                                      <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                                <Row gutter={16}>
+                                  <Col span={12}>
+                                    <div className="text-xs text-gray-400 mb-1">Banka</div>
+                                    <Form.Item name="bankName" className="mb-0">
+                                      <Input placeholder="Çekin bankası" variant="filled" />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                              </>
+                            ) : (
+                              <div className="text-center text-gray-400 py-8">
+                                Seçilen ödeme yöntemi için banka bilgisi gerekli değil.
+                              </div>
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
+                        key: 'notes',
+                        label: (
+                          <span>
+                            <FileTextOutlined className="mr-1" />
+                            Notlar
+                          </span>
+                        ),
+                        children: (
+                          <div className="space-y-4">
+                            <Row gutter={16}>
+                              <Col span={24}>
+                                <div className="text-xs text-gray-400 mb-1">Açıklama</div>
+                                <Form.Item name="description" className="mb-0">
+                                  <TextArea rows={2} placeholder="Ödeme açıklaması..." variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={24}>
+                                <div className="text-xs text-gray-400 mb-1">Genel Not</div>
+                                <Form.Item name="notes" className="mb-0">
+                                  <TextArea rows={2} placeholder="Genel notlar..." variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                            <Row gutter={16}>
+                              <Col span={24}>
+                                <div className="text-xs text-gray-400 mb-1">Dahili Not</div>
+                                <Form.Item name="internalNotes" className="mb-0">
+                                  <TextArea rows={2} placeholder="Dahili not (müşteriye gösterilmez)..." variant="filled" />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+                </Col>
+              </Row>
+            </Form>
+          </div>
+        </Spin>
       </div>
     </div>
   );

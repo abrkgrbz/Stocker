@@ -5,17 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Form,
   Button,
-  Card,
   Input,
   Select,
   DatePicker,
   InputNumber,
   Row,
   Col,
-  Typography,
   Table,
-  Divider,
+  Tabs,
   message,
+  Spin,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -24,14 +23,15 @@ import {
   PlusOutlined,
   DeleteOutlined,
   RollbackOutlined,
+  InfoCircleOutlined,
+  FileTextOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import { useCreatePurchaseReturn, useSuppliers, usePurchaseOrders, useGoodsReceipts, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import { PurchaseReturnItemReason, ItemCondition } from '@/lib/api/services/purchase.types';
-import type { PurchaseReturnType, PurchaseReturnReason, RefundMethod } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface ReturnItem {
@@ -106,11 +106,11 @@ export default function NewPurchaseReturnPage() {
   const [form] = Form.useForm();
 
   const createReturn = useCreatePurchaseReturn();
-  const { data: suppliersData } = useSuppliers({ pageSize: 1000 });
-  const { data: ordersData } = usePurchaseOrders({ pageSize: 1000 });
-  const { data: receiptsData } = useGoodsReceipts({ pageSize: 1000 });
-  const { data: invoicesData } = usePurchaseInvoices({ pageSize: 1000 });
-  const { data: productsData } = useProducts();
+  const { data: suppliersData, isLoading: loadingSuppliers } = useSuppliers({ pageSize: 1000 });
+  const { data: ordersData, isLoading: loadingOrders } = usePurchaseOrders({ pageSize: 1000 });
+  const { data: receiptsData, isLoading: loadingReceipts } = useGoodsReceipts({ pageSize: 1000 });
+  const { data: invoicesData, isLoading: loadingInvoices } = usePurchaseInvoices({ pageSize: 1000 });
+  const { data: productsData, isLoading: loadingProducts } = useProducts();
 
   const [items, setItems] = useState<ReturnItem[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
@@ -120,6 +120,8 @@ export default function NewPurchaseReturnPage() {
   const receipts = receiptsData?.items || [];
   const invoices = invoicesData?.items || [];
   const products = productsData || [];
+
+  const isDataLoading = loadingSuppliers || loadingOrders || loadingReceipts || loadingInvoices || loadingProducts;
 
   const addItem = () => {
     const newItem: ReturnItem = {
@@ -185,6 +187,14 @@ export default function NewPurchaseReturnPage() {
 
   const totals = calculateTotals();
 
+  const getCurrencySymbol = () => {
+    switch (selectedCurrency) {
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      default: return '₺';
+    }
+  };
+
   const handleSave = async (values: any) => {
     if (items.length === 0) {
       message.error('En az bir kalem eklemelisiniz');
@@ -228,7 +238,7 @@ export default function NewPurchaseReturnPage() {
     {
       title: 'Ürün',
       key: 'product',
-      width: 220,
+      width: 200,
       render: (record: ReturnItem) => (
         <Select
           placeholder="Ürün seçin"
@@ -237,6 +247,7 @@ export default function NewPurchaseReturnPage() {
           value={record.productId}
           onChange={(value) => handleProductSelect(record.key, Number(value))}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {products.map(product => (
             <Select.Option key={product.id} value={product.id}>
@@ -257,11 +268,12 @@ export default function NewPurchaseReturnPage() {
           value={record.quantity}
           onChange={(value) => updateItem(record.key, 'quantity', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
     {
-      title: 'Fiyat',
+      title: 'Birim Fiyat',
       key: 'unitPrice',
       width: 100,
       render: (record: ReturnItem) => (
@@ -271,6 +283,7 @@ export default function NewPurchaseReturnPage() {
           value={record.unitPrice}
           onChange={(value) => updateItem(record.key, 'unitPrice', value || 0)}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
@@ -283,6 +296,7 @@ export default function NewPurchaseReturnPage() {
           value={record.vatRate}
           onChange={(value) => updateItem(record.key, 'vatRate', value)}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {vatRateOptions.map(opt => (
             <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
@@ -299,6 +313,7 @@ export default function NewPurchaseReturnPage() {
           value={record.reason}
           onChange={(value) => updateItem(record.key, 'reason', value)}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {reasonOptions.map(opt => (
             <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
@@ -315,6 +330,7 @@ export default function NewPurchaseReturnPage() {
           value={record.condition}
           onChange={(value) => updateItem(record.key, 'condition', value)}
           style={{ width: '100%' }}
+          variant="filled"
         >
           {conditionOptions.map(opt => (
             <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
@@ -328,9 +344,9 @@ export default function NewPurchaseReturnPage() {
       width: 100,
       align: 'right' as const,
       render: (record: ReturnItem) => (
-        <Text strong className="text-red-600">
-          {calculateItemTotal(record).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-        </Text>
+        <span className="font-medium text-orange-600">
+          {calculateItemTotal(record).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}
+        </span>
       ),
     },
     {
@@ -348,6 +364,229 @@ export default function NewPurchaseReturnPage() {
     },
   ];
 
+  const tabItems = [
+    {
+      key: 'info',
+      label: (
+        <span>
+          <InfoCircleOutlined className="mr-1" />
+          İade Bilgileri
+        </span>
+      ),
+      children: (
+        <div className="space-y-6">
+          {/* Basic Info Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Temel Bilgiler</span>
+            </div>
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+                <Form.Item
+                  name="supplierId"
+                  className="mb-4"
+                  rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+                >
+                  <Select
+                    placeholder="Tedarikçi seçin"
+                    showSearch
+                    optionFilterProp="children"
+                    variant="filled"
+                    loading={loadingSuppliers}
+                  >
+                    {suppliers.map(supplier => (
+                      <Select.Option key={supplier.id} value={supplier.id}>
+                        {supplier.code} - {supplier.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <div className="text-xs text-gray-400 mb-1">İade Tarihi *</div>
+                <Form.Item
+                  name="returnDate"
+                  className="mb-4"
+                  rules={[{ required: true, message: 'Tarih seçin' }]}
+                >
+                  <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">İade Tipi</div>
+                <Form.Item name="type" className="mb-4">
+                  <Select options={typeOptions} variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">İade Sebebi</div>
+                <Form.Item name="reason" className="mb-4">
+                  <Select options={reasonOptions} variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <div className="text-xs text-gray-400 mb-1">İade Yöntemi</div>
+                <Form.Item name="refundMethod" className="mb-4">
+                  <Select placeholder="Seçin (opsiyonel)" allowClear options={refundMethodOptions} variant="filled" />
+                </Form.Item>
+              </Col>
+              <Col xs={24}>
+                <div className="text-xs text-gray-400 mb-1">Sebep Detayı</div>
+                <Form.Item name="reasonDetails" className="mb-0">
+                  <TextArea rows={2} placeholder="İade sebebini detaylı açıklayın..." variant="filled" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Gradient Divider */}
+          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent"></div>
+
+          {/* Currency Settings */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Para Birimi</span>
+            </div>
+            <Row gutter={16}>
+              <Col xs={12} md={8}>
+                <div className="text-xs text-gray-400 mb-1">Para Birimi</div>
+                <Form.Item name="currency" className="mb-0">
+                  <Select
+                    options={currencyOptions}
+                    variant="filled"
+                    onChange={(value) => setSelectedCurrency(value)}
+                  />
+                </Form.Item>
+              </Col>
+              {selectedCurrency !== 'TRY' && (
+                <Col xs={12} md={8}>
+                  <div className="text-xs text-gray-400 mb-1">Döviz Kuru</div>
+                  <Form.Item name="exchangeRate" className="mb-0">
+                    <InputNumber min={0} step={0.0001} className="w-full" variant="filled" />
+                  </Form.Item>
+                </Col>
+              )}
+            </Row>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'documents',
+      label: (
+        <span>
+          <LinkOutlined className="mr-1" />
+          İlişkili Belgeler
+        </span>
+      ),
+      children: (
+        <div className="space-y-4">
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <div className="text-xs text-gray-400 mb-1">Sipariş</div>
+              <Form.Item name="purchaseOrderId" className="mb-4">
+                <Select
+                  placeholder="Seçin (opsiyonel)"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  variant="filled"
+                  loading={loadingOrders}
+                >
+                  {orders.map(order => (
+                    <Select.Option key={order.id} value={order.id}>
+                      {order.orderNumber}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <div className="text-xs text-gray-400 mb-1">Mal Alım</div>
+              <Form.Item name="goodsReceiptId" className="mb-4">
+                <Select
+                  placeholder="Seçin (opsiyonel)"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  variant="filled"
+                  loading={loadingReceipts}
+                >
+                  {receipts.map(receipt => (
+                    <Select.Option key={receipt.id} value={receipt.id}>
+                      {receipt.receiptNumber}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <div className="text-xs text-gray-400 mb-1">Fatura</div>
+              <Form.Item name="purchaseInvoiceId" className="mb-4">
+                <Select
+                  placeholder="Seçin (opsiyonel)"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  variant="filled"
+                  loading={loadingInvoices}
+                >
+                  {invoices.map(invoice => (
+                    <Select.Option key={invoice.id} value={invoice.id}>
+                      {invoice.invoiceNumber}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500">
+            <p className="mb-2">• İlişkili belge seçimi opsiyoneldir.</p>
+            <p className="mb-2">• Sipariş, mal alım veya fatura ile ilişkilendirme yapabilirsiniz.</p>
+            <p>• Bu bağlantılar raporlama ve takip için kullanılır.</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'notes',
+      label: (
+        <span>
+          <FileTextOutlined className="mr-1" />
+          Notlar
+        </span>
+      ),
+      children: (
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Genel Not</div>
+            <Form.Item name="notes" className="mb-4">
+              <TextArea rows={3} placeholder="Genel notlar..." variant="filled" />
+            </Form.Item>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Dahili Not (Tedarikçiye gösterilmez)</div>
+            <Form.Item name="internalNotes" className="mb-0">
+              <TextArea rows={3} placeholder="Dahili not (sadece şirket içi görünür)..." variant="filled" />
+            </Form.Item>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50/30 flex items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Sticky Header */}
@@ -359,7 +598,7 @@ export default function NewPurchaseReturnPage() {
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               type="text"
@@ -407,7 +646,7 @@ export default function NewPurchaseReturnPage() {
       </div>
 
       {/* Form Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-8">
         <Form
           form={form}
           layout="vertical"
@@ -420,243 +659,136 @@ export default function NewPurchaseReturnPage() {
             exchangeRate: 1,
           }}
         >
-          <Row gutter={24}>
-            {/* Left Column */}
-            <Col xs={24} lg={16}>
-              {/* Basic Info */}
-              <Card title="Temel Bilgiler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="supplierId"
-                      label="Tedarikçi"
-                      rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+          <Row gutter={32}>
+            {/* Left Panel - Visual & Summary */}
+            <Col xs={24} lg={9}>
+              <div className="sticky top-28 space-y-6">
+                {/* Visual Card */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                  <div className="text-center mb-6">
+                    <div
+                      className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-4"
+                      style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
                     >
-                      <Select
-                        placeholder="Tedarikçi seçin"
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {suppliers.map(supplier => (
-                          <Select.Option key={supplier.id} value={supplier.id}>
-                            {supplier.code} - {supplier.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="returnDate"
-                      label="İade Tarihi"
-                      rules={[{ required: true, message: 'Tarih seçin' }]}
-                    >
-                      <DatePicker className="w-full" format="DD.MM.YYYY" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="type" label="İade Tipi">
-                      <Select>
-                        {typeOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="reason" label="İade Sebebi">
-                      <Select>
-                        {reasonOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="refundMethod" label="İade Yöntemi">
-                      <Select placeholder="Seçin (opsiyonel)" allowClear>
-                        {refundMethodOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24}>
-                    <Form.Item name="reasonDetails" label="Sebep Detayı">
-                      <TextArea rows={2} placeholder="İade sebebini detaylı açıklayın..." />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Related Documents */}
-              <Card title="İlişkili Belgeler" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="purchaseOrderId" label="Sipariş">
-                      <Select placeholder="Seçin (opsiyonel)" allowClear showSearch optionFilterProp="children">
-                        {orders.map(order => (
-                          <Select.Option key={order.id} value={order.id}>
-                            {order.orderNumber}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="goodsReceiptId" label="Mal Alım">
-                      <Select placeholder="Seçin (opsiyonel)" allowClear showSearch optionFilterProp="children">
-                        {receipts.map(receipt => (
-                          <Select.Option key={receipt.id} value={receipt.id}>
-                            {receipt.receiptNumber}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={8}>
-                    <Form.Item name="purchaseInvoiceId" label="Fatura">
-                      <Select placeholder="Seçin (opsiyonel)" allowClear showSearch optionFilterProp="children">
-                        {invoices.map(invoice => (
-                          <Select.Option key={invoice.id} value={invoice.id}>
-                            {invoice.invoiceNumber}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Items */}
-              <Card
-                title="İade Kalemleri"
-                className="mb-6"
-                extra={
-                  <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
-                    Kalem Ekle
-                  </Button>
-                }
-              >
-                <Table
-                  dataSource={items}
-                  columns={itemColumns}
-                  rowKey="key"
-                  pagination={false}
-                  size="small"
-                  scroll={{ x: 900 }}
-                  locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
-                  summary={() => items.length > 0 ? (
-                    <Table.Summary>
-                      <Table.Summary.Row>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>Ara Toplam</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                      <Table.Summary.Row>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>Toplam KDV</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                      <Table.Summary.Row style={{ background: '#fef2f2' }}>
-                        <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text strong style={{ fontSize: 16 }}>İade Tutarı</Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={1} align="right">
-                          <Text strong style={{ fontSize: 16, color: '#ef4444' }}>
-                            {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                          </Text>
-                        </Table.Summary.Cell>
-                        <Table.Summary.Cell index={2} />
-                      </Table.Summary.Row>
-                    </Table.Summary>
-                  ) : null}
-                />
-              </Card>
-
-              {/* Notes */}
-              <Card title="Notlar" className="mb-6">
-                <Form.Item name="notes" label="Genel Not">
-                  <TextArea rows={2} placeholder="Genel notlar..." />
-                </Form.Item>
-                <Form.Item name="internalNotes" label="Dahili Not">
-                  <TextArea rows={2} placeholder="Dahili not (tedarikçiye gösterilmez)..." />
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* Right Column - Summary */}
-            <Col xs={24} lg={8}>
-              <Card title="Para Birimi" className="mb-6">
-                <Row gutter={16}>
-                  <Col xs={12}>
-                    <Form.Item name="currency" label="Para Birimi">
-                      <Select onChange={(value) => setSelectedCurrency(value)}>
-                        {currencyOptions.map(opt => (
-                          <Select.Option key={opt.value} value={opt.value}>{opt.label}</Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  {selectedCurrency !== 'TRY' && (
-                    <Col xs={12}>
-                      <Form.Item name="exchangeRate" label="Döviz Kuru">
-                        <InputNumber min={0} step={0.0001} className="w-full" />
-                      </Form.Item>
-                    </Col>
-                  )}
-                </Row>
-              </Card>
-
-              <Card title="Özet" className="mb-6 sticky top-28">
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <div className="text-sm text-gray-500 mb-1">İade Tutarı</div>
-                    <div className="text-3xl font-bold text-red-600">
-                      {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {selectedCurrency === 'TRY' ? '₺' : selectedCurrency}
+                      <RollbackOutlined style={{ fontSize: 48, color: 'white' }} />
                     </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      Satın Alma İadesi
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Tedarikçiye iade edilecek ürünler
+                    </p>
                   </div>
 
-                  <Divider />
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Text type="secondary">Kalem Sayısı</Text>
-                      <Text strong>{items.length}</Text>
+                  {/* Summary Stats */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-500">Kalem Sayısı</span>
+                      <span className="font-medium">{items.length}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <Text type="secondary">Ara Toplam</Text>
-                      <Text>{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-500">Ara Toplam</span>
+                      <span className="font-medium">{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <Text type="secondary">KDV</Text>
-                      <Text>{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-sm text-gray-500">KDV</span>
+                      <span className="font-medium">{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}</span>
                     </div>
-                  </div>
-
-                  <Divider />
-
-                  <div className="text-xs text-gray-500">
-                    <p className="mb-2">
-                      • İade talebi kaydedildikten sonra onay sürecine gönderilecektir.
-                    </p>
-                    <p className="mb-2">
-                      • Onaylanan iadeler tedarikçiye gönderilebilir.
-                    </p>
-                    <p>
-                      • İade işlemi tamamlandığında para iadesi yapılabilir.
-                    </p>
+                    <div className="flex justify-between items-center py-3 bg-orange-50 rounded-lg px-3 -mx-3">
+                      <span className="text-sm font-medium text-orange-700">İade Tutarı</span>
+                      <span className="text-xl font-bold text-orange-600">
+                        {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </Card>
+
+                {/* Info Card */}
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100">
+                  <h4 className="text-sm font-semibold text-orange-800 mb-3">İade İşlem Akışı</h4>
+                  <ul className="space-y-2 text-sm text-orange-700">
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center text-xs font-bold text-orange-700 shrink-0 mt-0.5">1</span>
+                      <span>İade talebi kaydedildikten sonra onay sürecine gönderilir</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center text-xs font-bold text-orange-700 shrink-0 mt-0.5">2</span>
+                      <span>Onaylanan iadeler tedarikçiye gönderilebilir</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-5 h-5 bg-orange-200 rounded-full flex items-center justify-center text-xs font-bold text-orange-700 shrink-0 mt-0.5">3</span>
+                      <span>İade işlemi tamamlandığında para iadesi yapılır</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Col>
+
+            {/* Right Panel - Form Content */}
+            <Col xs={24} lg={15}>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <Tabs items={tabItems} className="supplier-form-tabs" />
+
+                {/* Gradient Divider */}
+                <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent my-6"></div>
+
+                {/* Items Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700">İade Kalemleri</span>
+                    </div>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+                      Kalem Ekle
+                    </Button>
+                  </div>
+
+                  <Table
+                    dataSource={items}
+                    columns={itemColumns}
+                    rowKey="key"
+                    pagination={false}
+                    size="small"
+                    scroll={{ x: 900 }}
+                    className="border border-gray-100 rounded-lg overflow-hidden"
+                    locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
+                    summary={() => items.length > 0 ? (
+                      <Table.Summary>
+                        <Table.Summary.Row className="bg-gray-50">
+                          <Table.Summary.Cell index={0} colSpan={6} align="right">
+                            <span className="text-gray-600">Ara Toplam</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={1} align="right">
+                            <span className="font-medium">{totals.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={2} />
+                        </Table.Summary.Row>
+                        <Table.Summary.Row className="bg-gray-50">
+                          <Table.Summary.Cell index={0} colSpan={6} align="right">
+                            <span className="text-gray-600">Toplam KDV</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={1} align="right">
+                            <span className="font-medium">{totals.totalVat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={2} />
+                        </Table.Summary.Row>
+                        <Table.Summary.Row className="bg-orange-50">
+                          <Table.Summary.Cell index={0} colSpan={6} align="right">
+                            <span className="font-semibold text-orange-700">İade Tutarı</span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={1} align="right">
+                            <span className="font-bold text-lg text-orange-600">
+                              {totals.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {getCurrencySymbol()}
+                            </span>
+                          </Table.Summary.Cell>
+                          <Table.Summary.Cell index={2} />
+                        </Table.Summary.Row>
+                      </Table.Summary>
+                    ) : null}
+                  />
+                </div>
+              </div>
             </Col>
           </Row>
         </Form>
