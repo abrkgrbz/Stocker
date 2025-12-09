@@ -499,67 +499,17 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                     _logger.LogWarning(progressEx, "Failed to send progress update for SeedingData step");
                 }
 
-                // ✅ NOW activate package modules AFTER database is created and migrated
-                _logger.LogInformation("Activating package modules for tenant {TenantId}...", tenant.Id);
+                // NOTE: Module activation is NOT done here during registration.
+                // Modules are only activated after the user completes the Setup Wizard.
+                // This ensures:
+                // 1. User can select which modules they want during Setup Wizard
+                // 2. Module migrations only run when user explicitly selects modules
+                // 3. No wasted resources on modules user might not want
+                // Module activation is handled by CompleteSetupCommandHandler which triggers
+                // TenantProvisioningJob.ProvisionModulesAsync() after Setup Wizard completion.
+                _logger.LogInformation("📋 Tenant {TenantId} created. Module activation will happen after Setup Wizard completion.", tenant.Id);
 
-                try
-                {
-                    // Use already loaded package with modules (eager loaded at line 96-98)
-                    if (package.Modules != null && package.Modules.Any())
-                    {
-                        // CRITICAL FIX: Use TenantDbContext instead of Master UnitOfWork
-                        // TenantModules must be saved to the TENANT database, not Master database!
-                        using var tenantDbContext = await _tenantDbContextFactory.CreateDbContextAsync(tenant.Id);
-
-                        foreach (var packageModule in package.Modules.Where(m => m.IsIncluded))
-                        {
-                            var tenantModule = Domain.Tenant.Entities.TenantModules.Create(
-                                tenantId: tenant.Id,
-                                moduleName: packageModule.ModuleName,
-                                moduleCode: packageModule.ModuleCode,
-                                description: $"Module from {package.Name} package",
-                                isEnabled: true,
-                                recordLimit: packageModule.MaxEntities,
-                                isTrial: package.TrialDays > 0
-                            );
-
-                            tenantDbContext.TenantModules.Add(tenantModule);
-                            _logger.LogInformation("✅ Activated module {ModuleCode} ({ModuleName}) for tenant {TenantId}",
-                                packageModule.ModuleCode, packageModule.ModuleName, tenant.Id);
-                        }
-
-                        await tenantDbContext.SaveChangesAsync(cancellationToken);
-                        _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
-                            package.Modules.Count(m => m.IsIncluded), tenant.Id);
-
-                        // Send progress: ActivatingModules
-                        try
-                        {
-                            await _progressService.SendProgressAsync(
-                                registration.Id,
-                                TenantCreationStep.ActivatingModules,
-                                "Modüller aktifleştiriliyor...",
-                                75,
-                                cancellationToken);
-                        }
-                        catch (Exception progressEx)
-                        {
-                            _logger.LogWarning(progressEx, "Failed to send progress update for ActivatingModules step");
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("⚠️ No modules to activate for tenant {TenantId} - package has no modules or package is null", tenant.Id);
-                    }
-                }
-                catch (Exception moduleEx)
-                {
-                    _logger.LogError(moduleEx, "❌ CRITICAL: Failed to activate modules for tenant {TenantId}. This will prevent module access!", tenant.Id);
-                    // Re-throw to fail tenant creation if modules can't be activated
-                    throw new InvalidOperationException($"Failed to activate modules for tenant {tenant.Id}. Tenant database exists but modules are not configured.", moduleEx);
-                }
-
-                // Activate tenant after successful database setup and module activation
+                // Activate tenant after successful database setup
                 // Tenant is created as inactive (IsActive = false) and must be explicitly activated
                 _logger.LogInformation("Activating tenant after successful setup: {TenantId}", tenant.Id);
                 tenant.Activate();
