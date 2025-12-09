@@ -214,44 +214,45 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [taxNumber, setTaxNumber] = useState('')
 
   // Convert SignalR result to CustomPackagePrice format
+  // Backend returns CustomPackagePriceResponseDto directly
   const customPrice = useMemo<CustomPackagePrice | null>(() => {
     if (!signalRPriceResult) return null
 
     return {
-      monthlyTotal: signalRPriceResult.totalMonthlyPrice,
-      quarterlyTotal: signalRPriceResult.totalMonthlyPrice * 3 * 0.95, // 5% discount
-      semiAnnualTotal: signalRPriceResult.totalMonthlyPrice * 6 * 0.90, // 10% discount
-      annualTotal: signalRPriceResult.totalAnnualPrice,
+      monthlyTotal: signalRPriceResult.monthlyTotal,
+      quarterlyTotal: signalRPriceResult.quarterlyTotal,
+      semiAnnualTotal: signalRPriceResult.semiAnnualTotal,
+      annualTotal: signalRPriceResult.annualTotal,
       currency: signalRPriceResult.currency,
-      breakdown: signalRPriceResult.breakdown.modules.map(m => ({
-        moduleCode: m.name,
-        moduleName: m.name,
-        monthlyPrice: m.total,
-        isCore: false,
-        isRequired: false
-      })),
-      quarterlyDiscount: 5,
-      semiAnnualDiscount: 10,
-      annualDiscount: signalRPriceResult.discounts.annualDiscount,
-      userPricing: signalRPriceResult.breakdown.users ? {
-        userCount: signalRPriceResult.breakdown.users.quantity,
-        tierCode: '',
-        tierName: signalRPriceResult.breakdown.users.name,
-        pricePerUser: signalRPriceResult.breakdown.users.unitPrice,
-        basePrice: 0,
-        totalMonthly: signalRPriceResult.breakdown.users.total
+      breakdown: signalRPriceResult.breakdown?.map(m => ({
+        moduleCode: m.moduleCode,
+        moduleName: m.moduleName,
+        monthlyPrice: m.monthlyPrice,
+        isCore: m.isCore,
+        isRequired: m.isRequired
+      })) || [],
+      quarterlyDiscount: signalRPriceResult.quarterlyDiscount,
+      semiAnnualDiscount: signalRPriceResult.semiAnnualDiscount,
+      annualDiscount: signalRPriceResult.annualDiscount,
+      userPricing: signalRPriceResult.userPricing ? {
+        userCount: signalRPriceResult.userPricing.userCount,
+        tierCode: signalRPriceResult.userPricing.tierCode,
+        tierName: signalRPriceResult.userPricing.tierName,
+        pricePerUser: signalRPriceResult.userPricing.pricePerUser,
+        basePrice: signalRPriceResult.userPricing.basePrice,
+        totalMonthly: signalRPriceResult.userPricing.totalMonthly
       } : undefined,
-      storagePricing: signalRPriceResult.breakdown.storage ? {
-        planCode: '',
-        planName: signalRPriceResult.breakdown.storage.name,
-        storageGB: signalRPriceResult.breakdown.storage.quantity,
-        monthlyPrice: signalRPriceResult.breakdown.storage.total
+      storagePricing: signalRPriceResult.storagePricing ? {
+        planCode: signalRPriceResult.storagePricing.planCode,
+        planName: signalRPriceResult.storagePricing.planName,
+        storageGB: signalRPriceResult.storagePricing.storageGB,
+        monthlyPrice: signalRPriceResult.storagePricing.monthlyPrice
       } : undefined,
-      addOns: signalRPriceResult.breakdown.addOns.map(a => ({
-        code: a.name,
+      addOns: signalRPriceResult.addOns?.map(a => ({
+        code: a.code,
         name: a.name,
-        monthlyPrice: a.total
-      }))
+        monthlyPrice: a.monthlyPrice
+      })) || []
     }
   }, [signalRPriceResult])
 

@@ -13,33 +13,50 @@ export interface PriceCalculationRequest {
   selectedAddOnCodes?: string[];
 }
 
-export interface PriceBreakdownItem {
+// Matches backend CustomPackagePriceResponseDto
+export interface ModulePriceBreakdown {
+  moduleCode: string;
+  moduleName: string;
+  monthlyPrice: number;
+  isCore: boolean;
+  isRequired: boolean;
+}
+
+export interface UserPricing {
+  userCount: number;
+  tierCode: string;
+  tierName: string;
+  pricePerUser: number;
+  basePrice: number;
+  totalMonthly: number;
+}
+
+export interface StoragePricing {
+  planCode: string;
+  planName: string;
+  storageGB: number;
+  monthlyPrice: number;
+}
+
+export interface AddOnPricing {
+  code: string;
   name: string;
-  unitPrice: number;
-  quantity: number;
-  total: number;
+  monthlyPrice: number;
 }
 
 export interface PriceCalculationResult {
-  basePrice: number;
-  modulesPrice: number;
-  usersPrice: number;
-  storagePrice: number;
-  addOnsPrice: number;
-  totalMonthlyPrice: number;
-  totalAnnualPrice: number;
+  monthlyTotal: number;
+  quarterlyTotal: number;
+  semiAnnualTotal: number;
+  annualTotal: number;
   currency: string;
-  breakdown: {
-    modules: PriceBreakdownItem[];
-    users: PriceBreakdownItem | null;
-    storage: PriceBreakdownItem | null;
-    addOns: PriceBreakdownItem[];
-  };
-  discounts: {
-    annualDiscount: number;
-    volumeDiscount: number;
-    totalDiscount: number;
-  };
+  breakdown: ModulePriceBreakdown[];
+  quarterlyDiscount: number;
+  semiAnnualDiscount: number;
+  annualDiscount: number;
+  userPricing?: UserPricing;
+  storagePricing?: StoragePricing;
+  addOns: AddOnPricing[];
 }
 
 export interface PriceCalculationResponse {
