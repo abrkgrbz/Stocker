@@ -231,6 +231,16 @@ public static class MiddlewareExtensions
         .RequireCors(corsPolicy)
         .RequireAuthorization(); // ✅ Authentication required - System Admin role checked in Hub
 
+        // PricingHub allows anonymous for setup wizard real-time price calculation
+        app.MapHub<PricingHub>("/hubs/pricing", options =>
+        {
+            options.Transports = HttpTransportType.WebSockets |
+                                 HttpTransportType.ServerSentEvents |
+                                 HttpTransportType.LongPolling;
+        })
+        .RequireCors(corsPolicy)
+        .AllowAnonymous(); // Allow anonymous for setup wizard pricing
+
         // 21. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")

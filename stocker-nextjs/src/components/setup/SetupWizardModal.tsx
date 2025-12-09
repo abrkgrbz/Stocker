@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Modal, Tabs, Tooltip, Badge } from 'antd'
 import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
+import { usePricingSignalR } from '@/hooks/usePricingSignalR'
 
 type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'company' | 'complete'
 type PackageType = 'ready' | 'custom'
@@ -167,6 +168,20 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [currentStep, setCurrentStep] = useState<SetupStep>('package-type')
   const [isLoading, setIsLoading] = useState(false)
 
+  // SignalR for real-time pricing
+  const {
+    isConnected: isPricingConnected,
+    isCalculating: loadingPrice,
+    priceResult: signalRPriceResult,
+    error: pricingError,
+    calculatePrice: calculatePriceViaSignalR,
+    connect: connectPricing,
+    disconnect: disconnectPricing
+  } = usePricingSignalR()
+
+  // Debounce ref for price calculation
+  const priceCalculationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Package type selection
   const [packageType, setPackageType] = useState<PackageType>('ready')
 
@@ -179,8 +194,6 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [modules, setModules] = useState<ModuleDefinition[]>([])
   const [selectedModuleCodes, setSelectedModuleCodes] = useState<string[]>([])
   const [loadingModules, setLoadingModules] = useState(false)
-  const [customPrice, setCustomPrice] = useState<CustomPackagePrice | null>(null)
-  const [loadingPrice, setLoadingPrice] = useState(false)
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
 
   // Setup options state (users, storage, add-ons, industries)
@@ -200,12 +213,74 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [taxOffice, setTaxOffice] = useState('')
   const [taxNumber, setTaxNumber] = useState('')
 
+  // Convert SignalR result to CustomPackagePrice format
+  const customPrice = useMemo<CustomPackagePrice | null>(() => {
+    if (!signalRPriceResult) return null
+
+    return {
+      monthlyTotal: signalRPriceResult.totalMonthlyPrice,
+      quarterlyTotal: signalRPriceResult.totalMonthlyPrice * 3 * 0.95, // 5% discount
+      semiAnnualTotal: signalRPriceResult.totalMonthlyPrice * 6 * 0.90, // 10% discount
+      annualTotal: signalRPriceResult.totalAnnualPrice,
+      currency: signalRPriceResult.currency,
+      breakdown: signalRPriceResult.breakdown.modules.map(m => ({
+        moduleCode: m.name,
+        moduleName: m.name,
+        monthlyPrice: m.total,
+        isCore: false,
+        isRequired: false
+      })),
+      quarterlyDiscount: 5,
+      semiAnnualDiscount: 10,
+      annualDiscount: signalRPriceResult.discounts.annualDiscount,
+      userPricing: signalRPriceResult.breakdown.users ? {
+        userCount: signalRPriceResult.breakdown.users.quantity,
+        tierCode: '',
+        tierName: signalRPriceResult.breakdown.users.name,
+        pricePerUser: signalRPriceResult.breakdown.users.unitPrice,
+        basePrice: 0,
+        totalMonthly: signalRPriceResult.breakdown.users.total
+      } : undefined,
+      storagePricing: signalRPriceResult.breakdown.storage ? {
+        planCode: '',
+        planName: signalRPriceResult.breakdown.storage.name,
+        storageGB: signalRPriceResult.breakdown.storage.quantity,
+        monthlyPrice: signalRPriceResult.breakdown.storage.total
+      } : undefined,
+      addOns: signalRPriceResult.breakdown.addOns.map(a => ({
+        code: a.name,
+        name: a.name,
+        monthlyPrice: a.total
+      }))
+    }
+  }, [signalRPriceResult])
+
   // Load packages on mount
   useEffect(() => {
     if (open) {
       loadPackages()
     }
   }, [open])
+
+  // Connect to SignalR when custom package is selected
+  useEffect(() => {
+    if (packageType === 'custom' && open) {
+      connectPricing()
+    }
+
+    return () => {
+      if (priceCalculationTimeoutRef.current) {
+        clearTimeout(priceCalculationTimeoutRef.current)
+      }
+    }
+  }, [packageType, open, connectPricing])
+
+  // Disconnect SignalR when modal closes
+  useEffect(() => {
+    if (!open) {
+      disconnectPricing()
+    }
+  }, [open, disconnectPricing])
 
   // Load modules when custom package is selected
   useEffect(() => {
@@ -221,14 +296,24 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     }
   }, [packageType])
 
-  // Calculate price when selections change
+  // Calculate price via SignalR when selections change (debounced)
   useEffect(() => {
-    if (selectedModuleCodes.length > 0) {
-      calculatePrice()
-    } else {
-      setCustomPrice(null)
+    if (selectedModuleCodes.length > 0 && isPricingConnected) {
+      // Debounce price calculation to avoid too many requests
+      if (priceCalculationTimeoutRef.current) {
+        clearTimeout(priceCalculationTimeoutRef.current)
+      }
+
+      priceCalculationTimeoutRef.current = setTimeout(() => {
+        calculatePriceViaSignalR({
+          selectedModuleCodes,
+          userCount,
+          storagePlanCode: selectedStoragePlanCode || undefined,
+          selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : undefined
+        })
+      }, 300) // 300ms debounce
     }
-  }, [selectedModuleCodes, userCount, selectedStoragePlanCode, selectedAddOnCodes])
+  }, [selectedModuleCodes, userCount, selectedStoragePlanCode, selectedAddOnCodes, isPricingConnected, calculatePriceViaSignalR])
 
   const loadPackages = async () => {
     try {
@@ -325,34 +410,6 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       })
     } finally {
       setLoadingSetupOptions(false)
-    }
-  }
-
-  const calculatePrice = async () => {
-    try {
-      setLoadingPrice(true)
-      const apiUrl = getApiUrl(false)
-      const response = await fetch(`${apiUrl}/api/public/calculate-price`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          selectedModuleCodes,
-          userCount,
-          storagePlanCode: selectedStoragePlanCode || null,
-          selectedAddOnCodes: selectedAddOnCodes || []
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.data) {
-          setCustomPrice(data.data)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to calculate price:', error)
-    } finally {
-      setLoadingPrice(false)
     }
   }
 
@@ -681,6 +738,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
           {/* Price Display */}
           <div className="flex items-center gap-4">
+            {/* SignalR Connection Status */}
+            {!isPricingConnected && (
+              <div className="flex items-center gap-1 text-xs text-yellow-600">
+                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                <span>Bağlanıyor...</span>
+              </div>
+            )}
+            {pricingError && (
+              <div className="text-xs text-red-500">{pricingError}</div>
+            )}
             {loadingPrice ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
