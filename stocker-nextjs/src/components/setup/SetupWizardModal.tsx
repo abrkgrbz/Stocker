@@ -5,7 +5,7 @@ import { Modal, Tabs, Tooltip, Badge } from 'antd'
 import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
 
-type SetupStep = 'package-type' | 'package' | 'custom-package' | 'company' | 'complete'
+type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'company' | 'complete'
 type PackageType = 'ready' | 'custom'
 type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
@@ -58,6 +58,28 @@ interface PriceBreakdown {
   isRequired: boolean
 }
 
+interface UserPricing {
+  userCount: number
+  tierCode: string
+  tierName: string
+  pricePerUser: number
+  basePrice: number
+  totalMonthly: number
+}
+
+interface StoragePricing {
+  planCode: string
+  planName: string
+  storageGB: number
+  monthlyPrice: number
+}
+
+interface AddOnPricing {
+  code: string
+  name: string
+  monthlyPrice: number
+}
+
 interface CustomPackagePrice {
   monthlyTotal: number
   quarterlyTotal: number
@@ -68,6 +90,72 @@ interface CustomPackagePrice {
   quarterlyDiscount: number
   semiAnnualDiscount: number
   annualDiscount: number
+  userPricing?: UserPricing
+  storagePricing?: StoragePricing
+  addOns: AddOnPricing[]
+}
+
+// Setup Options Types
+interface UserTier {
+  id: string
+  code: string
+  name: string
+  description?: string
+  minUsers: number
+  maxUsers: number
+  pricePerUser: number
+  basePrice?: number
+  currency: string
+  isActive: boolean
+  displayOrder: number
+}
+
+interface StoragePlan {
+  id: string
+  code: string
+  name: string
+  description?: string
+  storageGB: number
+  monthlyPrice: number
+  currency: string
+  isActive: boolean
+  isDefault: boolean
+  displayOrder: number
+}
+
+interface AddOn {
+  id: string
+  code: string
+  name: string
+  description?: string
+  icon?: string
+  monthlyPrice: number
+  currency: string
+  isActive: boolean
+  displayOrder: number
+  category?: string
+  features: Array<{
+    featureName: string
+    description?: string
+  }>
+}
+
+interface Industry {
+  id: string
+  code: string
+  name: string
+  description?: string
+  icon?: string
+  isActive: boolean
+  displayOrder: number
+  recommendedModules: string[]
+}
+
+interface SetupOptions {
+  userTiers: UserTier[]
+  storagePlans: StoragePlan[]
+  addOns: AddOn[]
+  industries: Industry[]
 }
 
 interface SetupWizardModalProps {
@@ -95,6 +183,14 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [loadingPrice, setLoadingPrice] = useState(false)
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
 
+  // Setup options state (users, storage, add-ons, industries)
+  const [setupOptions, setSetupOptions] = useState<SetupOptions | null>(null)
+  const [loadingSetupOptions, setLoadingSetupOptions] = useState(false)
+  const [userCount, setUserCount] = useState<number>(1)
+  const [selectedStoragePlanCode, setSelectedStoragePlanCode] = useState<string>('')
+  const [selectedAddOnCodes, setSelectedAddOnCodes] = useState<string[]>([])
+  const [selectedIndustryCode, setSelectedIndustryCode] = useState<string>('')
+
   // Company information state
   const [companyName, setCompanyName] = useState('')
   const [sector, setSector] = useState('')
@@ -118,14 +214,21 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     }
   }, [packageType])
 
-  // Calculate price when modules change
+  // Load setup options when custom package is selected
+  useEffect(() => {
+    if (packageType === 'custom' && !setupOptions) {
+      loadSetupOptions()
+    }
+  }, [packageType])
+
+  // Calculate price when selections change
   useEffect(() => {
     if (selectedModuleCodes.length > 0) {
       calculatePrice()
     } else {
       setCustomPrice(null)
     }
-  }, [selectedModuleCodes])
+  }, [selectedModuleCodes, userCount, selectedStoragePlanCode, selectedAddOnCodes])
 
   const loadPackages = async () => {
     try {
@@ -171,6 +274,30 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     }
   }
 
+  const loadSetupOptions = async () => {
+    try {
+      setLoadingSetupOptions(true)
+      const apiUrl = getApiUrl(false)
+      const response = await fetch(`${apiUrl}/api/public/setup-options`)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setSetupOptions(data.data)
+          // Set default storage plan
+          const defaultPlan = data.data.storagePlans.find((p: StoragePlan) => p.isDefault)
+          if (defaultPlan) {
+            setSelectedStoragePlanCode(defaultPlan.code)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load setup options:', error)
+    } finally {
+      setLoadingSetupOptions(false)
+    }
+  }
+
   const calculatePrice = async () => {
     try {
       setLoadingPrice(true)
@@ -178,7 +305,12 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       const response = await fetch(`${apiUrl}/api/public/calculate-price`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ selectedModuleCodes })
+        body: JSON.stringify({
+          selectedModuleCodes,
+          userCount,
+          storagePlanCode: selectedStoragePlanCode || null,
+          selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : null
+        })
       })
 
       if (response.ok) {
@@ -266,7 +398,55 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       })
       return
     }
+    setCurrentStep('users')
+  }
+
+  const handleUsersNext = () => {
+    if (userCount < 1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Uyarı',
+        text: 'En az 1 kullanıcı seçmelisiniz',
+        confirmButtonText: 'Tamam'
+      })
+      return
+    }
+    setCurrentStep('storage')
+  }
+
+  const handleStorageNext = () => {
+    setCurrentStep('addons')
+  }
+
+  const handleAddOnsNext = () => {
+    setCurrentStep('industry')
+  }
+
+  const handleIndustryNext = () => {
+    // If industry is selected, apply recommended modules
+    if (selectedIndustryCode && setupOptions) {
+      const industry = setupOptions.industries.find(i => i.code === selectedIndustryCode)
+      if (industry) {
+        const newCodes = [...selectedModuleCodes]
+        industry.recommendedModules.forEach(moduleCode => {
+          if (!newCodes.includes(moduleCode)) {
+            newCodes.push(moduleCode)
+          }
+        })
+        setSelectedModuleCodes(newCodes)
+      }
+    }
     setCurrentStep('company')
+  }
+
+  const toggleAddOn = (addOnCode: string) => {
+    setSelectedAddOnCodes(prev => {
+      if (prev.includes(addOnCode)) {
+        return prev.filter(c => c !== addOnCode)
+      } else {
+        return [...prev, addOnCode]
+      }
+    })
   }
 
   const handleCompanySubmit = async () => {
@@ -299,7 +479,11 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         : {
             customPackage: {
               selectedModuleCodes,
-              billingCycle
+              billingCycle,
+              userCount,
+              storagePlanCode: selectedStoragePlanCode || null,
+              selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : null,
+              industryCode: selectedIndustryCode || null
             },
             companyName,
             sector,
@@ -379,14 +563,32 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
   // Get step number for progress
   const getStepNumber = () => {
-    switch (currentStep) {
-      case 'package-type': return 1
-      case 'package':
-      case 'custom-package': return 2
-      case 'company': return 3
-      case 'complete': return 4
-      default: return 1
+    if (packageType === 'ready') {
+      switch (currentStep) {
+        case 'package-type': return 1
+        case 'package': return 2
+        case 'company': return 3
+        case 'complete': return 4
+        default: return 1
+      }
+    } else {
+      // Custom package has more steps
+      switch (currentStep) {
+        case 'package-type': return 1
+        case 'custom-package': return 2
+        case 'users': return 3
+        case 'storage': return 4
+        case 'addons': return 5
+        case 'industry': return 6
+        case 'company': return 7
+        case 'complete': return 8
+        default: return 1
+      }
     }
+  }
+
+  const getTotalSteps = () => {
+    return packageType === 'ready' ? 4 : 8
   }
 
   return (
@@ -396,7 +598,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       closable={false}
       maskClosable={false}
       keyboard={false}
-      width={currentStep === 'custom-package' ? 1100 : 900}
+      width={['custom-package', 'addons', 'storage', 'industry'].includes(currentStep) ? 1100 : 900}
       centered
       destroyOnClose
     >
@@ -411,67 +613,29 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            {/* Step 1 */}
-            <div className={`flex items-center space-x-2 ${
-              getStepNumber() >= 1 ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                getStepNumber() > 1 ? 'bg-green-600 text-white' :
-                getStepNumber() === 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                {getStepNumber() > 1 ? '✓' : '1'}
-              </div>
-              <span className="font-medium">Paket Türü</span>
-            </div>
-
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-
-            {/* Step 2 */}
-            <div className={`flex items-center space-x-2 ${
-              getStepNumber() >= 2 ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                getStepNumber() > 2 ? 'bg-green-600 text-white' :
-                getStepNumber() === 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                {getStepNumber() > 2 ? '✓' : '2'}
-              </div>
-              <span className="font-medium">
-                {packageType === 'custom' ? 'Modül Seçimi' : 'Paket Seçimi'}
-              </span>
-            </div>
-
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-
-            {/* Step 3 */}
-            <div className={`flex items-center space-x-2 ${
-              getStepNumber() >= 3 ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                getStepNumber() > 3 ? 'bg-green-600 text-white' :
-                getStepNumber() === 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                {getStepNumber() > 3 ? '✓' : '3'}
-              </div>
-              <span className="font-medium">Firma Bilgileri</span>
-            </div>
-
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-
-            {/* Step 4 */}
-            <div className={`flex items-center space-x-2 ${
-              currentStep === 'complete' ? 'text-green-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 'complete' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                ✓
-              </div>
-              <span className="font-medium">Tamamlandı</span>
-            </div>
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">
+              Adım {getStepNumber()} / {getTotalSteps()}
+            </span>
+            <span className="text-sm text-gray-500">
+              {currentStep === 'package-type' && 'Paket Türü'}
+              {currentStep === 'package' && 'Paket Seçimi'}
+              {currentStep === 'custom-package' && 'Modül Seçimi'}
+              {currentStep === 'users' && 'Kullanıcı Sayısı'}
+              {currentStep === 'storage' && 'Depolama Planı'}
+              {currentStep === 'addons' && 'Ek Özellikler'}
+              {currentStep === 'industry' && 'Sektör Seçimi'}
+              {currentStep === 'company' && 'Firma Bilgileri'}
+              {currentStep === 'complete' && 'Tamamlandı'}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(getStepNumber() / getTotalSteps()) * 100}%` }}
+            ></div>
           </div>
         </div>
 
@@ -827,7 +991,396 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           </div>
         )}
 
-        {/* Step 3: Company Information */}
+        {/* Step: User Count Selection */}
+        {currentStep === 'users' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+              Kaç Kullanıcı Kullanacak?
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Sistemde aynı anda çalışacak kullanıcı sayısını belirleyin
+            </p>
+
+            {loadingSetupOptions ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Yükleniyor...</p>
+              </div>
+            ) : (
+              <>
+                {/* User Count Slider */}
+                <div className="max-w-md mx-auto">
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                    <button
+                      onClick={() => setUserCount(Math.max(1, userCount - 1))}
+                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xl font-bold"
+                    >
+                      -
+                    </button>
+                    <div className="text-center">
+                      <div className="text-5xl font-bold text-blue-600">{userCount}</div>
+                      <div className="text-gray-500 text-sm">Kullanıcı</div>
+                    </div>
+                    <button
+                      onClick={() => setUserCount(userCount + 1)}
+                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xl font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={userCount}
+                    onChange={(e) => setUserCount(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>1</span>
+                    <span>25</span>
+                    <span>50</span>
+                    <span>75</span>
+                    <span>100+</span>
+                  </div>
+                </div>
+
+                {/* User Tier Info */}
+                {setupOptions && (
+                  <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                    {setupOptions.userTiers.map((tier) => {
+                      const isActive = tier.minUsers <= userCount && (tier.maxUsers === -1 || tier.maxUsers >= userCount)
+                      return (
+                        <div
+                          key={tier.id}
+                          className={`border-2 rounded-lg p-4 transition-all ${
+                            isActive
+                              ? 'border-blue-600 bg-blue-50'
+                              : 'border-gray-200'
+                          }`}
+                        >
+                          <h3 className="font-semibold text-gray-900">{tier.name}</h3>
+                          <p className="text-sm text-gray-500 mb-2">
+                            {tier.minUsers}-{tier.maxUsers === -1 ? '∞' : tier.maxUsers} kullanıcı
+                          </p>
+                          <div className="text-lg font-bold text-blue-600">
+                            ₺{tier.pricePerUser}/kullanıcı/ay
+                          </div>
+                          {tier.basePrice && tier.basePrice > 0 && (
+                            <div className="text-xs text-gray-500">
+                              + ₺{tier.basePrice} temel ücret
+                            </div>
+                          )}
+                          {isActive && (
+                            <div className="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs inline-block">
+                              Seçili
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Current Price Display */}
+                {customPrice?.userPricing && (
+                  <div className="mt-6 text-center">
+                    <div className="text-gray-600">Kullanıcı maliyeti:</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      ₺{customPrice.userPricing.totalMonthly}/ay
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="flex justify-between pt-6 border-t">
+              <button
+                onClick={() => setCurrentStep('custom-package')}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Geri
+              </button>
+              <button
+                onClick={handleUsersNext}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+              >
+                Devam Et
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Storage Plan Selection */}
+        {currentStep === 'storage' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+              Depolama Planı Seçin
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Dosya, belge ve veritabanı depolama ihtiyacınıza göre plan seçin
+            </p>
+
+            {loadingSetupOptions ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : setupOptions && (
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+                {setupOptions.storagePlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => setSelectedStoragePlanCode(plan.code)}
+                    className={`border-2 rounded-xl p-6 cursor-pointer transition-all text-center ${
+                      selectedStoragePlanCode === plan.code
+                        ? 'border-blue-600 bg-blue-50 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {plan.isDefault && (
+                      <div className="text-xs text-green-600 font-medium mb-2">Ücretsiz</div>
+                    )}
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-900">{plan.name}</h3>
+                    <div className="text-2xl font-bold text-gray-900 my-2">
+                      {plan.storageGB} GB
+                    </div>
+                    {plan.description && (
+                      <p className="text-xs text-gray-500 mb-3">{plan.description}</p>
+                    )}
+                    <div className="text-lg font-bold text-blue-600">
+                      {plan.monthlyPrice === 0 ? 'Ücretsiz' : `₺${plan.monthlyPrice}/ay`}
+                    </div>
+                    {selectedStoragePlanCode === plan.code && (
+                      <div className="mt-3">
+                        <svg className="w-6 h-6 text-blue-600 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-between pt-6 border-t">
+              <button
+                onClick={() => setCurrentStep('users')}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Geri
+              </button>
+              <button
+                onClick={handleStorageNext}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+              >
+                Devam Et
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Add-ons Selection */}
+        {currentStep === 'addons' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+              Ek Özellikler
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              İhtiyacınıza göre ek özellikler ekleyin (isteğe bağlı)
+            </p>
+
+            {loadingSetupOptions ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : setupOptions && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                {setupOptions.addOns.map((addOn) => (
+                  <div
+                    key={addOn.id}
+                    onClick={() => toggleAddOn(addOn.code)}
+                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all ${
+                      selectedAddOnCodes.includes(addOn.code)
+                        ? 'border-blue-600 bg-blue-50 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg">
+                        {addOn.icon || '⚡'}
+                      </div>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        selectedAddOnCodes.includes(addOn.code)
+                          ? 'bg-blue-600 border-blue-600'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedAddOnCodes.includes(addOn.code) && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-1">{addOn.name}</h3>
+                    {addOn.description && (
+                      <p className="text-xs text-gray-500 mb-3 line-clamp-2">{addOn.description}</p>
+                    )}
+                    <div className="text-lg font-bold text-blue-600">
+                      ₺{addOn.monthlyPrice}/ay
+                    </div>
+                    {addOn.features.length > 0 && selectedAddOnCodes.includes(addOn.code) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <ul className="space-y-1">
+                          {addOn.features.slice(0, 3).map((feature, idx) => (
+                            <li key={idx} className="text-xs text-gray-500 flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              {feature.featureName}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Add-ons Total */}
+            {selectedAddOnCodes.length > 0 && customPrice && (
+              <div className="text-center mt-4">
+                <div className="text-gray-600">Seçili ek özellikler toplam:</div>
+                <div className="text-xl font-bold text-blue-600">
+                  ₺{customPrice.addOns.reduce((sum, a) => sum + a.monthlyPrice, 0)}/ay
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between pt-6 border-t">
+              <button
+                onClick={() => setCurrentStep('storage')}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Geri
+              </button>
+              <button
+                onClick={handleAddOnsNext}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+              >
+                {selectedAddOnCodes.length === 0 ? 'Atla' : 'Devam Et'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Industry Selection */}
+        {currentStep === 'industry' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+              Sektörünüzü Seçin
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Sektörünüze özel modül önerileri alın (isteğe bağlı)
+            </p>
+
+            {loadingSetupOptions ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : setupOptions && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                {setupOptions.industries.map((industry) => (
+                  <div
+                    key={industry.id}
+                    onClick={() => setSelectedIndustryCode(
+                      selectedIndustryCode === industry.code ? '' : industry.code
+                    )}
+                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all text-center ${
+                      selectedIndustryCode === industry.code
+                        ? 'border-blue-600 bg-blue-50 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-3xl mb-2">{industry.icon || '🏢'}</div>
+                    <h3 className="font-semibold text-gray-900 text-sm">{industry.name}</h3>
+                    {industry.description && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{industry.description}</p>
+                    )}
+                    {selectedIndustryCode === industry.code && industry.recommendedModules.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="text-xs text-blue-600 font-medium">
+                          +{industry.recommendedModules.length} önerilen modül
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Recommended Modules Preview */}
+            {selectedIndustryCode && setupOptions && (
+              <div className="mt-6 max-w-2xl mx-auto">
+                {(() => {
+                  const industry = setupOptions.industries.find(i => i.code === selectedIndustryCode)
+                  if (!industry || industry.recommendedModules.length === 0) return null
+                  return (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 mb-2">
+                        {industry.name} için Önerilen Modüller:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {industry.recommendedModules.map((moduleCode) => {
+                          const module = modules.find(m => m.code === moduleCode)
+                          return (
+                            <span
+                              key={moduleCode}
+                              className={`px-2 py-1 rounded text-xs ${
+                                selectedModuleCodes.includes(moduleCode)
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              {module?.name || moduleCode}
+                              {selectedModuleCodes.includes(moduleCode) && ' ✓'}
+                            </span>
+                          )
+                        })}
+                      </div>
+                      <p className="text-xs text-blue-700 mt-2">
+                        Bu modüller devam ettiğinizde otomatik olarak eklenecektir.
+                      </p>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
+            <div className="flex justify-between pt-6 border-t">
+              <button
+                onClick={() => setCurrentStep('addons')}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Geri
+              </button>
+              <button
+                onClick={handleIndustryNext}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+              >
+                {selectedIndustryCode ? 'Devam Et' : 'Atla'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Company Information */}
         {currentStep === 'company' && (
           <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -942,7 +1495,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
             <div className="flex justify-between pt-6">
               <button
-                onClick={() => setCurrentStep(packageType === 'custom' ? 'custom-package' : 'package')}
+                onClick={() => setCurrentStep(packageType === 'custom' ? 'industry' : 'package')}
                 className="px-6 py-2 text-gray-600 hover:text-gray-900"
               >
                 Geri

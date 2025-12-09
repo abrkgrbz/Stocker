@@ -11,6 +11,8 @@ using Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 using Stocker.Application.Features.Subscriptions.Commands.ProcessPayment;
 using Stocker.Application.Features.Modules.Queries.GetAvailableModules;
 using Stocker.Application.Features.Modules.Queries.CalculateCustomPackagePrice;
+using Stocker.Application.Features.Pricing.Queries;
+using Stocker.Application.DTOs.Pricing;
 using Stocker.Persistence.Contexts;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
@@ -91,15 +93,20 @@ public class PublicController : ControllerBase
     }
 
     /// <summary>
-    /// Calculate price for custom package based on selected modules
+    /// Calculate price for custom package based on selected modules, users, storage, and add-ons
     /// </summary>
     [HttpPost("calculate-price")]
     [ProducesResponseType(typeof(CustomPackagePriceResponseDto), 200)]
     public async Task<IActionResult> CalculateCustomPackagePrice([FromBody] CustomPackagePriceRequestDto request)
     {
-        _logger.LogInformation("Calculating custom package price for {ModuleCount} modules", request.SelectedModuleCodes.Count);
+        _logger.LogInformation("Calculating custom package price for {ModuleCount} modules, {UserCount} users",
+            request.SelectedModuleCodes.Count, request.UserCount);
 
-        var query = new CalculateCustomPackagePriceQuery(request.SelectedModuleCodes);
+        var query = new CalculateCustomPackagePriceQuery(
+            request.SelectedModuleCodes,
+            request.UserCount,
+            request.StoragePlanCode,
+            request.SelectedAddOnCodes);
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
@@ -108,6 +115,26 @@ public class PublicController : ControllerBase
         }
 
         return BadRequest(new { success = false, message = result.Error?.Description ?? "Fiyat hesaplanamadı" });
+    }
+
+    /// <summary>
+    /// Get all pricing options for setup wizard (user tiers, storage plans, add-ons, industries)
+    /// </summary>
+    [HttpGet("setup-options")]
+    [ProducesResponseType(typeof(SetupPricingOptionsDto), 200)]
+    public async Task<IActionResult> GetSetupPricingOptions()
+    {
+        _logger.LogInformation("Getting setup pricing options");
+
+        var query = new GetSetupPricingOptionsQuery();
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, data = result.Value });
+        }
+
+        return BadRequest(new { success = false, message = result.Error?.Description ?? "Seçenekler yüklenemedi" });
     }
 
     /// <summary>

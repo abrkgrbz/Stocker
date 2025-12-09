@@ -35,6 +35,10 @@ public class MasterDataSeeder
     {
         await SeedModuleDefinitionsAsync();
         await SeedPackagesAsync();
+        await SeedUserTiersAsync();
+        await SeedStoragePlansAsync();
+        await SeedAddOnsAsync();
+        await SeedIndustriesAsync();
         await SeedSystemAdminAsync();
 
         // Only seed test admin in Development environment
@@ -480,5 +484,435 @@ public class MasterDataSeeder
 
         await _context.MasterUsers.AddAsync(tenantAdmin);
         _logger.LogInformation("DEVELOPMENT: Created test tenant admin (Username: 'tenantadmin', Password: 'Admin123!')");
+    }
+
+    private async Task SeedUserTiersAsync()
+    {
+        if (await _context.UserTiers.AnyAsync())
+        {
+            _logger.LogInformation("User tiers already seeded.");
+            return;
+        }
+
+        var tiers = new List<UserTier>
+        {
+            UserTier.Create(
+                code: "MICRO",
+                name: "Mikro İşletme",
+                minUsers: 1,
+                maxUsers: 5,
+                pricePerUser: Money.Create(49m, "TRY"),
+                basePrice: null,
+                description: "1-5 kullanıcı için ideal",
+                displayOrder: 0),
+
+            UserTier.Create(
+                code: "SMALL",
+                name: "Küçük İşletme",
+                minUsers: 6,
+                maxUsers: 15,
+                pricePerUser: Money.Create(39m, "TRY"),
+                basePrice: Money.Create(100m, "TRY"),
+                description: "6-15 kullanıcı için tasarlandı",
+                displayOrder: 1),
+
+            UserTier.Create(
+                code: "MEDIUM",
+                name: "Orta Ölçekli",
+                minUsers: 16,
+                maxUsers: 50,
+                pricePerUser: Money.Create(29m, "TRY"),
+                basePrice: Money.Create(300m, "TRY"),
+                description: "16-50 kullanıcı için uygun",
+                displayOrder: 2),
+
+            UserTier.Create(
+                code: "LARGE",
+                name: "Büyük İşletme",
+                minUsers: 51,
+                maxUsers: 200,
+                pricePerUser: Money.Create(19m, "TRY"),
+                basePrice: Money.Create(500m, "TRY"),
+                description: "51-200 kullanıcı için",
+                displayOrder: 3),
+
+            UserTier.Create(
+                code: "ENTERPRISE",
+                name: "Kurumsal",
+                minUsers: 201,
+                maxUsers: -1, // Sınırsız
+                pricePerUser: Money.Create(14m, "TRY"),
+                basePrice: Money.Create(1000m, "TRY"),
+                description: "200+ kullanıcı için kurumsal plan",
+                displayOrder: 4)
+        };
+
+        await _context.UserTiers.AddRangeAsync(tiers);
+        _logger.LogInformation("Seeded {Count} user tiers.", tiers.Count);
+    }
+
+    private async Task SeedStoragePlansAsync()
+    {
+        if (await _context.StoragePlans.AnyAsync())
+        {
+            _logger.LogInformation("Storage plans already seeded.");
+            return;
+        }
+
+        var plans = new List<StoragePlan>
+        {
+            StoragePlan.Create(
+                code: "BASIC",
+                name: "Temel Depolama",
+                storageGB: 5,
+                monthlyPrice: Money.Create(0m, "TRY"),
+                description: "5 GB ücretsiz depolama alanı",
+                isDefault: true,
+                displayOrder: 0),
+
+            StoragePlan.Create(
+                code: "STANDARD",
+                name: "Standart Depolama",
+                storageGB: 25,
+                monthlyPrice: Money.Create(49m, "TRY"),
+                description: "25 GB depolama alanı",
+                isDefault: false,
+                displayOrder: 1),
+
+            StoragePlan.Create(
+                code: "PROFESSIONAL",
+                name: "Profesyonel Depolama",
+                storageGB: 100,
+                monthlyPrice: Money.Create(149m, "TRY"),
+                description: "100 GB depolama alanı",
+                isDefault: false,
+                displayOrder: 2),
+
+            StoragePlan.Create(
+                code: "ENTERPRISE",
+                name: "Kurumsal Depolama",
+                storageGB: 500,
+                monthlyPrice: Money.Create(399m, "TRY"),
+                description: "500 GB depolama alanı",
+                isDefault: false,
+                displayOrder: 3),
+
+            StoragePlan.Create(
+                code: "UNLIMITED",
+                name: "Sınırsız Depolama",
+                storageGB: 2000,
+                monthlyPrice: Money.Create(799m, "TRY"),
+                description: "2 TB depolama alanı",
+                isDefault: false,
+                displayOrder: 4)
+        };
+
+        await _context.StoragePlans.AddRangeAsync(plans);
+        _logger.LogInformation("Seeded {Count} storage plans.", plans.Count);
+    }
+
+    private async Task SeedAddOnsAsync()
+    {
+        if (await _context.AddOns.AnyAsync())
+        {
+            _logger.LogInformation("Add-ons already seeded.");
+            return;
+        }
+
+        var addOns = new List<AddOn>();
+
+        // API Erişimi
+        var apiAccess = AddOn.Create(
+            code: "API_ACCESS",
+            name: "API Erişimi",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            description: "REST API ve webhook entegrasyonları",
+            icon: "ApiOutlined",
+            displayOrder: 0,
+            category: "Entegrasyon");
+        apiAccess.AddFeature("REST API", "Tam REST API erişimi");
+        apiAccess.AddFeature("Webhook", "Gerçek zamanlı webhook bildirimleri");
+        apiAccess.AddFeature("API Dokümantasyonu", "Detaylı API belgeleri");
+        apiAccess.AddFeature("Rate Limit", "Dakikada 1000 istek");
+        addOns.Add(apiAccess);
+
+        // Öncelikli Destek
+        var prioritySupport = AddOn.Create(
+            code: "PRIORITY_SUPPORT",
+            name: "Öncelikli Destek",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            description: "7/24 öncelikli teknik destek",
+            icon: "CustomerServiceOutlined",
+            displayOrder: 1,
+            category: "Destek");
+        prioritySupport.AddFeature("7/24 Destek", "Her zaman ulaşılabilir destek");
+        prioritySupport.AddFeature("Öncelikli Yanıt", "1 saat içinde yanıt garantisi");
+        prioritySupport.AddFeature("Telefon Desteği", "Doğrudan telefon hattı");
+        prioritySupport.AddFeature("Uzaktan Yardım", "Ekran paylaşımı ile destek");
+        addOns.Add(prioritySupport);
+
+        // İleri Güvenlik
+        var advancedSecurity = AddOn.Create(
+            code: "ADVANCED_SECURITY",
+            name: "İleri Güvenlik",
+            monthlyPrice: Money.Create(249m, "TRY"),
+            description: "Gelişmiş güvenlik özellikleri",
+            icon: "SecurityScanOutlined",
+            displayOrder: 2,
+            category: "Güvenlik");
+        advancedSecurity.AddFeature("İki Faktörlü Doğrulama", "2FA zorunluluğu");
+        advancedSecurity.AddFeature("IP Kısıtlama", "İzin verilen IP listesi");
+        advancedSecurity.AddFeature("Oturum Yönetimi", "Gelişmiş oturum kontrolü");
+        advancedSecurity.AddFeature("Güvenlik Raporları", "Haftalık güvenlik raporları");
+        advancedSecurity.AddFeature("SSO Entegrasyonu", "Single Sign-On desteği");
+        addOns.Add(advancedSecurity);
+
+        // Özel Alan Adı
+        var customDomain = AddOn.Create(
+            code: "CUSTOM_DOMAIN",
+            name: "Özel Alan Adı",
+            monthlyPrice: Money.Create(99m, "TRY"),
+            description: "Kendi alan adınızla erişim",
+            icon: "GlobalOutlined",
+            displayOrder: 3,
+            category: "Özelleştirme");
+        customDomain.AddFeature("Özel Domain", "firma.sizinalan.com");
+        customDomain.AddFeature("SSL Sertifikası", "Ücretsiz SSL sertifikası");
+        customDomain.AddFeature("DNS Yönetimi", "Kolay DNS yapılandırması");
+        addOns.Add(customDomain);
+
+        // Beyaz Etiket
+        var whiteLabel = AddOn.Create(
+            code: "WHITE_LABEL",
+            name: "Beyaz Etiket",
+            monthlyPrice: Money.Create(499m, "TRY"),
+            description: "Kendi markanızla sunun",
+            icon: "SkinOutlined",
+            displayOrder: 4,
+            category: "Özelleştirme");
+        whiteLabel.AddFeature("Özel Logo", "Kendi logonuzu kullanın");
+        whiteLabel.AddFeature("Özel Renkler", "Marka renkleriniz");
+        whiteLabel.AddFeature("Özel E-posta Şablonları", "Markalı e-postalar");
+        whiteLabel.AddFeature("Giriş Sayfası Özelleştirme", "Özel giriş ekranı");
+        addOns.Add(whiteLabel);
+
+        // Otomatik Yedekleme
+        var autoBackup = AddOn.Create(
+            code: "AUTO_BACKUP",
+            name: "Otomatik Yedekleme",
+            monthlyPrice: Money.Create(149m, "TRY"),
+            description: "Gelişmiş yedekleme ve kurtarma",
+            icon: "CloudSyncOutlined",
+            displayOrder: 5,
+            category: "Güvenlik");
+        autoBackup.AddFeature("Saatlik Yedekleme", "Her saat otomatik yedek");
+        autoBackup.AddFeature("30 Gün Saklama", "30 günlük yedek geçmişi");
+        autoBackup.AddFeature("Tek Tık Geri Yükleme", "Kolay geri yükleme");
+        autoBackup.AddFeature("Farklı Lokasyon", "Coğrafi yedeklilik");
+        addOns.Add(autoBackup);
+
+        // E-Fatura Entegrasyonu
+        var eInvoice = AddOn.Create(
+            code: "E_INVOICE",
+            name: "e-Fatura Entegrasyonu",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            description: "GİB entegrasyonu ile e-fatura",
+            icon: "FileProtectOutlined",
+            displayOrder: 6,
+            category: "Entegrasyon");
+        eInvoice.AddFeature("e-Fatura Gönderimi", "Doğrudan GİB'e gönderim");
+        eInvoice.AddFeature("e-Arşiv", "e-Arşiv fatura desteği");
+        eInvoice.AddFeature("Otomatik Numaralama", "Seri no yönetimi");
+        eInvoice.AddFeature("XML/PDF Export", "Çoklu format desteği");
+        addOns.Add(eInvoice);
+
+        // Çoklu Dil Desteği
+        var multiLanguage = AddOn.Create(
+            code: "MULTI_LANGUAGE",
+            name: "Çoklu Dil Desteği",
+            monthlyPrice: Money.Create(79m, "TRY"),
+            description: "10+ dilde kullanım imkanı",
+            icon: "TranslationOutlined",
+            displayOrder: 7,
+            category: "Özelleştirme");
+        multiLanguage.AddFeature("10+ Dil", "Türkçe, İngilizce, Almanca, vb.");
+        multiLanguage.AddFeature("Otomatik Çeviri", "İçerik otomatik çevirisi");
+        multiLanguage.AddFeature("Çok Dilli Raporlar", "Farklı dillerde raporlar");
+        addOns.Add(multiLanguage);
+
+        await _context.AddOns.AddRangeAsync(addOns);
+        _logger.LogInformation("Seeded {Count} add-ons.", addOns.Count);
+    }
+
+    private async Task SeedIndustriesAsync()
+    {
+        if (await _context.Industries.AnyAsync())
+        {
+            _logger.LogInformation("Industries already seeded.");
+            return;
+        }
+
+        var industries = new List<Industry>();
+
+        // Perakende
+        var retail = Industry.Create(
+            code: "RETAIL",
+            name: "Perakende",
+            description: "Mağaza, market, butik ve perakende satış işletmeleri",
+            icon: "ShopOutlined",
+            displayOrder: 0);
+        retail.AddRecommendedModule("CRM");
+        retail.AddRecommendedModule("Sales");
+        retail.AddRecommendedModule("Inventory");
+        retail.AddRecommendedModule("Finance");
+        industries.Add(retail);
+
+        // E-Ticaret
+        var ecommerce = Industry.Create(
+            code: "ECOMMERCE",
+            name: "E-Ticaret",
+            description: "Online satış ve e-ticaret platformları",
+            icon: "ShoppingCartOutlined",
+            displayOrder: 1);
+        ecommerce.AddRecommendedModule("CRM");
+        ecommerce.AddRecommendedModule("Sales");
+        ecommerce.AddRecommendedModule("Inventory");
+        ecommerce.AddRecommendedModule("Reports");
+        industries.Add(ecommerce);
+
+        // Üretim
+        var manufacturing = Industry.Create(
+            code: "MANUFACTURING",
+            name: "Üretim",
+            description: "İmalat, fabrika ve üretim tesisleri",
+            icon: "ToolOutlined",
+            displayOrder: 2);
+        manufacturing.AddRecommendedModule("Inventory");
+        manufacturing.AddRecommendedModule("Purchase");
+        manufacturing.AddRecommendedModule("HR");
+        manufacturing.AddRecommendedModule("Finance");
+        manufacturing.AddRecommendedModule("ACCOUNTING");
+        industries.Add(manufacturing);
+
+        // Toptan Satış
+        var wholesale = Industry.Create(
+            code: "WHOLESALE",
+            name: "Toptan Satış",
+            description: "Toptancı ve distribütör firmalar",
+            icon: "HomeOutlined",
+            displayOrder: 3);
+        wholesale.AddRecommendedModule("CRM");
+        wholesale.AddRecommendedModule("Sales");
+        wholesale.AddRecommendedModule("Inventory");
+        wholesale.AddRecommendedModule("Purchase");
+        wholesale.AddRecommendedModule("Finance");
+        industries.Add(wholesale);
+
+        // Hizmet Sektörü
+        var services = Industry.Create(
+            code: "SERVICES",
+            name: "Hizmet",
+            description: "Danışmanlık, ajans ve profesyonel hizmet firmaları",
+            icon: "SolutionOutlined",
+            displayOrder: 4);
+        services.AddRecommendedModule("CRM");
+        services.AddRecommendedModule("Projects");
+        services.AddRecommendedModule("HR");
+        services.AddRecommendedModule("Finance");
+        industries.Add(services);
+
+        // Sağlık
+        var healthcare = Industry.Create(
+            code: "HEALTHCARE",
+            name: "Sağlık",
+            description: "Hastane, klinik ve sağlık kuruluşları",
+            icon: "MedicineBoxOutlined",
+            displayOrder: 5);
+        healthcare.AddRecommendedModule("CRM");
+        healthcare.AddRecommendedModule("HR");
+        healthcare.AddRecommendedModule("Inventory");
+        healthcare.AddRecommendedModule("Finance");
+        healthcare.AddRecommendedModule("ACCOUNTING");
+        industries.Add(healthcare);
+
+        // İnşaat
+        var construction = Industry.Create(
+            code: "CONSTRUCTION",
+            name: "İnşaat",
+            description: "Müteahhitlik ve inşaat firmaları",
+            icon: "BuildOutlined",
+            displayOrder: 6);
+        construction.AddRecommendedModule("Projects");
+        construction.AddRecommendedModule("Purchase");
+        construction.AddRecommendedModule("HR");
+        construction.AddRecommendedModule("Finance");
+        construction.AddRecommendedModule("ACCOUNTING");
+        industries.Add(construction);
+
+        // Eğitim
+        var education = Industry.Create(
+            code: "EDUCATION",
+            name: "Eğitim",
+            description: "Okul, kurs ve eğitim kurumları",
+            icon: "ReadOutlined",
+            displayOrder: 7);
+        education.AddRecommendedModule("CRM");
+        education.AddRecommendedModule("HR");
+        education.AddRecommendedModule("Finance");
+        education.AddRecommendedModule("Reports");
+        industries.Add(education);
+
+        // Restoran & Gıda
+        var restaurant = Industry.Create(
+            code: "RESTAURANT",
+            name: "Restoran & Gıda",
+            description: "Restoran, kafe ve yiyecek içecek işletmeleri",
+            icon: "CoffeeOutlined",
+            displayOrder: 8);
+        restaurant.AddRecommendedModule("Sales");
+        restaurant.AddRecommendedModule("Inventory");
+        restaurant.AddRecommendedModule("HR");
+        restaurant.AddRecommendedModule("Finance");
+        industries.Add(restaurant);
+
+        // Lojistik
+        var logistics = Industry.Create(
+            code: "LOGISTICS",
+            name: "Lojistik",
+            description: "Taşımacılık, kargo ve lojistik firmaları",
+            icon: "CarOutlined",
+            displayOrder: 9);
+        logistics.AddRecommendedModule("CRM");
+        logistics.AddRecommendedModule("Inventory");
+        logistics.AddRecommendedModule("HR");
+        logistics.AddRecommendedModule("Finance");
+        logistics.AddRecommendedModule("Projects");
+        industries.Add(logistics);
+
+        // Otomotiv
+        var automotive = Industry.Create(
+            code: "AUTOMOTIVE",
+            name: "Otomotiv",
+            description: "Oto galeri, servis ve yedek parça",
+            icon: "CarOutlined",
+            displayOrder: 10);
+        automotive.AddRecommendedModule("CRM");
+        automotive.AddRecommendedModule("Sales");
+        automotive.AddRecommendedModule("Inventory");
+        automotive.AddRecommendedModule("Finance");
+        industries.Add(automotive);
+
+        // Diğer
+        var other = Industry.Create(
+            code: "OTHER",
+            name: "Diğer",
+            description: "Yukarıdaki kategorilere uymayan işletmeler",
+            icon: "AppstoreOutlined",
+            displayOrder: 99);
+        other.AddRecommendedModule("Core");
+        industries.Add(other);
+
+        await _context.Industries.AddRangeAsync(industries);
+        _logger.LogInformation("Seeded {Count} industries.", industries.Count);
     }
 }

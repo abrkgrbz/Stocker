@@ -26,6 +26,9 @@ public class ModuleFeatureDto
 public class CustomPackagePriceRequestDto
 {
     public List<string> SelectedModuleCodes { get; set; } = new();
+    public int UserCount { get; set; } = 1;
+    public string? StoragePlanCode { get; set; }
+    public List<string> SelectedAddOnCodes { get; set; } = new();
 }
 
 public class CustomPackagePriceResponseDto
@@ -39,6 +42,40 @@ public class CustomPackagePriceResponseDto
     public decimal QuarterlyDiscount { get; set; } // Yüzde olarak
     public decimal SemiAnnualDiscount { get; set; }
     public decimal AnnualDiscount { get; set; }
+
+    // User pricing breakdown
+    public UserPricingDto? UserPricing { get; set; }
+
+    // Storage pricing breakdown
+    public StoragePricingDto? StoragePricing { get; set; }
+
+    // Add-ons breakdown
+    public List<AddOnPricingDto> AddOns { get; set; } = new();
+}
+
+public class UserPricingDto
+{
+    public int UserCount { get; set; }
+    public string TierCode { get; set; } = string.Empty;
+    public string TierName { get; set; } = string.Empty;
+    public decimal PricePerUser { get; set; }
+    public decimal BasePrice { get; set; }
+    public decimal TotalMonthly { get; set; }
+}
+
+public class StoragePricingDto
+{
+    public string PlanCode { get; set; } = string.Empty;
+    public string PlanName { get; set; } = string.Empty;
+    public int StorageGB { get; set; }
+    public decimal MonthlyPrice { get; set; }
+}
+
+public class AddOnPricingDto
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal MonthlyPrice { get; set; }
 }
 
 public class ModulePriceBreakdownDto

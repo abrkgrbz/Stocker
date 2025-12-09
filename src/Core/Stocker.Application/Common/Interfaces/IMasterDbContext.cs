@@ -28,6 +28,14 @@ public interface IMasterDbContext
     DbSet<TenantSettings> TenantSettings { get; }
     DbSet<SecurityAuditLog> SecurityAuditLogs { get; }
 
+    // Pricing & Setup entities
+    DbSet<AddOn> AddOns { get; }
+    DbSet<AddOnFeature> AddOnFeatures { get; }
+    DbSet<StoragePlan> StoragePlans { get; }
+    DbSet<Industry> Industries { get; }
+    DbSet<IndustryRecommendedModule> IndustryRecommendedModules { get; }
+    DbSet<UserTier> UserTiers { get; }
+
     // All entities requiring tenant isolation have been moved to Tenant DB
     
     // REMOVED - Moved to Tenant DB (All phases completed):

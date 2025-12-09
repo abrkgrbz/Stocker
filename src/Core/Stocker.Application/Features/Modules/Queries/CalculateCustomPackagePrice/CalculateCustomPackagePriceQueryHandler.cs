@@ -103,8 +103,108 @@ public class CalculateCustomPackagePriceQueryHandler
                 });
             }
 
-            // Toplam aylık fiyat
-            var monthlyTotal = breakdown.Sum(b => b.MonthlyPrice);
+            // Modül fiyatı toplamı
+            var modulesTotal = breakdown.Sum(b => b.MonthlyPrice);
+
+            // ==================== USER PRICING ====================
+            UserPricingDto? userPricing = null;
+            decimal userTotal = 0m;
+
+            if (request.UserCount > 0)
+            {
+                var userTiers = await _context.UserTiers
+                    .AsNoTracking()
+                    .Where(ut => ut.IsActive)
+                    .OrderBy(ut => ut.DisplayOrder)
+                    .ToListAsync(cancellationToken);
+
+                // Kullanıcı sayısına uygun tier'ı bul
+                var applicableTier = userTiers.FirstOrDefault(t => t.IsWithinRange(request.UserCount));
+
+                if (applicableTier != null)
+                {
+                    var tierPrice = applicableTier.CalculatePrice(request.UserCount);
+                    userTotal = tierPrice.Amount;
+
+                    userPricing = new UserPricingDto
+                    {
+                        UserCount = request.UserCount,
+                        TierCode = applicableTier.Code,
+                        TierName = applicableTier.Name,
+                        PricePerUser = applicableTier.PricePerUser.Amount,
+                        BasePrice = applicableTier.BasePrice?.Amount ?? 0m,
+                        TotalMonthly = userTotal
+                    };
+                }
+            }
+
+            // ==================== STORAGE PRICING ====================
+            StoragePricingDto? storagePricing = null;
+            decimal storageTotal = 0m;
+
+            if (!string.IsNullOrEmpty(request.StoragePlanCode))
+            {
+                var storagePlan = await _context.StoragePlans
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sp => sp.Code == request.StoragePlanCode && sp.IsActive, cancellationToken);
+
+                if (storagePlan != null)
+                {
+                    storageTotal = storagePlan.MonthlyPrice.Amount;
+                    storagePricing = new StoragePricingDto
+                    {
+                        PlanCode = storagePlan.Code,
+                        PlanName = storagePlan.Name,
+                        StorageGB = storagePlan.StorageGB,
+                        MonthlyPrice = storageTotal
+                    };
+                }
+            }
+            else
+            {
+                // Varsayılan ücretsiz plan
+                var defaultPlan = await _context.StoragePlans
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(sp => sp.IsDefault && sp.IsActive, cancellationToken);
+
+                if (defaultPlan != null)
+                {
+                    storagePricing = new StoragePricingDto
+                    {
+                        PlanCode = defaultPlan.Code,
+                        PlanName = defaultPlan.Name,
+                        StorageGB = defaultPlan.StorageGB,
+                        MonthlyPrice = 0m
+                    };
+                }
+            }
+
+            // ==================== ADD-ONS PRICING ====================
+            var addOnPricing = new List<AddOnPricingDto>();
+            decimal addOnsTotal = 0m;
+
+            if (request.SelectedAddOnCodes?.Any() == true)
+            {
+                var selectedAddOnCodes = request.SelectedAddOnCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var addOns = await _context.AddOns
+                    .AsNoTracking()
+                    .Where(a => a.IsActive)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var addOn in addOns.Where(a => selectedAddOnCodes.Contains(a.Code)))
+                {
+                    addOnsTotal += addOn.MonthlyPrice.Amount;
+                    addOnPricing.Add(new AddOnPricingDto
+                    {
+                        Code = addOn.Code,
+                        Name = addOn.Name,
+                        MonthlyPrice = addOn.MonthlyPrice.Amount
+                    });
+                }
+            }
+
+            // ==================== TOTAL CALCULATION ====================
+            var monthlyTotal = modulesTotal + userTotal + storageTotal + addOnsTotal;
 
             // Dönemsel fiyatları hesapla (indirimli)
             var quarterlyTotal = monthlyTotal * 3 * (1 - QuarterlyDiscountPercent / 100);
@@ -121,7 +221,10 @@ public class CalculateCustomPackagePriceQueryHandler
                 Breakdown = breakdown,
                 QuarterlyDiscount = QuarterlyDiscountPercent,
                 SemiAnnualDiscount = SemiAnnualDiscountPercent,
-                AnnualDiscount = AnnualDiscountPercent
+                AnnualDiscount = AnnualDiscountPercent,
+                UserPricing = userPricing,
+                StoragePricing = storagePricing,
+                AddOns = addOnPricing
             });
         }
         catch (Exception ex)

@@ -63,6 +63,14 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // System Settings
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 
+    // Pricing & Setup entities
+    public DbSet<AddOn> AddOns => Set<AddOn>();
+    public DbSet<AddOnFeature> AddOnFeatures => Set<AddOnFeature>();
+    public DbSet<StoragePlan> StoragePlans => Set<StoragePlan>();
+    public DbSet<Industry> Industries => Set<Industry>();
+    public DbSet<IndustryRecommendedModule> IndustryRecommendedModules => Set<IndustryRecommendedModule>();
+    public DbSet<UserTier> UserTiers => Set<UserTier>();
+
     // Migration Management
     public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
 
