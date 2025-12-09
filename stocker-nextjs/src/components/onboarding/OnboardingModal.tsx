@@ -152,15 +152,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         setLoading(true);
 
         // Call onComplete and get tenantId for progress tracking
+        console.log('📤 OnboardingModal calling onComplete with:', finalData);
         const result = await onComplete(finalData);
+        console.log('📥 OnboardingModal received result:', result);
         setLoading(false);
 
         // If we got a tenantId, show the progress modal (provisioning started)
         // Otherwise tenant is already active, redirect to dashboard
         if (result?.tenantId) {
+          console.log('✅ TenantId received, showing progress modal:', result.tenantId);
           setSetupTenantId(result.tenantId);
           setShowProgressModal(true);
         } else {
+          console.log('⚠️ No tenantId, redirecting to dashboard');
           // Tenant already active, redirect immediately
           window.location.href = '/dashboard';
         }

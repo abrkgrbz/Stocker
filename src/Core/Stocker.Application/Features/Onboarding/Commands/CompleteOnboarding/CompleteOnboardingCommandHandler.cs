@@ -279,16 +279,19 @@ public sealed class CompleteOnboardingCommandHandler
             // TRIGGER TENANT PROVISIONING JOB
             // ============================================
             // Only trigger if tenant is not yet active (database not provisioned)
+            _logger.LogWarning("🔍 ONBOARDING DEBUG - TenantId: {TenantId}, IsActive: {IsActive}",
+                request.TenantId, tenant.IsActive);
+
             if (!tenant.IsActive)
             {
-                _logger.LogInformation("Triggering tenant provisioning job for TenantId: {TenantId}", request.TenantId);
+                _logger.LogWarning("🚀 TRIGGERING PROVISIONING JOB for TenantId: {TenantId}", request.TenantId);
                 _backgroundJobService.Enqueue<ITenantProvisioningJob>(
                     job => job.ProvisionNewTenantAsync(request.TenantId));
                 provisioningStarted = true;
             }
             else
             {
-                _logger.LogInformation("Tenant {TenantId} is already active, skipping provisioning", request.TenantId);
+                _logger.LogWarning("⚠️ SKIPPING PROVISIONING - Tenant {TenantId} IsActive=true", request.TenantId);
             }
         }
         catch (Exception ex)

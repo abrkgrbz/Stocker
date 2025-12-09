@@ -461,16 +461,24 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   const handleOnboardingComplete = async (data: any): Promise<{ tenantId?: string; success?: boolean }> => {
     try {
+      console.log('🚀 Onboarding data being sent:', data);
       const result = await completeOnboarding(data);
+      console.log('✅ Onboarding complete response:', result);
+      console.log('📊 provisioningStarted:', result.provisioningStarted);
+      console.log('🏢 tenantId:', result.tenantId);
+
       // Don't show success message here - it will be shown by SetupProgressModal
       // Return tenantId for progress tracking
       // If provisioningStarted is true, the progress modal will show
       // Otherwise (tenant already active), redirect immediately
-      return {
+      const returnValue = {
         tenantId: result.provisioningStarted ? result.tenantId : undefined,
         success: true
       };
+      console.log('🎯 Returning to OnboardingModal:', returnValue);
+      return returnValue;
     } catch (error) {
+      console.error('❌ Onboarding error:', error);
       message.error('Kurulum sırasında bir hata oluştu. Lütfen tekrar deneyin.');
       throw error;
     }
