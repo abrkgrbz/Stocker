@@ -285,8 +285,10 @@ public sealed class CompleteOnboardingCommandHandler
             if (!tenant.IsActive)
             {
                 _logger.LogWarning("🚀 TRIGGERING PROVISIONING JOB for TenantId: {TenantId}", request.TenantId);
-                _backgroundJobService.Enqueue<ITenantProvisioningJob>(
-                    job => job.ProvisionNewTenantAsync(request.TenantId));
+                // Schedule with 3 second delay to allow frontend SignalR connection to establish
+                _backgroundJobService.Schedule<ITenantProvisioningJob>(
+                    job => job.ProvisionNewTenantAsync(request.TenantId),
+                    TimeSpan.FromSeconds(3));
                 provisioningStarted = true;
             }
             else

@@ -8,6 +8,7 @@ using Stocker.SharedKernel.MultiTenancy;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Domain.Master.Entities;
 using BillingCycle = Stocker.Domain.Master.Enums.BillingCycle;
+using MasterTenant = Stocker.Domain.Master.Entities.Tenant;
 
 namespace Stocker.Application.Features.Setup.Commands.CompleteSetup;
 
@@ -17,6 +18,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
     private readonly IMasterDbContext _masterDbContext;
     private readonly ITenantContextFactory _tenantContextFactory;
     private readonly ITenantStorageService _tenantStorageService;
+    private readonly IBackgroundJobService _backgroundJobService;
     private readonly ILogger<CompleteSetupCommandHandler> _logger;
 
     public CompleteSetupCommandHandler(
@@ -24,12 +26,14 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
         IMasterDbContext masterDbContext,
         ITenantContextFactory tenantContextFactory,
         ITenantStorageService tenantStorageService,
+        IBackgroundJobService backgroundJobService,
         ILogger<CompleteSetupCommandHandler> logger)
     {
         _masterUnitOfWork = masterUnitOfWork;
         _masterDbContext = masterDbContext;
         _tenantContextFactory = tenantContextFactory;
         _tenantStorageService = tenantStorageService;
+        _backgroundJobService = backgroundJobService;
         _logger = logger;
     }
 
@@ -296,17 +300,52 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                 _logger.LogError(setupEx, "Failed to create SetupWizard record for tenant {TenantId}", request.TenantId);
             }
 
-            _logger.LogInformation("Setup completed successfully - CompanyId: {CompanyId}, SubscriptionId: {SubscriptionId}",
-                companyId, subscriptionId);
+            // Trigger tenant provisioning job if tenant is not yet active
+            var provisioningStarted = false;
+            try
+            {
+                var masterTenant = await _masterUnitOfWork.Repository<MasterTenant>()
+                    .GetByIdAsync(request.TenantId, cancellationToken);
+
+                _logger.LogWarning("🔍 SETUP DEBUG - TenantId: {TenantId}, IsActive: {IsActive}",
+                    request.TenantId, masterTenant?.IsActive);
+
+                if (masterTenant != null && !masterTenant.IsActive)
+                {
+                    _logger.LogWarning("🚀 TRIGGERING PROVISIONING JOB from CompleteSetup for TenantId: {TenantId}", request.TenantId);
+                    // Schedule with 3 second delay to allow frontend SignalR connection to establish
+                    _backgroundJobService.Schedule<ITenantProvisioningJob>(
+                        job => job.ProvisionNewTenantAsync(request.TenantId),
+                        TimeSpan.FromSeconds(3));
+                    provisioningStarted = true;
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ SKIPPING PROVISIONING from CompleteSetup - Tenant {TenantId} IsActive={IsActive}",
+                        request.TenantId, masterTenant?.IsActive);
+                }
+            }
+            catch (Exception provisionEx)
+            {
+                _logger.LogError(provisionEx, "Error triggering provisioning job for TenantId: {TenantId}", request.TenantId);
+                // Don't fail setup - provisioning can be retried
+            }
+
+            _logger.LogInformation("Setup completed successfully - CompanyId: {CompanyId}, SubscriptionId: {SubscriptionId}, ProvisioningStarted: {ProvisioningStarted}",
+                companyId, subscriptionId, provisioningStarted);
 
             return Result<CompleteSetupResponse>.Success(new CompleteSetupResponse
             {
                 Success = true,
-                Message = "Kurulum başarıyla tamamlandı",
+                Message = provisioningStarted
+                    ? "Kurulum başlatıldı, veritabanı hazırlanıyor"
+                    : "Kurulum başarıyla tamamlandı",
                 CompanyId = companyId,
                 SubscriptionId = subscriptionId,
+                TenantId = request.TenantId,
                 SetupCompleted = true,
-                RedirectUrl = "/dashboard"
+                ProvisioningStarted = provisioningStarted,
+                RedirectUrl = provisioningStarted ? "" : "/dashboard"
             });
         }
         catch (Exception ex)

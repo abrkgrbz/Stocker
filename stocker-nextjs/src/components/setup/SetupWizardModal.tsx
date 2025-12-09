@@ -5,6 +5,7 @@ import { Modal, Tabs, Tooltip, Badge } from 'antd'
 import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
 import { usePricingSignalR } from '@/hooks/usePricingSignalR'
+import SetupProgressModal from './SetupProgressModal'
 
 type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'complete'
 type PackageType = 'ready' | 'custom'
@@ -167,6 +168,10 @@ interface SetupWizardModalProps {
 export default function SetupWizardModal({ open, onComplete }: SetupWizardModalProps) {
   const [currentStep, setCurrentStep] = useState<SetupStep>('package-type')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Progress modal state for tenant provisioning
+  const [showProgressModal, setShowProgressModal] = useState(false)
+  const [setupTenantId, setSetupTenantId] = useState<string | null>(null)
 
   // SignalR for real-time pricing
   const {
@@ -558,12 +563,22 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       })
 
       const data = await response.json()
+      console.log('[SetupWizardModal] Complete response:', data)
 
       if (response.ok && data.success) {
-        setCurrentStep('complete')
-        setTimeout(() => {
-          onComplete()
-        }, 2000)
+        // Check if provisioning was started - show progress modal
+        if (data.provisioningStarted && data.tenantId) {
+          console.log('[SetupWizardModal] Provisioning started, showing progress modal for tenant:', data.tenantId)
+          setSetupTenantId(data.tenantId)
+          setShowProgressModal(true)
+        } else {
+          // No provisioning needed, redirect to dashboard
+          console.log('[SetupWizardModal] No provisioning needed, redirecting to dashboard')
+          setCurrentStep('complete')
+          setTimeout(() => {
+            onComplete()
+          }, 2000)
+        }
       } else {
         Swal.fire({
           icon: 'error',
@@ -747,8 +762,9 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   }
 
   return (
+    <>
     <Modal
-      open={open}
+      open={open && !showProgressModal}
       footer={null}
       closable={false}
       maskClosable={false}
@@ -1559,5 +1575,32 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       {/* Floating Price Summary Panel */}
       <PriceSummaryPanel />
     </Modal>
+
+    {/* Setup Progress Modal for tenant provisioning */}
+    {showProgressModal && setupTenantId && (
+      <SetupProgressModal
+        visible={showProgressModal}
+        tenantId={setupTenantId}
+        onComplete={() => {
+          console.log('[SetupWizardModal] Setup progress completed')
+          setShowProgressModal(false)
+          onComplete()
+        }}
+        onError={(error: string) => {
+          console.error('[SetupWizardModal] Setup progress error:', error)
+          setShowProgressModal(false)
+          Swal.fire({
+            icon: 'error',
+            title: 'Kurulum Hatası',
+            text: error || 'Kurulum sırasında bir hata oluştu',
+            confirmButtonText: 'Tamam'
+          }).then(() => {
+            // Still try to redirect to dashboard
+            onComplete()
+          })
+        }}
+      />
+    )}
+  </>
   )
 }
