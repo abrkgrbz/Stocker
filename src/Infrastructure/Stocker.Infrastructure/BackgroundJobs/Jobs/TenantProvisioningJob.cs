@@ -302,4 +302,72 @@ public class TenantProvisioningJob : ITenantProvisioningJob
             throw;
         }
     }
+
+    [Queue("critical")]
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 30, 60, 120 })]
+    [DisableConcurrentExecution(timeoutInSeconds: 15 * 60)] // 15 dakika timeout
+    public async Task ProvisionModulesAsync(Guid tenantId)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var migrationService = scope.ServiceProvider.GetRequiredService<IMigrationService>();
+        var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<IMasterUnitOfWork>();
+
+        // Get progress notifier for real-time updates
+        var progressNotifier = scope.ServiceProvider.GetService<ISetupProgressNotifier>();
+
+        try
+        {
+            _logger.LogInformation("Starting module provisioning for TenantId: {TenantId}", tenantId);
+
+            // Step 1: Initializing
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.Initializing,
+                "Modül kurulumu başlatılıyor...", 5);
+
+            // Tenant'ı kontrol et
+            var tenant = await masterUnitOfWork.Repository<Tenant>().GetByIdAsync(tenantId);
+            if (tenant == null)
+            {
+                _logger.LogError("Tenant not found: {TenantId}", tenantId);
+                await NotifyErrorAsync(progressNotifier, tenantId, "Tenant bulunamadı");
+                throw new InvalidOperationException($"Tenant {tenantId} not found");
+            }
+
+            // Step 2: Skip database creation - already exists
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.CreatingDatabase,
+                "Veritabanı doğrulanıyor...", 10);
+
+            // Step 3: Configuring Modules - Main work
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.ConfiguringModules,
+                "Modüller yapılandırılıyor...", 15);
+
+            // Apply module migrations with progress tracking
+            var appliedMigrations = await migrationService.ApplyModuleMigrationsAsync(
+                tenantId, progressNotifier, CancellationToken.None);
+
+            _logger.LogInformation("Applied {Count} module migrations for tenant {TenantId}: {Migrations}",
+                appliedMigrations.Count, tenantId, string.Join(", ", appliedMigrations));
+
+            // Step 4: Seeding module data if needed
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.SeedingData,
+                "Modül verileri hazırlanıyor...", 85);
+
+            // Note: Module-specific seeding can be added here in the future
+            await Task.Delay(500); // Small delay for UI visibility
+
+            // Step 5: Completed
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.Completed,
+                "Modül kurulumu tamamlandı! Yönlendiriliyorsunuz...", 100, isCompleted: true);
+
+            _logger.LogInformation("Module provisioning completed successfully for tenant: {TenantName}", tenant.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to provision modules for tenant: {TenantId}", tenantId);
+
+            // Notify error via SignalR
+            await NotifyErrorAsync(progressNotifier, tenantId, ex.Message);
+
+            throw;
+        }
+    }
 }

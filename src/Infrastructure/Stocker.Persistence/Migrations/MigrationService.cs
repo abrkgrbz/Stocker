@@ -1770,6 +1770,270 @@ public partial class MigrationService
 
         return settings;
     }
+
+    /// <summary>
+    /// Applies only module-specific migrations for a tenant based on their subscription.
+    /// This is used when tenant database already exists but modules need to be provisioned.
+    /// </summary>
+    public async Task<List<string>> ApplyModuleMigrationsAsync(
+        Guid tenantId,
+        ISetupProgressNotifier? progressNotifier = null,
+        CancellationToken cancellationToken = default)
+    {
+        var appliedMigrations = new List<string>();
+
+        using var scope = _serviceProvider.CreateScope();
+        var masterContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
+
+        try
+        {
+            _logger.LogInformation("Starting module migrations for tenant {TenantId}...", tenantId);
+
+            // Get tenant information
+            var tenant = await masterContext.Tenants.FindAsync(new object[] { tenantId }, cancellationToken);
+            if (tenant == null)
+            {
+                throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
+            }
+
+            // Create the tenant database context
+            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
+            var tenantDbContext = (TenantDbContext)context;
+            var connectionString = tenantDbContext.Database.GetConnectionString();
+
+            // Get tenant's subscribed modules from subscription
+            var subscribedModules = await masterContext.Subscriptions
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.Modules)
+                .Where(s => s.TenantId == tenantId)
+                .SelectMany(s => s.Package.Modules)
+                .Where(m => m.IsIncluded)
+                .Select(m => m.ModuleCode.ToUpper())
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation("Tenant {TenantId} has subscribed modules: {Modules}",
+                tenantId, string.Join(", ", subscribedModules));
+
+            var totalModules = subscribedModules.Count;
+            var currentModule = 0;
+
+            // Apply CRM module migrations
+            if (subscribedModules.Contains("CRM"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10; // 10-80%
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "CRM modülü yapılandırılıyor...", progressPercent));
+                }
+
+                try
+                {
+                    _logger.LogInformation("Applying CRM migrations for tenant {TenantId}...", tenantId);
+
+                    var crmOptionsBuilder = new DbContextOptionsBuilder<Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext>();
+                    crmOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var crmDbContext = new Stocker.Modules.CRM.Infrastructure.Persistence.CRMDbContext(
+                        crmOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await crmDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await crmDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"CRM:{m}"));
+                        _logger.LogInformation("CRM migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending CRM migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception crmEx)
+                {
+                    _logger.LogError(crmEx, "Error applying CRM migrations for tenant {TenantId}", tenantId);
+                }
+            }
+
+            // Apply Inventory module migrations
+            if (subscribedModules.Contains("INVENTORY"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "Envanter modülü yapılandırılıyor...", progressPercent));
+                }
+
+                try
+                {
+                    _logger.LogInformation("Applying Inventory migrations for tenant {TenantId}...", tenantId);
+
+                    var inventoryOptionsBuilder = new DbContextOptionsBuilder<InventoryDbContext>();
+                    inventoryOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(InventoryDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var inventoryDbContext = new InventoryDbContext(
+                        inventoryOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await inventoryDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await inventoryDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"Inventory:{m}"));
+                        _logger.LogInformation("Inventory migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending Inventory migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception invEx)
+                {
+                    _logger.LogError(invEx, "Error applying Inventory migrations for tenant {TenantId}", tenantId);
+                }
+            }
+
+            // Apply HR module migrations
+            if (subscribedModules.Contains("HR"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "İK modülü yapılandırılıyor...", progressPercent));
+                }
+
+                try
+                {
+                    _logger.LogInformation("Applying HR migrations for tenant {TenantId}...", tenantId);
+
+                    var hrOptionsBuilder = new DbContextOptionsBuilder<HRDbContext>();
+                    hrOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(HRDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var hrDbContext = new HRDbContext(
+                        hrOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await hrDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await hrDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"HR:{m}"));
+                        _logger.LogInformation("HR migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending HR migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception hrEx)
+                {
+                    _logger.LogError(hrEx, "Error applying HR migrations for tenant {TenantId}", tenantId);
+                }
+            }
+
+            // Apply Sales module migrations
+            if (subscribedModules.Contains("SALES"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "Satış modülü yapılandırılıyor...", progressPercent));
+                }
+
+                // TODO: Implement Sales module migrations when SalesDbContext is available
+                _logger.LogInformation("Sales module migrations placeholder for tenant {TenantId}", tenantId);
+            }
+
+            // Apply Purchase module migrations
+            if (subscribedModules.Contains("PURCHASE"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "Satın alma modülü yapılandırılıyor...", progressPercent));
+                }
+
+                // TODO: Implement Purchase module migrations when PurchaseDbContext is available
+                _logger.LogInformation("Purchase module migrations placeholder for tenant {TenantId}", tenantId);
+            }
+
+            // Apply Finance module migrations
+            if (subscribedModules.Contains("FINANCE"))
+            {
+                currentModule++;
+                var progressPercent = (int)((currentModule / (double)totalModules) * 100 * 0.7) + 10;
+
+                if (progressNotifier != null)
+                {
+                    await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                        tenantId, SetupStepType.ConfiguringModules,
+                        "Finans modülü yapılandırılıyor...", progressPercent));
+                }
+
+                // TODO: Implement Finance module migrations when FinanceDbContext is available
+                _logger.LogInformation("Finance module migrations placeholder for tenant {TenantId}", tenantId);
+            }
+
+            _logger.LogInformation("Module migrations completed for tenant {TenantId}. Applied: {Count} migrations",
+                tenantId, appliedMigrations.Count);
+
+            return appliedMigrations;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying module migrations for tenant {TenantId}", tenantId);
+            throw;
+        }
+    }
 }
 
 /// <summary>

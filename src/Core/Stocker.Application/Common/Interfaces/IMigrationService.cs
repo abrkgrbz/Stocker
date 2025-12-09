@@ -111,4 +111,17 @@ public interface IMigrationService
     /// Executes a scheduled migration. This method is called by Hangfire.
     /// </summary>
     Task ExecuteScheduledMigrationAsync(Guid scheduleId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies only module-specific migrations for a tenant based on their subscription.
+    /// This is used when tenant database already exists but modules need to be provisioned.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="progressNotifier">Optional progress notifier for real-time updates</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of applied module migrations</returns>
+    Task<List<string>> ApplyModuleMigrationsAsync(
+        Guid tenantId,
+        ISetupProgressNotifier? progressNotifier = null,
+        CancellationToken cancellationToken = default);
 }

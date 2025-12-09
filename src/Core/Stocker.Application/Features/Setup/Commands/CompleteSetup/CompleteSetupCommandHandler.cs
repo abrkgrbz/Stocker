@@ -300,7 +300,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                 _logger.LogError(setupEx, "Failed to create SetupWizard record for tenant {TenantId}", request.TenantId);
             }
 
-            // Trigger tenant provisioning job if tenant is not yet active
+            // Trigger tenant provisioning job
             var provisioningStarted = false;
             try
             {
@@ -312,17 +312,23 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
 
                 if (masterTenant != null && !masterTenant.IsActive)
                 {
-                    _logger.LogWarning("🚀 TRIGGERING PROVISIONING JOB from CompleteSetup for TenantId: {TenantId}", request.TenantId);
+                    // Tenant not yet active - run full provisioning (database + modules)
+                    _logger.LogWarning("🚀 TRIGGERING FULL PROVISIONING JOB from CompleteSetup for TenantId: {TenantId}", request.TenantId);
                     // Schedule with 3 second delay to allow frontend SignalR connection to establish
                     _backgroundJobService.Schedule<ITenantProvisioningJob>(
                         job => job.ProvisionNewTenantAsync(request.TenantId),
                         TimeSpan.FromSeconds(3));
                     provisioningStarted = true;
                 }
-                else
+                else if (masterTenant != null && masterTenant.IsActive)
                 {
-                    _logger.LogWarning("⚠️ SKIPPING PROVISIONING from CompleteSetup - Tenant {TenantId} IsActive={IsActive}",
-                        request.TenantId, masterTenant?.IsActive);
+                    // Tenant already active - run module-only provisioning for newly selected modules
+                    _logger.LogWarning("🚀 TRIGGERING MODULE PROVISIONING JOB from CompleteSetup for TenantId: {TenantId}", request.TenantId);
+                    // Schedule with 3 second delay to allow frontend SignalR connection to establish
+                    _backgroundJobService.Schedule<ITenantProvisioningJob>(
+                        job => job.ProvisionModulesAsync(request.TenantId),
+                        TimeSpan.FromSeconds(3));
+                    provisioningStarted = true;
                 }
             }
             catch (Exception provisionEx)
