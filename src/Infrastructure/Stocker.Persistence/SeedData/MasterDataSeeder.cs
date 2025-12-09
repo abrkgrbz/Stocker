@@ -627,7 +627,7 @@ public class MasterDataSeeder
             name: "API Erişimi",
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "REST API ve webhook entegrasyonları",
-            icon: "ApiOutlined",
+            icon: "🔌",
             displayOrder: 0,
             category: "Entegrasyon");
         apiAccess.AddFeature("REST API", "Tam REST API erişimi");
@@ -642,7 +642,7 @@ public class MasterDataSeeder
             name: "Öncelikli Destek",
             monthlyPrice: Money.Create(299m, "TRY"),
             description: "7/24 öncelikli teknik destek",
-            icon: "CustomerServiceOutlined",
+            icon: "🎧",
             displayOrder: 1,
             category: "Destek");
         prioritySupport.AddFeature("7/24 Destek", "Her zaman ulaşılabilir destek");
@@ -657,7 +657,7 @@ public class MasterDataSeeder
             name: "İleri Güvenlik",
             monthlyPrice: Money.Create(249m, "TRY"),
             description: "Gelişmiş güvenlik özellikleri",
-            icon: "SecurityScanOutlined",
+            icon: "🛡️",
             displayOrder: 2,
             category: "Güvenlik");
         advancedSecurity.AddFeature("İki Faktörlü Doğrulama", "2FA zorunluluğu");
@@ -673,7 +673,7 @@ public class MasterDataSeeder
             name: "Özel Alan Adı",
             monthlyPrice: Money.Create(99m, "TRY"),
             description: "Kendi alan adınızla erişim",
-            icon: "GlobalOutlined",
+            icon: "🌐",
             displayOrder: 3,
             category: "Özelleştirme");
         customDomain.AddFeature("Özel Domain", "firma.sizinalan.com");
@@ -687,7 +687,7 @@ public class MasterDataSeeder
             name: "Beyaz Etiket",
             monthlyPrice: Money.Create(499m, "TRY"),
             description: "Kendi markanızla sunun",
-            icon: "SkinOutlined",
+            icon: "🏷️",
             displayOrder: 4,
             category: "Özelleştirme");
         whiteLabel.AddFeature("Özel Logo", "Kendi logonuzu kullanın");
@@ -702,7 +702,7 @@ public class MasterDataSeeder
             name: "Otomatik Yedekleme",
             monthlyPrice: Money.Create(149m, "TRY"),
             description: "Gelişmiş yedekleme ve kurtarma",
-            icon: "CloudSyncOutlined",
+            icon: "☁️",
             displayOrder: 5,
             category: "Güvenlik");
         autoBackup.AddFeature("Saatlik Yedekleme", "Her saat otomatik yedek");
@@ -717,7 +717,7 @@ public class MasterDataSeeder
             name: "e-Fatura Entegrasyonu",
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "GİB entegrasyonu ile e-fatura",
-            icon: "FileProtectOutlined",
+            icon: "📄",
             displayOrder: 6,
             category: "Entegrasyon");
         eInvoice.AddFeature("e-Fatura Gönderimi", "Doğrudan GİB'e gönderim");
@@ -732,7 +732,7 @@ public class MasterDataSeeder
             name: "Çoklu Dil Desteği",
             monthlyPrice: Money.Create(79m, "TRY"),
             description: "10+ dilde kullanım imkanı",
-            icon: "TranslationOutlined",
+            icon: "🌍",
             displayOrder: 7,
             category: "Özelleştirme");
         multiLanguage.AddFeature("10+ Dil", "Türkçe, İngilizce, Almanca, vb.");
@@ -759,7 +759,7 @@ public class MasterDataSeeder
             code: "RETAIL",
             name: "Perakende",
             description: "Mağaza, market, butik ve perakende satış işletmeleri",
-            icon: "ShopOutlined",
+            icon: "🏪",
             displayOrder: 0);
         retail.AddRecommendedModule("CRM");
         retail.AddRecommendedModule("Sales");
@@ -772,7 +772,7 @@ public class MasterDataSeeder
             code: "ECOMMERCE",
             name: "E-Ticaret",
             description: "Online satış ve e-ticaret platformları",
-            icon: "ShoppingCartOutlined",
+            icon: "🛒",
             displayOrder: 1);
         ecommerce.AddRecommendedModule("CRM");
         ecommerce.AddRecommendedModule("Sales");
@@ -785,7 +785,7 @@ public class MasterDataSeeder
             code: "MANUFACTURING",
             name: "Üretim",
             description: "İmalat, fabrika ve üretim tesisleri",
-            icon: "ToolOutlined",
+            icon: "🏭",
             displayOrder: 2);
         manufacturing.AddRecommendedModule("Inventory");
         manufacturing.AddRecommendedModule("Purchase");
@@ -799,7 +799,7 @@ public class MasterDataSeeder
             code: "WHOLESALE",
             name: "Toptan Satış",
             description: "Toptancı ve distribütör firmalar",
-            icon: "HomeOutlined",
+            icon: "📦",
             displayOrder: 3);
         wholesale.AddRecommendedModule("CRM");
         wholesale.AddRecommendedModule("Sales");
@@ -813,7 +813,7 @@ public class MasterDataSeeder
             code: "SERVICES",
             name: "Hizmet",
             description: "Danışmanlık, ajans ve profesyonel hizmet firmaları",
-            icon: "SolutionOutlined",
+            icon: "💼",
             displayOrder: 4);
         services.AddRecommendedModule("CRM");
         services.AddRecommendedModule("Projects");
@@ -826,7 +826,7 @@ public class MasterDataSeeder
             code: "HEALTHCARE",
             name: "Sağlık",
             description: "Hastane, klinik ve sağlık kuruluşları",
-            icon: "MedicineBoxOutlined",
+            icon: "🏥",
             displayOrder: 5);
         healthcare.AddRecommendedModule("CRM");
         healthcare.AddRecommendedModule("HR");
@@ -840,7 +840,7 @@ public class MasterDataSeeder
             code: "CONSTRUCTION",
             name: "İnşaat",
             description: "Müteahhitlik ve inşaat firmaları",
-            icon: "BuildOutlined",
+            icon: "🏗️",
             displayOrder: 6);
         construction.AddRecommendedModule("Projects");
         construction.AddRecommendedModule("Purchase");
@@ -854,7 +854,7 @@ public class MasterDataSeeder
             code: "EDUCATION",
             name: "Eğitim",
             description: "Okul, kurs ve eğitim kurumları",
-            icon: "ReadOutlined",
+            icon: "🎓",
             displayOrder: 7);
         education.AddRecommendedModule("CRM");
         education.AddRecommendedModule("HR");
@@ -867,7 +867,7 @@ public class MasterDataSeeder
             code: "RESTAURANT",
             name: "Restoran & Gıda",
             description: "Restoran, kafe ve yiyecek içecek işletmeleri",
-            icon: "CoffeeOutlined",
+            icon: "🍽️",
             displayOrder: 8);
         restaurant.AddRecommendedModule("Sales");
         restaurant.AddRecommendedModule("Inventory");
@@ -880,7 +880,7 @@ public class MasterDataSeeder
             code: "LOGISTICS",
             name: "Lojistik",
             description: "Taşımacılık, kargo ve lojistik firmaları",
-            icon: "CarOutlined",
+            icon: "🚚",
             displayOrder: 9);
         logistics.AddRecommendedModule("CRM");
         logistics.AddRecommendedModule("Inventory");
@@ -894,7 +894,7 @@ public class MasterDataSeeder
             code: "AUTOMOTIVE",
             name: "Otomotiv",
             description: "Oto galeri, servis ve yedek parça",
-            icon: "CarOutlined",
+            icon: "🚗",
             displayOrder: 10);
         automotive.AddRecommendedModule("CRM");
         automotive.AddRecommendedModule("Sales");
@@ -907,7 +907,7 @@ public class MasterDataSeeder
             code: "OTHER",
             name: "Diğer",
             description: "Yukarıdaki kategorilere uymayan işletmeler",
-            icon: "AppstoreOutlined",
+            icon: "🏢",
             displayOrder: 99);
         other.AddRecommendedModule("Core");
         industries.Add(other);

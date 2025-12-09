@@ -243,10 +243,20 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           if (data.data.length > 0) {
             setSelectedPackageId(data.data[0].id)
           }
+        } else {
+          console.error('Packages API returned error:', data.message)
         }
+      } else {
+        console.error('Failed to fetch packages:', response.status)
       }
     } catch (error) {
       console.error('Failed to load packages:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Bağlantı Hatası',
+        text: 'Paketler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.',
+        confirmButtonText: 'Tamam'
+      })
     } finally {
       setLoadingPackages(false)
     }
@@ -265,10 +275,20 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           // Auto-select core modules
           const coreCodes = data.data.filter((m: ModuleDefinition) => m.isCore).map((m: ModuleDefinition) => m.code)
           setSelectedModuleCodes(coreCodes)
+        } else {
+          console.error('Modules API returned error:', data.message)
         }
+      } else {
+        console.error('Failed to fetch modules:', response.status)
       }
     } catch (error) {
       console.error('Failed to load modules:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Bağlantı Hatası',
+        text: 'Modüller yüklenirken bir hata oluştu. Lütfen tekrar deneyin.',
+        confirmButtonText: 'Tamam'
+      })
     } finally {
       setLoadingModules(false)
     }
@@ -289,10 +309,20 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           if (defaultPlan) {
             setSelectedStoragePlanCode(defaultPlan.code)
           }
+        } else {
+          console.error('Setup options API returned error:', data.message)
         }
+      } else {
+        console.error('Failed to fetch setup options:', response.status)
       }
     } catch (error) {
       console.error('Failed to load setup options:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Bağlantı Hatası',
+        text: 'Kurulum seçenekleri yüklenirken bir hata oluştu. Lütfen tekrar deneyin.',
+        confirmButtonText: 'Tamam'
+      })
     } finally {
       setLoadingSetupOptions(false)
     }
@@ -589,6 +619,97 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
   const getTotalSteps = () => {
     return packageType === 'ready' ? 4 : 8
+  }
+
+  // Check if we should show price summary (custom package steps only)
+  const showPriceSummary = packageType === 'custom' &&
+    ['custom-package', 'users', 'storage', 'addons', 'industry', 'company'].includes(currentStep)
+
+  // Price Summary Panel Component
+  const PriceSummaryPanel = () => {
+    if (!showPriceSummary) return null
+
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {/* Module Count */}
+            <div className="text-center">
+              <div className="text-xs text-gray-500">Modüller</div>
+              <div className="font-semibold text-gray-900">
+                {selectedModuleCodes.filter(code => {
+                  const m = modules.find(mod => mod.code === code)
+                  return m && !m.isCore
+                }).length}
+              </div>
+            </div>
+
+            {/* Users */}
+            <div className="text-center">
+              <div className="text-xs text-gray-500">Kullanıcı</div>
+              <div className="font-semibold text-gray-900">{userCount}</div>
+            </div>
+
+            {/* Storage */}
+            {selectedStoragePlanCode && setupOptions && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500">Depolama</div>
+                <div className="font-semibold text-gray-900">
+                  {setupOptions.storagePlans.find(p => p.code === selectedStoragePlanCode)?.storageGB || 0} GB
+                </div>
+              </div>
+            )}
+
+            {/* Add-ons */}
+            {selectedAddOnCodes.length > 0 && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500">Ek Özellik</div>
+                <div className="font-semibold text-gray-900">{selectedAddOnCodes.length}</div>
+              </div>
+            )}
+
+            {/* Industry */}
+            {selectedIndustryCode && setupOptions && (
+              <div className="text-center">
+                <div className="text-xs text-gray-500">Sektör</div>
+                <div className="font-semibold text-gray-900 text-sm">
+                  {setupOptions.industries.find(i => i.code === selectedIndustryCode)?.name || '-'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Price Display */}
+          <div className="flex items-center gap-4">
+            {loadingPrice ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm text-gray-500">Hesaplanıyor...</span>
+              </div>
+            ) : customPrice ? (
+              <div className="text-right">
+                <div className="text-xs text-gray-500">{getBillingLabel()} Toplam</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </div>
+                {billingCycle !== 'monthly' && (
+                  <div className="text-xs text-green-600">
+                    %{billingCycle === 'quarterly' ? customPrice.quarterlyDiscount :
+                      billingCycle === 'semiannual' ? customPrice.semiAnnualDiscount :
+                      customPrice.annualDiscount} indirim
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-right">
+                <div className="text-xs text-gray-500">Toplam</div>
+                <div className="text-xl font-semibold text-gray-400">₺0,00</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1535,7 +1656,13 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           </div>
         )}
+
+        {/* Bottom spacing for price summary panel */}
+        {showPriceSummary && <div className="h-20"></div>}
       </div>
+
+      {/* Floating Price Summary Panel */}
+      <PriceSummaryPanel />
     </Modal>
   )
 }
