@@ -33,6 +33,7 @@ public class MasterDataSeeder
 
     public async Task SeedAsync()
     {
+        await SeedModuleDefinitionsAsync();
         await SeedPackagesAsync();
         await SeedSystemAdminAsync();
 
@@ -44,6 +45,232 @@ public class MasterDataSeeder
 
         await SystemSettingsSeed.SeedAsync(_context);
         await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedModuleDefinitionsAsync()
+    {
+        if (await _context.ModuleDefinitions.AnyAsync())
+        {
+            _logger.LogInformation("Module definitions already seeded.");
+            return;
+        }
+
+        var modules = new List<ModuleDefinition>();
+
+        // ==================== CORE MODÜLLER (Zorunlu) ====================
+
+        // Core - Temel Sistem (Ücretsiz, her pakete dahil)
+        var coreModule = ModuleDefinition.Create(
+            code: "Core",
+            name: "Temel Sistem",
+            monthlyPrice: Money.Create(0m, "TRY"),
+            description: "Kullanıcı yönetimi, ayarlar ve temel sistem özellikleri",
+            icon: "SettingOutlined",
+            isCore: true,
+            displayOrder: 0,
+            category: "Temel");
+        coreModule.AddFeature("Kullanıcı Yönetimi", "Kullanıcı ekleme, düzenleme ve yetkilendirme");
+        coreModule.AddFeature("Rol ve İzin Yönetimi", "Detaylı rol ve izin sistemi");
+        coreModule.AddFeature("Sistem Ayarları", "Genel sistem yapılandırması");
+        coreModule.AddFeature("Dashboard", "Özet görünüm ve widget'lar");
+        modules.Add(coreModule);
+
+        // ==================== SATIŞ VE MÜŞTERİ YÖNETİMİ ====================
+
+        // CRM Modülü
+        var crmModule = ModuleDefinition.Create(
+            code: "CRM",
+            name: "CRM",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            description: "Müşteri ilişkileri yönetimi, potansiyel müşteriler, fırsatlar ve kampanyalar",
+            icon: "TeamOutlined",
+            isCore: false,
+            displayOrder: 10,
+            category: "Satış ve Müşteri");
+        crmModule.AddFeature("Müşteri Kartları", "Detaylı müşteri bilgi yönetimi");
+        crmModule.AddFeature("Potansiyel Müşteri Takibi", "Lead yönetimi ve dönüşüm takibi");
+        crmModule.AddFeature("Fırsat Yönetimi", "Satış fırsatlarının pipeline görünümü");
+        crmModule.AddFeature("Kampanya Yönetimi", "Pazarlama kampanyalarının planlanması");
+        crmModule.AddFeature("Aktivite Takibi", "Görüşme, toplantı ve görev yönetimi");
+        crmModule.AddFeature("Müşteri Segmentasyonu", "Hedef kitle analizi");
+        modules.Add(crmModule);
+
+        // Satış Modülü
+        var salesModule = ModuleDefinition.Create(
+            code: "Sales",
+            name: "Satış Yönetimi",
+            monthlyPrice: Money.Create(249m, "TRY"),
+            description: "Satış siparişleri, teklifler, faturalar ve satış raporları",
+            icon: "ShoppingCartOutlined",
+            isCore: false,
+            displayOrder: 11,
+            category: "Satış ve Müşteri");
+        salesModule.AddFeature("Teklif Oluşturma", "Profesyonel teklif hazırlama");
+        salesModule.AddFeature("Sipariş Yönetimi", "Satış siparişi takibi");
+        salesModule.AddFeature("Fatura Kesimi", "e-Fatura ve e-Arşiv entegrasyonu");
+        salesModule.AddFeature("Satış Raporları", "Detaylı satış analitiği");
+        salesModule.AddFeature("Fiyat Listeleri", "Çoklu fiyat listesi yönetimi");
+        salesModule.AddDependency("CRM"); // CRM modülüne bağımlı
+        modules.Add(salesModule);
+
+        // ==================== STOK VE DEPO YÖNETİMİ ====================
+
+        // Stok Yönetimi
+        var inventoryModule = ModuleDefinition.Create(
+            code: "Inventory",
+            name: "Stok Yönetimi",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            description: "Depo, ürün, stok hareketleri ve envanter yönetimi",
+            icon: "InboxOutlined",
+            isCore: false,
+            displayOrder: 20,
+            category: "Stok ve Depo");
+        inventoryModule.AddFeature("Ürün Kataloğu", "Ürün ve varyant yönetimi");
+        inventoryModule.AddFeature("Depo Yönetimi", "Çoklu depo desteği");
+        inventoryModule.AddFeature("Stok Hareketleri", "Giriş, çıkış ve transfer işlemleri");
+        inventoryModule.AddFeature("Barkod Sistemi", "Barkod okuma ve yazdırma");
+        inventoryModule.AddFeature("Sayım İşlemleri", "Periyodik envanter sayımı");
+        inventoryModule.AddFeature("Minimum Stok Uyarısı", "Kritik stok seviyesi bildirimleri");
+        inventoryModule.AddFeature("ABC/XYZ Analizi", "Stok sınıflandırma ve analiz");
+        modules.Add(inventoryModule);
+
+        // ==================== SATIN ALMA ====================
+
+        // Satın Alma Modülü
+        var purchaseModule = ModuleDefinition.Create(
+            code: "Purchase",
+            name: "Satın Alma",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            description: "Tedarikçi yönetimi, satın alma siparişleri ve maliyet takibi",
+            icon: "ShopOutlined",
+            isCore: false,
+            displayOrder: 30,
+            category: "Satın Alma");
+        purchaseModule.AddFeature("Tedarikçi Kartları", "Tedarikçi bilgi yönetimi");
+        purchaseModule.AddFeature("Satın Alma Siparişi", "Sipariş oluşturma ve takip");
+        purchaseModule.AddFeature("Teklif Toplama", "Tedarikçilerden teklif alma");
+        purchaseModule.AddFeature("Mal Kabul", "İrsaliye ve giriş işlemleri");
+        purchaseModule.AddFeature("Maliyet Takibi", "Satın alma maliyetlerinin analizi");
+        purchaseModule.AddDependency("Inventory"); // Stok modülüne bağımlı
+        modules.Add(purchaseModule);
+
+        // ==================== FİNANS VE MUHASEBE ====================
+
+        // Finans Modülü
+        var financeModule = ModuleDefinition.Create(
+            code: "Finance",
+            name: "Finans",
+            monthlyPrice: Money.Create(349m, "TRY"),
+            description: "Nakit akışı, banka hesapları ve finansal raporlama",
+            icon: "BankOutlined",
+            isCore: false,
+            displayOrder: 40,
+            category: "Finans");
+        financeModule.AddFeature("Kasa Yönetimi", "Nakit hareketleri takibi");
+        financeModule.AddFeature("Banka Hesapları", "Banka entegrasyonu ve mutabakat");
+        financeModule.AddFeature("Çek/Senet Takibi", "Vadeli ödeme yönetimi");
+        financeModule.AddFeature("Nakit Akışı", "Gelir/gider projeksiyonu");
+        financeModule.AddFeature("Döviz İşlemleri", "Çoklu döviz desteği");
+        modules.Add(financeModule);
+
+        // Muhasebe Modülü
+        var accountingModule = ModuleDefinition.Create(
+            code: "ACCOUNTING",
+            name: "Muhasebe",
+            monthlyPrice: Money.Create(399m, "TRY"),
+            description: "Genel muhasebe, hesap planı ve mali raporlar",
+            icon: "CalculatorOutlined",
+            isCore: false,
+            displayOrder: 41,
+            category: "Finans");
+        accountingModule.AddFeature("Hesap Planı", "Standart hesap planı yönetimi");
+        accountingModule.AddFeature("Fişler", "Muhasebe fişi girişi");
+        accountingModule.AddFeature("Mizan", "Mizan raporları");
+        accountingModule.AddFeature("Bilanço", "Bilanço hazırlama");
+        accountingModule.AddFeature("Gelir Tablosu", "Kar/Zarar raporları");
+        accountingModule.AddFeature("KDV Beyanname", "KDV hesaplama ve raporlama");
+        accountingModule.AddDependency("Finance"); // Finans modülüne bağımlı
+        modules.Add(accountingModule);
+
+        // ==================== İNSAN KAYNAKLARI ====================
+
+        // İK Modülü
+        var hrModule = ModuleDefinition.Create(
+            code: "HR",
+            name: "İnsan Kaynakları",
+            monthlyPrice: Money.Create(299m, "TRY"),
+            description: "Personel yönetimi, izin takibi, vardiya ve organizasyon",
+            icon: "UserOutlined",
+            isCore: false,
+            displayOrder: 50,
+            category: "İnsan Kaynakları");
+        hrModule.AddFeature("Personel Kartları", "Detaylı personel bilgi yönetimi");
+        hrModule.AddFeature("Organizasyon Şeması", "Departman ve pozisyon yapısı");
+        hrModule.AddFeature("İzin Yönetimi", "İzin talep ve onay süreci");
+        hrModule.AddFeature("Vardiya Planlama", "Çalışma saati yönetimi");
+        hrModule.AddFeature("Performans Değerlendirme", "KPI ve hedef takibi");
+        hrModule.AddFeature("Eğitim Takibi", "Personel eğitim kayıtları");
+        modules.Add(hrModule);
+
+        // Bordro Modülü
+        var payrollModule = ModuleDefinition.Create(
+            code: "Payroll",
+            name: "Bordro",
+            monthlyPrice: Money.Create(249m, "TRY"),
+            description: "Maaş hesaplama, SGK bildirgeleri ve yasal kesintiler",
+            icon: "WalletOutlined",
+            isCore: false,
+            displayOrder: 51,
+            category: "İnsan Kaynakları");
+        payrollModule.AddFeature("Maaş Hesaplama", "Otomatik bordro hesaplama");
+        payrollModule.AddFeature("SGK Bildirgeleri", "SGK entegrasyonu");
+        payrollModule.AddFeature("Vergi Hesaplama", "Gelir vergisi ve damga vergisi");
+        payrollModule.AddFeature("Banka Listesi", "Toplu ödeme listesi");
+        payrollModule.AddFeature("Kıdem/İhbar", "Tazminat hesaplama");
+        payrollModule.AddDependency("HR"); // İK modülüne bağımlı
+        modules.Add(payrollModule);
+
+        // ==================== PROJE YÖNETİMİ ====================
+
+        // Proje Modülü
+        var projectsModule = ModuleDefinition.Create(
+            code: "Projects",
+            name: "Proje Yönetimi",
+            monthlyPrice: Money.Create(199m, "TRY"),
+            description: "Proje planlama, görev yönetimi ve zaman takibi",
+            icon: "ProjectOutlined",
+            isCore: false,
+            displayOrder: 60,
+            category: "Proje");
+        projectsModule.AddFeature("Proje Oluşturma", "Proje kartları ve detayları");
+        projectsModule.AddFeature("Görev Yönetimi", "Kanban ve liste görünümü");
+        projectsModule.AddFeature("Gantt Chart", "Proje zaman çizelgesi");
+        projectsModule.AddFeature("Zaman Takibi", "Çalışma saati kaydı");
+        projectsModule.AddFeature("Kaynak Planlama", "Ekip ve kaynak ataması");
+        projectsModule.AddFeature("Proje Raporları", "İlerleme ve maliyet raporları");
+        modules.Add(projectsModule);
+
+        // ==================== RAPORLAMA VE ANALİTİK ====================
+
+        // Raporlama Modülü
+        var reportsModule = ModuleDefinition.Create(
+            code: "Reports",
+            name: "Gelişmiş Raporlama",
+            monthlyPrice: Money.Create(149m, "TRY"),
+            description: "Özel rapor tasarlama, dashboard oluşturma ve veri analizi",
+            icon: "BarChartOutlined",
+            isCore: false,
+            displayOrder: 70,
+            category: "Raporlama");
+        reportsModule.AddFeature("Rapor Tasarımcı", "Sürükle-bırak rapor oluşturma");
+        reportsModule.AddFeature("Dashboard Builder", "Özel dashboard tasarlama");
+        reportsModule.AddFeature("Excel Export", "Detaylı Excel çıktıları");
+        reportsModule.AddFeature("PDF Raporları", "Profesyonel PDF raporlar");
+        reportsModule.AddFeature("Zamanlanmış Raporlar", "Otomatik rapor gönderimi");
+        modules.Add(reportsModule);
+
+        await _context.ModuleDefinitions.AddRangeAsync(modules);
+        _logger.LogInformation("Seeded {Count} module definitions.", modules.Count);
     }
 
     private async Task SeedPackagesAsync()

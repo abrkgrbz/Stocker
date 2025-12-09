@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Package;
 using Stocker.Application.DTOs.Tenant;
+using Stocker.Application.DTOs.Module;
 using Stocker.Application.Features.Packages.Queries.GetPublicPackages;
 using Stocker.Application.Features.Tenants.Commands.RegisterTenant;
 using Stocker.Application.Features.Subscriptions.Commands.ProcessPayment;
+using Stocker.Application.Features.Modules.Queries.GetAvailableModules;
+using Stocker.Application.Features.Modules.Queries.CalculateCustomPackagePrice;
 using Stocker.Persistence.Contexts;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
@@ -55,16 +58,56 @@ public class PublicController : ControllerBase
     public async Task<IActionResult> GetPackages()
     {
         _logger.LogInformation("Getting public packages list");
-        
+
         var query = new GetPublicPackagesQuery();
         var result = await _mediator.Send(query);
-        
+
         if (result.IsSuccess)
         {
             return Ok(new { success = true, data = result.Value });
         }
-        
+
         return BadRequest(new { success = false, message = result.Error.Description });
+    }
+
+    /// <summary>
+    /// Get available modules for custom package creation
+    /// </summary>
+    [HttpGet("modules")]
+    [ProducesResponseType(typeof(List<ModuleDefinitionDto>), 200)]
+    public async Task<IActionResult> GetAvailableModules()
+    {
+        _logger.LogInformation("Getting available modules list for custom package");
+
+        var query = new GetAvailableModulesQuery();
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, data = result.Value });
+        }
+
+        return BadRequest(new { success = false, message = result.Error?.Description ?? "Modüller yüklenemedi" });
+    }
+
+    /// <summary>
+    /// Calculate price for custom package based on selected modules
+    /// </summary>
+    [HttpPost("calculate-price")]
+    [ProducesResponseType(typeof(CustomPackagePriceResponseDto), 200)]
+    public async Task<IActionResult> CalculateCustomPackagePrice([FromBody] CustomPackagePriceRequestDto request)
+    {
+        _logger.LogInformation("Calculating custom package price for {ModuleCount} modules", request.SelectedModuleCodes.Count);
+
+        var query = new CalculateCustomPackagePriceQuery(request.SelectedModuleCodes);
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, data = result.Value });
+        }
+
+        return BadRequest(new { success = false, message = result.Error?.Description ?? "Fiyat hesaplanamadı" });
     }
 
     /// <summary>

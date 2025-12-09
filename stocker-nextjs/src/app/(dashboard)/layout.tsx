@@ -144,6 +144,7 @@ const MODULE_MENUS = {
         icon: <SwapOutlined />,
         label: 'Stok İşlemleri',
         children: [
+          { key: '/inventory/stock', icon: <InboxOutlined />, label: 'Stok Görünümü' },
           { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
           { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Hareketler' },
           { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Transferler' },
@@ -168,6 +169,8 @@ const MODULE_MENUS = {
         label: 'Raporlar & Analiz',
         children: [
           { key: '/inventory/reports', icon: <BarChartOutlined />, label: 'Raporlar' },
+          { key: '/inventory/analytics', icon: <LineChartOutlined />, label: 'Analizler' },
+          { key: '/inventory/analysis', icon: <BarChartOutlined />, label: 'ABC/XYZ Analizi' },
           { key: '/inventory/forecasting', icon: <LineChartOutlined />, label: 'Tahminleme' },
           { key: '/inventory/costing', icon: <AccountBookOutlined />, label: 'Maliyetlendirme' },
           { key: '/inventory/audit-trail', icon: <AuditOutlined />, label: 'Denetim İzi' },
@@ -503,6 +506,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/inventory/audit-trail': '/inventory/audit-trail',
       '/inventory/forecasting': '/inventory/forecasting',
       '/inventory/costing': '/inventory/costing',
+      '/inventory/stock': '/inventory/stock',
+      '/inventory/analytics': '/inventory/analytics',
+      '/inventory/analysis': '/inventory/analysis',
       '/inventory/categories': '/inventory/categories',
       '/inventory/brands': '/inventory/brands',
       '/inventory/units': '/inventory/units',

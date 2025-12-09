@@ -14,6 +14,9 @@ public interface IMasterDbContext
     DbSet<MasterUser> MasterUsers { get; }
     DbSet<Package> Packages { get; }
     DbSet<PackageModule> PackageModules { get; }
+    DbSet<ModuleDefinition> ModuleDefinitions { get; }
+    DbSet<ModuleFeature> ModuleFeatures { get; }
+    DbSet<ModuleDependency> ModuleDependencies { get; }
     DbSet<Subscription> Subscriptions { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }

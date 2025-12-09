@@ -34,6 +34,11 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     // Phase 3:  TenantWebhook, TenantCompliance, TenantCustomization, TenantOnboarding
     //           OnboardingStep, OnboardingTask, TenantFeature, PasswordHistory
 
+    // Module Definitions (Available modules with pricing)
+    public DbSet<ModuleDefinition> ModuleDefinitions => Set<ModuleDefinition>();
+    public DbSet<ModuleFeature> ModuleFeatures => Set<ModuleFeature>();
+    public DbSet<ModuleDependency> ModuleDependencies => Set<ModuleDependency>();
+
     // Package & Subscription Management
     public DbSet<Package> Packages => Set<Package>();
     public DbSet<PackageFeature> PackageFeatures => Set<PackageFeature>();
