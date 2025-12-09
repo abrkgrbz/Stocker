@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -1843,6 +1844,8 @@ public partial class MigrationService
                         sqlOptions.CommandTimeout(60);
                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
                     });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    crmOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
                     var mockTenantService = new MockTenantService(tenantId, connectionString!);
 
@@ -1894,6 +1897,8 @@ public partial class MigrationService
                         sqlOptions.CommandTimeout(60);
                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
                     });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    inventoryOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
                     var mockTenantService = new MockTenantService(tenantId, connectionString!);
 
@@ -1945,6 +1950,8 @@ public partial class MigrationService
                         sqlOptions.CommandTimeout(60);
                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
                     });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    hrOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
                     var mockTenantService = new MockTenantService(tenantId, connectionString!);
 
