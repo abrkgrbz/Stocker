@@ -11,7 +11,7 @@ public sealed class Subscription : AggregateRoot
     private readonly List<SubscriptionUsage> _usages = new();
 
     public Guid TenantId { get; private set; }
-    public Guid PackageId { get; private set; }
+    public Guid? PackageId { get; private set; }
     public string SubscriptionNumber { get; private set; }
     
     // Navigation properties
@@ -39,7 +39,7 @@ public sealed class Subscription : AggregateRoot
     public string? CustomModuleCodes { get; private set; }
     public string? CustomStoragePlanCode { get; private set; }
     public string? CustomAddOnCodes { get; private set; }
-    public bool IsCustomPackage => PackageId == Guid.Empty;
+    public bool IsCustomPackage => !PackageId.HasValue;
 
     public IReadOnlyList<SubscriptionModule> Modules => _modules.AsReadOnly();
     public IReadOnlyList<SubscriptionUsage> Usages => _usages.AsReadOnly();
@@ -48,7 +48,7 @@ public sealed class Subscription : AggregateRoot
 
     private Subscription(
         Guid tenantId,
-        Guid packageId,
+        Guid? packageId,
         BillingCycle billingCycle,
         Money price,
         DateTime startDate,
@@ -73,7 +73,7 @@ public sealed class Subscription : AggregateRoot
 
     public static Subscription Create(
         Guid tenantId,
-        Guid packageId,
+        Guid? packageId,
         BillingCycle billingCycle,
         Money price,
         DateTime startDate,

@@ -15,7 +15,7 @@ public class TenantDto
 public class TenantSubscriptionDto
 {
     public Guid Id { get; set; }
-    public Guid PackageId { get; set; }
+    public Guid? PackageId { get; set; }
     public string PackageName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }

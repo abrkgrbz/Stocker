@@ -77,12 +77,12 @@ public class TenantModuleService : ITenantModuleService
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (tenantRegistration != null && tenantRegistration.PackageId.HasValue && tenantRegistration.TenantId.HasValue)
+            if (tenantRegistration != null && tenantRegistration.TenantId.HasValue)
             {
                 subscription = new
                 {
                     TenantId = tenantRegistration.TenantId.Value,
-                    PackageId = tenantRegistration.PackageId.Value,
+                    PackageId = tenantRegistration.PackageId, // Keep as Guid? to match Subscription's PackageId type
                     tenantRegistration.PackageName
                 };
             }

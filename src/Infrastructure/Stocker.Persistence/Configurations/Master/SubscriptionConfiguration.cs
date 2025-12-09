@@ -17,7 +17,7 @@ public class SubscriptionConfiguration : BaseEntityTypeConfiguration<Subscriptio
             .IsRequired();
 
         builder.Property(s => s.PackageId)
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(s => s.SubscriptionNumber)
             .IsRequired()

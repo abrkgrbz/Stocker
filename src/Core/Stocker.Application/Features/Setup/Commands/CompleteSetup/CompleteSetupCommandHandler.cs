@@ -183,7 +183,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
 
                     var subscription = Domain.Master.Entities.Subscription.Create(
                         tenantId: request.TenantId,
-                        packageId: request.PackageId ?? Guid.Empty, // Empty for custom packages
+                        packageId: request.PackageId, // null for custom packages
                         billingCycle: billingCycle,
                         price: subscriptionPrice,
                         startDate: DateTime.UtcNow,
