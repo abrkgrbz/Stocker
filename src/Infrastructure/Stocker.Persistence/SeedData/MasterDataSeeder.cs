@@ -69,7 +69,7 @@ public class MasterDataSeeder
             name: "Temel Sistem",
             monthlyPrice: Money.Create(0m, "TRY"),
             description: "Kullanıcı yönetimi, ayarlar ve temel sistem özellikleri",
-            icon: "SettingOutlined",
+            icon: "⚙️",
             isCore: true,
             displayOrder: 0,
             category: "Temel");
@@ -87,7 +87,7 @@ public class MasterDataSeeder
             name: "CRM",
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "Müşteri ilişkileri yönetimi, potansiyel müşteriler, fırsatlar ve kampanyalar",
-            icon: "TeamOutlined",
+            icon: "👥",
             isCore: false,
             displayOrder: 10,
             category: "Satış ve Müşteri");
@@ -105,7 +105,7 @@ public class MasterDataSeeder
             name: "Satış Yönetimi",
             monthlyPrice: Money.Create(249m, "TRY"),
             description: "Satış siparişleri, teklifler, faturalar ve satış raporları",
-            icon: "ShoppingCartOutlined",
+            icon: "🛒",
             isCore: false,
             displayOrder: 11,
             category: "Satış ve Müşteri");
@@ -125,7 +125,7 @@ public class MasterDataSeeder
             name: "Stok Yönetimi",
             monthlyPrice: Money.Create(299m, "TRY"),
             description: "Depo, ürün, stok hareketleri ve envanter yönetimi",
-            icon: "InboxOutlined",
+            icon: "📦",
             isCore: false,
             displayOrder: 20,
             category: "Stok ve Depo");
@@ -146,7 +146,7 @@ public class MasterDataSeeder
             name: "Satın Alma",
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "Tedarikçi yönetimi, satın alma siparişleri ve maliyet takibi",
-            icon: "ShopOutlined",
+            icon: "🏪",
             isCore: false,
             displayOrder: 30,
             category: "Satın Alma");
@@ -166,7 +166,7 @@ public class MasterDataSeeder
             name: "Finans",
             monthlyPrice: Money.Create(349m, "TRY"),
             description: "Nakit akışı, banka hesapları ve finansal raporlama",
-            icon: "BankOutlined",
+            icon: "🏦",
             isCore: false,
             displayOrder: 40,
             category: "Finans");
@@ -183,7 +183,7 @@ public class MasterDataSeeder
             name: "Muhasebe",
             monthlyPrice: Money.Create(399m, "TRY"),
             description: "Genel muhasebe, hesap planı ve mali raporlar",
-            icon: "CalculatorOutlined",
+            icon: "🧮",
             isCore: false,
             displayOrder: 41,
             category: "Finans");
@@ -204,7 +204,7 @@ public class MasterDataSeeder
             name: "İnsan Kaynakları",
             monthlyPrice: Money.Create(299m, "TRY"),
             description: "Personel yönetimi, izin takibi, vardiya ve organizasyon",
-            icon: "UserOutlined",
+            icon: "👤",
             isCore: false,
             displayOrder: 50,
             category: "İnsan Kaynakları");
@@ -222,7 +222,7 @@ public class MasterDataSeeder
             name: "Bordro",
             monthlyPrice: Money.Create(249m, "TRY"),
             description: "Maaş hesaplama, SGK bildirgeleri ve yasal kesintiler",
-            icon: "WalletOutlined",
+            icon: "💰",
             isCore: false,
             displayOrder: 51,
             category: "İnsan Kaynakları");
@@ -242,7 +242,7 @@ public class MasterDataSeeder
             name: "Proje Yönetimi",
             monthlyPrice: Money.Create(199m, "TRY"),
             description: "Proje planlama, görev yönetimi ve zaman takibi",
-            icon: "ProjectOutlined",
+            icon: "📋",
             isCore: false,
             displayOrder: 60,
             category: "Proje");
@@ -262,7 +262,7 @@ public class MasterDataSeeder
             name: "Gelişmiş Raporlama",
             monthlyPrice: Money.Create(149m, "TRY"),
             description: "Özel rapor tasarlama, dashboard oluşturma ve veri analizi",
-            icon: "BarChartOutlined",
+            icon: "📊",
             isCore: false,
             displayOrder: 70,
             category: "Raporlama");
