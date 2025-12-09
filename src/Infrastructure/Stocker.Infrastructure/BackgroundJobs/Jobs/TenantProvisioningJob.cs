@@ -31,17 +31,29 @@ public class TenantProvisioningJob : ITenantProvisioningJob
         var masterUnitOfWork = scope.ServiceProvider.GetRequiredService<IMasterUnitOfWork>();
         var backgroundJobService = scope.ServiceProvider.GetRequiredService<IBackgroundJobService>();
 
+        // Get progress notifier for real-time updates
+        var progressNotifier = scope.ServiceProvider.GetService<ISetupProgressNotifier>();
+
         try
         {
             _logger.LogInformation("Starting tenant provisioning for TenantId: {TenantId}", tenantId);
+
+            // Step 1: Initializing
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.Initializing,
+                "Kurulum başlatılıyor...", 5);
 
             // Tenant'ı kontrol et
             var tenant = await masterUnitOfWork.Repository<Tenant>().GetByIdAsync(tenantId);
             if (tenant == null)
             {
                 _logger.LogError("Tenant not found: {TenantId}", tenantId);
+                await NotifyErrorAsync(progressNotifier, tenantId, "Tenant bulunamadı");
                 throw new InvalidOperationException($"Tenant {tenantId} not found");
             }
+
+            // Step 2: Creating Database
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.CreatingDatabase,
+                "Veritabanı oluşturuluyor...", 15);
 
             // CRITICAL: Update connection string to real SQL Server connection string
             // Get master connection string template from configuration
@@ -51,6 +63,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
             if (string.IsNullOrEmpty(masterConnectionString))
             {
                 _logger.LogError("MasterConnection string not found in configuration");
+                await NotifyErrorAsync(progressNotifier, tenantId, "Veritabanı bağlantı ayarları bulunamadı");
                 throw new InvalidOperationException("MasterConnection string not configured");
             }
 
@@ -63,6 +76,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
             if (connectionStringResult.IsFailure)
             {
                 _logger.LogError("Failed to create connection string for tenant {TenantId}: {Error}", tenantId, connectionStringResult.Error);
+                await NotifyErrorAsync(progressNotifier, tenantId, "Veritabanı bağlantısı oluşturulamadı");
                 throw new InvalidOperationException($"Invalid connection string: {connectionStringResult.Error}");
             }
 
@@ -71,24 +85,50 @@ public class TenantProvisioningJob : ITenantProvisioningJob
 
             _logger.LogInformation("Updated connection string for tenant {TenantId} to use database {DatabaseName}", tenantId, tenantDatabaseName);
 
+            // Step 3: Running Migrations
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.RunningMigrations,
+                "Veritabanı tabloları oluşturuluyor...", 35);
+
             // Database migration
             _logger.LogInformation("Creating database for tenant: {TenantName}", tenant.Name);
             await migrationService.MigrateTenantDatabaseAsync(tenantId);
+
+            // Step 4: Seeding Data
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.SeedingData,
+                "Temel veriler yükleniyor...", 55);
 
             // Seed data
             _logger.LogInformation("Seeding data for tenant: {TenantName}", tenant.Name);
             await migrationService.SeedTenantDataAsync(tenantId);
 
+            // Step 5: Configuring Modules
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.ConfiguringModules,
+                "Modüller yapılandırılıyor...", 75);
+
+            // Note: Module configuration happens during seeding, this is for progress visibility
+            await Task.Delay(500); // Small delay for UI visibility
+
+            // Step 6: Activating Tenant
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.ActivatingTenant,
+                "Hesap aktifleştiriliyor...", 90);
+
             // Tenant'ı aktif olarak işaretle
             tenant.Activate();
             await masterUnitOfWork.SaveChangesAsync();
+
+            // Step 7: Completed
+            await NotifyProgressAsync(progressNotifier, tenantId, SetupStepType.Completed,
+                "Kurulum tamamlandı! Yönlendiriliyorsunuz...", 100, isCompleted: true);
 
             _logger.LogInformation("Tenant provisioning completed successfully for: {TenantName}", tenant.Name);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to provision tenant: {TenantId}", tenantId);
-            
+
+            // Notify error via SignalR
+            await NotifyErrorAsync(progressNotifier, tenantId, ex.Message);
+
             // Tenant'ı deaktif et
             try
             {
@@ -97,7 +137,7 @@ public class TenantProvisioningJob : ITenantProvisioningJob
                 {
                     tenant.Deactivate();
                     await masterUnitOfWork.SaveChangesAsync();
-                    
+
                     _logger.LogWarning("Tenant {TenantId} marked as inactive. Will retry provisioning.", tenantId);
                 }
             }
@@ -105,12 +145,55 @@ public class TenantProvisioningJob : ITenantProvisioningJob
             {
                 _logger.LogError(deactivateEx, "Failed to deactivate tenant after provisioning failure: {TenantId}", tenantId);
             }
-            
+
             // Note: Hangfire will automatically retry 3 times (configured in AutomaticRetry attribute)
             // After all retries are exhausted, manual intervention or a separate cleanup job is needed
             // The rollback mechanism is handled by a separate scheduled job that checks for failed provisions
             // Re-throw to trigger Hangfire retry
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to send progress notifications
+    /// </summary>
+    private async Task NotifyProgressAsync(
+        ISetupProgressNotifier? notifier,
+        Guid tenantId,
+        SetupStepType step,
+        string message,
+        int progressPercentage,
+        bool isCompleted = false)
+    {
+        if (notifier == null) return;
+
+        try
+        {
+            var progress = SetupProgressUpdate.Create(tenantId, step, message, progressPercentage);
+            progress.IsCompleted = isCompleted;
+            await notifier.NotifyProgressAsync(progress);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send progress notification for tenant {TenantId}", tenantId);
+            // Don't throw - progress notification failure shouldn't stop provisioning
+        }
+    }
+
+    /// <summary>
+    /// Helper method to send error notifications
+    /// </summary>
+    private async Task NotifyErrorAsync(ISetupProgressNotifier? notifier, Guid tenantId, string errorMessage)
+    {
+        if (notifier == null) return;
+
+        try
+        {
+            await notifier.NotifyErrorAsync(tenantId, errorMessage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send error notification for tenant {TenantId}", tenantId);
         }
     }
 

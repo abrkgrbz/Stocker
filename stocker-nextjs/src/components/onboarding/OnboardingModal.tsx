@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { showAlert } from '@/lib/sweetalert-config';
 import Swal from 'sweetalert2';
+import { SetupProgressModal } from '@/components/setup/SetupProgressModal';
 
 const { Title, Paragraph, Text } = Typography;
 const { Step } = Steps;
@@ -21,7 +22,7 @@ interface OnboardingModalProps {
     totalSteps: number;
     progressPercentage: number;
   };
-  onComplete: (data: OnboardingData) => Promise<void>;
+  onComplete: (data: OnboardingData) => Promise<{ tenantId?: string; success?: boolean }>;
 }
 
 interface OnboardingData {
@@ -97,6 +98,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [form] = Form.useForm();
   const [formData, setFormData] = useState<Partial<OnboardingData>>({});
 
+  // Setup progress modal state
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [setupTenantId, setSetupTenantId] = useState<string | null>(null);
+
   const steps = [
     {
       title: 'Hoş Geldiniz',
@@ -145,8 +150,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         const values = await form.validateFields(['packageId']);
         const finalData = { ...formData, ...values } as OnboardingData;
         setLoading(true);
-        await onComplete(finalData);
+
+        // Call onComplete and get tenantId for progress tracking
+        const result = await onComplete(finalData);
         setLoading(false);
+
+        // If we got a tenantId, show the progress modal
+        if (result?.tenantId) {
+          setSetupTenantId(result.tenantId);
+          setShowProgressModal(true);
+        }
       } catch (error: any) {
         // Form validation failed or API error
         setLoading(false);
@@ -337,55 +350,79 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   };
 
+  const handleProgressComplete = () => {
+    // Redirect to dashboard after setup completes
+    window.location.href = '/dashboard';
+  };
+
+  const handleProgressError = (error: string) => {
+    console.error('Setup progress error:', error);
+    setShowProgressModal(false);
+    showAlert.error('Kurulum Hatası', error);
+  };
+
   return (
-    <Modal
-      open={visible}
-      title={null}
-      footer={null}
-      closable={false}
-      maskClosable={false}
-      width={800}
-      centered
-      styles={{
-        body: { padding: 0 },
-      }}
-    >
-      <div style={{ padding: '24px 24px 0' }}>
-        <Steps current={currentStep} items={steps} />
-      </div>
+    <>
+      <Modal
+        open={visible && !showProgressModal}
+        title={null}
+        footer={null}
+        closable={false}
+        maskClosable={false}
+        width={800}
+        centered
+        styles={{
+          body: { padding: 0 },
+        }}
+      >
+        <div style={{ padding: '24px 24px 0' }}>
+          <Steps current={currentStep} items={steps} />
+        </div>
 
-      <div style={{ minHeight: 400, padding: '24px' }}>
-        {renderStepContent()}
-      </div>
+        <div style={{ minHeight: 400, padding: '24px' }}>
+          {renderStepContent()}
+        </div>
 
-      <div style={{ padding: '0 24px 24px', borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            {currentStep > 0 && currentStep !== 3 && (
-              <Button onClick={handlePrev}>
-                Geri
-              </Button>
-            )}
-            {currentStep === 1 && (
-              <Button onClick={handleSkipSector} style={{ marginLeft: 8 }}>
-                Atla
-              </Button>
-            )}
-          </div>
-          <div>
-            {currentStep < 3 && (
-              <Button type="primary" onClick={handleNext}>
-                {currentStep === 0 ? 'Başlayalım' : 'Devam Et'}
-              </Button>
-            )}
-            {currentStep === 3 && (
-              <Button type="primary" onClick={handleNext} loading={loading}>
-                Kurulumu Tamamla
-              </Button>
-            )}
+        <div style={{ padding: '0 24px 24px', borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              {currentStep > 0 && currentStep !== 3 && (
+                <Button onClick={handlePrev}>
+                  Geri
+                </Button>
+              )}
+              {currentStep === 1 && (
+                <Button onClick={handleSkipSector} style={{ marginLeft: 8 }}>
+                  Atla
+                </Button>
+              )}
+            </div>
+            <div>
+              {currentStep < 3 && (
+                <Button type="primary" onClick={handleNext}>
+                  {currentStep === 0 ? 'Başlayalım' : 'Devam Et'}
+                </Button>
+              )}
+              {currentStep === 3 && (
+                <Button type="primary" onClick={handleNext} loading={loading}>
+                  Kurulumu Tamamla
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+
+      {/* Setup Progress Modal */}
+      {setupTenantId && (
+        <SetupProgressModal
+          visible={showProgressModal}
+          tenantId={setupTenantId}
+          onComplete={handleProgressComplete}
+          onError={handleProgressError}
+          redirectUrl="/dashboard"
+        />
+      )}
+    </>
   );
 };

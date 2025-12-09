@@ -241,6 +241,16 @@ public static class MiddlewareExtensions
         .RequireCors(corsPolicy)
         .AllowAnonymous(); // Allow anonymous for setup wizard pricing
 
+        // SetupProgressHub allows anonymous for tenant setup progress tracking
+        app.MapHub<SetupProgressHub>("/hubs/setup-progress", options =>
+        {
+            options.Transports = HttpTransportType.WebSockets |
+                                 HttpTransportType.ServerSentEvents |
+                                 HttpTransportType.LongPolling;
+        })
+        .RequireCors(corsPolicy)
+        .AllowAnonymous(); // Allow anonymous - setup happens before full auth
+
         // 21. Health Check Endpoints
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")

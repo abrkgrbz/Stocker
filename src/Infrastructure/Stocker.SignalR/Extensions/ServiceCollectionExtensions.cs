@@ -43,6 +43,9 @@ public static class ServiceCollectionExtensions
         // Register tenant creation progress service
         services.AddScoped<ITenantCreationProgressService, TenantCreationProgressService>();
 
+        // Register setup progress notifier for real-time setup updates
+        services.AddScoped<ISetupProgressNotifier, SetupProgressNotifier>();
+
         // Add SignalR user ID provider for authentication
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 

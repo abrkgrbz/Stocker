@@ -459,10 +459,15 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     completeOnboarding
   } = useOnboarding();
 
-  const handleOnboardingComplete = async (data: any) => {
+  const handleOnboardingComplete = async (data: any): Promise<{ tenantId?: string; success?: boolean }> => {
     try {
-      await completeOnboarding(data);
-      message.success('Kurulum başarıyla tamamlandı! Hoş geldiniz! 🎉');
+      const result = await completeOnboarding(data);
+      // Don't show success message here - it will be shown by SetupProgressModal
+      // Return tenantId for progress tracking
+      return {
+        tenantId: result?.tenantId || tenant?.id,
+        success: true
+      };
     } catch (error) {
       message.error('Kurulum sırasında bir hata oluştu. Lütfen tekrar deneyin.');
       throw error;
