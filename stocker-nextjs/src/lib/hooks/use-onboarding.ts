@@ -22,6 +22,14 @@ interface OnboardingFormData {
   contactPhone?: string;
 }
 
+interface CompleteOnboardingResult {
+  wizardId: string;
+  tenantId: string;
+  isCompleted: boolean;
+  provisioningStarted: boolean;
+  message: string;
+}
+
 export function useOnboarding() {
   const { user, isAuthenticated } = useAuth();
   const { tenant } = useTenant();
@@ -56,7 +64,7 @@ export function useOnboarding() {
     }
   };
 
-  const completeOnboarding = async (formData: OnboardingFormData) => {
+  const completeOnboarding = async (formData: OnboardingFormData): Promise<CompleteOnboardingResult> => {
     try {
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
@@ -79,10 +87,10 @@ export function useOnboarding() {
         throw error;
       }
 
-      const result = await response.json();
+      const result: CompleteOnboardingResult = await response.json();
 
-      // Refresh onboarding status
-      await checkOnboardingStatus();
+      // Don't refresh status here - let the progress modal handle it
+      // The frontend will redirect to dashboard after provisioning completes
 
       return result;
     } catch (err) {

@@ -155,10 +155,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         const result = await onComplete(finalData);
         setLoading(false);
 
-        // If we got a tenantId, show the progress modal
+        // If we got a tenantId, show the progress modal (provisioning started)
+        // Otherwise tenant is already active, redirect to dashboard
         if (result?.tenantId) {
           setSetupTenantId(result.tenantId);
           setShowProgressModal(true);
+        } else {
+          // Tenant already active, redirect immediately
+          window.location.href = '/dashboard';
         }
       } catch (error: any) {
         // Form validation failed or API error

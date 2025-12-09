@@ -464,8 +464,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       const result = await completeOnboarding(data);
       // Don't show success message here - it will be shown by SetupProgressModal
       // Return tenantId for progress tracking
+      // If provisioningStarted is true, the progress modal will show
+      // Otherwise (tenant already active), redirect immediately
       return {
-        tenantId: result?.tenantId || tenant?.id,
+        tenantId: result.provisioningStarted ? result.tenantId : undefined,
         success: true
       };
     } catch (error) {
