@@ -179,7 +179,7 @@ public class MasterDataSeeder
 
         // Muhasebe Modülü
         var accountingModule = ModuleDefinition.Create(
-            code: "ACCOUNTING",
+            code: "Accounting",
             name: "Muhasebe",
             monthlyPrice: Money.Create(399m, "TRY"),
             description: "Genel muhasebe, hesap planı ve mali raporlar",
@@ -329,7 +329,7 @@ public class MasterDataSeeder
                 moduleLimits: new Dictionary<string, int>
                 {
                     ["CRM"] = 100,
-                    ["ACCOUNTING"] = 50
+                    ["Accounting"] = 50
                 }),
             description: "Küçük işletmeler için ideal başlangıç paketi",
             trialDays: 14,
@@ -343,7 +343,7 @@ public class MasterDataSeeder
         starterPackage.AddFeature("STORAGE", "10 GB Depolama", "10 GB bulut depolama alanı");
         
         starterPackage.AddModule("CRM", "CRM Modülü", true, 100);
-        starterPackage.AddModule("ACCOUNTING", "Temel Muhasebe", true, 50);
+        starterPackage.AddModule("Accounting", "Temel Muhasebe", true, 50);
 
         packages.Add(starterPackage);
 
@@ -360,8 +360,8 @@ public class MasterDataSeeder
                 moduleLimits: new Dictionary<string, int>
                 {
                     ["CRM"] = 1000,
-                    ["ACCOUNTING"] = 500,
-                    ["ERP"] = 100
+                    ["Accounting"] = 500,
+                    ["Inventory"] = 100
                 }),
             description: "Büyüyen işletmeler için profesyonel çözüm",
             trialDays: 30,
@@ -377,8 +377,8 @@ public class MasterDataSeeder
         professionalPackage.AddFeature("TRAINING", "Özel Eğitim", "Ekibiniz için özel eğitim");
         
         professionalPackage.AddModule("CRM", "CRM Modülü", true, 1000);
-        professionalPackage.AddModule("ACCOUNTING", "Profesyonel Muhasebe", true, 500);
-        professionalPackage.AddModule("INVENTORY", "Stok Yönetimi", true, 100);
+        professionalPackage.AddModule("Accounting", "Profesyonel Muhasebe", true, 500);
+        professionalPackage.AddModule("Inventory", "Stok Yönetimi", true, 100);
         professionalPackage.AddModule("HR", "İnsan Kaynakları", true, 50);
 
         packages.Add(professionalPackage);
@@ -404,10 +404,10 @@ public class MasterDataSeeder
         enterprisePackage.AddFeature("CUSTOM_SERVER", "Özel Sunucu", "İsteğe bağlı özel sunucu seçeneği");
         
         enterprisePackage.AddModule("CRM", "CRM Modülü", true);
-        enterprisePackage.AddModule("ACCOUNTING", "Kurumsal Muhasebe", true);
-        enterprisePackage.AddModule("INVENTORY", "Stok Yönetimi", true);
+        enterprisePackage.AddModule("Accounting", "Kurumsal Muhasebe", true);
+        enterprisePackage.AddModule("Inventory", "Stok Yönetimi", true);
         enterprisePackage.AddModule("HR", "İnsan Kaynakları", true);
-        enterprisePackage.AddModule("PROJECTS", "Proje Yönetimi", true);
+        enterprisePackage.AddModule("Projects", "Proje Yönetimi", true);
 
         packages.Add(enterprisePackage);
 
@@ -791,7 +791,7 @@ public class MasterDataSeeder
         manufacturing.AddRecommendedModule("Purchase");
         manufacturing.AddRecommendedModule("HR");
         manufacturing.AddRecommendedModule("Finance");
-        manufacturing.AddRecommendedModule("ACCOUNTING");
+        manufacturing.AddRecommendedModule("Accounting");
         industries.Add(manufacturing);
 
         // Toptan Satış
@@ -832,7 +832,7 @@ public class MasterDataSeeder
         healthcare.AddRecommendedModule("HR");
         healthcare.AddRecommendedModule("Inventory");
         healthcare.AddRecommendedModule("Finance");
-        healthcare.AddRecommendedModule("ACCOUNTING");
+        healthcare.AddRecommendedModule("Accounting");
         industries.Add(healthcare);
 
         // İnşaat
@@ -846,7 +846,7 @@ public class MasterDataSeeder
         construction.AddRecommendedModule("Purchase");
         construction.AddRecommendedModule("HR");
         construction.AddRecommendedModule("Finance");
-        construction.AddRecommendedModule("ACCOUNTING");
+        construction.AddRecommendedModule("Accounting");
         industries.Add(construction);
 
         // Eğitim
