@@ -339,7 +339,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           selectedModuleCodes,
           userCount,
           storagePlanCode: selectedStoragePlanCode || null,
-          selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : null
+          selectedAddOnCodes: selectedAddOnCodes || []
         })
       })
 
