@@ -82,3 +82,11 @@ export type {
   RefundPaymentCommand,
   RejectPaymentCommand,
 } from './payment.service';
+
+// Storage Module
+export { StorageService } from './storage.service';
+export type {
+  StorageUsageResponse,
+  BucketExistsResponse,
+  BucketNameResponse,
+} from './storage.service';

@@ -1,14 +1,31 @@
 namespace Stocker.Application.Features.Setup.Commands.CompleteSetup;
 
+/// <summary>
+/// Request to complete setup with package selection
+/// Company billing information is collected later when user creates first invoice
+/// </summary>
 public sealed record CompleteSetupRequest
 {
-    public Guid PackageId { get; init; }
-    public string CompanyName { get; init; } = string.Empty;
-    public string CompanyCode { get; init; } = string.Empty; // Deprecated - no longer used, tenant code is used instead
-    public string? Sector { get; init; }
-    public string? EmployeeCount { get; init; }
-    public string? ContactPhone { get; init; }
-    public string? Address { get; init; }
-    public string? TaxOffice { get; init; }
-    public string? TaxNumber { get; init; }
+    /// <summary>
+    /// Ready package ID (mutually exclusive with CustomPackage)
+    /// </summary>
+    public Guid? PackageId { get; init; }
+
+    /// <summary>
+    /// Custom package configuration (mutually exclusive with PackageId)
+    /// </summary>
+    public CustomPackageRequest? CustomPackage { get; init; }
+}
+
+/// <summary>
+/// Custom package configuration for setup
+/// </summary>
+public sealed record CustomPackageRequest
+{
+    public List<string> SelectedModuleCodes { get; init; } = new();
+    public string BillingCycle { get; init; } = "monthly";
+    public int UserCount { get; init; } = 1;
+    public string? StoragePlanCode { get; init; }
+    public List<string>? SelectedAddOnCodes { get; init; }
+    public string? IndustryCode { get; init; }
 }

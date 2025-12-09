@@ -57,14 +57,7 @@ public class SetupController : ControllerBase
                 UserId = userId,
                 TenantId = tenantId,
                 PackageId = request.PackageId,
-                CompanyName = request.CompanyName,
-                CompanyCode = request.CompanyCode,
-                Sector = request.Sector,
-                EmployeeCount = request.EmployeeCount,
-                ContactPhone = request.ContactPhone,
-                Address = request.Address,
-                TaxOffice = request.TaxOffice,
-                TaxNumber = request.TaxNumber
+                CustomPackage = request.CustomPackage
             };
 
             var result = await _mediator.Send(command, cancellationToken);

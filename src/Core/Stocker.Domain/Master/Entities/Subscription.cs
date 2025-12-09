@@ -28,6 +28,19 @@ public sealed class Subscription : AggregateRoot
     public string? CancellationReason { get; private set; }
     public bool AutoRenew { get; private set; }
     public int UserCount { get; private set; }
+
+    // Storage quota and usage tracking
+    public string? StorageBucketName { get; private set; }
+    public long StorageQuotaGB { get; private set; }
+    public long StorageUsedBytes { get; private set; }
+    public DateTime? StorageLastCheckedAt { get; private set; }
+
+    // Custom package details (JSON serialized)
+    public string? CustomModuleCodes { get; private set; }
+    public string? CustomStoragePlanCode { get; private set; }
+    public string? CustomAddOnCodes { get; private set; }
+    public bool IsCustomPackage => PackageId == Guid.Empty;
+
     public IReadOnlyList<SubscriptionModule> Modules => _modules.AsReadOnly();
     public IReadOnlyList<SubscriptionUsage> Usages => _usages.AsReadOnly();
 
@@ -240,6 +253,43 @@ public sealed class Subscription : AggregateRoot
         _usages.Add(new SubscriptionUsage(Id, metricName, value, recordedAt));
     }
 
+    /// <summary>
+    /// Set custom package details for subscriptions without a pre-defined package
+    /// </summary>
+    public void SetCustomPackageDetails(
+        List<string> moduleCodes,
+        int userCount,
+        string? storagePlanCode,
+        List<string>? addOnCodes)
+    {
+        CustomModuleCodes = string.Join(",", moduleCodes);
+        UserCount = userCount > 0 ? userCount : 1;
+        CustomStoragePlanCode = storagePlanCode;
+        CustomAddOnCodes = addOnCodes?.Any() == true ? string.Join(",", addOnCodes) : null;
+    }
+
+    /// <summary>
+    /// Get the list of custom module codes
+    /// </summary>
+    public List<string> GetCustomModuleCodes()
+    {
+        if (string.IsNullOrEmpty(CustomModuleCodes))
+            return new List<string>();
+
+        return CustomModuleCodes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+
+    /// <summary>
+    /// Get the list of custom add-on codes
+    /// </summary>
+    public List<string> GetCustomAddOnCodes()
+    {
+        if (string.IsNullOrEmpty(CustomAddOnCodes))
+            return new List<string>();
+
+        return CustomAddOnCodes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+
     public bool IsInTrial()
     {
         return Status == SubscriptionStatus.Deneme && TrialEndDate.HasValue && TrialEndDate.Value > DateTime.UtcNow;
@@ -247,8 +297,67 @@ public sealed class Subscription : AggregateRoot
 
     public bool IsExpired()
     {
-        return Status == SubscriptionStatus.SuresiDoldu || 
+        return Status == SubscriptionStatus.SuresiDoldu ||
                (Status == SubscriptionStatus.IptalEdildi && CurrentPeriodEnd < DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Sets the storage bucket information for this subscription
+    /// </summary>
+    public void SetStorageBucket(string bucketName, long quotaGB)
+    {
+        if (string.IsNullOrWhiteSpace(bucketName))
+            throw new ArgumentException("Bucket name cannot be empty.", nameof(bucketName));
+
+        if (quotaGB <= 0)
+            throw new ArgumentException("Storage quota must be greater than zero.", nameof(quotaGB));
+
+        StorageBucketName = bucketName;
+        StorageQuotaGB = quotaGB;
+        StorageLastCheckedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the storage usage statistics
+    /// </summary>
+    public void UpdateStorageUsage(long usedBytes)
+    {
+        if (usedBytes < 0)
+            throw new ArgumentException("Used bytes cannot be negative.", nameof(usedBytes));
+
+        StorageUsedBytes = usedBytes;
+        StorageLastCheckedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the storage quota (e.g., when upgrading plan)
+    /// </summary>
+    public void UpdateStorageQuota(long newQuotaGB)
+    {
+        if (newQuotaGB <= 0)
+            throw new ArgumentException("Storage quota must be greater than zero.", nameof(newQuotaGB));
+
+        StorageQuotaGB = newQuotaGB;
+    }
+
+    /// <summary>
+    /// Gets the storage usage percentage
+    /// </summary>
+    public double GetStorageUsagePercentage()
+    {
+        if (StorageQuotaGB <= 0) return 0;
+        var quotaBytes = StorageQuotaGB * 1024 * 1024 * 1024;
+        return Math.Round((double)StorageUsedBytes / quotaBytes * 100, 2);
+    }
+
+    /// <summary>
+    /// Checks if storage quota is exceeded
+    /// </summary>
+    public bool IsStorageQuotaExceeded()
+    {
+        if (StorageQuotaGB <= 0) return false;
+        var quotaBytes = StorageQuotaGB * 1024 * 1024 * 1024;
+        return StorageUsedBytes >= quotaBytes;
     }
 
     private static DateTime CalculateNextBillingDate(DateTime fromDate, BillingCycle cycle)

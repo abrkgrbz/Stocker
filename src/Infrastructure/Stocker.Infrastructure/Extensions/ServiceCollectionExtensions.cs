@@ -3,10 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Minio;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Services;
 using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.BackgroundJobs.Jobs;
+using Stocker.Infrastructure.Configuration;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Infrastructure.Services;
 using Stocker.SharedKernel.Interfaces;
@@ -87,6 +89,9 @@ public static class ServiceCollectionExtensions
         // Add Memory Cache for tenant caching
         services.AddMemoryCache();
 
+        // Add MinIO Storage Services
+        services.AddMinioStorageServices(configuration);
+
         // Add Hangfire services (skip in Testing environment)
         var isTestingEnvironment = environment?.EnvironmentName?.Equals("Testing", StringComparison.OrdinalIgnoreCase) ?? false;
         if (!isTestingEnvironment)
@@ -110,6 +115,46 @@ public static class ServiceCollectionExtensions
         }
 
         // Add other infrastructure services here as needed
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds MinIO storage services for tenant bucket and quota management
+    /// </summary>
+    private static IServiceCollection AddMinioStorageServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure MinIO settings
+        services.Configure<MinioStorageSettings>(configuration.GetSection(MinioStorageSettings.SectionName));
+
+        // Register MinIO client as singleton
+        services.AddSingleton<IMinioClient>(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MinioStorageSettings>>().Value;
+
+            var minioClient = new MinioClient()
+                .WithEndpoint(settings.Endpoint)
+                .WithCredentials(settings.AccessKey, settings.SecretKey);
+
+            if (settings.UseSSL)
+            {
+                minioClient.WithSSL();
+            }
+
+            return minioClient.Build();
+        });
+
+        // Add HttpClient for MinIO Admin API operations
+        services.AddHttpClient("MinioAdmin", (sp, client) =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MinioStorageSettings>>().Value;
+            var adminEndpoint = settings.AdminEndpoint ?? settings.Endpoint;
+            var protocol = settings.UseSSL ? "https" : "http";
+            client.BaseAddress = new Uri($"{protocol}://{adminEndpoint}");
+        });
+
+        // Register Tenant Storage Service
+        services.AddScoped<ITenantStorageService, MinioTenantStorageService>();
 
         return services;
     }

@@ -51,6 +51,20 @@ public class SubscriptionConfiguration : BaseEntityTypeConfiguration<Subscriptio
         builder.Property(s => s.CancellationReason)
             .HasMaxLength(500);
 
+        // Storage quota and usage tracking
+        builder.Property(s => s.StorageBucketName)
+            .HasMaxLength(100);
+
+        builder.Property(s => s.StorageQuotaGB)
+            .IsRequired()
+            .HasDefaultValue(0L);
+
+        builder.Property(s => s.StorageUsedBytes)
+            .IsRequired()
+            .HasDefaultValue(0L);
+
+        builder.Property(s => s.StorageLastCheckedAt);
+
         // Value Objects
         builder.OwnsOne(s => s.Price, price =>
         {

@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { StorageUsageCard } from '@/components/settings';
 
 const { Title, Text } = Typography;
 
@@ -179,7 +180,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-green-50 rounded-lg">
@@ -215,6 +216,9 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+
+          {/* Storage Usage Mini Card */}
+          <StorageUsageCard showDetails={false} />
         </div>
 
         {/* Search Bar */}

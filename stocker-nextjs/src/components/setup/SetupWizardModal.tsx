@@ -6,7 +6,7 @@ import { getApiUrl } from '@/lib/env'
 import Swal from 'sweetalert2'
 import { usePricingSignalR } from '@/hooks/usePricingSignalR'
 
-type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'company' | 'complete'
+type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'complete'
 type PackageType = 'ready' | 'custom'
 type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
@@ -204,14 +204,6 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
   const [selectedAddOnCodes, setSelectedAddOnCodes] = useState<string[]>([])
   const [selectedIndustryCode, setSelectedIndustryCode] = useState<string>('')
 
-  // Company information state
-  const [companyName, setCompanyName] = useState('')
-  const [sector, setSector] = useState('')
-  const [employeeCount, setEmployeeCount] = useState('')
-  const [contactPhone, setContactPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [taxOffice, setTaxOffice] = useState('')
-  const [taxNumber, setTaxNumber] = useState('')
 
   // Convert SignalR result to CustomPackagePrice format
   // Backend returns CustomPackagePriceResponseDto directly
@@ -468,7 +460,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       })
       return
     }
-    setCurrentStep('company')
+    handleSetupComplete()
   }
 
   const handleCustomPackageNext = () => {
@@ -524,7 +516,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         setSelectedModuleCodes(newCodes)
       }
     }
-    setCurrentStep('company')
+    handleSetupComplete()
   }
 
   const toggleAddOn = (addOnCode: string) => {
@@ -537,17 +529,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     })
   }
 
-  const handleCompanySubmit = async () => {
-    if (!companyName.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Eksik Bilgi',
-        text: 'Firma adı zorunludur',
-        confirmButtonText: 'Tamam'
-      })
-      return
-    }
-
+  const handleSetupComplete = async () => {
     setIsLoading(true)
 
     try {
@@ -555,14 +537,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
       const body = packageType === 'ready'
         ? {
-            packageId: selectedPackageId,
-            companyName,
-            sector,
-            employeeCount,
-            contactPhone,
-            address,
-            taxOffice,
-            taxNumber
+            packageId: selectedPackageId
           }
         : {
             customPackage: {
@@ -572,14 +547,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               storagePlanCode: selectedStoragePlanCode || null,
               selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : null,
               industryCode: selectedIndustryCode || null
-            },
-            companyName,
-            sector,
-            employeeCount,
-            contactPhone,
-            address,
-            taxOffice,
-            taxNumber
+            }
           }
 
       const response = await fetch(`${apiUrl}/api/setup/complete`, {
@@ -655,8 +623,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
       switch (currentStep) {
         case 'package-type': return 1
         case 'package': return 2
-        case 'company': return 3
-        case 'complete': return 4
+        case 'complete': return 3
         default: return 1
       }
     } else {
@@ -668,20 +635,19 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         case 'storage': return 4
         case 'addons': return 5
         case 'industry': return 6
-        case 'company': return 7
-        case 'complete': return 8
+        case 'complete': return 7
         default: return 1
       }
     }
   }
 
   const getTotalSteps = () => {
-    return packageType === 'ready' ? 4 : 8
+    return packageType === 'ready' ? 3 : 7
   }
 
   // Check if we should show price summary (custom package steps only)
   const showPriceSummary = packageType === 'custom' &&
-    ['custom-package', 'users', 'storage', 'addons', 'industry', 'company'].includes(currentStep)
+    ['custom-package', 'users', 'storage', 'addons', 'industry'].includes(currentStep)
 
   // Price Summary Panel Component
   const PriceSummaryPanel = () => {
@@ -816,7 +782,6 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               {currentStep === 'storage' && 'Depolama Planı'}
               {currentStep === 'addons' && 'Ek Özellikler'}
               {currentStep === 'industry' && 'Sektör Seçimi'}
-              {currentStep === 'company' && 'Firma Bilgileri'}
               {currentStep === 'complete' && 'Tamamlandı'}
             </span>
           </div>
@@ -1569,145 +1534,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           </div>
         )}
 
-        {/* Step: Company Information */}
-        {currentStep === 'company' && (
-          <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Firma Bilgilerinizi Girin
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Firma Adı <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Örn: ABC Teknoloji Ltd."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sektör
-                </label>
-                <select
-                  value={sector}
-                  onChange={(e) => setSector(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Seçiniz...</option>
-                  <option value="teknoloji">Teknoloji</option>
-                  <option value="perakende">Perakende</option>
-                  <option value="uretim">Üretim</option>
-                  <option value="hizmet">Hizmet</option>
-                  <option value="egitim">Eğitim</option>
-                  <option value="saglik">Sağlık</option>
-                  <option value="diger">Diğer</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Çalışan Sayısı
-                </label>
-                <select
-                  value={employeeCount}
-                  onChange={(e) => setEmployeeCount(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Seçiniz...</option>
-                  <option value="1-10">1-10</option>
-                  <option value="11-50">11-50</option>
-                  <option value="51-200">51-200</option>
-                  <option value="201-500">201-500</option>
-                  <option value="500+">500+</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  İletişim Telefonu
-                </label>
-                <input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="05XX XXX XX XX"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vergi Dairesi
-                </label>
-                <input
-                  type="text"
-                  value={taxOffice}
-                  onChange={(e) => setTaxOffice(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Örn: Kadıköy V.D."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vergi Numarası
-                </label>
-                <input
-                  type="text"
-                  value={taxNumber}
-                  onChange={(e) => setTaxNumber(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="10 haneli vergi numarası"
-                  maxLength={10}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adres
-                </label>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Firma adresiniz"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between pt-6">
-              <button
-                onClick={() => setCurrentStep(packageType === 'custom' ? 'industry' : 'package')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
-              >
-                Geri
-              </button>
-              <button
-                onClick={handleCompanySubmit}
-                disabled={isLoading || !companyName.trim()}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    İşleniyor...
-                  </>
-                ) : (
-                  'Kurulumu Tamamla'
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Complete */}
+        {/* Step: Complete */}
         {currentStep === 'complete' && (
           <div className="text-center py-12">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
