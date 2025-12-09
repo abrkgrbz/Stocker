@@ -3,11 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Entities;
-using Stocker.Domain.Master.Enums;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.SharedKernel.Repositories;
 using Stocker.SharedKernel.Results;
 using System.Text.Json;
+
+// Type aliases for disambiguation
+using MasterEnums = Stocker.Domain.Master.Enums;
+using MasterTenant = Stocker.Domain.Master.Entities.Tenant;
 
 namespace Stocker.Application.Features.Onboarding.Commands.CompleteOnboarding;
 
@@ -193,7 +196,7 @@ public sealed class CompleteOnboardingCommandHandler
         try
         {
             // Get tenant from master DB
-            var tenant = await _masterUnitOfWork.Tenants()
+            var tenant = await _masterUnitOfWork.Repository<MasterTenant>()
                 .AsQueryable()
                 .FirstOrDefaultAsync(t => t.Id == request.TenantId, cancellationToken);
 
@@ -216,7 +219,7 @@ public sealed class CompleteOnboardingCommandHandler
             Package? package = null;
             if (!string.IsNullOrWhiteSpace(request.PackageId) && Guid.TryParse(request.PackageId, out var packageGuid))
             {
-                package = await _masterUnitOfWork.Packages()
+                package = await _masterUnitOfWork.Repository<Package>()
                     .AsQueryable()
                     .Include(p => p.Modules)
                     .FirstOrDefaultAsync(p => p.Id == packageGuid, cancellationToken);
@@ -228,7 +231,7 @@ public sealed class CompleteOnboardingCommandHandler
             }
 
             // Get or create subscription
-            var subscription = await _masterUnitOfWork.Subscriptions()
+            var subscription = await _masterUnitOfWork.Repository<Subscription>()
                 .AsQueryable()
                 .Include(s => s.Modules)
                 .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
@@ -239,15 +242,11 @@ public sealed class CompleteOnboardingCommandHandler
                 _logger.LogInformation("Updating subscription modules for tenant {TenantId} with package {PackageId}",
                     request.TenantId, package.Id);
 
-                // Clear existing modules and add new ones from package
-                subscription.Modules.Clear();
-                foreach (var module in package.Modules)
-                {
-                    subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
-                }
+                // Update subscription with new package
+                subscription.ChangePackage(package.Id, package.BasePrice);
 
-                // Activate subscription for trial
-                if (subscription.Status == SubscriptionStatus.Suspended || subscription.Status == SubscriptionStatus.Pending)
+                // Activate subscription for trial if needed
+                if (subscription.Status == MasterEnums.SubscriptionStatus.Askida || subscription.Status == MasterEnums.SubscriptionStatus.Beklemede)
                 {
                     subscription.StartTrial(DateTime.UtcNow.AddDays(14));
                 }
@@ -260,7 +259,7 @@ public sealed class CompleteOnboardingCommandHandler
                 subscription = Subscription.Create(
                     tenantId: request.TenantId,
                     packageId: package.Id,
-                    billingCycle: BillingCycle.Aylik,
+                    billingCycle: MasterEnums.BillingCycle.Aylik,
                     price: package.BasePrice,
                     startDate: DateTime.UtcNow,
                     trialEndDate: DateTime.UtcNow.AddDays(14)
@@ -271,7 +270,7 @@ public sealed class CompleteOnboardingCommandHandler
                     subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
                 }
 
-                await _masterUnitOfWork.Subscriptions().AddAsync(subscription, cancellationToken);
+                await _masterUnitOfWork.Repository<Subscription>().AddAsync(subscription, cancellationToken);
             }
 
             await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
