@@ -53,7 +53,9 @@ const StoragePage: React.FC = () => {
     setLoading(true);
     try {
       const response = await storageService.getAllBuckets();
+      console.log('Storage API Response:', response);
       if (response.success) {
+        console.log('Buckets data:', response.data);
         setBuckets(response.data.map(b => ({ ...b, key: b.name })));
         setStats({
           totalCount: response.totalCount,
@@ -62,9 +64,11 @@ const StoragePage: React.FC = () => {
           totalObjects: response.totalObjects,
         });
       } else {
+        console.error('API returned success: false', response);
         message.error('Bucket listesi alınamadı');
       }
     } catch (error: any) {
+      console.error('Storage API Error:', error);
       message.error(error.message || 'Bucket listesi alınırken hata oluştu');
     } finally {
       setLoading(false);
