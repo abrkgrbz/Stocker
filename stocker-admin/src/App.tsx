@@ -48,6 +48,7 @@ const SupportPage = lazy(() => import('./pages/Support'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogs'));
 const ApiStatusPage = lazy(() => import('./pages/ApiStatus'));
 const HangfireDashboard = lazy(() => import('./pages/Hangfire/HangfireDashboard'));
+const StoragePage = lazy(() => import('./pages/Storage'));
 
 // Loading component
 const PageLoader: React.FC = () => (
@@ -284,6 +285,11 @@ function App() {
           <Route path="api-status" element={
             <Suspense fallback={<PageLoader />}>
               <ApiStatusPage />
+            </Suspense>
+          } />
+          <Route path="storage" element={
+            <Suspense fallback={<PageLoader />}>
+              <StoragePage />
             </Suspense>
           } />
         </Route>

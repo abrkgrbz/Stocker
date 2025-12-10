@@ -47,7 +47,8 @@
       "Bash(done)",
       "Bash(Remove-Item -Recurse -Force \"c:\\Users\\PC\\source\\repos\\Stocker\\stocker-nextjs\\.next\\types\\app\\(dashboard)\\hr\\payroll\\[id]\\edit\")",
       "Bash(node -e:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(Select-String -Pattern \"error\")"
     ],
     "deny": [],
     "ask": []

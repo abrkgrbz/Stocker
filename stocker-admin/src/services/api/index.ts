@@ -14,6 +14,7 @@ export { activityLogService } from './activityLogService';
 export { roleService } from './roleService';
 export { settingsService } from './settingsService';
 export { subscriptionService } from './subscriptionService';
+export { storageService } from './storageService';
 
 // Re-export types
 export type {
@@ -127,3 +128,12 @@ export type {
   MaintenanceSettingsDto,
   NotificationSettingsDto,
 } from './settingsService';
+
+export type {
+  BucketInfo,
+  BucketsResponse,
+  DeleteBucketResponse,
+  DeleteMultipleBucketsRequest,
+  BucketDeleteResult,
+  DeleteMultipleBucketsResponse,
+} from './storageService';

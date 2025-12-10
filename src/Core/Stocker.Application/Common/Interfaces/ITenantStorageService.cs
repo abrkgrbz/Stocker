@@ -65,6 +65,24 @@ public interface ITenantStorageService
     /// <param name="tenantId">The tenant's unique identifier</param>
     /// <returns>The bucket name</returns>
     string GetTenantBucketName(Guid tenantId);
+
+    /// <summary>
+    /// Lists all tenant buckets in MinIO (Admin only)
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Result containing list of all bucket information</returns>
+    Task<Result<IEnumerable<BucketInfo>>> ListAllBucketsAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a bucket by name (Admin only)
+    /// WARNING: This operation is irreversible
+    /// </summary>
+    /// <param name="bucketName">The bucket name to delete</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task<Result> DeleteBucketByNameAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -77,3 +95,13 @@ public record TenantStorageUsage(
     long AvailableBytes,
     double UsagePercentage,
     int ObjectCount);
+
+/// <summary>
+/// Bucket information for admin listing
+/// </summary>
+public record BucketInfo(
+    string Name,
+    DateTime CreationDate,
+    long UsedBytes,
+    int ObjectCount,
+    Guid? TenantId);

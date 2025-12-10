@@ -402,4 +402,123 @@ public class MinioTenantStorageService : ITenantStorageService
             _logger.LogWarning(ex, "Failed to set bucket quota tag. Bucket: {Bucket}", bucketName);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<Result<IEnumerable<BucketInfo>>> ListAllBucketsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var buckets = await _minioClient.ListBucketsAsync(cancellationToken);
+
+            var bucketInfoList = new List<BucketInfo>();
+
+            foreach (var bucket in buckets.Buckets)
+            {
+                // Calculate storage usage for each bucket
+                long totalSize = 0;
+                int objectCount = 0;
+
+                try
+                {
+                    var listObjectsArgs = new ListObjectsArgs()
+                        .WithBucket(bucket.Name)
+                        .WithRecursive(true);
+
+                    await foreach (var item in _minioClient.ListObjectsEnumAsync(listObjectsArgs, cancellationToken))
+                    {
+                        totalSize += (long)item.Size;
+                        objectCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get objects for bucket: {Bucket}", bucket.Name);
+                }
+
+                // Try to extract tenant ID from bucket name
+                Guid? tenantId = null;
+                if (bucket.Name.StartsWith(TenantBucketPrefix))
+                {
+                    var guidPart = bucket.Name.Substring(TenantBucketPrefix.Length);
+                    // Note: We only store first 12 chars of GUID, so we can't fully reconstruct it
+                    // This is just for display purposes
+                }
+
+                bucketInfoList.Add(new BucketInfo(
+                    Name: bucket.Name,
+                    CreationDate: bucket.CreationDateDateTime,
+                    UsedBytes: totalSize,
+                    ObjectCount: objectCount,
+                    TenantId: tenantId));
+            }
+
+            _logger.LogInformation("Listed {Count} buckets from MinIO", bucketInfoList.Count);
+
+            return Result<IEnumerable<BucketInfo>>.Success(bucketInfoList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to list all buckets");
+            return Result<IEnumerable<BucketInfo>>.Failure(
+                Error.Failure("Storage.ListBuckets", $"Failed to list buckets: {ex.Message}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> DeleteBucketByNameAsync(
+        string bucketName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Check if bucket exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(bucketName);
+            bool exists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (!exists)
+            {
+                _logger.LogWarning("Attempted to delete non-existent bucket: {Bucket}", bucketName);
+                return Result.Success();
+            }
+
+            // First, delete all objects in the bucket
+            var listObjectsArgs = new ListObjectsArgs()
+                .WithBucket(bucketName)
+                .WithRecursive(true);
+
+            var objectsToDelete = new List<string>();
+            await foreach (var item in _minioClient.ListObjectsEnumAsync(listObjectsArgs, cancellationToken))
+            {
+                objectsToDelete.Add(item.Key);
+            }
+
+            if (objectsToDelete.Count > 0)
+            {
+                var removeObjectsArgs = new RemoveObjectsArgs()
+                    .WithBucket(bucketName)
+                    .WithObjects(objectsToDelete);
+
+                await _minioClient.RemoveObjectsAsync(removeObjectsArgs, cancellationToken);
+
+                _logger.LogInformation(
+                    "Deleted {Count} objects from bucket: {Bucket}",
+                    objectsToDelete.Count, bucketName);
+            }
+
+            // Now delete the bucket
+            var removeBucketArgs = new RemoveBucketArgs().WithBucket(bucketName);
+            await _minioClient.RemoveBucketAsync(removeBucketArgs, cancellationToken);
+
+            _logger.LogInformation("Bucket deleted: {Bucket}", bucketName);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete bucket: {Bucket}", bucketName);
+            return Result.Failure(
+                Error.Failure("Storage.DeleteBucket", $"Failed to delete bucket: {ex.Message}"));
+        }
+    }
 }

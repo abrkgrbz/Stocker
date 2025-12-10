@@ -15,6 +15,7 @@ import {
   SearchOutlined,
   GlobalOutlined,
   CloudOutlined,
+  CloudServerOutlined,
   FileTextOutlined,
   MonitorOutlined,
   SafetyOutlined,
@@ -193,6 +194,14 @@ const MasterLayout: React.FC = () => {
       path: '/audit-logs',
       icon: <AuditOutlined />,
       keywords: ['audit', 'denetim', 'log', 'günlük', 'security', 'güvenlik', 'history', 'geçmiş']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Depolama' : 'Storage',
+      description: locale === 'tr' ? 'MinIO bucket yönetimi' : 'MinIO bucket management',
+      path: '/storage',
+      icon: <CloudServerOutlined />,
+      keywords: ['storage', 'depolama', 'minio', 'bucket', 'file', 'dosya', 'cloud', 'bulut']
     },
     {
       type: 'page',
@@ -404,6 +413,11 @@ const MasterLayout: React.FC = () => {
       path: '/hangfire',
       name: 'Hangfire Dashboard',
       icon: <ApiOutlined />,
+    },
+    {
+      path: '/storage',
+      name: locale === 'tr' ? 'Depolama' : 'Storage',
+      icon: <CloudServerOutlined />,
     },
     {
       path: '/support',
