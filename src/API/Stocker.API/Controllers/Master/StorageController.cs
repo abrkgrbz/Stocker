@@ -1,28 +1,25 @@
-using Microsoft.AspNetCore.Authorization;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Common.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Stocker.API.Controllers.Admin;
+namespace Stocker.API.Controllers.Master;
 
 /// <summary>
-/// Admin API endpoints for MinIO storage bucket management
+/// Master API endpoints for MinIO storage bucket management
 /// </summary>
-[ApiController]
-[Route("api/admin/[controller]")]
-[Authorize(Roles = "SistemYoneticisi,Admin")]
-[SwaggerTag("Admin Storage - MinIO bucket management")]
-public class StorageController : ControllerBase
+[SwaggerTag("Master Storage - MinIO bucket management")]
+public class StorageController : MasterControllerBase
 {
     private readonly ITenantStorageService _storageService;
-    private readonly ILogger<StorageController> _logger;
 
     public StorageController(
+        IMediator mediator,
         ITenantStorageService storageService,
         ILogger<StorageController> logger)
+        : base(mediator, logger)
     {
         _storageService = storageService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -35,7 +32,7 @@ public class StorageController : ControllerBase
     )]
     [SwaggerResponse(200, "Buckets retrieved successfully")]
     [SwaggerResponse(401, "Unauthorized")]
-    [SwaggerResponse(403, "Forbidden - Admin role required")]
+    [SwaggerResponse(403, "Forbidden - Master access required")]
     [SwaggerResponse(500, "Internal server error")]
     public async Task<IActionResult> GetAllBuckets(CancellationToken cancellationToken)
     {
@@ -94,13 +91,13 @@ public class StorageController : ControllerBase
     )]
     [SwaggerResponse(200, "Bucket deleted successfully")]
     [SwaggerResponse(401, "Unauthorized")]
-    [SwaggerResponse(403, "Forbidden - Admin role required")]
+    [SwaggerResponse(403, "Forbidden - Master access required")]
     [SwaggerResponse(500, "Internal server error")]
     public async Task<IActionResult> DeleteBucket(string bucketName, CancellationToken cancellationToken)
     {
         try
         {
-            _logger.LogWarning("Admin deleting bucket: {BucketName}", bucketName);
+            _logger.LogWarning("Master user deleting bucket: {BucketName}", bucketName);
 
             var result = await _storageService.DeleteBucketByNameAsync(bucketName, cancellationToken);
 
@@ -142,7 +139,7 @@ public class StorageController : ControllerBase
     )]
     [SwaggerResponse(200, "Buckets deleted successfully")]
     [SwaggerResponse(401, "Unauthorized")]
-    [SwaggerResponse(403, "Forbidden - Admin role required")]
+    [SwaggerResponse(403, "Forbidden - Master access required")]
     [SwaggerResponse(500, "Internal server error")]
     public async Task<IActionResult> DeleteMultipleBuckets(
         [FromBody] DeleteBucketsRequest request,
@@ -159,7 +156,7 @@ public class StorageController : ControllerBase
                 });
             }
 
-            _logger.LogWarning("Admin deleting multiple buckets: {BucketNames}", string.Join(", ", request.BucketNames));
+            _logger.LogWarning("Master user deleting multiple buckets: {BucketNames}", string.Join(", ", request.BucketNames));
 
             var results = new List<BucketDeleteResult>();
 
