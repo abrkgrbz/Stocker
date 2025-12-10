@@ -49,7 +49,7 @@ export const storageService = {
    * Get all MinIO buckets
    */
   async getAllBuckets(): Promise<BucketsResponse> {
-    const response = await apiClient.get<BucketsResponse>('/master/storage/buckets');
+    const response = await apiClient.get<BucketsResponse>('/api/master/storage/buckets');
     return response.data;
   },
 
@@ -57,7 +57,7 @@ export const storageService = {
    * Delete a single bucket by name
    */
   async deleteBucket(bucketName: string): Promise<DeleteBucketResponse> {
-    const response = await apiClient.delete<DeleteBucketResponse>(`/master/storage/buckets/${encodeURIComponent(bucketName)}`);
+    const response = await apiClient.delete<DeleteBucketResponse>(`/api/master/storage/buckets/${encodeURIComponent(bucketName)}`);
     return response.data;
   },
 
@@ -65,7 +65,7 @@ export const storageService = {
    * Delete multiple buckets
    */
   async deleteMultipleBuckets(bucketNames: string[]): Promise<DeleteMultipleBucketsResponse> {
-    const response = await apiClient.post<DeleteMultipleBucketsResponse>('/master/storage/buckets/delete-multiple', {
+    const response = await apiClient.post<DeleteMultipleBucketsResponse>('/api/master/storage/buckets/delete-multiple', {
       bucketNames
     });
     return response.data;
