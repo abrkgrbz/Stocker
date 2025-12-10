@@ -562,10 +562,14 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         body: JSON.stringify(body),
       })
 
-      const data = await response.json()
-      console.log('[SetupWizardModal] Complete response:', data)
+      const responseData = await response.json()
+      console.log('[SetupWizardModal] Complete response:', responseData)
 
-      if (response.ok && data.success) {
+      if (response.ok && responseData.success) {
+        // Extract the actual data from the response wrapper (API returns { success, data, message })
+        const data = responseData.data || responseData
+        console.log('[SetupWizardModal] Extracted data:', data)
+
         // Check if provisioning was started - show progress modal
         if (data.provisioningStarted && data.tenantId) {
           console.log('[SetupWizardModal] Provisioning started, showing progress modal for tenant:', data.tenantId)
@@ -573,7 +577,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           setShowProgressModal(true)
         } else {
           // No provisioning needed, redirect to dashboard
-          console.log('[SetupWizardModal] No provisioning needed, redirecting to dashboard')
+          console.log('[SetupWizardModal] No provisioning needed, redirecting to dashboard. provisioningStarted:', data.provisioningStarted, 'tenantId:', data.tenantId)
           setCurrentStep('complete')
           setTimeout(() => {
             onComplete()
@@ -583,7 +587,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         Swal.fire({
           icon: 'error',
           title: 'Kurulum Başarısız',
-          text: data.message || 'Kurulum tamamlanamadı',
+          text: responseData.message || 'Kurulum tamamlanamadı',
           confirmButtonText: 'Tamam'
         })
         setIsLoading(false)

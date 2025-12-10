@@ -1859,6 +1859,81 @@ public partial class MigrationService
             _logger.LogInformation("Module migrations completed for tenant {TenantId}. Applied: {Count} migrations",
                 tenantId, appliedMigrations.Count);
 
+            // Now activate TenantModules in tenant database
+            if (progressNotifier != null)
+            {
+                await progressNotifier.NotifyProgressAsync(SetupProgressUpdate.Create(
+                    tenantId, SetupStepType.ConfiguringModules,
+                    "Modüller aktifleştiriliyor...", 80));
+            }
+
+            try
+            {
+                _logger.LogInformation("Activating TenantModules for tenant {TenantId}...", tenantId);
+
+                // Get package modules info from subscription
+                var packageModules = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                        .ThenInclude(p => p.Modules)
+                    .Where(s => s.TenantId == tenantId)
+                    .SelectMany(s => s.Package.Modules)
+                    .Where(m => m.IsIncluded)
+                    .ToListAsync(cancellationToken);
+
+                // Also get trial status from package
+                var package = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                    .Where(s => s.TenantId == tenantId)
+                    .Select(s => s.Package)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (packageModules.Any())
+                {
+                    // Create TenantModules in tenant database
+                    foreach (var packageModule in packageModules)
+                    {
+                        // Check if module already exists
+                        var existingModule = await tenantDbContext.TenantModules
+                            .FirstOrDefaultAsync(m => m.ModuleCode == packageModule.ModuleCode, cancellationToken);
+
+                        if (existingModule == null)
+                        {
+                            var tenantModule = Stocker.Domain.Tenant.Entities.TenantModules.Create(
+                                tenantId: tenantId,
+                                moduleName: packageModule.ModuleName,
+                                moduleCode: packageModule.ModuleCode,
+                                description: $"Module from {package?.Name ?? "selected"} package",
+                                isEnabled: true,
+                                recordLimit: packageModule.MaxEntities,
+                                isTrial: package?.TrialDays > 0
+                            );
+
+                            tenantDbContext.TenantModules.Add(tenantModule);
+                            _logger.LogInformation("✅ Created TenantModule {ModuleCode} ({ModuleName}) for tenant {TenantId}",
+                                packageModule.ModuleCode, packageModule.ModuleName, tenantId);
+                        }
+                        else
+                        {
+                            _logger.LogInformation("TenantModule {ModuleCode} already exists for tenant {TenantId}",
+                                packageModule.ModuleCode, tenantId);
+                        }
+                    }
+
+                    await tenantDbContext.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
+                        packageModules.Count, tenantId);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No modules found in subscription for tenant {TenantId}", tenantId);
+                }
+            }
+            catch (Exception moduleEx)
+            {
+                _logger.LogError(moduleEx, "❌ Error activating TenantModules for tenant {TenantId}", tenantId);
+                // Don't throw - migrations are already applied, module activation can be retried
+            }
+
             return appliedMigrations;
         }
         catch (Exception ex)
