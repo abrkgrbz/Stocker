@@ -1720,3 +1720,1658 @@ export interface TrainingFilterDto {
   endDate?: string;
   isMandatory?: boolean;
 }
+
+// =====================================
+// CAREER PATH DTOs
+// =====================================
+
+export interface CareerPathDto {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  pathName: string;
+  status: string;
+  careerTrack: string;
+  // Current State
+  currentPositionId: number;
+  currentPositionName: string;
+  currentLevel: number;
+  currentPositionStartDate: string;
+  // Target Information
+  targetPositionId?: number;
+  targetPositionName?: string;
+  targetLevel?: number;
+  expectedTargetDate?: string;
+  targetTimelineMonths?: number;
+  // Progress
+  progressPercentage: number;
+  readinessScore?: number;
+  readyForPromotion: boolean;
+  lastAssessmentDate?: string;
+  // Development Plan
+  developmentAreas?: string;
+  requiredCompetencies?: string;
+  requiredCertifications?: string;
+  requiredTraining?: string;
+  requiredExperienceYears?: number;
+  // Mentorship
+  mentorId?: number;
+  mentorName?: string;
+  mentorAssignmentDate?: string;
+  mentorshipNotes?: string;
+  // Manager Assessment
+  managerAssessment?: string;
+  managerRecommendation?: string;
+  lastManagerMeetingDate?: string;
+  // Additional Information
+  notes?: string;
+  startDate: string;
+  endDate?: string;
+  nextReviewDate?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateCareerPathDto {
+  employeeId: number;
+  pathName: string;
+  careerTrack: string;
+  currentPositionId: number;
+  currentLevel: number;
+  targetPositionId?: number;
+  targetLevel?: number;
+  expectedTargetDate?: string;
+  targetTimelineMonths?: number;
+  developmentAreas?: string;
+  requiredCompetencies?: string;
+  requiredCertifications?: string;
+  requiredTraining?: string;
+  requiredExperienceYears?: number;
+  mentorId?: number;
+  notes?: string;
+  startDate: string;
+}
+
+export interface UpdateCareerPathDto {
+  pathName: string;
+  status: string;
+  careerTrack: string;
+  targetPositionId?: number;
+  targetLevel?: number;
+  expectedTargetDate?: string;
+  targetTimelineMonths?: number;
+  progressPercentage: number;
+  readinessScore?: number;
+  readyForPromotion: boolean;
+  developmentAreas?: string;
+  requiredCompetencies?: string;
+  requiredCertifications?: string;
+  requiredTraining?: string;
+  requiredExperienceYears?: number;
+  mentorId?: number;
+  mentorshipNotes?: string;
+  managerAssessment?: string;
+  managerRecommendation?: string;
+  notes?: string;
+  endDate?: string;
+  nextReviewDate?: string;
+}
+
+// =====================================
+// CERTIFICATION DTOs
+// =====================================
+
+export interface CertificationDto {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  certificationName: string;
+  certificationType: string;
+  status: string;
+  // Issuing Authority
+  issuingAuthority: string;
+  issuingCountry?: string;
+  accreditationBody?: string;
+  // Certification Details
+  certificationNumber?: string;
+  credentialId?: string;
+  verificationUrl?: string;
+  certificationLevel?: string;
+  specialization?: string;
+  // Dates
+  issueDate: string;
+  expiryDate?: string;
+  lastRenewalDate?: string;
+  nextRenewalDate?: string;
+  // Training Information
+  trainingRequired: boolean;
+  totalTrainingHours?: number;
+  completedTrainingHours?: number;
+  trainingProvider?: string;
+  trainingCompletionDate?: string;
+  // Exam Information
+  examRequired: boolean;
+  examDate?: string;
+  examScore?: number;
+  passingScore?: number;
+  attemptNumber: number;
+  // Cost Information
+  certificationCost?: number;
+  renewalCost?: number;
+  companySponsored: boolean;
+  currency: string;
+  // CPE/CEU Information
+  cpeRequired: boolean;
+  requiredCpeUnits?: number;
+  earnedCpeUnits?: number;
+  cpePeriodStart?: string;
+  cpePeriodEnd?: string;
+  // Document Information
+  certificateFileUrl?: string;
+  badgeUrl?: string;
+  // Additional Information
+  description?: string;
+  notes?: string;
+  requiredForJob: boolean;
+  reminderSent: boolean;
+  reminderDate?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  // Computed Properties
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+}
+
+export interface CreateCertificationDto {
+  employeeId: number;
+  certificationName: string;
+  certificationType: string;
+  issuingAuthority: string;
+  issuingCountry?: string;
+  accreditationBody?: string;
+  certificationNumber?: string;
+  credentialId?: string;
+  verificationUrl?: string;
+  certificationLevel?: string;
+  specialization?: string;
+  issueDate: string;
+  expiryDate?: string;
+  trainingRequired: boolean;
+  totalTrainingHours?: number;
+  trainingProvider?: string;
+  examRequired: boolean;
+  examDate?: string;
+  examScore?: number;
+  passingScore?: number;
+  certificationCost?: number;
+  renewalCost?: number;
+  companySponsored: boolean;
+  currency?: string;
+  cpeRequired: boolean;
+  requiredCpeUnits?: number;
+  description?: string;
+  notes?: string;
+  requiredForJob: boolean;
+}
+
+export interface UpdateCertificationDto {
+  certificationName: string;
+  certificationType: string;
+  status: string;
+  issuingAuthority: string;
+  issuingCountry?: string;
+  accreditationBody?: string;
+  certificationNumber?: string;
+  credentialId?: string;
+  verificationUrl?: string;
+  certificationLevel?: string;
+  specialization?: string;
+  expiryDate?: string;
+  lastRenewalDate?: string;
+  nextRenewalDate?: string;
+  trainingRequired: boolean;
+  totalTrainingHours?: number;
+  completedTrainingHours?: number;
+  trainingProvider?: string;
+  trainingCompletionDate?: string;
+  examRequired: boolean;
+  examScore?: number;
+  passingScore?: number;
+  attemptNumber: number;
+  certificationCost?: number;
+  renewalCost?: number;
+  companySponsored: boolean;
+  cpeRequired: boolean;
+  requiredCpeUnits?: number;
+  earnedCpeUnits?: number;
+  cpePeriodStart?: string;
+  cpePeriodEnd?: string;
+  description?: string;
+  notes?: string;
+  requiredForJob: boolean;
+}
+
+// =====================================
+// DISCIPLINARY ACTION DTOs
+// =====================================
+
+export interface DisciplinaryActionDto {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  actionCode: string;
+  actionType: string;
+  status: string;
+  severityLevel: string;
+  // Incident Information
+  incidentDate: string;
+  incidentLocation?: string;
+  incidentDescription: string;
+  violatedPolicy?: string;
+  witnesses?: string;
+  evidence?: string;
+  // Investigation
+  investigationStartDate?: string;
+  investigationEndDate?: string;
+  investigatorId?: number;
+  investigatorName?: string;
+  investigationNotes?: string;
+  investigationFindings?: string;
+  // Defense
+  defenseRequested: boolean;
+  defenseDeadline?: string;
+  defenseReceived: boolean;
+  defenseDate?: string;
+  defenseText?: string;
+  // Decision
+  decisionDate?: string;
+  decisionMakerId?: number;
+  decisionMakerName?: string;
+  decision?: string;
+  decisionRationale?: string;
+  // Applied Sanction
+  appliedSanction?: string;
+  sanctionDetails?: string;
+  sanctionStartDate?: string;
+  sanctionEndDate?: string;
+  sanctionDurationDays?: number;
+  salaryDeductionAmount?: number;
+  currency: string;
+  // Follow-up
+  followUpRequired: boolean;
+  followUpDate?: string;
+  followUpNotes?: string;
+  hasPerformanceImprovementPlan: boolean;
+  performanceImprovementPlanId?: number;
+  // Appeal
+  wasAppealed: boolean;
+  appealDate?: string;
+  appealOutcome?: string;
+  appealNotes?: string;
+  // Additional Information
+  reportedById?: number;
+  reportedByName?: string;
+  hrRepresentativeId?: number;
+  hrRepresentativeName?: string;
+  isConfidential: boolean;
+  previousWarningsCount: number;
+  internalNotes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateDisciplinaryActionDto {
+  employeeId: number;
+  actionType: string;
+  severityLevel: string;
+  incidentDate: string;
+  incidentLocation?: string;
+  incidentDescription: string;
+  violatedPolicy?: string;
+  witnesses?: string;
+  evidence?: string;
+  reportedById?: number;
+  hrRepresentativeId?: number;
+  isConfidential: boolean;
+}
+
+export interface UpdateDisciplinaryActionDto {
+  actionType: string;
+  status: string;
+  severityLevel: string;
+  incidentDescription: string;
+  violatedPolicy?: string;
+  witnesses?: string;
+  evidence?: string;
+  investigationStartDate?: string;
+  investigationEndDate?: string;
+  investigatorId?: number;
+  investigationNotes?: string;
+  investigationFindings?: string;
+  defenseRequested: boolean;
+  defenseDeadline?: string;
+  defenseReceived: boolean;
+  defenseDate?: string;
+  defenseText?: string;
+  decisionDate?: string;
+  decisionMakerId?: number;
+  decision?: string;
+  decisionRationale?: string;
+  appliedSanction?: string;
+  sanctionDetails?: string;
+  sanctionStartDate?: string;
+  sanctionEndDate?: string;
+  sanctionDurationDays?: number;
+  salaryDeductionAmount?: number;
+  followUpRequired: boolean;
+  followUpDate?: string;
+  followUpNotes?: string;
+  wasAppealed: boolean;
+  appealDate?: string;
+  appealOutcome?: string;
+  appealNotes?: string;
+  internalNotes?: string;
+}
+
+// =====================================
+// EMPLOYEE ASSET DTOs
+// =====================================
+
+export interface EmployeeAssetDto {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  assetType: string;
+  status: string;
+  // Asset Information
+  assetName: string;
+  assetCode?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  description?: string;
+  // Value Information
+  purchaseValue?: number;
+  currentValue?: number;
+  currency: string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  // Assignment Information
+  assignmentDate: string;
+  returnDate?: string;
+  expectedReturnDate?: string;
+  assignedById?: number;
+  assignedByName?: string;
+  receivedById?: number;
+  receivedByName?: string;
+  // Location Information
+  location?: string;
+  departmentId?: number;
+  departmentName?: string;
+  office?: string;
+  // Condition Information
+  conditionAtAssignment: string;
+  conditionAtReturn?: string;
+  conditionNotes?: string;
+  hasDamage: boolean;
+  damageDescription?: string;
+  damageCost?: number;
+  // IT Assets
+  ipAddress?: string;
+  macAddress?: string;
+  hostname?: string;
+  operatingSystem?: string;
+  softwareLicenses?: string;
+  // Mobile Assets
+  imei?: string;
+  simCardNumber?: string;
+  phoneNumber?: string;
+  // Vehicle Assets
+  licensePlate?: string;
+  mileageAtAssignment?: number;
+  mileageAtReturn?: number;
+  fuelCardNumber?: string;
+  // Documents
+  assignmentFormSigned: boolean;
+  assignmentFormUrl?: string;
+  returnFormUrl?: string;
+  photosJson?: string;
+  // Additional Information
+  notes?: string;
+  tags?: string;
+  inventoryItemId?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  // Computed Properties
+  isUnderWarranty: boolean;
+}
+
+export interface CreateEmployeeAssetDto {
+  employeeId: number;
+  assetType: string;
+  assetName: string;
+  assetCode?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  description?: string;
+  purchaseValue?: number;
+  currentValue?: number;
+  currency?: string;
+  purchaseDate?: string;
+  warrantyEndDate?: string;
+  assignmentDate: string;
+  expectedReturnDate?: string;
+  assignedById?: number;
+  location?: string;
+  departmentId?: number;
+  office?: string;
+  conditionAtAssignment: string;
+  ipAddress?: string;
+  macAddress?: string;
+  hostname?: string;
+  operatingSystem?: string;
+  softwareLicenses?: string;
+  imei?: string;
+  simCardNumber?: string;
+  phoneNumber?: string;
+  licensePlate?: string;
+  mileageAtAssignment?: number;
+  fuelCardNumber?: string;
+  notes?: string;
+  tags?: string;
+  inventoryItemId?: number;
+}
+
+export interface UpdateEmployeeAssetDto {
+  assetType: string;
+  status: string;
+  assetName: string;
+  assetCode?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  description?: string;
+  purchaseValue?: number;
+  currentValue?: number;
+  warrantyEndDate?: string;
+  returnDate?: string;
+  expectedReturnDate?: string;
+  location?: string;
+  departmentId?: number;
+  office?: string;
+  conditionAtReturn?: string;
+  conditionNotes?: string;
+  hasDamage: boolean;
+  damageDescription?: string;
+  damageCost?: number;
+  ipAddress?: string;
+  macAddress?: string;
+  hostname?: string;
+  operatingSystem?: string;
+  softwareLicenses?: string;
+  imei?: string;
+  simCardNumber?: string;
+  phoneNumber?: string;
+  licensePlate?: string;
+  mileageAtReturn?: number;
+  notes?: string;
+  tags?: string;
+}
+
+// =====================================
+// EMPLOYEE BENEFIT DTOs
+// =====================================
+
+export interface EmployeeBenefitDto {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  benefitType: string;
+  benefitName: string;
+  status: string;
+  // Value Information
+  amount: number;
+  currency: string;
+  paymentFrequency: string;
+  annualValue?: number;
+  taxIncluded: boolean;
+  isTaxable: boolean;
+  // Period Information
+  startDate: string;
+  endDate?: string;
+  renewalDate?: string;
+  vestingDate?: string;
+  waitingPeriodMonths?: number;
+  // Health Insurance
+  insuranceProvider?: string;
+  policyNumber?: string;
+  coverageLevel?: string;
+  includesFamily: boolean;
+  spouseCovered: boolean;
+  childrenCovered: boolean;
+  numberOfDependents?: number;
+  // Vehicle
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  fuelAllowance?: number;
+  mileageLimit?: number;
+  // Phone/Internet
+  phoneNumber?: string;
+  monthlyLimit?: number;
+  operator?: string;
+  // Meal Card
+  cardNumber?: string;
+  dailyAmount?: number;
+  cardProvider?: string;
+  // Usage Information
+  usedAmount?: number;
+  remainingAmount?: number;
+  lastUsageDate?: string;
+  // Additional Information
+  description?: string;
+  notes?: string;
+  documentUrl?: string;
+  approvedById?: number;
+  approvedByName?: string;
+  approvalDate?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  // Computed Properties
+  isExpired: boolean;
+  isVested: boolean;
+}
+
+export interface CreateEmployeeBenefitDto {
+  employeeId: number;
+  benefitType: string;
+  benefitName: string;
+  amount: number;
+  currency?: string;
+  paymentFrequency: string;
+  taxIncluded: boolean;
+  isTaxable: boolean;
+  startDate: string;
+  endDate?: string;
+  renewalDate?: string;
+  vestingDate?: string;
+  waitingPeriodMonths?: number;
+  insuranceProvider?: string;
+  policyNumber?: string;
+  coverageLevel?: string;
+  includesFamily: boolean;
+  spouseCovered: boolean;
+  childrenCovered: boolean;
+  numberOfDependents?: number;
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  fuelAllowance?: number;
+  mileageLimit?: number;
+  phoneNumber?: string;
+  monthlyLimit?: number;
+  operator?: string;
+  cardNumber?: string;
+  dailyAmount?: number;
+  cardProvider?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface UpdateEmployeeBenefitDto {
+  benefitType: string;
+  benefitName: string;
+  status: string;
+  amount: number;
+  paymentFrequency: string;
+  annualValue?: number;
+  taxIncluded: boolean;
+  isTaxable: boolean;
+  endDate?: string;
+  renewalDate?: string;
+  vestingDate?: string;
+  insuranceProvider?: string;
+  policyNumber?: string;
+  coverageLevel?: string;
+  includesFamily: boolean;
+  spouseCovered: boolean;
+  childrenCovered: boolean;
+  numberOfDependents?: number;
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  fuelAllowance?: number;
+  mileageLimit?: number;
+  phoneNumber?: string;
+  monthlyLimit?: number;
+  operator?: string;
+  cardNumber?: string;
+  dailyAmount?: number;
+  cardProvider?: string;
+  usedAmount?: number;
+  description?: string;
+  notes?: string;
+}
+
+// =====================================
+// ONBOARDING DTOs
+// =====================================
+
+export interface OnboardingDto {
+  id: number;
+  employeeId: number;
+  employeeName?: string;
+  status: string;
+  templateId?: number;
+  templateName?: string;
+  startDate: string;
+  plannedEndDate?: string;
+  actualEndDate?: string;
+  firstDayOfWork: string;
+  buddyId?: number;
+  buddyName?: string;
+  hrResponsibleId?: number;
+  hrResponsibleName?: string;
+  itResponsibleId?: number;
+  itResponsibleName?: string;
+  completionPercentage: number;
+  totalTasks: number;
+  completedTasks: number;
+  // Equipment
+  laptopProvided: boolean;
+  phoneProvided: boolean;
+  accessCardProvided: boolean;
+  equipmentNotes?: string;
+  // IT Setup
+  emailAccountCreated: boolean;
+  adAccountCreated: boolean;
+  systemAccessGranted: boolean;
+  vpnAccessGranted: boolean;
+  // Documents
+  contractSigned: boolean;
+  ndaSigned: boolean;
+  policiesAcknowledged: boolean;
+  bankDetailsReceived: boolean;
+  emergencyContactReceived: boolean;
+  // Training
+  orientationCompleted: boolean;
+  safetyTrainingCompleted: boolean;
+  complianceTrainingCompleted: boolean;
+  productTrainingCompleted: boolean;
+  // Feedback
+  week1FeedbackReceived: boolean;
+  month1FeedbackReceived: boolean;
+  month3FeedbackReceived: boolean;
+  employeeFeedback?: string;
+  managerFeedback?: string;
+  // Other
+  welcomeKitSent: boolean;
+  deskPrepared: boolean;
+  teamIntroductionDone: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateOnboardingDto {
+  employeeId: number;
+  templateId?: number;
+  startDate: string;
+  plannedEndDate?: string;
+  firstDayOfWork: string;
+  buddyId?: number;
+  hrResponsibleId?: number;
+  itResponsibleId?: number;
+  notes?: string;
+}
+
+export interface UpdateOnboardingDto {
+  status: string;
+  plannedEndDate?: string;
+  actualEndDate?: string;
+  buddyId?: number;
+  hrResponsibleId?: number;
+  itResponsibleId?: number;
+  laptopProvided: boolean;
+  phoneProvided: boolean;
+  accessCardProvided: boolean;
+  equipmentNotes?: string;
+  emailAccountCreated: boolean;
+  adAccountCreated: boolean;
+  systemAccessGranted: boolean;
+  vpnAccessGranted: boolean;
+  contractSigned: boolean;
+  ndaSigned: boolean;
+  policiesAcknowledged: boolean;
+  bankDetailsReceived: boolean;
+  emergencyContactReceived: boolean;
+  orientationCompleted: boolean;
+  safetyTrainingCompleted: boolean;
+  complianceTrainingCompleted: boolean;
+  productTrainingCompleted: boolean;
+  week1FeedbackReceived: boolean;
+  month1FeedbackReceived: boolean;
+  month3FeedbackReceived: boolean;
+  employeeFeedback?: string;
+  managerFeedback?: string;
+  welcomeKitSent: boolean;
+  deskPrepared: boolean;
+  teamIntroductionDone: boolean;
+  notes?: string;
+}
+
+// =====================================
+// PAYSLIP DTOs
+// =====================================
+
+export interface PayslipDto {
+  id: number;
+  employeeId: number;
+  employeeName?: string;
+  payrollId: number;
+  payslipNumber: string;
+  status: string;
+  period: string;
+  year: number;
+  month: number;
+  periodStart: string;
+  periodEnd: string;
+  paymentDate: string;
+  // Earnings
+  grossSalary: number;
+  baseSalary: number;
+  overtimePay: number;
+  bonus: number;
+  gratuity: number;
+  commission: number;
+  otherEarnings: number;
+  totalEarnings: number;
+  // Allowances
+  transportationAllowance: number;
+  mealAllowance: number;
+  housingAllowance: number;
+  phoneAllowance: number;
+  otherAllowances: number;
+  totalAllowances: number;
+  // Deductions
+  incomeTax: number;
+  stampTax: number;
+  ssiEmployeeShare: number;
+  unemploymentInsuranceEmployee: number;
+  privatePensionDeduction: number;
+  unionDues: number;
+  garnishment: number;
+  advanceDeduction: number;
+  otherDeductions: number;
+  totalDeductions: number;
+  // Employer Cost
+  ssiEmployerShare: number;
+  unemploymentInsuranceEmployer: number;
+  privatePensionEmployer: number;
+  totalEmployerCost: number;
+  // Net
+  netSalary: number;
+  paidAmount: number;
+  currency: string;
+  // Work Details
+  daysWorked: number;
+  hoursWorked: number;
+  overtimeHours: number;
+  leaveDays: number;
+  absenceDays: number;
+  holidayDays: number;
+  // Cumulative
+  cumulativeGross: number;
+  cumulativeIncomeTax: number;
+  cumulativeSsiBase: number;
+  // Payment Info
+  bankName?: string;
+  iban?: string;
+  paymentMethod: string;
+  paymentReference?: string;
+  pdfUrl?: string;
+  generatedDate: string;
+  sentDate?: string;
+  viewedDate?: string;
+  notes?: string;
+  internalNotes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreatePayslipDto {
+  employeeId: number;
+  payrollId: number;
+  year: number;
+  month: number;
+  periodStart: string;
+  periodEnd: string;
+  paymentDate: string;
+  baseSalary: number;
+  overtimePay?: number;
+  bonus?: number;
+  gratuity?: number;
+  commission?: number;
+  otherEarnings?: number;
+  transportationAllowance?: number;
+  mealAllowance?: number;
+  housingAllowance?: number;
+  phoneAllowance?: number;
+  otherAllowances?: number;
+  notes?: string;
+}
+
+// =====================================
+// OVERTIME DTOs
+// =====================================
+
+export interface OvertimeDto {
+  id: number;
+  employeeId: number;
+  employeeName?: string;
+  overtimeType: string;
+  status: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  plannedHours: number;
+  actualHours?: number;
+  breakMinutes: number;
+  payMultiplier: number;
+  calculatedAmount?: number;
+  currency: string;
+  projectId?: number;
+  projectName?: string;
+  taskId?: string;
+  costCenter?: string;
+  reason: string;
+  description?: string;
+  workDetails?: string;
+  requestDate: string;
+  approvedById?: number;
+  approvedByName?: string;
+  approvalDate?: string;
+  approvalNotes?: string;
+  rejectionReason?: string;
+  isPaid: boolean;
+  paidDate?: string;
+  payrollId?: number;
+  isCompensatoryTimeOff: boolean;
+  compensatoryHoursEarned?: number;
+  compensatoryHoursUsed?: number;
+  isPreApproved: boolean;
+  isEmergency: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateOvertimeDto {
+  employeeId: number;
+  overtimeType: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  plannedHours: number;
+  breakMinutes?: number;
+  payMultiplier?: number;
+  projectId?: number;
+  taskId?: string;
+  costCenter?: string;
+  reason: string;
+  description?: string;
+  workDetails?: string;
+  isCompensatoryTimeOff: boolean;
+  isPreApproved: boolean;
+  isEmergency: boolean;
+  notes?: string;
+}
+
+export interface UpdateOvertimeDto {
+  overtimeType: string;
+  status: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  plannedHours: number;
+  actualHours?: number;
+  breakMinutes: number;
+  payMultiplier: number;
+  projectId?: number;
+  taskId?: string;
+  costCenter?: string;
+  reason: string;
+  description?: string;
+  workDetails?: string;
+  approvalNotes?: string;
+  rejectionReason?: string;
+  isCompensatoryTimeOff: boolean;
+  compensatoryHoursEarned?: number;
+  compensatoryHoursUsed?: number;
+  notes?: string;
+}
+
+// =====================================
+// TIMESHEET DTOs
+// =====================================
+
+export interface TimeSheetDto {
+  id: number;
+  employeeId: number;
+  employeeName?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: string;
+  totalWorkHours: number;
+  regularHours: number;
+  overtimeHours: number;
+  leaveHours: number;
+  holidayHours: number;
+  billableHours: number;
+  nonBillableHours: number;
+  submittedDate?: string;
+  approvedById?: number;
+  approvedByName?: string;
+  approvalDate?: string;
+  approvalNotes?: string;
+  rejectionReason?: string;
+  notes?: string;
+  isLocked: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateTimeSheetDto {
+  employeeId: number;
+  periodStart: string;
+  periodEnd: string;
+  totalWorkHours: number;
+  regularHours: number;
+  overtimeHours?: number;
+  leaveHours?: number;
+  holidayHours?: number;
+  billableHours?: number;
+  nonBillableHours?: number;
+  notes?: string;
+}
+
+export interface UpdateTimeSheetDto {
+  status: string;
+  totalWorkHours: number;
+  regularHours: number;
+  overtimeHours: number;
+  leaveHours: number;
+  holidayHours: number;
+  billableHours: number;
+  nonBillableHours: number;
+  approvalNotes?: string;
+  rejectionReason?: string;
+  notes?: string;
+}
+
+// =====================================
+// SUCCESSION PLAN DTOs
+// =====================================
+
+export interface SuccessionPlanDto {
+  id: number;
+  planName: string;
+  status: string;
+  priority: string;
+  positionId: number;
+  positionTitle?: string;
+  departmentId: number;
+  departmentName?: string;
+  currentIncumbentId?: number;
+  currentIncumbentName?: string;
+  isCriticalPosition: boolean;
+  riskLevel: string;
+  startDate: string;
+  targetDate?: string;
+  lastReviewDate?: string;
+  nextReviewDate?: string;
+  expectedVacancyDate?: string;
+  vacancyReason?: string;
+  completionPercentage: number;
+  hasReadyCandidate: boolean;
+  hasEmergencyBackup: boolean;
+  requiredCompetencies?: string;
+  requiredExperienceYears?: number;
+  requiredCertifications?: string;
+  requiredEducation?: string;
+  criticalSuccessFactors?: string;
+  planOwnerId?: number;
+  planOwnerName?: string;
+  hrResponsibleId?: number;
+  hrResponsibleName?: string;
+  description?: string;
+  notes?: string;
+  externalHiringNeeded: boolean;
+  budget?: number;
+  currency: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateSuccessionPlanDto {
+  planName: string;
+  priority: string;
+  positionId: number;
+  departmentId: number;
+  currentIncumbentId?: number;
+  isCriticalPosition: boolean;
+  riskLevel: string;
+  startDate: string;
+  targetDate?: string;
+  expectedVacancyDate?: string;
+  vacancyReason?: string;
+  requiredCompetencies?: string;
+  requiredExperienceYears?: number;
+  requiredCertifications?: string;
+  requiredEducation?: string;
+  criticalSuccessFactors?: string;
+  planOwnerId?: number;
+  hrResponsibleId?: number;
+  description?: string;
+  notes?: string;
+  externalHiringNeeded: boolean;
+  budget?: number;
+  currency?: string;
+}
+
+export interface UpdateSuccessionPlanDto {
+  planName: string;
+  status: string;
+  priority: string;
+  isCriticalPosition: boolean;
+  riskLevel: string;
+  targetDate?: string;
+  lastReviewDate?: string;
+  nextReviewDate?: string;
+  expectedVacancyDate?: string;
+  vacancyReason?: string;
+  completionPercentage: number;
+  hasReadyCandidate: boolean;
+  hasEmergencyBackup: boolean;
+  requiredCompetencies?: string;
+  requiredExperienceYears?: number;
+  requiredCertifications?: string;
+  requiredEducation?: string;
+  criticalSuccessFactors?: string;
+  planOwnerId?: number;
+  hrResponsibleId?: number;
+  description?: string;
+  notes?: string;
+  externalHiringNeeded: boolean;
+  budget?: number;
+}
+
+// =====================================
+// EMPLOYEE SKILL DTOs
+// =====================================
+
+export interface EmployeeSkillDto {
+  id: number;
+  employeeId: number;
+  skillId?: number;
+  skillName: string;
+  category: string;
+  skillType: string;
+  proficiencyLevel: string;
+  yearsOfExperience?: number;
+  selfAssessment?: number;
+  managerAssessment?: number;
+  lastAssessmentDate?: string;
+  isVerified: boolean;
+  verificationMethod?: string;
+  verificationDate?: string;
+  verifiedByUserId?: number;
+  isCertified: boolean;
+  certificationName?: string;
+  certifyingAuthority?: string;
+  certificationNumber?: string;
+  certificationDate?: string;
+  certificationExpiryDate?: string;
+  certificationUrl?: string;
+  isPrimary: boolean;
+  isActivelyUsed: boolean;
+  lastUsedDate?: string;
+  usageFrequency?: string;
+  notes?: string;
+  learningSource?: string;
+  relatedProjects?: string;
+  canMentor: boolean;
+  canTrain: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateEmployeeSkillDto {
+  employeeId: number;
+  skillId?: number;
+  skillName: string;
+  category: string;
+  skillType: string;
+  proficiencyLevel: string;
+  yearsOfExperience?: number;
+  selfAssessment?: number;
+  isCertified: boolean;
+  certificationName?: string;
+  certifyingAuthority?: string;
+  certificationNumber?: string;
+  certificationDate?: string;
+  certificationExpiryDate?: string;
+  certificationUrl?: string;
+  isPrimary: boolean;
+  isActivelyUsed: boolean;
+  lastUsedDate?: string;
+  usageFrequency?: string;
+  notes?: string;
+  learningSource?: string;
+  canMentor: boolean;
+  canTrain: boolean;
+}
+
+export interface UpdateEmployeeSkillDto {
+  skillName: string;
+  category: string;
+  skillType: string;
+  proficiencyLevel: string;
+  yearsOfExperience?: number;
+  selfAssessment?: number;
+  managerAssessment?: number;
+  isVerified: boolean;
+  verificationMethod?: string;
+  isCertified: boolean;
+  certificationName?: string;
+  certifyingAuthority?: string;
+  certificationNumber?: string;
+  certificationDate?: string;
+  certificationExpiryDate?: string;
+  certificationUrl?: string;
+  isPrimary: boolean;
+  isActivelyUsed: boolean;
+  lastUsedDate?: string;
+  usageFrequency?: string;
+  notes?: string;
+  learningSource?: string;
+  relatedProjects?: string;
+  canMentor: boolean;
+  canTrain: boolean;
+}
+
+// =====================================
+// GRIEVANCE DTOs
+// =====================================
+
+export interface GrievanceDto {
+  id: number;
+  grievanceCode: string;
+  complainantId: number;
+  complainantName: string;
+  status: string;
+  grievanceType: string;
+  priority: string;
+  subject: string;
+  description: string;
+  incidentDate?: string;
+  incidentLocation?: string;
+  accusedPersonId?: number;
+  accusedPersonName?: string;
+  accusedPersonDescription?: string;
+  witnesses?: string;
+  evidence?: string;
+  isAnonymous: boolean;
+  isConfidential: boolean;
+  retaliationProtectionRequested: boolean;
+  assignedToId?: number;
+  assignedToName?: string;
+  hrRepresentativeId?: number;
+  hrRepresentativeName?: string;
+  assignedDate?: string;
+  filedDate: string;
+  acknowledgedDate?: string;
+  targetResolutionDate?: string;
+  resolutionDate?: string;
+  closedDate?: string;
+  investigationRequired: boolean;
+  investigationStartDate?: string;
+  investigationEndDate?: string;
+  investigationNotes?: string;
+  investigationFindings?: string;
+  resolution?: string;
+  resolutionType?: string;
+  actionsTaken?: string;
+  preventiveMeasures?: string;
+  complainantSatisfied?: boolean;
+  satisfactionFeedback?: string;
+  satisfactionRating?: number;
+  wasEscalated: boolean;
+  escalationDate?: string;
+  escalationReason?: string;
+  escalationLevel: number;
+  internalNotes?: string;
+  category?: string;
+  subcategory?: string;
+  tags?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateGrievanceDto {
+  complainantId: number;
+  grievanceType: string;
+  priority: string;
+  subject: string;
+  description: string;
+  incidentDate?: string;
+  incidentLocation?: string;
+  accusedPersonId?: number;
+  accusedPersonDescription?: string;
+  witnesses?: string;
+  evidence?: string;
+  isAnonymous: boolean;
+  isConfidential: boolean;
+  retaliationProtectionRequested: boolean;
+  category?: string;
+  subcategory?: string;
+  tags?: string;
+}
+
+export interface UpdateGrievanceDto {
+  status: string;
+  grievanceType: string;
+  priority: string;
+  subject: string;
+  description: string;
+  assignedToId?: number;
+  hrRepresentativeId?: number;
+  targetResolutionDate?: string;
+  investigationRequired: boolean;
+  investigationStartDate?: string;
+  investigationEndDate?: string;
+  investigationNotes?: string;
+  investigationFindings?: string;
+  resolution?: string;
+  resolutionType?: string;
+  actionsTaken?: string;
+  preventiveMeasures?: string;
+  complainantSatisfied?: boolean;
+  satisfactionFeedback?: string;
+  satisfactionRating?: number;
+  wasEscalated: boolean;
+  escalationDate?: string;
+  escalationReason?: string;
+  escalationLevel: number;
+  internalNotes?: string;
+  category?: string;
+  subcategory?: string;
+  tags?: string;
+}
+
+// =====================================
+// INTERVIEW DTOs
+// =====================================
+
+export interface InterviewDto {
+  id: number;
+  interviewType: string;
+  round: number;
+  status: string;
+  jobApplicationId: number;
+  candidateName?: string;
+  interviewerId: number;
+  interviewerName: string;
+  scheduledDateTime: string;
+  durationMinutes: number;
+  timezone?: string;
+  actualDateTime?: string;
+  actualDurationMinutes?: number;
+  format: string;
+  location?: string;
+  meetingRoom?: string;
+  videoConferenceLink?: string;
+  videoConferencePlatform?: string;
+  phoneNumber?: string;
+  topics?: string;
+  questionsToAsk?: string;
+  interviewerNotes?: string;
+  candidateInstructions?: string;
+  overallRating?: number;
+  technicalCompetency?: number;
+  communicationSkills?: number;
+  problemSolving?: number;
+  culturalFit?: number;
+  leadershipPotential?: number;
+  recommendation?: string;
+  evaluationSummary?: string;
+  strengths?: string;
+  areasOfImprovement?: string;
+  invitationSentToCandidate: boolean;
+  invitationSentDate?: string;
+  candidateConfirmed: boolean;
+  reminderSent: boolean;
+  cancellationReason?: string;
+  cancelledBy?: string;
+  wasRescheduled: boolean;
+  previousDateTime?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateInterviewDto {
+  interviewType: string;
+  round: number;
+  jobApplicationId: number;
+  interviewerId: number;
+  scheduledDateTime: string;
+  durationMinutes: number;
+  timezone?: string;
+  format: string;
+  location?: string;
+  meetingRoom?: string;
+  videoConferenceLink?: string;
+  videoConferencePlatform?: string;
+  phoneNumber?: string;
+  topics?: string;
+  questionsToAsk?: string;
+  candidateInstructions?: string;
+}
+
+export interface UpdateInterviewDto {
+  interviewType: string;
+  status: string;
+  interviewerId: number;
+  scheduledDateTime: string;
+  durationMinutes: number;
+  timezone?: string;
+  actualDateTime?: string;
+  actualDurationMinutes?: number;
+  format: string;
+  location?: string;
+  meetingRoom?: string;
+  videoConferenceLink?: string;
+  videoConferencePlatform?: string;
+  phoneNumber?: string;
+  topics?: string;
+  questionsToAsk?: string;
+  interviewerNotes?: string;
+  candidateInstructions?: string;
+  overallRating?: number;
+  technicalCompetency?: number;
+  communicationSkills?: number;
+  problemSolving?: number;
+  culturalFit?: number;
+  leadershipPotential?: number;
+  recommendation?: string;
+  evaluationSummary?: string;
+  strengths?: string;
+  areasOfImprovement?: string;
+  cancellationReason?: string;
+}
+
+// =====================================
+// JOB APPLICATION DTOs
+// =====================================
+
+export interface JobApplicationDto {
+  id: number;
+  applicationCode: string;
+  status: string;
+  applicationDate: string;
+  jobPostingId: number;
+  jobTitle?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  linkedInUrl?: string;
+  portfolioUrl?: string;
+  totalExperienceYears?: number;
+  currentCompany?: string;
+  currentPosition?: string;
+  currentSalary?: number;
+  expectedSalary?: number;
+  currency: string;
+  noticePeriodDays?: number;
+  availableStartDate?: string;
+  highestEducation?: string;
+  university?: string;
+  major?: string;
+  graduationYear?: number;
+  resumeUrl?: string;
+  coverLetter?: string;
+  additionalDocumentsJson?: string;
+  overallRating?: number;
+  technicalScore?: number;
+  culturalFitScore?: number;
+  evaluationNotes?: string;
+  evaluatedByUserId?: number;
+  evaluationDate?: string;
+  source: string;
+  referredByEmployeeId?: number;
+  referredByEmployeeName?: string;
+  sourceDetail?: string;
+  currentStage: string;
+  lastStageChangeDate?: string;
+  rejectionReason?: string;
+  rejectionCategory?: string;
+  withdrawalReason?: string;
+  offerExtended: boolean;
+  offerDate?: string;
+  offeredSalary?: number;
+  hireDate?: string;
+  createdEmployeeId?: number;
+  skills?: string;
+  languages?: string;
+  notes?: string;
+  tags?: string;
+  inTalentPool: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateJobApplicationDto {
+  jobPostingId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  linkedInUrl?: string;
+  portfolioUrl?: string;
+  totalExperienceYears?: number;
+  currentCompany?: string;
+  currentPosition?: string;
+  currentSalary?: number;
+  expectedSalary?: number;
+  currency?: string;
+  noticePeriodDays?: number;
+  availableStartDate?: string;
+  highestEducation?: string;
+  university?: string;
+  major?: string;
+  graduationYear?: number;
+  coverLetter?: string;
+  source: string;
+  referredByEmployeeId?: number;
+  sourceDetail?: string;
+  skills?: string;
+  languages?: string;
+  notes?: string;
+  tags?: string;
+}
+
+export interface UpdateJobApplicationDto {
+  status: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  linkedInUrl?: string;
+  portfolioUrl?: string;
+  totalExperienceYears?: number;
+  currentCompany?: string;
+  currentPosition?: string;
+  currentSalary?: number;
+  expectedSalary?: number;
+  noticePeriodDays?: number;
+  availableStartDate?: string;
+  highestEducation?: string;
+  university?: string;
+  major?: string;
+  graduationYear?: number;
+  coverLetter?: string;
+  overallRating?: number;
+  technicalScore?: number;
+  culturalFitScore?: number;
+  evaluationNotes?: string;
+  currentStage: string;
+  rejectionReason?: string;
+  rejectionCategory?: string;
+  withdrawalReason?: string;
+  offerExtended: boolean;
+  offerDate?: string;
+  offeredSalary?: number;
+  hireDate?: string;
+  skills?: string;
+  languages?: string;
+  notes?: string;
+  tags?: string;
+  inTalentPool: boolean;
+}
+
+// =====================================
+// JOB POSTING DTOs
+// =====================================
+
+export interface JobPostingDto {
+  id: number;
+  title: string;
+  postingCode: string;
+  status: string;
+  employmentType: string;
+  experienceLevel: string;
+  departmentId: number;
+  departmentName: string;
+  positionId?: number;
+  positionTitle?: string;
+  hiringManagerId?: number;
+  hiringManagerName?: string;
+  numberOfOpenings: number;
+  workLocationId?: number;
+  workLocationName?: string;
+  remoteWorkType: string;
+  city?: string;
+  country?: string;
+  description: string;
+  requirements?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  preferredQualifications?: string;
+  benefits?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency: string;
+  showSalary: boolean;
+  salaryPeriod: string;
+  postedDate?: string;
+  applicationDeadline?: string;
+  expectedStartDate?: string;
+  closedDate?: string;
+  totalApplications: number;
+  viewsCount: number;
+  hiredCount: number;
+  isInternal: boolean;
+  isFeatured: boolean;
+  isUrgent: boolean;
+  postedByUserId?: number;
+  tags?: string;
+  keywords?: string;
+  internalNotes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateJobPostingDto {
+  title: string;
+  employmentType: string;
+  experienceLevel: string;
+  departmentId: number;
+  positionId?: number;
+  hiringManagerId?: number;
+  numberOfOpenings: number;
+  workLocationId?: number;
+  remoteWorkType: string;
+  city?: string;
+  country?: string;
+  description: string;
+  requirements?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  preferredQualifications?: string;
+  benefits?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  currency?: string;
+  showSalary: boolean;
+  salaryPeriod: string;
+  postedDate?: string;
+  applicationDeadline?: string;
+  expectedStartDate?: string;
+  isInternal: boolean;
+  isFeatured: boolean;
+  isUrgent: boolean;
+  tags?: string;
+  keywords?: string;
+  internalNotes?: string;
+}
+
+export interface UpdateJobPostingDto {
+  title: string;
+  status: string;
+  employmentType: string;
+  experienceLevel: string;
+  departmentId: number;
+  positionId?: number;
+  hiringManagerId?: number;
+  numberOfOpenings: number;
+  workLocationId?: number;
+  remoteWorkType: string;
+  city?: string;
+  country?: string;
+  description: string;
+  requirements?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  preferredQualifications?: string;
+  benefits?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  showSalary: boolean;
+  salaryPeriod: string;
+  applicationDeadline?: string;
+  expectedStartDate?: string;
+  closedDate?: string;
+  isInternal: boolean;
+  isFeatured: boolean;
+  isUrgent: boolean;
+  tags?: string;
+  keywords?: string;
+  internalNotes?: string;
+}

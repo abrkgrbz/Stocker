@@ -108,6 +108,65 @@ import type {
   UpdateAnnouncementDto,
   AcknowledgeAnnouncementDto,
   AnnouncementStatisticsDto,
+  // Career Path
+  CareerPathDto,
+  CreateCareerPathDto,
+  UpdateCareerPathDto,
+  // Certification
+  CertificationDto,
+  CreateCertificationDto,
+  UpdateCertificationDto,
+  // Disciplinary Action
+  DisciplinaryActionDto,
+  CreateDisciplinaryActionDto,
+  UpdateDisciplinaryActionDto,
+  // Employee Asset
+  EmployeeAssetDto,
+  CreateEmployeeAssetDto,
+  UpdateEmployeeAssetDto,
+  // Employee Benefit
+  EmployeeBenefitDto,
+  CreateEmployeeBenefitDto,
+  UpdateEmployeeBenefitDto,
+  // Onboarding
+  OnboardingDto,
+  CreateOnboardingDto,
+  UpdateOnboardingDto,
+  // Payslip
+  PayslipDto,
+  CreatePayslipDto,
+  // Overtime
+  OvertimeDto,
+  CreateOvertimeDto,
+  UpdateOvertimeDto,
+  // TimeSheet
+  TimeSheetDto,
+  CreateTimeSheetDto,
+  UpdateTimeSheetDto,
+  // Succession Plan
+  SuccessionPlanDto,
+  CreateSuccessionPlanDto,
+  UpdateSuccessionPlanDto,
+  // Employee Skill
+  EmployeeSkillDto,
+  CreateEmployeeSkillDto,
+  UpdateEmployeeSkillDto,
+  // Grievance
+  GrievanceDto,
+  CreateGrievanceDto,
+  UpdateGrievanceDto,
+  // Interview
+  InterviewDto,
+  CreateInterviewDto,
+  UpdateInterviewDto,
+  // Job Application
+  JobApplicationDto,
+  CreateJobApplicationDto,
+  UpdateJobApplicationDto,
+  // Job Posting
+  JobPostingDto,
+  CreateJobPostingDto,
+  UpdateJobPostingDto,
 } from './hr.types';
 
 // =====================================
@@ -839,5 +898,473 @@ export class HRService {
 
   static async getAnnouncementStatistics(id: number): Promise<AnnouncementStatisticsDto> {
     return ApiService.get<AnnouncementStatisticsDto>(this.getPath(`announcements/${id}/statistics`));
+  }
+
+  // =====================================
+  // CAREER PATHS
+  // =====================================
+
+  static async getCareerPaths(): Promise<CareerPathDto[]> {
+    return ApiService.get<CareerPathDto[]>(this.getPath('career-paths'));
+  }
+
+  static async getCareerPath(id: number): Promise<CareerPathDto> {
+    return ApiService.get<CareerPathDto>(this.getPath(`career-paths/${id}`));
+  }
+
+  static async createCareerPath(data: CreateCareerPathDto): Promise<CareerPathDto> {
+    return ApiService.post<CareerPathDto>(this.getPath('career-paths'), data);
+  }
+
+  static async updateCareerPath(id: number, data: UpdateCareerPathDto): Promise<CareerPathDto> {
+    return ApiService.put<CareerPathDto>(this.getPath(`career-paths/${id}`), data);
+  }
+
+  static async deleteCareerPath(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`career-paths/${id}`));
+  }
+
+  // =====================================
+  // CERTIFICATIONS
+  // =====================================
+
+  static async getCertifications(): Promise<CertificationDto[]> {
+    return ApiService.get<CertificationDto[]>(this.getPath('certifications'));
+  }
+
+  static async getCertification(id: number): Promise<CertificationDto> {
+    return ApiService.get<CertificationDto>(this.getPath(`certifications/${id}`));
+  }
+
+  static async createCertification(data: CreateCertificationDto): Promise<CertificationDto> {
+    return ApiService.post<CertificationDto>(this.getPath('certifications'), data);
+  }
+
+  static async updateCertification(id: number, data: UpdateCertificationDto): Promise<CertificationDto> {
+    return ApiService.put<CertificationDto>(this.getPath(`certifications/${id}`), data);
+  }
+
+  static async deleteCertification(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`certifications/${id}`));
+  }
+
+  // =====================================
+  // DISCIPLINARY ACTIONS
+  // =====================================
+
+  static async getDisciplinaryActions(employeeId?: number): Promise<DisciplinaryActionDto[]> {
+    return ApiService.get<DisciplinaryActionDto[]>(this.getPath('disciplinary-actions'), {
+      params: { employeeId },
+    });
+  }
+
+  static async getDisciplinaryAction(id: number): Promise<DisciplinaryActionDto> {
+    return ApiService.get<DisciplinaryActionDto>(this.getPath(`disciplinary-actions/${id}`));
+  }
+
+  static async createDisciplinaryAction(data: CreateDisciplinaryActionDto): Promise<DisciplinaryActionDto> {
+    return ApiService.post<DisciplinaryActionDto>(this.getPath('disciplinary-actions'), data);
+  }
+
+  static async updateDisciplinaryAction(id: number, data: UpdateDisciplinaryActionDto): Promise<DisciplinaryActionDto> {
+    return ApiService.put<DisciplinaryActionDto>(this.getPath(`disciplinary-actions/${id}`), data);
+  }
+
+  static async deleteDisciplinaryAction(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`disciplinary-actions/${id}`));
+  }
+
+  // =====================================
+  // EMPLOYEE ASSETS
+  // =====================================
+
+  static async getEmployeeAssets(employeeId?: number): Promise<EmployeeAssetDto[]> {
+    return ApiService.get<EmployeeAssetDto[]>(this.getPath('employee-assets'), {
+      params: { employeeId },
+    });
+  }
+
+  static async getEmployeeAsset(id: number): Promise<EmployeeAssetDto> {
+    return ApiService.get<EmployeeAssetDto>(this.getPath(`employee-assets/${id}`));
+  }
+
+  static async createEmployeeAsset(data: CreateEmployeeAssetDto): Promise<EmployeeAssetDto> {
+    return ApiService.post<EmployeeAssetDto>(this.getPath('employee-assets'), data);
+  }
+
+  static async updateEmployeeAsset(id: number, data: UpdateEmployeeAssetDto): Promise<EmployeeAssetDto> {
+    return ApiService.put<EmployeeAssetDto>(this.getPath(`employee-assets/${id}`), data);
+  }
+
+  static async deleteEmployeeAsset(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`employee-assets/${id}`));
+  }
+
+  static async returnEmployeeAsset(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`employee-assets/${id}/return`), {});
+  }
+
+  // =====================================
+  // EMPLOYEE BENEFITS
+  // =====================================
+
+  static async getEmployeeBenefits(employeeId?: number): Promise<EmployeeBenefitDto[]> {
+    return ApiService.get<EmployeeBenefitDto[]>(this.getPath('employee-benefits'), {
+      params: { employeeId },
+    });
+  }
+
+  static async getEmployeeBenefit(id: number): Promise<EmployeeBenefitDto> {
+    return ApiService.get<EmployeeBenefitDto>(this.getPath(`employee-benefits/${id}`));
+  }
+
+  static async createEmployeeBenefit(data: CreateEmployeeBenefitDto): Promise<EmployeeBenefitDto> {
+    return ApiService.post<EmployeeBenefitDto>(this.getPath('employee-benefits'), data);
+  }
+
+  static async updateEmployeeBenefit(id: number, data: UpdateEmployeeBenefitDto): Promise<EmployeeBenefitDto> {
+    return ApiService.put<EmployeeBenefitDto>(this.getPath(`employee-benefits/${id}`), data);
+  }
+
+  static async deleteEmployeeBenefit(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`employee-benefits/${id}`));
+  }
+
+  // =====================================
+  // ONBOARDING
+  // =====================================
+
+  static async getOnboardings(employeeId?: number): Promise<OnboardingDto[]> {
+    return ApiService.get<OnboardingDto[]>(this.getPath('onboarding'), {
+      params: { employeeId },
+    });
+  }
+
+  static async getOnboarding(id: number): Promise<OnboardingDto> {
+    return ApiService.get<OnboardingDto>(this.getPath(`onboarding/${id}`));
+  }
+
+  static async createOnboarding(data: CreateOnboardingDto): Promise<OnboardingDto> {
+    return ApiService.post<OnboardingDto>(this.getPath('onboarding'), data);
+  }
+
+  static async updateOnboarding(id: number, data: UpdateOnboardingDto): Promise<OnboardingDto> {
+    return ApiService.put<OnboardingDto>(this.getPath(`onboarding/${id}`), data);
+  }
+
+  static async deleteOnboarding(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`onboarding/${id}`));
+  }
+
+  static async startOnboarding(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`onboarding/${id}/start`), {});
+  }
+
+  static async completeOnboardingTask(id: number, taskId: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`onboarding/${id}/tasks/${taskId}/complete`), {});
+  }
+
+  static async completeOnboarding(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`onboarding/${id}/complete`), {});
+  }
+
+  // =====================================
+  // PAYSLIPS
+  // =====================================
+
+  static async getPayslips(employeeId?: number, year?: number, month?: number): Promise<PayslipDto[]> {
+    return ApiService.get<PayslipDto[]>(this.getPath('payslips'), {
+      params: { employeeId, year, month },
+    });
+  }
+
+  static async getPayslip(id: number): Promise<PayslipDto> {
+    return ApiService.get<PayslipDto>(this.getPath(`payslips/${id}`));
+  }
+
+  static async createPayslip(data: CreatePayslipDto): Promise<PayslipDto> {
+    return ApiService.post<PayslipDto>(this.getPath('payslips'), data);
+  }
+
+  static async deletePayslip(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`payslips/${id}`));
+  }
+
+  static async sendPayslip(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`payslips/${id}/send`), {});
+  }
+
+  static async downloadPayslip(id: number): Promise<Blob> {
+    return ApiService.get<Blob>(this.getPath(`payslips/${id}/download`), {
+      responseType: 'blob',
+    });
+  }
+
+  // =====================================
+  // OVERTIMES
+  // =====================================
+
+  static async getOvertimes(employeeId?: number, startDate?: string, endDate?: string): Promise<OvertimeDto[]> {
+    return ApiService.get<OvertimeDto[]>(this.getPath('overtimes'), {
+      params: { employeeId, startDate, endDate },
+    });
+  }
+
+  static async getOvertime(id: number): Promise<OvertimeDto> {
+    return ApiService.get<OvertimeDto>(this.getPath(`overtimes/${id}`));
+  }
+
+  static async createOvertime(data: CreateOvertimeDto): Promise<OvertimeDto> {
+    return ApiService.post<OvertimeDto>(this.getPath('overtimes'), data);
+  }
+
+  static async updateOvertime(id: number, data: UpdateOvertimeDto): Promise<OvertimeDto> {
+    return ApiService.put<OvertimeDto>(this.getPath(`overtimes/${id}`), data);
+  }
+
+  static async deleteOvertime(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`overtimes/${id}`));
+  }
+
+  static async approveOvertime(id: number, notes?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`overtimes/${id}/approve`), { notes });
+  }
+
+  static async rejectOvertime(id: number, reason: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`overtimes/${id}/reject`), { reason });
+  }
+
+  // =====================================
+  // TIMESHEETS
+  // =====================================
+
+  static async getTimeSheets(employeeId?: number, startDate?: string, endDate?: string): Promise<TimeSheetDto[]> {
+    return ApiService.get<TimeSheetDto[]>(this.getPath('timesheets'), {
+      params: { employeeId, startDate, endDate },
+    });
+  }
+
+  static async getTimeSheet(id: number): Promise<TimeSheetDto> {
+    return ApiService.get<TimeSheetDto>(this.getPath(`timesheets/${id}`));
+  }
+
+  static async createTimeSheet(data: CreateTimeSheetDto): Promise<TimeSheetDto> {
+    return ApiService.post<TimeSheetDto>(this.getPath('timesheets'), data);
+  }
+
+  static async updateTimeSheet(id: number, data: UpdateTimeSheetDto): Promise<TimeSheetDto> {
+    return ApiService.put<TimeSheetDto>(this.getPath(`timesheets/${id}`), data);
+  }
+
+  static async deleteTimeSheet(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`timesheets/${id}`));
+  }
+
+  static async submitTimeSheet(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`timesheets/${id}/submit`), {});
+  }
+
+  static async approveTimeSheet(id: number, notes?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`timesheets/${id}/approve`), { notes });
+  }
+
+  static async rejectTimeSheet(id: number, reason: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`timesheets/${id}/reject`), { reason });
+  }
+
+  // =====================================
+  // SUCCESSION PLANS
+  // =====================================
+
+  static async getSuccessionPlans(): Promise<SuccessionPlanDto[]> {
+    return ApiService.get<SuccessionPlanDto[]>(this.getPath('succession-plans'));
+  }
+
+  static async getSuccessionPlan(id: number): Promise<SuccessionPlanDto> {
+    return ApiService.get<SuccessionPlanDto>(this.getPath(`succession-plans/${id}`));
+  }
+
+  static async createSuccessionPlan(data: CreateSuccessionPlanDto): Promise<SuccessionPlanDto> {
+    return ApiService.post<SuccessionPlanDto>(this.getPath('succession-plans'), data);
+  }
+
+  static async updateSuccessionPlan(id: number, data: UpdateSuccessionPlanDto): Promise<SuccessionPlanDto> {
+    return ApiService.put<SuccessionPlanDto>(this.getPath(`succession-plans/${id}`), data);
+  }
+
+  static async deleteSuccessionPlan(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`succession-plans/${id}`));
+  }
+
+  // =====================================
+  // EMPLOYEE SKILLS
+  // =====================================
+
+  static async getEmployeeSkills(employeeId?: number): Promise<EmployeeSkillDto[]> {
+    return ApiService.get<EmployeeSkillDto[]>(this.getPath('employee-skills'), {
+      params: { employeeId },
+    });
+  }
+
+  static async getEmployeeSkill(id: number): Promise<EmployeeSkillDto> {
+    return ApiService.get<EmployeeSkillDto>(this.getPath(`employee-skills/${id}`));
+  }
+
+  static async createEmployeeSkill(data: CreateEmployeeSkillDto): Promise<EmployeeSkillDto> {
+    return ApiService.post<EmployeeSkillDto>(this.getPath('employee-skills'), data);
+  }
+
+  static async updateEmployeeSkill(id: number, data: UpdateEmployeeSkillDto): Promise<EmployeeSkillDto> {
+    return ApiService.put<EmployeeSkillDto>(this.getPath(`employee-skills/${id}`), data);
+  }
+
+  static async deleteEmployeeSkill(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`employee-skills/${id}`));
+  }
+
+  // =====================================
+  // GRIEVANCES
+  // =====================================
+
+  static async getGrievances(employeeId?: number, status?: string): Promise<GrievanceDto[]> {
+    return ApiService.get<GrievanceDto[]>(this.getPath('grievances'), {
+      params: { employeeId, status },
+    });
+  }
+
+  static async getGrievance(id: number): Promise<GrievanceDto> {
+    return ApiService.get<GrievanceDto>(this.getPath(`grievances/${id}`));
+  }
+
+  static async createGrievance(data: CreateGrievanceDto): Promise<GrievanceDto> {
+    return ApiService.post<GrievanceDto>(this.getPath('grievances'), data);
+  }
+
+  static async updateGrievance(id: number, data: UpdateGrievanceDto): Promise<GrievanceDto> {
+    return ApiService.put<GrievanceDto>(this.getPath(`grievances/${id}`), data);
+  }
+
+  static async deleteGrievance(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`grievances/${id}`));
+  }
+
+  static async resolveGrievance(id: number, resolution: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`grievances/${id}/resolve`), { resolution });
+  }
+
+  static async escalateGrievance(id: number, notes?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`grievances/${id}/escalate`), { notes });
+  }
+
+  // =====================================
+  // INTERVIEWS
+  // =====================================
+
+  static async getInterviews(applicationId?: number, interviewerId?: number): Promise<InterviewDto[]> {
+    return ApiService.get<InterviewDto[]>(this.getPath('interviews'), {
+      params: { applicationId, interviewerId },
+    });
+  }
+
+  static async getInterview(id: number): Promise<InterviewDto> {
+    return ApiService.get<InterviewDto>(this.getPath(`interviews/${id}`));
+  }
+
+  static async createInterview(data: CreateInterviewDto): Promise<InterviewDto> {
+    return ApiService.post<InterviewDto>(this.getPath('interviews'), data);
+  }
+
+  static async updateInterview(id: number, data: UpdateInterviewDto): Promise<InterviewDto> {
+    return ApiService.put<InterviewDto>(this.getPath(`interviews/${id}`), data);
+  }
+
+  static async deleteInterview(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`interviews/${id}`));
+  }
+
+  static async scheduleInterview(id: number, scheduledAt: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`interviews/${id}/schedule`), { scheduledAt });
+  }
+
+  static async completeInterview(id: number, feedback: string, rating?: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`interviews/${id}/complete`), { feedback, rating });
+  }
+
+  static async cancelInterview(id: number, reason?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`interviews/${id}/cancel`), { reason });
+  }
+
+  // =====================================
+  // JOB APPLICATIONS
+  // =====================================
+
+  static async getJobApplications(jobPostingId?: number, status?: string): Promise<JobApplicationDto[]> {
+    return ApiService.get<JobApplicationDto[]>(this.getPath('job-applications'), {
+      params: { jobPostingId, status },
+    });
+  }
+
+  static async getJobApplication(id: number): Promise<JobApplicationDto> {
+    return ApiService.get<JobApplicationDto>(this.getPath(`job-applications/${id}`));
+  }
+
+  static async createJobApplication(data: CreateJobApplicationDto): Promise<JobApplicationDto> {
+    return ApiService.post<JobApplicationDto>(this.getPath('job-applications'), data);
+  }
+
+  static async updateJobApplication(id: number, data: UpdateJobApplicationDto): Promise<JobApplicationDto> {
+    return ApiService.put<JobApplicationDto>(this.getPath(`job-applications/${id}`), data);
+  }
+
+  static async deleteJobApplication(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`job-applications/${id}`));
+  }
+
+  static async moveToNextStage(id: number, notes?: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-applications/${id}/next-stage`), { notes });
+  }
+
+  static async rejectApplication(id: number, reason: string): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-applications/${id}/reject`), { reason });
+  }
+
+  static async hireApplicant(id: number, startDate: string, positionId: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-applications/${id}/hire`), { startDate, positionId });
+  }
+
+  // =====================================
+  // JOB POSTINGS
+  // =====================================
+
+  static async getJobPostings(): Promise<JobPostingDto[]> {
+    return ApiService.get<JobPostingDto[]>(this.getPath('job-postings'));
+  }
+
+  static async getJobPosting(id: number): Promise<JobPostingDto> {
+    return ApiService.get<JobPostingDto>(this.getPath(`job-postings/${id}`));
+  }
+
+  static async createJobPosting(data: CreateJobPostingDto): Promise<JobPostingDto> {
+    return ApiService.post<JobPostingDto>(this.getPath('job-postings'), data);
+  }
+
+  static async updateJobPosting(id: number, data: UpdateJobPostingDto): Promise<JobPostingDto> {
+    return ApiService.put<JobPostingDto>(this.getPath(`job-postings/${id}`), data);
+  }
+
+  static async deleteJobPosting(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`job-postings/${id}`));
+  }
+
+  static async publishJobPosting(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-postings/${id}/publish`), {});
+  }
+
+  static async unpublishJobPosting(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-postings/${id}/unpublish`), {});
+  }
+
+  static async closeJobPosting(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`job-postings/${id}/close`), {});
   }
 }

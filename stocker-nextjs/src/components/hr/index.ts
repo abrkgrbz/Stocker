@@ -14,3 +14,8 @@ export { AttendanceCheckInForm } from './attendance';
 export { PayrollForm } from './payroll';
 export { EmployeeForm } from './employees';
 export { DocumentForm } from './documents';
+
+// New HR Form Components
+export { JobPostingForm } from './job-postings';
+export { CertificationForm } from './certifications';
+export { OvertimeForm } from './overtimes';
