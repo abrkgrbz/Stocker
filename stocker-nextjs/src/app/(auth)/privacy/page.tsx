@@ -285,6 +285,7 @@ export default function PrivacyPage() {
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-purple-400">Gizlilik</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Sartlar</Link>
+              <Link href="/cookies" className="hover:text-white transition-colors">Cerezler</Link>
               <Link href="/help" className="hover:text-white transition-colors">Yardim</Link>
             </div>
           </div>

@@ -294,6 +294,7 @@ export default function TermsPage() {
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="hover:text-white transition-colors">Gizlilik</Link>
               <Link href="/terms" className="text-blue-400">Sartlar</Link>
+              <Link href="/cookies" className="hover:text-white transition-colors">Cerezler</Link>
               <Link href="/help" className="hover:text-white transition-colors">Yardim</Link>
             </div>
           </div>

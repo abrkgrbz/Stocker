@@ -730,6 +730,22 @@ export default function RegisterPage() {
 
       {/* RIGHT - Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-b from-gray-50 to-white relative overflow-y-auto">
+        {/* Back to Home Link */}
+        <Link
+          href="/"
+          className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-violet-600 transition-colors group z-20"
+        >
+          <svg
+            className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="font-medium">Ana Sayfa</span>
+        </Link>
+
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100 to-transparent rounded-full blur-3xl opacity-30" />
 
