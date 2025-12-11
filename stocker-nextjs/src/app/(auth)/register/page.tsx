@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input, Button, Checkbox } from 'antd'
 import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
-import Logo from '@/components/Logo'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { showAlert } from '@/lib/sweetalert-config'
 import { cookieStorage } from '@/lib/auth/cookie-storage'
 import { authService } from '@/lib/api/services/auth.service'
+import { ApiClientError, handleApiError } from '@/lib/api/client'
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete'
 
@@ -253,7 +253,35 @@ export default function RegisterPage() {
       }
     } catch (error) {
       console.error('Registration error:', error)
-      await showAlert.error('Hata', 'Kayıt işlemi sırasında bir hata oluştu')
+
+      // Extract actual error message from API
+      const errorMessage = handleApiError(error)
+
+      // Check if it's a specific error type and navigate to relevant step
+      if (error instanceof ApiClientError) {
+        const lowerMessage = errorMessage.toLowerCase()
+
+        // Email already exists error
+        if (lowerMessage.includes('e-posta') || lowerMessage.includes('email') || lowerMessage.includes('mail')) {
+          setEmailError(errorMessage)
+          setEmailValid(false)
+          setCurrentStep('email')
+          setIsLoading(false)
+          return
+        }
+
+        // Team name already exists error
+        if (lowerMessage.includes('takım') || lowerMessage.includes('team') || lowerMessage.includes('tenant')) {
+          setTeamNameError(errorMessage)
+          setTeamNameValid(false)
+          setCurrentStep('teamName')
+          setIsLoading(false)
+          return
+        }
+      }
+
+      // Show generic error with actual API message
+      await showAlert.error('Kayıt Başarısız', errorMessage)
       setIsLoading(false)
     }
   }
@@ -309,7 +337,7 @@ export default function RegisterPage() {
 
             <p className="text-center text-sm text-gray-500">
               Zaten hesabınız var mı?{' '}
-              <Link href="/signin" className="text-violet-600 hover:text-violet-700 font-medium">
+              <Link href="/login" className="text-violet-600 hover:text-violet-700 font-medium">
                 Giriş Yapın
               </Link>
             </p>
@@ -554,104 +582,158 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* LEFT - Premium Branding */}
-      <div className="hidden lg:flex lg:w-[45%] relative bg-black overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          {/* Gradient Mesh */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-fuchsia-600/20 to-cyan-600/20" />
+      <div className="hidden lg:flex lg:w-[55%] relative bg-black overflow-hidden">
+        {/* Gradient Mesh Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-fuchsia-600/20 to-cyan-600/20" />
 
-          {/* Grid Pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        {/* Animated Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
-          {/* Glowing Orbs */}
-          <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
+        {/* Glowing Orbs */}
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+
+        {/* Floating Elements */}
+        <div className="absolute top-32 right-32 w-3 h-3 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-48 right-48 w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-48 left-32 w-2 h-2 bg-fuchsia-400 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white overflow-y-auto">
-          <div>
-            <Link href="/" className="mb-16 inline-block">
-              <Logo size="lg" />
-            </Link>
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          {/* Top Badge Row */}
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-sm text-white/90 font-medium">Ücretsiz başlayın</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-lg border border-white/10">
+              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-xs text-white/80">ISO 27001</span>
+            </div>
+          </div>
 
-            <div className="space-y-8">
-              <div>
-                <h1 className="text-5xl font-bold mb-4 leading-tight">
-                  Modern İşletme<br />Yönetimi Başlıyor
-                </h1>
-                <p className="text-xl text-white/70 max-w-md">
-                  Stoocker ile işletmenizi dijital çağa taşıyın. Güçlü özellikler, kolay kullanım.
-                </p>
+          {/* Main Content */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-5xl font-bold text-white leading-tight">
+                İşletmenizi
+                <br />
+                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                  dijitale taşıyın
+                </span>
+              </h1>
+
+              <p className="text-xl text-white/70 leading-relaxed max-w-md">
+                Stoocker ile modern ERP deneyimini keşfedin. 5 dakikada kurulum, hemen kullanmaya başlayın.
+              </p>
+            </div>
+
+            {/* Security Feature Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-semibold mb-1">256-bit SSL</h3>
+                <p className="text-white/50 text-sm">Uçtan uca şifreli bağlantı</p>
               </div>
 
-              {/* Features */}
-              <div className="space-y-6 max-w-md">
-                <div className="flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                  <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold mb-1">Gerçek Zamanlı Doğrulama</div>
-                    <p className="text-sm text-white/60">Form doldururken anlık validasyon</p>
-                  </div>
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
+                <h3 className="text-white font-semibold mb-1">KVKK Uyumlu</h3>
+                <p className="text-white/50 text-sm">Yasal veri koruma standardı</p>
+              </div>
 
-                <div className="flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold mb-1">Güvenli Altyapı</div>
-                    <p className="text-sm text-white/60">256-bit şifreleme ile korunan veriler</p>
-                  </div>
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
                 </div>
+                <h3 className="text-white font-semibold mb-1">2FA Desteği</h3>
+                <p className="text-white/50 text-sm">İki faktörlü kimlik doğrulama</p>
+              </div>
 
-                <div className="flex items-start space-x-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="font-semibold mb-1">Hızlı Başlangıç</div>
-                    <p className="text-sm text-white/60">5 dakikada sistemi kullanmaya başlayın</p>
-                  </div>
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
                 </div>
+                <h3 className="text-white font-semibold mb-1">Otomatik Yedekleme</h3>
+                <p className="text-white/50 text-sm">Günlük veri yedekleme</p>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">99.9%</div>
+                <div className="text-sm text-white/60 mt-1">Uptime</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">2M+</div>
+                <div className="text-sm text-white/60 mt-1">İşlem/gün</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">256-bit</div>
+                <div className="text-sm text-white/60 mt-1">Şifreleme</div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Stats */}
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
-            <div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">99.9%</div>
-              <div className="text-sm text-white/60 mt-1">Uptime</div>
+          {/* Bottom Trust Indicators */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">KVKK Uyumlu</div>
+                  <div className="text-white/50 text-xs">Veri güvenliği garantisi</div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Bulut Tabanlı</div>
+                  <div className="text-white/50 text-xs">Her yerden erişim</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">2M+</div>
-              <div className="text-sm text-white/60 mt-1">İşlem</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">256-bit</div>
-              <div className="text-sm text-white/60 mt-1">Şifreleme</div>
+            <div className="flex items-center justify-center space-x-6 text-white/40 text-xs">
+              <span>AWS Altyapısı</span>
+              <span>•</span>
+              <span>7/24 Destek</span>
+              <span>•</span>
+              <span>Otomatik Yedekleme</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* RIGHT - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-white overflow-y-auto">
-        <div className="w-full max-w-md py-8">
-          {/* Mobile Logo */}
-          <Link href="/" className="lg:hidden mb-8 inline-block">
-            <Logo size="md" />
-          </Link>
+      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-b from-gray-50 to-white relative overflow-y-auto">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100 to-transparent rounded-full blur-3xl opacity-30" />
 
+        <div className="w-full max-w-md py-8 relative z-10">
           {/* Progress Indicator */}
           {currentStep !== 'complete' && (
             <div className="mb-8">

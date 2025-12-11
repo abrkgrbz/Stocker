@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import Logo from '@/components/Logo'
 import { Tenant, TenantInfo } from '@/lib/types/auth'
 import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
@@ -358,57 +357,139 @@ function LoginForm() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
         {/* Glowing Orbs */}
-        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+
+        {/* Floating Elements */}
+        <div className="absolute top-32 right-32 w-3 h-3 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-48 right-48 w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-48 left-32 w-2 h-2 bg-fuchsia-400 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          {/* Logo */}
-          <Logo size="3xl" />
+          {/* Top Badge Row */}
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-sm text-white/90 font-medium">10,000+ aktif kullanıcı</span>
+            </div>
+            <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-lg border border-white/10">
+              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-xs text-white/80">ISO 27001</span>
+            </div>
+          </div>
 
           {/* Main Content */}
-          <div className="space-y-8 max-w-lg">
+          <div className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm text-white/90 font-medium">10,000+ aktif kullanıcı</span>
-              </div>
-
               <h1 className="text-5xl font-bold text-white leading-tight">
-                Modern işletme
+                Verileriniz
                 <br />
-                yönetimi başlıyor
+                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                  güvende
+                </span>
               </h1>
 
-              <p className="text-xl text-white/70 leading-relaxed">
-                Bulut tabanlı ERP sistemi ile tüm iş süreçlerinizi tek platformda yönetin
+              <p className="text-xl text-white/70 leading-relaxed max-w-md">
+                Kurumsal düzeyde güvenlik altyapısı ile verilerinizi koruyoruz. Her giriş, her işlem tamamen şifreli.
               </p>
             </div>
 
+            {/* Security Feature Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-semibold mb-1">256-bit SSL</h3>
+                <p className="text-white/50 text-sm">Uçtan uca şifreli bağlantı</p>
+              </div>
+
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-semibold mb-1">KVKK Uyumlu</h3>
+                <p className="text-white/50 text-sm">Yasal veri koruma standardı</p>
+              </div>
+
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-semibold mb-1">2FA Desteği</h3>
+                <p className="text-white/50 text-sm">İki faktörlü kimlik doğrulama</p>
+              </div>
+
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <h3 className="text-white font-semibold mb-1">Otomatik Yedekleme</h3>
+                <p className="text-white/50 text-sm">Günlük veri yedekleme</p>
+              </div>
+            </div>
+
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
-              <div>
-                <div className="text-3xl font-bold text-white">99.9%</div>
+            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">99.9%</div>
                 <div className="text-sm text-white/60 mt-1">Uptime</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-white">2M+</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">2M+</div>
                 <div className="text-sm text-white/60 mt-1">İşlem/gün</div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-white">256-bit</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">256-bit</div>
                 <div className="text-sm text-white/60 mt-1">Şifreleme</div>
               </div>
             </div>
           </div>
 
           {/* Bottom Trust Indicators */}
-          <div className="flex items-center space-x-8 pt-8 border-t border-white/10">
-            <div className="text-white/60 text-sm">Güvenilir Ortaklar:</div>
-            <div className="flex items-center space-x-6 opacity-60">
-              <div className="h-6 w-20 bg-white/20 rounded" />
-              <div className="h-6 w-20 bg-white/20 rounded" />
-              <div className="h-6 w-20 bg-white/20 rounded" />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">KVKK Uyumlu</div>
+                  <div className="text-white/50 text-xs">Veri güvenliği garantisi</div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Bulut Tabanlı</div>
+                  <div className="text-white/50 text-xs">Her yerden erişim</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center space-x-6 text-white/40 text-xs">
+              <span>AWS Altyapısı</span>
+              <span>•</span>
+              <span>7/24 Destek</span>
+              <span>•</span>
+              <span>Otomatik Yedekleme</span>
             </div>
           </div>
         </div>
@@ -420,11 +501,6 @@ function LoginForm() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100 to-transparent rounded-full blur-3xl opacity-30" />
 
         <div className="w-full max-w-md relative z-10">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Logo size="3xl" />
-          </div>
-
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
