@@ -26,7 +26,6 @@ public class CreateConsignmentStockCommandValidator : AbstractValidator<CreateCo
     {
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.ConsignmentNumber).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.SupplierId).GreaterThan(0);
         RuleFor(x => x.Data.ProductId).GreaterThan(0);
         RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
@@ -56,15 +55,18 @@ public class CreateConsignmentStockCommandHandler : IRequestHandler<CreateConsig
     {
         var data = request.Data;
 
+        // Generate consignment number
+        var consignmentNumber = $"CON-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
+
         // Check if consignment number already exists
-        var existingConsignment = await _repository.GetByNumberAsync(data.ConsignmentNumber, cancellationToken);
+        var existingConsignment = await _repository.GetByNumberAsync(consignmentNumber, cancellationToken);
         if (existingConsignment != null)
         {
-            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.DuplicateNumber", $"Consignment with number '{data.ConsignmentNumber}' already exists", ErrorType.Conflict));
+            return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.DuplicateNumber", $"Consignment with number '{consignmentNumber}' already exists", ErrorType.Conflict));
         }
 
         var entity = new ConsignmentStock(
-            data.ConsignmentNumber,
+            consignmentNumber,
             data.SupplierId,
             data.ProductId,
             data.WarehouseId,

@@ -26,14 +26,12 @@ public class CreateInventoryAdjustmentCommandValidator : AbstractValidator<Creat
     {
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.AdjustmentNumber).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
         RuleFor(x => x.Data.AdjustmentType).NotEmpty();
         RuleFor(x => x.Data.Reason).NotEmpty();
         RuleFor(x => x.Data.Description).MaximumLength(500);
         RuleFor(x => x.Data.ReferenceNumber).MaximumLength(50);
         RuleFor(x => x.Data.ReferenceType).MaximumLength(50);
-        RuleFor(x => x.Data.Currency).MaximumLength(3);
     }
 }
 
@@ -55,16 +53,19 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
     {
         var data = request.Data;
 
+        // Generate adjustment number
+        var adjustmentNumber = $"ADJ-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
+
         // Check if adjustment number already exists
-        var existingAdjustment = await _repository.GetByNumberAsync(data.AdjustmentNumber, cancellationToken);
+        var existingAdjustment = await _repository.GetByNumberAsync(adjustmentNumber, cancellationToken);
         if (existingAdjustment != null)
         {
-            return Result<InventoryAdjustmentDto>.Failure(new Error("InventoryAdjustment.DuplicateNumber", $"Adjustment with number '{data.AdjustmentNumber}' already exists", ErrorType.Conflict));
+            return Result<InventoryAdjustmentDto>.Failure(new Error("InventoryAdjustment.DuplicateNumber", $"Adjustment with number '{adjustmentNumber}' already exists", ErrorType.Conflict));
         }
 
         var adjustmentType = Enum.Parse<AdjustmentType>(data.AdjustmentType);
         var reason = Enum.Parse<AdjustmentReason>(data.Reason);
-        var entity = new InventoryAdjustment(data.AdjustmentNumber, data.WarehouseId, adjustmentType, reason, data.AdjustmentDate);
+        var entity = new InventoryAdjustment(adjustmentNumber, data.WarehouseId, adjustmentType, reason, data.AdjustmentDate);
 
         entity.SetDescription(data.Description);
         entity.SetLocation(data.LocationId);

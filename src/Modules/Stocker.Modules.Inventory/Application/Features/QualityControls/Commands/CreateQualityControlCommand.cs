@@ -26,7 +26,6 @@ public class CreateQualityControlCommandValidator : AbstractValidator<CreateQual
     {
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.QcNumber).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.ProductId).GreaterThan(0);
         RuleFor(x => x.Data.QcType).NotEmpty();
         RuleFor(x => x.Data.InspectedQuantity).GreaterThan(0);
@@ -56,15 +55,18 @@ public class CreateQualityControlCommandHandler : IRequestHandler<CreateQualityC
     {
         var data = request.Data;
 
+        // Generate QC number
+        var qcNumber = $"QC-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
+
         // Check if QC number already exists
-        var existingQc = await _repository.GetByQcNumberAsync(data.QcNumber, cancellationToken);
+        var existingQc = await _repository.GetByQcNumberAsync(qcNumber, cancellationToken);
         if (existingQc != null)
         {
-            return Result<QualityControlDto>.Failure(new Error("QualityControl.DuplicateNumber", $"Quality control with number '{data.QcNumber}' already exists", ErrorType.Conflict));
+            return Result<QualityControlDto>.Failure(new Error("QualityControl.DuplicateNumber", $"Quality control with number '{qcNumber}' already exists", ErrorType.Conflict));
         }
 
         var qcType = Enum.Parse<QualityControlType>(data.QcType);
-        var entity = new QualityControl(data.QcNumber, data.ProductId, qcType, data.InspectedQuantity, data.Unit);
+        var entity = new QualityControl(qcNumber, data.ProductId, qcType, data.InspectedQuantity, data.Unit);
 
         entity.SetLotNumber(data.LotNumber);
         entity.SetWarehouse(data.WarehouseId);

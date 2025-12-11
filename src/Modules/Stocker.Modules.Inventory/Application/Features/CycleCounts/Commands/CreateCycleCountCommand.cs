@@ -26,7 +26,6 @@ public class CreateCycleCountCommandValidator : AbstractValidator<CreateCycleCou
     {
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.PlanNumber).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Data.PlanName).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Data.WarehouseId).GreaterThan(0);
         RuleFor(x => x.Data.CountType).NotEmpty();
@@ -54,15 +53,18 @@ public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCo
     {
         var data = request.Data;
 
+        // Generate plan number
+        var planNumber = $"CC-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
+
         // Check if plan number already exists
-        var existingPlan = await _repository.GetByPlanNumberAsync(data.PlanNumber, cancellationToken);
+        var existingPlan = await _repository.GetByPlanNumberAsync(planNumber, cancellationToken);
         if (existingPlan != null)
         {
-            return Result<CycleCountDto>.Failure(new Error("CycleCount.DuplicateNumber", $"Cycle count with plan number '{data.PlanNumber}' already exists", ErrorType.Conflict));
+            return Result<CycleCountDto>.Failure(new Error("CycleCount.DuplicateNumber", $"Cycle count with plan number '{planNumber}' already exists", ErrorType.Conflict));
         }
 
         var countType = Enum.Parse<CycleCountType>(data.CountType);
-        var entity = new CycleCount(data.PlanNumber, data.PlanName, data.WarehouseId, data.ScheduledStartDate, data.ScheduledEndDate, countType);
+        var entity = new CycleCount(planNumber, data.PlanName, data.WarehouseId, data.ScheduledStartDate, data.ScheduledEndDate, countType);
 
         entity.SetDescription(data.Description);
         entity.SetZone(data.ZoneId);
@@ -70,7 +72,7 @@ public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCo
 
         if (!string.IsNullOrEmpty(data.AbcClassFilter))
         {
-            var abcClass = Enum.Parse<AbcClass>(data.AbcClassFilter);
+            var abcClass = Enum.Parse<Domain.Entities.AbcClass>(data.AbcClassFilter);
             entity.SetAbcClassFilter(abcClass);
         }
 
