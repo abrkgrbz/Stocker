@@ -44,7 +44,7 @@ public class PackagingTypesController : ControllerBase
         {
             TenantId = tenantId.Value,
             Category = category,
-            IsActive = isActive
+            IncludeInactive = isActive == false
         };
 
         var result = await _mediator.Send(query);

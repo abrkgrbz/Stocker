@@ -303,7 +303,7 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
         }
     }
 
-    public async Task<Result<string>> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> GeneratePasswordResetTokenAsync(string email, string? tenantCode = null, CancellationToken cancellationToken = default)
     {
         try
         {

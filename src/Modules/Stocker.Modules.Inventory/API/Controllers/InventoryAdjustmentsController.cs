@@ -195,7 +195,7 @@ public class InventoryAdjustmentsController : ControllerBase
         {
             TenantId = tenantId.Value,
             Id = id,
-            Data = dto
+            ApprovedBy = dto.ApprovedBy
         };
 
         var result = await _mediator.Send(command);

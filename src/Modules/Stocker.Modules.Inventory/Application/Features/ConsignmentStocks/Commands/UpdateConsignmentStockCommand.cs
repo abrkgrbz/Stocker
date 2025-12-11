@@ -27,7 +27,6 @@ public class UpdateConsignmentStockCommandValidator : AbstractValidator<UpdateCo
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Data).NotNull();
-        RuleFor(x => x.Data.LotNumber).MaximumLength(50);
     }
 }
 
@@ -56,11 +55,11 @@ public class UpdateConsignmentStockCommandHandler : IRequestHandler<UpdateConsig
         var data = request.Data;
 
         entity.SetLocation(data.LocationId);
-        entity.SetLotNumber(data.LotNumber);
         entity.SetSellingPrice(data.SellingPrice);
         entity.SetCommissionRate(data.CommissionRate);
         entity.SetMaxConsignmentDays(data.MaxConsignmentDays);
-        entity.SetReconciliationPeriod(data.ReconciliationPeriodDays);
+        if (data.ReconciliationPeriodDays.HasValue)
+            entity.SetReconciliationPeriod(data.ReconciliationPeriodDays.Value);
         entity.SetAgreementEndDate(data.AgreementEndDate);
         entity.SetAgreementNotes(data.AgreementNotes);
         entity.SetInternalNotes(data.InternalNotes);

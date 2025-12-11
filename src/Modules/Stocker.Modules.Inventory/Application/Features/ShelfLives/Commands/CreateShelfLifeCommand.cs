@@ -52,7 +52,7 @@ public class CreateShelfLifeCommandHandler : IRequestHandler<CreateShelfLifeComm
         var data = request.Data;
 
         // Check if shelf life config already exists for product
-        var existingConfig = await _repository.GetByProductIdAsync(data.ProductId, cancellationToken);
+        var existingConfig = await _repository.GetByProductAsync(data.ProductId, cancellationToken);
         if (existingConfig != null)
         {
             return Result<ShelfLifeDto>.Failure(new Error("ShelfLife.DuplicateProduct", $"Shelf life configuration for product {data.ProductId} already exists", ErrorType.Conflict));

@@ -164,7 +164,13 @@ public class QualityControlsController : ControllerBase
         {
             TenantId = tenantId.Value,
             Id = id,
-            Data = dto
+            Result = dto.Result,
+            AcceptedQuantity = dto.AcceptedQuantity,
+            RejectedQuantity = dto.RejectedQuantity,
+            QualityScore = dto.QualityScore,
+            QualityGrade = dto.QualityGrade,
+            RejectionReason = dto.RejectionReason,
+            RejectionCategory = dto.RejectionCategory
         };
 
         var result = await _mediator.Send(command);

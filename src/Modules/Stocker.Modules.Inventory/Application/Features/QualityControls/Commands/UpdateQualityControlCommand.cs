@@ -59,11 +59,9 @@ public class UpdateQualityControlCommandHandler : IRequestHandler<UpdateQualityC
         var data = request.Data;
 
         entity.SetLotNumber(data.LotNumber);
-        entity.SetWarehouse(data.WarehouseId);
         entity.SetSampleQuantity(data.SampleQuantity);
         entity.SetInspectionLocation(data.InspectionLocation);
         entity.SetInspectionStandard(data.InspectionStandard);
-        entity.SetInspectionDuration(data.InspectionDurationMinutes);
         entity.SetInspectionNotes(data.InspectionNotes);
         entity.SetInternalNotes(data.InternalNotes);
 

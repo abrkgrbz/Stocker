@@ -43,8 +43,7 @@ public class ShelfLivesController : ControllerBase
         var query = new GetShelfLivesQuery
         {
             TenantId = tenantId.Value,
-            ProductId = productId,
-            IsActive = isActive
+            IncludeInactive = isActive == false
         };
 
         var result = await _mediator.Send(query);

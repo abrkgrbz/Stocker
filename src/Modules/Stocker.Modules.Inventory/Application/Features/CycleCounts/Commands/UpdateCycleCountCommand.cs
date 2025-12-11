@@ -63,7 +63,7 @@ public class UpdateCycleCountCommandHandler : IRequestHandler<UpdateCycleCountCo
 
         if (!string.IsNullOrEmpty(data.AbcClassFilter))
         {
-            var abcClass = Enum.Parse<AbcClass>(data.AbcClassFilter);
+            var abcClass = Enum.Parse<Domain.Entities.AbcClass>(data.AbcClassFilter);
             entity.SetAbcClassFilter(abcClass);
         }
         else
@@ -81,9 +81,12 @@ public class UpdateCycleCountCommandHandler : IRequestHandler<UpdateCycleCountCo
             entity.SetFrequency(null);
         }
 
-        entity.SetTolerance(data.QuantityTolerancePercent, data.ValueTolerance);
-        entity.SetOnlyNegativeStocks(data.OnlyNegativeStocks);
-        entity.SetOnlyZeroStocks(data.OnlyZeroStocks);
+        if (data.QuantityTolerancePercent.HasValue)
+            entity.SetTolerance(data.QuantityTolerancePercent.Value, data.ValueTolerance);
+        if (data.OnlyNegativeStocks.HasValue)
+            entity.SetOnlyNegativeStocks(data.OnlyNegativeStocks.Value);
+        if (data.OnlyZeroStocks.HasValue)
+            entity.SetOnlyZeroStocks(data.OnlyZeroStocks.Value);
         entity.SetDaysSinceLastMovement(data.DaysSinceLastMovement);
         entity.SetPlanningNotes(data.PlanningNotes);
         entity.SetCountNotes(data.CountNotes);
