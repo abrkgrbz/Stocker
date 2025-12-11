@@ -64,12 +64,55 @@ export interface StockMovement {
     createdByName: string;
 }
 
+export interface StockTransfer {
+    id: number;
+    sourceWarehouseId: number;
+    sourceWarehouseName: string;
+    destinationWarehouseId: number;
+    destinationWarehouseName: string;
+    status: 'Pending' | 'Completed' | 'Rejected' | 'Cancelled';
+    transferDate: string;
+    reference?: string;
+    description?: string;
+    items: StockTransferItem[];
+    createdByName: string;
+}
+
+export interface StockTransferItem {
+    id: number;
+    productId: number;
+    productName: string;
+    quantity: number;
+}
+
+export interface StockCount {
+    id: number;
+    warehouseId: number;
+    warehouseName: string;
+    status: 'Draft' | 'InProgress' | 'Completed' | 'Cancelled';
+    countDate: string;
+    description?: string;
+    items: StockCountItem[];
+    createdByName: string;
+}
+
+export interface StockCountItem {
+    id: number;
+    productId: number;
+    productName: string;
+    expectedQuantity: number;
+    countedQuantity: number;
+    difference: number;
+}
+
 interface InventoryState {
     products: Product[];
     warehouses: Warehouse[];
     lowStockProducts: Product[];
     expiringStock: any[]; // Define proper type if needed
     stockMovements: StockMovement[];
+    stockTransfers: StockTransfer[];
+    stockCounts: StockCount[];
     stats: InventoryStats | null;
 
     isLoading: boolean;
@@ -82,6 +125,9 @@ interface InventoryState {
     fetchProductDetails: (id: number) => Promise<Product | null>;
     fetchWarehouses: () => Promise<void>;
     fetchStockMovements: (params?: any) => Promise<void>;
+    fetchStockTransfers: (params?: any) => Promise<void>;
+    fetchStockCounts: (params?: any) => Promise<void>;
+    fetchStockCountDetails: (id: number) => Promise<StockCount | null>;
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -90,6 +136,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     lowStockProducts: [],
     expiringStock: [],
     stockMovements: [],
+    stockTransfers: [],
+    stockCounts: [],
     stats: null,
 
     isLoading: false,
@@ -255,6 +303,20 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         }
     },
 
+    fetchStockTransfers: async (params) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await apiService.inventory.getStockTransfers(params);
+            if (response.data?.success) {
+                set({ stockTransfers: response.data.data, isLoading: false });
+            } else {
+                set({ error: 'Transferler yüklenemedi', isLoading: false });
+            }
+        } catch (error: any) {
+            set({ isLoading: false, error: error.message });
+        }
+    },
+
     fetchStockMovements: async (params) => {
         set({ isLoading: true, error: null });
         try {
@@ -264,6 +326,35 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
             }
         } catch (error: any) {
             set({ isLoading: false, error: error.message });
+        }
+    },
+
+    fetchStockCounts: async (params) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await apiService.inventory.getStockCounts(params);
+            if (response.data?.success) {
+                set({ stockCounts: response.data.data, isLoading: false });
+            } else {
+                set({ error: 'Sayımlar yüklenemedi', isLoading: false });
+            }
+        } catch (error: any) {
+            set({ isLoading: false, error: error.message });
+        }
+    },
+
+    fetchStockCountDetails: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await apiService.inventory.getStockCount(id);
+            set({ isLoading: false });
+            if (response.data?.success) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error: any) {
+            set({ isLoading: false, error: error.message });
+            return null;
         }
     }
 }));

@@ -77,6 +77,16 @@ public static class DependencyInjection
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
         services.AddScoped<IProductBundleRepository, ProductBundleRepository>();
 
+        // Register new entity repositories
+        services.AddScoped<IBarcodeDefinitionRepository, BarcodeDefinitionRepository>();
+        services.AddScoped<IPackagingTypeRepository, PackagingTypeRepository>();
+        services.AddScoped<IWarehouseZoneRepository, WarehouseZoneRepository>();
+        services.AddScoped<IShelfLifeRepository, ShelfLifeRepository>();
+        services.AddScoped<IQualityControlRepository, QualityControlRepository>();
+        services.AddScoped<IConsignmentStockRepository, ConsignmentStockRepository>();
+        services.AddScoped<ICycleCountRepository, CycleCountRepository>();
+        services.AddScoped<IInventoryAdjustmentRepository, InventoryAdjustmentRepository>();
+
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Inventory.IInventoryService, Application.Services.InventoryService>();
 

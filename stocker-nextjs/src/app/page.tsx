@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/lib/auth';
 import Navbar from '@/components/landing/Navbar';
 import AnimatedHero from '@/components/landing/AnimatedHero';
 import SocialProof from '@/components/landing/SocialProof';
@@ -15,12 +14,8 @@ import AnimatedBackground from '@/components/landing/AnimatedBackground';
 import StructuredData from '@/components/landing/StructuredData';
 
 export default function Home() {
-  const { isLoading } = useAuth();
-
-  // Show loading state
-  if (isLoading) {
-    return null;
-  }
+  // Landing page is public - no auth check needed
+  // This prevents the screen flicker caused by isLoading → null → content
 
   // Optimized landing page flow:
   // 1. Hero - Main value proposition + CTA

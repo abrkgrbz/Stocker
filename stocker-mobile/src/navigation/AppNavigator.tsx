@@ -1,17 +1,4 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
-import { useAuthStore } from '../stores/authStore';
-import LoginScreen from '../screens/LoginScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import SetupScreen from '../screens/SetupScreen';
-import TenantProgressScreen from '../screens/TenantProgressScreen';
-import CRMDashboardScreen from '../screens/crm/CRMDashboardScreen';
-import CustomerListScreen from '../screens/crm/CustomerListScreen';
-import CustomerDetailScreen from '../screens/crm/CustomerDetailScreen';
-import AddCustomerScreen from '../screens/crm/AddCustomerScreen';
-import DealListScreen from '../screens/crm/DealListScreen';
 import DealDetailScreen from '../screens/crm/DealDetailScreen';
 import ActivityListScreen from '../screens/crm/ActivityListScreen';
 import SalesDashboardScreen from '../screens/sales/SalesDashboardScreen';
@@ -23,6 +10,10 @@ import ProductListScreen from '../screens/inventory/ProductListScreen';
 import ProductDetailScreen from '../screens/inventory/ProductDetailScreen';
 import StockMovementScreen from '../screens/inventory/StockMovementScreen';
 import BarcodeScannerScreen from '../screens/inventory/BarcodeScannerScreen';
+import StockTransferListScreen from '../screens/inventory/StockTransferListScreen';
+import CreateStockTransferScreen from '../screens/inventory/CreateStockTransferScreen';
+import StockCountListScreen from '../screens/inventory/StockCountListScreen';
+import StockCountDetailScreen from '../screens/inventory/StockCountDetailScreen';
 import HRDashboardScreen from '../screens/hr/HRDashboardScreen';
 import EmployeeListScreen from '../screens/hr/EmployeeListScreen';
 import AttendanceScreen from '../screens/hr/AttendanceScreen';
@@ -52,6 +43,7 @@ export default function AppNavigator() {
                     <Stack.Group>
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />
+                        <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
                         <Stack.Screen name="TenantProgress" component={TenantProgressScreen} />
                     </Stack.Group>
                 ) : (
@@ -85,6 +77,10 @@ export default function AppNavigator() {
                             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
                             <Stack.Screen name="StockMovements" component={StockMovementScreen} />
                             <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} />
+                            <Stack.Screen name="StockTransfers" component={StockTransferListScreen} />
+                            <Stack.Screen name="CreateStockTransfer" component={CreateStockTransferScreen} />
+                            <Stack.Screen name="StockCounts" component={StockCountListScreen} />
+                            <Stack.Screen name="StockCountDetail" component={StockCountDetailScreen} />
 
                             {/* HR Module */}
                             <Stack.Screen name="HRDashboard" component={HRDashboardScreen} />

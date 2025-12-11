@@ -46,7 +46,7 @@ interface PackageOption {
 
 export default function SetupScreen({ navigation }: any) {
     const { showAlert } = useAlert();
-    const { user, updateUser, logout } = useAuthStore();
+    const { user, completeSetup, logout } = useAuthStore();
     const [currentStep, setCurrentStep] = useState<SetupStep>('package');
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
@@ -127,9 +127,7 @@ export default function SetupScreen({ navigation }: any) {
             if (response.data.success) {
                 setCurrentStep('complete');
                 // Update user state to remove requiresSetup
-                if (user) {
-                    updateUser({ ...user, requiresSetup: false });
-                }
+                completeSetup();
             } else {
                 throw new Error(response.data.message || 'Kurulum tamamlanamadı');
             }

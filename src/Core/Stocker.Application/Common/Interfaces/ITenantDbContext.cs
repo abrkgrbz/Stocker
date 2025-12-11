@@ -43,6 +43,7 @@ public interface ITenantDbContext : IDisposable, IAsyncDisposable
     
     // User Management
     DbSet<Domain.Tenant.Entities.UserTenant> UserTenants { get; }
+    DbSet<Domain.Tenant.Entities.TenantUser> TenantUsers { get; }
     
     // Documents & Integrations
     DbSet<Domain.Tenant.Entities.TenantDocument> TenantDocuments { get; }

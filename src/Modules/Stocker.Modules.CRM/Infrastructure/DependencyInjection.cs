@@ -81,6 +81,17 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IReminderRepository, ReminderRepository>();
+        services.AddScoped<ICallLogRepository, CallLogRepository>();
+        services.AddScoped<ICompetitorRepository, CompetitorRepository>();
+        services.AddScoped<IMeetingRepository, MeetingRepository>();
+        services.AddScoped<IProductInterestRepository, ProductInterestRepository>();
+        services.AddScoped<IReferralRepository, ReferralRepository>();
+        services.AddScoped<ISalesTeamRepository, SalesTeamRepository>();
+        services.AddScoped<ISocialMediaProfileRepository, SocialMediaProfileRepository>();
+        services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
+        services.AddScoped<ITerritoryRepository, TerritoryRepository>();
+        services.AddScoped<ILoyaltyProgramRepository, LoyaltyProgramRepository>();
+        services.AddScoped<ILoyaltyMembershipRepository, LoyaltyMembershipRepository>();
 
         // Register UnitOfWork
         services.AddScoped<IUnitOfWork, CRMUnitOfWork>();

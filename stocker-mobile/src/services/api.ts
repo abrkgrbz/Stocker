@@ -152,7 +152,7 @@ export const apiService = {
         resendVerificationEmail: (email: string) =>
             api.post<ApiResponse>('/api/auth/resend-verification-email', { email }),
 
-        register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string }) =>
+        register: (data: { email: string; password: string; teamName: string; firstName: string; lastName: string; acceptTerms: boolean; acceptPrivacyPolicy: boolean }) =>
             api.post<ApiResponse>('/api/auth/register', data),
 
         logout: () =>
@@ -195,6 +195,9 @@ export const apiService = {
 
         getPackages: () =>
             api.get<ApiResponse>('/api/public/packages'),
+
+        verifyEmailForTenantCreation: (data: { email: string; code: string }) =>
+            api.post<ApiResponse>('/api/public/tenant-registration/verify-email', data),
     },
 
     setup: {
@@ -210,42 +213,6 @@ export const apiService = {
 
         getCustomer: (id: string) =>
             api.get<ApiResponse>(`/api/crm/customers/${id}`),
-
-        createCustomer: (data: any) =>
-            api.post<ApiResponse>('/api/crm/customers', data),
-
-        updateCustomer: (id: string, data: any) =>
-            api.put<ApiResponse>(`/api/crm/customers/${id}`, data),
-
-        deleteCustomers: (ids: string[]) =>
-            api.post<ApiResponse>('/api/crm/customers/bulk-delete', { ids }),
-
-        // Leads
-        getLeads: (params?: any) =>
-            api.get<ApiResponse>('/api/crm/leads', { params }),
-
-        // Deals
-        getDeals: (params?: any) =>
-            api.get<ApiResponse>('/api/crm/deals', { params }),
-
-        getDeal: (id: string) =>
-            api.get<ApiResponse>(`/api/crm/deals/${id}`),
-
-        deleteDeals: (ids: string[]) =>
-            api.post<ApiResponse>('/api/crm/deals/bulk-delete', { ids }),
-
-        // Quotes
-        getQuotes: (params?: any) =>
-            api.get<ApiResponse>('/api/crm/quotes', { params }),
-
-        getQuoteDetail: (id: string) =>
-            api.get<ApiResponse>(`/api/crm/quotes/${id}`),
-
-        // Activities
-        getActivities: (params?: any) =>
-            api.get<ApiResponse>('/api/crm/activities', { params }),
-
-        // Stats
         getStats: () =>
             api.get<ApiResponse>('/api/crm/stats'),
     },
@@ -299,6 +266,38 @@ export const apiService = {
 
         getExpiringStock: (daysUntilExpiry: number = 30) =>
             api.get<ApiResponse>('/api/inventory/stock/expiring', { params: { daysUntilExpiry } }),
+
+        // Stock Transfers
+        getStockTransfers: (params?: any) =>
+            api.get<ApiResponse>('/api/inventory/stock-transfers', { params }),
+
+        getStockTransfer: (id: number) =>
+            api.get<ApiResponse>(`/api/inventory/stock-transfers/${id}`),
+
+        createStockTransfer: (data: any) =>
+            api.post<ApiResponse>('/api/inventory/stock-transfers', data),
+
+        approveStockTransfer: (id: number) =>
+            api.post<ApiResponse>(`/api/inventory/stock-transfers/${id}/approve`),
+
+        rejectStockTransfer: (id: number) =>
+            api.post<ApiResponse>(`/api/inventory/stock-transfers/${id}/reject`),
+
+        // Stock Counts
+        getStockCounts: (params?: any) =>
+            api.get<ApiResponse>('/api/inventory/stock-counts', { params }),
+
+        getStockCount: (id: number) =>
+            api.get<ApiResponse>(`/api/inventory/stock-counts/${id}`),
+
+        createStockCount: (data: any) =>
+            api.post<ApiResponse>('/api/inventory/stock-counts', data),
+
+        updateStockCount: (id: number, data: any) =>
+            api.put<ApiResponse>(`/api/inventory/stock-counts/${id}`, data),
+
+        completeStockCount: (id: number) =>
+            api.post<ApiResponse>(`/api/inventory/stock-counts/${id}/complete`),
 
         getProductStockSummary: (productId: number) =>
             api.get<ApiResponse>(`/api/inventory/stock/summary/${productId}`),

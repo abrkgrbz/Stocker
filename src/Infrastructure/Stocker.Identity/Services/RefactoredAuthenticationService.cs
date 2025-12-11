@@ -21,6 +21,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ITenantService _tenantService;
     private readonly IMasterDbContext _masterContext;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ILogger<RefactoredAuthenticationService> _logger;
 
     public RefactoredAuthenticationService(
@@ -30,6 +31,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
         IJwtTokenService jwtTokenService,
         ITenantService tenantService,
         IMasterDbContext masterContext,
+        ITenantDbContextFactory tenantDbContextFactory,
         ILogger<RefactoredAuthenticationService> logger)
     {
         _userManagementService = userManagementService;
@@ -38,6 +40,7 @@ public class RefactoredAuthenticationService : IAuthenticationService
         _jwtTokenService = jwtTokenService;
         _tenantService = tenantService;
         _masterContext = masterContext;
+        _tenantDbContextFactory = tenantDbContextFactory;
         _logger = logger;
     }
 
@@ -567,9 +570,80 @@ public class RefactoredAuthenticationService : IAuthenticationService
         throw new NotImplementedException("ChangePasswordAsync(string, string, string, CancellationToken) not implemented yet");
     }
 
-    public Task<Stocker.SharedKernel.Results.Result<string>> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken = default)
+    public async Task<Stocker.SharedKernel.Results.Result<string>> GeneratePasswordResetTokenAsync(string email, string? tenantCode = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("GeneratePasswordResetTokenAsync not implemented yet");
+        try
+        {
+            // If tenant code is provided, search directly in that tenant's database (optimized path)
+            if (!string.IsNullOrWhiteSpace(tenantCode))
+            {
+                _logger.LogInformation("Password reset with tenant code: {TenantCode} for email: {Email}", tenantCode, email);
+
+                // Find tenant by code
+                var tenant = await _masterContext.Tenants
+                    .Where(t => t.IsActive && EF.Functions.Like(t.Code, tenantCode))
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (tenant != null)
+                {
+                    try
+                    {
+                        await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenant.Id);
+
+                        var tenantUser = await tenantContext.TenantUsers
+                            .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email.Value, email), cancellationToken);
+
+                        if (tenantUser != null)
+                        {
+                            // Generate reset token for TenantUser
+                            tenantUser.GeneratePasswordResetToken();
+                            await tenantContext.SaveChangesAsync(cancellationToken);
+
+                            _logger.LogInformation("Password reset token generated for TenantUser: {Email} in Tenant: {TenantCode}", email, tenantCode);
+                            return Stocker.SharedKernel.Results.Result.Success(tenantUser.PasswordResetToken!);
+                        }
+                    }
+                    catch (Exception tenantEx)
+                    {
+                        _logger.LogWarning(tenantEx, "Error searching for user in tenant {TenantCode}", tenantCode);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Tenant not found with code: {TenantCode}", tenantCode);
+                }
+
+                // User not found in specified tenant
+                _logger.LogWarning("Password reset requested for non-existent email in tenant {TenantCode}: {Email}", tenantCode, email);
+                return Stocker.SharedKernel.Results.Result.Failure<string>(
+                    Stocker.SharedKernel.Results.Error.NotFound("User", $"User with email {email} not found in workspace {tenantCode}"));
+            }
+
+            // No tenant code provided - this is for MasterUsers (Tenant Admins / Firma Yöneticileri)
+            _logger.LogInformation("Password reset for MasterUser (no tenant code): {Email}", email);
+
+            var masterUser = await _userManagementService.FindMasterUserAsync(email);
+            if (masterUser != null)
+            {
+                // Generate reset token for MasterUser
+                masterUser.GeneratePasswordResetToken();
+                await _masterContext.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Password reset token generated for MasterUser: {Email}", email);
+                return Stocker.SharedKernel.Results.Result.Success(masterUser.PasswordResetToken!);
+            }
+
+            // User not found
+            _logger.LogWarning("Password reset requested for non-existent MasterUser email: {Email}", email);
+            return Stocker.SharedKernel.Results.Result.Failure<string>(
+                Stocker.SharedKernel.Results.Error.NotFound("User", $"User with email {email} not found"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating password reset token for: {Email}", email);
+            return Stocker.SharedKernel.Results.Result.Failure<string>(
+                Stocker.SharedKernel.Results.Error.Failure("PasswordReset.Failed", ex.Message));
+        }
     }
 
     public Task<Stocker.SharedKernel.Results.Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default)

@@ -59,6 +59,37 @@ public class CRMDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<Reminder> Reminders { get; set; } = null!;
 
+    // Communication & Activity Tracking
+    public DbSet<CallLog> CallLogs { get; set; } = null!;
+    public DbSet<Meeting> Meetings { get; set; } = null!;
+    public DbSet<MeetingAttendee> MeetingAttendees { get; set; } = null!;
+
+    // Sales Organization
+    public DbSet<SalesTeam> SalesTeams { get; set; } = null!;
+    public DbSet<SalesTeamMember> SalesTeamMembers { get; set; } = null!;
+    public DbSet<Territory> Territories { get; set; } = null!;
+    public DbSet<TerritoryAssignment> TerritoryAssignments { get; set; } = null!;
+
+    // Competition Analysis
+    public DbSet<Competitor> Competitors { get; set; } = null!;
+    public DbSet<CompetitorProduct> CompetitorProducts { get; set; } = null!;
+    public DbSet<CompetitorStrength> CompetitorStrengths { get; set; } = null!;
+    public DbSet<CompetitorWeakness> CompetitorWeaknesses { get; set; } = null!;
+
+    // Customer Engagement
+    public DbSet<ProductInterest> ProductInterests { get; set; } = null!;
+    public DbSet<Referral> Referrals { get; set; } = null!;
+    public DbSet<SurveyResponse> SurveyResponses { get; set; } = null!;
+    public DbSet<SurveyAnswer> SurveyAnswers { get; set; } = null!;
+
+    // Loyalty & Social
+    public DbSet<LoyaltyProgram> LoyaltyPrograms { get; set; } = null!;
+    public DbSet<LoyaltyTier> LoyaltyTiers { get; set; } = null!;
+    public DbSet<LoyaltyReward> LoyaltyRewards { get; set; } = null!;
+    public DbSet<LoyaltyMembership> LoyaltyMemberships { get; set; } = null!;
+    public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; } = null!;
+    public DbSet<SocialMediaProfile> SocialMediaProfiles { get; set; } = null!;
+
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
         ITenantService tenantService)
@@ -121,6 +152,37 @@ public class CRMDbContext : DbContext
             // Workflow automation entities
             modelBuilder.Entity<Workflow>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<WorkflowExecution>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Communication & Activity Tracking
+            modelBuilder.Entity<CallLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Meeting>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<MeetingAttendee>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Sales Organization
+            modelBuilder.Entity<SalesTeam>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SalesTeamMember>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Territory>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<TerritoryAssignment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Competition Analysis
+            modelBuilder.Entity<Competitor>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CompetitorProduct>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CompetitorStrength>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CompetitorWeakness>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Customer Engagement
+            modelBuilder.Entity<ProductInterest>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Referral>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SurveyResponse>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SurveyAnswer>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Loyalty & Social
+            modelBuilder.Entity<LoyaltyProgram>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<LoyaltyTier>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<LoyaltyReward>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<LoyaltyMembership>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<LoyaltyTransaction>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SocialMediaProfile>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 

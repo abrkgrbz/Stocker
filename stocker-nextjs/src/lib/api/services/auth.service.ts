@@ -138,9 +138,11 @@ export class AuthService {
 
   /**
    * Request password reset
+   * @param email - User's email address
+   * @param tenantCode - Optional workspace/tenant code for TenantUsers (employees)
    */
-  async forgotPassword(email: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/forgot-password', { email });
+  async forgotPassword(email: string, tenantCode?: string): Promise<ApiResponse<{ success: boolean }>> {
+    return apiClient.post('/auth/forgot-password', { email, tenantCode });
   }
 
   /**

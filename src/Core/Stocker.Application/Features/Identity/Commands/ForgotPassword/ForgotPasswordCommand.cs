@@ -6,6 +6,10 @@ namespace Stocker.Application.Features.Identity.Commands.ForgotPassword;
 public record ForgotPasswordCommand : IRequest<Result<ForgotPasswordResponse>>
 {
     public string Email { get; init; } = string.Empty;
+    /// <summary>
+    /// Tenant code (workspace name) - optional for MasterUsers, required for TenantUsers
+    /// </summary>
+    public string? TenantCode { get; init; }
     public string? IpAddress { get; init; }
     public string? UserAgent { get; init; }
 }

@@ -33,6 +33,7 @@ interface AuthState {
     setLoading: (loading: boolean) => void;
     updateUser: (user: User) => void;
     updateProfile: (data: { firstName: string; lastName: string; email: string }) => Promise<void>;
+    completeSetup: () => void;
 
     // Biometrics
     biometricEnabled: boolean;
@@ -145,6 +146,12 @@ export const useAuthStore = create<AuthState>()(
                     console.error('Update profile error:', error);
                     throw error;
                 }
+            },
+
+            completeSetup: () => {
+                set((state) => ({
+                    user: state.user ? { ...state.user, requiresSetup: false } : null
+                }));
             },
 
             checkAuth: async () => {

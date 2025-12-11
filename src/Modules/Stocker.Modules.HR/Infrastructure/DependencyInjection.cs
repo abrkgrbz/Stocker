@@ -86,6 +86,33 @@ public static class DependencyInjection
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
         services.AddScoped<IAnnouncementAcknowledgmentRepository, AnnouncementAcknowledgmentRepository>();
 
+        // Register Career and Development Repositories
+        services.AddScoped<ICareerPathRepository, CareerPathRepository>();
+        services.AddScoped<ICertificationRepository, CertificationRepository>();
+        services.AddScoped<IEmployeeSkillRepository, EmployeeSkillRepository>();
+        services.AddScoped<ISuccessionPlanRepository, SuccessionPlanRepository>();
+
+        // Register Disciplinary and Grievance Repositories
+        services.AddScoped<IDisciplinaryActionRepository, DisciplinaryActionRepository>();
+        services.AddScoped<IGrievanceRepository, GrievanceRepository>();
+
+        // Register Asset and Benefit Repositories
+        services.AddScoped<IEmployeeAssetRepository, EmployeeAssetRepository>();
+        services.AddScoped<IEmployeeBenefitRepository, EmployeeBenefitRepository>();
+
+        // Register Recruitment Repositories
+        services.AddScoped<IJobPostingRepository, JobPostingRepository>();
+        services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
+        services.AddScoped<IInterviewRepository, InterviewRepository>();
+        services.AddScoped<IOnboardingRepository, OnboardingRepository>();
+
+        // Register Time Management Repositories
+        services.AddScoped<IOvertimeRepository, OvertimeRepository>();
+        services.AddScoped<ITimeSheetRepository, TimeSheetRepository>();
+
+        // Register Payroll Repositories
+        services.AddScoped<IPayslipRepository, PayslipRepository>();
+
         return services;
     }
 }

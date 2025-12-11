@@ -64,6 +64,34 @@ public class InventoryDbContext : DbContext, IUnitOfWork
     public DbSet<ReorderRule> ReorderRules { get; set; } = null!;
     public DbSet<ReorderSuggestion> ReorderSuggestions { get; set; } = null!;
 
+    // Barcode Management
+    public DbSet<BarcodeDefinition> BarcodeDefinitions { get; set; } = null!;
+
+    // Packaging Types
+    public DbSet<PackagingType> PackagingTypes { get; set; } = null!;
+
+    // Warehouse Zones
+    public DbSet<WarehouseZone> WarehouseZones { get; set; } = null!;
+
+    // Shelf Life Management
+    public DbSet<ShelfLife> ShelfLives { get; set; } = null!;
+
+    // Quality Control
+    public DbSet<QualityControl> QualityControls { get; set; } = null!;
+    public DbSet<QualityControlItem> QualityControlItems { get; set; } = null!;
+
+    // Consignment Stock
+    public DbSet<ConsignmentStock> ConsignmentStocks { get; set; } = null!;
+    public DbSet<ConsignmentStockMovement> ConsignmentStockMovements { get; set; } = null!;
+
+    // Cycle Counts
+    public DbSet<CycleCount> CycleCounts { get; set; } = null!;
+    public DbSet<CycleCountItem> CycleCountItems { get; set; } = null!;
+
+    // Inventory Adjustments
+    public DbSet<InventoryAdjustment> InventoryAdjustments { get; set; } = null!;
+    public DbSet<InventoryAdjustmentItem> InventoryAdjustmentItems { get; set; } = null!;
+
     // Audit Logs
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
@@ -138,6 +166,34 @@ public class InventoryDbContext : DbContext, IUnitOfWork
             // Auto-Reorder entities
             modelBuilder.Entity<ReorderRule>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<ReorderSuggestion>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Barcode Management entities
+            modelBuilder.Entity<BarcodeDefinition>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Packaging Type entities
+            modelBuilder.Entity<PackagingType>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Warehouse Zone entities
+            modelBuilder.Entity<WarehouseZone>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Shelf Life entities
+            modelBuilder.Entity<ShelfLife>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Quality Control entities
+            modelBuilder.Entity<QualityControl>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<QualityControlItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Consignment Stock entities
+            modelBuilder.Entity<ConsignmentStock>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ConsignmentStockMovement>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Cycle Count entities
+            modelBuilder.Entity<CycleCount>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CycleCountItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Inventory Adjustment entities
+            modelBuilder.Entity<InventoryAdjustment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<InventoryAdjustmentItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
 
             // Audit Log entity
             modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);

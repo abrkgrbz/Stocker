@@ -9,15 +9,12 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    ViewStyle,
-    TextStyle,
     Dimensions,
     SafeAreaView,
 } from 'react-native';
-import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
 import { apiService } from '../services/api';
-import { colors, spacing, typography } from '../theme/colors';
+import { colors, spacing } from '../theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
     FadeInRight,
@@ -29,20 +26,42 @@ import Animated, {
     withSequence,
     Easing
 } from 'react-native-reanimated';
-import { tokenStorage } from '../utils/tokenStorage';
-import { useSignalRValidation, PasswordStrength } from '../hooks/useSignalRValidation';
-import { useAlert } from '../context/AlertContext';
+import { useSignalRValidation } from '../hooks/useSignalRValidation';
 
 const { width } = Dimensions.get('window');
 
-type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'verification' | 'complete';
+type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete';
 
 export default function RegisterScreen({ navigation }: any) {
-    const { showAlert } = useAlert();
     const [currentStep, setCurrentStep] = useState<Step>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
+
+    // Form Data
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [teamName, setTeamName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [acceptTerms, setAcceptTerms] = useState(false);
+    const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+
+    // Validation States
+    const [emailValid, setEmailValid] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const [passwordValid, setPasswordValid] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState(0);
+    const [teamNameValid, setTeamNameValid] = useState(false);
+    const [teamNameError, setTeamNameError] = useState('');
+
+    const {
+        validateEmail: validateEmailSignalR,
+        validateTenantCode,
+        checkPasswordStrength,
+        isConnected
+    } = useSignalRValidation();
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'error') => {
         setToast({ visible: true, message, type });
@@ -52,23 +71,9 @@ export default function RegisterScreen({ navigation }: any) {
         setToast({ ...toast, visible: false });
     };
 
-    // SignalR Validation
-    const {
-        validateEmail: validateEmailSignalR,
-        validateTenantCode,
-        checkPasswordStrength,
-        isConnected
-    } = useSignalRValidation();
-
-    // Debug: Log connection status
-    useEffect(() => {
-        console.log('[RegisterScreen] SignalR Validation Hub connected:', isConnected);
-    }, [isConnected]);
-
-    // Animation values for background blobs
+    // Background Animation
     const blob1TranslateY = useSharedValue(0);
     const blob2TranslateY = useSharedValue(0);
-    const blob3TranslateY = useSharedValue(0);
 
     useEffect(() => {
         blob1TranslateY.value = withRepeat(
@@ -87,14 +92,6 @@ export default function RegisterScreen({ navigation }: any) {
             -1,
             true
         );
-        blob3TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(-25, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 3500, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
     }, []);
 
     const blob1Style = useAnimatedStyle(() => ({
@@ -105,118 +102,97 @@ export default function RegisterScreen({ navigation }: any) {
         transform: [{ translateY: blob2TranslateY.value }],
     }));
 
-    const blob3Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob3TranslateY.value }],
-    }));
-
-    // Form Data
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [teamName, setTeamName] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [verificationCode, setVerificationCode] = useState('');
-    const [resendTimer, setResendTimer] = useState(0);
-
-    // Resend Timer Logic
+    // Email Validation
     useEffect(() => {
-        let interval: any;
-        if (resendTimer > 0) {
-            interval = setInterval(() => {
-                setResendTimer((prev) => prev - 1);
-            }, 1000);
+        if (!email) {
+            setEmailValid(false);
+            setEmailError('');
+            return;
         }
-        return () => clearInterval(interval);
-    }, [resendTimer]);
 
-    // Validation
-    const [emailError, setEmailError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [teamNameError, setTeamNameError] = useState('');
-    const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
-
-    const validateEmail = async (text: string) => {
-        setEmail(text);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(text)) {
+        if (!emailRegex.test(email)) {
+            setEmailValid(false);
             setEmailError('Geçerli bir e-posta adresi girin');
             return;
         }
 
-        setEmailError('');
-
         if (isConnected) {
-            console.log('[RegisterScreen] Validating email via SignalR:', text);
-            validateEmailSignalR(text, (result) => {
-                console.log('[RegisterScreen] Email validation result:', result);
-                if (!result.isValid) {
-                    setEmailError(result.message || 'E-posta kullanılamıyor');
-                }
+            validateEmailSignalR(email, (result) => {
+                setEmailValid(result.isValid);
+                setEmailError(result.isValid ? '' : result.message);
             });
+        } else {
+            setEmailValid(true);
+            setEmailError('');
         }
-    };
+    }, [email, isConnected]);
 
-    const validatePassword = (text: string) => {
-        setPassword(text);
-
-        // Basic client-side validation
-        if (text.length < 8) {
-            setPasswordError('En az 8 karakter olmalı');
-            setPasswordStrength(null);
+    // Password Validation
+    useEffect(() => {
+        if (!password) {
+            setPasswordValid(false);
+            setPasswordError('');
+            setPasswordStrength(0);
             return;
         }
 
-        setPasswordError('');
-
-        // Real-time password strength check via SignalR
         if (isConnected) {
-            console.log('[RegisterScreen] Checking password strength via SignalR');
-            checkPasswordStrength(text, (result) => {
-                console.log('[RegisterScreen] Password strength result:', result);
-
-                // Store strength for UI display
-                setPasswordStrength(result);
-
-                // Show strength-based feedback
-                if (result.score < 2) {
-                    // Weak - block registration
-                    setPasswordError(`Şifre çok zayıf. ${result.suggestions.join(', ')}`);
-                } else if (result.score === 2) {
-                    // Fair - show warning but allow
-                    setPasswordError(`Şifre orta seviyede. Öneriler: ${result.suggestions.join(', ')}`);
-                } else {
-                    // Strong - allow
-                    setPasswordError('');
-                }
+            checkPasswordStrength(password, (result) => {
+                setPasswordStrength(result.score);
+                setPasswordValid(result.score >= 3);
+                setPasswordError(result.score >= 3 ? '' : (result.suggestions[0] || 'Şifre güçlendirilmeli'));
             });
         } else {
-            // SignalR not connected, use basic validation only
-            setPasswordStrength(null);
+            if (password.length < 8) {
+                setPasswordValid(false);
+                setPasswordError('En az 8 karakter olmalı');
+            } else if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+                setPasswordValid(false);
+                setPasswordError('Büyük harf ve rakam içermeli');
+            } else {
+                setPasswordValid(true);
+                setPasswordError('');
+                setPasswordStrength(4);
+            }
         }
-    };
+    }, [password, isConnected]);
 
-    const validateTeamName = async (text: string) => {
-        const formatted = text.toLowerCase().replace(/[^a-z0-9-]/g, '');
-        setTeamName(formatted);
-        if (formatted.length < 3) {
+    // Team Name Validation
+    useEffect(() => {
+        if (!teamName) {
+            setTeamNameValid(false);
+            setTeamNameError('');
+            return;
+        }
+
+        const teamNameRegex = /^[a-z0-9-]+$/;
+        if (!teamNameRegex.test(teamName)) {
+            setTeamNameValid(false);
+            setTeamNameError('Sadece küçük harf, rakam ve tire (-) kullanın');
+            return;
+        }
+
+        if (teamName.length < 3) {
+            setTeamNameValid(false);
             setTeamNameError('En az 3 karakter olmalı');
             return;
         }
 
-        setTeamNameError('');
-
         if (isConnected) {
-            console.log('[RegisterScreen] Validating tenant code via SignalR:', formatted);
-            validateTenantCode(formatted, (result) => {
-                console.log('[RegisterScreen] Tenant code validation result:', result);
-                if (!result.isAvailable) {
-                    setTeamNameError(result.message || 'Bu alan adı kullanılamıyor');
-                }
+            validateTenantCode(teamName, (result) => {
+                setTeamNameValid(result.isAvailable);
+                setTeamNameError(result.isAvailable ? '' : result.message);
             });
+        } else {
+            setTeamNameValid(true);
+            setTeamNameError('');
         }
-    };
+    }, [teamName, isConnected]);
 
-    const handleRegister = async () => {
+    const handleComplete = async () => {
+        if (!firstName.trim() || !lastName.trim()) return;
+
         setIsLoading(true);
         try {
             const response = await apiService.auth.register({
@@ -225,344 +201,214 @@ export default function RegisterScreen({ navigation }: any) {
                 teamName,
                 firstName,
                 lastName,
+                acceptTerms,
+                acceptPrivacyPolicy: acceptPrivacy
             });
 
-            if (response.data.success) {
-                if (response.data.data?.accessToken) {
-                    await tokenStorage.setToken(response.data.data.accessToken);
-                }
-                setCurrentStep('verification');
+            if (response.data?.success) {
+                // Navigate to VerifyEmail screen with email
+                navigation.navigate('VerifyEmail', { email });
             } else {
-                throw new Error(response.data.message || 'Kayıt işlemi başarısız');
+                showToast(response.data?.message || 'Kayıt başarısız', 'error');
             }
         } catch (error: any) {
-            showToast(error.message || 'Kayıt işlemi başarısız', 'error');
+            showToast(error.message || 'Kayıt sırasında bir hata oluştu', 'error');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleVerify = async () => {
-        if (verificationCode.length !== 6) {
-            showAlert({
-                title: 'Hata',
-                message: 'Lütfen 6 haneli doğrulama kodunu giriniz.',
-                type: 'error'
-            });
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const response = await apiService.auth.verifyEmail({
-                email,
-                code: verificationCode,
-            });
-
-            if (response.data.success) {
-                // Check if we have a registrationId for progress tracking
-                const responseData = response.data as any;
-                if (responseData.registrationId) {
-                    navigation.replace('TenantProgress', {
-                        registrationId: responseData.registrationId
-                    });
-                } else {
-                    setCurrentStep('complete');
-                }
-            } else {
-                throw new Error(response.data.message || 'Doğrulama başarısız');
-            }
-        } catch (error: any) {
-            showToast(error.message || 'Doğrulama işlemi başarısız', 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleResendOtp = async () => {
-        if (resendTimer > 0) return;
-
-        setIsLoading(true);
-        try {
-            const response = await apiService.auth.resendVerificationEmail(email);
-            if (response.data.success) {
-                showToast('Doğrulama kodu tekrar gönderildi.', 'success');
-                setResendTimer(60); // Start 60s cooldown
-            } else {
-                throw new Error(response.data.message || 'Kod gönderilemedi');
-            }
-        } catch (error: any) {
-            showToast(error.message || 'Kod gönderilemedi', 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleNext = () => {
-        switch (currentStep) {
-            case 'email':
-                if (email && !emailError) setCurrentStep('password');
-                break;
-            case 'password':
-                if (password && !passwordError) setCurrentStep('teamName');
-                break;
-            case 'teamName':
-                if (teamName && !teamNameError) setCurrentStep('fullName');
-                break;
-            case 'fullName':
-                if (firstName && lastName) handleRegister();
-                break;
-            case 'verification':
-                handleVerify();
-                break;
-        }
-    };
-
-    const handleBack = () => {
-        switch (currentStep) {
-            case 'password':
-                setCurrentStep('email');
-                break;
-            case 'teamName':
-                setCurrentStep('password');
-                break;
-            case 'fullName':
-                setCurrentStep('teamName');
-                break;
-            case 'verification':
-                showAlert({
-                    title: 'Dikkat',
-                    message: 'Geri dönerseniz kayıt işlemini yeniden başlatmanız gerekebilir. Emin misiniz?',
-                    type: 'warning',
-                    buttons: [
-                        { text: 'İptal', style: 'cancel' },
-                        { text: 'Evet', onPress: () => setCurrentStep('fullName') }
-                    ]
-                });
-                break;
-            case 'email':
-                navigation.goBack();
-                break;
-        }
-    };
-
-    const renderStepIndicator = () => {
-        if (currentStep === 'complete') return null;
-
-        const steps: Step[] = ['email', 'password', 'teamName', 'fullName', 'verification'];
-        const currentIndex = steps.indexOf(currentStep);
-
-        return (
-            <View style={styles.stepIndicator}>
-                {steps.map((step, index) => (
-                    <View
-                        key={step}
-                        style={[
-                            styles.stepDot,
-                            index <= currentIndex && styles.stepDotActive,
-                        ]}
-                    />
-                ))}
-            </View>
-        );
-    };
-
-    const renderContent = () => {
+    const renderStepContent = () => {
         switch (currentStep) {
             case 'email':
                 return (
-                    <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft.duration(200)}>
-                        <Text style={styles.stepTitle}>İş e-postanızı girin</Text>
-                        <Text style={styles.stepSubtitle}>Hesabınız bu e-posta ile oluşturulacak</Text>
+                    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
+                        <Text style={styles.title}>İş e-postanızı girin</Text>
+                        <Text style={styles.subtitle}>Hesabınız bu e-posta ile oluşturulacak</Text>
 
                         <View style={styles.inputContainer}>
-                            <View style={[styles.inputWrapper, emailError ? styles.inputError : null]}>
-                                <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="ornek@sirket.com"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={email}
-                                    onChangeText={validateEmail}
-                                    autoCapitalize="none"
-                                    keyboardType="email-address"
-                                    autoFocus
-                                />
-                            </View>
-                            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                            <Ionicons name="mail-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="ornek@sirket.com"
+                                placeholderTextColor={colors.textSecondary}
+                                value={email}
+                                onChangeText={(text) => setEmail(text.toLowerCase())}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
                         </View>
+                        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                        {emailValid ? <Text style={styles.successText}>✓ E-posta geçerli</Text> : null}
+
+                        <TouchableOpacity
+                            style={[styles.button, !emailValid && styles.buttonDisabled]}
+                            onPress={() => setCurrentStep('password')}
+                            disabled={!emailValid}
+                        >
+                            <Text style={styles.buttonText}>Devam Et</Text>
+                            <Ionicons name="arrow-forward" size={20} color="#fff" />
+                        </TouchableOpacity>
                     </Animated.View>
                 );
 
             case 'password':
                 return (
-                    <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft.duration(200)}>
-                        <Text style={styles.stepTitle}>Şifrenizi belirleyin</Text>
-                        <Text style={styles.stepSubtitle}>Güçlü bir şifre oluşturun</Text>
+                    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
+                        <TouchableOpacity onPress={() => setCurrentStep('email')} style={styles.backLink}>
+                            <Text style={styles.backLinkText}>← Geri</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.title}>Şifrenizi belirleyin</Text>
+                        <Text style={styles.subtitle}>Güçlü bir şifre oluşturun</Text>
 
                         <View style={styles.inputContainer}>
-                            <View style={[styles.inputWrapper, passwordError ? styles.inputError : null]}>
-                                <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    key={showPassword ? 'text' : 'password'}
-                                    style={styles.input}
-                                    placeholder="En az 8 karakter"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={password}
-                                    onChangeText={validatePassword}
-                                    secureTextEntry={!showPassword}
-                                    autoCapitalize="none"
-                                    autoCorrect={false}
-                                    textContentType="password"
-                                    keyboardType="default"
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
-                                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
-                                </TouchableOpacity>
-                            </View>
-                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-
-                            {passwordStrength && !passwordError && (
-                                <View style={styles.strengthContainer}>
-                                    <View style={styles.strengthBarContainer}>
-                                        <View
-                                            style={[
-                                                styles.strengthBar,
-                                                {
-                                                    width: `${(passwordStrength.score / 5) * 100}%`,
-                                                    backgroundColor: passwordStrength.color
-                                                }
-                                            ]}
-                                        />
-                                    </View>
-                                    <Text style={[styles.strengthText, { color: passwordStrength.color }]}>
-                                        {passwordStrength.level}
-                                    </Text>
-                                    {passwordStrength.suggestions.length > 0 && (
-                                        <View style={styles.suggestionsContainer}>
-                                            {passwordStrength.suggestions.map((suggestion, index) => (
-                                                <Text key={index} style={styles.suggestionText}>• {suggestion}</Text>
-                                            ))}
-                                        </View>
-                                    )}
-                                </View>
-                            )}
-                        </View>
-                    </Animated.View>
-                );
-
-            case 'teamName':
-                return (
-                    <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft.duration(200)}>
-                        <Text style={styles.stepTitle}>Takım adınızı seçin</Text>
-                        <Text style={styles.stepSubtitle}>Bu, sizin Stoocker adresiniz olacak</Text>
-
-                        <View style={styles.inputContainer}>
-                            <View style={[styles.inputWrapper, teamNameError ? styles.inputError : null]}>
-                                <Ionicons name="people-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="sirketiniz"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={teamName}
-                                    onChangeText={validateTeamName}
-                                    autoCapitalize="none"
-                                    autoFocus
-                                />
-                                <Text style={styles.suffixText}>.stoocker.app</Text>
-                            </View>
-                            {teamNameError ? <Text style={styles.errorText}>{teamNameError}</Text> : null}
-                        </View>
-                    </Animated.View>
-                );
-
-            case 'fullName':
-                return (
-                    <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft.duration(200)}>
-                        <Text style={styles.stepTitle}>Adınız ve soyadınız</Text>
-                        <Text style={styles.stepSubtitle}>Son adım! Hemen tamamlayın</Text>
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputWrapper}>
-                                <Ionicons name="person-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Adınız"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={firstName}
-                                    onChangeText={setFirstName}
-                                    autoFocus
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputWrapper}>
-                                <Ionicons name="person-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Soyadınız"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={lastName}
-                                    onChangeText={setLastName}
-                                />
-                            </View>
-                        </View>
-                    </Animated.View>
-                );
-
-            case 'verification':
-                return (
-                    <Animated.View entering={FadeInRight.springify()} exiting={FadeOutLeft.duration(200)}>
-                        <Text style={styles.stepTitle}>E-posta Doğrulama</Text>
-                        <Text style={styles.stepSubtitle}>E-postanıza gönderilen 6 haneli kodu girin</Text>
-
-                        <View style={styles.inputContainer}>
-                            <View style={styles.inputWrapper}>
-                                <Ionicons name="key-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="000000"
-                                    placeholderTextColor={colors.textMuted}
-                                    value={verificationCode}
-                                    onChangeText={setVerificationCode}
-                                    keyboardType="number-pad"
-                                    maxLength={6}
-                                    autoFocus
-                                />
-                            </View>
-                            <TouchableOpacity
-                                style={styles.resendButton}
-                                onPress={handleResendOtp}
-                                disabled={resendTimer > 0 || isLoading}
-                            >
-                                <Text style={[
-                                    styles.resendButtonText,
-                                    resendTimer > 0 && styles.resendButtonTextDisabled
-                                ]}>
-                                    {resendTimer > 0
-                                        ? `Tekrar gönder (${resendTimer}s)`
-                                        : 'Kodu Tekrar Gönder'}
-                                </Text>
+                            <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="En az 8 karakter"
+                                placeholderTextColor={colors.textSecondary}
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textSecondary} />
                             </TouchableOpacity>
                         </View>
+                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                        {passwordValid ? <Text style={styles.successText}>✓ Şifre güçlü</Text> : null}
+
+                        <TouchableOpacity
+                            style={[styles.button, !passwordValid && styles.buttonDisabled]}
+                            onPress={() => setCurrentStep('teamName')}
+                            disabled={!passwordValid}
+                        >
+                            <Text style={styles.buttonText}>Şifreyi Onayla</Text>
+                            <Ionicons name="arrow-forward" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    </Animated.View>
+                );
+
+            case 'teamName':
+                return (
+                    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
+                        <TouchableOpacity onPress={() => setCurrentStep('password')} style={styles.backLink}>
+                            <Text style={styles.backLinkText}>← Geri</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.title}>Takım adınızı seçin</Text>
+                        <Text style={styles.subtitle}>Bu, sizin Stoocker adresiniz olacak</Text>
+
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="people-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="sirketiniz"
+                                placeholderTextColor={colors.textSecondary}
+                                value={teamName}
+                                onChangeText={(text) => setTeamName(text.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                autoCapitalize="none"
+                            />
+                            <Text style={styles.suffix}>.stoocker.app</Text>
+                        </View>
+                        {teamNameError ? <Text style={styles.errorText}>{teamNameError}</Text> : null}
+                        {teamNameValid ? <Text style={styles.successText}>✓ Takım adı kullanılabilir</Text> : null}
+
+                        <TouchableOpacity
+                            style={[styles.button, !teamNameValid && styles.buttonDisabled]}
+                            onPress={() => setCurrentStep('fullName')}
+                            disabled={!teamNameValid}
+                        >
+                            <Text style={styles.buttonText}>Takım Adını Onayla</Text>
+                            <Ionicons name="arrow-forward" size={20} color="#fff" />
+                        </TouchableOpacity>
+                    </Animated.View>
+                );
+
+            case 'fullName':
+                return (
+                    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
+                        <TouchableOpacity onPress={() => setCurrentStep('teamName')} style={styles.backLink}>
+                            <Text style={styles.backLinkText}>← Geri</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.title}>Adınız ve soyadınız</Text>
+                        <Text style={styles.subtitle}>Son adım! Hemen tamamlayın</Text>
+
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Adınız"
+                                placeholderTextColor={colors.textSecondary}
+                                value={firstName}
+                                onChangeText={setFirstName}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Soyadınız"
+                                placeholderTextColor={colors.textSecondary}
+                                value={lastName}
+                                onChangeText={setLastName}
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setAcceptTerms(!acceptTerms)}
+                        >
+                            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                                {acceptTerms && <Ionicons name="checkmark" size={14} color="#fff" />}
+                            </View>
+                            <Text style={styles.checkboxLabel}>Kullanım koşullarını kabul ediyorum</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.checkboxContainer}
+                            onPress={() => setAcceptPrivacy(!acceptPrivacy)}
+                        >
+                            <View style={[styles.checkbox, acceptPrivacy && styles.checkboxChecked]}>
+                                {acceptPrivacy && <Ionicons name="checkmark" size={14} color="#fff" />}
+                            </View>
+                            <Text style={styles.checkboxLabel}>Gizlilik politikasını kabul ediyorum</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.button, (!firstName || !lastName || !acceptTerms || !acceptPrivacy) && styles.buttonDisabled]}
+                            onPress={handleComplete}
+                            disabled={!firstName || !lastName || !acceptTerms || !acceptPrivacy || isLoading}
+                        >
+                            {isLoading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Text style={styles.buttonText}>Tamamla ve Başla</Text>
+                                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                                </>
+                            )}
+                        </TouchableOpacity>
                     </Animated.View>
                 );
 
             case 'complete':
                 return (
-                    <Animated.View style={styles.centerContent} entering={FadeInRight.springify()}>
-                        <View style={styles.successIcon}>
-                            <Ionicons name="checkmark" size={50} color={colors.success} />
+                    <Animated.View entering={FadeInRight} style={styles.stepContainer}>
+                        <View style={styles.successIconContainer}>
+                            <Ionicons name="checkmark-circle" size={80} color={colors.success} />
                         </View>
-                        <Text style={styles.stepTitle}>Hoş geldiniz, {firstName}!</Text>
-                        <Text style={[styles.stepSubtitle, { textAlign: 'center' }]}>
-                            Hesabınız başarıyla oluşturuldu.{'\n'}
-                            <Text style={{ color: colors.primary }}>{teamName}.stoocker.app</Text> adresiniz hazır.
+                        <Text style={styles.title}>Hoş Geldiniz, {firstName}!</Text>
+                        <Text style={styles.subtitle}>Hesabınız başarıyla oluşturuldu.</Text>
+                        <Text style={[styles.subtitle, { color: colors.primary, marginTop: 8 }]}>
+                            {teamName}.stoocker.app
                         </Text>
 
                         <TouchableOpacity
-                            style={[styles.button, { marginTop: spacing.xl, width: '100%' }]}
+                            style={styles.button}
                             onPress={() => navigation.navigate('Login')}
                         >
                             <Text style={styles.buttonText}>Giriş Yap</Text>
@@ -573,267 +419,232 @@ export default function RegisterScreen({ navigation }: any) {
     };
 
     return (
-        <View style={styles.container}>
-            <Loading visible={isLoading} text="İşlem yapılıyor..." />
+        <SafeAreaView style={styles.container}>
+            <View style={styles.background}>
+                <Animated.View style={[styles.blob, styles.blob1, blob1Style]} />
+                <Animated.View style={[styles.blob, styles.blob2, blob2Style]} />
+            </View>
+
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.content}
+            >
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    <View style={styles.header}>
+                        <Text style={styles.appName}>Stocker</Text>
+                    </View>
+
+                    {currentStep !== 'complete' && (
+                        <View style={styles.progressContainer}>
+                            {['email', 'password', 'teamName', 'fullName'].map((step, index) => {
+                                const steps: Step[] = ['email', 'password', 'teamName', 'fullName'];
+                                const currentIndex = steps.indexOf(currentStep);
+                                const isActive = index <= currentIndex;
+                                return (
+                                    <View key={step} style={[styles.progressDot, isActive && styles.progressDotActive]} />
+                                );
+                            })}
+                        </View>
+                    )}
+
+                    {renderStepContent()}
+
+                    {currentStep === 'email' && (
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>Zaten hesabınız var mı? </Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                <Text style={styles.link}>Giriş Yapın</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </ScrollView>
+            </KeyboardAvoidingView>
+
             <Toast
                 visible={toast.visible}
                 message={toast.message}
                 type={toast.type}
                 onHide={hideToast}
             />
-
-            {/* Background Elements */}
-            <Animated.View style={[styles.bgGradientTop, blob1Style]} />
-            <Animated.View style={[styles.bgGradientBottom, blob2Style]} />
-            <Animated.View style={[styles.bgGradientCenter, blob3Style]} />
-
-            <SafeAreaView style={styles.safeArea}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.keyboardView}
-                >
-                    <View style={styles.header}>
-                        {currentStep !== 'complete' && (
-                            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                                <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-                            </TouchableOpacity>
-                        )}
-                        <Text style={styles.headerTitle}>Kayıt Ol</Text>
-                        <View style={{ width: 24 }} />
-                    </View>
-
-                    {renderStepIndicator()}
-
-                    <ScrollView contentContainerStyle={styles.content}>
-                        {renderContent()}
-                    </ScrollView>
-
-                    {currentStep !== 'complete' && (
-                        <View style={styles.footer}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.button,
-                                    (currentStep === 'email' && (!email || !!emailError)) ||
-                                        (currentStep === 'password' && (!password || !!passwordError || (isConnected && passwordStrength && passwordStrength.score < 2))) ||
-                                        (currentStep === 'teamName' && (!teamName || !!teamNameError)) ||
-                                        (currentStep === 'fullName' && (!firstName || !lastName)) ||
-                                        (currentStep === 'verification' && verificationCode.length !== 6)
-                                        ? styles.buttonDisabled
-                                        : null
-                                ]}
-                                onPress={handleNext}
-                                disabled={isLoading}
-                            >
-                                <Text style={styles.buttonText}>
-                                    {currentStep === 'fullName' ? 'Kayıt Ol' :
-                                        currentStep === 'verification' ? 'Doğrula' : 'Devam Et'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </KeyboardAvoidingView>
-            </SafeAreaView>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
-    } as ViewStyle,
-    safeArea: {
-        flex: 1,
-    } as ViewStyle,
-    bgGradientTop: {
+        backgroundColor: '#0a0e27',
+    },
+    background: {
+        ...StyleSheet.absoluteFillObject,
+        overflow: 'hidden',
+    },
+    blob: {
         position: 'absolute',
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        opacity: 0.3,
+    },
+    blob1: {
         top: -100,
-        left: -100,
-        width: width * 1.2,
-        height: width * 1.2,
-        borderRadius: width * 0.6,
-        backgroundColor: colors.primary,
-        opacity: 0.08,
-        transform: [{ scale: 1.2 }],
-    } as ViewStyle,
-    bgGradientBottom: {
-        position: 'absolute',
-        bottom: -100,
         right: -100,
-        width: width,
-        height: width,
-        borderRadius: width * 0.5,
-        backgroundColor: colors.secondary,
-        opacity: 0.08,
-        transform: [{ scale: 1.2 }],
-    } as ViewStyle,
-    bgGradientCenter: {
-        position: 'absolute',
-        top: '40%',
-        left: -50,
-        width: 200,
-        height: 200,
-        borderRadius: 100,
-        backgroundColor: colors.accent,
-        opacity: 0.05,
-        transform: [{ scale: 1.5 }],
-    } as ViewStyle,
-    keyboardView: {
+        backgroundColor: '#667eea',
+    },
+    blob2: {
+        bottom: -100,
+        left: -100,
+        backgroundColor: '#764ba2',
+    },
+    content: {
         flex: 1,
-    } as ViewStyle,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        padding: spacing.l,
+        justifyContent: 'center',
+    },
     header: {
-        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: spacing.m,
-        paddingVertical: spacing.m,
-    } as ViewStyle,
-    backButton: {
-        padding: spacing.xs,
-    } as ViewStyle,
-    headerTitle: {
-        ...typography.h3,
-        color: colors.textPrimary,
-    } as TextStyle,
-    stepIndicator: {
+        marginBottom: spacing.xl,
+    },
+    appName: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#fff',
+        letterSpacing: 1,
+    },
+    progressContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: spacing.s,
-        marginBottom: spacing.l,
-    } as ViewStyle,
-    stepDot: {
+        marginBottom: spacing.xl,
+        gap: 8,
+    },
+    progressDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: colors.surfaceLight,
-    } as ViewStyle,
-    stepDotActive: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+    progressDotActive: {
         backgroundColor: colors.primary,
         width: 24,
-    } as ViewStyle,
-    content: {
-        padding: spacing.l,
-    } as ViewStyle,
-    centerContent: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: spacing.xl,
-    } as ViewStyle,
-    stepTitle: {
-        ...typography.h1,
-        color: colors.textPrimary,
+    },
+    stepContainer: {
+        width: '100%',
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#fff',
         marginBottom: spacing.s,
-    } as TextStyle,
-    stepSubtitle: {
-        ...typography.body,
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 16,
         color: colors.textSecondary,
         marginBottom: spacing.xl,
-    } as TextStyle,
+        textAlign: 'center',
+    },
     inputContainer: {
-        marginBottom: spacing.l,
-    } as ViewStyle,
-    inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
+        backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: 12,
+        paddingHorizontal: spacing.m,
+        marginBottom: spacing.m,
         borderWidth: 1,
-        borderColor: '#333',
-    } as ViewStyle,
-    inputError: {
-        borderColor: colors.error,
-    } as ViewStyle,
+        borderColor: 'rgba(255,255,255,0.1)',
+        height: 56,
+    },
     inputIcon: {
-        marginLeft: spacing.m,
         marginRight: spacing.s,
-    } as TextStyle,
+    },
     input: {
         flex: 1,
-        padding: spacing.m,
-        color: colors.textPrimary,
+        color: '#fff',
         fontSize: 16,
-    } as TextStyle,
-    passwordToggle: {
-        padding: spacing.s,
-        marginRight: spacing.xs,
-    } as ViewStyle,
-    suffixText: {
-        color: colors.textMuted,
-        marginRight: spacing.m,
-    } as TextStyle,
-    errorText: {
-        color: colors.error,
-        fontSize: 12,
-        marginTop: spacing.xs,
-        marginLeft: spacing.xs,
-    } as TextStyle,
-    footer: {
-        padding: spacing.l,
-        borderTopWidth: 1,
-        borderTopColor: colors.surfaceLight,
-    } as ViewStyle,
+    },
+    suffix: {
+        color: colors.textSecondary,
+        fontSize: 14,
+    },
     button: {
-        backgroundColor: colors.accent,
+        backgroundColor: colors.primary,
         borderRadius: 12,
-        padding: spacing.m,
+        height: 56,
+        flexDirection: 'row',
         alignItems: 'center',
-    } as ViewStyle,
+        justifyContent: 'center',
+        marginTop: spacing.m,
+        gap: 8,
+    },
     buttonDisabled: {
-        backgroundColor: colors.surfaceLight,
         opacity: 0.5,
-    } as ViewStyle,
+    },
     buttonText: {
-        color: '#0a1f2e',
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-    } as TextStyle,
-    successIcon: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: 'rgba(82, 196, 26, 0.1)',
+    },
+    backLink: {
+        marginBottom: spacing.m,
+    },
+    backLinkText: {
+        color: colors.textSecondary,
+        fontSize: 14,
+    },
+    errorText: {
+        color: colors.error,
+        fontSize: 14,
+        marginBottom: spacing.m,
+        marginLeft: spacing.xs,
+    },
+    successText: {
+        color: colors.success,
+        fontSize: 14,
+        marginBottom: spacing.m,
+        marginLeft: spacing.xs,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.m,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: colors.primary,
+        marginRight: spacing.s,
+        alignItems: 'center',
         justifyContent: 'center',
+    },
+    checkboxChecked: {
+        backgroundColor: colors.primary,
+    },
+    checkboxLabel: {
+        color: colors.textSecondary,
+        fontSize: 14,
+        flex: 1,
+    },
+    successIconContainer: {
         alignItems: 'center',
         marginBottom: spacing.l,
-    } as ViewStyle,
-    strengthContainer: {
-        marginTop: spacing.s,
-    } as ViewStyle,
-    strengthBarContainer: {
-        height: 4,
-        backgroundColor: colors.surfaceLight,
-        borderRadius: 2,
-        overflow: 'hidden',
-        marginBottom: spacing.xs,
-    } as ViewStyle,
-    strengthBar: {
-        height: '100%',
-        borderRadius: 2,
-    } as ViewStyle,
-    strengthText: {
-        fontSize: 12,
-        fontWeight: '600',
-        marginBottom: spacing.xs,
-    } as TextStyle,
-    suggestionsContainer: {
-        marginTop: spacing.xs,
-    } as ViewStyle,
-    suggestionText: {
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: spacing.xl,
+    },
+    footerText: {
         color: colors.textSecondary,
-        fontSize: 11,
-        marginLeft: spacing.xs,
-    } as TextStyle,
-    resendButton: {
-        marginTop: spacing.m,
-        alignSelf: 'center',
-        padding: spacing.s,
-    } as ViewStyle,
-    resendButtonText: {
-        color: colors.primary,
         fontSize: 14,
-        fontWeight: '600',
-    } as TextStyle,
-    resendButtonTextDisabled: {
-        color: colors.textMuted,
-    } as TextStyle,
+    },
+    link: {
+        color: colors.primary,
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
 });

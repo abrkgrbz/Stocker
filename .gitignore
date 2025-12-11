@@ -450,4 +450,4 @@ scripts/debug-output/
 scripts/.env
 
 # EF Core Migration Bundles (built in Dockerfile)
-efbundle-*
+efbundle-*nul

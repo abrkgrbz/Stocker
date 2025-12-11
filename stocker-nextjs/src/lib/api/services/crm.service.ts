@@ -63,6 +63,58 @@ import type {
   // Notifications
   NotificationFilterParams,
   GetNotificationsResponse,
+  // Call Logs
+  CallLogDto,
+  CreateCallLogCommand,
+  UpdateCallLogCommand,
+  CallLogFilters,
+  CallDirection,
+  CallStatus,
+  CallOutcome,
+  // Meetings
+  MeetingDto,
+  CreateMeetingCommand,
+  MeetingFilters,
+  MeetingType,
+  MeetingStatus,
+  // Territories
+  TerritoryDto,
+  CreateTerritoryCommand,
+  UpdateTerritoryCommand,
+  TerritoryFilters,
+  TerritoryType,
+  // Sales Teams
+  SalesTeamDto,
+  SalesTeamMemberDto,
+  CreateSalesTeamCommand,
+  SalesTeamFilters,
+  SalesTeamRole,
+  // Competitors
+  CompetitorDto,
+  CompetitorProductDto,
+  CompetitorStrengthDto,
+  CompetitorWeaknessDto,
+  CreateCompetitorCommand,
+  UpdateCompetitorCommand,
+  CompetitorFilters,
+  ThreatLevel,
+  StrengthCategory,
+  WeaknessCategory,
+  // Loyalty Programs
+  LoyaltyProgramDto,
+  LoyaltyTierDto,
+  LoyaltyRewardDto,
+  CreateLoyaltyProgramCommand,
+  UpdateLoyaltyProgramCommand,
+  LoyaltyProgramFilters,
+  LoyaltyProgramType,
+  // Referrals
+  ReferralDto,
+  CreateReferralCommand,
+  ReferralFilters,
+  ReferralStatus,
+  ReferralType,
+  ReferralRewardType,
   Guid,
   DateTime,
 } from './crm.types';
@@ -1627,6 +1679,284 @@ export class CRMService {
    */
   static async deleteNotification(id: number): Promise<void> {
     return ApiService.delete<void>(this.getPath(`notifications/${id}`));
+  }
+
+  // =====================================
+  // CALL LOGS
+  // =====================================
+
+  /**
+   * Get all call logs with filters
+   */
+  static async getCallLogs(filters?: CallLogFilters): Promise<CallLogDto[]> {
+    return ApiService.get<CallLogDto[]>(this.getPath('call-logs'), { params: filters });
+  }
+
+  /**
+   * Get call log by ID
+   */
+  static async getCallLog(id: Guid): Promise<CallLogDto> {
+    return ApiService.get<CallLogDto>(this.getPath(`call-logs/${id}`));
+  }
+
+  /**
+   * Get call logs by customer
+   */
+  static async getCallLogsByCustomer(customerId: Guid): Promise<CallLogDto[]> {
+    return ApiService.get<CallLogDto[]>(this.getPath(`call-logs/customer/${customerId}`));
+  }
+
+  /**
+   * Create new call log
+   */
+  static async createCallLog(data: CreateCallLogCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('call-logs'), data);
+  }
+
+  /**
+   * Complete a call log
+   */
+  static async completeCallLog(id: Guid, outcome: CallOutcome, outcomeDescription?: string): Promise<void> {
+    return ApiService.put<void>(this.getPath(`call-logs/${id}/complete`), { id, outcome, outcomeDescription });
+  }
+
+  /**
+   * Set follow-up for call log
+   */
+  static async setCallLogFollowUp(id: Guid, followUpDate: DateTime, followUpNote?: string): Promise<void> {
+    return ApiService.put<void>(this.getPath(`call-logs/${id}/follow-up`), { id, followUpDate, followUpNote });
+  }
+
+  /**
+   * Set quality score for call log
+   */
+  static async setCallLogQualityScore(
+    id: Guid,
+    score: number,
+    customerSatisfaction?: number,
+    qualityNotes?: string
+  ): Promise<void> {
+    return ApiService.put<void>(this.getPath(`call-logs/${id}/quality-score`), { id, score, customerSatisfaction, qualityNotes });
+  }
+
+  /**
+   * Delete call log
+   */
+  static async deleteCallLog(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`call-logs/${id}`));
+  }
+
+  // =====================================
+  // MEETINGS
+  // =====================================
+
+  /**
+   * Get all meetings with filters
+   */
+  static async getMeetings(filters?: MeetingFilters): Promise<PaginatedResponse<MeetingDto>> {
+    return ApiService.get<PaginatedResponse<MeetingDto>>(this.getPath('meetings'), { params: filters });
+  }
+
+  /**
+   * Get meeting by ID
+   */
+  static async getMeeting(id: Guid): Promise<MeetingDto> {
+    return ApiService.get<MeetingDto>(this.getPath(`meetings/${id}`));
+  }
+
+  /**
+   * Create new meeting
+   */
+  static async createMeeting(data: CreateMeetingCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('meetings'), data);
+  }
+
+  /**
+   * Delete meeting
+   */
+  static async deleteMeeting(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`meetings/${id}`));
+  }
+
+  // =====================================
+  // TERRITORIES
+  // =====================================
+
+  /**
+   * Get all territories with filters
+   */
+  static async getTerritories(filters?: TerritoryFilters): Promise<TerritoryDto[]> {
+    return ApiService.get<TerritoryDto[]>(this.getPath('territories'), { params: filters });
+  }
+
+  /**
+   * Get territory by ID
+   */
+  static async getTerritory(id: Guid): Promise<TerritoryDto> {
+    return ApiService.get<TerritoryDto>(this.getPath(`territories/${id}`));
+  }
+
+  /**
+   * Create new territory
+   */
+  static async createTerritory(data: CreateTerritoryCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('territories'), data);
+  }
+
+  /**
+   * Update territory
+   */
+  static async updateTerritory(id: Guid, data: Omit<UpdateTerritoryCommand, 'id'>): Promise<void> {
+    return ApiService.put<void>(this.getPath(`territories/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete territory
+   */
+  static async deleteTerritory(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`territories/${id}`));
+  }
+
+  // =====================================
+  // SALES TEAMS
+  // =====================================
+
+  /**
+   * Get all sales teams with filters
+   */
+  static async getSalesTeams(filters?: SalesTeamFilters): Promise<PaginatedResponse<SalesTeamDto>> {
+    return ApiService.get<PaginatedResponse<SalesTeamDto>>(this.getPath('sales-teams'), { params: filters });
+  }
+
+  /**
+   * Get sales team by ID
+   */
+  static async getSalesTeam(id: Guid): Promise<SalesTeamDto> {
+    return ApiService.get<SalesTeamDto>(this.getPath(`sales-teams/${id}`));
+  }
+
+  /**
+   * Create new sales team
+   */
+  static async createSalesTeam(data: CreateSalesTeamCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('sales-teams'), data);
+  }
+
+  /**
+   * Delete sales team
+   */
+  static async deleteSalesTeam(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`sales-teams/${id}`));
+  }
+
+  // =====================================
+  // COMPETITORS
+  // =====================================
+
+  /**
+   * Get all competitors with filters
+   */
+  static async getCompetitors(filters?: CompetitorFilters): Promise<PaginatedResponse<CompetitorDto>> {
+    return ApiService.get<PaginatedResponse<CompetitorDto>>(this.getPath('competitors'), { params: filters });
+  }
+
+  /**
+   * Get competitor by ID
+   */
+  static async getCompetitor(id: Guid): Promise<CompetitorDto> {
+    return ApiService.get<CompetitorDto>(this.getPath(`competitors/${id}`));
+  }
+
+  /**
+   * Create new competitor
+   */
+  static async createCompetitor(data: CreateCompetitorCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('competitors'), data);
+  }
+
+  /**
+   * Update competitor
+   */
+  static async updateCompetitor(id: Guid, data: Omit<UpdateCompetitorCommand, 'id'>): Promise<CompetitorDto> {
+    return ApiService.put<CompetitorDto>(this.getPath(`competitors/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete competitor
+   */
+  static async deleteCompetitor(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`competitors/${id}`));
+  }
+
+  // =====================================
+  // LOYALTY PROGRAMS
+  // =====================================
+
+  /**
+   * Get all loyalty programs with filters
+   */
+  static async getLoyaltyPrograms(filters?: LoyaltyProgramFilters): Promise<LoyaltyProgramDto[]> {
+    return ApiService.get<LoyaltyProgramDto[]>(this.getPath('loyalty-programs'), { params: filters });
+  }
+
+  /**
+   * Get loyalty program by ID
+   */
+  static async getLoyaltyProgram(id: Guid): Promise<LoyaltyProgramDto> {
+    return ApiService.get<LoyaltyProgramDto>(this.getPath(`loyalty-programs/${id}`));
+  }
+
+  /**
+   * Create new loyalty program
+   */
+  static async createLoyaltyProgram(data: CreateLoyaltyProgramCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('loyalty-programs'), data);
+  }
+
+  /**
+   * Update loyalty program
+   */
+  static async updateLoyaltyProgram(id: Guid, data: Omit<UpdateLoyaltyProgramCommand, 'id'>): Promise<void> {
+    return ApiService.put<void>(this.getPath(`loyalty-programs/${id}`), { id, ...data });
+  }
+
+  /**
+   * Delete loyalty program
+   */
+  static async deleteLoyaltyProgram(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`loyalty-programs/${id}`));
+  }
+
+  // =====================================
+  // REFERRALS
+  // =====================================
+
+  /**
+   * Get all referrals with filters
+   */
+  static async getReferrals(filters?: ReferralFilters): Promise<PaginatedResponse<ReferralDto>> {
+    return ApiService.get<PaginatedResponse<ReferralDto>>(this.getPath('referrals'), { params: filters });
+  }
+
+  /**
+   * Get referral by ID
+   */
+  static async getReferral(id: Guid): Promise<ReferralDto> {
+    return ApiService.get<ReferralDto>(this.getPath(`referrals/${id}`));
+  }
+
+  /**
+   * Create new referral
+   */
+  static async createReferral(data: CreateReferralCommand): Promise<Guid> {
+    return ApiService.post<Guid>(this.getPath('referrals'), data);
+  }
+
+  /**
+   * Delete referral
+   */
+  static async deleteReferral(id: Guid): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`referrals/${id}`));
   }
 }
 

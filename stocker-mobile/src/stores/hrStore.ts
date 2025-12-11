@@ -43,6 +43,8 @@ interface HRState {
     employees: Employee[];
     attendance: Attendance[];
     leaves: Leave[];
+    departments: any[];
+    leaveTypes: any[];
     todayAttendance: Attendance | null;
 
     isLoading: boolean;
@@ -56,12 +58,16 @@ interface HRState {
     checkOut: (location?: string) => Promise<void>;
     createLeave: (data: any) => Promise<void>;
     getDailyAttendance: (date: string) => Promise<void>;
+    fetchDepartments: () => Promise<void>;
+    fetchLeaveTypes: () => Promise<void>;
 }
 
 export const useHRStore = create<HRState>((set, get) => ({
     employees: [],
     attendance: [],
     leaves: [],
+    departments: [],
+    leaveTypes: [],
     todayAttendance: null,
 
     isLoading: false,
@@ -157,6 +163,28 @@ export const useHRStore = create<HRState>((set, get) => ({
             }
         } catch (error) {
             console.error('Fetch daily attendance error:', error);
+        }
+    },
+
+    fetchDepartments: async () => {
+        try {
+            const response = await apiService.hr.getDepartments();
+            if (response.data?.success) {
+                set({ departments: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch departments', error);
+        }
+    },
+
+    fetchLeaveTypes: async () => {
+        try {
+            const response = await apiService.hr.getLeaveTypes();
+            if (response.data?.success) {
+                set({ leaveTypes: response.data.data });
+            }
+        } catch (error) {
+            console.error('Failed to fetch leave types', error);
         }
     }
 }));

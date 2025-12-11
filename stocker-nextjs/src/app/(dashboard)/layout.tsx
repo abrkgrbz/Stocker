@@ -54,6 +54,10 @@ import {
   ReconciliationOutlined,
   RollbackOutlined,
   FileDoneOutlined,
+  PhoneOutlined,
+  ShareAltOutlined,
+  AimOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -87,6 +91,7 @@ const MODULE_MENUS = {
           { key: '/crm/customers', icon: <ContactsOutlined />, label: 'Müşteriler' },
           { key: '/crm/leads', icon: <UserAddOutlined />, label: 'Potansiyeller' },
           { key: '/crm/segments', icon: <GroupOutlined />, label: 'Segmentler' },
+          { key: '/crm/referrals', icon: <ShareAltOutlined />, label: 'Referanslar' },
         ],
       },
       {
@@ -97,6 +102,9 @@ const MODULE_MENUS = {
           { key: '/crm/opportunities', icon: <RiseOutlined />, label: 'Fırsatlar' },
           { key: '/crm/deals', icon: <DollarOutlined />, label: 'Anlaşmalar' },
           { key: '/crm/pipelines', icon: <FunnelPlotOutlined />, label: 'Pipeline' },
+          { key: '/crm/sales-teams', icon: <TeamOutlined />, label: 'Satış Ekipleri' },
+          { key: '/crm/territories', icon: <GlobalOutlined />, label: 'Bölgeler' },
+          { key: '/crm/competitors', icon: <AimOutlined />, label: 'Rakipler' },
         ],
       },
       {
@@ -105,7 +113,17 @@ const MODULE_MENUS = {
         label: 'Aktiviteler',
         children: [
           { key: '/crm/activities', icon: <CalendarOutlined />, label: 'Aktiviteler' },
+          { key: '/crm/meetings', icon: <CalendarOutlined />, label: 'Toplantılar' },
+          { key: '/crm/call-logs', icon: <PhoneOutlined />, label: 'Arama Kayıtları' },
           { key: '/crm/campaigns', icon: <NotificationOutlined />, label: 'Kampanyalar' },
+        ],
+      },
+      {
+        key: 'crm-loyalty',
+        icon: <GiftOutlined />,
+        label: 'Sadakat',
+        children: [
+          { key: '/crm/loyalty-programs', icon: <GiftOutlined />, label: 'Sadakat Programları' },
         ],
       },
       {
@@ -553,6 +571,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/shifts': '/hr/shifts',
       '/hr/work-schedules': '/hr/work-schedules',
       '/hr/work-locations': '/hr/work-locations',
+      // CRM Module - New Entities
+      '/crm/call-logs': '/crm/call-logs',
+      '/crm/meetings': '/crm/meetings',
+      '/crm/territories': '/crm/territories',
+      '/crm/sales-teams': '/crm/sales-teams',
+      '/crm/competitors': '/crm/competitors',
+      '/crm/loyalty-programs': '/crm/loyalty-programs',
+      '/crm/referrals': '/crm/referrals',
       // Purchase Module
       '/purchase/suppliers': '/purchase/suppliers',
       '/purchase/evaluations': '/purchase/evaluations',

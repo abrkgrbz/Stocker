@@ -30,6 +30,32 @@ import type {
   CreateWorkflowCommand,
   ExecuteWorkflowCommand,
   WorkflowExecutionResponse,
+  // New CRM types
+  CallLogDto,
+  CallLogFilters,
+  CreateCallLogCommand,
+  CallOutcome,
+  MeetingDto,
+  MeetingFilters,
+  CreateMeetingCommand,
+  TerritoryDto,
+  TerritoryFilters,
+  CreateTerritoryCommand,
+  UpdateTerritoryCommand,
+  SalesTeamDto,
+  SalesTeamFilters,
+  CreateSalesTeamCommand,
+  CompetitorDto,
+  CompetitorFilters,
+  CreateCompetitorCommand,
+  UpdateCompetitorCommand,
+  LoyaltyProgramDto,
+  LoyaltyProgramFilters,
+  CreateLoyaltyProgramCommand,
+  UpdateLoyaltyProgramCommand,
+  ReferralDto,
+  ReferralFilters,
+  CreateReferralCommand,
 } from '../services/crm.types';
 import type { Activity, Lead, Deal, Customer } from '../services/crm.service';
 
@@ -104,6 +130,35 @@ export const crmKeys = {
   // Workflows
   workflows: ['crm', 'workflows'] as const,
   workflow: (id: number) => ['crm', 'workflows', id] as const,
+
+  // Call Logs
+  callLogs: ['crm', 'call-logs'] as const,
+  callLog: (id: Guid) => ['crm', 'call-logs', id] as const,
+  callLogsByCustomer: (customerId: Guid) => ['crm', 'call-logs', 'customer', customerId] as const,
+
+  // Meetings
+  meetings: ['crm', 'meetings'] as const,
+  meeting: (id: Guid) => ['crm', 'meetings', id] as const,
+
+  // Territories
+  territories: ['crm', 'territories'] as const,
+  territory: (id: Guid) => ['crm', 'territories', id] as const,
+
+  // Sales Teams
+  salesTeams: ['crm', 'sales-teams'] as const,
+  salesTeam: (id: Guid) => ['crm', 'sales-teams', id] as const,
+
+  // Competitors
+  competitors: ['crm', 'competitors'] as const,
+  competitor: (id: Guid) => ['crm', 'competitors', id] as const,
+
+  // Loyalty Programs
+  loyaltyPrograms: ['crm', 'loyalty-programs'] as const,
+  loyaltyProgram: (id: Guid) => ['crm', 'loyalty-programs', id] as const,
+
+  // Referrals
+  referrals: ['crm', 'referrals'] as const,
+  referral: (id: Guid) => ['crm', 'referrals', id] as const,
 };
 
 // =====================================
@@ -1762,6 +1817,460 @@ export function useDeactivateWorkflow() {
     },
     onError: (error) => {
       showApiError(error, 'Workflow devre dışı bırakılamadı');
+    },
+  });
+}
+
+// =====================================
+// CALL LOGS HOOKS
+// =====================================
+
+export function useCallLogs(filters?: CallLogFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.callLogs, filters],
+    queryFn: () => CRMService.getCallLogs(filters),
+  });
+}
+
+export function useCallLog(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.callLog(id),
+    queryFn: () => CRMService.getCallLog(id),
+    enabled: !!id,
+  });
+}
+
+export function useCallLogsByCustomer(customerId: Guid) {
+  return useQuery({
+    queryKey: crmKeys.callLogsByCustomer(customerId),
+    queryFn: () => CRMService.getCallLogsByCustomer(customerId),
+    enabled: !!customerId,
+  });
+}
+
+export function useCreateCallLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCallLogCommand) => CRMService.createCallLog(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.callLogs });
+      showSuccess('Arama kaydı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Arama kaydı oluşturulamadı');
+    },
+  });
+}
+
+export function useCompleteCallLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, outcome, outcomeDescription }: { id: Guid; outcome: CallOutcome; outcomeDescription?: string }) =>
+      CRMService.completeCallLog(id, outcome, outcomeDescription),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.callLogs });
+      showSuccess('Arama tamamlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Arama tamamlanamadı');
+    },
+  });
+}
+
+export function useSetCallLogFollowUp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, followUpDate, followUpNote }: { id: Guid; followUpDate: DateTime; followUpNote?: string }) =>
+      CRMService.setCallLogFollowUp(id, followUpDate, followUpNote),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.callLogs });
+      showSuccess('Takip tarihi ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Takip tarihi ayarlanamadı');
+    },
+  });
+}
+
+export function useSetCallLogQualityScore() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, score, customerSatisfaction, qualityNotes }: {
+      id: Guid;
+      score: number;
+      customerSatisfaction?: number;
+      qualityNotes?: string;
+    }) => CRMService.setCallLogQualityScore(id, score, customerSatisfaction, qualityNotes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.callLogs });
+      showSuccess('Kalite puanı ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kalite puanı ayarlanamadı');
+    },
+  });
+}
+
+export function useDeleteCallLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteCallLog(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.callLogs });
+      showSuccess('Arama kaydı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Arama kaydı silinemedi');
+    },
+  });
+}
+
+// =====================================
+// MEETINGS HOOKS
+// =====================================
+
+export function useMeetings(filters?: MeetingFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.meetings, filters],
+    queryFn: () => CRMService.getMeetings(filters),
+  });
+}
+
+export function useMeeting(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.meeting(id),
+    queryFn: () => CRMService.getMeeting(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateMeeting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateMeetingCommand) => CRMService.createMeeting(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.meetings });
+      showSuccess('Toplantı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Toplantı oluşturulamadı');
+    },
+  });
+}
+
+export function useDeleteMeeting() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteMeeting(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.meetings });
+      showSuccess('Toplantı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Toplantı silinemedi');
+    },
+  });
+}
+
+// =====================================
+// TERRITORIES HOOKS
+// =====================================
+
+export function useTerritories(filters?: TerritoryFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.territories, filters],
+    queryFn: () => CRMService.getTerritories(filters),
+  });
+}
+
+export function useTerritory(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.territory(id),
+    queryFn: () => CRMService.getTerritory(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateTerritoryCommand) => CRMService.createTerritory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.territories });
+      showSuccess('Bölge oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bölge oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: Omit<UpdateTerritoryCommand, 'id'> }) =>
+      CRMService.updateTerritory(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.territory(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.territories });
+      showSuccess('Bölge güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bölge güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteTerritory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.territories });
+      showSuccess('Bölge silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bölge silinemedi');
+    },
+  });
+}
+
+// =====================================
+// SALES TEAMS HOOKS
+// =====================================
+
+export function useSalesTeams(filters?: SalesTeamFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.salesTeams, filters],
+    queryFn: () => CRMService.getSalesTeams(filters),
+  });
+}
+
+export function useSalesTeam(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.salesTeam(id),
+    queryFn: () => CRMService.getSalesTeam(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateSalesTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSalesTeamCommand) => CRMService.createSalesTeam(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeams });
+      showSuccess('Satış ekibi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış ekibi oluşturulamadı');
+    },
+  });
+}
+
+export function useDeleteSalesTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteSalesTeam(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.salesTeams });
+      showSuccess('Satış ekibi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış ekibi silinemedi');
+    },
+  });
+}
+
+// =====================================
+// COMPETITORS HOOKS
+// =====================================
+
+export function useCompetitors(filters?: CompetitorFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.competitors, filters],
+    queryFn: () => CRMService.getCompetitors(filters),
+  });
+}
+
+export function useCompetitor(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.competitor(id),
+    queryFn: () => CRMService.getCompetitor(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateCompetitor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCompetitorCommand) => CRMService.createCompetitor(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.competitors });
+      showSuccess('Rakip oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Rakip oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateCompetitor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: Omit<UpdateCompetitorCommand, 'id'> }) =>
+      CRMService.updateCompetitor(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.competitor(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.competitors });
+      showSuccess('Rakip güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Rakip güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteCompetitor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteCompetitor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.competitors });
+      showSuccess('Rakip silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Rakip silinemedi');
+    },
+  });
+}
+
+// =====================================
+// LOYALTY PROGRAMS HOOKS
+// =====================================
+
+export function useLoyaltyPrograms(filters?: LoyaltyProgramFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.loyaltyPrograms, filters],
+    queryFn: () => CRMService.getLoyaltyPrograms(filters),
+  });
+}
+
+export function useLoyaltyProgram(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.loyaltyProgram(id),
+    queryFn: () => CRMService.getLoyaltyProgram(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateLoyaltyProgram() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateLoyaltyProgramCommand) => CRMService.createLoyaltyProgram(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyPrograms });
+      showSuccess('Sadakat programı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat programı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateLoyaltyProgram() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: Guid; data: Omit<UpdateLoyaltyProgramCommand, 'id'> }) =>
+      CRMService.updateLoyaltyProgram(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyProgram(variables.id) });
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyPrograms });
+      showSuccess('Sadakat programı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat programı güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteLoyaltyProgram() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteLoyaltyProgram(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.loyaltyPrograms });
+      showSuccess('Sadakat programı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sadakat programı silinemedi');
+    },
+  });
+}
+
+// =====================================
+// REFERRALS HOOKS
+// =====================================
+
+export function useReferrals(filters?: ReferralFilters) {
+  return useQuery({
+    queryKey: [...crmKeys.referrals, filters],
+    queryFn: () => CRMService.getReferrals(filters),
+  });
+}
+
+export function useReferral(id: Guid) {
+  return useQuery({
+    queryKey: crmKeys.referral(id),
+    queryFn: () => CRMService.getReferral(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateReferral() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateReferralCommand) => CRMService.createReferral(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.referrals });
+      showSuccess('Referans oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Referans oluşturulamadı');
+    },
+  });
+}
+
+export function useDeleteReferral() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: Guid) => CRMService.deleteReferral(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.referrals });
+      showSuccess('Referans silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Referans silinemedi');
     },
   });
 }

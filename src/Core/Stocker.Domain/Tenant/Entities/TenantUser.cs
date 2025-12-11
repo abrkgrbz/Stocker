@@ -29,6 +29,8 @@ public sealed class TenantUser : TenantAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
+    public string? PasswordResetToken { get; private set; }
+    public DateTime? PasswordResetTokenExpiry { get; private set; }
     public IReadOnlyList<UserRole> UserRoles => _userRoles.AsReadOnly();
     public IReadOnlyList<UserPermission> UserPermissions => _userPermissions.AsReadOnly();
 
@@ -268,4 +270,45 @@ public sealed class TenantUser : TenantAggregateRoot
     public string GetFullName() => $"{FirstName} {LastName}";
 
     public bool IsActive() => Status == TenantUserStatus.Active;
+
+    public void GeneratePasswordResetToken()
+    {
+        var bytes = new byte[32];
+        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(bytes);
+        }
+        PasswordResetToken = Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
+        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1); // Token expires in 1 hour
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool ValidatePasswordResetToken(string token)
+    {
+        return PasswordResetToken == token &&
+               PasswordResetTokenExpiry.HasValue &&
+               PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+    }
+
+    public void ResetPassword(string newPasswordHash, string resetToken)
+    {
+        if (!ValidatePasswordResetToken(resetToken))
+        {
+            throw new InvalidOperationException("Invalid or expired password reset token.");
+        }
+
+        PasswordHash = newPasswordHash;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePassword(string newPasswordHash)
+    {
+        PasswordHash = newPasswordHash;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

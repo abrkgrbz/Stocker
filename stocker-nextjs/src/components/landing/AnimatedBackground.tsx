@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 // Fixed particle positions to avoid hydration mismatch
 const particlePositions = [
@@ -27,70 +28,89 @@ const particlePositions = [
 ];
 
 export default function AnimatedBackground() {
+  // Delay animations until after hydration to prevent flicker
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // Small delay to ensure smooth initial render
+    const timer = setTimeout(() => setIsMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-      {/* Gradient Orbs */}
-      <motion.div
-        className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-      <motion.div
-        className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.2, 0.4, 0.2],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 1,
-        }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-500/25 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.4, 1],
-          opacity: [0.25, 0.45, 0.25],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 2,
-        }}
-      />
+      {/* Static gradient orbs - always visible */}
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-500/25 rounded-full blur-3xl" />
 
-      {/* Floating Particles */}
-      {particlePositions.map((particle, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
-          style={{
-            left: `${particle.left}%`,
-            top: `${particle.top}%`,
-          }}
-          animate={{
-            y: [0, -100, 0],
-            x: [0, (i % 2 === 0 ? 20 : -20), 0],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: 5 + (i % 3) * 2,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: particle.delay,
-          }}
-        />
-      ))}
+      {/* Animated overlays - only after mount to prevent flicker */}
+      {isMounted && (
+        <>
+          <motion.div
+            className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+          <motion.div
+            className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: 1,
+            }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-500/25 rounded-full blur-3xl"
+            animate={{
+              scale: [1, 1.4, 1],
+              opacity: [0.25, 0.45, 0.25],
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: 2,
+            }}
+          />
+
+          {/* Floating Particles */}
+          {particlePositions.map((particle, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
+              style={{
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{
+                y: [0, -100, 0],
+                x: [0, (i % 2 === 0 ? 20 : -20), 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 5 + (i % 3) * 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: particle.delay,
+              }}
+            />
+          ))}
+        </>
+      )}
 
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:64px_64px]" />

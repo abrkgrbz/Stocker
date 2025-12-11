@@ -52,6 +52,33 @@ public class HRDbContext : DbContext, IUnitOfWork
     public DbSet<Announcement> Announcements { get; set; } = null!;
     public DbSet<AnnouncementAcknowledgment> AnnouncementAcknowledgments { get; set; } = null!;
 
+    // Career and Development
+    public DbSet<CareerPath> CareerPaths { get; set; } = null!;
+    public DbSet<Certification> Certifications { get; set; } = null!;
+    public DbSet<EmployeeSkill> EmployeeSkills { get; set; } = null!;
+    public DbSet<SuccessionPlan> SuccessionPlans { get; set; } = null!;
+
+    // Disciplinary and Grievance
+    public DbSet<DisciplinaryAction> DisciplinaryActions { get; set; } = null!;
+    public DbSet<Grievance> Grievances { get; set; } = null!;
+
+    // Assets and Benefits
+    public DbSet<EmployeeAsset> EmployeeAssets { get; set; } = null!;
+    public DbSet<EmployeeBenefit> EmployeeBenefits { get; set; } = null!;
+
+    // Recruitment
+    public DbSet<JobPosting> JobPostings { get; set; } = null!;
+    public DbSet<JobApplication> JobApplications { get; set; } = null!;
+    public DbSet<Interview> Interviews { get; set; } = null!;
+    public DbSet<Onboarding> Onboardings { get; set; } = null!;
+
+    // Time Management
+    public DbSet<Overtime> Overtimes { get; set; } = null!;
+    public DbSet<TimeSheet> TimeSheets { get; set; } = null!;
+
+    // Payroll Extended
+    public DbSet<Payslip> Payslips { get; set; } = null!;
+
     // Audit Logs
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
@@ -114,6 +141,33 @@ public class HRDbContext : DbContext, IUnitOfWork
             // Announcements
             modelBuilder.Entity<Announcement>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<AnnouncementAcknowledgment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Career and Development
+            modelBuilder.Entity<CareerPath>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Certification>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<EmployeeSkill>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<SuccessionPlan>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Disciplinary and Grievance
+            modelBuilder.Entity<DisciplinaryAction>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Grievance>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Assets and Benefits
+            modelBuilder.Entity<EmployeeAsset>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<EmployeeBenefit>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Recruitment
+            modelBuilder.Entity<JobPosting>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<JobApplication>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Interview>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Onboarding>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Time Management
+            modelBuilder.Entity<Overtime>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<TimeSheet>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Payroll Extended
+            modelBuilder.Entity<Payslip>().HasQueryFilter(e => e.TenantId == tenantId.Value);
 
             // Audit Log entity
             modelBuilder.Entity<AuditLog>().HasQueryFilter(e => e.TenantId == tenantId.Value);
