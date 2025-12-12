@@ -9,7 +9,9 @@ import * as Sentry from '@sentry/react';
 import LoginPage from './features/auth/LoginPage';
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
 import MasterLayout from './layouts/MasterLayout';
+import CMSLayout from './layouts/CMSLayout';
 import TwoFactorVerifyPage from './pages/TwoFactorVerifyPage';
+import AdminHome from './pages/AdminHome';
 
 // Lazy loaded pages (loaded on demand)
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -49,6 +51,12 @@ const AuditLogsPage = lazy(() => import('./pages/AuditLogs'));
 const ApiStatusPage = lazy(() => import('./pages/ApiStatus'));
 const HangfireDashboard = lazy(() => import('./pages/Hangfire/HangfireDashboard'));
 const StoragePage = lazy(() => import('./pages/Storage'));
+
+// CMS Pages
+const CMSDashboard = lazy(() => import('./pages/CMS/Dashboard'));
+const CMSPages = lazy(() => import('./pages/CMS/Pages'));
+const CMSBlog = lazy(() => import('./pages/CMS/Blog'));
+const CMSFAQ = lazy(() => import('./pages/CMS/FAQ'));
 
 // Loading component
 const PageLoader: React.FC = () => (
@@ -93,6 +101,60 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-2fa" element={<TwoFactorVerifyPage />} />
+
+        {/* Admin Home - Panel Selection */}
+        <Route
+          path="/admin-home"
+          element={
+            <ProtectedRoute>
+              <AdminHome />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CMS Layout and Routes */}
+        <Route
+          path="/cms"
+          element={
+            <ProtectedRoute>
+              <CMSLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/cms/dashboard" replace />} />
+          <Route path="dashboard" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSDashboard />
+            </Suspense>
+          } />
+          <Route path="pages" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSPages />
+            </Suspense>
+          } />
+          <Route path="pages/*" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSPages />
+            </Suspense>
+          } />
+          <Route path="blog" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSBlog />
+            </Suspense>
+          } />
+          <Route path="blog/*" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSBlog />
+            </Suspense>
+          } />
+          <Route path="faq" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSFAQ />
+            </Suspense>
+          } />
+        </Route>
+
+        {/* Tenant Admin Layout and Routes */}
         <Route
           path="/"
           element={
@@ -101,7 +163,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<Navigate to="/admin-home" replace />} />
           <Route path="dashboard" element={
             <Suspense fallback={<PageLoader />}>
               <Dashboard />
@@ -293,7 +355,7 @@ function App() {
             </Suspense>
           } />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/admin-home" replace />} />
           </SentryRoutes>
         </BrowserRouter>
       </AntdApp>

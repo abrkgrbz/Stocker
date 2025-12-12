@@ -58,6 +58,14 @@ import {
   ShareAltOutlined,
   AimOutlined,
   GlobalOutlined,
+  RocketOutlined,
+  ToolOutlined,
+  HeartOutlined,
+  TrophyOutlined,
+  SolutionOutlined,
+  ExclamationCircleOutlined,
+  CrownOutlined,
+  ScheduleOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -293,6 +301,9 @@ const MODULE_MENUS = {
           { key: '/hr/employees', icon: <TeamOutlined />, label: 'Çalışanlar' },
           { key: '/hr/departments', icon: <ApartmentOutlined />, label: 'Departmanlar' },
           { key: '/hr/positions', icon: <SafetyCertificateOutlined />, label: 'Pozisyonlar' },
+          { key: '/hr/employee-skills', icon: <ToolOutlined />, label: 'Yetkinlikler' },
+          { key: '/hr/employee-assets', icon: <InboxOutlined />, label: 'Zimmetler' },
+          { key: '/hr/employee-benefits', icon: <HeartOutlined />, label: 'Yan Haklar' },
         ],
       },
       {
@@ -304,6 +315,7 @@ const MODULE_MENUS = {
           { key: '/hr/leaves', icon: <CalendarOutlined />, label: 'İzinler' },
           { key: '/hr/leave-types', icon: <TagsOutlined />, label: 'İzin Türleri' },
           { key: '/hr/holidays', icon: <CalendarOutlined />, label: 'Tatil Günleri' },
+          { key: '/hr/time-sheets', icon: <ScheduleOutlined />, label: 'Puantaj' },
         ],
       },
       {
@@ -312,6 +324,7 @@ const MODULE_MENUS = {
         label: 'Bordro & Masraf',
         children: [
           { key: '/hr/payroll', icon: <DollarOutlined />, label: 'Bordro' },
+          { key: '/hr/payslips', icon: <FileTextOutlined />, label: 'Bordro Makbuzları' },
           { key: '/hr/expenses', icon: <WalletOutlined />, label: 'Masraflar' },
         ],
       },
@@ -322,6 +335,8 @@ const MODULE_MENUS = {
         children: [
           { key: '/hr/performance', icon: <RiseOutlined />, label: 'Değerlendirmeler' },
           { key: '/hr/goals', icon: <FunnelPlotOutlined />, label: 'Hedefler' },
+          { key: '/hr/career-paths', icon: <TrophyOutlined />, label: 'Kariyer Yolları' },
+          { key: '/hr/succession-plans', icon: <CrownOutlined />, label: 'Yedekleme Planları' },
         ],
       },
       {
@@ -339,6 +354,9 @@ const MODULE_MENUS = {
         label: 'İşe Alım',
         children: [
           { key: '/hr/job-postings', icon: <FileTextOutlined />, label: 'İş İlanları' },
+          { key: '/hr/job-applications', icon: <SolutionOutlined />, label: 'Başvurular' },
+          { key: '/hr/interviews', icon: <CalendarOutlined />, label: 'Mülakatlar' },
+          { key: '/hr/onboardings', icon: <RocketOutlined />, label: 'İşe Alışım' },
         ],
       },
       {
@@ -347,6 +365,15 @@ const MODULE_MENUS = {
         label: 'Fazla Mesai',
         children: [
           { key: '/hr/overtimes', icon: <ClockCircleOutlined />, label: 'Fazla Mesailer' },
+        ],
+      },
+      {
+        key: 'hr-relations',
+        icon: <TeamOutlined />,
+        label: 'Çalışan İlişkileri',
+        children: [
+          { key: '/hr/grievances', icon: <ExclamationCircleOutlined />, label: 'Şikayetler' },
+          { key: '/hr/disciplinary-actions', icon: <WarningOutlined />, label: 'Disiplin İşlemleri' },
         ],
       },
       {
@@ -579,6 +606,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/leave-types': '/hr/leave-types',
       '/hr/holidays': '/hr/holidays',
       '/hr/payroll': '/hr/payroll',
+      '/hr/payslips': '/hr/payslips',
       '/hr/expenses': '/hr/expenses',
       '/hr/performance': '/hr/performance',
       '/hr/goals': '/hr/goals',
@@ -591,6 +619,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/job-postings': '/hr/job-postings',
       '/hr/certifications': '/hr/certifications',
       '/hr/overtimes': '/hr/overtimes',
+      // HR Module - New Entities
+      '/hr/career-paths': '/hr/career-paths',
+      '/hr/disciplinary-actions': '/hr/disciplinary-actions',
+      '/hr/employee-assets': '/hr/employee-assets',
+      '/hr/employee-benefits': '/hr/employee-benefits',
+      '/hr/employee-skills': '/hr/employee-skills',
+      '/hr/grievances': '/hr/grievances',
+      '/hr/interviews': '/hr/interviews',
+      '/hr/job-applications': '/hr/job-applications',
+      '/hr/onboardings': '/hr/onboardings',
+      '/hr/succession-plans': '/hr/succession-plans',
+      '/hr/time-sheets': '/hr/time-sheets',
       // CRM Module - New Entities
       '/crm/call-logs': '/crm/call-logs',
       '/crm/meetings': '/crm/meetings',
