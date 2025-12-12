@@ -3,9 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copy package files (context is repo root, so prefix with stocker-cms/)
+COPY stocker-cms/package*.json ./
+COPY stocker-cms/prisma ./prisma/
 
 # Install dependencies
 RUN npm ci
@@ -14,7 +14,8 @@ RUN npm ci
 RUN npx prisma generate
 
 # Copy source code
-COPY . .
+COPY stocker-cms/src ./src
+COPY stocker-cms/tsconfig.json ./
 
 # Build TypeScript
 RUN npm run build

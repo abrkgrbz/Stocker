@@ -6,8 +6,8 @@ version: '3.8'
 services:
   cms:
     build:
-      context: ../../../../stocker-cms
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./stocker-cms/Dockerfile
     container_name: stocker-cms
     restart: unless-stopped
     environment:
@@ -21,7 +21,8 @@ services:
       # ==================================
       # DATABASE CONNECTION (PostgreSQL)
       # ==================================
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-stocker_admin}:${POSTGRES_PASSWORD}@postgres:5432/stocker_cms?schema=public
+      # Using external postgres container on coolify network
+      - DATABASE_URL=${DATABASE_URL:-postgresql://stocker_admin:password@postgres:5432/stocker_cms?schema=public}
 
       # ==================================
       # JWT AUTHENTICATION
@@ -43,10 +44,6 @@ services:
     volumes:
       # Persist uploaded media files
       - cms_uploads:/app/uploads
-
-    depends_on:
-      postgres:
-        condition: service_healthy
 
     networks:
       - coolify
