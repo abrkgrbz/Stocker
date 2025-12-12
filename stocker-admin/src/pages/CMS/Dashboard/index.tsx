@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Row, Col, Statistic, Typography, Table, Tag, Space, Button, Progress, List, Avatar } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Table, Tag, Space, Button, List, Avatar, Spin } from 'antd';
 import {
   FileTextOutlined,
   ReadOutlined,
@@ -9,74 +9,124 @@ import {
   PlusOutlined,
   RiseOutlined,
   GlobalOutlined,
-  ClockCircleOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { usePages, useBlogPosts, useFAQItems } from '../../../hooks/useCMS';
+import { PageDto, BlogPostListDto } from '../../../services/api/cmsService';
 
 const { Title, Text } = Typography;
 
 const CMSDashboard: React.FC = () => {
   const navigate = useNavigate();
 
+  // API hooks
+  const { data: pages = [], isLoading: pagesLoading } = usePages();
+  const { data: blogPosts = [], isLoading: blogLoading } = useBlogPosts();
+  const { data: faqItems = [], isLoading: faqLoading } = useFAQItems();
+
+  const isLoading = pagesLoading || blogLoading || faqLoading;
+
+  // Calculate stats from API data
   const stats = [
     {
       title: 'Toplam Sayfa',
-      value: 12,
+      value: pages.length,
       icon: <FileTextOutlined />,
       color: '#667eea',
-      change: '+2',
-      changeType: 'increase',
+      published: pages.filter(p => p.status === 'Published').length,
     },
     {
       title: 'Blog Yazısı',
-      value: 24,
+      value: blogPosts.length,
       icon: <ReadOutlined />,
       color: '#f093fb',
-      change: '+5',
-      changeType: 'increase',
+      published: blogPosts.filter(p => p.status === 'Published').length,
     },
     {
       title: 'SSS',
-      value: 18,
+      value: faqItems.length,
       icon: <QuestionCircleOutlined />,
       color: '#52c41a',
-      change: '+3',
-      changeType: 'increase',
+      published: faqItems.filter(f => f.isActive).length,
     },
     {
-      title: 'Aylık Görüntüleme',
-      value: 45620,
+      title: 'Toplam Görüntüleme',
+      value: blogPosts.reduce((sum, p) => sum + p.viewCount, 0),
       icon: <EyeOutlined />,
       color: '#1890ff',
-      change: '+12%',
-      changeType: 'increase',
+      published: 0,
     },
   ];
 
-  const recentPages = [
-    { key: '1', name: 'Hakkımızda', path: '/about', status: 'published', updatedAt: '2 saat önce', views: 1234 },
-    { key: '2', name: 'İletişim', path: '/contact', status: 'published', updatedAt: '5 saat önce', views: 856 },
-    { key: '3', name: 'SSS', path: '/faq', status: 'published', updatedAt: '1 gün önce', views: 2341 },
-    { key: '4', name: 'Kariyer', path: '/careers', status: 'draft', updatedAt: '2 gün önce', views: 432 },
-    { key: '5', name: 'Demo', path: '/demo', status: 'published', updatedAt: '3 gün önce', views: 3456 },
-  ];
+  // Get recent pages (sorted by updatedAt or createdAt)
+  const recentPages = [...pages]
+    .sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
-  const recentBlogPosts = [
-    { id: 1, title: 'Stok Yönetiminde AI Trendleri', category: 'Teknoloji', date: '10 Ara 2024', views: 1520 },
-    { id: 2, title: 'E-ticarette Envanter Optimizasyonu', category: 'E-ticaret', date: '5 Ara 2024', views: 980 },
-    { id: 3, title: 'Depo Verimliliği Artırma', category: 'Operasyon', date: '28 Kas 2024', views: 756 },
-  ];
+  // Get recent blog posts
+  const recentBlogPosts = [...blogPosts]
+    .sort((a, b) => {
+      const dateA = new Date(a.publishedAt || '').getTime() || 0;
+      const dateB = new Date(b.publishedAt || '').getTime() || 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 1) return 'Az önce';
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    return date.toLocaleDateString('tr-TR');
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Published':
+        return 'green';
+      case 'Draft':
+        return 'orange';
+      case 'Archived':
+        return 'red';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'Published':
+        return 'Yayında';
+      case 'Draft':
+        return 'Taslak';
+      case 'Archived':
+        return 'Arşiv';
+      default:
+        return status;
+    }
+  };
 
   const pageColumns = [
     {
       title: 'Sayfa',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string, record: any) => (
+      dataIndex: 'title',
+      key: 'title',
+      render: (text: string, record: PageDto) => (
         <Space>
           <FileTextOutlined />
           <span>{text}</span>
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.path}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.slug}</Text>
         </Space>
       ),
     },
@@ -85,33 +135,35 @@ const CMSDashboard: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Tag color={status === 'published' ? 'green' : 'orange'}>
-          {status === 'published' ? 'Yayında' : 'Taslak'}
+        <Tag color={getStatusColor(status)}>
+          {getStatusText(status)}
         </Tag>
       ),
     },
     {
-      title: 'Görüntüleme',
-      dataIndex: 'views',
-      key: 'views',
-      render: (views: number) => views.toLocaleString(),
-    },
-    {
       title: 'Son Güncelleme',
-      dataIndex: 'updatedAt',
       key: 'updatedAt',
+      render: (_: any, record: PageDto) => formatDate(record.updatedAt || record.createdAt),
     },
     {
       title: 'İşlem',
       key: 'action',
-      render: (_: any, record: any) => (
+      render: (_: any, record: PageDto) => (
         <Space>
-          <Button type="text" icon={<EditOutlined />} onClick={() => navigate(`/cms/pages${record.path}`)} />
-          <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(record.path, '_blank')} />
+          <Button type="text" icon={<EditOutlined />} onClick={() => navigate('/cms/pages')} />
+          <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(record.slug, '_blank')} />
         </Space>
       ),
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 24 }}>
@@ -134,9 +186,11 @@ const CMSDashboard: React.FC = () => {
                 }
                 value={stat.value}
                 suffix={
-                  <Text type="success" style={{ fontSize: 14 }}>
-                    <RiseOutlined /> {stat.change}
-                  </Text>
+                  stat.published > 0 ? (
+                    <Text type="success" style={{ fontSize: 14 }}>
+                      <RiseOutlined /> {stat.published} yayında
+                    </Text>
+                  ) : null
                 }
                 valueStyle={{ color: stat.color }}
               />
@@ -156,7 +210,7 @@ const CMSDashboard: React.FC = () => {
               </Space>
             }
             extra={
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/cms/pages/new')}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/cms/pages')}>
                 Yeni Sayfa
               </Button>
             }
@@ -166,6 +220,8 @@ const CMSDashboard: React.FC = () => {
               columns={pageColumns}
               pagination={false}
               size="small"
+              rowKey="id"
+              locale={{ emptyText: 'Henüz sayfa eklenmemiş' }}
             />
           </Card>
         </Col>
@@ -188,10 +244,11 @@ const CMSDashboard: React.FC = () => {
             <List
               itemLayout="horizontal"
               dataSource={recentBlogPosts}
-              renderItem={(item) => (
+              locale={{ emptyText: 'Henüz blog yazısı eklenmemiş' }}
+              renderItem={(item: BlogPostListDto) => (
                 <List.Item
                   actions={[
-                    <Button type="text" icon={<EditOutlined />} key="edit" onClick={() => navigate(`/cms/blog/${item.id}`)} />,
+                    <Button type="text" icon={<EditOutlined />} key="edit" onClick={() => navigate('/cms/blog')} />,
                   ]}
                 >
                   <List.Item.Meta
@@ -199,9 +256,9 @@ const CMSDashboard: React.FC = () => {
                     title={item.title}
                     description={
                       <Space>
-                        <Tag>{item.category}</Tag>
-                        <Text type="secondary">{item.date}</Text>
-                        <Text type="secondary"><EyeOutlined /> {item.views}</Text>
+                        {item.categoryName && <Tag>{item.categoryName}</Tag>}
+                        <Text type="secondary">{formatDate(item.publishedAt)}</Text>
+                        <Text type="secondary"><EyeOutlined /> {item.viewCount}</Text>
                       </Space>
                     }
                   />
@@ -213,7 +270,7 @@ const CMSDashboard: React.FC = () => {
           {/* Quick Actions */}
           <Card title="Hızlı İşlemler" style={{ marginTop: 16 }}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button block icon={<PlusOutlined />} onClick={() => navigate('/cms/blog/new')}>
+              <Button block icon={<PlusOutlined />} onClick={() => navigate('/cms/blog')}>
                 Yeni Blog Yazısı
               </Button>
               <Button block icon={<QuestionCircleOutlined />} onClick={() => navigate('/cms/faq')}>
