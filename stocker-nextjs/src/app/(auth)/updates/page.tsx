@@ -1,5 +1,6 @@
 'use client'
 
+import { ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -128,7 +129,7 @@ const updates: Update[] = [
   },
 ];
 
-const typeConfig: Record<UpdateType, { label: string; color: string; bgColor: string; icon: JSX.Element }> = {
+const typeConfig: Record<UpdateType, { label: string; color: string; bgColor: string; icon: ReactNode }> = {
   feature: {
     label: 'Yeni Özellik',
     color: 'text-emerald-400',

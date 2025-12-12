@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -10,14 +10,14 @@ interface DocItem {
   title: string;
   description: string;
   href: string;
-  icon: JSX.Element;
+  icon: ReactNode;
 }
 
 interface DocCategory {
   id: string;
   title: string;
   description: string;
-  icon: JSX.Element;
+  icon: ReactNode;
   color: string;
   items: DocItem[];
 }

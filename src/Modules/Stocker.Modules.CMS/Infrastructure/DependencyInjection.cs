@@ -22,11 +22,33 @@ public static class DependencyInjection
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", CMSDbContext.Schema);
             }));
 
-        // Repositories
+        // Core Repositories
         services.AddScoped<ICMSPageRepository, CMSPageRepository>();
         services.AddScoped<IBlogRepository, BlogRepository>();
         services.AddScoped<IFAQRepository, FAQRepository>();
         services.AddScoped<ICMSSettingRepository, CMSSettingRepository>();
+
+        // Landing Page Repositories
+        services.AddScoped<ITestimonialRepository, TestimonialRepository>();
+        services.AddScoped<IPricingPlanRepository, PricingPlanRepository>();
+        services.AddScoped<IPricingFeatureRepository, PricingFeatureRepository>();
+        services.AddScoped<IFeatureRepository, FeatureRepository>();
+        services.AddScoped<IIndustryRepository, IndustryRepository>();
+        services.AddScoped<IIntegrationRepository, IntegrationRepository>();
+        services.AddScoped<IIntegrationItemRepository, IntegrationItemRepository>();
+        services.AddScoped<IStatRepository, StatRepository>();
+        services.AddScoped<IPartnerRepository, PartnerRepository>();
+        services.AddScoped<IAchievementRepository, AchievementRepository>();
+
+        // Company Page Repositories
+        services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
+        services.AddScoped<ICompanyValueRepository, CompanyValueRepository>();
+        services.AddScoped<IContactInfoRepository, ContactInfoRepository>();
+        services.AddScoped<ISocialLinkRepository, SocialLinkRepository>();
+
+        // Documentation Repositories
+        services.AddScoped<IDocCategoryRepository, DocCategoryRepository>();
+        services.AddScoped<IDocArticleRepository, DocArticleRepository>();
 
         return services;
     }
