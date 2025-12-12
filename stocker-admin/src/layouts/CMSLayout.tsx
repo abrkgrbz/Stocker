@@ -26,6 +26,9 @@ import {
   TranslationOutlined,
   ReloadOutlined,
   SwapOutlined,
+  StarOutlined,
+  BankOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
 import {
   Dropdown,
@@ -101,6 +104,21 @@ const CMSLayout: React.FC = () => {
       path: '/cms/faq',
       name: locale === 'tr' ? 'SSS' : 'FAQ',
       icon: <QuestionCircleOutlined />,
+    },
+    {
+      path: '/cms/landing',
+      name: locale === 'tr' ? 'Landing Page' : 'Landing Page',
+      icon: <StarOutlined />,
+    },
+    {
+      path: '/cms/company',
+      name: locale === 'tr' ? 'Şirket Sayfası' : 'Company Page',
+      icon: <BankOutlined />,
+    },
+    {
+      path: '/cms/docs',
+      name: locale === 'tr' ? 'Dokümantasyon' : 'Documentation',
+      icon: <BookOutlined />,
     },
     {
       path: '/cms/careers',

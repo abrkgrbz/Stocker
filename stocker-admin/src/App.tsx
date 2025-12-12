@@ -1,9 +1,21 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { App as AntdApp, Spin } from 'antd';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './stores/authStore';
 import { SentryErrorBoundary } from './components/ErrorBoundary/SentryErrorBoundary';
 import * as Sentry from '@sentry/react';
+
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Immediate imports (needed right away)
 import LoginPage from './features/auth/LoginPage';
@@ -57,6 +69,9 @@ const CMSDashboard = lazy(() => import('./pages/CMS/Dashboard'));
 const CMSPages = lazy(() => import('./pages/CMS/Pages'));
 const CMSBlog = lazy(() => import('./pages/CMS/Blog'));
 const CMSFAQ = lazy(() => import('./pages/CMS/FAQ'));
+const CMSLanding = lazy(() => import('./pages/CMS/Landing'));
+const CMSCompany = lazy(() => import('./pages/CMS/Company'));
+const CMSDocs = lazy(() => import('./pages/CMS/Docs'));
 
 // Loading component
 const PageLoader: React.FC = () => (
@@ -94,10 +109,11 @@ function App() {
   }, [checkAuth]);
   
   return (
-    <SentryErrorBoundary>
-      <AntdApp>
-        <BrowserRouter>
-          <SentryRoutes>
+    <QueryClientProvider client={queryClient}>
+      <SentryErrorBoundary>
+        <AntdApp>
+          <BrowserRouter>
+            <SentryRoutes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-2fa" element={<TwoFactorVerifyPage />} />
@@ -150,6 +166,21 @@ function App() {
           <Route path="faq" element={
             <Suspense fallback={<PageLoader />}>
               <CMSFAQ />
+            </Suspense>
+          } />
+          <Route path="landing" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSLanding />
+            </Suspense>
+          } />
+          <Route path="company" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSCompany />
+            </Suspense>
+          } />
+          <Route path="docs" element={
+            <Suspense fallback={<PageLoader />}>
+              <CMSDocs />
             </Suspense>
           } />
         </Route>
@@ -356,10 +387,11 @@ function App() {
           } />
         </Route>
         <Route path="*" element={<Navigate to="/admin-home" replace />} />
-          </SentryRoutes>
-        </BrowserRouter>
-      </AntdApp>
-    </SentryErrorBoundary>
+            </SentryRoutes>
+          </BrowserRouter>
+        </AntdApp>
+      </SentryErrorBoundary>
+    </QueryClientProvider>
   );
 }
 
