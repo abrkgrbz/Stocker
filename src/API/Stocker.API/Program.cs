@@ -15,6 +15,7 @@ using Stocker.Modules.Finance.Infrastructure;
 using Stocker.Modules.Inventory;
 using Stocker.Modules.HR;
 using Stocker.Modules.Purchase;
+using Stocker.Modules.CMS;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
@@ -234,6 +235,13 @@ if (enabledModules.GetValue<bool>("Purchase"))
 {
     Log.Information("Loading Purchase Module...");
     builder.Services.AddPurchaseModule(builder.Configuration);
+}
+
+// CMS Module (always enabled for landing page management)
+if (enabledModules.GetValue<bool>("CMS", true))
+{
+    Log.Information("Loading CMS Module...");
+    builder.Services.AddCMSModule(builder.Configuration);
 }
 
 // SignalR Services

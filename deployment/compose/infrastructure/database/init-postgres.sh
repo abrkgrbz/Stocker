@@ -9,20 +9,22 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE stocker_master;
     CREATE DATABASE stocker_tenant;
     CREATE DATABASE stocker_hangfire;
-    CREATE DATABASE stocker_cms;
 
     -- Grant privileges
     GRANT ALL PRIVILEGES ON DATABASE stocker_master TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE stocker_tenant TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE stocker_hangfire TO $POSTGRES_USER;
-    GRANT ALL PRIVILEGES ON DATABASE stocker_cms TO $POSTGRES_USER;
 
     -- Connect to each database and create schemas
     \c stocker_master
     CREATE SCHEMA IF NOT EXISTS master;
+    CREATE SCHEMA IF NOT EXISTS cms;
     GRANT ALL ON SCHEMA master TO $POSTGRES_USER;
+    GRANT ALL ON SCHEMA cms TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA master TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA master TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA cms TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA cms TO $POSTGRES_USER;
 
     \c stocker_tenant
     CREATE SCHEMA IF NOT EXISTS tenant;
@@ -39,16 +41,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL ON SCHEMA hangfire TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA hangfire TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA hangfire TO $POSTGRES_USER;
-
-    \c stocker_cms
-    CREATE SCHEMA IF NOT EXISTS public;
-    GRANT ALL ON SCHEMA public TO $POSTGRES_USER;
-    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $POSTGRES_USER;
-    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $POSTGRES_USER;
 EOSQL
 
 echo "✅ PostgreSQL databases and schemas created successfully!"
-echo "   - stocker_master (schema: master)"
+echo "   - stocker_master (schema: master, cms)"
 echo "   - stocker_tenant (schema: tenant, crm)"
 echo "   - stocker_hangfire (schema: hangfire)"
-echo "   - stocker_cms (schema: public)"
