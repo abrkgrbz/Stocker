@@ -95,7 +95,7 @@ const LoginPage: React.FC = () => {
 
         // Navigate after showing success message
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/admin-home');
         }, 1500);
       }
       // Otherwise, 2FA modal will be shown via useEffect
@@ -169,7 +169,7 @@ const LoginPage: React.FC = () => {
         });
 
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/admin-home');
         }, 1500);
 
         return true;
@@ -213,7 +213,7 @@ const LoginPage: React.FC = () => {
         });
 
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/admin-home');
         }, 1500);
 
         return true;
