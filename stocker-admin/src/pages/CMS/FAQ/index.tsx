@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Tag, Input, Typography, Modal, message, Form, Select, Collapse } from 'antd';
+import { Card, Table, Button, Space, Tag, Input, Typography, Modal, Form, Select, Collapse, Spin } from 'antd';
 import {
   QuestionCircleOutlined,
   EditOutlined,
@@ -8,48 +8,48 @@ import {
   SearchOutlined,
   DragOutlined,
   EyeOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
+import {
+  useFAQItems,
+  useFAQCategories,
+  useCreateFAQItem,
+  useUpdateFAQItem,
+  useDeleteFAQItem,
+} from '../../../hooks/useCMS';
+import {
+  FAQItemDto,
+  FAQCategoryListDto,
+  CreateFAQItemDto,
+  UpdateFAQItemDto,
+} from '../../../services/api/cmsService';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 const { Panel } = Collapse;
 
-interface FAQ {
-  key: string;
-  id: number;
-  question: string;
-  answer: string;
-  category: string;
-  order: number;
-  isActive: boolean;
-}
-
 const CMSFAQ: React.FC = () => {
   const [searchText, setSearchText] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  const [editingFaq, setEditingFaq] = useState<FAQItemDto | null>(null);
   const [form] = Form.useForm();
 
-  const [faqs, setFaqs] = useState<FAQ[]>([
-    { key: '1', id: 1, question: 'Stocker nedir?', answer: 'Stocker, işletmelerin stok ve envanter yönetimini kolaylaştıran bulut tabanlı bir SaaS platformudur.', category: 'Genel', order: 1, isActive: true },
-    { key: '2', id: 2, question: 'Ücretsiz deneme süresi var mı?', answer: 'Evet! 14 gün boyunca tüm özellikleri ücretsiz deneyebilirsiniz.', category: 'Fiyatlandırma', order: 2, isActive: true },
-    { key: '3', id: 3, question: 'Hangi ödeme yöntemlerini kabul ediyorsunuz?', answer: 'Kredi kartı, banka kartı ve havale/EFT ile ödeme yapabilirsiniz.', category: 'Fiyatlandırma', order: 3, isActive: true },
-    { key: '4', id: 4, question: 'Kaç kullanıcı ekleyebilirim?', answer: 'Kullanıcı sayısı seçtiğiniz pakete göre değişir.', category: 'Özellikler', order: 4, isActive: true },
-    { key: '5', id: 5, question: 'Mobil uygulama var mı?', answer: 'Evet! iOS ve Android için mobil uygulamamız mevcuttur.', category: 'Özellikler', order: 5, isActive: true },
-    { key: '6', id: 6, question: 'Verilerim güvende mi?', answer: 'Kesinlikle. Verileriniz 256-bit SSL şifreleme ile korunur.', category: 'Güvenlik', order: 6, isActive: true },
-    { key: '7', id: 7, question: 'İki faktörlü kimlik doğrulama var mı?', answer: 'Evet, hesabınızı korumak için 2FA kullanabilirsiniz.', category: 'Güvenlik', order: 7, isActive: true },
-    { key: '8', id: 8, question: 'Teknik destek nasıl alırım?', answer: 'E-posta, canlı sohbet ve telefon ile 7/24 destek alabilirsiniz.', category: 'Destek', order: 8, isActive: true },
-  ]);
+  // API hooks
+  const { data: faqs = [], isLoading: faqsLoading } = useFAQItems(categoryFilter);
+  const { data: categories = [], isLoading: categoriesLoading } = useFAQCategories();
+  const createFAQ = useCreateFAQItem();
+  const updateFAQ = useUpdateFAQItem();
+  const deleteFAQ = useDeleteFAQItem();
 
-  const categories = ['Tümü', 'Genel', 'Fiyatlandırma', 'Özellikler', 'Güvenlik', 'Destek'];
+  const isLoading = faqsLoading || categoriesLoading;
 
   const filteredFaqs = faqs.filter((faq) => {
-    const matchesSearch = faq.question.toLowerCase().includes(searchText.toLowerCase()) ||
-                          faq.answer.toLowerCase().includes(searchText.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || faq.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesSearch =
+      faq.question.toLowerCase().includes(searchText.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchText.toLowerCase());
+    return matchesSearch;
   });
 
   const handleAdd = () => {
@@ -58,13 +58,19 @@ const CMSFAQ: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (faq: FAQ) => {
+  const handleEdit = (faq: FAQItemDto) => {
     setEditingFaq(faq);
-    form.setFieldsValue(faq);
+    form.setFieldsValue({
+      question: faq.question,
+      answer: faq.answer,
+      categoryId: faq.categoryId,
+      sortOrder: faq.sortOrder,
+      isActive: faq.isActive,
+    });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (faq: FAQ) => {
+  const handleDelete = (faq: FAQItemDto) => {
     Modal.confirm({
       title: 'SSS Sil',
       content: `Bu soruyu silmek istediğinize emin misiniz?`,
@@ -72,29 +78,39 @@ const CMSFAQ: React.FC = () => {
       okType: 'danger',
       cancelText: 'İptal',
       onOk: () => {
-        setFaqs(faqs.filter(f => f.id !== faq.id));
-        message.success('SSS silindi');
+        deleteFAQ.mutate(faq.id);
       },
     });
   };
 
   const handleSave = () => {
-    form.validateFields().then(values => {
+    form.validateFields().then((values) => {
       if (editingFaq) {
-        setFaqs(faqs.map(f => f.id === editingFaq.id ? { ...f, ...values } : f));
-        message.success('SSS güncellendi');
-      } else {
-        const newFaq: FAQ = {
-          key: String(Date.now()),
-          id: Date.now(),
-          ...values,
-          order: faqs.length + 1,
-          isActive: true,
+        const updateData: UpdateFAQItemDto = {
+          question: values.question,
+          answer: values.answer,
+          sortOrder: values.sortOrder || editingFaq.sortOrder,
+          isActive: values.isActive ?? editingFaq.isActive,
+          categoryId: values.categoryId,
         };
-        setFaqs([...faqs, newFaq]);
-        message.success('SSS eklendi');
+        updateFAQ.mutate(
+          { id: editingFaq.id, data: updateData },
+          {
+            onSuccess: () => setIsModalOpen(false),
+          }
+        );
+      } else {
+        const createData: CreateFAQItemDto = {
+          question: values.question,
+          answer: values.answer,
+          sortOrder: values.sortOrder,
+          isActive: values.isActive ?? true,
+          categoryId: values.categoryId,
+        };
+        createFAQ.mutate(createData, {
+          onSuccess: () => setIsModalOpen(false),
+        });
       }
-      setIsModalOpen(false);
     });
   };
 
@@ -113,10 +129,10 @@ const CMSFAQ: React.FC = () => {
     },
     {
       title: 'Kategori',
-      dataIndex: 'category',
-      key: 'category',
-      width: 120,
-      render: (category: string) => <Tag color="blue">{category}</Tag>,
+      dataIndex: 'categoryName',
+      key: 'categoryName',
+      width: 150,
+      render: (category: string) => <Tag color="blue">{category || '-'}</Tag>,
     },
     {
       title: 'Durum',
@@ -124,42 +140,64 @@ const CMSFAQ: React.FC = () => {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'red'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
       ),
     },
     {
       title: 'Sıra',
-      dataIndex: 'order',
-      key: 'order',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
       width: 80,
-      sorter: (a: FAQ, b: FAQ) => a.order - b.order,
+      sorter: (a: FAQItemDto, b: FAQItemDto) => a.sortOrder - b.sortOrder,
+    },
+    {
+      title: 'Görüntüleme',
+      dataIndex: 'viewCount',
+      key: 'viewCount',
+      width: 100,
+      render: (views: number) => views?.toLocaleString() || '0',
     },
     {
       title: 'İşlemler',
       key: 'action',
       width: 120,
-      render: (_: any, record: FAQ) => (
+      render: (_: any, record: FAQItemDto) => (
         <Space>
           <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)} />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />
         </Space>
       ),
     },
   ];
 
   // Group by category for preview
-  const groupedFaqs = categories.slice(1).reduce((acc, cat) => {
-    acc[cat] = filteredFaqs.filter(f => f.category === cat);
+  const groupedFaqs = categories.reduce((acc, cat) => {
+    acc[cat.name] = filteredFaqs.filter((f) => f.categoryId === cat.id);
     return acc;
-  }, {} as Record<string, FAQ[]>);
+  }, {} as Record<string, FAQItemDto[]>);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      >
         <div>
-          <Title level={4} style={{ margin: 0 }}>Sıkça Sorulan Sorular</Title>
+          <Title level={4} style={{ margin: 0 }}>
+            Sıkça Sorulan Sorular
+          </Title>
           <Text type="secondary">SSS içeriklerini yönetin</Text>
         </div>
         <Space>
@@ -185,11 +223,14 @@ const CMSFAQ: React.FC = () => {
           <Select
             value={categoryFilter}
             onChange={setCategoryFilter}
-            style={{ width: 150 }}
+            style={{ width: 200 }}
+            placeholder="Kategori seçin"
+            allowClear
           >
-            <Option value="all">Tüm Kategoriler</Option>
-            {categories.slice(1).map(cat => (
-              <Option key={cat} value={cat}>{cat}</Option>
+            {categories.map((cat) => (
+              <Option key={cat.id} value={cat.id}>
+                {cat.name}
+              </Option>
             ))}
           </Select>
         </Space>
@@ -200,12 +241,11 @@ const CMSFAQ: React.FC = () => {
         <Table
           dataSource={filteredFaqs}
           columns={columns}
+          rowKey="id"
           pagination={false}
           expandable={{
             expandedRowRender: (record) => (
-              <Paragraph style={{ margin: 0, paddingLeft: 40 }}>
-                {record.answer}
-              </Paragraph>
+              <Paragraph style={{ margin: 0, paddingLeft: 40 }}>{record.answer}</Paragraph>
             ),
           }}
         />
@@ -214,18 +254,27 @@ const CMSFAQ: React.FC = () => {
       {/* Preview by Category */}
       <Card title="Kategoriye Göre Önizleme">
         <Collapse>
-          {Object.entries(groupedFaqs).map(([category, items]) => (
-            items.length > 0 && (
-              <Panel header={`${category} (${items.length})`} key={category}>
-                {items.map(faq => (
-                  <div key={faq.id} style={{ marginBottom: 16, padding: 12, background: '#fafafa', borderRadius: 8 }}>
-                    <Text strong><QuestionCircleOutlined style={{ marginRight: 8 }} />{faq.question}</Text>
-                    <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>{faq.answer}</Paragraph>
-                  </div>
-                ))}
-              </Panel>
-            )
-          ))}
+          {Object.entries(groupedFaqs).map(
+            ([category, items]) =>
+              items.length > 0 && (
+                <Panel header={`${category} (${items.length})`} key={category}>
+                  {items.map((faq) => (
+                    <div
+                      key={faq.id}
+                      style={{ marginBottom: 16, padding: 12, background: '#fafafa', borderRadius: 8 }}
+                    >
+                      <Text strong>
+                        <QuestionCircleOutlined style={{ marginRight: 8 }} />
+                        {faq.question}
+                      </Text>
+                      <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+                        {faq.answer}
+                      </Paragraph>
+                    </div>
+                  ))}
+                </Panel>
+              )
+          )}
         </Collapse>
       </Card>
 
@@ -238,19 +287,43 @@ const CMSFAQ: React.FC = () => {
         okText="Kaydet"
         cancelText="İptal"
         width={600}
+        confirmLoading={createFAQ.isPending || updateFAQ.isPending}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="question" label="Soru" rules={[{ required: true, message: 'Soru gerekli' }]}>
+          <Form.Item
+            name="question"
+            label="Soru"
+            rules={[{ required: true, message: 'Soru gerekli' }]}
+          >
             <Input placeholder="Soruyu yazın..." />
           </Form.Item>
-          <Form.Item name="answer" label="Cevap" rules={[{ required: true, message: 'Cevap gerekli' }]}>
+          <Form.Item
+            name="answer"
+            label="Cevap"
+            rules={[{ required: true, message: 'Cevap gerekli' }]}
+          >
             <TextArea rows={4} placeholder="Cevabı yazın..." />
           </Form.Item>
-          <Form.Item name="category" label="Kategori" rules={[{ required: true, message: 'Kategori seçin' }]}>
+          <Form.Item
+            name="categoryId"
+            label="Kategori"
+            rules={[{ required: true, message: 'Kategori seçin' }]}
+          >
             <Select placeholder="Kategori seçin">
-              {categories.slice(1).map(cat => (
-                <Option key={cat} value={cat}>{cat}</Option>
+              {categories.map((cat) => (
+                <Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Option>
               ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="sortOrder" label="Sıra">
+            <Input type="number" placeholder="1" />
+          </Form.Item>
+          <Form.Item name="isActive" label="Durum">
+            <Select placeholder="Durum seçin" defaultValue={true}>
+              <Option value={true}>Aktif</Option>
+              <Option value={false}>Pasif</Option>
             </Select>
           </Form.Item>
         </Form>

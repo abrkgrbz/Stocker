@@ -15,6 +15,7 @@ export { roleService } from './roleService';
 export { settingsService } from './settingsService';
 export { subscriptionService } from './subscriptionService';
 export { storageService } from './storageService';
+export { cmsService } from './cmsService';
 
 // Re-export types
 export type {

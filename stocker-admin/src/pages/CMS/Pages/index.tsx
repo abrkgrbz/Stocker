@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Tag, Input, Typography, Modal, message, Dropdown, Tooltip } from 'antd';
+import { Card, Table, Button, Space, Tag, Input, Typography, Modal, message, Dropdown, Tooltip, Form, Spin } from 'antd';
 import {
   FileTextOutlined,
   EditOutlined,
@@ -18,134 +18,233 @@ import {
   RocketOutlined,
   SafetyOutlined,
   HistoryOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import {
+  usePages,
+  useCreatePage,
+  useUpdatePage,
+  useDeletePage,
+  usePublishPage,
+  useUnpublishPage,
+} from '../../../hooks/useCMS';
+import { PageDto, PageStatus, CreatePageDto, UpdatePageDto } from '../../../services/api/cmsService';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
-interface Page {
-  key: string;
-  name: string;
-  path: string;
-  icon: React.ReactNode;
-  status: 'published' | 'draft';
-  lastUpdated: string;
-  views: number;
-  description: string;
-}
+// Icon mapping for pages
+const getPageIcon = (slug: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    '/': <HomeOutlined />,
+    '/about': <InfoCircleOutlined />,
+    '/contact': <PhoneOutlined />,
+    '/demo': <RocketOutlined />,
+    '/faq': <QuestionCircleOutlined />,
+    '/support': <CustomerServiceOutlined />,
+    '/careers': <SolutionOutlined />,
+    '/blog': <ReadOutlined />,
+    '/updates': <HistoryOutlined />,
+    '/privacy': <SafetyOutlined />,
+    '/terms': <SafetyOutlined />,
+    '/kvkk': <SafetyOutlined />,
+  };
+  return iconMap[slug] || <FileTextOutlined />;
+};
 
 const CMSPages: React.FC = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPage, setEditingPage] = useState<PageDto | null>(null);
+  const [form] = Form.useForm();
 
-  const pages: Page[] = [
-    { key: '1', name: 'Ana Sayfa', path: '/', icon: <HomeOutlined />, status: 'published', lastUpdated: '10 Ara 2024', views: 15420, description: 'Landing page ana içerik' },
-    { key: '2', name: 'Hakkımızda', path: '/about', icon: <InfoCircleOutlined />, status: 'published', lastUpdated: '8 Ara 2024', views: 3240, description: 'Şirket bilgileri ve ekip' },
-    { key: '3', name: 'İletişim', path: '/contact', icon: <PhoneOutlined />, status: 'published', lastUpdated: '5 Ara 2024', views: 2180, description: 'İletişim formu ve bilgiler' },
-    { key: '4', name: 'Demo', path: '/demo', icon: <RocketOutlined />, status: 'published', lastUpdated: '3 Ara 2024', views: 4560, description: 'Demo talep formu' },
-    { key: '5', name: 'SSS', path: '/faq', icon: <QuestionCircleOutlined />, status: 'published', lastUpdated: '1 Ara 2024', views: 5670, description: 'Sıkça sorulan sorular' },
-    { key: '6', name: 'Destek', path: '/support', icon: <CustomerServiceOutlined />, status: 'published', lastUpdated: '28 Kas 2024', views: 1890, description: 'Destek merkezi' },
-    { key: '7', name: 'Kariyer', path: '/careers', icon: <SolutionOutlined />, status: 'published', lastUpdated: '25 Kas 2024', views: 980, description: 'Açık pozisyonlar' },
-    { key: '8', name: 'Blog', path: '/blog', icon: <ReadOutlined />, status: 'published', lastUpdated: '20 Kas 2024', views: 8920, description: 'Blog ana sayfa' },
-    { key: '9', name: 'Güncellemeler', path: '/updates', icon: <HistoryOutlined />, status: 'published', lastUpdated: '15 Kas 2024', views: 2340, description: 'Changelog ve güncellemeler' },
-    { key: '10', name: 'Gizlilik Politikası', path: '/privacy', icon: <SafetyOutlined />, status: 'published', lastUpdated: '10 Kas 2024', views: 890, description: 'Gizlilik politikası' },
-    { key: '11', name: 'Kullanım Şartları', path: '/terms', icon: <SafetyOutlined />, status: 'published', lastUpdated: '10 Kas 2024', views: 670, description: 'Kullanım şartları' },
-    { key: '12', name: 'KVKK', path: '/kvkk', icon: <SafetyOutlined />, status: 'published', lastUpdated: '10 Kas 2024', views: 450, description: 'KVKK aydınlatma metni' },
-  ];
+  // API hooks
+  const { data: pages = [], isLoading } = usePages();
+  const createPage = useCreatePage();
+  const updatePage = useUpdatePage();
+  const deletePage = useDeletePage();
+  const publishPage = usePublishPage();
+  const unpublishPage = useUnpublishPage();
 
   const filteredPages = pages.filter(
     (page) =>
-      page.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      page.path.toLowerCase().includes(searchText.toLowerCase())
+      page.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      page.slug.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const handleDelete = (page: Page) => {
+  const handleAdd = () => {
+    setEditingPage(null);
+    form.resetFields();
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (page: PageDto) => {
+    setEditingPage(page);
+    form.setFieldsValue({
+      title: page.title,
+      slug: page.slug,
+      metaTitle: page.metaTitle,
+      metaDescription: page.metaDescription,
+      content: page.content,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (page: PageDto) => {
     Modal.confirm({
       title: 'Sayfayı Sil',
-      content: `"${page.name}" sayfasını silmek istediğinize emin misiniz?`,
+      content: `"${page.title}" sayfasını silmek istediğinize emin misiniz?`,
       okText: 'Sil',
       okType: 'danger',
       cancelText: 'İptal',
       onOk: () => {
-        message.success('Sayfa silindi');
+        deletePage.mutate(page.id);
       },
     });
+  };
+
+  const handleSave = () => {
+    form.validateFields().then((values) => {
+      if (editingPage) {
+        const updateData: UpdatePageDto = {
+          title: values.title,
+          slug: values.slug,
+          metaTitle: values.metaTitle,
+          metaDescription: values.metaDescription,
+          metaKeywords: editingPage.metaKeywords,
+          content: values.content,
+          status: editingPage.status,
+          sortOrder: editingPage.sortOrder,
+          featuredImage: editingPage.featuredImage,
+          template: editingPage.template,
+        };
+        updatePage.mutate({ id: editingPage.id, data: updateData }, {
+          onSuccess: () => setIsModalOpen(false),
+        });
+      } else {
+        const createData: CreatePageDto = {
+          title: values.title,
+          slug: values.slug,
+          metaTitle: values.metaTitle,
+          metaDescription: values.metaDescription,
+          content: values.content || '',
+          status: 'Draft',
+        };
+        createPage.mutate(createData, {
+          onSuccess: () => setIsModalOpen(false),
+        });
+      }
+    });
+  };
+
+  const handlePublish = (page: PageDto) => {
+    if (page.status === 'Published') {
+      unpublishPage.mutate(page.id);
+    } else {
+      publishPage.mutate(page.id);
+    }
+  };
+
+  const getStatusColor = (status: PageStatus) => {
+    switch (status) {
+      case 'Published':
+        return 'green';
+      case 'Draft':
+        return 'orange';
+      case 'Archived':
+        return 'red';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusText = (status: PageStatus) => {
+    switch (status) {
+      case 'Published':
+        return 'Yayında';
+      case 'Draft':
+        return 'Taslak';
+      case 'Archived':
+        return 'Arşiv';
+      default:
+        return status;
+    }
   };
 
   const columns = [
     {
       title: 'Sayfa',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string, record: Page) => (
+      dataIndex: 'title',
+      key: 'title',
+      render: (text: string, record: PageDto) => (
         <Space>
-          <span style={{ color: '#667eea' }}>{record.icon}</span>
+          <span style={{ color: '#667eea' }}>{getPageIcon(record.slug)}</span>
           <div>
             <div style={{ fontWeight: 500 }}>{text}</div>
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.path}</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>{record.slug}</Text>
           </div>
         </Space>
       ),
     },
     {
-      title: 'Açıklama',
-      dataIndex: 'description',
-      key: 'description',
-      render: (text: string) => <Text type="secondary">{text}</Text>,
+      title: 'Meta Başlık',
+      dataIndex: 'metaTitle',
+      key: 'metaTitle',
+      render: (text: string) => <Text type="secondary">{text || '-'}</Text>,
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'published' ? 'green' : 'orange'}>
-          {status === 'published' ? 'Yayında' : 'Taslak'}
+      render: (status: PageStatus) => (
+        <Tag color={getStatusColor(status)}>
+          {getStatusText(status)}
         </Tag>
       ),
     },
     {
-      title: 'Görüntüleme',
-      dataIndex: 'views',
-      key: 'views',
-      sorter: (a: Page, b: Page) => a.views - b.views,
-      render: (views: number) => views.toLocaleString(),
+      title: 'Sıra',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
+      sorter: (a: PageDto, b: PageDto) => a.sortOrder - b.sortOrder,
     },
     {
       title: 'Son Güncelleme',
-      dataIndex: 'lastUpdated',
-      key: 'lastUpdated',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (date: string, record: PageDto) => {
+        const displayDate = date || record.createdAt;
+        return displayDate ? new Date(displayDate).toLocaleDateString('tr-TR') : '-';
+      },
     },
     {
       title: 'İşlemler',
       key: 'action',
-      render: (_: any, record: Page) => (
+      render: (_: any, record: PageDto) => (
         <Space>
           <Tooltip title="Düzenle">
             <Button
               type="text"
               icon={<EditOutlined />}
-              onClick={() => navigate(`/cms/pages${record.path}`)}
+              onClick={() => handleEdit(record)}
             />
           </Tooltip>
           <Tooltip title="Önizle">
             <Button
               type="text"
               icon={<EyeOutlined />}
-              onClick={() => window.open(record.path, '_blank')}
+              onClick={() => window.open(record.slug, '_blank')}
             />
           </Tooltip>
           <Dropdown
             menu={{
               items: [
                 {
-                  key: 'duplicate',
-                  label: 'Kopyala',
-                  onClick: () => message.info('Sayfa kopyalandı'),
-                },
-                {
-                  key: 'unpublish',
-                  label: record.status === 'published' ? 'Yayından Kaldır' : 'Yayınla',
-                  onClick: () => message.success('Durum güncellendi'),
+                  key: 'publish',
+                  label: record.status === 'Published' ? 'Yayından Kaldır' : 'Yayınla',
+                  onClick: () => handlePublish(record),
                 },
                 { type: 'divider' },
                 {
@@ -164,6 +263,14 @@ const CMSPages: React.FC = () => {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -179,7 +286,7 @@ const CMSPages: React.FC = () => {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
           />
-          <Button type="primary" icon={<PlusOutlined />}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Yeni Sayfa
           </Button>
         </Space>
@@ -189,12 +296,51 @@ const CMSPages: React.FC = () => {
         <Table
           dataSource={filteredPages}
           columns={columns}
+          rowKey="id"
           pagination={{
             pageSize: 10,
             showTotal: (total) => `Toplam ${total} sayfa`,
           }}
         />
       </Card>
+
+      {/* Add/Edit Modal */}
+      <Modal
+        title={editingPage ? 'Sayfayı Düzenle' : 'Yeni Sayfa Ekle'}
+        open={isModalOpen}
+        onOk={handleSave}
+        onCancel={() => setIsModalOpen(false)}
+        okText="Kaydet"
+        cancelText="İptal"
+        width={700}
+        confirmLoading={createPage.isPending || updatePage.isPending}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="title"
+            label="Başlık"
+            rules={[{ required: true, message: 'Başlık gerekli' }]}
+          >
+            <Input placeholder="Sayfa başlığı" />
+          </Form.Item>
+          <Form.Item
+            name="slug"
+            label="URL (Slug)"
+            rules={[{ required: true, message: 'URL gerekli' }]}
+          >
+            <Input placeholder="/sayfa-url" />
+          </Form.Item>
+          <Form.Item name="metaTitle" label="Meta Başlık">
+            <Input placeholder="SEO başlığı" />
+          </Form.Item>
+          <Form.Item name="metaDescription" label="Meta Açıklama">
+            <TextArea rows={2} placeholder="SEO açıklaması" />
+          </Form.Item>
+          <Form.Item name="content" label="İçerik">
+            <TextArea rows={6} placeholder="Sayfa içeriği..." />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
