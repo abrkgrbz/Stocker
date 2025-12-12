@@ -75,17 +75,18 @@ const TestimonialsTab: React.FC = () => {
       title: 'Avatar',
       dataIndex: 'avatar',
       key: 'avatar',
-      width: 60,
-      render: (avatar: string) => <Avatar src={avatar} icon={<UserOutlined />} />,
+      width: 50,
+      render: (avatar: string) => <Avatar src={avatar} icon={<UserOutlined />} size="small" />,
     },
     {
       title: 'Ad Soyad',
       dataIndex: 'name',
       key: 'name',
+      width: 150,
       render: (name: string, record: TestimonialDto) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{name}</div>
-          <div style={{ fontSize: 12, color: '#888' }}>{record.role} - {record.company}</div>
+          <div style={{ fontWeight: 500, fontSize: 13 }}>{name}</div>
+          <div style={{ fontSize: 11, color: '#888' }}>{record.role} - {record.company}</div>
         </div>
       ),
     },
@@ -94,7 +95,6 @@ const TestimonialsTab: React.FC = () => {
       dataIndex: 'content',
       key: 'content',
       ellipsis: true,
-      width: 300,
     },
     {
       title: 'Puan',
