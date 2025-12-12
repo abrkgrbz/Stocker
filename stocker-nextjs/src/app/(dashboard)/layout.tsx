@@ -327,9 +327,26 @@ const MODULE_MENUS = {
       {
         key: 'hr-training',
         icon: <SafetyCertificateOutlined />,
-        label: 'Eğitim',
+        label: 'Eğitim & Sertifika',
         children: [
           { key: '/hr/trainings', icon: <SafetyCertificateOutlined />, label: 'Eğitimler' },
+          { key: '/hr/certifications', icon: <SafetyCertificateOutlined />, label: 'Sertifikalar' },
+        ],
+      },
+      {
+        key: 'hr-recruitment',
+        icon: <UserAddOutlined />,
+        label: 'İşe Alım',
+        children: [
+          { key: '/hr/job-postings', icon: <FileTextOutlined />, label: 'İş İlanları' },
+        ],
+      },
+      {
+        key: 'hr-overtime',
+        icon: <ClockCircleOutlined />,
+        label: 'Fazla Mesai',
+        children: [
+          { key: '/hr/overtimes', icon: <ClockCircleOutlined />, label: 'Fazla Mesailer' },
         ],
       },
       {
@@ -571,6 +588,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/hr/shifts': '/hr/shifts',
       '/hr/work-schedules': '/hr/work-schedules',
       '/hr/work-locations': '/hr/work-locations',
+      '/hr/job-postings': '/hr/job-postings',
+      '/hr/certifications': '/hr/certifications',
+      '/hr/overtimes': '/hr/overtimes',
       // CRM Module - New Entities
       '/crm/call-logs': '/crm/call-logs',
       '/crm/meetings': '/crm/meetings',
