@@ -103,23 +103,29 @@ public class TokenGenerationService : ITokenGenerationService
         };
 
         // Add role claims based on UserType
+        // Include both Turkish and English role names for compatibility
         switch (user.UserType)
         {
             case Domain.Master.Enums.UserType.SistemYoneticisi:
                 claims.Add(new Claim(ClaimTypes.Role, "SistemYoneticisi"));
+                claims.Add(new Claim(ClaimTypes.Role, "SuperAdmin")); // English alias for CMS
                 claims.Add(new Claim("IsSuperAdmin", "true"));
                 break;
             case Domain.Master.Enums.UserType.FirmaYoneticisi:
                 claims.Add(new Claim(ClaimTypes.Role, "FirmaYoneticisi"));
+                claims.Add(new Claim(ClaimTypes.Role, "Admin")); // English alias for CMS
                 break;
             case Domain.Master.Enums.UserType.Destek:
                 claims.Add(new Claim(ClaimTypes.Role, "Destek"));
+                claims.Add(new Claim(ClaimTypes.Role, "Support")); // English alias
                 break;
             case Domain.Master.Enums.UserType.Personel:
                 claims.Add(new Claim(ClaimTypes.Role, "Personel"));
+                claims.Add(new Claim(ClaimTypes.Role, "Staff")); // English alias
                 break;
             case Domain.Master.Enums.UserType.Misafir:
                 claims.Add(new Claim(ClaimTypes.Role, "Misafir"));
+                claims.Add(new Claim(ClaimTypes.Role, "Guest")); // English alias
                 break;
         }
 
@@ -169,13 +175,14 @@ public class TokenGenerationService : ITokenGenerationService
 
     private List<string> GetRolesForUserType(Domain.Master.Enums.UserType userType)
     {
+        // Include both Turkish and English role names for compatibility
         return userType switch
         {
-            Domain.Master.Enums.UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi" },
-            Domain.Master.Enums.UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi" },
-            Domain.Master.Enums.UserType.Destek => new List<string> { "Destek" },
-            Domain.Master.Enums.UserType.Personel => new List<string> { "Personel" },
-            Domain.Master.Enums.UserType.Misafir => new List<string> { "Misafir" },
+            Domain.Master.Enums.UserType.SistemYoneticisi => new List<string> { "SistemYoneticisi", "SuperAdmin" },
+            Domain.Master.Enums.UserType.FirmaYoneticisi => new List<string> { "FirmaYoneticisi", "Admin" },
+            Domain.Master.Enums.UserType.Destek => new List<string> { "Destek", "Support" },
+            Domain.Master.Enums.UserType.Personel => new List<string> { "Personel", "Staff" },
+            Domain.Master.Enums.UserType.Misafir => new List<string> { "Misafir", "Guest" },
             _ => new List<string>()
         };
     }
