@@ -27,10 +27,10 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpGet("categories")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<FAQCategoryDto>>> GetCategories(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FAQCategoryDto>>>> GetCategories(CancellationToken cancellationToken)
     {
         var categories = await _repository.GetAllCategoriesAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<FAQCategoryDto>>(categories));
+        return Ok(ApiResponse<IEnumerable<FAQCategoryDto>>.SuccessResponse(_mapper.Map<IEnumerable<FAQCategoryDto>>(categories)));
     }
 
     /// <summary>
@@ -38,23 +38,23 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpGet("categories/active")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<FAQCategoryDto>>> GetActiveCategories(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FAQCategoryDto>>>> GetActiveCategories(CancellationToken cancellationToken)
     {
         var categories = await _repository.GetActiveCategoriesAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<FAQCategoryDto>>(categories));
+        return Ok(ApiResponse<IEnumerable<FAQCategoryDto>>.SuccessResponse(_mapper.Map<IEnumerable<FAQCategoryDto>>(categories)));
     }
 
     /// <summary>
     /// Get category by ID
     /// </summary>
     [HttpGet("categories/{id:guid}")]
-    public async Task<ActionResult<FAQCategoryDto>> GetCategoryById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQCategoryDto>>> GetCategoryById(Guid id, CancellationToken cancellationToken)
     {
         var category = await _repository.GetCategoryByIdAsync(id, cancellationToken);
         if (category == null)
-            return NotFound();
+            return NotFound(ApiResponse<FAQCategoryDto>.FailureResponse("Category not found"));
 
-        return Ok(_mapper.Map<FAQCategoryDto>(category));
+        return Ok(ApiResponse<FAQCategoryDto>.SuccessResponse(_mapper.Map<FAQCategoryDto>(category)));
     }
 
     /// <summary>
@@ -62,13 +62,13 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpGet("categories/slug/{slug}")]
     [AllowAnonymous]
-    public async Task<ActionResult<FAQCategoryDto>> GetCategoryBySlug(string slug, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQCategoryDto>>> GetCategoryBySlug(string slug, CancellationToken cancellationToken)
     {
         var category = await _repository.GetCategoryBySlugAsync(slug, cancellationToken);
         if (category == null || !category.IsActive)
-            return NotFound();
+            return NotFound(ApiResponse<FAQCategoryDto>.FailureResponse("Category not found"));
 
-        return Ok(_mapper.Map<FAQCategoryDto>(category));
+        return Ok(ApiResponse<FAQCategoryDto>.SuccessResponse(_mapper.Map<FAQCategoryDto>(category)));
     }
 
     /// <summary>
@@ -76,11 +76,11 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpPost("categories")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<FAQCategoryDto>> CreateCategory([FromBody] CreateFAQCategoryDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQCategoryDto>>> CreateCategory([FromBody] CreateFAQCategoryDto dto, CancellationToken cancellationToken)
     {
         var category = _mapper.Map<FAQCategory>(dto);
         var created = await _repository.AddCategoryAsync(category, cancellationToken);
-        return CreatedAtAction(nameof(GetCategoryById), new { id = created.Id }, _mapper.Map<FAQCategoryDto>(created));
+        return CreatedAtAction(nameof(GetCategoryById), new { id = created.Id }, ApiResponse<FAQCategoryDto>.SuccessResponse(_mapper.Map<FAQCategoryDto>(created)));
     }
 
     /// <summary>
@@ -88,15 +88,15 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpPut("categories/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<FAQCategoryDto>> UpdateCategory(Guid id, [FromBody] UpdateFAQCategoryDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQCategoryDto>>> UpdateCategory(Guid id, [FromBody] UpdateFAQCategoryDto dto, CancellationToken cancellationToken)
     {
         var category = await _repository.GetCategoryByIdAsync(id, cancellationToken);
         if (category == null)
-            return NotFound();
+            return NotFound(ApiResponse<FAQCategoryDto>.FailureResponse("Category not found"));
 
         _mapper.Map(dto, category);
         await _repository.UpdateCategoryAsync(category, cancellationToken);
-        return Ok(_mapper.Map<FAQCategoryDto>(category));
+        return Ok(ApiResponse<FAQCategoryDto>.SuccessResponse(_mapper.Map<FAQCategoryDto>(category)));
     }
 
     /// <summary>
@@ -104,10 +104,10 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpDelete("categories/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteCategory(Guid id, CancellationToken cancellationToken)
     {
         await _repository.DeleteCategoryAsync(id, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     #endregion
@@ -119,10 +119,10 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpGet("items")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<FAQItemDto>>> GetAllItems(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FAQItemDto>>>> GetAllItems(CancellationToken cancellationToken)
     {
         var items = await _repository.GetAllItemsAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<FAQItemDto>>(items));
+        return Ok(ApiResponse<IEnumerable<FAQItemDto>>.SuccessResponse(_mapper.Map<IEnumerable<FAQItemDto>>(items)));
     }
 
     /// <summary>
@@ -130,26 +130,26 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpGet("items/active")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<FAQItemDto>>> GetActiveItems(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FAQItemDto>>>> GetActiveItems(CancellationToken cancellationToken)
     {
         var items = await _repository.GetActiveItemsAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<FAQItemDto>>(items));
+        return Ok(ApiResponse<IEnumerable<FAQItemDto>>.SuccessResponse(_mapper.Map<IEnumerable<FAQItemDto>>(items)));
     }
 
     /// <summary>
     /// Get item by ID
     /// </summary>
     [HttpGet("items/{id:guid}")]
-    public async Task<ActionResult<FAQItemDto>> GetItemById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQItemDto>>> GetItemById(Guid id, CancellationToken cancellationToken)
     {
         var item = await _repository.GetItemByIdAsync(id, cancellationToken);
         if (item == null)
-            return NotFound();
+            return NotFound(ApiResponse<FAQItemDto>.FailureResponse("FAQ item not found"));
 
         // Increment view count
         await _repository.IncrementViewCountAsync(id, cancellationToken);
 
-        return Ok(_mapper.Map<FAQItemDto>(item));
+        return Ok(ApiResponse<FAQItemDto>.SuccessResponse(_mapper.Map<FAQItemDto>(item)));
     }
 
     /// <summary>
@@ -157,11 +157,11 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpPost("items")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<FAQItemDto>> CreateItem([FromBody] CreateFAQItemDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQItemDto>>> CreateItem([FromBody] CreateFAQItemDto dto, CancellationToken cancellationToken)
     {
         var item = _mapper.Map<FAQItem>(dto);
         var created = await _repository.AddItemAsync(item, cancellationToken);
-        return CreatedAtAction(nameof(GetItemById), new { id = created.Id }, _mapper.Map<FAQItemDto>(created));
+        return CreatedAtAction(nameof(GetItemById), new { id = created.Id }, ApiResponse<FAQItemDto>.SuccessResponse(_mapper.Map<FAQItemDto>(created)));
     }
 
     /// <summary>
@@ -169,15 +169,15 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpPut("items/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<FAQItemDto>> UpdateItem(Guid id, [FromBody] UpdateFAQItemDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<FAQItemDto>>> UpdateItem(Guid id, [FromBody] UpdateFAQItemDto dto, CancellationToken cancellationToken)
     {
         var item = await _repository.GetItemByIdAsync(id, cancellationToken);
         if (item == null)
-            return NotFound();
+            return NotFound(ApiResponse<FAQItemDto>.FailureResponse("FAQ item not found"));
 
         _mapper.Map(dto, item);
         await _repository.UpdateItemAsync(item, cancellationToken);
-        return Ok(_mapper.Map<FAQItemDto>(item));
+        return Ok(ApiResponse<FAQItemDto>.SuccessResponse(_mapper.Map<FAQItemDto>(item)));
     }
 
     /// <summary>
@@ -185,10 +185,10 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpDelete("items/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> DeleteItem(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteItem(Guid id, CancellationToken cancellationToken)
     {
         await _repository.DeleteItemAsync(id, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     /// <summary>
@@ -196,10 +196,10 @@ public class CMSFAQController : ControllerBase
     /// </summary>
     [HttpPost("items/{id:guid}/feedback")]
     [AllowAnonymous]
-    public async Task<IActionResult> SubmitFeedback(Guid id, [FromQuery] bool helpful, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> SubmitFeedback(Guid id, [FromQuery] bool helpful, CancellationToken cancellationToken)
     {
         await _repository.IncrementHelpfulCountAsync(id, helpful, cancellationToken);
-        return Ok();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     #endregion

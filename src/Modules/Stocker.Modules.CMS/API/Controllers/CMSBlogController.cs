@@ -28,23 +28,23 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("categories")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<BlogCategoryListDto>>> GetCategories(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<BlogCategoryListDto>>>> GetCategories(CancellationToken cancellationToken)
     {
         var categories = await _repository.GetAllCategoriesAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<BlogCategoryListDto>>(categories));
+        return Ok(ApiResponse<IEnumerable<BlogCategoryListDto>>.SuccessResponse(_mapper.Map<IEnumerable<BlogCategoryListDto>>(categories)));
     }
 
     /// <summary>
     /// Get category by ID
     /// </summary>
     [HttpGet("categories/{id:guid}")]
-    public async Task<ActionResult<BlogCategoryDto>> GetCategoryById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogCategoryDto>>> GetCategoryById(Guid id, CancellationToken cancellationToken)
     {
         var category = await _repository.GetCategoryByIdAsync(id, cancellationToken);
         if (category == null)
-            return NotFound();
+            return NotFound(ApiResponse<BlogCategoryDto>.FailureResponse("Category not found"));
 
-        return Ok(_mapper.Map<BlogCategoryDto>(category));
+        return Ok(ApiResponse<BlogCategoryDto>.SuccessResponse(_mapper.Map<BlogCategoryDto>(category)));
     }
 
     /// <summary>
@@ -52,11 +52,11 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpPost("categories")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<BlogCategoryDto>> CreateCategory([FromBody] CreateBlogCategoryDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogCategoryDto>>> CreateCategory([FromBody] CreateBlogCategoryDto dto, CancellationToken cancellationToken)
     {
         var category = _mapper.Map<BlogCategory>(dto);
         var created = await _repository.AddCategoryAsync(category, cancellationToken);
-        return CreatedAtAction(nameof(GetCategoryById), new { id = created.Id }, _mapper.Map<BlogCategoryDto>(created));
+        return CreatedAtAction(nameof(GetCategoryById), new { id = created.Id }, ApiResponse<BlogCategoryDto>.SuccessResponse(_mapper.Map<BlogCategoryDto>(created)));
     }
 
     /// <summary>
@@ -64,15 +64,15 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpPut("categories/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<BlogCategoryDto>> UpdateCategory(Guid id, [FromBody] UpdateBlogCategoryDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogCategoryDto>>> UpdateCategory(Guid id, [FromBody] UpdateBlogCategoryDto dto, CancellationToken cancellationToken)
     {
         var category = await _repository.GetCategoryByIdAsync(id, cancellationToken);
         if (category == null)
-            return NotFound();
+            return NotFound(ApiResponse<BlogCategoryDto>.FailureResponse("Category not found"));
 
         _mapper.Map(dto, category);
         await _repository.UpdateCategoryAsync(category, cancellationToken);
-        return Ok(_mapper.Map<BlogCategoryDto>(category));
+        return Ok(ApiResponse<BlogCategoryDto>.SuccessResponse(_mapper.Map<BlogCategoryDto>(category)));
     }
 
     /// <summary>
@@ -80,10 +80,10 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpDelete("categories/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteCategory(Guid id, CancellationToken cancellationToken)
     {
         await _repository.DeleteCategoryAsync(id, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     #endregion
@@ -95,10 +95,10 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("posts")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<BlogPostListDto>>> GetAllPosts(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<BlogPostListDto>>>> GetAllPosts(CancellationToken cancellationToken)
     {
         var posts = await _repository.GetAllPostsAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<BlogPostListDto>>(posts));
+        return Ok(ApiResponse<IEnumerable<BlogPostListDto>>.SuccessResponse(_mapper.Map<IEnumerable<BlogPostListDto>>(posts)));
     }
 
     /// <summary>
@@ -106,10 +106,10 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("posts/published")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<BlogPostListDto>>> GetPublishedPosts(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<BlogPostListDto>>>> GetPublishedPosts(CancellationToken cancellationToken)
     {
         var posts = await _repository.GetPublishedPostsAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<BlogPostListDto>>(posts));
+        return Ok(ApiResponse<IEnumerable<BlogPostListDto>>.SuccessResponse(_mapper.Map<IEnumerable<BlogPostListDto>>(posts)));
     }
 
     /// <summary>
@@ -117,13 +117,13 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("posts/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<BlogPostDto>> GetPostById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogPostDto>>> GetPostById(Guid id, CancellationToken cancellationToken)
     {
         var post = await _repository.GetPostByIdAsync(id, cancellationToken);
         if (post == null)
-            return NotFound();
+            return NotFound(ApiResponse<BlogPostDto>.FailureResponse("Post not found"));
 
-        return Ok(_mapper.Map<BlogPostDto>(post));
+        return Ok(ApiResponse<BlogPostDto>.SuccessResponse(_mapper.Map<BlogPostDto>(post)));
     }
 
     /// <summary>
@@ -131,16 +131,16 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("posts/slug/{slug}")]
     [AllowAnonymous]
-    public async Task<ActionResult<BlogPostDto>> GetPostBySlug(string slug, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogPostDto>>> GetPostBySlug(string slug, CancellationToken cancellationToken)
     {
         var post = await _repository.GetPostBySlugAsync(slug, cancellationToken);
         if (post == null || post.Status != BlogPostStatus.Published)
-            return NotFound();
+            return NotFound(ApiResponse<BlogPostDto>.FailureResponse("Post not found"));
 
         // Increment view count
         await _repository.IncrementViewCountAsync(post.Id, cancellationToken);
 
-        return Ok(_mapper.Map<BlogPostDto>(post));
+        return Ok(ApiResponse<BlogPostDto>.SuccessResponse(_mapper.Map<BlogPostDto>(post)));
     }
 
     /// <summary>
@@ -148,11 +148,11 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpGet("categories/{categoryId:guid}/posts")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<BlogPostListDto>>> GetPostsByCategory(Guid categoryId, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<BlogPostListDto>>>> GetPostsByCategory(Guid categoryId, CancellationToken cancellationToken)
     {
         var posts = await _repository.GetPostsByCategoryAsync(categoryId, cancellationToken);
         var publishedPosts = posts.Where(p => p.Status == BlogPostStatus.Published);
-        return Ok(_mapper.Map<IEnumerable<BlogPostListDto>>(publishedPosts));
+        return Ok(ApiResponse<IEnumerable<BlogPostListDto>>.SuccessResponse(_mapper.Map<IEnumerable<BlogPostListDto>>(publishedPosts)));
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpPost("posts")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<BlogPostDto>> CreatePost([FromBody] CreateBlogPostDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogPostDto>>> CreatePost([FromBody] CreateBlogPostDto dto, CancellationToken cancellationToken)
     {
         var post = _mapper.Map<BlogPost>(dto);
 
@@ -168,7 +168,7 @@ public class CMSBlogController : ControllerBase
             post.PublishedAt = DateTime.UtcNow;
 
         var created = await _repository.AddPostAsync(post, cancellationToken);
-        return CreatedAtAction(nameof(GetPostById), new { id = created.Id }, _mapper.Map<BlogPostDto>(created));
+        return CreatedAtAction(nameof(GetPostById), new { id = created.Id }, ApiResponse<BlogPostDto>.SuccessResponse(_mapper.Map<BlogPostDto>(created)));
     }
 
     /// <summary>
@@ -176,11 +176,11 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpPut("posts/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<BlogPostDto>> UpdatePost(Guid id, [FromBody] UpdateBlogPostDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<BlogPostDto>>> UpdatePost(Guid id, [FromBody] UpdateBlogPostDto dto, CancellationToken cancellationToken)
     {
         var post = await _repository.GetPostByIdAsync(id, cancellationToken);
         if (post == null)
-            return NotFound();
+            return NotFound(ApiResponse<BlogPostDto>.FailureResponse("Post not found"));
 
         var wasPublished = post.Status == BlogPostStatus.Published;
         _mapper.Map(dto, post);
@@ -189,7 +189,7 @@ public class CMSBlogController : ControllerBase
             post.PublishedAt = DateTime.UtcNow;
 
         await _repository.UpdatePostAsync(post, cancellationToken);
-        return Ok(_mapper.Map<BlogPostDto>(post));
+        return Ok(ApiResponse<BlogPostDto>.SuccessResponse(_mapper.Map<BlogPostDto>(post)));
     }
 
     /// <summary>
@@ -197,10 +197,10 @@ public class CMSBlogController : ControllerBase
     /// </summary>
     [HttpDelete("posts/{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> DeletePost(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> DeletePost(Guid id, CancellationToken cancellationToken)
     {
         await _repository.DeletePostAsync(id, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     #endregion

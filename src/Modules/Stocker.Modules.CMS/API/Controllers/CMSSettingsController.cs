@@ -25,10 +25,10 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<CMSSettingDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<CMSSettingDto>>>> GetAll(CancellationToken cancellationToken)
     {
         var settings = await _repository.GetAllAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<CMSSettingDto>>(settings));
+        return Ok(ApiResponse<IEnumerable<CMSSettingDto>>.SuccessResponse(_mapper.Map<IEnumerable<CMSSettingDto>>(settings)));
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpGet("grouped")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<Dictionary<string, Dictionary<string, string>>>> GetGrouped(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<Dictionary<string, Dictionary<string, string>>>>> GetGrouped(CancellationToken cancellationToken)
     {
         var settings = await _repository.GetAllAsync(cancellationToken);
 
@@ -47,7 +47,7 @@ public class CMSSettingsController : ControllerBase
                 g => g.ToDictionary(s => s.Key, s => s.Value)
             );
 
-        return Ok(grouped);
+        return Ok(ApiResponse<Dictionary<string, Dictionary<string, string>>>.SuccessResponse(grouped));
     }
 
     /// <summary>
@@ -55,11 +55,11 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpGet("group/{group}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<Dictionary<string, string>>> GetByGroup(string group, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<Dictionary<string, string>>>> GetByGroup(string group, CancellationToken cancellationToken)
     {
         var settings = await _repository.GetByGroupAsync(group, cancellationToken);
         var result = settings.ToDictionary(s => s.Key, s => s.Value);
-        return Ok(result);
+        return Ok(ApiResponse<Dictionary<string, string>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -67,13 +67,13 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpGet("{key}")]
     [AllowAnonymous]
-    public async Task<ActionResult<object>> GetByKey(string key, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<object>>> GetByKey(string key, CancellationToken cancellationToken)
     {
         var setting = await _repository.GetByKeyAsync(key, cancellationToken);
         if (setting == null)
-            return NotFound();
+            return NotFound(ApiResponse<object>.FailureResponse("Setting not found"));
 
-        return Ok(new { key = setting.Key, value = setting.Value });
+        return Ok(ApiResponse<object>.SuccessResponse(new { key = setting.Key, value = setting.Value }));
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpPut("{key}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<CMSSettingDto>> Upsert(string key, [FromBody] UpdateSettingDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<CMSSettingDto>>> Upsert(string key, [FromBody] UpdateSettingDto dto, CancellationToken cancellationToken)
     {
         var setting = new CMSSetting
         {
@@ -92,7 +92,7 @@ public class CMSSettingsController : ControllerBase
         };
 
         var result = await _repository.UpsertAsync(setting, cancellationToken);
-        return Ok(_mapper.Map<CMSSettingDto>(result));
+        return Ok(ApiResponse<CMSSettingDto>.SuccessResponse(_mapper.Map<CMSSettingDto>(result)));
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpPost("bulk")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<CMSSettingDto>>> BulkUpdate([FromBody] IEnumerable<CreateSettingDto> settings, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<CMSSettingDto>>>> BulkUpdate([FromBody] IEnumerable<CreateSettingDto> settings, CancellationToken cancellationToken)
     {
         var results = new List<CMSSetting>();
 
@@ -111,7 +111,7 @@ public class CMSSettingsController : ControllerBase
             results.Add(result);
         }
 
-        return Ok(_mapper.Map<IEnumerable<CMSSettingDto>>(results));
+        return Ok(ApiResponse<IEnumerable<CMSSettingDto>>.SuccessResponse(_mapper.Map<IEnumerable<CMSSettingDto>>(results)));
     }
 
     /// <summary>
@@ -119,10 +119,10 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpDelete("{key}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> Delete(string key, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> Delete(string key, CancellationToken cancellationToken)
     {
         await _repository.DeleteAsync(key, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class CMSSettingsController : ControllerBase
     /// </summary>
     [HttpPost("init")]
     [Authorize(Roles = "SuperAdmin")]
-    public async Task<ActionResult<object>> InitDefaults(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<object>>> InitDefaults(CancellationToken cancellationToken)
     {
         var defaults = new List<CMSSetting>
         {
@@ -148,6 +148,6 @@ public class CMSSettingsController : ControllerBase
             await _repository.UpsertAsync(setting, cancellationToken);
         }
 
-        return Ok(new { message = "Default settings initialized", count = defaults.Count });
+        return Ok(ApiResponse<object>.SuccessResponse(new { message = "Default settings initialized", count = defaults.Count }));
     }
 }

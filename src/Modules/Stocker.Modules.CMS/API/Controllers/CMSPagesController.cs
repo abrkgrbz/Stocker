@@ -26,10 +26,10 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<IEnumerable<PageDto>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<PageDto>>>> GetAll(CancellationToken cancellationToken)
     {
         var pages = await _repository.GetAllAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<PageDto>>(pages));
+        return Ok(ApiResponse<IEnumerable<PageDto>>.SuccessResponse(_mapper.Map<IEnumerable<PageDto>>(pages)));
     }
 
     /// <summary>
@@ -37,10 +37,10 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpGet("published")]
     [AllowAnonymous]
-    public async Task<ActionResult<IEnumerable<PageDto>>> GetPublished(CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<IEnumerable<PageDto>>>> GetPublished(CancellationToken cancellationToken)
     {
         var pages = await _repository.GetPublishedAsync(cancellationToken);
-        return Ok(_mapper.Map<IEnumerable<PageDto>>(pages));
+        return Ok(ApiResponse<IEnumerable<PageDto>>.SuccessResponse(_mapper.Map<IEnumerable<PageDto>>(pages)));
     }
 
     /// <summary>
@@ -48,13 +48,13 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<PageDto>> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<PageDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var page = await _repository.GetByIdAsync(id, cancellationToken);
         if (page == null)
-            return NotFound();
+            return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
 
-        return Ok(_mapper.Map<PageDto>(page));
+        return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
     }
 
     /// <summary>
@@ -62,13 +62,13 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpGet("slug/{slug}")]
     [AllowAnonymous]
-    public async Task<ActionResult<PageDto>> GetBySlug(string slug, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<PageDto>>> GetBySlug(string slug, CancellationToken cancellationToken)
     {
         var page = await _repository.GetBySlugAsync(slug, cancellationToken);
         if (page == null || page.Status != PageStatus.Published)
-            return NotFound();
+            return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
 
-        return Ok(_mapper.Map<PageDto>(page));
+        return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<PageDto>> Create([FromBody] CreatePageDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<PageDto>>> Create([FromBody] CreatePageDto dto, CancellationToken cancellationToken)
     {
         var page = _mapper.Map<CMSPage>(dto);
 
@@ -84,7 +84,7 @@ public class CMSPagesController : ControllerBase
             page.PublishedAt = DateTime.UtcNow;
 
         var created = await _repository.AddAsync(page, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, _mapper.Map<PageDto>(created));
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(created)));
     }
 
     /// <summary>
@@ -92,11 +92,11 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<ActionResult<PageDto>> Update(Guid id, [FromBody] UpdatePageDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<PageDto>>> Update(Guid id, [FromBody] UpdatePageDto dto, CancellationToken cancellationToken)
     {
         var page = await _repository.GetByIdAsync(id, cancellationToken);
         if (page == null)
-            return NotFound();
+            return NotFound(ApiResponse<PageDto>.FailureResponse("Page not found"));
 
         var wasPublished = page.Status == PageStatus.Published;
         _mapper.Map(dto, page);
@@ -105,7 +105,7 @@ public class CMSPagesController : ControllerBase
             page.PublishedAt = DateTime.UtcNow;
 
         await _repository.UpdateAsync(page, cancellationToken);
-        return Ok(_mapper.Map<PageDto>(page));
+        return Ok(ApiResponse<PageDto>.SuccessResponse(_mapper.Map<PageDto>(page)));
     }
 
     /// <summary>
@@ -113,9 +113,9 @@ public class CMSPagesController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ApiResponse<bool>>> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _repository.DeleteAsync(id, cancellationToken);
-        return NoContent();
+        return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 }
