@@ -58,7 +58,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<TestimonialDto>>> CreateTestimonial([FromBody] CreateTestimonialDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateTestimonialCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetTestimonialById), new { id = result.Value.Id }, ApiResponse<TestimonialDto>.SuccessResponse(result.Value));
     }
 
@@ -67,7 +67,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<TestimonialDto>>> UpdateTestimonial(Guid id, [FromBody] UpdateTestimonialDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateTestimonialCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<TestimonialDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<TestimonialDto>.SuccessResponse(result.Value));
     }
 
@@ -76,7 +76,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteTestimonial(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteTestimonialCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -123,7 +123,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PricingPlanDto>>> CreatePricingPlan([FromBody] CreatePricingPlanDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreatePricingPlanCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetPricingPlanById), new { id = result.Value.Id }, ApiResponse<PricingPlanDto>.SuccessResponse(result.Value));
     }
 
@@ -132,7 +132,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PricingPlanDto>>> UpdatePricingPlan(Guid id, [FromBody] UpdatePricingPlanDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdatePricingPlanCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<PricingPlanDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<PricingPlanDto>.SuccessResponse(result.Value));
     }
 
@@ -141,7 +141,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeletePricingPlan(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeletePricingPlanCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -171,7 +171,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PricingFeatureDto>>> CreatePricingFeature([FromBody] CreatePricingFeatureDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreatePricingFeatureCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetPricingFeatureById), new { id = result.Value.Id }, ApiResponse<PricingFeatureDto>.SuccessResponse(result.Value));
     }
 
@@ -180,7 +180,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PricingFeatureDto>>> UpdatePricingFeature(Guid id, [FromBody] UpdatePricingFeatureDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdatePricingFeatureCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<PricingFeatureDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<PricingFeatureDto>.SuccessResponse(result.Value));
     }
 
@@ -189,7 +189,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeletePricingFeature(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeletePricingFeatureCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -243,7 +243,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<FeatureDto>>> CreateFeature([FromBody] CreateFeatureDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateFeatureCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<FeatureDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<FeatureDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetFeatureById), new { id = result.Value.Id }, ApiResponse<FeatureDto>.SuccessResponse(result.Value));
     }
 
@@ -252,7 +252,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<FeatureDto>>> UpdateFeature(Guid id, [FromBody] UpdateFeatureDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateFeatureCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<FeatureDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<FeatureDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<FeatureDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<FeatureDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<FeatureDto>.SuccessResponse(result.Value));
     }
 
@@ -261,7 +261,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteFeature(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteFeatureCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -308,7 +308,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IndustryDto>>> CreateIndustry([FromBody] CreateIndustryDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateIndustryCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<IndustryDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<IndustryDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetIndustryById), new { id = result.Value.Id }, ApiResponse<IndustryDto>.SuccessResponse(result.Value));
     }
 
@@ -317,7 +317,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IndustryDto>>> UpdateIndustry(Guid id, [FromBody] UpdateIndustryDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateIndustryCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IndustryDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<IndustryDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IndustryDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<IndustryDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<IndustryDto>.SuccessResponse(result.Value));
     }
 
@@ -326,7 +326,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteIndustry(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteIndustryCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -373,7 +373,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IntegrationDto>>> CreateIntegration([FromBody] CreateIntegrationDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateIntegrationCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetIntegrationById), new { id = result.Value.Id }, ApiResponse<IntegrationDto>.SuccessResponse(result.Value));
     }
 
@@ -382,7 +382,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IntegrationDto>>> UpdateIntegration(Guid id, [FromBody] UpdateIntegrationDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateIntegrationCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<IntegrationDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<IntegrationDto>.SuccessResponse(result.Value));
     }
 
@@ -391,7 +391,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteIntegration(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteIntegrationCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -421,7 +421,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IntegrationItemDto>>> CreateIntegrationItem([FromBody] CreateIntegrationItemDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateIntegrationItemCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetIntegrationItemById), new { id = result.Value.Id }, ApiResponse<IntegrationItemDto>.SuccessResponse(result.Value));
     }
 
@@ -430,7 +430,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<IntegrationItemDto>>> UpdateIntegrationItem(Guid id, [FromBody] UpdateIntegrationItemDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateIntegrationItemCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<IntegrationItemDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<IntegrationItemDto>.SuccessResponse(result.Value));
     }
 
@@ -439,7 +439,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteIntegrationItem(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteIntegrationItemCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -485,7 +485,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<StatDto>>> CreateStat([FromBody] CreateStatDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateStatCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<StatDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<StatDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetStatById), new { id = result.Value.Id }, ApiResponse<StatDto>.SuccessResponse(result.Value));
     }
 
@@ -494,7 +494,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<StatDto>>> UpdateStat(Guid id, [FromBody] UpdateStatDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateStatCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<StatDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<StatDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<StatDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<StatDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<StatDto>.SuccessResponse(result.Value));
     }
 
@@ -503,7 +503,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteStat(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteStatCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -549,7 +549,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PartnerDto>>> CreatePartner([FromBody] CreatePartnerDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreatePartnerCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<PartnerDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<PartnerDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetPartnerById), new { id = result.Value.Id }, ApiResponse<PartnerDto>.SuccessResponse(result.Value));
     }
 
@@ -558,7 +558,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<PartnerDto>>> UpdatePartner(Guid id, [FromBody] UpdatePartnerDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdatePartnerCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PartnerDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<PartnerDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<PartnerDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<PartnerDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<PartnerDto>.SuccessResponse(result.Value));
     }
 
@@ -567,7 +567,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeletePartner(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeletePartnerCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -605,7 +605,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<AchievementDto>>> CreateAchievement([FromBody] CreateAchievementDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateAchievementCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<AchievementDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<AchievementDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetAchievementById), new { id = result.Value.Id }, ApiResponse<AchievementDto>.SuccessResponse(result.Value));
     }
 
@@ -614,7 +614,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<AchievementDto>>> UpdateAchievement(Guid id, [FromBody] UpdateAchievementDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateAchievementCommand { Id = id, Data = dto }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<AchievementDto>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<AchievementDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<AchievementDto>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<AchievementDto>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<AchievementDto>.SuccessResponse(result.Value));
     }
 
@@ -623,7 +623,7 @@ public class CMSLandingPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAchievement(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteAchievementCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return result.Error.Code.Contains("NotFound") ? NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description)) : BadRequest(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 

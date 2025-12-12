@@ -67,7 +67,7 @@ public class CMSDocsController : ControllerBase
     public async Task<ActionResult<ApiResponse<DocCategoryDto>>> CreateCategory([FromBody] CreateDocCategoryDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateDocCategoryCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetCategoryById), new { id = result.Value.Id }, ApiResponse<DocCategoryDto>.SuccessResponse(result.Value));
     }
 
@@ -78,8 +78,8 @@ public class CMSDocsController : ControllerBase
         var result = await _mediator.Send(new UpdateDocCategoryCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "DocCategory.NotFound") return NotFound(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "DocCategory.NotFound") return NotFound(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<DocCategoryDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<DocCategoryDto>.SuccessResponse(result.Value));
     }
@@ -89,7 +89,7 @@ public class CMSDocsController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteCategory(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteDocCategoryCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -165,7 +165,7 @@ public class CMSDocsController : ControllerBase
     public async Task<ActionResult<ApiResponse<DocArticleDto>>> CreateArticle([FromBody] CreateDocArticleDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateDocArticleCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetArticleById), new { id = result.Value.Id }, ApiResponse<DocArticleDto>.SuccessResponse(result.Value));
     }
 
@@ -176,8 +176,8 @@ public class CMSDocsController : ControllerBase
         var result = await _mediator.Send(new UpdateDocArticleCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "DocArticle.NotFound") return NotFound(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "DocArticle.NotFound") return NotFound(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<DocArticleDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<DocArticleDto>.SuccessResponse(result.Value));
     }
@@ -187,7 +187,7 @@ public class CMSDocsController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteArticle(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteDocArticleCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 

@@ -58,7 +58,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<TeamMemberDto>>> CreateTeamMember([FromBody] CreateTeamMemberDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateTeamMemberCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetTeamMemberById), new { id = result.Value.Id }, ApiResponse<TeamMemberDto>.SuccessResponse(result.Value));
     }
 
@@ -69,8 +69,8 @@ public class CMSCompanyPageController : ControllerBase
         var result = await _mediator.Send(new UpdateTeamMemberCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "TeamMember.NotFound") return NotFound(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "TeamMember.NotFound") return NotFound(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<TeamMemberDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<TeamMemberDto>.SuccessResponse(result.Value));
     }
@@ -80,7 +80,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteTeamMember(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteTeamMemberCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -118,7 +118,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<CompanyValueDto>>> CreateCompanyValue([FromBody] CreateCompanyValueDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateCompanyValueCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetCompanyValueById), new { id = result.Value.Id }, ApiResponse<CompanyValueDto>.SuccessResponse(result.Value));
     }
 
@@ -129,8 +129,8 @@ public class CMSCompanyPageController : ControllerBase
         var result = await _mediator.Send(new UpdateCompanyValueCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "CompanyValue.NotFound") return NotFound(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "CompanyValue.NotFound") return NotFound(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<CompanyValueDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<CompanyValueDto>.SuccessResponse(result.Value));
     }
@@ -140,7 +140,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteCompanyValue(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteCompanyValueCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -186,7 +186,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<ContactInfoDto>>> CreateContactInfo([FromBody] CreateContactInfoDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateContactInfoCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetContactInfoById), new { id = result.Value.Id }, ApiResponse<ContactInfoDto>.SuccessResponse(result.Value));
     }
 
@@ -197,8 +197,8 @@ public class CMSCompanyPageController : ControllerBase
         var result = await _mediator.Send(new UpdateContactInfoCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "ContactInfo.NotFound") return NotFound(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "ContactInfo.NotFound") return NotFound(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<ContactInfoDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<ContactInfoDto>.SuccessResponse(result.Value));
     }
@@ -208,7 +208,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteContactInfo(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteContactInfoCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
@@ -246,7 +246,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<SocialLinkDto>>> CreateSocialLink([FromBody] CreateSocialLinkDto dto, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateSocialLinkCommand { Data = dto }, cancellationToken);
-        if (result.IsFailure) return BadRequest(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return BadRequest(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Description));
         return CreatedAtAction(nameof(GetSocialLinkById), new { id = result.Value.Id }, ApiResponse<SocialLinkDto>.SuccessResponse(result.Value));
     }
 
@@ -257,8 +257,8 @@ public class CMSCompanyPageController : ControllerBase
         var result = await _mediator.Send(new UpdateSocialLinkCommand { Id = id, Data = dto }, cancellationToken);
         if (result.IsFailure)
         {
-            if (result.Error.Code == "SocialLink.NotFound") return NotFound(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Message));
-            return BadRequest(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Message));
+            if (result.Error.Code == "SocialLink.NotFound") return NotFound(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Description));
+            return BadRequest(ApiResponse<SocialLinkDto>.FailureResponse(result.Error.Description));
         }
         return Ok(ApiResponse<SocialLinkDto>.SuccessResponse(result.Value));
     }
@@ -268,7 +268,7 @@ public class CMSCompanyPageController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteSocialLink(Guid id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new DeleteSocialLinkCommand { Id = id }, cancellationToken);
-        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Message));
+        if (result.IsFailure) return NotFound(ApiResponse<bool>.FailureResponse(result.Error.Description));
         return Ok(ApiResponse<bool>.SuccessResponse(true));
     }
 
