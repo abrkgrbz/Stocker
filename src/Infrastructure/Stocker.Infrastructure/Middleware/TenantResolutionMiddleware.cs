@@ -47,6 +47,7 @@ public class TenantResolutionMiddleware
             context.Request.Path.StartsWithSegments("/api/auth") ||
             context.Request.Path.StartsWithSegments("/api/master") ||
             context.Request.Path.StartsWithSegments("/api/admin") ||
+            context.Request.Path.StartsWithSegments("/api/cms") ||
             context.Request.Path.StartsWithSegments("/swagger") ||
             context.Request.Path.Value == "/" ||
             context.Request.Path.StartsWithSegments("/hangfire")))

@@ -351,6 +351,13 @@ export default function LoginScreen({ navigation }: any) {
                 <Text style={styles.buttonText}>Giriş Yap</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+                style={{ marginTop: 15, alignSelf: 'center' }}
+                onPress={() => navigation.navigate('ForgotPassword')}
+            >
+                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Şifremi Unuttum</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
                 <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Geri Dön</Text>
             </TouchableOpacity>

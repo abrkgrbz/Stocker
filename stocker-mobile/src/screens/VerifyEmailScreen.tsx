@@ -48,15 +48,16 @@ export default function VerifyEmailScreen({ route, navigation }: any) {
         try {
             // Use the tenant registration verification endpoint to trigger the creation process
             const response = await apiService.public.verifyEmailForTenantCreation({ email, code });
+            const responseData = response.data as any; // Cast to avoid TS error
 
-            if (response.data?.success && response.data?.registrationId) {
+            if (responseData?.success && responseData?.registrationId) {
                 showToast('Doğrulama başarılı, kurulum başlıyor...', 'success');
                 // Navigate to TenantProgressScreen with registrationId
                 navigation.replace('TenantProgress', {
-                    registrationId: response.data.registrationId
+                    registrationId: responseData.registrationId
                 });
             } else {
-                showToast(response.data?.message || 'Doğrulama başarısız', 'error');
+                showToast(responseData?.message || 'Doğrulama başarısız', 'error');
             }
         } catch (error: any) {
             showToast(error.message || 'Doğrulama sırasında hata oluştu', 'error');

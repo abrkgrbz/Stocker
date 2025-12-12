@@ -2,27 +2,45 @@ import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { databaseService } from '../db/database';
 import { TABLES } from '../db/schema';
 import { apiService } from '../api';
+import { tokenStorage } from '../../utils/tokenStorage';
 
 class SyncService {
     private isConnected: boolean = false;
     private isSyncing: boolean = false;
 
     constructor() {
-        NetInfo.addEventListener(this.handleConnectivityChange);
+        // Listener moved to init() to ensure DB is ready
     }
 
-    private handleConnectivityChange = (state: NetInfoState) => {
+    public async init() {
+        NetInfo.addEventListener(this.handleConnectivityChange);
+        const state = await NetInfo.fetch();
+        this.isConnected = state.isConnected ?? false;
+
+        const token = await tokenStorage.getToken();
+        if (this.isConnected && token) {
+            this.sync();
+        }
+    }
+
+    private handleConnectivityChange = async (state: NetInfoState) => {
         const wasConnected = this.isConnected;
         this.isConnected = state.isConnected ?? false;
 
         if (!wasConnected && this.isConnected) {
-            console.log('Online: Triggering sync...');
-            this.sync();
+            const token = await tokenStorage.getToken();
+            if (token) {
+                console.log('Online: Triggering sync...');
+                this.sync();
+            }
         }
     };
 
     public async sync() {
         if (this.isSyncing || !this.isConnected) return;
+
+        const token = await tokenStorage.getToken();
+        if (!token) return;
 
         this.isSyncing = true;
         try {

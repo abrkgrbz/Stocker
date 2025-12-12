@@ -1,4 +1,19 @@
 import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useAuthStore } from '../stores/authStore';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import VerifyEmailScreen from '../screens/VerifyEmailScreen';
+import TenantProgressScreen from '../screens/TenantProgressScreen';
+import SetupScreen from '../screens/SetupScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import CRMDashboardScreen from '../screens/crm/CRMDashboardScreen';
+import CustomerListScreen from '../screens/crm/CustomerListScreen';
+import CustomerDetailScreen from '../screens/crm/CustomerDetailScreen';
+import AddCustomerScreen from '../screens/crm/AddCustomerScreen';
+import DealListScreen from '../screens/crm/DealListScreen';
 import DealDetailScreen from '../screens/crm/DealDetailScreen';
 import ActivityListScreen from '../screens/crm/ActivityListScreen';
 import SalesDashboardScreen from '../screens/sales/SalesDashboardScreen';
@@ -22,7 +37,51 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { ActivityIndicator, View } from 'react-native';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export type RootStackParamList = {
+    Login: undefined;
+    Register: undefined;
+    VerifyEmail: { email: string };
+    TenantProgress: { registrationId: string };
+    ForgotPassword: undefined;
+    Setup: undefined;
+    Dashboard: undefined;
+
+    // CRM
+    CRMDashboard: undefined;
+    CustomerList: undefined;
+    CustomerDetail: { id: string };
+    AddCustomer: undefined;
+    DealList: undefined;
+    DealDetail: { id: string };
+    ActivityList: undefined;
+
+    // Sales
+    SalesDashboard: undefined;
+    QuoteList: undefined;
+    OrderList: undefined;
+    InvoiceList: undefined;
+
+    // Inventory
+    InventoryDashboard: undefined;
+    ProductList: undefined;
+    ProductDetail: { id: number };
+    StockMovements: undefined;
+    BarcodeScanner: undefined;
+    StockTransfers: undefined;
+    CreateStockTransfer: undefined;
+    StockCounts: undefined;
+    StockCountDetail: { id: number };
+
+    // HR
+    HRDashboard: undefined;
+    EmployeeList: undefined;
+    Attendance: undefined;
+    LeaveRequest: undefined;
+    Settings: undefined;
+    Profile: undefined;
+};
 
 export default function AppNavigator() {
     const { isAuthenticated, isLoading, isInitializing, user } = useAuthStore();
@@ -36,24 +95,27 @@ export default function AppNavigator() {
     }
 
     return (
+        // @ts-ignore - React 19 types mismatch with NavigationContainer
         <NavigationContainer>
+            {/* @ts-ignore - React 19 types mismatch with Stack.Navigator */}
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {!isAuthenticated ? (
                     // Auth Stack
-                    <Stack.Group>
+                    <>
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />
                         <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
                         <Stack.Screen name="TenantProgress" component={TenantProgressScreen} />
-                    </Stack.Group>
+                        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    </>
                 ) : (
                     // App Stack
                     user?.requiresSetup ? (
-                        <Stack.Group>
+                        <>
                             <Stack.Screen name="Setup" component={SetupScreen} />
-                        </Stack.Group>
+                        </>
                     ) : (
-                        <Stack.Group>
+                        <>
                             <Stack.Screen name="Dashboard" component={DashboardScreen} />
 
                             {/* CRM Module */}
@@ -89,7 +151,7 @@ export default function AppNavigator() {
                             <Stack.Screen name="LeaveRequest" component={LeaveRequestScreen} />
                             <Stack.Screen name="Settings" component={SettingsScreen} />
                             <Stack.Screen name="Profile" component={ProfileScreen} />
-                        </Stack.Group>
+                        </>
                     )
                 )}
             </Stack.Navigator>

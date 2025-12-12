@@ -19,7 +19,7 @@ export default function QuoteListScreen({ navigation }: any) {
 
     const loadQuotes = async () => {
         try {
-            const response = await apiService.crm.getQuotes();
+            const response = await apiService.sales.getQuotes();
             if (response.data.success) {
                 setQuotes(response.data.data);
             }

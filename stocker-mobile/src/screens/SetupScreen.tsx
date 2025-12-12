@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -10,10 +10,11 @@ import {
     ViewStyle,
     TextStyle,
     Dimensions,
-    SafeAreaView,
     Platform,
     KeyboardAvoidingView,
+    Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { apiService } from '../services/api';
 import { colors, spacing, typography } from '../theme/colors';
@@ -23,10 +24,13 @@ import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAlert } from '../context/AlertContext';
+import { usePricingSignalR } from '../hooks/usePricingSignalR';
 
 const { width } = Dimensions.get('window');
 
-type SetupStep = 'package' | 'company' | 'complete';
+type SetupStep = 'package-type' | 'package' | 'custom-package' | 'users' | 'storage' | 'addons' | 'industry' | 'company' | 'complete';
+type PackageType = 'ready' | 'custom';
+type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
 
 interface PackageOption {
     id: string;
@@ -41,31 +45,47 @@ interface PackageOption {
         featureName: string;
         isEnabled: boolean;
     }>;
+    modules: Array<{
+        moduleCode: string;
+        moduleName: string;
+        isIncluded: boolean;
+    }>;
     trialDays: number;
+}
+
+interface ModuleDefinition {
+    id: string;
+    code: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    monthlyPrice: number;
+    currency: string;
+    isCore: boolean;
+    isActive: boolean;
+    displayOrder: number;
+    category?: string;
+    dependencies: string[];
+}
+
+interface SetupOptions {
+    userTiers: any[];
+    storagePlans: any[];
+    addOns: any[];
+    industries: any[];
 }
 
 export default function SetupScreen({ navigation }: any) {
     const { showAlert } = useAlert();
     const { user, completeSetup, logout } = useAuthStore();
-    const [currentStep, setCurrentStep] = useState<SetupStep>('package');
+    const [currentStep, setCurrentStep] = useState<SetupStep>('package-type');
     const [isLoading, setIsLoading] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
 
-    // Package State
-    const [packages, setPackages] = useState<PackageOption[]>([]);
-    const [selectedPackageId, setSelectedPackageId] = useState<string>('');
-    const [loadingPackages, setLoadingPackages] = useState(true);
+    // Package Type
+    const [packageType, setPackageType] = useState<PackageType>('ready');
 
-    // Company State
-    const [companyName, setCompanyName] = useState('');
-    const [companyCode, setCompanyCode] = useState('');
-    const [sector, setSector] = useState('');
-    const [employeeCount, setEmployeeCount] = useState('');
-    const [contactPhone, setContactPhone] = useState('');
-    const [address, setAddress] = useState('');
-    const [taxOffice, setTaxOffice] = useState('');
-    const [taxNumber, setTaxNumber] = useState('');
-
+    // Message Handling
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'error') => {
         setToast({ visible: true, message, type });
     };
@@ -74,9 +94,81 @@ export default function SetupScreen({ navigation }: any) {
         setToast({ ...toast, visible: false });
     };
 
+    // Ready Package State
+    const [packages, setPackages] = useState<PackageOption[]>([]);
+    const [selectedPackageId, setSelectedPackageId] = useState<string>('');
+    const [loadingPackages, setLoadingPackages] = useState(false);
+
+    // Custom Package State
+    const [modules, setModules] = useState<ModuleDefinition[]>([]);
+    const [selectedModuleCodes, setSelectedModuleCodes] = useState<string[]>([]);
+    const [loadingModules, setLoadingModules] = useState(false);
+    const [setupOptions, setSetupOptions] = useState<SetupOptions | null>(null);
+    const [loadingSetupOptions, setLoadingSetupOptions] = useState(false);
+
+    // Custom Selections
+    const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+    const [userCount, setUserCount] = useState<number>(1);
+    const [selectedStoragePlanCode, setSelectedStoragePlanCode] = useState<string>('');
+    const [selectedAddOnCodes, setSelectedAddOnCodes] = useState<string[]>([]);
+    const [selectedIndustryCode, setSelectedIndustryCode] = useState<string>('');
+
+    // Company State
+    const [companyName, setCompanyName] = useState('');
+    const [companyCode, setCompanyCode] = useState('');
+    const [contactPhone, setContactPhone] = useState('');
+    const [address, setAddress] = useState('');
+    const [taxOffice, setTaxOffice] = useState('');
+    const [taxNumber, setTaxNumber] = useState('');
+
+    // SignalR Hook
+    const {
+        connect,
+        disconnect,
+        calculatePrice,
+        priceResult,
+        isCalculating,
+        isConnected
+    } = usePricingSignalR();
+
+    // Debounce Ref
+    const priceCalculationTimeoutRef = useRef<any>(null);
+
+    // --- Effects ---
+
+    // Load initial data
     useEffect(() => {
         loadPackages();
     }, []);
+
+    // Connect SignalR when Custom Package is selected
+    useEffect(() => {
+        if (packageType === 'custom') {
+            connect();
+            if (modules.length === 0) loadModules();
+            if (!setupOptions) loadSetupOptions();
+        } else {
+            disconnect();
+        }
+    }, [packageType]);
+
+    // Calculate Price when selections change
+    useEffect(() => {
+        if (packageType === 'custom' && isConnected && selectedModuleCodes.length > 0) {
+            if (priceCalculationTimeoutRef.current) clearTimeout(priceCalculationTimeoutRef.current);
+
+            priceCalculationTimeoutRef.current = setTimeout(() => {
+                calculatePrice({
+                    selectedModuleCodes,
+                    userCount,
+                    storagePlanCode: selectedStoragePlanCode || undefined,
+                    selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : undefined
+                });
+            }, 500);
+        }
+    }, [selectedModuleCodes, userCount, selectedStoragePlanCode, selectedAddOnCodes, isConnected]);
+
+    // --- Loading Data ---
 
     const loadPackages = async () => {
         try {
@@ -84,9 +176,7 @@ export default function SetupScreen({ navigation }: any) {
             const response = await apiService.public.getPackages();
             if (response.data.success && response.data.data) {
                 setPackages(response.data.data);
-                if (response.data.data.length > 0) {
-                    setSelectedPackageId(response.data.data[0].id);
-                }
+                if (response.data.data.length > 0) setSelectedPackageId(response.data.data[0].id);
             }
         } catch (error) {
             console.error('Failed to load packages:', error);
@@ -96,12 +186,112 @@ export default function SetupScreen({ navigation }: any) {
         }
     };
 
-    const handlePackageNext = () => {
-        if (!selectedPackageId) {
-            showToast('Lütfen bir paket seçin', 'error');
-            return;
+    const loadModules = async () => {
+        try {
+            setLoadingModules(true);
+            const response = await apiService.public.getModules();
+            if (response.data.success && response.data.data) {
+                setModules(response.data.data);
+                // Pre-select core modules
+                const coreCodes = response.data.data.filter((m: ModuleDefinition) => m.isCore).map((m: any) => m.code);
+                setSelectedModuleCodes(coreCodes);
+            }
+        } catch (error) {
+            console.error('Failed to load modules:', error);
+            showToast('Modüller yüklenemedi', 'error');
+        } finally {
+            setLoadingModules(false);
         }
-        setCurrentStep('company');
+    };
+
+    const loadSetupOptions = async () => {
+        try {
+            setLoadingSetupOptions(true);
+            const response = await apiService.public.getSetupOptions();
+            if (response.data.success && response.data.data) {
+                setSetupOptions(response.data.data);
+                const defaultStorage = response.data.data.storagePlans.find((p: any) => p.isDefault);
+                if (defaultStorage) setSelectedStoragePlanCode(defaultStorage.code);
+            }
+        } catch (error) {
+            console.error('Failed to load setup options:', error);
+            showToast('Seçenekler yüklenemedi', 'error');
+        } finally {
+            setLoadingSetupOptions(false);
+        }
+    };
+
+    // --- Logic ---
+
+    const toggleModule = (moduleCode: string) => {
+        const module = modules.find(m => m.code === moduleCode);
+        if (module?.isCore) return;
+
+        setSelectedModuleCodes(prev => {
+            if (prev.includes(moduleCode)) {
+                // Deselect logic (check dependencies)
+                const dependentModules = modules.filter(m => prev.includes(m.code) && m.dependencies.includes(moduleCode));
+                if (dependentModules.length > 0) {
+                    Alert.alert('Uyarı', `Bu modül şu modüller tarafından kullanılıyor: ${dependentModules.map(m => m.name).join(', ')}`);
+                    return prev;
+                }
+                return prev.filter(c => c !== moduleCode);
+            } else {
+                // Select logic (add dependencies)
+                const newCodes = [...prev, moduleCode];
+                module?.dependencies.forEach(dep => {
+                    if (!newCodes.includes(dep)) newCodes.push(dep);
+                });
+                return newCodes;
+            }
+        });
+    };
+
+    const handleNext = () => {
+        switch (currentStep) {
+            case 'package-type':
+                if (packageType === 'ready') setCurrentStep('package');
+                else setCurrentStep('custom-package');
+                break;
+            case 'package':
+                if (!selectedPackageId) showToast('Lütfen bir paket seçin', 'error');
+                else setCurrentStep('company');
+                break;
+            case 'custom-package':
+                if (selectedModuleCodes.filter(c => !modules.find(m => m.code === c)?.isCore).length === 0) {
+                    showToast('Lütfen en az bir modül seçin', 'error');
+                } else {
+                    setCurrentStep('users');
+                }
+                break;
+            case 'users':
+                if (userCount < 1) showToast('En az 1 kullanıcı seçmelisiniz', 'error');
+                else setCurrentStep('storage');
+                break;
+            case 'storage':
+                setCurrentStep('addons');
+                break;
+            case 'addons':
+                setCurrentStep('industry');
+                break;
+            case 'industry':
+                if (selectedIndustryCode && setupOptions) {
+                    // Apply recommended modules
+                    const industry = setupOptions.industries.find((i: any) => i.code === selectedIndustryCode);
+                    if (industry) {
+                        const newCodes = [...selectedModuleCodes];
+                        industry.recommendedModules.forEach((m: string) => {
+                            if (!newCodes.includes(m)) newCodes.push(m);
+                        });
+                        setSelectedModuleCodes(newCodes);
+                    }
+                }
+                setCurrentStep('company');
+                break;
+            case 'company':
+                handleCompanySubmit();
+                break;
+        }
     };
 
     const handleCompanySubmit = async () => {
@@ -112,309 +302,396 @@ export default function SetupScreen({ navigation }: any) {
 
         setIsLoading(true);
         try {
-            const response = await apiService.setup.complete({
-                packageId: selectedPackageId,
-                companyName,
-                companyCode,
-                sector,
-                employeeCount,
-                contactPhone,
-                address,
-                taxOffice,
-                taxNumber
-            });
+            const payload = packageType === 'ready'
+                ? {
+                    packageId: selectedPackageId,
+                    companyName, companyCode, contactPhone, address, taxOffice, taxNumber
+                }
+                : {
+                    customPackage: {
+                        selectedModuleCodes,
+                        billingCycle,
+                        userCount,
+                        storagePlanCode: selectedStoragePlanCode || null,
+                        selectedAddOnCodes: selectedAddOnCodes.length > 0 ? selectedAddOnCodes : null,
+                        industryCode: selectedIndustryCode || null
+                    },
+                    companyName, companyCode, contactPhone, address, taxOffice, taxNumber
+                };
+
+            const response = await apiService.setup.complete(payload);
 
             if (response.data.success) {
                 setCurrentStep('complete');
-                // Update user state to remove requiresSetup
                 completeSetup();
             } else {
                 throw new Error(response.data.message || 'Kurulum tamamlanamadı');
             }
         } catch (error: any) {
-            showToast(error.message || 'Kurulum sırasında hata oluştu', 'error');
+            showToast(error.message || 'Kurulum hatası', 'error');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleFinish = () => {
-        // Navigate to Dashboard and reset stack
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'Dashboard' }],
-        });
-    };
-
     const handleLogout = async () => {
         showAlert({
             title: 'Çıkış Yap',
-            message: 'Kurulumu iptal edip çıkış yapmak istediğinize emin misiniz?',
+            message: 'Kurulumu iptal etmek istiyor musunuz?',
             type: 'warning',
             buttons: [
                 { text: 'İptal', style: 'cancel' },
-                {
-                    text: 'Çıkış Yap',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await logout();
-                        } catch (error) {
-                            console.error('Logout failed:', error);
-                        }
-                    }
-                }
+                { text: 'Çıkış', style: 'destructive', onPress: logout }
             ]
         });
     };
 
-    const renderStepIndicator = () => {
-        const steps = [
-            { key: 'package', label: 'Paket', icon: 'cube-outline' },
-            { key: 'company', label: 'Firma', icon: 'business-outline' },
-            { key: 'complete', label: 'Tamam', icon: 'checkmark-circle-outline' },
-        ];
+    // --- Render Helpers ---
+
+    const renderPriceSummary = () => {
+        if (packageType !== 'custom' || !['custom-package', 'users', 'storage', 'addons', 'industry'].includes(currentStep)) return null;
 
         return (
-            <View style={styles.stepIndicator}>
-                {steps.map((step, index) => {
-                    const isActive = step.key === currentStep;
-                    const isCompleted =
-                        (currentStep === 'company' && index === 0) ||
-                        (currentStep === 'complete');
-
-                    return (
-                        <View key={step.key} style={styles.stepItem}>
-                            <View style={[
-                                styles.stepIconContainer,
-                                isActive && styles.stepIconActive,
-                                isCompleted && styles.stepIconCompleted
-                            ]}>
-                                <Ionicons
-                                    name={step.icon as any}
-                                    size={20}
-                                    color={isActive || isCompleted ? '#fff' : 'rgba(255,255,255,0.5)'}
-                                />
-                            </View>
-                            <Text style={[
-                                styles.stepLabel,
-                                isActive && styles.stepLabelActive
-                            ]}>{step.label}</Text>
-                            {index < steps.length - 1 && (
-                                <View style={[
-                                    styles.stepLine,
-                                    isCompleted && styles.stepLineCompleted
-                                ]} />
-                            )}
-                        </View>
-                    );
-                })}
+            <View style={styles.pricePanel}>
+                <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>Toplam ({billingCycle === 'monthly' ? 'Aylık' : 'Dönemlik'})</Text>
+                    {isCalculating ? (
+                        <Loading visible={false} text="" /> // Just spinner
+                    ) : (
+                        <Text style={styles.priceValue}>
+                            {priceResult
+                                ? `₺${(billingCycle === 'monthly' ? priceResult.monthlyTotal : priceResult.annualTotal).toFixed(2)}`
+                                : 'Hesaplanıyor...'}
+                        </Text>
+                    )}
+                </View>
+                {!isConnected && <Text style={styles.reconnecting}>Bağlanıyor...</Text>}
             </View>
         );
     };
 
-    const renderPackageStep = () => (
-        <Animated.View entering={FadeInRight} exiting={FadeOutLeft}>
-            <Text style={styles.title}>Paket Seçimi</Text>
-            <Text style={styles.subtitle}>İşletmeniz için en uygun paketi seçin</Text>
+    const renderFooter = () => {
+        if (currentStep === 'complete') return null;
 
-            {loadingPackages ? (
-                <View style={styles.loadingContainer}>
-                    <Loading visible={true} text="Paketler yükleniyor..." />
+        return (
+            <View style={styles.footer}>
+                {currentStep !== 'package-type' && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => setCurrentStep('package-type')} // Simplified back
+                    >
+                        <Text style={styles.backButtonText}>Geri</Text>
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                    <Text style={styles.nextButtonText}>
+                        {currentStep === 'company' ? 'Tamamla' : 'Devam Et'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    // --- Render Steps ---
+
+    const renderPackageTypeStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Paketinizi Seçin</Text>
+            <Text style={styles.subtitle}>İhtiyacınıza en uygun başlangıcı yapın.</Text>
+
+            <TouchableOpacity
+                style={[styles.bigCard, packageType === 'ready' && styles.bigCardSelected]}
+                onPress={() => setPackageType('ready')}
+            >
+                <Ionicons name="gift-outline" size={32} color={colors.white} />
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardTitle}>Hazır Paketler</Text>
+                    <Text style={styles.cardDesc}>Sizin için hazırlanmış avantajlı paketler.</Text>
                 </View>
-            ) : (
-                <View>
-                    {packages.map((pkg) => (
+                {packageType === 'ready' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.bigCard, packageType === 'custom' && styles.bigCardSelected]}
+                onPress={() => setPackageType('custom')}
+            >
+                <Ionicons name="construct-outline" size={32} color={colors.white} />
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardTitle}>Kendi Paketini Oluştur</Text>
+                    <Text style={styles.cardDesc}>İhtiyacınız olan modülleri seçin, sadece kullandığınızı ödeyin.</Text>
+                </View>
+                {packageType === 'custom' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+            </TouchableOpacity>
+        </Animated.View>
+    );
+
+    const renderCustomPackageStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Modül Seçimi</Text>
+            <Text style={styles.subtitle}>İhtiyacınız olan modülleri ekleyin.</Text>
+
+            {loadingModules ? <Loading visible={true} text="Modüller yükleniyor..." /> : (
+                modules.map(module => (
+                    <TouchableOpacity
+                        key={module.code}
+                        style={[styles.moduleCard, selectedModuleCodes.includes(module.code) && styles.moduleCardSelected]}
+                        onPress={() => toggleModule(module.code)}
+                        disabled={module.isCore}
+                    >
+                        <View style={styles.moduleHeader}>
+                            <Text style={styles.moduleName}>{module.name}</Text>
+                            <Text style={styles.modulePrice}>₺{module.monthlyPrice}/ay</Text>
+                        </View>
+                        <Text style={styles.moduleDesc}>{module.description || 'Açıklama yok'}</Text>
+                        {module.isCore && <Text style={styles.coreBadge}>Zorunlu</Text>}
+                    </TouchableOpacity>
+                ))
+            )}
+        </Animated.View>
+    );
+
+    const renderUsersStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Kullanıcı Sayısı</Text>
+            <Text style={styles.subtitle}>Sistemi kaç kişi kullanacak?</Text>
+
+            <View style={styles.counterContainer}>
+                <TouchableOpacity onPress={() => setUserCount(prev => Math.max(1, prev - 1))} style={styles.counterBtn}>
+                    <Ionicons name="remove" size={24} color="white" />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{userCount}</Text>
+                <TouchableOpacity onPress={() => setUserCount(prev => prev + 1)} style={styles.counterBtn}>
+                    <Ionicons name="add" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
+            <Text style={styles.infoText}>Kişi başı fiyat kullanıcı sayısı arttıkça düşer.</Text>
+        </Animated.View>
+    );
+
+    const renderStorageStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Depolama Alanı</Text>
+            <Text style={styles.subtitle}>Verileriniz için ne kadar alana ihtiyacınız var?</Text>
+
+            {loadingSetupOptions ? <Loading visible={true} text="Seçenekler yükleniyor..." /> : (
+                setupOptions?.storagePlans.map((plan: any) => (
+                    <TouchableOpacity
+                        key={plan.code}
+                        style={[styles.moduleCard, selectedStoragePlanCode === plan.code && styles.moduleCardSelected]}
+                        onPress={() => setSelectedStoragePlanCode(plan.code)}
+                    >
+                        <View style={styles.moduleHeader}>
+                            <Text style={styles.moduleName}>{plan.name}</Text>
+                            <Text style={styles.modulePrice}>
+                                {plan.monthlyPrice === 0 ? 'Ücretsiz' : `₺${plan.monthlyPrice}/ay`}
+                            </Text>
+                        </View>
+                        <Text style={styles.moduleDesc}>{plan.description || `${plan.capacity} GB Depolama Alanı`}</Text>
+                    </TouchableOpacity>
+                ))
+            )}
+        </Animated.View>
+    );
+
+    const renderAddonsStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Ek Özellikler</Text>
+            <Text style={styles.subtitle}>İşletmenizi güçlendirecek ekler seçin.</Text>
+
+            {loadingSetupOptions ? <Loading visible={true} /> : (
+                setupOptions?.addOns.length === 0 ? (
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: 20 }}>Ek özellik bulunmuyor.</Text>
+                ) : (
+                    setupOptions?.addOns.map((addon: any) => (
                         <TouchableOpacity
-                            key={pkg.id}
-                            style={[
-                                styles.packageCard,
-                                selectedPackageId === pkg.id && styles.packageCardSelected
-                            ]}
-                            onPress={() => setSelectedPackageId(pkg.id)}
+                            key={addon.code}
+                            style={[styles.moduleCard, selectedAddOnCodes.includes(addon.code) && styles.moduleCardSelected]}
+                            onPress={() => {
+                                setSelectedAddOnCodes(prev =>
+                                    prev.includes(addon.code)
+                                        ? prev.filter(c => c !== addon.code)
+                                        : [...prev, addon.code]
+                                )
+                            }}
                         >
-                            <View style={styles.packageHeader}>
-                                <Text style={styles.packageName}>{pkg.name}</Text>
-                                <View style={styles.priceContainer}>
-                                    <Text style={styles.priceAmount}>₺{pkg.basePrice.amount}</Text>
-                                    <Text style={styles.priceCurrency}>/ay</Text>
-                                </View>
+                            <View style={styles.moduleHeader}>
+                                <Text style={styles.moduleName}>{addon.name}</Text>
+                                <Text style={styles.modulePrice}>₺{addon.monthlyPrice}/ay</Text>
                             </View>
+                            <Text style={styles.moduleDesc}>{addon.description}</Text>
+                        </TouchableOpacity>
+                    ))
+                )
+            )}
+        </Animated.View>
+    );
 
-                            {pkg.trialDays > 0 && (
-                                <Text style={styles.trialText}>{pkg.trialDays} gün ücretsiz deneme</Text>
-                            )}
+    const renderIndustryStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Sektör Seçimi</Text>
+            <Text style={styles.subtitle}>Size en uygun modülleri önerelim.</Text>
 
-                            <Text style={styles.packageDescription}>{pkg.description}</Text>
-
-                            <View style={styles.featuresList}>
-                                {pkg.features.slice(0, 3).map((feature, idx) => (
-                                    <View key={idx} style={styles.featureItem}>
-                                        <Ionicons name="checkmark-circle" size={16} color={colors.success} />
-                                        <Text style={styles.featureText}>{feature.featureName}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                            {selectedPackageId === pkg.id && (
-                                <View style={styles.selectedBadge}>
-                                    <Ionicons name="checkmark" size={16} color="#fff" />
-                                </View>
-                            )}
+            {loadingSetupOptions ? <Loading visible={true} /> : (
+                <View style={{ gap: 10 }}>
+                    {setupOptions?.industries.map((industry: any) => (
+                        <TouchableOpacity
+                            key={industry.code}
+                            style={[styles.moduleCard, selectedIndustryCode === industry.code && styles.moduleCardSelected]}
+                            onPress={() => setSelectedIndustryCode(industry.code)}
+                        >
+                            <Text style={styles.moduleName}>{industry.name}</Text>
+                            {industry.description && <Text style={styles.moduleDesc}>{industry.description}</Text>}
                         </TouchableOpacity>
                     ))}
+                    <TouchableOpacity
+                        style={[styles.moduleCard, selectedIndustryCode === '' && styles.moduleCardSelected]}
+                        onPress={() => setSelectedIndustryCode('')}
+                    >
+                        <Text style={styles.moduleName}>Diğer / Belirtmek İstemiyorum</Text>
+                    </TouchableOpacity>
                 </View>
             )}
-
-            <TouchableOpacity style={styles.button} onPress={handlePackageNext}>
-                <Text style={styles.buttonText}>Devam Et</Text>
-            </TouchableOpacity>
         </Animated.View>
     );
 
     const renderCompanyStep = () => (
-        <Animated.View entering={FadeInRight} exiting={FadeOutLeft}>
+        <Animated.View entering={FadeInRight}>
             <Text style={styles.title}>Firma Bilgileri</Text>
-            <Text style={styles.subtitle}>Firmanızı tanımlayın</Text>
-
             <View style={styles.form}>
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Firma Adı *</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={companyName}
-                        onChangeText={setCompanyName}
-                        placeholder="Örn: ABC Teknoloji"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Firma Kodu *</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={companyCode}
-                        onChangeText={setCompanyCode}
-                        placeholder="Örn: ABC123"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        autoCapitalize="characters"
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Telefon</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={contactPhone}
-                        onChangeText={setContactPhone}
-                        placeholder="05XX XXX XX XX"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        keyboardType="phone-pad"
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Vergi Dairesi</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={taxOffice}
-                        onChangeText={setTaxOffice}
-                        placeholder="Vergi Dairesi"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Vergi No</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={taxNumber}
-                        onChangeText={setTaxNumber}
-                        placeholder="Vergi Numarası"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        keyboardType="number-pad"
-                    />
-                </View>
-
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Adres</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        value={address}
-                        onChangeText={setAddress}
-                        placeholder="Firma adresi"
-                        placeholderTextColor="rgba(255,255,255,0.4)"
-                        multiline
-                        numberOfLines={3}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.buttonGroup}>
-                <TouchableOpacity
-                    style={[styles.button, styles.secondaryButton]}
-                    onPress={() => setCurrentStep('package')}
-                >
-                    <Text style={styles.secondaryButtonText}>Geri</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.button, styles.primaryButton]}
-                    onPress={handleCompanySubmit}
-                >
-                    <Text style={styles.buttonText}>Kurulumu Tamamla</Text>
-                </TouchableOpacity>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Firma Adı *"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={companyName}
+                    onChangeText={setCompanyName}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Firma Kodu *"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={companyCode}
+                    onChangeText={setCompanyCode}
+                    autoCapitalize="characters"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Telefon"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={contactPhone}
+                    onChangeText={setContactPhone}
+                    keyboardType="phone-pad"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Vergi Dairesi"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={taxOffice}
+                    onChangeText={setTaxOffice}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Vergi No"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={taxNumber}
+                    onChangeText={setTaxNumber}
+                    keyboardType="number-pad"
+                />
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Adres"
+                    placeholderTextColor="rgba(255,255,255,0.4)"
+                    value={address}
+                    onChangeText={setAddress}
+                    multiline
+                />
             </View>
         </Animated.View>
     );
 
-    const renderCompleteStep = () => (
-        <Animated.View entering={FadeInRight} style={styles.centerContent}>
-            <View style={styles.successIcon}>
-                <Ionicons name="rocket" size={64} color={colors.success} />
-            </View>
-            <Text style={styles.title}>Kurulum Tamamlandı! 🎉</Text>
-            <Text style={[styles.subtitle, { textAlign: 'center' }]}>
-                Hesabınız başarıyla oluşturuldu. Artık işletmenizi yönetmeye başlayabilirsiniz.
-            </Text>
-
-            <TouchableOpacity style={[styles.button, { width: '100%', marginTop: spacing.xl }]} onPress={handleFinish}>
-                <Text style={styles.buttonText}>Dashboard'a Git</Text>
-            </TouchableOpacity>
+    const renderPackageStep = () => (
+        <Animated.View entering={FadeInRight}>
+            <Text style={styles.title}>Paket Seçimi</Text>
+            {loadingPackages ? <Loading visible={true} /> : (
+                packages.map(pkg => (
+                    <TouchableOpacity
+                        key={pkg.id}
+                        style={[styles.packageCard, selectedPackageId === pkg.id && styles.packageCardSelected]}
+                        onPress={() => setSelectedPackageId(pkg.id)}
+                    >
+                        <View style={styles.packageHeader}>
+                            <Text style={styles.packageName}>{pkg.name}</Text>
+                            <Text style={styles.priceAmount}>₺{pkg.basePrice.amount}/ay</Text>
+                        </View>
+                        <Text style={styles.packageDescription}>{pkg.description}</Text>
+                        {pkg.modules?.length > 0 && (
+                            <View style={styles.featuresList}>
+                                <Text style={styles.featureHeader}>Modüller:</Text>
+                                {pkg.modules.slice(0, 3).map((m, i) => (
+                                    <Text key={i} style={styles.featureText}>• {m.moduleName}</Text>
+                                ))}
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                ))
+            )}
         </Animated.View>
     );
 
     return (
-        <LinearGradient
-            colors={['#28002D', '#1A315A']}
-            style={styles.container}
-        >
-            <Loading visible={isLoading} text="İşlem yapılıyor..." />
-            <Toast
-                visible={toast.visible}
-                message={toast.message}
-                type={toast.type}
-                onHide={hideToast}
-            />
-            <SafeAreaView style={styles.safeArea}>
+        <LinearGradient colors={['#28002D', '#1A315A']} style={styles.container}>
+            <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+                <Loading visible={isLoading} text="İşleniyor..." />
+                <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
+
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     style={styles.keyboardView}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Hesap Kurulumu</Text>
-                        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                            <Ionicons name="log-out-outline" size={24} color={colors.error} />
+                        <Text style={styles.headerTitle}>Kurulum</Text>
+                        <TouchableOpacity onPress={handleLogout}>
+                            <Ionicons name="close-circle-outline" size={28} color={colors.error} />
                         </TouchableOpacity>
                     </View>
 
-                    {renderStepIndicator()}
+                    <View style={styles.contentContainer}>
+                        <ScrollView contentContainerStyle={styles.scrollContent}>
+                            {currentStep === 'package-type' && renderPackageTypeStep()}
 
-                    <ScrollView contentContainerStyle={styles.content}>
-                        {currentStep === 'package' && renderPackageStep()}
-                        {currentStep === 'company' && renderCompanyStep()}
-                        {currentStep === 'complete' && renderCompleteStep()}
-                    </ScrollView>
+                            {currentStep === 'package' && (
+                                <>
+                                    {packages.length === 0 && !loadingPackages && (
+                                        <View style={styles.errorContainer}>
+                                            <Text style={styles.errorText}>Paketler yüklenemedi.</Text>
+                                            <TouchableOpacity style={styles.retryButton} onPress={loadPackages}>
+                                                <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                    {renderPackageStep()}
+                                </>
+                            )}
+
+                            {currentStep === 'custom-package' && renderCustomPackageStep()}
+                            {currentStep === 'users' && renderUsersStep()}
+                            {currentStep === 'storage' && renderStorageStep()}
+                            {currentStep === 'addons' && renderAddonsStep()}
+                            {currentStep === 'industry' && renderIndustryStep()}
+                            {currentStep === 'company' && renderCompanyStep()}
+                            {currentStep === 'complete' && (
+                                <View style={styles.centerContent}>
+                                    <Ionicons name="checkmark-circle" size={80} color={colors.success} />
+                                    <Text style={styles.title}>Tamamlandı!</Text>
+                                    <Text style={styles.subtitle}>Yönlendiriliyorsunuz...</Text>
+                                </View>
+                            )}
+                        </ScrollView>
+                    </View>
+
+                    {renderPriceSummary()}
+                    {renderFooter()}
+
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </LinearGradient>
@@ -422,233 +699,75 @@ export default function SetupScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    } as ViewStyle,
-    safeArea: {
-        flex: 1,
-    } as ViewStyle,
-    keyboardView: {
-        flex: 1,
-    } as ViewStyle,
-    header: {
-        padding: spacing.m,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
-        position: 'relative',
-    } as ViewStyle,
-    headerTitle: {
-        ...typography.h3,
-        color: '#fff',
-    } as TextStyle,
-    logoutButton: {
-        position: 'absolute',
-        right: spacing.m,
-        padding: spacing.xs,
-    } as ViewStyle,
-    stepIndicator: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        padding: spacing.m,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-    } as ViewStyle,
-    stepItem: {
-        alignItems: 'center',
-        width: 80,
-    } as ViewStyle,
-    stepIconContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: spacing.xs,
-    } as ViewStyle,
-    stepIconActive: {
-        backgroundColor: colors.primary,
-    } as ViewStyle,
-    stepIconCompleted: {
-        backgroundColor: colors.success,
-    } as ViewStyle,
-    stepLabel: {
-        fontSize: 12,
-        color: 'rgba(255,255,255,0.5)',
-    } as TextStyle,
-    stepLabelActive: {
-        color: colors.primary,
-        fontWeight: 'bold',
-    } as TextStyle,
-    stepLine: {
-        position: 'absolute',
-        top: 16,
-        left: 50,
-        width: 60,
-        height: 2,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        zIndex: -1,
-    } as ViewStyle,
-    stepLineCompleted: {
-        backgroundColor: colors.success,
-    } as ViewStyle,
-    content: {
-        padding: spacing.l,
-    } as ViewStyle,
-    title: {
-        ...typography.h2,
-        color: '#fff',
-        marginBottom: spacing.xs,
-    } as TextStyle,
-    subtitle: {
-        ...typography.body,
-        color: 'rgba(255,255,255,0.7)',
-        marginBottom: spacing.l,
-    } as TextStyle,
-    loadingContainer: {
-        padding: spacing.xl,
-        alignItems: 'center',
-    } as ViewStyle,
-    packageCard: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12,
-        padding: spacing.m,
-        marginBottom: spacing.m,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.05)',
-    } as ViewStyle,
-    packageCardSelected: {
-        borderColor: colors.primary,
-        backgroundColor: 'rgba(24, 144, 255, 0.1)',
-    } as ViewStyle,
-    packageHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: spacing.s,
-    } as ViewStyle,
-    packageName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-    } as TextStyle,
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-    } as ViewStyle,
-    priceAmount: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: colors.primary,
-    } as TextStyle,
-    priceCurrency: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
-        marginLeft: 2,
-    } as TextStyle,
-    trialText: {
-        color: colors.success,
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: spacing.s,
-    } as TextStyle,
-    packageDescription: {
-        color: 'rgba(255,255,255,0.7)',
-        marginBottom: spacing.m,
-    } as TextStyle,
-    featuresList: {
-        marginTop: spacing.s,
-    } as ViewStyle,
-    featureItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
-    } as ViewStyle,
-    featureText: {
-        color: 'rgba(255,255,255,0.7)',
-        marginLeft: spacing.s,
-        fontSize: 14,
-    } as TextStyle,
-    selectedBadge: {
-        position: 'absolute',
-        top: -10,
-        right: -10,
-        backgroundColor: colors.primary,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    } as ViewStyle,
-    button: {
-        backgroundColor: colors.primary,
-        padding: spacing.m,
-        borderRadius: 12,
-        alignItems: 'center',
-        marginTop: spacing.m,
-    } as ViewStyle,
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    } as TextStyle,
-    form: {
-        gap: spacing.m,
-    } as ViewStyle,
-    inputGroup: {
-        marginBottom: spacing.s,
-    } as ViewStyle,
-    label: {
-        color: '#fff',
-        marginBottom: spacing.xs,
-        fontSize: 14,
-        fontWeight: '500',
-    } as TextStyle,
-    input: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 8,
-        padding: spacing.m,
-        color: '#fff',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-    } as TextStyle,
-    textArea: {
-        height: 80,
-        textAlignVertical: 'top',
-    } as TextStyle,
-    buttonGroup: {
-        flexDirection: 'row',
-        gap: spacing.m,
-        marginTop: spacing.l,
-    } as ViewStyle,
-    secondaryButton: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
-    } as ViewStyle,
-    primaryButton: {
-        flex: 2,
-    } as ViewStyle,
-    secondaryButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    } as TextStyle,
-    centerContent: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: spacing.xl,
-    } as ViewStyle,
-    successIcon: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: 'rgba(82, 196, 26, 0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: spacing.l,
-    } as ViewStyle,
+    container: { flex: 1 },
+    safeArea: { flex: 1 },
+    keyboardView: { flex: 1 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15, alignItems: 'center', backgroundColor: 'transparent' },
+    headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
+
+    // Layout
+    contentContainer: { flex: 1 },
+    scrollContent: { padding: 20, paddingBottom: 20 },
+
+    title: { color: 'white', fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+    subtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 16, marginBottom: 30 },
+
+    // Error Handling
+    errorContainer: { alignItems: 'center', marginVertical: 20 },
+    errorText: { color: colors.error, marginBottom: 10 },
+    retryButton: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 6 },
+    retryButtonText: { color: 'white' },
+
+    // Cards
+    bigCard: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 20, borderRadius: 12, flexDirection: 'row', alignItems: 'center', marginBottom: 15, borderWidth: 1, borderColor: 'transparent' },
+    bigCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+    cardContent: { flex: 1, marginLeft: 15 },
+    cardTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+    cardDesc: { color: 'rgba(255,255,255,0.6)', fontSize: 14, marginTop: 4 },
+
+    // Modules
+    moduleCard: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 10, marginBottom: 10, borderWidth: 1, borderColor: 'transparent' },
+    moduleCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(102, 126, 234, 0.2)' },
+    moduleHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+    moduleName: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+    modulePrice: { color: colors.success, fontWeight: 'bold' },
+    moduleDesc: { color: 'rgba(255,255,255,0.6)', fontSize: 13 },
+    coreBadge: { position: 'absolute', top: -8, right: 10, backgroundColor: colors.warning, paddingHorizontal: 8, borderRadius: 4, fontSize: 10, color: 'black', fontWeight: 'bold', overflow: 'hidden' },
+
+    // Counter
+    counterContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginVertical: 30 },
+    counterBtn: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 15, borderRadius: 30 },
+    counterText: { color: 'white', fontSize: 32, fontWeight: 'bold', marginHorizontal: 30 },
+    infoText: { color: 'rgba(255,255,255,0.5)', textAlign: 'center' },
+
+    // Form
+    form: { gap: 15 },
+    input: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 15, color: 'white', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+    textArea: { height: 100, textAlignVertical: 'top' },
+
+    // Footer - Relative Layout
+    footer: { flexDirection: 'row', padding: 20, paddingTop: 15, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', backgroundColor: 'transparent' },
+    backButton: { padding: 15, marginRight: 15 },
+    backButtonText: { color: 'rgba(255,255,255,0.7)', fontSize: 16 },
+    nextButton: { flex: 1, backgroundColor: colors.primary, borderRadius: 10, padding: 15, alignItems: 'center' },
+    nextButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+
+    // Price Panel
+    pricePanel: { marginHorizontal: 20, marginBottom: 10, backgroundColor: 'rgba(10, 14, 39, 0.9)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: colors.primary },
+    priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    priceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
+    priceValue: { color: colors.success, fontWeight: 'bold', fontSize: 20 },
+    reconnecting: { color: colors.warning, fontSize: 12, marginTop: 5, textAlign: 'right' },
+
+    centerContent: { alignItems: 'center', marginTop: 50 },
+
+    packageCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: 'transparent' },
+    packageCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(24, 144, 255, 0.1)' },
+    packageHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    packageName: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+    priceAmount: { fontSize: 18, fontWeight: 'bold', color: colors.primary },
+    packageDescription: { color: 'rgba(255,255,255,0.7)', marginBottom: 10 },
+    featuresList: { marginTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: 10 },
+    featureHeader: { color: '#fff', fontSize: 14, fontWeight: 'bold', marginBottom: 5 },
+    featureText: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 2 },
 });

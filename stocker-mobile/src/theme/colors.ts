@@ -4,6 +4,10 @@ export const colors = {
     secondary: '#722ed1', // Violet/Purple from branding
     accent: '#00ff88', // Neon Green from globals.css
 
+    // Base
+    white: '#FFFFFF',
+    black: '#000000',
+
     // Backgrounds
     background: '#0a0a0a', // Dark mode background
     surface: '#171717', // Dark mode surface

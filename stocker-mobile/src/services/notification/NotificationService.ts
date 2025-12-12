@@ -46,6 +46,12 @@ export const notificationService = {
         // Get the token
         try {
             const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+
+            if (!projectId) {
+                console.log('NOTICE: EAS Project ID not found. Push notifications will be disabled in development.');
+                return null;
+            }
+
             const tokenData = await Notifications.getExpoPushTokenAsync({
                 projectId,
             });

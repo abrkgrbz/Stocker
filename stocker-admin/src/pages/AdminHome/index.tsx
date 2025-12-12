@@ -28,7 +28,7 @@ const AdminHome: React.FC = () => {
       icon: <TeamOutlined style={{ fontSize: 48 }} />,
       color: '#667eea',
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      path: '/tenant-admin/dashboard',
+      path: '/dashboard',
       stats: [
         { label: 'Aktif Tenant', value: 156 },
         { label: 'Bu Ay Yeni', value: 12 },
@@ -53,9 +53,9 @@ const AdminHome: React.FC = () => {
   ];
 
   const quickActions = [
-    { icon: <DatabaseOutlined />, label: 'Yeni Tenant', path: '/tenant-admin/tenants/new', color: '#52c41a' },
-    { icon: <FileTextOutlined />, label: 'Blog Yazısı', path: '/cms/blog/new', color: '#1890ff' },
-    { icon: <AppstoreOutlined />, label: 'Modüller', path: '/tenant-admin/modules', color: '#722ed1' },
+    { icon: <DatabaseOutlined />, label: 'Yeni Tenant', path: '/tenants', color: '#52c41a' },
+    { icon: <FileTextOutlined />, label: 'Blog Yazısı', path: '/cms/blog', color: '#1890ff' },
+    { icon: <AppstoreOutlined />, label: 'Modüller', path: '/modules', color: '#722ed1' },
     { icon: <SettingOutlined />, label: 'Ayarlar', path: '/settings', color: '#fa8c16' },
   ];
 

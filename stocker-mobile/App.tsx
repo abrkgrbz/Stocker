@@ -1,3 +1,4 @@
+import './src/utils/polyfill'; // Polyfills must be imported first
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -30,6 +31,10 @@ export default function App() {
                 console.log('📦 [App] Initializing database...');
                 await databaseService.init();
                 console.log('✅ [App] Database initialized');
+
+                console.log('🔄 [App] Initializing Sync Service...');
+                await syncService.init();
+                console.log('✅ [App] Sync Service initialized');
 
                 console.log('🔐 [App] Checking auth...');
                 await checkAuth();
@@ -67,9 +72,7 @@ export default function App() {
                 <AlertProvider>
                     <StatusBar style="auto" />
                     <OfflineIndicator />
-                    <SignalRProvider>
-                        <AppNavigator />
-                    </SignalRProvider>
+                    <AppNavigator />
                 </AlertProvider>
             </ThemeProvider>
         </SafeAreaProvider>

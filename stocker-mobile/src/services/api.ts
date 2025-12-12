@@ -169,6 +169,9 @@ export const apiService = {
 
         changePassword: (data: any) =>
             api.post<ApiResponse>('/api/auth/change-password', data),
+
+        forgotPassword: (email: string, tenantCode?: string) =>
+            api.post<ApiResponse>('/api/auth/forgot-password', { email, tenantCode }),
     },
 
     // Master endpoints
@@ -196,6 +199,12 @@ export const apiService = {
         getPackages: () =>
             api.get<ApiResponse>('/api/public/packages'),
 
+        getModules: () =>
+            api.get<ApiResponse>('/api/public/modules'),
+
+        getSetupOptions: () =>
+            api.get<ApiResponse>('/api/public/setup-options'),
+
         verifyEmailForTenantCreation: (data: { email: string; code: string }) =>
             api.post<ApiResponse>('/api/public/tenant-registration/verify-email', data),
     },
@@ -213,6 +222,36 @@ export const apiService = {
 
         getCustomer: (id: string) =>
             api.get<ApiResponse>(`/api/crm/customers/${id}`),
+
+        createCustomer: (data: any) =>
+            api.post<ApiResponse>('/api/crm/customers', data),
+
+        updateCustomer: (id: string, data: any) =>
+            api.put<ApiResponse>(`/api/crm/customers/${id}`, data),
+
+        // Deals
+        getDeals: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/deals', { params }),
+
+        getDeal: (id: string) =>
+            api.get<ApiResponse>(`/api/crm/deals/${id}`),
+
+        createDeal: (data: any) =>
+            api.post<ApiResponse>('/api/crm/deals', data),
+
+        updateDeal: (id: string, data: any) =>
+            api.put<ApiResponse>(`/api/crm/deals/${id}`, data),
+
+        // Activities
+        getActivities: (params?: any) =>
+            api.get<ApiResponse>('/api/crm/activities', { params }),
+
+        createActivity: (data: any) =>
+            api.post<ApiResponse>('/api/crm/activities', data),
+
+        updateActivity: (id: string, data: any) =>
+            api.put<ApiResponse>(`/api/crm/activities/${id}`, data),
+
         getStats: () =>
             api.get<ApiResponse>('/api/crm/stats'),
     },
@@ -222,6 +261,19 @@ export const apiService = {
         // Dashboard Stats
         getDashboardStats: () =>
             api.get<ApiResponse>('/api/sales/stats'),
+
+        // Quotes
+        getQuotes: (params?: any) =>
+            api.get<ApiResponse>('/api/sales/quotes', { params }),
+
+        getQuote: (id: string) =>
+            api.get<ApiResponse>(`/api/sales/quotes/${id}`),
+
+        createQuote: (data: any) =>
+            api.post<ApiResponse>('/api/sales/quotes', data),
+
+        updateQuote: (id: string, data: any) =>
+            api.put<ApiResponse>(`/api/sales/quotes/${id}`, data),
 
         // Orders
         getOrders: (params?: any) =>
