@@ -16,7 +16,6 @@ import {
   DashboardOutlined,
   AppstoreOutlined,
   SettingOutlined,
-  ThunderboltOutlined,
   RocketOutlined,
   LogoutOutlined,
   ShoppingCartOutlined,
@@ -320,50 +319,6 @@ export default function AppHomePage() {
     >
       {/* Main Content Wrapper */}
       <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Activation Notification Bar - Elegant Design */}
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 1200,
-            margin: '0 auto 24px',
-          }}
-        >
-          <div
-            style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: 12,
-              padding: '12px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <ThunderboltOutlined style={{ fontSize: 18, color: '#fca5a5' }} />
-              <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: 14, fontWeight: 500 }}>
-                Aktivasyon e-postası gönderildi • Veri tabanı geçerlilik süresi:{' '}
-                <strong style={{ color: '#fca5a5' }}>3 saat</strong>
-              </Text>
-            </div>
-            <a
-              href="#"
-              style={{
-                color: '#fca5a5',
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                borderBottom: '1px solid #fca5a5',
-              }}
-            >
-              E-posta ulaşmadı mı?
-            </a>
-          </div>
-        </div>
-
         {/* Header with User Menu */}
       <div
         style={{

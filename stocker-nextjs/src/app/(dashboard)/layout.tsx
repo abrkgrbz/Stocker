@@ -494,7 +494,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [moduleSwitcherOpen, setModuleSwitcherOpen] = useState(false);
 
   // Fetch active modules for the user
-  const { data: modulesData } = useActiveModules();
+  const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
 
   // Create a Set of active module codes for fast lookup
   const activeModuleCodes = useMemo(() => {
@@ -661,7 +661,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return [pathname];
   }, [pathname]);
 
-  if (authLoading || tenantLoading) {
+  if (authLoading || tenantLoading || onboardingLoading || modulesLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spin size="large" />
@@ -671,6 +671,60 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  // Block access to dashboard if onboarding is not completed
+  if (requiresOnboarding) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <OnboardingModal
+          visible={true}
+          wizardData={wizardData || { currentStepIndex: 0, totalSteps: 4, progressPercentage: 0 }}
+          onComplete={handleOnboardingComplete}
+        />
+      </div>
+    );
+  }
+
+  // Check module access - block access to modules user doesn't have
+  const modulePathPrefixes: Record<string, string> = {
+    '/crm': 'crm',
+    '/hr': 'hr',
+    '/inventory': 'inventory',
+    '/sales': 'sales',
+    '/purchase': 'purchase',
+  };
+
+  // Paths that are always allowed (no module required)
+  const alwaysAllowedPaths = ['/dashboard', '/settings', '/modules', '/profile', '/notifications', '/reminders', '/app'];
+  const isAlwaysAllowed = alwaysAllowedPaths.some(path => pathname.startsWith(path));
+
+  if (!isAlwaysAllowed) {
+    // Check if current path requires a specific module
+    for (const [prefix, moduleCode] of Object.entries(modulePathPrefixes)) {
+      if (pathname.startsWith(prefix)) {
+        // User is trying to access a module path - check if they have access
+        const hasAccess = activeModuleCodes.has(moduleCode);
+        if (!hasAccess) {
+          // Redirect to /app with a message
+          return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+              <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+                <ExclamationCircleOutlined style={{ fontSize: 48, color: '#faad14' }} />
+                <h2 className="text-xl font-semibold mt-4 mb-2">Erişim Yetkiniz Yok</h2>
+                <p className="text-gray-500 mb-4">
+                  Bu modüle erişim için aboneliğinizi yükseltmeniz gerekmektedir.
+                </p>
+                <Button type="primary" onClick={() => router.push('/app')} style={{ background: '#1a1a1a' }}>
+                  Ana Sayfaya Dön
+                </Button>
+              </div>
+            </div>
+          );
+        }
+        break;
+      }
+    }
   }
 
   const handleMenuClick = (key: string) => {
@@ -695,14 +749,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <>
-      <OnboardingModal
-        visible={requiresOnboarding && !onboardingLoading}
-        wizardData={wizardData || { currentStepIndex: 0, totalSteps: 4, progressPercentage: 0 }}
-        onComplete={handleOnboardingComplete}
-      />
-
-      <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh' }}>
         <Sider
           theme="light"
           width={240}
@@ -1025,8 +1072,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </Content>
         </Layout>
       </Layout>
-    </>
-  );
+    );
 }
 
 export default function DashboardLayout({
