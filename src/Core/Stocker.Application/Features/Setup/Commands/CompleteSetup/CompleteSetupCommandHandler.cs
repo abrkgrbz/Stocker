@@ -193,7 +193,7 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         startDate: DateTime.UtcNow,
                         trialEndDate: trialEndDate);
 
-                    // Store custom package details if applicable
+                    // Store custom package details and add modules if applicable
                     if (request.CustomPackage != null)
                     {
                         subscription.SetCustomPackageDetails(
@@ -201,6 +201,39 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             request.CustomPackage.UserCount,
                             request.CustomPackage.StoragePlanCode,
                             request.CustomPackage.SelectedAddOnCodes);
+
+                        // Add modules to subscription for custom packages
+                        // This is critical for module migrations to work
+                        var moduleDefinitions = await _masterDbContext.ModuleDefinitions
+                            .AsNoTracking()
+                            .Where(m => m.IsActive && request.CustomPackage.SelectedModuleCodes.Contains(m.Code))
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var moduleDef in moduleDefinitions)
+                        {
+                            subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                            _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to custom subscription",
+                                moduleDef.Code, moduleDef.Name);
+                        }
+                    }
+                    // Add modules from ready package
+                    else if (package != null)
+                    {
+                        // Load package with modules
+                        var packageWithModules = await _masterDbContext.Packages
+                            .AsNoTracking()
+                            .Include(p => p.Modules)
+                            .FirstOrDefaultAsync(p => p.Id == package.Id, cancellationToken);
+
+                        if (packageWithModules?.Modules != null)
+                        {
+                            foreach (var module in packageWithModules.Modules.Where(m => m.IsIncluded))
+                            {
+                                subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription from package",
+                                    module.ModuleCode, module.ModuleName);
+                            }
+                        }
                     }
 
                     await _masterUnitOfWork.Repository<Domain.Master.Entities.Subscription>()
