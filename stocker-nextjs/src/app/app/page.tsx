@@ -266,7 +266,7 @@ export default function AppHomePage() {
     return (
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
           display: 'flex',
           alignItems: 'center',
@@ -308,13 +308,14 @@ export default function AppHomePage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
         padding: '48px 24px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
+        overflowX: 'hidden',
       }}
     >
       {/* Main Content Wrapper */}

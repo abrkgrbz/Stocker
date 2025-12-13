@@ -663,7 +663,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   if (authLoading || tenantLoading || onboardingLoading || modulesLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
         <Spin size="large" />
       </div>
     );
@@ -676,7 +676,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   // Block access to dashboard if onboarding is not completed
   if (requiresOnboarding) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center bg-gray-50" style={{ minHeight: '100dvh' }}>
         <OnboardingModal
           visible={true}
           wizardData={wizardData || { currentStepIndex: 0, totalSteps: 4, progressPercentage: 0 }}
@@ -708,7 +708,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         if (!hasAccess) {
           // Redirect to /app with a message
           return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center bg-gray-50" style={{ minHeight: '100dvh' }}>
               <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
                 <ExclamationCircleOutlined style={{ fontSize: 48, color: '#faad14' }} />
                 <h2 className="text-xl font-semibold mt-4 mb-2">Erişim Yetkiniz Yok</h2>
@@ -749,18 +749,21 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100dvh' }}>
         <Sider
           theme="light"
           width={240}
           style={{
-            height: '100vh',
+            height: '100dvh',
             position: 'fixed',
             left: 0,
             top: 0,
             bottom: 0,
             borderRight: '1px solid #f0f0f0',
+            zIndex: 100,
+            transition: 'transform 0.2s ease-in-out',
           }}
+          className="dashboard-sider"
         >
           {/* Inner flex container to handle scroll properly */}
           <div
