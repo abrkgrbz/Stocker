@@ -83,7 +83,7 @@ public class GlobalErrorHandlingMiddleware
 
         switch (exception)
         {
-            case ValidationException validationException:
+            case FluentValidation.ValidationException validationException:
                 response.Status = (int)HttpStatusCode.BadRequest;
                 response.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
                 response.Title = "Validation Error";
