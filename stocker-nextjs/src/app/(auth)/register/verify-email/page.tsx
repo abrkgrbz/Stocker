@@ -14,6 +14,7 @@ function VerifyEmailContent() {
 
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
+  const [verifySuccess, setVerifySuccess] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
   const [resending, setResending] = useState(false);
@@ -69,20 +70,27 @@ function VerifyEmailContent() {
 
     setVerifying(true);
     setVerifyError('');
+    setVerifySuccess(false);
 
     try {
       const registrationId = await verifyEmailWithAPI(email, verificationToken, false);
 
       if (registrationId) {
-        setRedirecting(true);
-        // Redirect with registrationId - tenant creation will start automatically
-        const params = new URLSearchParams({
-          registrationId: registrationId,
-        });
-        router.push(`/register/tenant-creation?${params.toString()}`);
+        // Show success message first
+        setVerifySuccess(true);
+        setVerifying(false);
+
+        // Then redirect after a short delay
+        setTimeout(() => {
+          setRedirecting(true);
+          const params = new URLSearchParams({
+            registrationId: registrationId,
+          });
+          router.push(`/register/tenant-creation?${params.toString()}`);
+        }, 1500);
       }
     } catch (err: any) {
-      setVerifyError(err.message || 'Doğrulama başarısız oldu');
+      setVerifyError('Doğrulama kodu yanlış. Lütfen tekrar deneyin.');
       setVerifying(false);
     }
   };
@@ -95,20 +103,27 @@ function VerifyEmailContent() {
 
     setVerifying(true);
     setVerifyError('');
+    setVerifySuccess(false);
 
     try {
       const registrationId = await verifyEmailWithAPI(email, code, true);
 
       if (registrationId) {
-        setRedirecting(true);
-        // Redirect with registrationId - tenant creation will start automatically
-        const params = new URLSearchParams({
-          registrationId: registrationId,
-        });
-        router.push(`/register/tenant-creation?${params.toString()}`);
+        // Show success message first
+        setVerifySuccess(true);
+        setVerifying(false);
+
+        // Then redirect after a short delay
+        setTimeout(() => {
+          setRedirecting(true);
+          const params = new URLSearchParams({
+            registrationId: registrationId,
+          });
+          router.push(`/register/tenant-creation?${params.toString()}`);
+        }, 1500);
       }
     } catch (err: any) {
-      setVerifyError(err.message || 'Doğrulama kodu geçersiz');
+      setVerifyError('Doğrulama kodu yanlış. Lütfen tekrar deneyin.');
       setVerifying(false);
     }
   };
@@ -138,27 +153,28 @@ function VerifyEmailContent() {
     }
   };
 
-  if (redirecting) {
+  // Show success state before redirecting
+  if (verifySuccess || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
-            {/* Loading Icon */}
+            {/* Success Icon */}
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircleOutlined className="text-4xl text-green-600" />
               </div>
             </div>
 
-            {/* Redirecting Message */}
+            {/* Success Message */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Doğrulanıyor...</h2>
+              <h2 className="text-2xl font-bold text-gray-900">E-posta Doğrulandı!</h2>
               <p className="mt-2 text-sm text-gray-600">
-                Kodunuz doğrulanıyor, lütfen bekleyin.
+                E-posta adresiniz başarıyla doğrulandı.
               </p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-sm text-gray-700">
                 Hesap oluşturma sayfasına yönlendiriliyorsunuz...
               </p>
