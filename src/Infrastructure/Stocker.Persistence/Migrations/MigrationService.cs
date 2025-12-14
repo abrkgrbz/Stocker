@@ -1629,16 +1629,29 @@ public partial class MigrationService
             var tenantDbContext = (TenantDbContext)context;
             var connectionString = tenantDbContext.Database.GetConnectionString();
 
-            // Get tenant's subscribed modules from subscription
+            // Get tenant's subscribed modules from SubscriptionModules table
+            // This works for both ready packages and custom packages
             var subscribedModules = await masterContext.Subscriptions
-                .Include(s => s.Package)
-                    .ThenInclude(p => p.Modules)
+                .Include(s => s.Modules)
                 .Where(s => s.TenantId == tenantId)
-                .SelectMany(s => s.Package.Modules)
-                .Where(m => m.IsIncluded)
+                .SelectMany(s => s.Modules)
                 .Select(m => m.ModuleCode.ToUpper())
                 .Distinct()
                 .ToListAsync(cancellationToken);
+
+            // Fallback: If no modules found in SubscriptionModules, check Package.Modules (for legacy subscriptions)
+            if (!subscribedModules.Any())
+            {
+                subscribedModules = await masterContext.Subscriptions
+                    .Include(s => s.Package)
+                        .ThenInclude(p => p.Modules)
+                    .Where(s => s.TenantId == tenantId && s.Package != null)
+                    .SelectMany(s => s.Package!.Modules)
+                    .Where(m => m.IsIncluded)
+                    .Select(m => m.ModuleCode.ToUpper())
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+            }
 
             _logger.LogInformation("Tenant {TenantId} has subscribed modules: {Modules}",
                 tenantId, string.Join(", ", subscribedModules));
