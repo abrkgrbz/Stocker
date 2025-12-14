@@ -1,5 +1,3 @@
-import { env } from '@/lib/env'
-
 import logger from '../utils/logger';
 /**
  * Multi-layer Rate Limiting
@@ -82,16 +80,34 @@ class MemoryRateLimiter {
 // Redis rate limiter (production)
 class RedisRateLimiter {
   private redisClient: any = null
+  private initialized: boolean = false
+  private initializing: boolean = false
 
-  async initialize() {
-    if (!env.REDIS_URL) return
+  async initialize(redisUrl?: string) {
+    const url = redisUrl || process.env.REDIS_URL
+    if (!url || this.initialized || this.initializing) return
+
+    this.initializing = true
 
     try {
-      const { createClient } = await import('redis')
-      this.redisClient = createClient({ url: env.REDIS_URL })
+      // Dynamic import with better error handling
+      const redis = await import('redis').catch(() => null)
+      if (!redis) {
+        logger.error('Redis package not available, falling back to memory')
+        this.initialized = true
+        this.initializing = false
+        return
+      }
+
+      this.redisClient = redis.createClient({ url })
       await this.redisClient.connect()
+      this.initialized = true
+      logger.info('Redis rate limiter connected successfully')
     } catch (error) {
-      logger.error('Redis connection failed, falling back to memory:', error);
+      logger.error('Redis connection failed, falling back to memory:', error)
+      this.initialized = true
+    } finally {
+      this.initializing = false
     }
   }
 
@@ -171,9 +187,24 @@ class RedisRateLimiter {
 const memoryLimiter = new MemoryRateLimiter()
 const redisLimiter = new RedisRateLimiter()
 
-// Initialize Redis in production
-if (env.REDIS_URL) {
-  redisLimiter.initialize().catch(console.error)
+// Lazy Redis initialization flag
+let redisInitialized = false
+
+// Initialize Redis lazily on first use
+async function ensureRedisInitialized(): Promise<void> {
+  if (redisInitialized) return
+
+  try {
+    // Check if REDIS_URL is set (safe access)
+    const redisUrl = typeof process !== 'undefined' ? process.env.REDIS_URL : undefined
+    if (redisUrl) {
+      await redisLimiter.initialize()
+    }
+  } catch (error) {
+    logger.error('Redis initialization error:', error)
+  } finally {
+    redisInitialized = true
+  }
 }
 
 // Rate limit configurations
@@ -204,7 +235,12 @@ export async function checkRateLimit(
   key: string,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
-  const limiter = env.REDIS_URL ? redisLimiter : memoryLimiter
+  // Ensure Redis is initialized (lazy, first-use initialization)
+  await ensureRedisInitialized()
+
+  // Check if Redis URL is configured and client is ready
+  const useRedis = process.env.REDIS_URL && redisLimiter['redisClient']?.isOpen
+  const limiter = useRedis ? redisLimiter : memoryLimiter
   return limiter.check(key, config)
 }
 
@@ -212,7 +248,12 @@ export async function checkRateLimit(
  * Reset rate limit for a key (use after successful auth)
  */
 export async function resetRateLimit(key: string): Promise<void> {
-  const limiter = env.REDIS_URL ? redisLimiter : memoryLimiter
+  // Ensure Redis is initialized (lazy, first-use initialization)
+  await ensureRedisInitialized()
+
+  // Check if Redis URL is configured and client is ready
+  const useRedis = process.env.REDIS_URL && redisLimiter['redisClient']?.isOpen
+  const limiter = useRedis ? redisLimiter : memoryLimiter
   return limiter.reset(key)
 }
 

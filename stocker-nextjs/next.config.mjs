@@ -8,6 +8,10 @@ const nextConfig = {
   // Standalone output for Docker
   output: 'standalone',
 
+  // External packages for server components (needed for standalone build)
+  // These packages are dynamically imported and need to be bundled separately
+  serverExternalPackages: ['redis'],
+
   // Disable ESLint and TypeScript checks during build
   eslint: {
     ignoreDuringBuilds: true,
