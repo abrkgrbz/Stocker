@@ -9,7 +9,7 @@ const nextConfig = {
   output: 'standalone',
 
   // External packages for server components (needed for standalone build)
-  // These packages are dynamically imported and need to be bundled separately
+  // Redis is dynamically imported for rate-limiting
   serverExternalPackages: ['redis'],
 
   // Disable ESLint and TypeScript checks during build
