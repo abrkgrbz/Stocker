@@ -14,7 +14,7 @@ function VerifyEmailContent() {
 
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
-  const [verifySuccess, setVerifySuccess] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -23,7 +23,7 @@ function VerifyEmailContent() {
 
   // Auto-verify if token is provided in URL (from email link)
   useEffect(() => {
-    if (token && email && !verifySuccess && !verifyError) {
+    if (token && email && !redirecting && !verifyError) {
       // Automatically verify with token from email link
       handleVerifyToken(token);
     }
@@ -47,7 +47,7 @@ function VerifyEmailContent() {
     }
 
     setVerifying(true);
-    setVerifySuccess(true);
+    setRedirecting(true);
 
     // Pass verification params to progress page - it will call verify-email API after SignalR connects
     setTimeout(() => {
@@ -68,7 +68,7 @@ function VerifyEmailContent() {
     }
 
     setVerifying(true);
-    setVerifySuccess(true);
+    setRedirecting(true);
 
     // Pass verification params to progress page - it will call verify-email API after SignalR connects
     setTimeout(() => {
@@ -105,29 +105,29 @@ function VerifyEmailContent() {
     }
   };
 
-  if (verifySuccess) {
+  if (redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
-            {/* Success Icon */}
+            {/* Loading Icon */}
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircleOutlined className="text-4xl text-green-600" />
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
               </div>
             </div>
 
-            {/* Success Message */}
+            {/* Redirecting Message */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">E-posta Doğrulandı!</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Doğrulanıyor...</h2>
               <p className="mt-2 text-sm text-gray-600">
-                E-posta adresiniz başarıyla doğrulandı.
+                Kodunuz doğrulanıyor, lütfen bekleyin.
               </p>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-gray-700">
-                Hesabınız oluşturuluyor... Lütfen bekleyin.
+                Hesap oluşturma sayfasına yönlendiriliyorsunuz...
               </p>
             </div>
           </div>
