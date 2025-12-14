@@ -194,87 +194,128 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         _logger.LogInformation("Found existing subscription {SubscriptionId} for tenant {TenantId}, updating...",
                             existingSubscription.Id, request.TenantId);
 
-                        subscription = existingSubscription;
+                        subscriptionId = existingSubscription.Id;
+                        var existingModuleCodes = existingSubscription.Modules.Select(m => m.ModuleCode).ToHashSet();
 
-                        // Update package if different
-                        if (request.PackageId.HasValue && subscription.PackageId != request.PackageId.Value)
-                        {
-                            subscription.ChangePackage(request.PackageId.Value, subscriptionPrice);
-                            _logger.LogInformation("Changed subscription package to {PackageId}", request.PackageId.Value);
-                        }
-
-                        // Delete existing modules directly from database to avoid concurrency issues
-                        var existingModuleIds = existingSubscription.Modules.Select(m => m.Id).ToList();
-                        if (existingModuleIds.Any())
-                        {
-                            await _masterDbContext.SubscriptionModules
-                                .Where(m => existingModuleIds.Contains(m.Id))
-                                .ExecuteDeleteAsync(cancellationToken);
-                            _logger.LogInformation("Deleted {Count} existing modules from subscription {SubscriptionId}",
-                                existingModuleIds.Count, existingSubscription.Id);
-                        }
-
-                        // Clear the in-memory collection to sync with database state
-                        subscription.ClearModules();
-
-                        // Store custom package details and add modules if applicable
+                        // Determine requested module codes
+                        List<string> requestedModuleCodes;
                         if (request.CustomPackage != null)
                         {
-                            subscription.SetCustomPackageDetails(
-                                request.CustomPackage.SelectedModuleCodes,
-                                request.CustomPackage.UserCount,
-                                request.CustomPackage.StoragePlanCode,
-                                request.CustomPackage.SelectedAddOnCodes);
-
-                            // Add modules to subscription for custom packages
-                            var moduleDefinitions = await _masterDbContext.ModuleDefinitions
-                                .AsNoTracking()
-                                .Where(m => m.IsActive && request.CustomPackage.SelectedModuleCodes.Contains(m.Code))
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var moduleDef in moduleDefinitions)
-                            {
-                                subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
-                                _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to existing subscription",
-                                    moduleDef.Code, moduleDef.Name);
-                            }
+                            requestedModuleCodes = request.CustomPackage.SelectedModuleCodes;
                         }
-                        // Add modules from ready package
                         else if (package != null)
                         {
-                            // Load package with modules
                             var packageWithModules = await _masterDbContext.Packages
                                 .AsNoTracking()
                                 .Include(p => p.Modules)
                                 .FirstOrDefaultAsync(p => p.Id == package.Id, cancellationToken);
+                            requestedModuleCodes = packageWithModules?.Modules?
+                                .Where(m => m.IsIncluded)
+                                .Select(m => m.ModuleCode)
+                                .ToList() ?? new List<string>();
+                        }
+                        else
+                        {
+                            requestedModuleCodes = new List<string>();
+                        }
 
-                            if (packageWithModules?.Modules != null)
+                        // Check if we need to update modules (same package and same modules = skip update)
+                        var samePackage = request.PackageId.HasValue && existingSubscription.PackageId == request.PackageId.Value;
+                        var sameModules = existingModuleCodes.SetEquals(requestedModuleCodes);
+
+                        if (samePackage && sameModules && existingSubscription.Modules.Any())
+                        {
+                            // No changes needed - subscription already has the same configuration
+                            _logger.LogInformation("Subscription {SubscriptionId} already has the same package and modules, skipping update",
+                                existingSubscription.Id);
+                            subscription = existingSubscription;
+                        }
+                        else
+                        {
+                            // Need to update - reload subscription fresh to avoid tracking issues
+                            _logger.LogInformation("Updating subscription {SubscriptionId} with new package/modules. " +
+                                "SamePackage: {SamePackage}, SameModules: {SameModules}, ExistingModules: {ExistingCount}, RequestedModules: {RequestedCount}",
+                                existingSubscription.Id, samePackage, sameModules, existingModuleCodes.Count, requestedModuleCodes.Count);
+
+                            // Delete existing modules directly from database
+                            var existingModuleIds = existingSubscription.Modules.Select(m => m.Id).ToList();
+                            if (existingModuleIds.Any())
                             {
-                                foreach (var module in packageWithModules.Modules.Where(m => m.IsIncluded))
+                                await _masterDbContext.SubscriptionModules
+                                    .Where(m => existingModuleIds.Contains(m.Id))
+                                    .ExecuteDeleteAsync(cancellationToken);
+                                _logger.LogInformation("Deleted {Count} existing modules from subscription {SubscriptionId}",
+                                    existingModuleIds.Count, existingSubscription.Id);
+                            }
+
+                            // Reload subscription fresh (without tracked modules that were deleted)
+                            subscription = await _masterDbContext.Subscriptions
+                                .FirstAsync(s => s.Id == existingSubscription.Id, cancellationToken);
+
+                            // Update package if different
+                            if (request.PackageId.HasValue && subscription.PackageId != request.PackageId.Value)
+                            {
+                                subscription.ChangePackage(request.PackageId.Value, subscriptionPrice);
+                                _logger.LogInformation("Changed subscription package to {PackageId}", request.PackageId.Value);
+                            }
+
+                            // Store custom package details and add modules if applicable
+                            if (request.CustomPackage != null)
+                            {
+                                subscription.SetCustomPackageDetails(
+                                    request.CustomPackage.SelectedModuleCodes,
+                                    request.CustomPackage.UserCount,
+                                    request.CustomPackage.StoragePlanCode,
+                                    request.CustomPackage.SelectedAddOnCodes);
+
+                                // Add modules to subscription for custom packages
+                                var moduleDefinitions = await _masterDbContext.ModuleDefinitions
+                                    .AsNoTracking()
+                                    .Where(m => m.IsActive && request.CustomPackage.SelectedModuleCodes.Contains(m.Code))
+                                    .ToListAsync(cancellationToken);
+
+                                foreach (var moduleDef in moduleDefinitions)
                                 {
-                                    subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
-                                    _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to existing subscription from package",
-                                        module.ModuleCode, module.ModuleName);
+                                    subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                                    _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription",
+                                        moduleDef.Code, moduleDef.Name);
                                 }
                             }
-                        }
-
-                        // Start trial if subscription is pending
-                        if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Beklemede ||
-                            subscription.Status == Domain.Master.Enums.SubscriptionStatus.Askida)
-                        {
-                            var trialEndDate = trialDays > 0
-                                ? DateTime.UtcNow.AddDays(trialDays)
-                                : (DateTime?)null;
-                            if (trialEndDate.HasValue)
+                            // Add modules from ready package
+                            else if (package != null)
                             {
-                                subscription.StartTrial(trialEndDate.Value);
-                            }
-                        }
+                                var packageWithModules = await _masterDbContext.Packages
+                                    .AsNoTracking()
+                                    .Include(p => p.Modules)
+                                    .FirstOrDefaultAsync(p => p.Id == package.Id, cancellationToken);
 
-                        await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
-                        subscriptionId = subscription.Id;
-                        _logger.LogInformation("Existing subscription updated with ID: {SubscriptionId}", subscriptionId);
+                                if (packageWithModules?.Modules != null)
+                                {
+                                    foreach (var module in packageWithModules.Modules.Where(m => m.IsIncluded))
+                                    {
+                                        subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
+                                        _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription from package",
+                                            module.ModuleCode, module.ModuleName);
+                                    }
+                                }
+                            }
+
+                            // Start trial if subscription is pending
+                            if (subscription.Status == Domain.Master.Enums.SubscriptionStatus.Beklemede ||
+                                subscription.Status == Domain.Master.Enums.SubscriptionStatus.Askida)
+                            {
+                                var trialEndDate = trialDays > 0
+                                    ? DateTime.UtcNow.AddDays(trialDays)
+                                    : (DateTime?)null;
+                                if (trialEndDate.HasValue)
+                                {
+                                    subscription.StartTrial(trialEndDate.Value);
+                                }
+                            }
+
+                            await _masterUnitOfWork.SaveChangesAsync(cancellationToken);
+                            _logger.LogInformation("Subscription updated with ID: {SubscriptionId}", subscriptionId);
+                        }
                     }
                     else
                     {
