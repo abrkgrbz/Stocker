@@ -203,7 +203,18 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             _logger.LogInformation("Changed subscription package to {PackageId}", request.PackageId.Value);
                         }
 
-                        // Clear existing modules and add new ones
+                        // Delete existing modules directly from database to avoid concurrency issues
+                        var existingModuleIds = existingSubscription.Modules.Select(m => m.Id).ToList();
+                        if (existingModuleIds.Any())
+                        {
+                            await _masterDbContext.SubscriptionModules
+                                .Where(m => existingModuleIds.Contains(m.Id))
+                                .ExecuteDeleteAsync(cancellationToken);
+                            _logger.LogInformation("Deleted {Count} existing modules from subscription {SubscriptionId}",
+                                existingModuleIds.Count, existingSubscription.Id);
+                        }
+
+                        // Clear the in-memory collection to sync with database state
                         subscription.ClearModules();
 
                         // Store custom package details and add modules if applicable

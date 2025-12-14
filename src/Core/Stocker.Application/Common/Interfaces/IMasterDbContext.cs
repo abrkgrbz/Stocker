@@ -18,6 +18,7 @@ public interface IMasterDbContext
     DbSet<ModuleFeature> ModuleFeatures { get; }
     DbSet<ModuleDependency> ModuleDependencies { get; }
     DbSet<Subscription> Subscriptions { get; }
+    DbSet<SubscriptionModule> SubscriptionModules { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }
     DbSet<SystemSettings> SystemSettings { get; }
