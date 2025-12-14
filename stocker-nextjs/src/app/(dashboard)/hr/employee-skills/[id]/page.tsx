@@ -39,7 +39,7 @@ export default function EmployeeSkillDetailPage() {
             <Card style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
               <ToolOutlined style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
               <h3 className="mt-4 text-lg font-medium text-gray-800">{skill.skillName}</h3>
-              <p className="text-sm text-gray-600">{skill.skillCategory}</p>
+              <p className="text-sm text-gray-600">{skill.category}</p>
               <Tag color={proficiencyColors[skill.proficiencyLevel]} className="mt-4">{skill.proficiencyLevel}</Tag>
               <Progress percent={proficiencyPercent[skill.proficiencyLevel] || 0} className="mt-4" />
             </Card>
@@ -59,16 +59,16 @@ export default function EmployeeSkillDetailPage() {
           <Col xs={24} lg={16}>
             <Card title="Genel Bilgiler">
               <Descriptions column={2} bordered size="small">
-                <Descriptions.Item label="Calisan">{skill.employeeName}</Descriptions.Item>
+                <Descriptions.Item label="Calisan">Calisan #{skill.employeeId}</Descriptions.Item>
                 <Descriptions.Item label="Yetkinlik">{skill.skillName}</Descriptions.Item>
-                <Descriptions.Item label="Kategori">{skill.skillCategory || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Kategori">{skill.category || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Seviye"><Tag color={proficiencyColors[skill.proficiencyLevel]}>{skill.proficiencyLevel}</Tag></Descriptions.Item>
                 <Descriptions.Item label="Deneyim">{skill.yearsOfExperience ? `${skill.yearsOfExperience} yil` : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Son Kullanim">{skill.lastUsedDate ? new Date(skill.lastUsedDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Sertifika Adi">{skill.certificationName || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Sertifika Tarihi">{skill.certificationDate ? new Date(skill.certificationDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Sertifika Bitis">{skill.certificationExpiry ? new Date(skill.certificationExpiry).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Veren Kurum">{skill.issuingOrganization || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Sertifika Bitis">{skill.certificationExpiryDate ? new Date(skill.certificationExpiryDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Veren Kurum">{skill.certifyingAuthority || '-'}</Descriptions.Item>
               </Descriptions>
             </Card>
             {skill.notes && <Card title="Notlar" className="mt-4"><p>{skill.notes}</p></Card>}

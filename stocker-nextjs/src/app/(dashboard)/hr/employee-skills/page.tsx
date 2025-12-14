@@ -10,9 +10,8 @@ import { useEmployeeSkills, useDeleteEmployeeSkill } from '@/lib/api/hooks/useHR
 interface EmployeeSkill {
   id: number;
   employeeId: number;
-  employeeName?: string;
   skillName: string;
-  skillCategory?: string;
+  category?: string;
   proficiencyLevel: string;
   yearsOfExperience?: number;
   isCertified: boolean;
@@ -48,8 +47,8 @@ export default function EmployeeSkillsPage() {
     if (!searchText) return skills;
     const lower = searchText.toLowerCase();
     return skills.filter((item: EmployeeSkill) =>
-      item.employeeName?.toLowerCase().includes(lower) ||
-      item.skillName?.toLowerCase().includes(lower)
+      item.skillName?.toLowerCase().includes(lower) ||
+      item.category?.toLowerCase().includes(lower)
     );
   }, [skills, searchText]);
 
@@ -58,9 +57,9 @@ export default function EmployeeSkillsPage() {
   };
 
   const columns: ColumnsType<EmployeeSkill> = [
-    { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
+    { title: 'Calisan', dataIndex: 'employeeId', key: 'employeeId', render: (id: number) => `Calisan #${id}` },
     { title: 'Yetkinlik', dataIndex: 'skillName', key: 'skillName' },
-    { title: 'Kategori', dataIndex: 'skillCategory', key: 'skillCategory' },
+    { title: 'Kategori', dataIndex: 'category', key: 'category' },
     { title: 'Seviye', dataIndex: 'proficiencyLevel', key: 'proficiencyLevel', render: (level: string) => (
       <div style={{ minWidth: 120 }}>
         <Tag color={proficiencyColors[level] || 'default'}>{level}</Tag>

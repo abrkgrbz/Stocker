@@ -57,14 +57,14 @@ export default function EmployeeAssetDetailPage() {
                 <Descriptions.Item label="Varlik Adi">{asset.assetName}</Descriptions.Item>
                 <Descriptions.Item label="Varlik Turu">{asset.assetType}</Descriptions.Item>
                 <Descriptions.Item label="Durum"><Tag color={statusColors[asset.status]}>{asset.status}</Tag></Descriptions.Item>
-                <Descriptions.Item label="Varlik Etiketi">{asset.assetTag || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Varlik Kodu">{asset.assetCode || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Seri Numarasi">{asset.serialNumber || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Marka">{asset.brand || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Model">{asset.model || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Atama Tarihi">{asset.assignedDate ? new Date(asset.assignedDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Atama Tarihi">{asset.assignmentDate ? new Date(asset.assignmentDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Iade Tarihi">{asset.returnDate ? new Date(asset.returnDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Garanti Bitis">{asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Deger">{asset.value ? `${asset.value} ${asset.currency || 'TRY'}` : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Garanti Bitis">{asset.warrantyEndDate ? new Date(asset.warrantyEndDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Deger">{asset.purchaseValue ? `${asset.purchaseValue} ${asset.currency || 'TRY'}` : '-'}</Descriptions.Item>
               </Descriptions>
             </Card>
             {asset.notes && <Card title="Notlar" className="mt-4"><p>{asset.notes}</p></Card>}

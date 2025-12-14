@@ -9,12 +9,12 @@ import { useInterviews, useDeleteInterview } from '@/lib/api/hooks/useHR';
 
 interface Interview {
   id: number;
-  applicationId: number;
+  jobApplicationId: number;
   candidateName?: string;
   interviewerName?: string;
   interviewType: string;
   status: string;
-  scheduledDate: string;
+  scheduledDateTime: string;
   overallRating?: number;
 }
 
@@ -40,7 +40,7 @@ export default function InterviewsPage() {
     { title: 'Gorusmeci', dataIndex: 'interviewerName', key: 'interviewerName' },
     { title: 'Tur', dataIndex: 'interviewType', key: 'interviewType' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Tarih', dataIndex: 'scheduledDate', key: 'scheduledDate', render: (date: string) => date ? new Date(date).toLocaleString('tr-TR') : '-' },
+    { title: 'Tarih', dataIndex: 'scheduledDateTime', key: 'scheduledDateTime', render: (date: string) => date ? new Date(date).toLocaleString('tr-TR') : '-' },
     { title: 'Puan', dataIndex: 'overallRating', key: 'overallRating', render: (rating: number) => rating ? `${rating}/10` : '-' },
     { title: 'Islemler', key: 'actions', render: (_, record) => (
       <Space>

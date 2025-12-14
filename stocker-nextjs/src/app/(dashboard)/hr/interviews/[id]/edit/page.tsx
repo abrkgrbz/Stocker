@@ -43,13 +43,13 @@ export default function EditInterviewPage() {
 
   useEffect(() => {
     if (interview) {
-      form.setFieldsValue({ ...interview, scheduledDate: interview.scheduledDate ? dayjs(interview.scheduledDate) : null });
+      form.setFieldsValue({ ...interview, scheduledDateTime: interview.scheduledDateTime ? dayjs(interview.scheduledDateTime) : null });
     }
   }, [interview, form]);
 
   const handleSubmit = async (values: any) => {
     try {
-      const data = { ...values, scheduledDate: values.scheduledDate?.toISOString() };
+      const data = { ...values, scheduledDateTime: values.scheduledDateTime?.toISOString() };
       await updateInterview.mutateAsync({ id, data });
       router.push(`/hr/interviews/${id}`);
     } catch (error) {}
@@ -101,7 +101,7 @@ export default function EditInterviewPage() {
             <Col xs={24} lg={14}>
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserOutlined className="mr-1" /> Basvuru & Gorusmeci</Text>
-                <Form.Item name="applicationId" rules={[{ required: true }]} className="mb-3">
+                <Form.Item name="jobApplicationId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Basvuru secin" optionFilterProp="label" options={applications?.map((a: any) => ({ value: a.id, label: `${a.candidateName} - ${a.positionTitle}` }))} />
                 </Form.Item>
                 <Form.Item name="interviewerId" rules={[{ required: true }]} className="mb-3">
@@ -112,19 +112,19 @@ export default function EditInterviewPage() {
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Planlama</Text>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="scheduledDate" rules={[{ required: true }]} className="mb-3"><DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="duration" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Sure (dakika)" addonAfter="dk" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="scheduledDateTime" rules={[{ required: true }]} className="mb-3"><DatePicker showTime style={{ width: '100%' }} format="DD.MM.YYYY HH:mm" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="durationMinutes" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Sure (dakika)" addonAfter="dk" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="location" className="mb-3"><Input placeholder="Konum" variant="filled" /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="videoLink" className="mb-3"><Input placeholder="Video link" variant="filled" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="videoConferenceLink" className="mb-3"><Input placeholder="Video link" variant="filled" /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Geri Bildirim & Notlar</Text>
-                <Form.Item name="feedback" className="mb-3"><TextArea rows={3} placeholder="Geri bildirim..." variant="filled" /></Form.Item>
-                <Form.Item name="notes" className="mb-0"><TextArea rows={3} placeholder="Notlar..." variant="filled" /></Form.Item>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Degerlendirme & Notlar</Text>
+                <Form.Item name="evaluationSummary" className="mb-3"><TextArea rows={3} placeholder="Degerlendirme ozeti..." variant="filled" /></Form.Item>
+                <Form.Item name="interviewerNotes" className="mb-0"><TextArea rows={3} placeholder="Gorusmeci notlari..." variant="filled" /></Form.Item>
               </div>
             </Col>
           </Row>

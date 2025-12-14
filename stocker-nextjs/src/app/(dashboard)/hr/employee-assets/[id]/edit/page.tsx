@@ -57,10 +57,10 @@ export default function EditEmployeeAssetPage() {
     if (asset) {
       form.setFieldsValue({
         ...asset,
-        assignedDate: asset.assignedDate ? dayjs(asset.assignedDate) : null,
+        assignmentDate: asset.assignmentDate ? dayjs(asset.assignmentDate) : null,
         returnDate: asset.returnDate ? dayjs(asset.returnDate) : null,
         purchaseDate: asset.purchaseDate ? dayjs(asset.purchaseDate) : null,
-        warrantyExpiry: asset.warrantyExpiry ? dayjs(asset.warrantyExpiry) : null,
+        warrantyEndDate: asset.warrantyEndDate ? dayjs(asset.warrantyEndDate) : null,
       });
     }
   }, [asset, form]);
@@ -69,10 +69,10 @@ export default function EditEmployeeAssetPage() {
     try {
       const data = {
         ...values,
-        assignedDate: values.assignedDate?.toISOString(),
+        assignmentDate: values.assignmentDate?.toISOString(),
         returnDate: values.returnDate?.toISOString(),
         purchaseDate: values.purchaseDate?.toISOString(),
-        warrantyExpiry: values.warrantyExpiry?.toISOString(),
+        warrantyEndDate: values.warrantyEndDate?.toISOString(),
       };
       await updateAsset.mutateAsync({ id, data });
       router.push(`/hr/employee-assets/${id}`);

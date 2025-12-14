@@ -11,11 +11,11 @@ interface SuccessionPlan {
   id: number;
   positionTitle?: string;
   departmentName?: string;
-  incumbentName?: string;
+  currentIncumbentName?: string;
   status: string;
   priority: string;
-  readinessScore?: number;
-  targetDate: string;
+  completionPercentage?: number;
+  targetDate?: string;
 }
 
 const statusColors: Record<string, string> = { 'Draft': 'default', 'Active': 'processing', 'UnderReview': 'warning', 'Approved': 'success', 'Implemented': 'blue', 'Archived': 'default' };
@@ -31,7 +31,7 @@ export default function SuccessionPlansPage() {
     if (!plans) return [];
     if (!searchText) return plans;
     const lower = searchText.toLowerCase();
-    return plans.filter((item: SuccessionPlan) => item.positionTitle?.toLowerCase().includes(lower) || item.incumbentName?.toLowerCase().includes(lower));
+    return plans.filter((item: SuccessionPlan) => item.positionTitle?.toLowerCase().includes(lower) || item.currentIncumbentName?.toLowerCase().includes(lower));
   }, [plans, searchText]);
 
   const handleDelete = async (id: number) => { try { await deletePlan.mutateAsync(id); } catch (error) {} };
@@ -39,8 +39,8 @@ export default function SuccessionPlansPage() {
   const columns: ColumnsType<SuccessionPlan> = [
     { title: 'Pozisyon', dataIndex: 'positionTitle', key: 'positionTitle', sorter: (a, b) => (a.positionTitle || '').localeCompare(b.positionTitle || '') },
     { title: 'Departman', dataIndex: 'departmentName', key: 'departmentName' },
-    { title: 'Mevcut Kisi', dataIndex: 'incumbentName', key: 'incumbentName' },
-    { title: 'Hazirlik', dataIndex: 'readinessScore', key: 'readinessScore', render: (val: number) => <Progress percent={val || 0} size="small" /> },
+    { title: 'Mevcut Kisi', dataIndex: 'currentIncumbentName', key: 'currentIncumbentName' },
+    { title: 'Tamamlanma', dataIndex: 'completionPercentage', key: 'completionPercentage', render: (val: number) => <Progress percent={val || 0} size="small" /> },
     { title: 'Oncelik', dataIndex: 'priority', key: 'priority', render: (p: string) => <Tag color={priorityColors[p] || 'default'}>{p}</Tag> },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
     { title: 'Hedef Tarih', dataIndex: 'targetDate', key: 'targetDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },

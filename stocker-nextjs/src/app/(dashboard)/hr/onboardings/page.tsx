@@ -13,8 +13,7 @@ interface Onboarding {
   startDate: string;
   status: string;
   completionPercentage?: number;
-  mentorName?: string;
-  departmentName?: string;
+  buddyName?: string;
 }
 
 const statusColors: Record<string, string> = { 'NotStarted': 'default', 'InProgress': 'processing', 'Completed': 'success', 'OnHold': 'warning', 'Cancelled': 'error' };
@@ -29,15 +28,14 @@ export default function OnboardingsPage() {
     if (!onboardings) return [];
     if (!searchText) return onboardings;
     const lower = searchText.toLowerCase();
-    return onboardings.filter((item: Onboarding) => item.employeeName?.toLowerCase().includes(lower) || item.departmentName?.toLowerCase().includes(lower));
+    return onboardings.filter((item: Onboarding) => item.employeeName?.toLowerCase().includes(lower) || item.buddyName?.toLowerCase().includes(lower));
   }, [onboardings, searchText]);
 
   const handleDelete = async (id: number) => { try { await deleteOnboarding.mutateAsync(id); } catch (error) {} };
 
   const columns: ColumnsType<Onboarding> = [
     { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
-    { title: 'Departman', dataIndex: 'departmentName', key: 'departmentName' },
-    { title: 'Mentor', dataIndex: 'mentorName', key: 'mentorName' },
+    { title: 'Buddy', dataIndex: 'buddyName', key: 'buddyName' },
     { title: 'Ilerleme', dataIndex: 'completionPercentage', key: 'completionPercentage', render: (val: number) => <Progress percent={val || 0} size="small" /> },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
     { title: 'Baslangic', dataIndex: 'startDate', key: 'startDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },

@@ -157,15 +157,16 @@ export default function DisciplinaryActionDetailPage() {
               </Card>
             )}
 
-            {action.actionsTaken && (
+            {action.appliedSanction && (
               <Card title="Alinan Aksiyonlar" className="mt-4">
-                <p>{action.actionsTaken}</p>
+                <p>{action.appliedSanction}</p>
+                {action.sanctionDetails && <p className="mt-2 text-gray-500">{action.sanctionDetails}</p>}
               </Card>
             )}
 
-            {action.notes && (
+            {action.internalNotes && (
               <Card title="Notlar" className="mt-4">
-                <p>{action.notes}</p>
+                <p>{action.internalNotes}</p>
               </Card>
             )}
           </Col>

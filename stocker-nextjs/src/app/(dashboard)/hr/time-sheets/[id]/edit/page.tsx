@@ -35,7 +35,7 @@ export default function EditTimeSheetPage() {
         periodStart: timeSheet.periodStart ? dayjs(timeSheet.periodStart) : null,
         periodEnd: timeSheet.periodEnd ? dayjs(timeSheet.periodEnd) : null,
         submittedDate: timeSheet.submittedDate ? dayjs(timeSheet.submittedDate) : null,
-        approvedDate: timeSheet.approvedDate ? dayjs(timeSheet.approvedDate) : null,
+        approvalDate: timeSheet.approvalDate ? dayjs(timeSheet.approvalDate) : null,
       });
     }
   }, [timeSheet, form]);
@@ -47,7 +47,7 @@ export default function EditTimeSheetPage() {
         periodStart: values.periodStart?.toISOString(),
         periodEnd: values.periodEnd?.toISOString(),
         submittedDate: values.submittedDate?.toISOString(),
-        approvedDate: values.approvedDate?.toISOString(),
+        approvalDate: values.approvalDate?.toISOString(),
       };
       await updateTimeSheet.mutateAsync({ id, data });
       router.push(`/hr/time-sheets/${id}`);
@@ -102,27 +102,23 @@ export default function EditTimeSheetPage() {
                 </Row>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="submittedDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Gonderim tarihi" /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="approvedDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Onay tarihi" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="approvalDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Onay tarihi" /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><FieldTimeOutlined className="mr-1" /> Calisma Saatleri</Text>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="totalRegularHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Normal saat" min={0} /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="totalOvertimeHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Fazla mesai saat" min={0} /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="regularHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Normal saat" min={0} /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="overtimeHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Fazla mesai saat" min={0} /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="weekendHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Hafta sonu saat" min={0} /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="leaveHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Izin saat" min={0} /></Form.Item></Col>
                   <Col span={12}><Form.Item name="holidayHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Tatil gun saat" min={0} /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="nightShiftHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Gece mesaisi saat" min={0} /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="paidLeaveHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Ucretli izin saat" min={0} /></Form.Item></Col>
-                </Row>
-                <Row gutter={16}>
-                  <Col span={12}><Form.Item name="unpaidLeaveHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Ucretsiz izin saat" min={0} /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="sickLeaveHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Hastalik izni saat" min={0} /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="billableHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Faturali saat" min={0} /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="nonBillableHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Faturasiz saat" min={0} /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />

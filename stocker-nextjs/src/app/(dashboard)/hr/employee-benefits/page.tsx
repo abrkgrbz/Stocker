@@ -16,7 +16,7 @@ interface EmployeeBenefit {
   status: string;
   startDate: string;
   endDate?: string;
-  value?: number;
+  amount?: number;
   currency?: string;
 }
 
@@ -71,7 +71,7 @@ export default function EmployeeBenefitsPage() {
     { title: 'Yan Hakki', dataIndex: 'benefitName', key: 'benefitName' },
     { title: 'Tur', dataIndex: 'benefitType', key: 'benefitType', render: (type: string) => <Tag color={benefitTypeColors[type] || 'default'}>{type}</Tag> },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Deger', key: 'value', render: (_, record) => record.value ? `${record.value} ${record.currency || 'TRY'}` : '-' },
+    { title: 'Deger', key: 'value', render: (_, record) => record.amount ? `${record.amount} ${record.currency || 'TRY'}` : '-' },
     { title: 'Baslangic', dataIndex: 'startDate', key: 'startDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
     {
       title: 'Islemler', key: 'actions',

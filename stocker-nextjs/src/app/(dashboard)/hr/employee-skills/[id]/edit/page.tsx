@@ -45,14 +45,14 @@ export default function EditEmployeeSkillPage() {
         ...skill,
         lastUsedDate: skill.lastUsedDate ? dayjs(skill.lastUsedDate) : null,
         certificationDate: skill.certificationDate ? dayjs(skill.certificationDate) : null,
-        certificationExpiry: skill.certificationExpiry ? dayjs(skill.certificationExpiry) : null,
+        certificationExpiryDate: skill.certificationExpiryDate ? dayjs(skill.certificationExpiryDate) : null,
       });
     }
   }, [skill, form]);
 
   const handleSubmit = async (values: any) => {
     try {
-      const data = { ...values, lastUsedDate: values.lastUsedDate?.toISOString(), certificationDate: values.certificationDate?.toISOString(), certificationExpiry: values.certificationExpiry?.toISOString() };
+      const data = { ...values, lastUsedDate: values.lastUsedDate?.toISOString(), certificationDate: values.certificationDate?.toISOString(), certificationExpiryDate: values.certificationExpiryDate?.toISOString() };
       await updateSkill.mutateAsync({ id, data });
       router.push(`/hr/employee-skills/${id}`);
     } catch (error) {}

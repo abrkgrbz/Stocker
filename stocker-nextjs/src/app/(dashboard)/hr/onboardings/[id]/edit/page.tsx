@@ -33,13 +33,9 @@ export default function EditOnboardingPage() {
       form.setFieldsValue({
         ...onboarding,
         startDate: onboarding.startDate ? dayjs(onboarding.startDate) : null,
-        expectedEndDate: onboarding.expectedEndDate ? dayjs(onboarding.expectedEndDate) : null,
+        plannedEndDate: onboarding.plannedEndDate ? dayjs(onboarding.plannedEndDate) : null,
         actualEndDate: onboarding.actualEndDate ? dayjs(onboarding.actualEndDate) : null,
-        firstDaySchedule: onboarding.firstDaySchedule ? dayjs(onboarding.firstDaySchedule) : null,
-        firstWeekCheckIn: onboarding.firstWeekCheckIn ? dayjs(onboarding.firstWeekCheckIn) : null,
-        thirtyDayCheckIn: onboarding.thirtyDayCheckIn ? dayjs(onboarding.thirtyDayCheckIn) : null,
-        sixtyDayCheckIn: onboarding.sixtyDayCheckIn ? dayjs(onboarding.sixtyDayCheckIn) : null,
-        ninetyDayCheckIn: onboarding.ninetyDayCheckIn ? dayjs(onboarding.ninetyDayCheckIn) : null,
+        firstDayOfWork: onboarding.firstDayOfWork ? dayjs(onboarding.firstDayOfWork) : null,
       });
     }
   }, [onboarding, form]);
@@ -49,13 +45,9 @@ export default function EditOnboardingPage() {
       const data = {
         ...values,
         startDate: values.startDate?.toISOString(),
-        expectedEndDate: values.expectedEndDate?.toISOString(),
+        plannedEndDate: values.plannedEndDate?.toISOString(),
         actualEndDate: values.actualEndDate?.toISOString(),
-        firstDaySchedule: values.firstDaySchedule?.toISOString(),
-        firstWeekCheckIn: values.firstWeekCheckIn?.toISOString(),
-        thirtyDayCheckIn: values.thirtyDayCheckIn?.toISOString(),
-        sixtyDayCheckIn: values.sixtyDayCheckIn?.toISOString(),
-        ninetyDayCheckIn: values.ninetyDayCheckIn?.toISOString(),
+        firstDayOfWork: values.firstDayOfWork?.toISOString(),
       };
       await updateOnboarding.mutateAsync({ id, data });
       router.push(`/hr/onboardings/${id}`);
@@ -106,13 +98,13 @@ export default function EditOnboardingPage() {
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="mentorId" className="mb-3"><Select showSearch placeholder="Mentor secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} allowClear /></Form.Item></Col>
                   <Col span={12}><Form.Item name="buddyId" className="mb-3"><Select showSearch placeholder="Buddy secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} allowClear /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="hrResponsibleId" className="mb-3"><Select showSearch placeholder="HR Sorumlusu secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} allowClear /></Form.Item></Col>
                 </Row>
-                <Form.Item name="hrRepresentativeId" className="mb-3"><Select showSearch placeholder="HR Sorumlusu secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} allowClear /></Form.Item>
+                <Form.Item name="itResponsibleId" className="mb-3"><Select showSearch placeholder="IT Sorumlusu secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} allowClear /></Form.Item>
                 <Row gutter={16}>
                   <Col span={8}><Form.Item name="startDate" rules={[{ required: true }]} className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Baslangic" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="expectedEndDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Beklenen bitis" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="plannedEndDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Beklenen bitis" /></Form.Item></Col>
                   <Col span={8}><Form.Item name="actualEndDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Gercek bitis" /></Form.Item></Col>
                 </Row>
               </div>
@@ -120,19 +112,17 @@ export default function EditOnboardingPage() {
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><LaptopOutlined className="mr-1" /> Ekipman & IT Erisimi</Text>
                 <Row gutter={16}>
-                  <Col span={8}><Form.Item name="workstationAssigned" valuePropName="checked" className="mb-3"><Switch checkedChildren="Is Istasyonu" unCheckedChildren="Is Istasyonu" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="computerAssigned" valuePropName="checked" className="mb-3"><Switch checkedChildren="Bilgisayar" unCheckedChildren="Bilgisayar" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="phoneAssigned" valuePropName="checked" className="mb-3"><Switch checkedChildren="Telefon" unCheckedChildren="Telefon" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="deskPrepared" valuePropName="checked" className="mb-3"><Switch checkedChildren="Is Istasyonu" unCheckedChildren="Is Istasyonu" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="laptopProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="Bilgisayar" unCheckedChildren="Bilgisayar" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="phoneProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="Telefon" unCheckedChildren="Telefon" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={8}><Form.Item name="emailSetup" valuePropName="checked" className="mb-3"><Switch checkedChildren="E-posta" unCheckedChildren="E-posta" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="networkAccess" valuePropName="checked" className="mb-3"><Switch checkedChildren="Ag Erisimi" unCheckedChildren="Ag Erisimi" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="vpnAccess" valuePropName="checked" className="mb-3"><Switch checkedChildren="VPN" unCheckedChildren="VPN" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="emailAccountCreated" valuePropName="checked" className="mb-3"><Switch checkedChildren="E-posta" unCheckedChildren="E-posta" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="systemAccessGranted" valuePropName="checked" className="mb-3"><Switch checkedChildren="Sistem Erisimi" unCheckedChildren="Sistem Erisimi" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="vpnAccessGranted" valuePropName="checked" className="mb-3"><Switch checkedChildren="VPN" unCheckedChildren="VPN" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={8}><Form.Item name="accessCardIssued" valuePropName="checked" className="mb-3"><Switch checkedChildren="Gec Karti" unCheckedChildren="Gec Karti" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="softwareLicenses" valuePropName="checked" className="mb-3"><Switch checkedChildren="Yazilim" unCheckedChildren="Yazilim" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="toolsProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="Ekipman" unCheckedChildren="Ekipman" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="accessCardProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="Gec Karti" unCheckedChildren="Gec Karti" /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
@@ -144,14 +134,13 @@ export default function EditOnboardingPage() {
                   <Col span={8}><Form.Item name="policiesAcknowledged" valuePropName="checked" className="mb-3"><Switch checkedChildren="Politikalar" unCheckedChildren="Politikalar" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={8}><Form.Item name="handbookProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="El Kitabi" unCheckedChildren="El Kitabi" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="safetyTrainingComplete" valuePropName="checked" className="mb-3"><Switch checkedChildren="Is Guvenligi" unCheckedChildren="Is Guvenligi" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="complianceTrainingComplete" valuePropName="checked" className="mb-3"><Switch checkedChildren="Uyum" unCheckedChildren="Uyum" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="safetyTrainingCompleted" valuePropName="checked" className="mb-3"><Switch checkedChildren="Is Guvenligi" unCheckedChildren="Is Guvenligi" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="complianceTrainingCompleted" valuePropName="checked" className="mb-3"><Switch checkedChildren="Uyum" unCheckedChildren="Uyum" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="orientationCompleted" valuePropName="checked" className="mb-3"><Switch checkedChildren="Oryantasyon" unCheckedChildren="Oryantasyon" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={8}><Form.Item name="orientationComplete" valuePropName="checked" className="mb-3"><Switch checkedChildren="Oryantasyon" unCheckedChildren="Oryantasyon" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="departmentIntroComplete" valuePropName="checked" className="mb-3"><Switch checkedChildren="Dept. Tanitim" unCheckedChildren="Dept. Tanitim" /></Form.Item></Col>
-                  <Col span={8}><Form.Item name="systemsTrainingComplete" valuePropName="checked" className="mb-3"><Switch checkedChildren="Sistem Egitimi" unCheckedChildren="Sistem Egitimi" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="teamIntroductionDone" valuePropName="checked" className="mb-3"><Switch checkedChildren="Takim Tanitimi" unCheckedChildren="Takim Tanitimi" /></Form.Item></Col>
+                  <Col span={8}><Form.Item name="productTrainingCompleted" valuePropName="checked" className="mb-3"><Switch checkedChildren="Urun Egitimi" unCheckedChildren="Urun Egitimi" /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />

@@ -69,7 +69,7 @@ export default function EditJobApplicationPage() {
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Basvuru Duzenle</h1>
-              <p className="text-sm text-gray-400 m-0">{application?.candidateName}</p>
+              <p className="text-sm text-gray-400 m-0">{application?.fullName}</p>
             </div>
           </div>
           <Space>
@@ -102,12 +102,15 @@ export default function EditJobApplicationPage() {
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserOutlined className="mr-1" /> Aday Bilgileri</Text>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="candidateName" rules={[{ required: true }]} className="mb-3"><Input placeholder="Ad Soyad" variant="filled" /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="candidateEmail" rules={[{ required: true, type: 'email' }]} className="mb-3"><Input placeholder="E-posta" variant="filled" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="firstName" rules={[{ required: true }]} className="mb-3"><Input placeholder="Ad" variant="filled" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="lastName" rules={[{ required: true }]} className="mb-3"><Input placeholder="Soyad" variant="filled" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="candidatePhone" className="mb-3"><Input placeholder="Telefon" variant="filled" /></Form.Item></Col>
-                  <Col span={12}><Form.Item name="applicationDate" rules={[{ required: true }]} className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="email" rules={[{ required: true, type: 'email' }]} className="mb-3"><Input placeholder="E-posta" variant="filled" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="phone" className="mb-3"><Input placeholder="Telefon" variant="filled" /></Form.Item></Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={24}><Form.Item name="applicationDate" rules={[{ required: true }]} className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" /></Form.Item></Col>
                 </Row>
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
@@ -117,7 +120,7 @@ export default function EditJobApplicationPage() {
                   <Select showSearch placeholder="Is ilani secin" optionFilterProp="label" options={jobPostings?.map((j: any) => ({ value: j.id, label: j.title }))} />
                 </Form.Item>
                 <Row gutter={16}>
-                  <Col span={12}><Form.Item name="yearsOfExperience" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Deneyim (yil)" /></Form.Item></Col>
+                  <Col span={12}><Form.Item name="totalExperienceYears" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Deneyim (yil)" /></Form.Item></Col>
                   <Col span={12}><Form.Item name="currentCompany" className="mb-3"><Input placeholder="Mevcut sirket" variant="filled" /></Form.Item></Col>
                 </Row>
                 <Row gutter={16}>

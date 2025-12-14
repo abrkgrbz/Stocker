@@ -19,11 +19,11 @@ interface DisciplinaryAction {
   employeeId: number;
   employeeName?: string;
   actionType: string;
-  severity: string;
+  severityLevel: string;
   status: string;
   incidentDate: string;
-  effectiveDate?: string;
-  description?: string;
+  sanctionStartDate?: string;
+  incidentDescription?: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -82,10 +82,10 @@ export default function DisciplinaryActionsPage() {
     },
     {
       title: 'Siddet',
-      dataIndex: 'severity',
-      key: 'severity',
-      render: (severity: string) => (
-        <Tag color={severityColors[severity] || 'default'}>{severity}</Tag>
+      dataIndex: 'severityLevel',
+      key: 'severityLevel',
+      render: (severityLevel: string) => (
+        <Tag color={severityColors[severityLevel] || 'default'}>{severityLevel}</Tag>
       ),
     },
     {

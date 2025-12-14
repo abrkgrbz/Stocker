@@ -12,8 +12,8 @@ interface TimeSheet {
   employeeName?: string;
   periodStart: string;
   periodEnd: string;
-  totalRegularHours?: number;
-  totalOvertimeHours?: number;
+  regularHours?: number;
+  overtimeHours?: number;
   status: string;
 }
 
@@ -38,8 +38,8 @@ export default function TimeSheetsPage() {
     { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
     { title: 'Donem Baslangic', dataIndex: 'periodStart', key: 'periodStart', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
     { title: 'Donem Bitis', dataIndex: 'periodEnd', key: 'periodEnd', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
-    { title: 'Normal Saat', dataIndex: 'totalRegularHours', key: 'totalRegularHours', render: (val: number) => val ? `${val} saat` : '-', align: 'right' },
-    { title: 'Fazla Mesai', dataIndex: 'totalOvertimeHours', key: 'totalOvertimeHours', render: (val: number) => val ? `${val} saat` : '-', align: 'right' },
+    { title: 'Normal Saat', dataIndex: 'regularHours', key: 'regularHours', render: (val: number) => val ? `${val} saat` : '-', align: 'right' },
+    { title: 'Fazla Mesai', dataIndex: 'overtimeHours', key: 'overtimeHours', render: (val: number) => val ? `${val} saat` : '-', align: 'right' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
     { title: 'Islemler', key: 'actions', render: (_, record) => (
       <Space>

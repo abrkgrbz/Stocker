@@ -13,10 +13,10 @@ interface EmployeeAsset {
   employeeName?: string;
   assetType: string;
   assetName: string;
-  assetTag?: string;
+  assetCode?: string;
   serialNumber?: string;
   status: string;
-  assignedDate: string;
+  assignmentDate: string;
   returnDate?: string;
 }
 
@@ -59,7 +59,7 @@ export default function EmployeeAssetsPage() {
     return assets.filter((item: EmployeeAsset) =>
       item.employeeName?.toLowerCase().includes(lower) ||
       item.assetName?.toLowerCase().includes(lower) ||
-      item.assetTag?.toLowerCase().includes(lower)
+      item.assetCode?.toLowerCase().includes(lower)
     );
   }, [assets, searchText]);
 
@@ -73,10 +73,10 @@ export default function EmployeeAssetsPage() {
     { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
     { title: 'Varlik Adi', dataIndex: 'assetName', key: 'assetName' },
     { title: 'Varlik Turu', dataIndex: 'assetType', key: 'assetType', render: (type: string) => <Tag color={assetTypeColors[type] || 'default'}>{type}</Tag> },
-    { title: 'Etiket', dataIndex: 'assetTag', key: 'assetTag' },
+    { title: 'Kod', dataIndex: 'assetCode', key: 'assetCode' },
     { title: 'Seri No', dataIndex: 'serialNumber', key: 'serialNumber' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
-    { title: 'Atama Tarihi', dataIndex: 'assignedDate', key: 'assignedDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
+    { title: 'Atama Tarihi', dataIndex: 'assignmentDate', key: 'assignmentDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
     {
       title: 'Islemler',
       key: 'actions',

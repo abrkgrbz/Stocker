@@ -57,14 +57,14 @@ export default function InterviewDetailPage() {
                 <Descriptions.Item label="Gorusmeci">{interview.interviewerName || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Mulakat Turu">{interview.interviewType}</Descriptions.Item>
                 <Descriptions.Item label="Durum"><Tag color={statusColors[interview.status]}>{interview.status}</Tag></Descriptions.Item>
-                <Descriptions.Item label="Planlanan Tarih">{interview.scheduledDate ? new Date(interview.scheduledDate).toLocaleString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Sure (dk)">{interview.duration || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Planlanan Tarih">{interview.scheduledDateTime ? new Date(interview.scheduledDateTime).toLocaleString('tr-TR') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Sure (dk)">{interview.durationMinutes || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Konum">{interview.location || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Video Link">{interview.videoLink || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Video Link">{interview.videoConferenceLink || '-'}</Descriptions.Item>
               </Descriptions>
             </Card>
-            {interview.feedback && <Card title="Geri Bildirim" className="mt-4"><p>{interview.feedback}</p></Card>}
-            {interview.notes && <Card title="Notlar" className="mt-4"><p>{interview.notes}</p></Card>}
+            {interview.evaluationSummary && <Card title="Degerlendirme" className="mt-4"><p>{interview.evaluationSummary}</p></Card>}
+            {interview.interviewerNotes && <Card title="Gorusmeci Notlari" className="mt-4"><p>{interview.interviewerNotes}</p></Card>}
           </Col>
         </Row>
       </div>

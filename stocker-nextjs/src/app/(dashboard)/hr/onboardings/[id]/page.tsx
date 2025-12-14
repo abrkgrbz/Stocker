@@ -38,40 +38,40 @@ export default function OnboardingDetailPage() {
             <Card style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
               <RocketOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{onboarding.employeeName}</h3>
-              <p className="text-sm text-white/60">{onboarding.departmentName}</p>
+              <p className="text-sm text-white/60">Onboarding</p>
               <Tag color={statusColors[onboarding.status]} className="mt-4">{onboarding.status}</Tag>
               <div className="mt-4 px-8"><Progress percent={onboarding.completionPercentage || 0} strokeColor="#fff" trailColor="rgba(255,255,255,0.3)" /></div>
             </Card>
-            <Card className="mt-4" title="Mentor Bilgileri">
-              <p><strong>Mentor:</strong> {onboarding.mentorName || '-'}</p>
+            <Card className="mt-4" title="Sorumlular">
               <p><strong>Buddy:</strong> {onboarding.buddyName || '-'}</p>
-              <p><strong>HR Sorumlusu:</strong> {onboarding.hrRepresentativeName || '-'}</p>
+              <p><strong>HR Sorumlusu:</strong> {onboarding.hrResponsibleName || '-'}</p>
+              <p><strong>IT Sorumlusu:</strong> {onboarding.itResponsibleName || '-'}</p>
             </Card>
           </Col>
           <Col xs={24} lg={16}>
             <Card title="Genel Bilgiler" className="mb-4">
               <Descriptions column={2} bordered size="small">
                 <Descriptions.Item label="Calisan">{onboarding.employeeName}</Descriptions.Item>
-                <Descriptions.Item label="Departman">{onboarding.departmentName || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Pozisyon">{onboarding.positionTitle || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Durum"><Tag color={statusColors[onboarding.status]}>{onboarding.status}</Tag></Descriptions.Item>
                 <Descriptions.Item label="Baslangic">{onboarding.startDate ? new Date(onboarding.startDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Beklenen Bitis">{onboarding.expectedEndDate ? new Date(onboarding.expectedEndDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Beklenen Bitis">{onboarding.plannedEndDate ? new Date(onboarding.plannedEndDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Gercek Bitis">{onboarding.actualEndDate ? new Date(onboarding.actualEndDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Ilerleme">{onboarding.completionPercentage || 0}%</Descriptions.Item>
+                <Descriptions.Item label="Toplam Gorev">{onboarding.totalTasks || 0}</Descriptions.Item>
+                <Descriptions.Item label="Tamamlanan">{onboarding.completedTasks || 0}</Descriptions.Item>
               </Descriptions>
             </Card>
             <Card title="Ekipman & IT Erisimi" className="mb-4">
               <Row gutter={[16, 16]}>
-                <Col span={8}><Checkbox checked={onboarding.workstationAssigned}> Is istasyonu</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.computerAssigned}> Bilgisayar</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.phoneAssigned}> Telefon</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.emailSetup}> E-posta</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.networkAccess}> Ag Erisimi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.vpnAccess}> VPN Erisimi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.accessCardIssued}> Gec Karti</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.softwareLicenses}> Yazilim Lisanslari</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.toolsProvided}> Ekipman</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.deskPrepared}> Is istasyonu</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.laptopProvided}> Laptop</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.phoneProvided}> Telefon</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.emailAccountCreated}> E-posta</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.adAccountCreated}> AD Hesabi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.systemAccessGranted}> Sistem Erisimi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.vpnAccessGranted}> VPN Erisimi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.accessCardProvided}> Gec Karti</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.welcomeKitSent}> Karsilama Paketi</Checkbox></Col>
               </Row>
             </Card>
             <Card title="Dokumantasyon & Egitim" className="mb-4">
@@ -79,12 +79,13 @@ export default function OnboardingDetailPage() {
                 <Col span={8}><Checkbox checked={onboarding.contractSigned}> Sozlesme</Checkbox></Col>
                 <Col span={8}><Checkbox checked={onboarding.ndaSigned}> NDA</Checkbox></Col>
                 <Col span={8}><Checkbox checked={onboarding.policiesAcknowledged}> Politikalar</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.handbookProvided}> El kitabi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.safetyTrainingComplete}> Is Guvenligi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.complianceTrainingComplete}> Uyum Egitimi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.orientationComplete}> Oryantasyon</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.departmentIntroComplete}> Departman Tanitimi</Checkbox></Col>
-                <Col span={8}><Checkbox checked={onboarding.systemsTrainingComplete}> Sistem Egitimi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.bankDetailsReceived}> Banka Bilgileri</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.emergencyContactReceived}> Acil Durum</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.safetyTrainingCompleted}> Is Guvenligi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.complianceTrainingCompleted}> Uyum Egitimi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.orientationCompleted}> Oryantasyon</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.teamIntroductionDone}> Takim Tanitimi</Checkbox></Col>
+                <Col span={8}><Checkbox checked={onboarding.productTrainingCompleted}> Urun Egitimi</Checkbox></Col>
               </Row>
             </Card>
             {onboarding.notes && <Card title="Notlar"><p>{onboarding.notes}</p></Card>}

@@ -9,9 +9,9 @@ import { useJobApplications, useDeleteJobApplication } from '@/lib/api/hooks/use
 
 interface JobApplication {
   id: number;
-  candidateName: string;
-  candidateEmail?: string;
-  positionTitle?: string;
+  fullName: string;
+  email?: string;
+  jobTitle?: string;
   status: string;
   applicationDate: string;
   source?: string;
@@ -29,15 +29,15 @@ export default function JobApplicationsPage() {
     if (!applications) return [];
     if (!searchText) return applications;
     const lower = searchText.toLowerCase();
-    return applications.filter((item: JobApplication) => item.candidateName?.toLowerCase().includes(lower) || item.positionTitle?.toLowerCase().includes(lower));
+    return applications.filter((item: JobApplication) => item.fullName?.toLowerCase().includes(lower) || item.jobTitle?.toLowerCase().includes(lower));
   }, [applications, searchText]);
 
   const handleDelete = async (id: number) => { try { await deleteApplication.mutateAsync(id); } catch (error) {} };
 
   const columns: ColumnsType<JobApplication> = [
-    { title: 'Aday', dataIndex: 'candidateName', key: 'candidateName', sorter: (a, b) => (a.candidateName || '').localeCompare(b.candidateName || '') },
-    { title: 'E-posta', dataIndex: 'candidateEmail', key: 'candidateEmail' },
-    { title: 'Pozisyon', dataIndex: 'positionTitle', key: 'positionTitle' },
+    { title: 'Aday', dataIndex: 'fullName', key: 'fullName', sorter: (a, b) => (a.fullName || '').localeCompare(b.fullName || '') },
+    { title: 'E-posta', dataIndex: 'email', key: 'email' },
+    { title: 'Pozisyon', dataIndex: 'jobTitle', key: 'jobTitle' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },
     { title: 'Kaynak', dataIndex: 'source', key: 'source' },
     { title: 'Basvuru Tarihi', dataIndex: 'applicationDate', key: 'applicationDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },

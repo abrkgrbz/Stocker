@@ -28,7 +28,7 @@ export default function JobApplicationDetailPage() {
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Basvuru Detayi</h1>
-              <p className="text-sm text-gray-400 m-0">{application.candidateName}</p>
+              <p className="text-sm text-gray-400 m-0">{application.fullName}</p>
             </div>
           </div>
           <Button type="primary" icon={<EditOutlined />} onClick={() => router.push(`/hr/job-applications/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
@@ -40,13 +40,13 @@ export default function JobApplicationDetailPage() {
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
               <FileTextOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <h3 className="mt-4 text-lg font-medium text-white/90">{application.candidateName}</h3>
-              <p className="text-sm text-white/60">{application.positionTitle}</p>
+              <h3 className="mt-4 text-lg font-medium text-white/90">{application.fullName}</h3>
+              <p className="text-sm text-white/60">{application.jobTitle}</p>
               <Tag color={statusColors[application.status]} className="mt-4">{application.status}</Tag>
             </Card>
             <Card className="mt-4" title="Iletisim">
-              <p><MailOutlined className="mr-2" />{application.candidateEmail || '-'}</p>
-              <p><PhoneOutlined className="mr-2" />{application.candidatePhone || '-'}</p>
+              <p><MailOutlined className="mr-2" />{application.email || '-'}</p>
+              <p><PhoneOutlined className="mr-2" />{application.phone || '-'}</p>
             </Card>
           </Col>
           <Col xs={24} lg={16}>
@@ -57,14 +57,14 @@ export default function JobApplicationDetailPage() {
             )}
             <Card title="Genel Bilgiler">
               <Descriptions column={2} bordered size="small">
-                <Descriptions.Item label="Aday">{application.candidateName}</Descriptions.Item>
-                <Descriptions.Item label="E-posta">{application.candidateEmail || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Telefon">{application.candidatePhone || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Pozisyon">{application.positionTitle || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Aday">{application.fullName}</Descriptions.Item>
+                <Descriptions.Item label="E-posta">{application.email || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Telefon">{application.phone || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Pozisyon">{application.jobTitle || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Durum"><Tag color={statusColors[application.status]}>{application.status}</Tag></Descriptions.Item>
                 <Descriptions.Item label="Kaynak">{application.source || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Basvuru Tarihi">{application.applicationDate ? new Date(application.applicationDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Deneyim (Yil)">{application.yearsOfExperience || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Deneyim (Yil)">{application.totalExperienceYears || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Mevcut Sirket">{application.currentCompany || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Beklenen Maas">{application.expectedSalary || '-'}</Descriptions.Item>
               </Descriptions>

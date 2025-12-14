@@ -10,8 +10,8 @@ import { usePayslips, useDeletePayslip } from '@/lib/api/hooks/useHR';
 interface Payslip {
   id: number;
   employeeName?: string;
-  payPeriodStart: string;
-  payPeriodEnd: string;
+  periodStart: string;
+  periodEnd: string;
   paymentDate: string;
   grossSalary: number;
   netSalary: number;
@@ -39,8 +39,8 @@ export default function PayslipsPage() {
 
   const columns: ColumnsType<Payslip> = [
     { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
-    { title: 'Donem Baslangic', dataIndex: 'payPeriodStart', key: 'payPeriodStart', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
-    { title: 'Donem Bitis', dataIndex: 'payPeriodEnd', key: 'payPeriodEnd', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
+    { title: 'Donem Baslangic', dataIndex: 'periodStart', key: 'periodStart', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
+    { title: 'Donem Bitis', dataIndex: 'periodEnd', key: 'periodEnd', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
     { title: 'Brut Maas', dataIndex: 'grossSalary', key: 'grossSalary', render: (val: number) => formatCurrency(val), align: 'right' },
     { title: 'Net Maas', dataIndex: 'netSalary', key: 'netSalary', render: (val: number) => formatCurrency(val), align: 'right' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },

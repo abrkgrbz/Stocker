@@ -9,8 +9,8 @@ import { useGrievances, useDeleteGrievance } from '@/lib/api/hooks/useHR';
 
 interface Grievance {
   id: number;
-  employeeId: number;
-  employeeName?: string;
+  complainantId: number;
+  complainantName?: string;
   grievanceType: string;
   status: string;
   priority: string;
@@ -31,13 +31,13 @@ export default function GrievancesPage() {
     if (!grievances) return [];
     if (!searchText) return grievances;
     const lower = searchText.toLowerCase();
-    return grievances.filter((item: Grievance) => item.employeeName?.toLowerCase().includes(lower) || item.subject?.toLowerCase().includes(lower));
+    return grievances.filter((item: Grievance) => item.complainantName?.toLowerCase().includes(lower) || item.subject?.toLowerCase().includes(lower));
   }, [grievances, searchText]);
 
   const handleDelete = async (id: number) => { try { await deleteGrievance.mutateAsync(id); } catch (error) {} };
 
   const columns: ColumnsType<Grievance> = [
-    { title: 'Calisan', dataIndex: 'employeeName', key: 'employeeName', sorter: (a, b) => (a.employeeName || '').localeCompare(b.employeeName || '') },
+    { title: 'Sikayet Eden', dataIndex: 'complainantName', key: 'complainantName', sorter: (a, b) => (a.complainantName || '').localeCompare(b.complainantName || '') },
     { title: 'Konu', dataIndex: 'subject', key: 'subject' },
     { title: 'Tur', dataIndex: 'grievanceType', key: 'grievanceType' },
     { title: 'Durum', dataIndex: 'status', key: 'status', render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag> },

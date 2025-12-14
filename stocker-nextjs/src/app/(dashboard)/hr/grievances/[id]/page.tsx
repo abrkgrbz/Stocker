@@ -49,7 +49,7 @@ export default function GrievanceDetailPage() {
           <Col xs={24} lg={16}>
             <Card title="Genel Bilgiler">
               <Descriptions column={2} bordered size="small">
-                <Descriptions.Item label="Calisan">{grievance.employeeName}</Descriptions.Item>
+                <Descriptions.Item label="Sikayet Eden">{grievance.complainantName}</Descriptions.Item>
                 <Descriptions.Item label="Konu">{grievance.subject}</Descriptions.Item>
                 <Descriptions.Item label="Tur">{grievance.grievanceType}</Descriptions.Item>
                 <Descriptions.Item label="Durum"><Tag color={statusColors[grievance.status]}>{grievance.status}</Tag></Descriptions.Item>

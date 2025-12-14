@@ -51,8 +51,8 @@ export default function EmployeeBenefitDetailPage() {
                 <Descriptions.Item label="Durum"><Tag color={statusColors[benefit.status]}>{benefit.status}</Tag></Descriptions.Item>
                 <Descriptions.Item label="Baslangic">{benefit.startDate ? new Date(benefit.startDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
                 <Descriptions.Item label="Bitis">{benefit.endDate ? new Date(benefit.endDate).toLocaleDateString('tr-TR') : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Deger">{benefit.value ? `${benefit.value} ${benefit.currency || 'TRY'}` : '-'}</Descriptions.Item>
-                <Descriptions.Item label="Saglayici">{benefit.provider || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Deger">{benefit.amount ? `${benefit.amount} ${benefit.currency || 'TRY'}` : '-'}</Descriptions.Item>
+                <Descriptions.Item label="Saglayici">{benefit.insuranceProvider || '-'}</Descriptions.Item>
               </Descriptions>
             </Card>
             {benefit.notes && <Card title="Notlar" className="mt-4"><p>{benefit.notes}</p></Card>}
