@@ -21,7 +21,7 @@ const statusOptions = [
   { value: 'Closed', label: 'Kapandi' },
 ];
 
-const severityOptions = [
+const severityLevelOptions = [
   { value: 'Minor', label: 'Hafif' },
   { value: 'Moderate', label: 'Orta' },
   { value: 'Major', label: 'Agir' },
@@ -68,8 +68,8 @@ export default function EditDisciplinaryActionPage() {
       form.setFieldsValue({
         ...action,
         incidentDate: action.incidentDate ? dayjs(action.incidentDate) : null,
-        effectiveDate: action.effectiveDate ? dayjs(action.effectiveDate) : null,
-        expiryDate: action.expiryDate ? dayjs(action.expiryDate) : null,
+        sanctionStartDate: action.sanctionStartDate ? dayjs(action.sanctionStartDate) : null,
+        sanctionEndDate: action.sanctionEndDate ? dayjs(action.sanctionEndDate) : null,
       });
     }
   }, [action, form]);
@@ -79,8 +79,8 @@ export default function EditDisciplinaryActionPage() {
       const data = {
         ...values,
         incidentDate: values.incidentDate?.toISOString(),
-        effectiveDate: values.effectiveDate?.toISOString(),
-        expiryDate: values.expiryDate?.toISOString(),
+        sanctionStartDate: values.sanctionStartDate?.toISOString(),
+        sanctionEndDate: values.sanctionEndDate?.toISOString(),
       };
       await updateAction.mutateAsync({ id, data });
       router.push(`/hr/disciplinary-actions/${id}`);
@@ -156,7 +156,7 @@ export default function EditDisciplinaryActionPage() {
                     <Form.Item name="status" className="mb-3"><Select options={statusOptions} placeholder="Durum" /></Form.Item>
                   </Col>
                   <Col span={12}>
-                    <Form.Item name="severity" className="mb-3"><Select options={severityOptions} placeholder="Siddet" /></Form.Item>
+                    <Form.Item name="severityLevel" className="mb-3"><Select options={severityLevelOptions} placeholder="Siddet" /></Form.Item>
                   </Col>
                 </Row>
               </div>
@@ -179,8 +179,8 @@ export default function EditDisciplinaryActionPage() {
                     </Form.Item>
                   </Col>
                 </Row>
-                <Form.Item name="violationType" className="mb-3">
-                  <Select options={violationTypeOptions} placeholder="Ihlal turu" allowClear />
+                <Form.Item name="violatedPolicy" className="mb-3">
+                  <Input placeholder="Ihlal edilen politika" />
                 </Form.Item>
               </div>
 
@@ -197,13 +197,13 @@ export default function EditDisciplinaryActionPage() {
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item name="effectiveDate" className="mb-3">
-                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Yururluk tarihi" />
+                    <Form.Item name="sanctionStartDate" className="mb-3">
+                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Yaptirim baslangic" />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item name="expiryDate" className="mb-3">
-                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Bitis tarihi" />
+                    <Form.Item name="sanctionEndDate" className="mb-3">
+                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Yaptirim bitis" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -213,7 +213,6 @@ export default function EditDisciplinaryActionPage() {
 
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Aciklamalar</Text>
-                <Form.Item name="description" className="mb-3"><TextArea rows={3} placeholder="Genel aciklama..." variant="filled" /></Form.Item>
                 <Form.Item name="incidentDescription" className="mb-3"><TextArea rows={3} placeholder="Olay aciklamasi..." variant="filled" /></Form.Item>
               </div>
 
@@ -230,9 +229,9 @@ export default function EditDisciplinaryActionPage() {
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Calisan Savunmasi & Duzeltici Eylemler</Text>
-                <Form.Item name="employeeResponse" className="mb-3"><TextArea rows={3} placeholder="Calisan savunmasi..." variant="filled" /></Form.Item>
-                <Form.Item name="correctiveActions" className="mb-3"><TextArea rows={3} placeholder="Duzeltici eylemler..." variant="filled" /></Form.Item>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">Savunma & Alinan Aksiyonlar</Text>
+                <Form.Item name="defenseText" className="mb-3"><TextArea rows={3} placeholder="Calisan savunmasi..." variant="filled" /></Form.Item>
+                <Form.Item name="actionsTaken" className="mb-3"><TextArea rows={3} placeholder="Alinan aksiyonlar..." variant="filled" /></Form.Item>
               </div>
 
               <div className="mb-8">

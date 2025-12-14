@@ -104,7 +104,7 @@ export default function CareerPathDetailPage() {
                 {careerPath.employeeName}
               </h3>
               <p className="text-sm text-white/60">
-                {careerPath.currentPositionTitle} &rarr; {careerPath.targetPositionTitle}
+                {careerPath.currentPositionName} &rarr; {careerPath.targetPositionName}
               </p>
               <Tag color={statusColors[careerPath.status]} className="mt-4">
                 {careerPath.status}
@@ -131,15 +131,16 @@ export default function CareerPathDetailPage() {
               <Row gutter={16}>
                 <Col span={12}>
                   <Statistic
-                    title="Tamamlanan"
-                    value={careerPath.completedMilestones || 0}
+                    title="Hazirlik Puani"
+                    value={careerPath.readinessScore || 0}
                     prefix={<BookOutlined />}
+                    suffix="%"
                   />
                 </Col>
                 <Col span={12}>
                   <Statistic
-                    title="Toplam"
-                    value={careerPath.totalMilestones || 0}
+                    title="Seviye"
+                    value={`${careerPath.currentLevel || 0} → ${careerPath.targetLevel || 0}`}
                     prefix={<CalendarOutlined />}
                   />
                 </Col>
@@ -152,26 +153,26 @@ export default function CareerPathDetailPage() {
             <Card title="Genel Bilgiler">
               <Descriptions column={2} bordered size="small">
                 <Descriptions.Item label="Calisan">{careerPath.employeeName}</Descriptions.Item>
-                <Descriptions.Item label="Mevcut Pozisyon">{careerPath.currentPositionTitle}</Descriptions.Item>
-                <Descriptions.Item label="Hedef Pozisyon">{careerPath.targetPositionTitle}</Descriptions.Item>
+                <Descriptions.Item label="Mevcut Pozisyon">{careerPath.currentPositionName}</Descriptions.Item>
+                <Descriptions.Item label="Hedef Pozisyon">{careerPath.targetPositionName}</Descriptions.Item>
                 <Descriptions.Item label="Mentor">{careerPath.mentorName || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Baslangic Tarihi">
                   {careerPath.startDate ? new Date(careerPath.startDate).toLocaleDateString('tr-TR') : '-'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Hedef Tarih">
-                  {careerPath.targetDate ? new Date(careerPath.targetDate).toLocaleDateString('tr-TR') : '-'}
+                  {careerPath.expectedTargetDate ? new Date(careerPath.expectedTargetDate).toLocaleDateString('tr-TR') : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Oncellik">{careerPath.priority || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Kariyer Yolu">{careerPath.careerTrack || '-'}</Descriptions.Item>
                 <Descriptions.Item label="Durum">
                   <Tag color={statusColors[careerPath.status]}>{careerPath.status}</Tag>
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
-            {/* Development Plan */}
-            {careerPath.developmentPlan && (
-              <Card title="Gelisim Plani" className="mt-4">
-                <p>{careerPath.developmentPlan}</p>
+            {/* Development Areas */}
+            {careerPath.developmentAreas && (
+              <Card title="Gelisim Alanlari" className="mt-4">
+                <p>{careerPath.developmentAreas}</p>
               </Card>
             )}
 

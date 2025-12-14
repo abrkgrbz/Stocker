@@ -39,11 +39,11 @@ const statusOptions = [
   { value: 'OnHold', label: 'Beklemede' },
 ];
 
-const priorityOptions = [
-  { value: 'Low', label: 'Dusuk' },
-  { value: 'Medium', label: 'Orta' },
-  { value: 'High', label: 'Yuksek' },
-  { value: 'Critical', label: 'Kritik' },
+const careerTrackOptions = [
+  { value: 'Technical', label: 'Teknik' },
+  { value: 'Management', label: 'Yonetim' },
+  { value: 'Specialist', label: 'Uzmanlik' },
+  { value: 'Leadership', label: 'Liderlik' },
 ];
 
 export default function EditCareerPathPage() {
@@ -62,7 +62,7 @@ export default function EditCareerPathPage() {
       form.setFieldsValue({
         ...careerPath,
         startDate: careerPath.startDate ? dayjs(careerPath.startDate) : null,
-        targetDate: careerPath.targetDate ? dayjs(careerPath.targetDate) : null,
+        expectedTargetDate: careerPath.expectedTargetDate ? dayjs(careerPath.expectedTargetDate) : null,
       });
     }
   }, [careerPath, form]);
@@ -72,7 +72,7 @@ export default function EditCareerPathPage() {
       const data = {
         ...values,
         startDate: values.startDate?.toISOString(),
-        targetDate: values.targetDate?.toISOString(),
+        expectedTargetDate: values.expectedTargetDate?.toISOString(),
       };
       await updateCareerPath.mutateAsync({ id, data });
       router.push(`/hr/career-paths/${id}`);
@@ -163,7 +163,7 @@ export default function EditCareerPathPage() {
 
               <div className="mb-6">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  Durum & Oncelik
+                  Durum & Kariyer Yolu
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -172,8 +172,8 @@ export default function EditCareerPathPage() {
                     </Form.Item>
                   </Col>
                   <Col span={12}>
-                    <Form.Item name="priority" className="mb-3">
-                      <Select options={priorityOptions} placeholder="Oncelik" />
+                    <Form.Item name="careerTrack" className="mb-3">
+                      <Select options={careerTrackOptions} placeholder="Kariyer Yolu" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -273,7 +273,7 @@ export default function EditCareerPathPage() {
                   </Col>
                   <Col span={12}>
                     <div className="text-xs text-gray-400 mb-1">Hedef Tarih</div>
-                    <Form.Item name="targetDate" className="mb-3">
+                    <Form.Item name="expectedTargetDate" className="mb-3">
                       <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
                     </Form.Item>
                   </Col>
@@ -304,10 +304,10 @@ export default function EditCareerPathPage() {
 
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  Gelisim Plani
+                  Gelisim Alanlari
                 </Text>
-                <Form.Item name="developmentPlan" className="mb-3">
-                  <TextArea rows={4} placeholder="Gelisim plani detaylarini girin..." variant="filled" />
+                <Form.Item name="developmentAreas" className="mb-3">
+                  <TextArea rows={4} placeholder="Gelisim alanlari detaylarini girin..." variant="filled" />
                 </Form.Item>
               </div>
 

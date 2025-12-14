@@ -104,7 +104,7 @@ export default function DisciplinaryActionDetailPage() {
               <p className="text-sm text-white/60">{action.actionType}</p>
               <div className="mt-4 space-x-2">
                 <Tag color={statusColors[action.status]}>{action.status}</Tag>
-                <Tag color={severityColors[action.severity]}>{action.severity}</Tag>
+                <Tag color={severityColors[action.severityLevel]}>{action.severityLevel}</Tag>
               </div>
             </Card>
 
@@ -121,7 +121,7 @@ export default function DisciplinaryActionDetailPage() {
                 <Descriptions.Item label="Calisan">{action.employeeName}</Descriptions.Item>
                 <Descriptions.Item label="Islem Turu">{action.actionType}</Descriptions.Item>
                 <Descriptions.Item label="Siddet">
-                  <Tag color={severityColors[action.severity]}>{action.severity}</Tag>
+                  <Tag color={severityColors[action.severityLevel]}>{action.severityLevel}</Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="Durum">
                   <Tag color={statusColors[action.status]}>{action.status}</Tag>
@@ -129,21 +129,15 @@ export default function DisciplinaryActionDetailPage() {
                 <Descriptions.Item label="Olay Tarihi">
                   {action.incidentDate ? new Date(action.incidentDate).toLocaleDateString('tr-TR') : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Yururluk Tarihi">
-                  {action.effectiveDate ? new Date(action.effectiveDate).toLocaleDateString('tr-TR') : '-'}
+                <Descriptions.Item label="Yaptirim Baslangic">
+                  {action.sanctionStartDate ? new Date(action.sanctionStartDate).toLocaleDateString('tr-TR') : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Bitis Tarihi">
-                  {action.expiryDate ? new Date(action.expiryDate).toLocaleDateString('tr-TR') : '-'}
+                <Descriptions.Item label="Yaptirim Bitis">
+                  {action.sanctionEndDate ? new Date(action.sanctionEndDate).toLocaleDateString('tr-TR') : '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="Ihlal Turu">{action.violationType || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Ihlal Edilen Politika">{action.violatedPolicy || '-'}</Descriptions.Item>
               </Descriptions>
             </Card>
-
-            {action.description && (
-              <Card title="Aciklama" className="mt-4">
-                <p>{action.description}</p>
-              </Card>
-            )}
 
             {action.incidentDescription && (
               <Card title="Olay Aciklamasi" className="mt-4">
@@ -157,15 +151,15 @@ export default function DisciplinaryActionDetailPage() {
               </Card>
             )}
 
-            {action.employeeResponse && (
+            {action.defenseText && (
               <Card title="Calisan Savunmasi" className="mt-4">
-                <p>{action.employeeResponse}</p>
+                <p>{action.defenseText}</p>
               </Card>
             )}
 
-            {action.correctiveActions && (
-              <Card title="Duzeltici Eylemler" className="mt-4">
-                <p>{action.correctiveActions}</p>
+            {action.actionsTaken && (
+              <Card title="Alinan Aksiyonlar" className="mt-4">
+                <p>{action.actionsTaken}</p>
               </Card>
             )}
 

@@ -17,13 +17,13 @@ import { useCareerPaths, useDeleteCareerPath } from '@/lib/api/hooks/useHR';
 interface CareerPath {
   id: number;
   employeeId: number;
-  employeeName?: string;
-  currentPositionTitle?: string;
-  targetPositionTitle?: string;
+  employeeName: string;
+  currentPositionName: string;
+  targetPositionName?: string;
   status: string;
   progressPercentage: number;
   startDate: string;
-  targetDate?: string;
+  expectedTargetDate?: string;
   mentorName?: string;
 }
 
@@ -49,8 +49,8 @@ export default function CareerPathsPage() {
     const lower = searchText.toLowerCase();
     return careerPaths.filter((item: CareerPath) =>
       item.employeeName?.toLowerCase().includes(lower) ||
-      item.currentPositionTitle?.toLowerCase().includes(lower) ||
-      item.targetPositionTitle?.toLowerCase().includes(lower)
+      item.currentPositionName?.toLowerCase().includes(lower) ||
+      item.targetPositionName?.toLowerCase().includes(lower)
     );
   }, [careerPaths, searchText]);
 
@@ -71,13 +71,13 @@ export default function CareerPathsPage() {
     },
     {
       title: 'Mevcut Pozisyon',
-      dataIndex: 'currentPositionTitle',
-      key: 'currentPositionTitle',
+      dataIndex: 'currentPositionName',
+      key: 'currentPositionName',
     },
     {
       title: 'Hedef Pozisyon',
-      dataIndex: 'targetPositionTitle',
-      key: 'targetPositionTitle',
+      dataIndex: 'targetPositionName',
+      key: 'targetPositionName',
     },
     {
       title: 'Durum',
@@ -102,8 +102,8 @@ export default function CareerPathsPage() {
     },
     {
       title: 'Baslangic',
-      dataIndex: 'startDate',
-      key: 'startDate',
+      dataIndex: 'currentPositionStartDate',
+      key: 'currentPositionStartDate',
       render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-',
     },
     {
