@@ -107,6 +107,10 @@ public class CRMDbContext : DbContext
 
         // Set default schema for CRM module
         modelBuilder.HasDefaultSchema("crm");
+
+        // Configure Address as a keyless entity (Value Object used in Account, Contract, etc.)
+        // This prevents EF Core from requiring a primary key for the Address class
+        modelBuilder.Entity<Address>().HasNoKey().ToTable(t => t.ExcludeFromMigrations());
         
         // Apply global query filters for multi-tenancy
         var tenantId = _tenantService.GetCurrentTenantId();
