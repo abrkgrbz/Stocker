@@ -38,46 +38,79 @@ function VerifyEmailContent() {
     }
   }, [resendCountdown]);
 
+  // Verify email with API first, then redirect on success
+  const verifyEmailWithAPI = async (emailAddress: string, codeOrToken: string, isCode: boolean): Promise<string | null> => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const response = await fetch(`${apiUrl}/api/public/tenant-registration/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: emailAddress,
+        ...(isCode ? { code: codeOrToken } : { token: codeOrToken }),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success && data.registrationId) {
+      return data.registrationId;
+    } else {
+      throw new Error(data.detail || data.message || 'Doğrulama kodu geçersiz');
+    }
+  };
+
   const handleVerifyToken = async (verificationToken: string) => {
-    // Instead of verifying here and missing SignalR updates,
-    // redirect to progress page which will verify AFTER connecting to SignalR
     if (!email) {
       setVerifyError('E-posta adresi bulunamadı');
       return;
     }
 
     setVerifying(true);
-    setRedirecting(true);
+    setVerifyError('');
 
-    // Pass verification params to progress page - it will call verify-email API after SignalR connects
-    setTimeout(() => {
-      const params = new URLSearchParams({
-        email: email,
-        token: verificationToken,
-      });
-      router.push(`/register/tenant-creation?${params.toString()}`);
-    }, 1000);
+    try {
+      const registrationId = await verifyEmailWithAPI(email, verificationToken, false);
+
+      if (registrationId) {
+        setRedirecting(true);
+        // Redirect with registrationId - tenant creation will start automatically
+        const params = new URLSearchParams({
+          registrationId: registrationId,
+        });
+        router.push(`/register/tenant-creation?${params.toString()}`);
+      }
+    } catch (err: any) {
+      setVerifyError(err.message || 'Doğrulama başarısız oldu');
+      setVerifying(false);
+    }
   };
 
   const handleVerifyCode = async (code: string) => {
-    // Instead of verifying here and missing SignalR updates,
-    // redirect to progress page which will verify AFTER connecting to SignalR
     if (!email) {
       setVerifyError('E-posta adresi bulunamadı');
       return;
     }
 
     setVerifying(true);
-    setRedirecting(true);
+    setVerifyError('');
 
-    // Pass verification params to progress page - it will call verify-email API after SignalR connects
-    setTimeout(() => {
-      const params = new URLSearchParams({
-        email: email,
-        code: code,
-      });
-      router.push(`/register/tenant-creation?${params.toString()}`);
-    }, 1000);
+    try {
+      const registrationId = await verifyEmailWithAPI(email, code, true);
+
+      if (registrationId) {
+        setRedirecting(true);
+        // Redirect with registrationId - tenant creation will start automatically
+        const params = new URLSearchParams({
+          registrationId: registrationId,
+        });
+        router.push(`/register/tenant-creation?${params.toString()}`);
+      }
+    } catch (err: any) {
+      setVerifyError(err.message || 'Doğrulama kodu geçersiz');
+      setVerifying(false);
+    }
   };
 
   const handleResendEmail = async () => {

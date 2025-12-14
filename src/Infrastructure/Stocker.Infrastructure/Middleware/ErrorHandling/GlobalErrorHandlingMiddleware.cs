@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Models;
+using Stocker.Application.Common.Exceptions;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
@@ -140,6 +141,19 @@ public class GlobalErrorHandlingMiddleware
                 {
                     Code = "INVALID_OPERATION",
                     Message = exception.Message
+                });
+                break;
+
+            // Handle Application layer BusinessException (includes BusinessRuleException)
+            case Stocker.Application.Common.Exceptions.BusinessException appBusinessException:
+                response.Status = (int)HttpStatusCode.BadRequest;
+                response.Type = $"https://stoocker.app/errors/{appBusinessException.Code}";
+                response.Title = "Business Rule Violation";
+                response.Detail = appBusinessException.Message;
+                response.Errors.Add(new ApiError
+                {
+                    Code = appBusinessException.Code,
+                    Message = appBusinessException.Message
                 });
                 break;
 
