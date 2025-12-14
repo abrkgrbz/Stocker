@@ -58,7 +58,11 @@
       "Bash(npx prisma:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(dotnet sln:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dotnet:*)",
+      "Bash(Select-String -Pattern \"error|Error|warning CS\")",
+      "Bash(git restore:*)",
+      "Bash(Select-String -Pattern \"error|warning CS|Build succeeded|Build FAILED\")"
     ],
     "deny": [],
     "ask": []

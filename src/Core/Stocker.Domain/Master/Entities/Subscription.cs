@@ -248,6 +248,15 @@ public sealed class Subscription : AggregateRoot
         _modules.Remove(module);
     }
 
+    /// <summary>
+    /// Clears all modules from the subscription.
+    /// Used when updating subscription with new package/module selection.
+    /// </summary>
+    public void ClearModules()
+    {
+        _modules.Clear();
+    }
+
     public void RecordUsage(string metricName, int value, DateTime recordedAt)
     {
         _usages.Add(new SubscriptionUsage(Id, metricName, value, recordedAt));
