@@ -252,6 +252,11 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                     existingModuleIds.Count, existingSubscription.Id);
                             }
 
+                            // Clear change tracker to remove any stale references to deleted modules
+                            // This prevents EF Core from trying to delete already-deleted entities on SaveChanges
+                            _masterDbContext.ChangeTracker.Clear();
+                            _logger.LogInformation("Cleared change tracker after module deletion");
+
                             // Reload subscription fresh (without tracked modules that were deleted)
                             subscription = await _masterDbContext.Subscriptions
                                 .FirstAsync(s => s.Id == existingSubscription.Id, cancellationToken);

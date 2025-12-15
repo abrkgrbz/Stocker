@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
 
@@ -9,6 +10,10 @@ namespace Stocker.Application.Common.Interfaces;
 /// </summary>
 public interface IMasterDbContext
 {
+    /// <summary>
+    /// Provides access to change tracking for entities
+    /// </summary>
+    ChangeTracker ChangeTracker { get; }
     // Core Master entities (Stay in Master DB)
     DbSet<Tenant> Tenants { get; }
     DbSet<MasterUser> MasterUsers { get; }
