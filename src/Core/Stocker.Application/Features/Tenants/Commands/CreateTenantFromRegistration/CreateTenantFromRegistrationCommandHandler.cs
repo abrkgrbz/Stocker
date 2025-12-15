@@ -216,16 +216,9 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 return Result<TenantDto>.Failure(Error.Conflict("Tenant.AlreadyExists", "Bu kod ile tenant zaten mevcut."));
             }
 
-            // Get package with modules (eager loading to avoid N+1 query later)
-            var packageId = registration.SelectedPackageId ?? await GetDefaultPackageId(cancellationToken);
-            var package = await _context.Packages
-                .Include(p => p.Modules)
-                .FirstOrDefaultAsync(p => p.Id == packageId, cancellationToken);
-
-            if (package == null)
-            {
-                return Result<TenantDto>.Failure(Error.NotFound("Package.NotFound", "Paket bulunamadı."));
-            }
+            // NOTE: Package and Subscription are NOT created here during registration.
+            // They will be created in CompleteSetup when user selects their package in Setup Wizard.
+            // This allows users to freely choose/customize their package after registration.
 
             // Create connection string
             var databaseName = $"Stocker_{registration.CompanyCode.Replace("-", "_")}_Db";
@@ -272,54 +265,12 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 _logger.LogWarning(progressEx, "Failed to send progress update for CreatingTenant step");
             }
 
-            // Create subscription
-            var startDate = DateTime.UtcNow;
-            DateTime? trialEndDate = package.TrialDays > 0 
-                ? startDate.AddDays(package.TrialDays) 
-                : null;
+            // NOTE: Subscription is NOT created here during registration.
+            // It will be created in CompleteSetup when user selects their package in Setup Wizard.
+            _logger.LogInformation("📋 Tenant {TenantId} created. Subscription will be created during Setup Wizard.", tenant.Id);
 
-            var billingCycle = registration.BillingCycle == "Yillik" 
-                ? Domain.Master.Enums.BillingCycle.Yillik 
-                : Domain.Master.Enums.BillingCycle.Aylik;
-            
-            var subscription = Subscription.Create(
-                tenant.Id,
-                package.Id,
-                billingCycle,
-                package.BasePrice,
-                startDate,
-                trialEndDate
-            );
-
-            // NOTE: Modules are NOT added here during registration.
-            // Modules will be added later in CompleteSetup when user selects their package/modules.
-            // This prevents concurrency issues and allows users to customize their selection.
-            _logger.LogInformation("📋 Subscription created without modules for tenant {TenantId}. Modules will be added during Setup Wizard.", tenant.Id);
-
-            // Activate subscription if not trial
-            if (!trialEndDate.HasValue)
-            {
-                subscription.Activate();
-            }
-
-            // Send progress: CreatingSubscription
-            try
-            {
-                await _progressService.SendProgressAsync(
-                    registration.Id,
-                    TenantCreationStep.CreatingSubscription,
-                    "Abonelik oluşturuluyor...",
-                    20,
-                    cancellationToken);
-            }
-            catch (Exception progressEx)
-            {
-                _logger.LogWarning(progressEx, "Failed to send progress update for CreatingSubscription step");
-            }
-
-            // Add to repository
+            // Add tenant to repository (subscription will be added in CompleteSetup)
             await _unitOfWork.Repository<Domain.Master.Entities.Tenant>().AddAsync(tenant);
-            await _unitOfWork.Repository<Subscription>().AddAsync(subscription);
 
             // Approve registration and link to tenant
             registration.Approve(approvedBy: "System", tenantId: tenant.Id);
@@ -533,9 +484,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                         tenantId = tenant.Id,
                         tenantName = tenant.Name,
                         registrationId = registration.Id,
-                        packageId = package?.Id,
-                        packageName = package?.Name,
-                        modulesActivated = package?.Modules?.Count(m => m.IsIncluded) ?? 0
+                        note = "Subscription will be created during Setup Wizard"
                     })
                 }, cancellationToken);
 
