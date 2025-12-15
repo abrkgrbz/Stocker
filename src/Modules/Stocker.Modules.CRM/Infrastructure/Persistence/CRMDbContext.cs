@@ -108,10 +108,83 @@ public class CRMDbContext : DbContext
         // Set default schema for CRM module
         modelBuilder.HasDefaultSchema("crm");
 
-        // Configure Address as a keyless entity (Value Object used in Account, Contract, etc.)
-        // This prevents EF Core from requiring a primary key for the Address class
-        modelBuilder.Entity<Address>().HasNoKey().ToTable(t => t.ExcludeFromMigrations());
-        
+        // Configure Address as owned entity (Value Object) for entities that use it
+        // Account entity with BillingAddress and ShippingAddress
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.OwnsOne(a => a.BillingAddress, address =>
+            {
+                address.Property(a => a.Street).HasColumnName("BillingStreet").HasMaxLength(500);
+                address.Property(a => a.City).HasColumnName("BillingCity").HasMaxLength(200);
+                address.Property(a => a.State).HasColumnName("BillingState").HasMaxLength(200);
+                address.Property(a => a.PostalCode).HasColumnName("BillingPostalCode").HasMaxLength(20);
+                address.Property(a => a.Country).HasColumnName("BillingCountry").HasMaxLength(100);
+            });
+            entity.OwnsOne(a => a.ShippingAddress, address =>
+            {
+                address.Property(a => a.Street).HasColumnName("ShippingStreet").HasMaxLength(500);
+                address.Property(a => a.City).HasColumnName("ShippingCity").HasMaxLength(200);
+                address.Property(a => a.State).HasColumnName("ShippingState").HasMaxLength(200);
+                address.Property(a => a.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
+                address.Property(a => a.Country).HasColumnName("ShippingCountry").HasMaxLength(100);
+            });
+            entity.HasOne(a => a.ParentAccount)
+                .WithMany()
+                .HasForeignKey(a => a.ParentAccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Contract entity with BillingAddress
+        modelBuilder.Entity<Contract>(entity =>
+        {
+            entity.OwnsOne(c => c.BillingAddress, address =>
+            {
+                address.Property(a => a.Street).HasColumnName("BillingStreet").HasMaxLength(500);
+                address.Property(a => a.City).HasColumnName("BillingCity").HasMaxLength(200);
+                address.Property(a => a.State).HasColumnName("BillingState").HasMaxLength(200);
+                address.Property(a => a.PostalCode).HasColumnName("BillingPostalCode").HasMaxLength(20);
+                address.Property(a => a.Country).HasColumnName("BillingCountry").HasMaxLength(100);
+            });
+            entity.HasOne(c => c.Account)
+                .WithMany(a => a.Contracts)
+                .HasForeignKey(c => c.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Quote entity with BillingAddress and ShippingAddress
+        modelBuilder.Entity<Quote>(entity =>
+        {
+            entity.OwnsOne(q => q.BillingAddress, address =>
+            {
+                address.Property(a => a.Street).HasColumnName("BillingStreet").HasMaxLength(500);
+                address.Property(a => a.City).HasColumnName("BillingCity").HasMaxLength(200);
+                address.Property(a => a.State).HasColumnName("BillingState").HasMaxLength(200);
+                address.Property(a => a.PostalCode).HasColumnName("BillingPostalCode").HasMaxLength(20);
+                address.Property(a => a.Country).HasColumnName("BillingCountry").HasMaxLength(100);
+            });
+            entity.OwnsOne(q => q.ShippingAddress, address =>
+            {
+                address.Property(a => a.Street).HasColumnName("ShippingStreet").HasMaxLength(500);
+                address.Property(a => a.City).HasColumnName("ShippingCity").HasMaxLength(200);
+                address.Property(a => a.State).HasColumnName("ShippingState").HasMaxLength(200);
+                address.Property(a => a.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
+                address.Property(a => a.Country).HasColumnName("ShippingCountry").HasMaxLength(100);
+            });
+            entity.HasOne(q => q.Account)
+                .WithMany()
+                .HasForeignKey(q => q.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Ticket entity with Account relationship
+        modelBuilder.Entity<Ticket>(entity =>
+        {
+            entity.HasOne(t => t.Account)
+                .WithMany()
+                .HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         // Apply global query filters for multi-tenancy
         var tenantId = _tenantService.GetCurrentTenantId();
         if (tenantId.HasValue)
@@ -120,6 +193,10 @@ public class CRMDbContext : DbContext
             modelBuilder.Entity<Customer>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<Contact>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<Lead>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Account>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Contract>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Quote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<Ticket>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             
             // Opportunity entities
             modelBuilder.Entity<Opportunity>().HasQueryFilter(e => e.TenantId == tenantId.Value);
