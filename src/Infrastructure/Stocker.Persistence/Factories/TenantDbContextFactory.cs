@@ -14,15 +14,18 @@ public class TenantDbContextFactory : ITenantDbContextFactory
     private readonly IMasterDbContext _masterContext;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TenantDbContextFactory> _logger;
+    private readonly ITenantDatabaseSecurityService? _securityService;
 
     public TenantDbContextFactory(
         IMasterDbContext masterContext,
         IConfiguration configuration,
-        ILogger<TenantDbContextFactory> logger)
+        ILogger<TenantDbContextFactory> logger,
+        ITenantDatabaseSecurityService? securityService = null)
     {
         _masterContext = masterContext;
         _configuration = configuration;
         _logger = logger;
+        _securityService = securityService;
     }
 
     public async Task<ITenantDbContext> CreateDbContextAsync(Guid tenantId)
@@ -96,12 +99,34 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             throw new InvalidOperationException($"Tenant {tenantId} not found. Please ensure the tenant exists in the master database.");
         }
 
+        // Priority: Use encrypted connection string if available (more secure)
+        if (!string.IsNullOrEmpty(tenant.EncryptedConnectionString) && _securityService != null)
+        {
+            try
+            {
+                var decrypted = _securityService.DecryptConnectionString(tenant.EncryptedConnectionString);
+                if (!string.IsNullOrEmpty(decrypted))
+                {
+                    _logger.LogDebug("Using encrypted connection string for tenant {TenantId}", tenantId);
+                    return decrypted;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to decrypt connection string for tenant {TenantId}. Falling back to plain connection string.",
+                    tenantId);
+            }
+        }
+
+        // Fallback: Use plain connection string
         if (tenant.ConnectionString == null || string.IsNullOrEmpty(tenant.ConnectionString.Value))
         {
             _logger.LogError("Tenant {TenantId} has no connection string configured", tenantId);
             throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured.");
         }
 
+        _logger.LogDebug("Using plain connection string for tenant {TenantId}", tenantId);
         return tenant.ConnectionString.Value;
     }
 }

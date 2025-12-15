@@ -17,6 +17,23 @@ public sealed class Tenant : AggregateRoot
     public string Code { get; private set; }
     public string DatabaseName { get; private set; }
     public ConnectionString ConnectionString { get; private set; }
+
+    /// <summary>
+    /// Encrypted connection string for secure storage.
+    /// Use ITenantDatabaseSecurityService to decrypt at runtime.
+    /// </summary>
+    public string? EncryptedConnectionString { get; private set; }
+
+    /// <summary>
+    /// The dedicated PostgreSQL username for this tenant (e.g., tenant_user_abc123)
+    /// </summary>
+    public string? DatabaseUsername { get; private set; }
+
+    /// <summary>
+    /// When the database credentials should be rotated (90-day policy)
+    /// </summary>
+    public DateTime? CredentialsRotateAfter { get; private set; }
+
     public bool IsActive { get; private set; }
     public string? Description { get; private set; }
     public string? LogoUrl { get; private set; }
@@ -167,6 +184,48 @@ public sealed class Tenant : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
 
         RaiseDomainEvent(new TenantConnectionStringUpdatedDomainEvent(Id));
+    }
+
+    /// <summary>
+    /// Updates the secure connection string with encrypted storage and dedicated credentials.
+    /// </summary>
+    /// <param name="connectionString">The ValueObject connection string</param>
+    /// <param name="encryptedConnectionString">The encrypted version for storage</param>
+    /// <param name="databaseUsername">The dedicated PostgreSQL username</param>
+    /// <param name="credentialsRotateAfter">When credentials should be rotated</param>
+    public void UpdateSecureConnectionString(
+        ConnectionString connectionString,
+        string encryptedConnectionString,
+        string databaseUsername,
+        DateTime? credentialsRotateAfter = null)
+    {
+        ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+        EncryptedConnectionString = encryptedConnectionString ?? throw new ArgumentNullException(nameof(encryptedConnectionString));
+        DatabaseUsername = databaseUsername ?? throw new ArgumentNullException(nameof(databaseUsername));
+        CredentialsRotateAfter = credentialsRotateAfter ?? DateTime.UtcNow.AddDays(90);
+        UpdatedAt = DateTime.UtcNow;
+
+        RaiseDomainEvent(new TenantConnectionStringUpdatedDomainEvent(Id));
+    }
+
+    /// <summary>
+    /// Updates only the encrypted connection string and rotation date (used during credential rotation).
+    /// </summary>
+    public void RotateCredentials(string encryptedConnectionString, DateTime rotateAfter)
+    {
+        EncryptedConnectionString = encryptedConnectionString ?? throw new ArgumentNullException(nameof(encryptedConnectionString));
+        CredentialsRotateAfter = rotateAfter;
+        UpdatedAt = DateTime.UtcNow;
+
+        RaiseDomainEvent(new TenantConnectionStringUpdatedDomainEvent(Id));
+    }
+
+    /// <summary>
+    /// Checks if credentials need rotation based on the rotation policy.
+    /// </summary>
+    public bool NeedsCredentialRotation()
+    {
+        return CredentialsRotateAfter.HasValue && DateTime.UtcNow >= CredentialsRotateAfter.Value;
     }
 
     public void AddDomain(string domainName, bool isPrimary = false)

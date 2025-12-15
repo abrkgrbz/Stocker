@@ -27,6 +27,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ISecurityAuditService _auditService;
     private readonly ITenantCreationProgressService _progressService;
+    private readonly ITenantDatabaseSecurityService? _databaseSecurityService;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -38,7 +39,8 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         IConfiguration configuration,
         ITenantDbContextFactory tenantDbContextFactory,
         ISecurityAuditService auditService,
-        ITenantCreationProgressService progressService)
+        ITenantCreationProgressService progressService,
+        ITenantDatabaseSecurityService? databaseSecurityService = null)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -50,6 +52,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         _tenantDbContextFactory = tenantDbContextFactory;
         _auditService = auditService;
         _progressService = progressService;
+        _databaseSecurityService = databaseSecurityService;
     }
 
     public async Task<Result<TenantDto>> Handle(CreateTenantFromRegistrationCommand request, CancellationToken cancellationToken)
@@ -220,24 +223,25 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             // They will be created in CompleteSetup when user selects their package in Setup Wizard.
             // This allows users to freely choose/customize their package after registration.
 
-            // Create connection string
+            // Create database name
             var databaseName = $"Stocker_{registration.CompanyCode.Replace("-", "_")}_Db";
-            var connectionString = GenerateConnectionString(databaseName);
-            
-            var connectionStringResult = ConnectionString.Create(connectionString);
-            if (connectionStringResult.IsFailure)
-            {
-                return Result<TenantDto>.Failure(connectionStringResult.Error);
-            }
 
-            // Create email value object
+            // Create email value object (needed for tenant creation)
             var emailResult = Email.Create(registration.ContactEmail.Value);
             if (emailResult.IsFailure)
             {
                 return Result<TenantDto>.Failure(emailResult.Error);
             }
 
-            // Create tenant
+            // Generate initial connection string (will be upgraded to secure after DB creation)
+            var initialConnectionString = GenerateConnectionString(databaseName);
+            var connectionStringResult = ConnectionString.Create(initialConnectionString);
+            if (connectionStringResult.IsFailure)
+            {
+                return Result<TenantDto>.Failure(connectionStringResult.Error);
+            }
+
+            // Create tenant with initial connection string
             var tenant = Domain.Master.Entities.Tenant.Create(
                 registration.CompanyName,
                 registration.CompanyCode,
@@ -447,6 +451,49 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 // Module activation is handled by CompleteSetupCommandHandler which triggers
                 // TenantProvisioningJob.ProvisionModulesAsync() after Setup Wizard completion.
                 _logger.LogInformation("📋 Tenant {TenantId} created. Module activation will happen after Setup Wizard completion.", tenant.Id);
+
+                // Create dedicated PostgreSQL user for this tenant (security isolation)
+                if (_databaseSecurityService != null)
+                {
+                    try
+                    {
+                        _logger.LogInformation("🔐 Creating secure database user for tenant: {TenantId}", tenant.Id);
+
+                        var credentials = await _databaseSecurityService.CreateTenantDatabaseUserAsync(tenant.Id, databaseName);
+
+                        // Update tenant with secure connection string
+                        var secureConnectionStringResult = ConnectionString.Create(credentials.ConnectionString);
+                        if (secureConnectionStringResult.IsSuccess)
+                        {
+                            tenant.UpdateSecureConnectionString(
+                                secureConnectionStringResult.Value,
+                                credentials.EncryptedConnectionString,
+                                credentials.Username,
+                                credentials.RotateAfter);
+
+                            await _unitOfWork.SaveChangesAsync(cancellationToken);
+                            _logger.LogInformation("✅ Secure database credentials created for tenant: {TenantId}, User: {Username}",
+                                tenant.Id, credentials.Username);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to create secure connection string for tenant: {TenantId}. Using master credentials.",
+                                tenant.Id);
+                        }
+                    }
+                    catch (Exception securityEx)
+                    {
+                        // Non-critical: If secure user creation fails, tenant still works with master credentials
+                        _logger.LogWarning(securityEx,
+                            "⚠️ Failed to create secure database user for tenant: {TenantId}. Tenant will use master credentials.",
+                            tenant.Id);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("ℹ️ TenantDatabaseSecurityService not configured. Tenant {TenantId} using master credentials.",
+                        tenant.Id);
+                }
 
                 // Activate tenant after successful database setup
                 // Tenant is created as inactive (IsActive = false) and must be explicitly activated

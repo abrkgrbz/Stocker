@@ -42,6 +42,9 @@ public static class DependencyInjection
         // Register migration service
         services.AddScoped<IMigrationService, Migrations.MigrationService>();
 
+        // Register tenant database security service (per-tenant PostgreSQL users, encrypted connection strings)
+        services.AddScoped<ITenantDatabaseSecurityService, TenantDatabaseSecurityService>();
+
         // Register system monitoring service
         services.AddScoped<ISystemMonitoringService, SystemMonitoringService>();
 

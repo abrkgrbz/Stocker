@@ -72,6 +72,15 @@ public class TenantConfiguration : BaseEntityTypeConfiguration<Domain.Master.Ent
                 .HasColumnName("ContactPhone");
         });
 
+        // Secure connection string properties
+        builder.Property(t => t.EncryptedConnectionString)
+            .HasMaxLength(2048); // Encrypted strings are longer than plain text
+
+        builder.Property(t => t.DatabaseUsername)
+            .HasMaxLength(128); // PostgreSQL username (tenant_user_{12chars})
+
+        builder.Property(t => t.CredentialsRotateAfter);
+
         // Relationships
         builder.HasMany(t => t.Domains)
             .WithOne()
