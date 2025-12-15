@@ -98,8 +98,9 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
             await using var tenantConnection = await GetTenantConnectionAsync(databaseName);
 
             // 4. Grant schema usage and all privileges on the public schema
+            // CREATE permission is needed for migrations to create new tables
             await ExecuteNonQueryAsync(tenantConnection, $@"
-                GRANT USAGE ON SCHEMA public TO ""{username}"";
+                GRANT USAGE, CREATE ON SCHEMA public TO ""{username}"";
                 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ""{username}"";
                 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ""{username}"";
                 GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO ""{username}"";
@@ -242,7 +243,7 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                 await ExecuteNonQuerySafeAsync(tenantConnection, $@"
                     REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM ""{username}"";
                     REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM ""{username}"";
-                    REVOKE USAGE ON SCHEMA public FROM ""{username}"";
+                    REVOKE USAGE, CREATE ON SCHEMA public FROM ""{username}"";
                 ");
 
                 // Also revoke from tenant schema if exists
