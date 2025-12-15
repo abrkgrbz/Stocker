@@ -128,53 +128,41 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
             // Store secrets in Key Vault (if available) or encrypt locally
             if (_useSecretStore && _secretStore != null)
             {
-                try
+                // Store connection string in secret store
+                var secretName = GetConnectionStringSecretName(tenantId);
+                var tags = new Dictionary<string, string>
                 {
-                    // Store connection string in secret store
-                    var secretName = GetConnectionStringSecretName(tenantId);
-                    var tags = new Dictionary<string, string>
+                    ["tenantId"] = tenantId.ToString(),
+                    ["databaseName"] = databaseName,
+                    ["username"] = username,
+                    ["type"] = "connectionString"
+                };
+
+                await _secretStore.SetSecretAsync(
+                    secretName,
+                    connectionString,
+                    tags,
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                // Also store the password separately for rotation purposes
+                var passwordSecretName = GetPasswordSecretName(tenantId);
+                await _secretStore.SetSecretAsync(
+                    passwordSecretName,
+                    password,
+                    new Dictionary<string, string>
                     {
                         ["tenantId"] = tenantId.ToString(),
-                        ["databaseName"] = databaseName,
                         ["username"] = username,
-                        ["type"] = "connectionString"
-                    };
+                        ["type"] = "password"
+                    },
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
 
-                    await _secretStore.SetSecretAsync(
-                        secretName,
-                        connectionString,
-                        tags,
-                        DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+                _logger.LogInformation(
+                    "🔐 Credentials for tenant {TenantId} stored in {Provider}",
+                    tenantId, _secretStore.ProviderName);
 
-                    // Also store the password separately for rotation purposes
-                    var passwordSecretName = GetPasswordSecretName(tenantId);
-                    await _secretStore.SetSecretAsync(
-                        passwordSecretName,
-                        password,
-                        new Dictionary<string, string>
-                        {
-                            ["tenantId"] = tenantId.ToString(),
-                            ["username"] = username,
-                            ["type"] = "password"
-                        },
-                        DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
-
-                    _logger.LogInformation(
-                        "🔐 Credentials for tenant {TenantId} stored in {Provider}",
-                        tenantId, _secretStore.ProviderName);
-
-                    // For encrypted connection string field, use the secret name as reference
-                    encryptedConnectionString = $"SECRET:{secretName}";
-                }
-                catch (Exception secretStoreEx)
-                {
-                    // Fallback to local encryption if Key Vault fails (e.g., permissions issue)
-                    _logger.LogWarning(secretStoreEx,
-                        "⚠️ Failed to store credentials in {Provider} for tenant {TenantId}. Falling back to local encryption. Error: {Error}",
-                        _secretStore.ProviderName, tenantId, secretStoreEx.Message);
-
-                    encryptedConnectionString = EncryptConnectionString(connectionString);
-                }
+                // For encrypted connection string field, use the secret name as reference
+                encryptedConnectionString = $"SECRET:{secretName}";
             }
             else
             {
@@ -321,53 +309,41 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
             // Update secrets in Key Vault (if available)
             if (_useSecretStore && _secretStore != null)
             {
-                try
+                var secretName = GetConnectionStringSecretName(tenantId);
+                var tags = new Dictionary<string, string>
                 {
-                    var secretName = GetConnectionStringSecretName(tenantId);
-                    var tags = new Dictionary<string, string>
+                    ["tenantId"] = tenantId.ToString(),
+                    ["databaseName"] = databaseName,
+                    ["username"] = username,
+                    ["type"] = "connectionString",
+                    ["rotatedAt"] = DateTimeOffset.UtcNow.ToString("O")
+                };
+
+                await _secretStore.SetSecretAsync(
+                    secretName,
+                    connectionString,
+                    tags,
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                // Update password secret
+                var passwordSecretName = GetPasswordSecretName(tenantId);
+                await _secretStore.SetSecretAsync(
+                    passwordSecretName,
+                    newPassword,
+                    new Dictionary<string, string>
                     {
                         ["tenantId"] = tenantId.ToString(),
-                        ["databaseName"] = databaseName,
                         ["username"] = username,
-                        ["type"] = "connectionString",
+                        ["type"] = "password",
                         ["rotatedAt"] = DateTimeOffset.UtcNow.ToString("O")
-                    };
+                    },
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
 
-                    await _secretStore.SetSecretAsync(
-                        secretName,
-                        connectionString,
-                        tags,
-                        DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+                _logger.LogInformation(
+                    "🔐 Rotated credentials for tenant {TenantId} stored in {Provider}",
+                    tenantId, _secretStore.ProviderName);
 
-                    // Update password secret
-                    var passwordSecretName = GetPasswordSecretName(tenantId);
-                    await _secretStore.SetSecretAsync(
-                        passwordSecretName,
-                        newPassword,
-                        new Dictionary<string, string>
-                        {
-                            ["tenantId"] = tenantId.ToString(),
-                            ["username"] = username,
-                            ["type"] = "password",
-                            ["rotatedAt"] = DateTimeOffset.UtcNow.ToString("O")
-                        },
-                        DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
-
-                    _logger.LogInformation(
-                        "🔐 Rotated credentials for tenant {TenantId} stored in {Provider}",
-                        tenantId, _secretStore.ProviderName);
-
-                    encryptedConnectionString = $"SECRET:{secretName}";
-                }
-                catch (Exception secretStoreEx)
-                {
-                    // Fallback to local encryption if Key Vault fails
-                    _logger.LogWarning(secretStoreEx,
-                        "⚠️ Failed to store rotated credentials in {Provider} for tenant {TenantId}. Falling back to local encryption. Error: {Error}",
-                        _secretStore.ProviderName, tenantId, secretStoreEx.Message);
-
-                    encryptedConnectionString = EncryptConnectionString(connectionString);
-                }
+                encryptedConnectionString = $"SECRET:{secretName}";
             }
             else
             {
