@@ -84,11 +84,19 @@ public class AzureKeyVaultSecretStore : ISecretStore
         // 3. Visual Studio
         // 4. Azure CLI
         // 5. Azure PowerShell
-        return new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        var options = new DefaultAzureCredentialOptions
         {
-            TenantId = tenantId,
             ExcludeInteractiveBrowserCredential = true
-        });
+        };
+
+        // Only set TenantId if it's not null or empty
+        // Azure SDK throws if TenantId is an empty string
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            options.TenantId = tenantId;
+        }
+
+        return new DefaultAzureCredential(options);
     }
 
     public async Task<string> SetSecretAsync(
