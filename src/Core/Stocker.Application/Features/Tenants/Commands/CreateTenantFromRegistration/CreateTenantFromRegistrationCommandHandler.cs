@@ -223,9 +223,6 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
             // They will be created in CompleteSetup when user selects their package in Setup Wizard.
             // This allows users to freely choose/customize their package after registration.
 
-            // Create database name
-            var databaseName = $"Stocker_{registration.CompanyCode.Replace("-", "_")}_Db";
-
             // Create email value object (needed for tenant creation)
             var emailResult = Email.Create(registration.ContactEmail.Value);
             if (emailResult.IsFailure)
@@ -233,7 +230,30 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 return Result<TenantDto>.Failure(emailResult.Error);
             }
 
-            // Generate initial connection string (will be upgraded to secure after DB creation)
+            // Create tenant first with a temporary database name
+            // We'll update it with the actual TenantId-based name after creation
+            var tempDatabaseName = "temp_placeholder";
+            var tempConnectionStringResult = ConnectionString.Create("Host=temp;Database=temp;Username=temp;Password=temp");
+            if (tempConnectionStringResult.IsFailure)
+            {
+                return Result<TenantDto>.Failure(tempConnectionStringResult.Error);
+            }
+
+            // Create tenant (this generates the TenantId)
+            var tenant = Domain.Master.Entities.Tenant.Create(
+                registration.CompanyName,
+                registration.CompanyCode,
+                tempDatabaseName,
+                tempConnectionStringResult.Value,
+                emailResult.Value
+            );
+
+            // Now generate the actual database name using the TenantId
+            // Format: stocker_tenant_{shortTenantId} (e.g., stocker_tenant_4f6556fefa58)
+            var shortTenantId = tenant.Id.ToString("N").Substring(0, 12);
+            var databaseName = $"stocker_tenant_{shortTenantId}";
+
+            // Generate the actual connection string with the correct database name
             var initialConnectionString = GenerateConnectionString(databaseName);
             var connectionStringResult = ConnectionString.Create(initialConnectionString);
             if (connectionStringResult.IsFailure)
@@ -241,14 +261,13 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 return Result<TenantDto>.Failure(connectionStringResult.Error);
             }
 
-            // Create tenant with initial connection string
-            var tenant = Domain.Master.Entities.Tenant.Create(
-                registration.CompanyName,
-                registration.CompanyCode,
-                databaseName,
-                connectionStringResult.Value,
-                emailResult.Value
-            );
+            // Update tenant with actual database name and connection string
+            tenant.UpdateDatabaseName(databaseName);
+            tenant.UpdateConnectionString(connectionStringResult.Value);
+
+            _logger.LogInformation(
+                "📋 Tenant database name generated: TenantId={TenantId}, DatabaseName={DatabaseName}",
+                tenant.Id, databaseName);
 
             // Add domain
             var domainName = $"{registration.CompanyCode.ToLower()}.stocker.app";

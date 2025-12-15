@@ -187,6 +187,21 @@ public sealed class Tenant : AggregateRoot
     }
 
     /// <summary>
+    /// Updates the database name. Should only be called during initial setup
+    /// when the database name needs to be derived from the tenant ID.
+    /// </summary>
+    public void UpdateDatabaseName(string databaseName)
+    {
+        if (string.IsNullOrWhiteSpace(databaseName))
+        {
+            throw new ArgumentException("Database name cannot be empty.", nameof(databaseName));
+        }
+
+        DatabaseName = databaseName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Updates the secure connection string with encrypted storage and dedicated credentials.
     /// </summary>
     /// <param name="connectionString">The ValueObject connection string</param>
