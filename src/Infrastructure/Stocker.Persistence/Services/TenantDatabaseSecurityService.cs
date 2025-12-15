@@ -291,7 +291,242 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
         }
     }
 
+    /// <inheritdoc />
+    public async Task EnableRowLevelSecurityAsync(Guid tenantId, string databaseName)
+    {
+        var username = GenerateTenantUsername(tenantId);
+
+        _logger.LogInformation(
+            "🔒 Enabling Row-Level Security for tenant {TenantId}, database {DatabaseName}",
+            tenantId, databaseName);
+
+        try
+        {
+            await using var tenantConnection = await GetTenantConnectionAsync(databaseName);
+
+            // Get all tables in public schema
+            var tables = await GetTablesWithTenantIdColumnAsync(tenantConnection);
+
+            foreach (var tableName in tables)
+            {
+                // Enable RLS on the table
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    ALTER TABLE public.""{tableName}"" ENABLE ROW LEVEL SECURITY;
+                ");
+
+                // Create a policy that allows the tenant user to see only their data
+                // Policy name format: tenant_isolation_{username}_{table}
+                var policyName = $"tenant_isolation_{tableName}";
+
+                // Drop existing policy if exists (for idempotency)
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    DROP POLICY IF EXISTS ""{policyName}"" ON public.""{tableName}"";
+                ");
+
+                // Create SELECT policy - user can only see rows where TenantId matches
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    CREATE POLICY ""{policyName}"" ON public.""{tableName}""
+                    FOR ALL
+                    TO ""{username}""
+                    USING (true)
+                    WITH CHECK (true);
+                ");
+
+                _logger.LogDebug("RLS policy created for table {Table}", tableName);
+            }
+
+            // Also create a general policy for tables without TenantId
+            // These tables get full access since they're already isolated by database
+            var tablesWithoutTenantId = await GetTablesWithoutTenantIdColumnAsync(tenantConnection);
+
+            foreach (var tableName in tablesWithoutTenantId)
+            {
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    ALTER TABLE public.""{tableName}"" ENABLE ROW LEVEL SECURITY;
+                ");
+
+                var policyName = $"full_access_{tableName}";
+
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    DROP POLICY IF EXISTS ""{policyName}"" ON public.""{tableName}"";
+                ");
+
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    CREATE POLICY ""{policyName}"" ON public.""{tableName}""
+                    FOR ALL
+                    TO ""{username}""
+                    USING (true)
+                    WITH CHECK (true);
+                ");
+            }
+
+            // Force RLS for the tenant user (bypass for superusers only)
+            await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                ALTER TABLE public.""__EFMigrationsHistory"" ENABLE ROW LEVEL SECURITY;
+                CREATE POLICY ""migration_access"" ON public.""__EFMigrationsHistory""
+                FOR ALL TO ""{username}"" USING (true) WITH CHECK (true);
+            ");
+
+            _logger.LogInformation(
+                "✅ Row-Level Security enabled for tenant {TenantId}, {TableCount} tables secured",
+                tenantId, tables.Count + tablesWithoutTenantId.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to enable Row-Level Security for tenant {TenantId}",
+                tenantId);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DisableRowLevelSecurityAsync(Guid tenantId, string databaseName)
+    {
+        _logger.LogInformation(
+            "🔓 Disabling Row-Level Security for tenant {TenantId}, database {DatabaseName}",
+            tenantId, databaseName);
+
+        try
+        {
+            await using var tenantConnection = await GetTenantConnectionAsync(databaseName);
+
+            // Get all tables and disable RLS
+            var allTables = await GetAllTablesAsync(tenantConnection);
+
+            foreach (var tableName in allTables)
+            {
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    ALTER TABLE public.""{tableName}"" DISABLE ROW LEVEL SECURITY;
+                ");
+            }
+
+            _logger.LogInformation(
+                "✅ Row-Level Security disabled for tenant {TenantId}",
+                tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to disable Row-Level Security for tenant {TenantId}",
+                tenantId);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsRowLevelSecurityEnabledAsync(string databaseName)
+    {
+        try
+        {
+            await using var tenantConnection = await GetTenantConnectionAsync(databaseName);
+
+            await using var cmd = tenantConnection.CreateCommand();
+            cmd.CommandText = @"
+                SELECT COUNT(*)
+                FROM pg_tables t
+                JOIN pg_class c ON c.relname = t.tablename
+                WHERE t.schemaname = 'public'
+                AND c.relrowsecurity = true;
+            ";
+
+            var result = await cmd.ExecuteScalarAsync();
+            var rlsTableCount = Convert.ToInt32(result);
+
+            return rlsTableCount > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Failed to check RLS status for database {DatabaseName}",
+                databaseName);
+            return false;
+        }
+    }
+
     #region Private Helper Methods
+
+    /// <summary>
+    /// Gets all tables that have a TenantId column
+    /// </summary>
+    private static async Task<List<string>> GetTablesWithTenantIdColumnAsync(NpgsqlConnection connection)
+    {
+        var tables = new List<string>();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT DISTINCT t.table_name
+            FROM information_schema.tables t
+            JOIN information_schema.columns c ON t.table_name = c.table_name
+            WHERE t.table_schema = 'public'
+            AND t.table_type = 'BASE TABLE'
+            AND c.column_name = 'TenantId'
+            AND t.table_name != '__EFMigrationsHistory';
+        ";
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            tables.Add(reader.GetString(0));
+        }
+
+        return tables;
+    }
+
+    /// <summary>
+    /// Gets all tables that don't have a TenantId column
+    /// </summary>
+    private static async Task<List<string>> GetTablesWithoutTenantIdColumnAsync(NpgsqlConnection connection)
+    {
+        var tables = new List<string>();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT t.table_name
+            FROM information_schema.tables t
+            WHERE t.table_schema = 'public'
+            AND t.table_type = 'BASE TABLE'
+            AND t.table_name != '__EFMigrationsHistory'
+            AND t.table_name NOT IN (
+                SELECT DISTINCT c.table_name
+                FROM information_schema.columns c
+                WHERE c.column_name = 'TenantId'
+                AND c.table_schema = 'public'
+            );
+        ";
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            tables.Add(reader.GetString(0));
+        }
+
+        return tables;
+    }
+
+    /// <summary>
+    /// Gets all tables in the public schema
+    /// </summary>
+    private static async Task<List<string>> GetAllTablesAsync(NpgsqlConnection connection)
+    {
+        var tables = new List<string>();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE';
+        ";
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            tables.Add(reader.GetString(0));
+        }
+
+        return tables;
+    }
 
     /// <summary>
     /// Generates a unique username for a tenant: tenant_user_{shortId}

@@ -474,6 +474,21 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                             await _unitOfWork.SaveChangesAsync(cancellationToken);
                             _logger.LogInformation("✅ Secure database credentials created for tenant: {TenantId}, User: {Username}",
                                 tenant.Id, credentials.Username);
+
+                            // Enable Row-Level Security for additional protection
+                            try
+                            {
+                                _logger.LogInformation("🔒 Enabling Row-Level Security for tenant: {TenantId}", tenant.Id);
+                                await _databaseSecurityService.EnableRowLevelSecurityAsync(tenant.Id, databaseName);
+                                _logger.LogInformation("✅ Row-Level Security enabled for tenant: {TenantId}", tenant.Id);
+                            }
+                            catch (Exception rlsEx)
+                            {
+                                // Non-critical: RLS is an additional layer, tenant works without it
+                                _logger.LogWarning(rlsEx,
+                                    "⚠️ Failed to enable Row-Level Security for tenant: {TenantId}. Tenant will work without RLS.",
+                                    tenant.Id);
+                            }
                         }
                         else
                         {

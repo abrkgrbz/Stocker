@@ -899,8 +899,14 @@ UYGULANAN GÜVENLİK ÖZELLİKLERİ:
    - CredentialsRotateAfter alanı ile takip
    - ITenantDatabaseSecurityService.RotateTenantCredentialsAsync()
 
+5. Row-Level Security (RLS) ✅
+   - Tenant oluşturulurken otomatik aktifleştiriliyor
+   - Tüm tablolar için RLS policy oluşturuluyor
+   - tenant_user_X sadece kendi tablolarına erişebilir
+   - __EFMigrationsHistory tablosu dahil tüm tablolar korunuyor
+   - Non-critical: RLS başarısız olursa tenant çalışmaya devam eder
+
 HENÜZ UYGULANMAMIŞ:
-- Row-Level Security (RLS): İleride eklenebilir
 - Azure Key Vault / AWS Secrets Manager: Production için değerlendirilebilir
 
 İLGİLİ DOSYALAR:

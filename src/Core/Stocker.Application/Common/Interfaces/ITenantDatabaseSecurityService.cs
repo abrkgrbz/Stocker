@@ -58,6 +58,29 @@ public interface ITenantDatabaseSecurityService
     /// <param name="connectionString">Connection string to validate</param>
     /// <returns>True if permissions are correctly configured</returns>
     Task<bool> ValidateTenantPermissionsAsync(Guid tenantId, string connectionString);
+
+    /// <summary>
+    /// Enables Row-Level Security (RLS) on a tenant database.
+    /// Creates policies that restrict data access based on tenant context.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <param name="databaseName">The tenant's database name</param>
+    Task EnableRowLevelSecurityAsync(Guid tenantId, string databaseName);
+
+    /// <summary>
+    /// Disables Row-Level Security on a tenant database.
+    /// Used during migrations or when RLS needs to be temporarily disabled.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <param name="databaseName">The tenant's database name</param>
+    Task DisableRowLevelSecurityAsync(Guid tenantId, string databaseName);
+
+    /// <summary>
+    /// Checks if Row-Level Security is enabled on a database.
+    /// </summary>
+    /// <param name="databaseName">The database name</param>
+    /// <returns>True if RLS is enabled</returns>
+    Task<bool> IsRowLevelSecurityEnabledAsync(string databaseName);
 }
 
 /// <summary>
