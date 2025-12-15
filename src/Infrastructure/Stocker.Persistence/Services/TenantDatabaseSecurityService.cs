@@ -89,9 +89,10 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                 $$;
             ");
 
-            // 2. Grant connect privilege to the specific database only
+            // 2. Grant connect and create privileges on the specific database
+            // CREATE is needed for module migrations to create schemas (crm, inventory, hr, etc.)
             await ExecuteNonQueryAsync(masterConnection, $@"
-                GRANT CONNECT ON DATABASE ""{databaseName}"" TO ""{username}"";
+                GRANT CONNECT, CREATE ON DATABASE ""{databaseName}"" TO ""{username}"";
             ");
 
             // 3. Connect to the tenant database to grant schema permissions
