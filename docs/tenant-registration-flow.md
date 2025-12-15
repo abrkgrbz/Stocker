@@ -10,8 +10,8 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  1. KAYIT FORMU  →  2. E-POSTA DOĞRULAMA  →  3. TENANT OLUŞTURMA           │
-│   (PackageId      (Senkron Migration +     (SignalR ile ilerleme)          │
-│    alınır)         TenantDomain oluşur)                                    │
+│   (Minimal info)   (Hızlı response,        (SignalR ile ilerleme,          │
+│                     Background job tetikle) DB + Migration burada)          │
 │                                                                             │
 │  4. GİRİŞ  →  5. SETUP WIZARD  →  6. PAKET SEÇİMİ  →  7. MODÜL AKTİVASYON │
 │                                   (Subscription                             │
@@ -22,18 +22,28 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 
 ---
 
-## ⚠️ ÖNEMLİ NOTLAR (Kod-Doküman Eşleşmesi)
+## ✅ Akış Mimarisi (Refactored)
 
-### 1. PackageId Durumu
-- **Kayıt formunda** `PackageId` **zorunlu alan** olarak istenir (`RegisterTenantCommand.cs:28`)
-- **ANCAK** bu değer `CreateTenantFromRegistrationCommandHandler` tarafından **KULLANILMAZ**
-- Subscription oluşturma işlemi tamamen **Setup Wizard** aşamasına bırakılmıştır
-- **Öneri**: Kayıt formundan `PackageId` kaldırılabilir veya opsiyonel yapılabilir
+### İki Ayrı Kayıt Akışı
 
-### 2. Migration Zamanlaması
-- Migrations **E-POSTA DOĞRULAMA** sırasında **SENKRON** olarak çalışır (`VerifyEmailCommandHandler.cs:198`)
-- SignalR akışı (`CreateTenantFromRegistration`) **İKİNCİ BİR MİGRATION** çalıştırır
-- Bu durum, bazı tenantlar için migration'ların iki kez çalışmasına yol açabilir
+Sistemde iki ayrı kayıt akışı bulunmaktadır:
+
+| Akış | Endpoint | Command | Kullanım |
+|------|----------|---------|----------|
+| **YENİ (Aktif)** | `/api/public/tenant-registration/register` | `CreateTenantRegistrationCommand` | Frontend tarafından kullanılır ✅ |
+| **ESKİ (Legacy)** | `/api/public/register` | `RegisterTenantCommand` | Kullanılmıyor, geriye uyumluluk için korunuyor |
+
+### Yeni Akış Detayları
+
+1. **CreateTenantRegistrationCommand** - Minimal kayıt (PackageId YOK)
+2. **VerifyTenantEmailCommandHandler** - Email doğrulama + Background job tetikleme (Migration YOK)
+3. **CreateTenantFromRegistrationCommandHandler** - TEK YETKİLİ: DB oluşturma + Migration + Seeding
+
+### Migration Zamanlaması (Düzeltildi)
+- ✅ **Email doğrulama** sadece durum güncellemesi yapar, kullanıcıya hızlı response döner
+- ✅ **CreateTenantFromRegistration** background job olarak 3 saniye sonra tetiklenir
+- ✅ Migration **TEK BİR NOKTADA** (CreateTenantFromRegistration) yapılır
+- ✅ SignalR ile gerçek zamanlı ilerleme takibi sağlanır
 
 ---
 
@@ -45,14 +55,15 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │                              1. KAYIT FORMU                                          │
 │                         /register sayfası (Frontend)                                 │
 │                                                                                      │
-│   Kullanıcı Bilgileri:                                                              │
-│   • Şirket Adı (CompanyName)                                                        │
-│   • Şirket Kodu (CompanyCode) → subdomain olarak kullanılır                         │
-│   • E-posta (ContactEmail)                                                          │
+│   Kullanıcı Bilgileri (Minimal):                                                    │
+│   • E-posta (Email) - Admin email olarak kullanılır                                 │
 │   • Şifre (Password)                                                                │
-│   • Telefon (ContactPhone - Opsiyonel)                                              │
-│   • PackageId ⚠️ (Zorunlu alan AMA kullanılmıyor - bkz. önemli notlar)             │
-│   • BillingPeriod (Monthly/Yearly)                                                  │
+│   • Ad (FirstName)                                                                  │
+│   • Soyad (LastName)                                                                │
+│   • Takım Adı (TeamName) → subdomain/company code olarak kullanılır                │
+│   • Koşullar ve Gizlilik Politikası onayı (checkbox)                               │
+│                                                                                      │
+│   ✅ NOT: PackageId ve BillingPeriod ALINMAZ - Setup Wizard'da seçilir              │
 │                                                                                      │
 └────────────────────────────────────┬─────────────────────────────────────────────────┘
                                      │
@@ -61,18 +72,18 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │                                                                                      │
 │                    POST /api/public/tenant-registration/register                     │
 │                                                                                      │
-│   RegisterTenantCommand → RegisterTenantCommandHandler                              │
+│   CreateTenantRegistrationCommand → CreateTenantRegistrationCommandHandler          │
 │                                                                                      │
 │   İşlemler:                                                                          │
 │   ┌─────────────────────────────────────────────────────────────────────┐           │
 │   │ 1. E-posta benzersizlik kontrolü                                     │           │
 │   │ 2. CompanyCode benzersizlik kontrolü (subdomain için)               │           │
-│   │ 3. TenantRegistration kaydı oluştur (Status: PendingVerification)   │           │
+│   │ 3. TenantRegistration kaydı oluştur (Status: Pending)               │           │
 │   │ 4. AdminPasswordHash'i kaydet (daha sonra MasterUser için)          │           │
-│   │ 5. 6 haneli doğrulama kodu üret                                      │           │
+│   │ 5. 6 haneli doğrulama kodu + token üret                             │           │
 │   │ 6. Doğrulama e-postası gönder                                        │           │
 │   │                                                                      │           │
-│   │ ⚠️ PackageId alınır ama bu aşamada işlenmez!                        │           │
+│   │ ✅ PackageId ve Subscription bu aşamada OLUŞTURULMAZ                │           │
 │   └─────────────────────────────────────────────────────────────────────┘           │
 │                                                                                      │
 │   Veritabanı: MasterDb.TenantRegistrations                                          │
@@ -85,63 +96,52 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │                          2. E-POSTA DOĞRULAMA                                        │
 │                   /verify-email?email=...&token=... (Frontend)                       │
 │                                                                                      │
-│   Kullanıcı e-postasındaki linke tıklar veya kodu girer                             │
+│   Kullanıcı e-postasındaki linke tıklar veya 6 haneli kodu girer                    │
 │                                                                                      │
 └────────────────────────────────────┬─────────────────────────────────────────────────┘
                                      │
                                      ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                      │
-│                   POST /api/identity/verify-email                                    │
+│                   POST /api/public/tenant-registration/verify-email                  │
 │                                                                                      │
-│   VerifyEmailCommand → VerifyEmailCommandHandler                                    │
+│   VerifyTenantEmailCommand → VerifyTenantEmailCommandHandler                        │
 │                                                                                      │
-│   ⚡ KRITIK: Bu handler SENKRON olarak veritabanı oluşturur!                        │
+│   ✅ HIZLI RESPONSE: Migration YAPILMAZ, background job tetiklenir                  │
 │                                                                                      │
 │   İşlemler:                                                                          │
 │   ┌─────────────────────────────────────────────────────────────────────┐           │
-│   │ 1. Token doğrulama                                                   │           │
-│   │ 2. user.VerifyEmail() - Email doğrulandı olarak işaretle            │           │
-│   │ 3. user.Activate() - Kullanıcıyı aktif et                           │           │
-│   │ 4. Tenant'ı bul (ContactEmail'e göre)                               │           │
+│   │ 1. Token/Code doğrulama                                              │           │
+│   │ 2. registration.VerifyEmail() - Email doğrulandı olarak işaretle    │           │
+│   │ 3. Değişiklikleri kaydet (SaveChangesAsync)                         │           │
 │   │                                                                      │           │
-│   │ 5. TenantRegistration kaydı oluştur                                  │           │
-│   │    └─ registration.Approve("System", tenant.Id)                     │           │
-│   │                                                                      │           │
-│   │ 6. ⭐ TenantDomain kaydı oluştur (Subdomain)                        │           │
+│   │ 4. 🚀 CreateTenantFromRegistration'ı 3 saniye delay ile schedule et │           │
 │   │    ┌──────────────────────────────────────────────────────────┐     │           │
-│   │    │ TenantDomain.Create(                                      │     │           │
-│   │    │   tenantId: tenant.Id,                                    │     │           │
-│   │    │   domainName: "{tenant.Code}.stoocker.app",              │     │           │
-│   │    │   isPrimary: true)                                        │     │           │
+│   │    │ _backgroundJobService.Schedule<IMediator>(                │     │           │
+│   │    │     mediator => mediator.Send(                            │     │           │
+│   │    │         new CreateTenantFromRegistrationCommand(regId)),  │     │           │
+│   │    │     TimeSpan.FromSeconds(3));                             │     │           │
 │   │    │                                                           │     │           │
-│   │    │ tenantDomain.Verify() // Otomatik doğrula                 │     │           │
-│   │    │ → MasterDb.TenantDomains tablosuna kaydet                 │     │           │
+│   │    │ ✅ 3 saniye delay nedeni:                                 │     │           │
+│   │    │    - Frontend'in response'ı alması                        │     │           │
+│   │    │    - SignalR'a bağlanması                                 │     │           │
+│   │    │    - Registration group'a katılması                       │     │           │
+│   │    │    - Progress event'lerini dinlemeye başlaması           │     │           │
 │   │    └──────────────────────────────────────────────────────────┘     │           │
 │   │                                                                      │           │
-│   │ 7. 🔄 SENKRON Migration (VerifyEmailCommandHandler:198)             │           │
-│   │    ┌──────────────────────────────────────────────────────────┐     │           │
-│   │    │ await _migrationService.MigrateTenantDatabaseAsync(      │     │           │
-│   │    │     tenant.Id);                                           │     │           │
-│   │    │                                                           │     │           │
-│   │    │ Bu işlem BEKLER - kullanıcı bu süre boyunca bekler       │     │           │
-│   │    │ Hata olursa kullanıcıya hata mesajı gösterilir           │     │           │
-│   │    └──────────────────────────────────────────────────────────┘     │           │
-│   │                                                                      │           │
-│   │ 8. Tenant data seeding'i arka plan job olarak kuyruğa al           │           │
-│   │    └─ _backgroundJobService.Enqueue<ITenantProvisioningJob>        │           │
-│   │       (job => job.SeedTenantDataAsync(tenant.Id))                  │           │
+│   │ ❌ Migration YAPILMAZ - CreateTenantFromRegistration'a bırakılır   │           │
+│   │ ❌ TenantDomain OLUŞTURULMAZ - CreateTenantFromRegistration yapar  │           │
 │   │                                                                      │           │
 │   └─────────────────────────────────────────────────────────────────────┘           │
 │                                                                                      │
-│   Return:                                                                            │
+│   Return (HIZLI - <100ms):                                                          │
 │   {                                                                                  │
 │     success: true,                                                                   │
-│     message: "Email adresiniz başarıyla doğrulandı!",                              │
-│     redirectUrl: "/login",                                                          │
-│     tenantId: Guid,                                                                 │
-│     tenantName: string                                                              │
+│     registrationId: Guid,  // SignalR subscription için                            │
+│     message: "E-posta doğrulandı. Hesabınız oluşturuluyor..."                      │
 │   }                                                                                  │
+│                                                                                      │
+│   Frontend: registrationId ile SignalR'a bağlanır, progress takip eder             │
 │                                                                                      │
 └────────────────────────────────────┬─────────────────────────────────────────────────┘
                                      │
@@ -836,38 +836,39 @@ enum TenantCreationStep {
 
 ## İyileştirme Önerileri
 
-### 1. PackageId Konusunda
+### 1. PackageId Konusunda ✅ TAMAMLANDI
 ```
-MEVCUT DURUM:
-- RegisterTenantCommand.cs içinde PackageId zorunlu alan olarak tanımlı
-- CreateTenantFromRegistrationCommandHandler bu değeri kullanmıyor
-- Subscription oluşturma CompleteSetup'a bırakılmış
+DURUM: ÇÖZÜLDÜ (2025-12)
 
-ÖNERİLER:
-A) PackageId'yi RegisterTenantCommand'dan kaldır (opsiyonel yap)
-   → Kullanıcı kayıt sırasında paket seçmek zorunda kalmaz
-   → Setup Wizard'da özgürce seçim yapabilir
+YENİ AKIŞ (CreateTenantRegistrationCommand):
+- PackageId YOKTUR - minimal kayıt formu
+- Sadece: Email, Password, FirstName, LastName, TeamName, AcceptTerms, AcceptPrivacyPolicy
+- Paket seçimi Setup Wizard'da yapılır
 
-B) Veya kayıt sırasında Trial subscription oluştur
-   → PackageId'yi kullan, Trial paket ile başlat
-   → Setup Wizard'da upgrade seçeneği sun
+ESKİ AKIŞ (RegisterTenantCommand):
+- Legacy kod olarak kaldı, frontend kullanmıyor
+- PackageId hala var ama kullanılmıyor
+- İleride tamamen kaldırılabilir
 ```
 
-### 2. Migration Zamanlaması Konusunda
+### 2. Migration Zamanlaması Konusunda ✅ TAMAMLANDI
 ```
-MEVCUT DURUM:
-- VerifyEmailCommandHandler SENKRON migration çalıştırıyor (satır 198)
-- CreateTenantFromRegistration TEKRAR migration çalıştırıyor
-- Bu durum bazı edge case'lerde sorun yaratabilir
+DURUM: ÇÖZÜLDÜ (2025-12) - "Akıcı Kayıt Refactor'ü"
 
-ÖNERİLER:
-A) VerifyEmail'den migration'ı kaldır
-   → Sadece email doğrulama + TenantDomain oluşturma yapsın
-   → Migration'lar CreateTenantFromRegistration'da yapılsın (SignalR ile takip)
+YENİ AKIŞ:
+- VerifyTenantEmailCommandHandler: Migration YOK, sadece email doğrulama
+- CreateTenantFromRegistrationCommand: TEK YETKİLİ migration kaynağı
+- Background job ile asenkron çalışır, SignalR ile ilerleme takibi
 
-B) Veya CreateTenantFromRegistration'dan migration'ı kaldır
-   → Migration zaten VerifyEmail'de yapıldıysa atlansın
-   → Idempotent migration kontrolü ekle
+ESKİ AKIŞ (VerifyEmailCommandHandler - Identity namespace):
+- Migration kaldırıldı, background job'a delegate edildi
+- Artık CreateTenantFromRegistrationCommand çağırıyor
+- 10-30 saniye bekleme ortadan kalktı
+
+SONUÇ:
+- Email doğrulama ANINDA tamamlanır (< 1 saniye)
+- Tenant DB oluşturma arka planda yapılır
+- Kullanıcı deneyimi önemli ölçüde iyileşti
 ```
 
 ### 3. Connection String Güvenliği
