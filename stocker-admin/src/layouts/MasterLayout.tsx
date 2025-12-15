@@ -325,6 +325,9 @@ const MasterLayout: React.FC = () => {
   };
 
   const menuItems: MenuItem[] = [
+    // ═══════════════════════════════════════════════════
+    // ANA MENÜ
+    // ═══════════════════════════════════════════════════
     {
       path: '/dashboard',
       name: locale === 'tr' ? 'Kontrol Paneli' : 'Dashboard',
@@ -335,9 +338,13 @@ const MasterLayout: React.FC = () => {
       name: locale === 'tr' ? 'Analitik' : 'Analytics',
       icon: <LineChartOutlined />,
     },
+
+    // ═══════════════════════════════════════════════════
+    // MÜŞTERİ YÖNETİMİ
+    // ═══════════════════════════════════════════════════
     {
-      path: '/tenants',
-      name: 'Tenants',
+      path: '/customer-management',
+      name: locale === 'tr' ? 'Müşteri Yönetimi' : 'Customer Management',
       icon: <TeamOutlined />,
       routes: [
         {
@@ -352,82 +359,91 @@ const MasterLayout: React.FC = () => {
         },
         {
           path: '/tenants/migrations',
-          name: locale === 'tr' ? 'Migration Yönetimi' : 'Migration Management',
+          name: locale === 'tr' ? 'Migration Yönetimi' : 'Migrations',
           icon: <DatabaseOutlined />,
         },
         {
           path: '/tenants/modules',
-          name: locale === 'tr' ? 'Modül Yönetimi' : 'Module Management',
+          name: locale === 'tr' ? 'Modül Yönetimi' : 'Modules',
           icon: <AppstoreOutlined />,
+        },
+        {
+          path: '/users',
+          name: locale === 'tr' ? 'Kullanıcılar' : 'Users',
+          icon: <UserOutlined />,
         },
       ],
     },
+
+    // ═══════════════════════════════════════════════════
+    // FİNANSAL YÖNETİM
+    // ═══════════════════════════════════════════════════
     {
-      path: '/users',
-      name: locale === 'tr' ? 'Kullanıcılar' : 'Users',
-      icon: <UserOutlined />,
+      path: '/financial',
+      name: locale === 'tr' ? 'Finansal' : 'Financial',
+      icon: <CreditCardOutlined />,
       routes: [
         {
-          path: '/users',
-          name: locale === 'tr' ? 'Kullanıcı Listesi' : 'User List',
-          icon: <UserOutlined />,
+          path: '/packages',
+          name: locale === 'tr' ? 'Paketler' : 'Packages',
+          icon: <AppstoreOutlined />,
         },
         {
-          path: '/users/roles',
-          name: locale === 'tr' ? 'Roller' : 'Roles',
-          icon: <SafetyOutlined />,
+          path: '/subscriptions',
+          name: locale === 'tr' ? 'Abonelikler' : 'Subscriptions',
+          icon: <CreditCardOutlined />,
         },
         {
-          path: '/users/permissions',
-          name: locale === 'tr' ? 'İzinler' : 'Permissions',
+          path: '/invoices',
+          name: locale === 'tr' ? 'Faturalar' : 'Invoices',
+          icon: <ReconciliationOutlined />,
+        },
+      ],
+    },
+
+    // ═══════════════════════════════════════════════════
+    // SİSTEM YÖNETİMİ
+    // ═══════════════════════════════════════════════════
+    {
+      path: '/system',
+      name: locale === 'tr' ? 'Sistem' : 'System',
+      icon: <CloudServerOutlined />,
+      routes: [
+        {
+          path: '/monitoring',
+          name: locale === 'tr' ? 'İzleme' : 'Monitoring',
+          icon: <MonitorOutlined />,
+        },
+        {
+          path: '/storage',
+          name: locale === 'tr' ? 'Depolama' : 'Storage',
+          icon: <CloudServerOutlined />,
+        },
+        {
+          path: '/hangfire',
+          name: 'Hangfire',
+          icon: <ApiOutlined />,
+        },
+        {
+          path: '/audit-logs',
+          name: locale === 'tr' ? 'Denetim Günlükleri' : 'Audit Logs',
           icon: <AuditOutlined />,
         },
       ],
     },
-    {
-      path: '/packages',
-      name: locale === 'tr' ? 'Paketler' : 'Packages',
-      icon: <AppstoreOutlined />,
-    },
-    {
-      path: '/subscriptions',
-      name: locale === 'tr' ? 'Abonelikler' : 'Subscriptions',
-      icon: <CreditCardOutlined />,
-    },
-    {
-      path: '/invoices',
-      name: locale === 'tr' ? 'Faturalar' : 'Invoices',
-      icon: <ReconciliationOutlined />,
-    },
+
+    // ═══════════════════════════════════════════════════
+    // RAPORLAR & DESTEK
+    // ═══════════════════════════════════════════════════
     {
       path: '/reports',
       name: locale === 'tr' ? 'Raporlar' : 'Reports',
       icon: <BarChartOutlined />,
     },
     {
-      path: '/monitoring',
-      name: locale === 'tr' ? 'İzleme' : 'Monitoring',
-      icon: <MonitorOutlined />,
-    },
-    {
-      path: '/hangfire',
-      name: 'Hangfire Dashboard',
-      icon: <ApiOutlined />,
-    },
-    {
-      path: '/storage',
-      name: locale === 'tr' ? 'Depolama' : 'Storage',
-      icon: <CloudServerOutlined />,
-    },
-    {
       path: '/support',
       name: locale === 'tr' ? 'Destek' : 'Support',
       icon: <CustomerServiceOutlined />,
-    },
-    {
-      path: '/audit-logs',
-      name: locale === 'tr' ? 'Denetim Günlükleri' : 'Audit Logs',
-      icon: <AuditOutlined />,
     },
     {
       path: '/settings',
