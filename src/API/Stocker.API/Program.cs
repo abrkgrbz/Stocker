@@ -82,10 +82,12 @@ builder.Services.AddMonitoringServices(builder.Configuration);
 // Swagger Documentation
 builder.Services.AddSwaggerDocumentation();
 
-// Layer Services (Application, Persistence, Infrastructure, Identity)
+// Layer Services (Application, Infrastructure, Persistence, Identity)
+// Note: Infrastructure must be registered before Persistence because
+// TenantDatabaseSecurityService depends on IEncryptionService and ISecretStore
 builder.Services.AddApplication(builder.Configuration);
-builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
+builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddMultiTenancy();
 
