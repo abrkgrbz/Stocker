@@ -62,7 +62,8 @@
       "Bash(dotnet:*)",
       "Bash(Select-String -Pattern \"error|Error|warning CS\")",
       "Bash(git restore:*)",
-      "Bash(Select-String -Pattern \"error|warning CS|Build succeeded|Build FAILED\")"
+      "Bash(Select-String -Pattern \"error|warning CS|Build succeeded|Build FAILED\")",
+      "Bash(Select-String -Pattern \"error|Error|warning CS|Build succeeded|Build FAILED\")"
     ],
     "deny": [],
     "ask": []

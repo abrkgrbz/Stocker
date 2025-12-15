@@ -46,10 +46,11 @@ public class UserModulesController : ApiController
                 return BadRequest("Tenant ID not found");
             }
 
-            // Get active subscription with package
+            // Get active subscription with package and modules
             var subscription = await _masterDbContext.Subscriptions
                 .AsNoTracking()
                 .Include(s => s.Package)
+                .Include(s => s.Modules)
                 .Where(s => s.TenantId == tenantId &&
                            (s.Status == SubscriptionStatus.Aktif ||
                             s.Status == SubscriptionStatus.Deneme))
@@ -70,11 +71,29 @@ public class UserModulesController : ApiController
                 });
             }
 
-            // Query PackageModules directly (more reliable than ThenInclude with private backing fields)
+            // First try to get modules from SubscriptionModules (created during Setup Wizard)
             var modules = new List<ModuleInfo>();
 
-            if (subscription.Package != null)
+            if (subscription.Modules != null && subscription.Modules.Any())
             {
+                // Use SubscriptionModules - this is the primary source after Setup Wizard
+                // All modules in SubscriptionModules are considered active
+                modules = subscription.Modules
+                    .Select(m => new ModuleInfo
+                    {
+                        Code = NormalizeModuleCode(m.ModuleCode),
+                        Name = m.ModuleName,
+                        IsActive = true,
+                        Category = GetModuleCategory(m.ModuleCode)
+                    }).ToList();
+
+                _logger.LogInformation(
+                    "Found {ModuleCount} modules from SubscriptionModules for tenant {TenantId}",
+                    modules.Count, tenantId);
+            }
+            else if (subscription.Package != null)
+            {
+                // Fallback to PackageModules if no SubscriptionModules exist
                 var packageModules = await _masterDbContext.PackageModules
                     .AsNoTracking()
                     .Where(pm => pm.PackageId == subscription.Package.Id && pm.IsIncluded)
@@ -87,6 +106,10 @@ public class UserModulesController : ApiController
                     IsActive = true,
                     Category = GetModuleCategory(pm.ModuleCode)
                 }).ToList();
+
+                _logger.LogInformation(
+                    "Found {ModuleCount} modules from PackageModules (fallback) for tenant {TenantId}",
+                    modules.Count, tenantId);
             }
 
             _logger.LogInformation(
