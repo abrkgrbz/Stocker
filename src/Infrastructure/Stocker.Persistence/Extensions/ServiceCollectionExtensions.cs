@@ -143,6 +143,9 @@ public static class ServiceCollectionExtensions
         // Add Tenant Module Service (for module authorization - Phase 4.5)
         services.AddScoped<ITenantModuleService, Services.TenantModuleService>();
 
+        // Add Tenant Database Security Service (per-tenant PostgreSQL users, encrypted connection strings)
+        services.AddScoped<ITenantDatabaseSecurityService, Services.TenantDatabaseSecurityService>();
+
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>
         {
