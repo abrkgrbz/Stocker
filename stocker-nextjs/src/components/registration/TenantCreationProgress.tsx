@@ -545,7 +545,21 @@ export default function TenantCreationProgress() {
                       : 'bg-gray-200 text-gray-400'
                   }`}
                 >
-                  {isCompleted ? '✓' : config.icon}
+                  {isCompleted ? (
+                    <svg
+                      className="w-5 h-5 text-white animate-scale-check"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : config.icon}
                 </div>
                 <span
                   className={`relative z-10 text-xs font-medium leading-tight ${
@@ -574,7 +588,7 @@ export default function TenantCreationProgress() {
         )}
       </div>
 
-      {/* Add shimmer animation */}
+      {/* Add shimmer and checkmark animations */}
       <style jsx>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -582,6 +596,14 @@ export default function TenantCreationProgress() {
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
+        }
+        @keyframes scale-check {
+          0% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        :global(.animate-scale-check) {
+          animation: scale-check 0.4s ease-out forwards;
         }
       `}</style>
     </div>
