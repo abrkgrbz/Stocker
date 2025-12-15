@@ -14,26 +14,54 @@ namespace Stocker.Persistence.Services;
 /// - Each tenant gets a dedicated PostgreSQL user (tenant_user_{shortId})
 /// - Users are restricted to their specific database only
 /// - Passwords are cryptographically secure (32 bytes of randomness)
-/// - Connection strings are encrypted using ASP.NET Core Data Protection
+/// - Connection strings stored in Azure Key Vault (production) or encrypted locally
 /// - Users have minimal required privileges (no SUPERUSER, no CREATEDB)
+///
+/// Secret Storage Strategy:
+/// - Production: Azure Key Vault for centralized secret management
+/// - Development: Local encryption with Data Protection API
+/// - Secret names: tenant-{tenantId}-connection-string, tenant-{tenantId}-password
 /// </summary>
 public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
 {
     private readonly IConfiguration _configuration;
     private readonly IEncryptionService _encryptionService;
+    private readonly ISecretStore? _secretStore;
     private readonly ILogger<TenantDatabaseSecurityService> _logger;
+    private readonly bool _useSecretStore;
 
     // Password rotation policy (90 days recommended for compliance)
     private static readonly TimeSpan PasswordRotationPeriod = TimeSpan.FromDays(90);
 
+    // Secret name prefixes
+    private const string ConnectionStringSecretPrefix = "tenant-cs";
+    private const string PasswordSecretPrefix = "tenant-pwd";
+
     public TenantDatabaseSecurityService(
         IConfiguration configuration,
         IEncryptionService encryptionService,
-        ILogger<TenantDatabaseSecurityService> logger)
+        ILogger<TenantDatabaseSecurityService> logger,
+        ISecretStore? secretStore = null)
     {
         _configuration = configuration;
         _encryptionService = encryptionService;
+        _secretStore = secretStore;
         _logger = logger;
+
+        // Use secret store if available (Azure Key Vault or local encryption store)
+        _useSecretStore = _secretStore?.IsAvailable == true;
+
+        if (_useSecretStore)
+        {
+            _logger.LogInformation(
+                "🔐 TenantDatabaseSecurityService using {Provider} for secret storage",
+                _secretStore!.ProviderName);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "📁 TenantDatabaseSecurityService using local encryption (ISecretStore not available)");
+        }
     }
 
     /// <inheritdoc />
@@ -95,7 +123,52 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
 
             // Build the connection string with tenant credentials
             var connectionString = BuildTenantConnectionString(databaseName, username, password);
-            var encryptedConnectionString = EncryptConnectionString(connectionString);
+            string encryptedConnectionString;
+
+            // Store secrets in Key Vault (if available) or encrypt locally
+            if (_useSecretStore && _secretStore != null)
+            {
+                // Store connection string in secret store
+                var secretName = GetConnectionStringSecretName(tenantId);
+                var tags = new Dictionary<string, string>
+                {
+                    ["tenantId"] = tenantId.ToString(),
+                    ["databaseName"] = databaseName,
+                    ["username"] = username,
+                    ["type"] = "connectionString"
+                };
+
+                await _secretStore.SetSecretAsync(
+                    secretName,
+                    connectionString,
+                    tags,
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                // Also store the password separately for rotation purposes
+                var passwordSecretName = GetPasswordSecretName(tenantId);
+                await _secretStore.SetSecretAsync(
+                    passwordSecretName,
+                    password,
+                    new Dictionary<string, string>
+                    {
+                        ["tenantId"] = tenantId.ToString(),
+                        ["username"] = username,
+                        ["type"] = "password"
+                    },
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                _logger.LogInformation(
+                    "🔐 Credentials for tenant {TenantId} stored in {Provider}",
+                    tenantId, _secretStore.ProviderName);
+
+                // For encrypted connection string field, use the secret name as reference
+                encryptedConnectionString = $"SECRET:{secretName}";
+            }
+            else
+            {
+                // Fallback: Encrypt locally
+                encryptedConnectionString = EncryptConnectionString(connectionString);
+            }
 
             return new TenantDatabaseCredentials
             {
@@ -171,6 +244,29 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                 DROP USER IF EXISTS ""{username}"";
             ");
 
+            // 5. Delete secrets from secret store (if available)
+            if (_useSecretStore && _secretStore != null)
+            {
+                try
+                {
+                    var connectionSecretName = GetConnectionStringSecretName(tenantId);
+                    var passwordSecretName = GetPasswordSecretName(tenantId);
+
+                    await _secretStore.DeleteSecretAsync(connectionSecretName);
+                    await _secretStore.DeleteSecretAsync(passwordSecretName);
+
+                    _logger.LogInformation(
+                        "🗑️ Deleted secrets for tenant {TenantId} from {Provider}",
+                        tenantId, _secretStore.ProviderName);
+                }
+                catch (Exception secretEx)
+                {
+                    _logger.LogWarning(secretEx,
+                        "Failed to delete secrets for tenant {TenantId} from secret store (non-critical)",
+                        tenantId);
+                }
+            }
+
             _logger.LogInformation(
                 "Successfully revoked and dropped PostgreSQL user {Username}",
                 username);
@@ -208,7 +304,51 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                 username);
 
             var connectionString = BuildTenantConnectionString(databaseName, username, newPassword);
-            var encryptedConnectionString = EncryptConnectionString(connectionString);
+            string encryptedConnectionString;
+
+            // Update secrets in Key Vault (if available)
+            if (_useSecretStore && _secretStore != null)
+            {
+                var secretName = GetConnectionStringSecretName(tenantId);
+                var tags = new Dictionary<string, string>
+                {
+                    ["tenantId"] = tenantId.ToString(),
+                    ["databaseName"] = databaseName,
+                    ["username"] = username,
+                    ["type"] = "connectionString",
+                    ["rotatedAt"] = DateTimeOffset.UtcNow.ToString("O")
+                };
+
+                await _secretStore.SetSecretAsync(
+                    secretName,
+                    connectionString,
+                    tags,
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                // Update password secret
+                var passwordSecretName = GetPasswordSecretName(tenantId);
+                await _secretStore.SetSecretAsync(
+                    passwordSecretName,
+                    newPassword,
+                    new Dictionary<string, string>
+                    {
+                        ["tenantId"] = tenantId.ToString(),
+                        ["username"] = username,
+                        ["type"] = "password",
+                        ["rotatedAt"] = DateTimeOffset.UtcNow.ToString("O")
+                    },
+                    DateTimeOffset.UtcNow.Add(PasswordRotationPeriod));
+
+                _logger.LogInformation(
+                    "🔐 Rotated credentials for tenant {TenantId} stored in {Provider}",
+                    tenantId, _secretStore.ProviderName);
+
+                encryptedConnectionString = $"SECRET:{secretName}";
+            }
+            else
+            {
+                encryptedConnectionString = EncryptConnectionString(connectionString);
+            }
 
             return new TenantDatabaseCredentials
             {
@@ -249,7 +389,88 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
         if (encryptedConnectionString.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
             return encryptedConnectionString;
 
+        // Check if it's a Key Vault secret reference
+        if (encryptedConnectionString.StartsWith("SECRET:", StringComparison.OrdinalIgnoreCase))
+        {
+            return DecryptFromSecretStoreSync(encryptedConnectionString);
+        }
+
+        // Fallback: Local encryption
         return _encryptionService.Decrypt(encryptedConnectionString);
+    }
+
+    /// <summary>
+    /// Asynchronously decrypts a connection string from the secret store.
+    /// Preferred method for async contexts.
+    /// </summary>
+    public async Task<string> DecryptConnectionStringAsync(string encryptedConnectionString, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(encryptedConnectionString))
+            return encryptedConnectionString;
+
+        // Check if it's already decrypted
+        if (encryptedConnectionString.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
+            return encryptedConnectionString;
+
+        // Check if it's a Key Vault secret reference
+        if (encryptedConnectionString.StartsWith("SECRET:", StringComparison.OrdinalIgnoreCase) && _secretStore != null)
+        {
+            var secretName = encryptedConnectionString.Substring(7); // Remove "SECRET:" prefix
+            var secret = await _secretStore.GetSecretAsync(secretName, cancellationToken: cancellationToken);
+
+            if (secret != null && !string.IsNullOrEmpty(secret.Value))
+            {
+                _logger.LogDebug("Retrieved connection string from secret store: {SecretName}", secretName);
+                return secret.Value;
+            }
+
+            _logger.LogWarning(
+                "Secret {SecretName} not found in secret store. Returning empty string.",
+                secretName);
+            return string.Empty;
+        }
+
+        // Fallback: Local encryption
+        return _encryptionService.Decrypt(encryptedConnectionString);
+    }
+
+    /// <summary>
+    /// Synchronous wrapper for secret store retrieval.
+    /// Uses GetAwaiter().GetResult() for backward compatibility.
+    /// </summary>
+    private string DecryptFromSecretStoreSync(string encryptedConnectionString)
+    {
+        if (_secretStore == null)
+        {
+            _logger.LogWarning("Secret store not available. Cannot decrypt {Value}", encryptedConnectionString);
+            return string.Empty;
+        }
+
+        var secretName = encryptedConnectionString.Substring(7); // Remove "SECRET:" prefix
+
+        try
+        {
+            // Use Task.Run to avoid deadlocks in synchronous contexts
+            var secret = Task.Run(async () => await _secretStore.GetSecretAsync(secretName)).GetAwaiter().GetResult();
+
+            if (secret != null && !string.IsNullOrEmpty(secret.Value))
+            {
+                _logger.LogDebug("Retrieved connection string from secret store: {SecretName}", secretName);
+                return secret.Value;
+            }
+
+            _logger.LogWarning(
+                "Secret {SecretName} not found in secret store. Returning empty string.",
+                secretName);
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to retrieve secret {SecretName} from secret store",
+                secretName);
+            return string.Empty;
+        }
     }
 
     /// <inheritdoc />
@@ -536,6 +757,24 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
     {
         var shortId = tenantId.ToString("N")[..12].ToLowerInvariant();
         return $"tenant_user_{shortId}";
+    }
+
+    /// <summary>
+    /// Gets the secret name for a tenant's connection string
+    /// </summary>
+    private static string GetConnectionStringSecretName(Guid tenantId)
+    {
+        var shortId = tenantId.ToString("N")[..12].ToLowerInvariant();
+        return $"{ConnectionStringSecretPrefix}-{shortId}";
+    }
+
+    /// <summary>
+    /// Gets the secret name for a tenant's database password
+    /// </summary>
+    private static string GetPasswordSecretName(Guid tenantId)
+    {
+        var shortId = tenantId.ToString("N")[..12].ToLowerInvariant();
+        return $"{PasswordSecretPrefix}-{shortId}";
     }
 
     /// <summary>

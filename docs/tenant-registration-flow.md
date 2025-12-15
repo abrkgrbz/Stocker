@@ -906,12 +906,35 @@ UYGULANAN GÜVENLİK ÖZELLİKLERİ:
    - __EFMigrationsHistory tablosu dahil tüm tablolar korunuyor
    - Non-critical: RLS başarısız olursa tenant çalışmaya devam eder
 
-HENÜZ UYGULANMAMIŞ:
-- Azure Key Vault / AWS Secrets Manager: Production için değerlendirilebilir
+6. Azure Key Vault Entegrasyonu ✅
+   - Production: Azure Key Vault ile merkezi secret yönetimi
+   - Development: Local encryption ile fallback
+   - Hybrid yaklaşım: Key Vault mevcut değilse otomatik local encryption
+   - Secret naming: tenant-cs-{shortId}, tenant-pwd-{shortId}
+   - Otomatik failover ve migration desteği
+
+   Konfigürasyon (appsettings.Production.json):
+   ```json
+   "AzureKeyVault": {
+     "VaultUri": "https://your-vault.vault.azure.net/",
+     "TenantId": "your-azure-ad-tenant-id",
+     "ClientId": "service-principal-client-id",
+     "ClientSecret": "service-principal-client-secret"
+   }
+   ```
+
+   Desteklenen Kimlik Doğrulama Yöntemleri:
+   - Service Principal (ClientId/ClientSecret ile)
+   - Managed Identity (Azure ortamında otomatik)
+   - Azure CLI / Visual Studio (geliştirme ortamında)
 
 İLGİLİ DOSYALAR:
 - ITenantDatabaseSecurityService.cs (Interface)
 - TenantDatabaseSecurityService.cs (Implementation)
+- ISecretStore.cs (Secret storage abstraction)
+- AzureKeyVaultSecretStore.cs (Azure Key Vault implementation)
+- LocalEncryptionSecretStore.cs (Local encryption fallback)
+- HybridSecretStore.cs (Automatic failover between stores)
 - Tenant.cs (Entity - yeni alanlar)
 - TenantDbContextFactory.cs (Encrypted CS kullanımı)
 - CreateTenantFromRegistrationCommandHandler.cs (Secure user creation)

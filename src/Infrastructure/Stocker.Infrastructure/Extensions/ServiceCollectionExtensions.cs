@@ -36,7 +36,10 @@ public static class ServiceCollectionExtensions
             .SetApplicationName("Stocker.ERP")
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "keys")));
         services.AddSingleton<IEncryptionService, EncryptionService>();
-        
+
+        // Add Secret Store Services (Azure Key Vault + Local Encryption)
+        services.AddSecretStoreServices(configuration);
+
         // Add JWT Service
         services.AddScoped<IJwtService, JwtService>();
 
@@ -155,6 +158,39 @@ public static class ServiceCollectionExtensions
 
         // Register Tenant Storage Service
         services.AddScoped<ITenantStorageService, MinioTenantStorageService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds secret store services for secure secret management.
+    /// Priority: Azure Key Vault (if configured) → Local Encryption (fallback)
+    ///
+    /// Configuration:
+    /// - AzureKeyVault:VaultUri - Azure Key Vault URI (e.g., https://myvault.vault.azure.net/)
+    /// - AzureKeyVault:TenantId - Azure AD tenant ID (optional)
+    /// - AzureKeyVault:ClientId - Service principal client ID (optional)
+    /// - AzureKeyVault:ClientSecret - Service principal client secret (optional)
+    /// </summary>
+    private static IServiceCollection AddSecretStoreServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Register local encryption store (always available as fallback)
+        services.AddSingleton<LocalEncryptionSecretStore>();
+
+        // Register Azure Key Vault store (may be null if not configured)
+        var vaultUri = configuration["AzureKeyVault:VaultUri"];
+        if (!string.IsNullOrEmpty(vaultUri))
+        {
+            services.AddSingleton<AzureKeyVaultSecretStore>();
+        }
+        else
+        {
+            // Register null for optional injection
+            services.AddSingleton<AzureKeyVaultSecretStore?>(sp => null);
+        }
+
+        // Register hybrid store as the primary ISecretStore
+        services.AddSingleton<ISecretStore, HybridSecretStore>();
 
         return services;
     }
