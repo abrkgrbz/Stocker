@@ -159,63 +159,82 @@ public partial class MigrationService : IMigrationService
     public async Task MigrateTenantDatabaseAsync(Guid tenantId)
     {
         using var scope = _serviceProvider.CreateScope();
-        var tenantDbContextFactory = scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>();
         var masterContext = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         try
         {
             _logger.LogInformation("Starting tenant database migration for tenant {TenantId}...", tenantId);
-            
+
             // Get tenant information
             var tenant = await masterContext.Tenants.FindAsync(tenantId);
             if (tenant == null)
             {
                 throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
             }
-            
-            // Create the database context
-            using var context = await tenantDbContextFactory.CreateDbContextAsync(tenantId);
-            
-            // Cast to TenantDbContext to access Database property
-            var tenantDbContext = (TenantDbContext)context;
 
-            // Check if database exists, if not create it (required for PostgreSQL)
-            var connectionString = tenantDbContext.Database.GetConnectionString();
+            // Get connection string from tenant entity (not from factory to avoid connecting to non-existent DB)
+            var connectionString = tenant.ConnectionString?.Value;
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured");
+            }
+
             var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
             var databaseName = builder.Database;
 
-            // Connect to postgres database to create tenant database
-            builder.Database = "postgres";
-            var masterConnectionString = builder.ConnectionString;
+            _logger.LogInformation("🗄️ Checking/Creating database {DatabaseName} for tenant {TenantId}...", databaseName, tenantId);
 
-            using (var masterConnection = new Npgsql.NpgsqlConnection(masterConnectionString))
+            // Connect to postgres database to create tenant database FIRST
+            builder.Database = "postgres";
+            var postgresConnectionString = builder.ConnectionString;
+
+            using (var postgresConnection = new Npgsql.NpgsqlConnection(postgresConnectionString))
             {
-                await masterConnection.OpenAsync();
+                await postgresConnection.OpenAsync();
 
                 // Check if database exists
-                var checkDbCommand = masterConnection.CreateCommand();
+                var checkDbCommand = postgresConnection.CreateCommand();
                 checkDbCommand.CommandText = $"SELECT 1 FROM pg_database WHERE datname = '{databaseName}'";
                 var dbExists = await checkDbCommand.ExecuteScalarAsync();
 
                 if (dbExists == null)
                 {
-                    _logger.LogInformation("Creating database {DatabaseName} for tenant {TenantId}...", databaseName, tenantId);
+                    _logger.LogInformation("📦 Creating database {DatabaseName} for tenant {TenantId}...", databaseName, tenantId);
 
                     // Create database
-                    var createDbCommand = masterConnection.CreateCommand();
+                    var createDbCommand = postgresConnection.CreateCommand();
                     createDbCommand.CommandText = $"CREATE DATABASE \"{databaseName}\"";
                     await createDbCommand.ExecuteNonQueryAsync();
 
-                    _logger.LogInformation("Database {DatabaseName} created successfully.", databaseName);
+                    _logger.LogInformation("✅ Database {DatabaseName} created successfully.", databaseName);
+
+                    // Brief delay for database initialization
+                    await Task.Delay(500);
                 }
                 else
                 {
-                    _logger.LogInformation("Database {DatabaseName} already exists.", databaseName);
+                    _logger.LogInformation("📋 Database {DatabaseName} already exists.", databaseName);
                 }
             }
 
-            // Now apply migrations
-            _logger.LogInformation("Applying migrations for tenant {TenantId}...", tenantId);
+            // NOW create the TenantDbContext and apply migrations (database exists now)
+            _logger.LogInformation("📥 Applying migrations for tenant {TenantId}...", tenantId);
+
+            var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
+            optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorCodesToAdd: null);
+            });
+
+            // Suppress PendingModelChangesWarning for navigation configuration changes
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+            using var tenantDbContext = new TenantDbContext(optionsBuilder.Options, tenantId);
             await tenantDbContext.Database.MigrateAsync();
             
             _logger.LogInformation("Tenant database migration completed successfully for tenant {TenantId}.", tenantId);
