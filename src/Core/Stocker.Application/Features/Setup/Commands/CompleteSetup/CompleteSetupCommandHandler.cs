@@ -181,8 +181,9 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                     _logger.LogInformation("Company created with ID: {CompanyId}", companyId);
 
                     // Check if subscription already exists for this tenant (created during registration)
-                    var existingSubscription = await _masterUnitOfWork.Repository<Domain.Master.Entities.Subscription>()
-                        .AsQueryable()
+                    // Use AsNoTracking to avoid change tracker issues when we delete/recreate modules
+                    var existingSubscription = await _masterDbContext.Subscriptions
+                        .AsNoTracking()
                         .Include(s => s.Modules)
                         .FirstOrDefaultAsync(s => s.TenantId == request.TenantId, cancellationToken);
 
@@ -228,7 +229,10 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                             // No changes needed - subscription already has the same configuration
                             _logger.LogInformation("Subscription {SubscriptionId} already has the same package and modules, skipping update",
                                 existingSubscription.Id);
-                            subscription = existingSubscription;
+                            // Load tracked version for any subsequent operations
+                            subscription = await _masterDbContext.Subscriptions
+                                .Include(s => s.Modules)
+                                .FirstAsync(s => s.Id == existingSubscription.Id, cancellationToken);
                         }
                         else
                         {
