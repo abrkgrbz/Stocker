@@ -417,19 +417,28 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
     public string DecryptConnectionString(string encryptedConnectionString)
     {
         if (string.IsNullOrEmpty(encryptedConnectionString))
+        {
+            _logger.LogWarning("🔐 DecryptConnectionString called with empty/null value");
             return encryptedConnectionString;
+        }
 
         // Check if it's already decrypted (starts with "Host=" for PostgreSQL)
         if (encryptedConnectionString.StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogDebug("🔐 Connection string already decrypted (starts with Host=)");
             return encryptedConnectionString;
+        }
 
         // Check if it's a Key Vault secret reference
         if (encryptedConnectionString.StartsWith("SECRET:", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogInformation("🔐 Decrypting connection string from Azure Key Vault: {Reference}",
+                encryptedConnectionString);
             return DecryptFromSecretStoreSync(encryptedConnectionString);
         }
 
         // Fallback: Local encryption
+        _logger.LogDebug("🔐 Decrypting connection string using local encryption");
         return _encryptionService.Decrypt(encryptedConnectionString);
     }
 
@@ -474,13 +483,26 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
     /// </summary>
     private string DecryptFromSecretStoreSync(string encryptedConnectionString)
     {
+        _logger.LogInformation("🔑 DecryptFromSecretStoreSync called. SecretStore available: {Available}, Provider: {Provider}",
+            _secretStore != null,
+            _secretStore?.ProviderName ?? "N/A");
+
         if (_secretStore == null)
         {
-            _logger.LogWarning("Secret store not available. Cannot decrypt {Value}", encryptedConnectionString);
+            _logger.LogWarning("🔑 Secret store not available. Cannot decrypt {Value}", encryptedConnectionString);
+            return string.Empty;
+        }
+
+        if (!_secretStore.IsAvailable)
+        {
+            _logger.LogWarning("🔑 Secret store ({Provider}) is not available/configured. Cannot decrypt {Value}",
+                _secretStore.ProviderName, encryptedConnectionString);
             return string.Empty;
         }
 
         var secretName = encryptedConnectionString.Substring(7); // Remove "SECRET:" prefix
+        _logger.LogInformation("🔑 Retrieving secret from {Provider}: {SecretName}",
+            _secretStore.ProviderName, secretName);
 
         try
         {
@@ -489,21 +511,51 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
 
             if (secret != null && !string.IsNullOrEmpty(secret.Value))
             {
-                _logger.LogDebug("Retrieved connection string from secret store: {SecretName}", secretName);
+                // Parse to log connection details (without password)
+                var safeInfo = ParseConnectionStringForLogging(secret.Value);
+                _logger.LogInformation(
+                    "✅ Retrieved connection string from {Provider}: SecretName={SecretName}, Host={Host}, Database={Database}, User={User}",
+                    _secretStore.ProviderName,
+                    secretName,
+                    safeInfo.Host,
+                    safeInfo.Database,
+                    safeInfo.Username);
                 return secret.Value;
             }
 
             _logger.LogWarning(
-                "Secret {SecretName} not found in secret store. Returning empty string.",
-                secretName);
+                "⚠️ Secret {SecretName} not found in {Provider}. Returning empty string.",
+                secretName,
+                _secretStore.ProviderName);
             return string.Empty;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Failed to retrieve secret {SecretName} from secret store",
-                secretName);
+                "❌ Failed to retrieve secret {SecretName} from {Provider}",
+                secretName,
+                _secretStore.ProviderName);
             return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Parses connection string to extract safe logging information (no password)
+    /// </summary>
+    private static (string Host, string Database, string Username) ParseConnectionStringForLogging(string connectionString)
+    {
+        try
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString);
+            return (
+                Host: builder.Host ?? "unknown",
+                Database: builder.Database ?? "unknown",
+                Username: builder.Username ?? "unknown"
+            );
+        }
+        catch
+        {
+            return ("unknown", "unknown", "unknown");
         }
     }
 

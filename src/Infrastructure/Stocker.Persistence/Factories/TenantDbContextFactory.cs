@@ -163,22 +163,43 @@ public class TenantDbContextFactory : ITenantDbContextFactory
             throw new InvalidOperationException($"Tenant {tenantId} not found. Please ensure the tenant exists in the master database.");
         }
 
+        _logger.LogInformation(
+            "🔍 Resolving connection string for tenant {TenantId}: EncryptedCS={HasEncrypted}, PlainCS={HasPlain}, SecurityService={HasSecurityService}",
+            tenantId,
+            !string.IsNullOrEmpty(tenant.EncryptedConnectionString),
+            tenant.ConnectionString != null && !string.IsNullOrEmpty(tenant.ConnectionString.Value),
+            _securityService != null);
+
         // Priority: Use encrypted connection string if available (more secure)
         if (!string.IsNullOrEmpty(tenant.EncryptedConnectionString) && _securityService != null)
         {
+            _logger.LogInformation(
+                "🔐 Tenant {TenantId} has encrypted connection string: {EncryptedValue}",
+                tenantId,
+                tenant.EncryptedConnectionString.Length > 50
+                    ? tenant.EncryptedConnectionString.Substring(0, 50) + "..."
+                    : tenant.EncryptedConnectionString);
+
             try
             {
                 var decrypted = _securityService.DecryptConnectionString(tenant.EncryptedConnectionString);
                 if (!string.IsNullOrEmpty(decrypted))
                 {
-                    _logger.LogDebug("Using encrypted connection string for tenant {TenantId}", tenantId);
+                    _logger.LogInformation("✅ Using encrypted/decrypted connection string for tenant {TenantId}", tenantId);
                     return decrypted;
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "⚠️ Decryption returned empty string for tenant {TenantId}. Encrypted value was: {EncryptedValue}",
+                        tenantId,
+                        tenant.EncryptedConnectionString);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex,
-                    "Failed to decrypt connection string for tenant {TenantId}. Falling back to plain connection string.",
+                    "❌ Failed to decrypt connection string for tenant {TenantId}. Falling back to plain connection string.",
                     tenantId);
             }
         }
@@ -186,11 +207,11 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         // Fallback: Use plain connection string
         if (tenant.ConnectionString == null || string.IsNullOrEmpty(tenant.ConnectionString.Value))
         {
-            _logger.LogError("Tenant {TenantId} has no connection string configured", tenantId);
+            _logger.LogError("❌ Tenant {TenantId} has no connection string configured (neither encrypted nor plain)", tenantId);
             throw new InvalidOperationException($"Tenant {tenantId} has no connection string configured.");
         }
 
-        _logger.LogDebug("Using plain connection string for tenant {TenantId}", tenantId);
+        _logger.LogWarning("⚠️ Using plain (unencrypted) connection string for tenant {TenantId} - consider migrating to encrypted storage", tenantId);
         return tenant.ConnectionString.Value;
     }
 }
