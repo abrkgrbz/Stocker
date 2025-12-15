@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ProLayout, ProLayoutProps, PageContainer } from '@ant-design/pro-components';
+import { ProLayout, ProLayoutProps } from '@ant-design/pro-components';
 import {
   DashboardOutlined,
   DatabaseOutlined,
@@ -13,15 +13,11 @@ import {
   LogoutOutlined,
   BellOutlined,
   SearchOutlined,
-  GlobalOutlined,
-  CloudOutlined,
   CloudServerOutlined,
-  FileTextOutlined,
   MonitorOutlined,
   SafetyOutlined,
   AuditOutlined,
   LineChartOutlined,
-  PlusOutlined,
   ReloadOutlined,
   QuestionCircleOutlined,
   TranslationOutlined,
@@ -30,13 +26,14 @@ import {
   ApiOutlined,
   SecurityScanOutlined,
   CheckCircleOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
-import { 
-  Dropdown, 
-  Avatar, 
-  Badge, 
-  Space, 
-  ConfigProvider, 
+import {
+  Dropdown,
+  Avatar,
+  Badge,
+  Space,
+  ConfigProvider,
   theme,
   Input,
   Button,
@@ -44,7 +41,6 @@ import {
   Tooltip,
   message,
   AutoComplete,
-  Divider,
 } from 'antd';
 import { useAuthStore } from '../stores/authStore';
 import trTR from 'antd/locale/tr_TR';
@@ -227,6 +223,14 @@ const MasterLayout: React.FC = () => {
       icon: <SettingOutlined />,
       keywords: ['settings', 'ayarlar', 'config', 'konfigürasyon', 'preferences', 'tercihler']
     },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Secret Yönetimi' : 'Secrets Management',
+      description: locale === 'tr' ? 'Azure Key Vault secret yönetimi' : 'Azure Key Vault secrets management',
+      path: '/secrets',
+      icon: <KeyOutlined />,
+      keywords: ['secrets', 'key', 'vault', 'azure', 'keyvault', 'gizli', 'anahtar', 'şifre', 'password', 'connection', 'string']
+    },
     // Quick Actions
     // Common Terms
     {
@@ -305,7 +309,7 @@ const MasterLayout: React.FC = () => {
     // Add "See all results" option if there are more results
     if (filtered.length > 8) {
       options.push({
-        key: 'see-all',
+        key: 999,
         value: '',
         label: (
           <div style={{ 
@@ -429,6 +433,11 @@ const MasterLayout: React.FC = () => {
           name: locale === 'tr' ? 'Denetim Günlükleri' : 'Audit Logs',
           icon: <AuditOutlined />,
         },
+        {
+          path: '/secrets',
+          name: locale === 'tr' ? 'Secret Yönetimi' : 'Secrets',
+          icon: <KeyOutlined />,
+        },
       ],
     },
 
@@ -536,7 +545,7 @@ const MasterLayout: React.FC = () => {
           options={searchOptions}
           onSearch={handleSearch}
           onSelect={(value, option) => {
-            if (option.key !== 'see-all') {
+            if (option.key !== 999) {
               // Navigation is handled in the option click
             }
           }}
@@ -767,7 +776,6 @@ const MasterLayout: React.FC = () => {
       return `${title} - Stocker`;
     },
     siderWidth: 256,
-    headerHeight: 56,
     disableMobile: false,
     suppressSiderWhenMenuEmpty: true,
   };
