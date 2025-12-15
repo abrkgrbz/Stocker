@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Persistence.Contexts;
 using Stocker.Domain.Master.Entities;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Stocker.Persistence.Factories;
@@ -30,8 +32,19 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
     public async Task<ITenantDbContext> CreateDbContextAsync(Guid tenantId)
     {
+        var stopwatch = Stopwatch.StartNew();
         var connectionString = await GetTenantConnectionStringAsync(tenantId);
-        
+
+        // Parse connection string to extract connection details for logging
+        var connectionInfo = ParseConnectionStringForLogging(connectionString);
+
+        _logger.LogInformation(
+            "🔌 Connecting to tenant database: TenantId={TenantId}, Database={Database}, User={User}, Host={Host}",
+            tenantId,
+            connectionInfo.Database,
+            connectionInfo.Username,
+            connectionInfo.Host);
+
         var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
         optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
         {
@@ -59,14 +72,45 @@ public class TenantDbContextFactory : ITenantDbContextFactory
 
         try
         {
+            // Test the connection by opening it
+            await context.Database.OpenConnectionAsync();
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "✅ Tenant database connection successful: TenantId={TenantId}, Database={Database}, User={User}, ConnectionTime={ElapsedMs}ms",
+                tenantId,
+                connectionInfo.Database,
+                connectionInfo.Username,
+                stopwatch.ElapsedMilliseconds);
+
+            // Close and let EF manage the connection
+            await context.Database.CloseConnectionAsync();
+
             // Ensure database exists and is migrated
-            _logger.LogDebug("Ensuring database exists for tenant {TenantId}", tenantId);
+            _logger.LogDebug("Ensuring database is migrated for tenant {TenantId}", tenantId);
             await context.Database.MigrateAsync();
             _logger.LogInformation("Tenant database ready for tenant {TenantId}", tenantId);
         }
+        catch (NpgsqlException npgsqlEx)
+        {
+            stopwatch.Stop();
+            _logger.LogError(npgsqlEx,
+                "❌ Tenant database connection FAILED: TenantId={TenantId}, Database={Database}, User={User}, Error={ErrorMessage}, SqlState={SqlState}, ConnectionTime={ElapsedMs}ms",
+                tenantId,
+                connectionInfo.Database,
+                connectionInfo.Username,
+                npgsqlEx.Message,
+                npgsqlEx.SqlState,
+                stopwatch.ElapsedMilliseconds);
+            throw;
+        }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to ensure database exists for tenant {TenantId}. Database may need manual migration.", tenantId);
+            stopwatch.Stop();
+            _logger.LogWarning(ex,
+                "⚠️ Failed to ensure database exists for tenant {TenantId}. Database may need manual migration. ConnectionTime={ElapsedMs}ms",
+                tenantId,
+                stopwatch.ElapsedMilliseconds);
             // Don't throw - let the application continue and fail on actual database operations
             // This allows for better error messages and retry logic
         }
@@ -74,6 +118,26 @@ public class TenantDbContextFactory : ITenantDbContextFactory
         _logger.LogDebug("Created TenantDbContext for tenant {TenantId}", tenantId);
 
         return context;
+    }
+
+    /// <summary>
+    /// Parses connection string to extract safe logging information (no password)
+    /// </summary>
+    private static (string Host, string Database, string Username) ParseConnectionStringForLogging(string connectionString)
+    {
+        try
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString);
+            return (
+                Host: builder.Host ?? "unknown",
+                Database: builder.Database ?? "unknown",
+                Username: builder.Username ?? "unknown"
+            );
+        }
+        catch
+        {
+            return ("unknown", "unknown", "unknown");
+        }
     }
 
     public ITenantDbContext CreateDbContext(Guid tenantId)
