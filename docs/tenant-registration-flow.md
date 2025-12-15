@@ -916,12 +916,23 @@ UYGULANAN GÜVENLİK ÖZELLİKLERİ:
    Konfigürasyon (appsettings.Production.json):
    ```json
    "AzureKeyVault": {
-     "VaultUri": "https://your-vault.vault.azure.net/",
-     "TenantId": "your-azure-ad-tenant-id",
-     "ClientId": "service-principal-client-id",
-     "ClientSecret": "service-principal-client-secret"
+     "VaultUri": "https://stocker-kv-prod.vault.azure.net/",
+     "TenantId": "",
+     "ClientId": "",
+     "ClientSecret": ""
    }
    ```
+
+   Coolify Environment Variables (Hassas bilgiler):
+   ```
+   AzureKeyVault__TenantId=<Azure AD Tenant ID>
+   AzureKeyVault__ClientId=<Service Principal Client ID>
+   AzureKeyVault__ClientSecret=<Service Principal Client Secret>
+   ```
+
+   NOT: VaultUri appsettings'de tanımlı, kimlik bilgileri Coolify'dan
+   environment variables olarak okunur. .NET IConfiguration otomatik
+   olarak __ (double underscore) ile nested değerleri birleştirir.
 
    Desteklenen Kimlik Doğrulama Yöntemleri:
    - Service Principal (ClientId/ClientSecret ile)
