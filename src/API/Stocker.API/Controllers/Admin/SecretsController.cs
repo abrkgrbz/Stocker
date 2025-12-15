@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.Common.Interfaces;
+using Stocker.API.Controllers.Base;
 
 namespace Stocker.API.Controllers.Admin;
 
@@ -36,10 +37,9 @@ public class SecretsController : ControllerBase
     {
         if (!_secretStore.IsAvailable)
         {
-            return StatusCode(503, new {
-                Message = "Secret store is not available",
-                Provider = _secretStore.ProviderName
-            });
+            return StatusCode(503, ApiResponse<SecretsListResponse>.FailureResponse(
+                "Secret store is not available",
+                $"Provider: {_secretStore.ProviderName}"));
         }
 
         try
@@ -71,17 +71,19 @@ public class SecretsController : ControllerBase
                 "Listed {Count} secrets from {Provider} with prefix '{Prefix}'",
                 secrets.Count, _secretStore.ProviderName, prefix);
 
-            return Ok(new SecretsListResponse
+            var response = new SecretsListResponse
             {
                 Provider = _secretStore.ProviderName,
                 TotalCount = secrets.Count,
                 Secrets = secrets.OrderByDescending(s => s.CreatedOn).ToList()
-            });
+            };
+
+            return Ok(ApiResponse<SecretsListResponse>.SuccessResponse(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to list secrets from {Provider}", _secretStore.ProviderName);
-            return StatusCode(500, new { Message = "Failed to list secrets", Error = ex.Message });
+            return StatusCode(500, ApiResponse<SecretsListResponse>.FailureResponse(ex.Message, "Failed to list secrets"));
         }
     }
 
@@ -95,7 +97,7 @@ public class SecretsController : ControllerBase
     {
         if (!_secretStore.IsAvailable)
         {
-            return StatusCode(503, new { Message = "Secret store is not available" });
+            return StatusCode(503, ApiResponse<SecretInfo>.FailureResponse("Secret store is not available"));
         }
 
         try
@@ -103,10 +105,10 @@ public class SecretsController : ControllerBase
             var secret = await _secretStore.GetSecretAsync(secretName);
             if (secret == null)
             {
-                return NotFound(new { Message = $"Secret '{secretName}' not found" });
+                return NotFound(ApiResponse<SecretInfo>.FailureResponse($"Secret '{secretName}' not found"));
             }
 
-            return Ok(new SecretInfo
+            var response = new SecretInfo
             {
                 Name = secret.Name,
                 CreatedOn = secret.CreatedOn,
@@ -116,12 +118,14 @@ public class SecretsController : ControllerBase
                 Tags = secret.Tags,
                 TenantShortId = ExtractTenantIdFromSecretName(secretName),
                 SecretType = DetermineSecretType(secretName)
-            });
+            };
+
+            return Ok(ApiResponse<SecretInfo>.SuccessResponse(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get secret metadata for {SecretName}", secretName);
-            return StatusCode(500, new { Message = "Failed to get secret", Error = ex.Message });
+            return StatusCode(500, ApiResponse<SecretInfo>.FailureResponse(ex.Message, "Failed to get secret"));
         }
     }
 
@@ -135,7 +139,7 @@ public class SecretsController : ControllerBase
     {
         if (!_secretStore.IsAvailable)
         {
-            return StatusCode(503, new { Message = "Secret store is not available" });
+            return StatusCode(503, ApiResponse<DeleteSecretResponse>.FailureResponse("Secret store is not available"));
         }
 
         try
@@ -144,7 +148,7 @@ public class SecretsController : ControllerBase
             var exists = await _secretStore.SecretExistsAsync(secretName);
             if (!exists)
             {
-                return NotFound(new { Message = $"Secret '{secretName}' not found" });
+                return NotFound(ApiResponse<DeleteSecretResponse>.FailureResponse($"Secret '{secretName}' not found"));
             }
 
             await _secretStore.DeleteSecretAsync(secretName);
@@ -153,15 +157,18 @@ public class SecretsController : ControllerBase
                 "Deleted secret '{SecretName}' from {Provider}",
                 secretName, _secretStore.ProviderName);
 
-            return Ok(new {
+            var response = new DeleteSecretResponse
+            {
                 Message = $"Secret '{secretName}' deleted successfully",
                 Provider = _secretStore.ProviderName
-            });
+            };
+
+            return Ok(ApiResponse<DeleteSecretResponse>.SuccessResponse(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete secret {SecretName}", secretName);
-            return StatusCode(500, new { Message = "Failed to delete secret", Error = ex.Message });
+            return StatusCode(500, ApiResponse<DeleteSecretResponse>.FailureResponse(ex.Message, "Failed to delete secret"));
         }
     }
 
@@ -174,7 +181,7 @@ public class SecretsController : ControllerBase
     {
         if (!_secretStore.IsAvailable)
         {
-            return StatusCode(503, new { Message = "Secret store is not available" });
+            return StatusCode(503, ApiResponse<BulkDeleteResponse>.FailureResponse("Secret store is not available"));
         }
 
         try
@@ -209,19 +216,21 @@ public class SecretsController : ControllerBase
                 }
             }
 
-            return Ok(new BulkDeleteResponse
+            var response = new BulkDeleteResponse
             {
                 TenantShortId = tenantShortId,
                 DeletedCount = deletedSecrets.Count,
                 FailedCount = failedSecrets.Count,
                 DeletedSecrets = deletedSecrets,
                 FailedSecrets = failedSecrets
-            });
+            };
+
+            return Ok(ApiResponse<BulkDeleteResponse>.SuccessResponse(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete secrets for tenant {TenantShortId}", tenantShortId);
-            return StatusCode(500, new { Message = "Failed to delete tenant secrets", Error = ex.Message });
+            return StatusCode(500, ApiResponse<BulkDeleteResponse>.FailureResponse(ex.Message, "Failed to delete tenant secrets"));
         }
     }
 
@@ -232,11 +241,13 @@ public class SecretsController : ControllerBase
     [ProducesResponseType(typeof(SecretStoreStatus), StatusCodes.Status200OK)]
     public IActionResult GetStatus()
     {
-        return Ok(new SecretStoreStatus
+        var response = new SecretStoreStatus
         {
             Provider = _secretStore.ProviderName,
             IsAvailable = _secretStore.IsAvailable
-        });
+        };
+
+        return Ok(ApiResponse<SecretStoreStatus>.SuccessResponse(response));
     }
 
     private static string? ExtractTenantIdFromSecretName(string secretName)
@@ -292,6 +303,12 @@ public class SecretStoreStatus
 {
     public string Provider { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
+}
+
+public class DeleteSecretResponse
+{
+    public string Message { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
 }
 
 #endregion
