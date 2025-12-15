@@ -63,7 +63,10 @@
       "Bash(Select-String -Pattern \"error|Error|warning CS\")",
       "Bash(git restore:*)",
       "Bash(Select-String -Pattern \"error|warning CS|Build succeeded|Build FAILED\")",
-      "Bash(Select-String -Pattern \"error|Error|warning CS|Build succeeded|Build FAILED\")"
+      "Bash(Select-String -Pattern \"error|Error|warning CS|Build succeeded|Build FAILED\")",
+      "Bash(git revert:*)",
+      "Bash(az account show:*)",
+      "Bash(az keyvault set-policy:*)"
     ],
     "deny": [],
     "ask": []

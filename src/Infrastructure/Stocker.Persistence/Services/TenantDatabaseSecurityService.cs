@@ -111,6 +111,26 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                     GRANT ALL PRIVILEGES ON SEQUENCES TO ""{username}"";
             ");
 
+            // 4b. Grant schema usage and all privileges on the tenant schema (if exists)
+            await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'tenant') THEN
+                        GRANT USAGE, CREATE ON SCHEMA tenant TO ""{username}"";
+                        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA tenant TO ""{username}"";
+                        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA tenant TO ""{username}"";
+                        GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA tenant TO ""{username}"";
+
+                        -- Also grant for future tables/sequences created by migrations
+                        ALTER DEFAULT PRIVILEGES IN SCHEMA tenant
+                            GRANT ALL PRIVILEGES ON TABLES TO ""{username}"";
+                        ALTER DEFAULT PRIVILEGES IN SCHEMA tenant
+                            GRANT ALL PRIVILEGES ON SEQUENCES TO ""{username}"";
+                    END IF;
+                END
+                $$;
+            ");
+
             // 5. Revoke access to other databases (security hardening)
             // Note: By default, PUBLIC has CONNECT on all databases, we revoke it for this user
             await ExecuteNonQueryAsync(masterConnection, $@"
@@ -223,6 +243,19 @@ public class TenantDatabaseSecurityService : ITenantDatabaseSecurityService
                     REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM ""{username}"";
                     REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM ""{username}"";
                     REVOKE USAGE ON SCHEMA public FROM ""{username}"";
+                ");
+
+                // Also revoke from tenant schema if exists
+                await ExecuteNonQuerySafeAsync(tenantConnection, $@"
+                    DO $$
+                    BEGIN
+                        IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'tenant') THEN
+                            REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA tenant FROM ""{username}"";
+                            REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA tenant FROM ""{username}"";
+                            REVOKE USAGE, CREATE ON SCHEMA tenant FROM ""{username}"";
+                        END IF;
+                    END
+                    $$;
                 ");
             }
             catch (PostgresException ex) when (ex.SqlState == "3D000") // Database does not exist
