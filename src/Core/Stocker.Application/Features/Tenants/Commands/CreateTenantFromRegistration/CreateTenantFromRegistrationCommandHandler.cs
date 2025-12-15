@@ -27,7 +27,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
     private readonly ITenantDbContextFactory _tenantDbContextFactory;
     private readonly ISecurityAuditService _auditService;
     private readonly ITenantCreationProgressService _progressService;
-    private readonly ITenantDatabaseSecurityService? _databaseSecurityService;
+    private readonly ITenantDatabaseSecurityService _databaseSecurityService;
 
     public CreateTenantFromRegistrationCommandHandler(
         IMasterDbContext context,
@@ -40,7 +40,7 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
         ITenantDbContextFactory tenantDbContextFactory,
         ISecurityAuditService auditService,
         ITenantCreationProgressService progressService,
-        ITenantDatabaseSecurityService? databaseSecurityService = null)
+        ITenantDatabaseSecurityService databaseSecurityService)
     {
         _context = context;
         _unitOfWork = unitOfWork;
@@ -453,60 +453,52 @@ public sealed class CreateTenantFromRegistrationCommandHandler : IRequestHandler
                 _logger.LogInformation("📋 Tenant {TenantId} created. Module activation will happen after Setup Wizard completion.", tenant.Id);
 
                 // Create dedicated PostgreSQL user for this tenant (security isolation)
-                if (_databaseSecurityService != null)
+                try
                 {
-                    try
+                    _logger.LogInformation("🔐 Creating secure database user for tenant: {TenantId}", tenant.Id);
+
+                    var credentials = await _databaseSecurityService.CreateTenantDatabaseUserAsync(tenant.Id, databaseName);
+
+                    // Update tenant with secure connection string
+                    var secureConnectionStringResult = ConnectionString.Create(credentials.ConnectionString);
+                    if (secureConnectionStringResult.IsSuccess)
                     {
-                        _logger.LogInformation("🔐 Creating secure database user for tenant: {TenantId}", tenant.Id);
+                        tenant.UpdateSecureConnectionString(
+                            secureConnectionStringResult.Value,
+                            credentials.EncryptedConnectionString,
+                            credentials.Username,
+                            credentials.RotateAfter);
 
-                        var credentials = await _databaseSecurityService.CreateTenantDatabaseUserAsync(tenant.Id, databaseName);
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        _logger.LogInformation("✅ Secure database credentials created for tenant: {TenantId}, User: {Username}",
+                            tenant.Id, credentials.Username);
 
-                        // Update tenant with secure connection string
-                        var secureConnectionStringResult = ConnectionString.Create(credentials.ConnectionString);
-                        if (secureConnectionStringResult.IsSuccess)
+                        // Enable Row-Level Security for additional protection
+                        try
                         {
-                            tenant.UpdateSecureConnectionString(
-                                secureConnectionStringResult.Value,
-                                credentials.EncryptedConnectionString,
-                                credentials.Username,
-                                credentials.RotateAfter);
-
-                            await _unitOfWork.SaveChangesAsync(cancellationToken);
-                            _logger.LogInformation("✅ Secure database credentials created for tenant: {TenantId}, User: {Username}",
-                                tenant.Id, credentials.Username);
-
-                            // Enable Row-Level Security for additional protection
-                            try
-                            {
-                                _logger.LogInformation("🔒 Enabling Row-Level Security for tenant: {TenantId}", tenant.Id);
-                                await _databaseSecurityService.EnableRowLevelSecurityAsync(tenant.Id, databaseName);
-                                _logger.LogInformation("✅ Row-Level Security enabled for tenant: {TenantId}", tenant.Id);
-                            }
-                            catch (Exception rlsEx)
-                            {
-                                // Non-critical: RLS is an additional layer, tenant works without it
-                                _logger.LogWarning(rlsEx,
-                                    "⚠️ Failed to enable Row-Level Security for tenant: {TenantId}. Tenant will work without RLS.",
-                                    tenant.Id);
-                            }
+                            _logger.LogInformation("🔒 Enabling Row-Level Security for tenant: {TenantId}", tenant.Id);
+                            await _databaseSecurityService.EnableRowLevelSecurityAsync(tenant.Id, databaseName);
+                            _logger.LogInformation("✅ Row-Level Security enabled for tenant: {TenantId}", tenant.Id);
                         }
-                        else
+                        catch (Exception rlsEx)
                         {
-                            _logger.LogWarning("Failed to create secure connection string for tenant: {TenantId}. Using master credentials.",
+                            // Non-critical: RLS is an additional layer, tenant works without it
+                            _logger.LogWarning(rlsEx,
+                                "⚠️ Failed to enable Row-Level Security for tenant: {TenantId}. Tenant will work without RLS.",
                                 tenant.Id);
                         }
                     }
-                    catch (Exception securityEx)
+                    else
                     {
-                        // Non-critical: If secure user creation fails, tenant still works with master credentials
-                        _logger.LogWarning(securityEx,
-                            "⚠️ Failed to create secure database user for tenant: {TenantId}. Tenant will use master credentials.",
+                        _logger.LogWarning("Failed to create secure connection string for tenant: {TenantId}. Using master credentials.",
                             tenant.Id);
                     }
                 }
-                else
+                catch (Exception securityEx)
                 {
-                    _logger.LogInformation("ℹ️ TenantDatabaseSecurityService not configured. Tenant {TenantId} using master credentials.",
+                    // Non-critical: If secure user creation fails, tenant still works with master credentials
+                    _logger.LogWarning(securityEx,
+                        "⚠️ Failed to create secure database user for tenant: {TenantId}. Tenant will use master credentials.",
                         tenant.Id);
                 }
 
