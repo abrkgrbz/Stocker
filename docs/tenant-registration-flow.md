@@ -10,11 +10,30 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  1. KAYIT FORMU  →  2. E-POSTA DOĞRULAMA  →  3. TENANT OLUŞTURMA           │
+│   (PackageId      (Senkron Migration +     (SignalR ile ilerleme)          │
+│    alınır)         TenantDomain oluşur)                                    │
 │                                                                             │
 │  4. GİRİŞ  →  5. SETUP WIZARD  →  6. PAKET SEÇİMİ  →  7. MODÜL AKTİVASYON │
+│                                   (Subscription                             │
+│                                    burada oluşur)                           │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## ⚠️ ÖNEMLİ NOTLAR (Kod-Doküman Eşleşmesi)
+
+### 1. PackageId Durumu
+- **Kayıt formunda** `PackageId` **zorunlu alan** olarak istenir (`RegisterTenantCommand.cs:28`)
+- **ANCAK** bu değer `CreateTenantFromRegistrationCommandHandler` tarafından **KULLANILMAZ**
+- Subscription oluşturma işlemi tamamen **Setup Wizard** aşamasına bırakılmıştır
+- **Öneri**: Kayıt formundan `PackageId` kaldırılabilir veya opsiyonel yapılabilir
+
+### 2. Migration Zamanlaması
+- Migrations **E-POSTA DOĞRULAMA** sırasında **SENKRON** olarak çalışır (`VerifyEmailCommandHandler.cs:198`)
+- SignalR akışı (`CreateTenantFromRegistration`) **İKİNCİ BİR MİGRATION** çalıştırır
+- Bu durum, bazı tenantlar için migration'ların iki kez çalışmasına yol açabilir
 
 ---
 
@@ -27,10 +46,13 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │                         /register sayfası (Frontend)                                 │
 │                                                                                      │
 │   Kullanıcı Bilgileri:                                                              │
-│   • Şirket Adı                                                                       │
-│   • E-posta                                                                          │
-│   • Şifre                                                                            │
-│   • Telefon (Opsiyonel)                                                             │
+│   • Şirket Adı (CompanyName)                                                        │
+│   • Şirket Kodu (CompanyCode) → subdomain olarak kullanılır                         │
+│   • E-posta (ContactEmail)                                                          │
+│   • Şifre (Password)                                                                │
+│   • Telefon (ContactPhone - Opsiyonel)                                              │
+│   • PackageId ⚠️ (Zorunlu alan AMA kullanılmıyor - bkz. önemli notlar)             │
+│   • BillingPeriod (Monthly/Yearly)                                                  │
 │                                                                                      │
 └────────────────────────────────────┬─────────────────────────────────────────────────┘
                                      │
@@ -44,9 +66,13 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   İşlemler:                                                                          │
 │   ┌─────────────────────────────────────────────────────────────────────┐           │
 │   │ 1. E-posta benzersizlik kontrolü                                     │           │
-│   │ 2. TenantRegistration kaydı oluştur (Status: PendingVerification)   │           │
-│   │ 3. 6 haneli doğrulama kodu üret                                      │           │
-│   │ 4. Doğrulama e-postası gönder                                        │           │
+│   │ 2. CompanyCode benzersizlik kontrolü (subdomain için)               │           │
+│   │ 3. TenantRegistration kaydı oluştur (Status: PendingVerification)   │           │
+│   │ 4. AdminPasswordHash'i kaydet (daha sonra MasterUser için)          │           │
+│   │ 5. 6 haneli doğrulama kodu üret                                      │           │
+│   │ 6. Doğrulama e-postası gönder                                        │           │
+│   │                                                                      │           │
+│   │ ⚠️ PackageId alınır ama bu aşamada işlenmez!                        │           │
 │   └─────────────────────────────────────────────────────────────────────┘           │
 │                                                                                      │
 │   Veritabanı: MasterDb.TenantRegistrations                                          │
@@ -57,7 +83,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                      │
 │                          2. E-POSTA DOĞRULAMA                                        │
-│                   /verify-email?email=...&code=... (Frontend)                        │
+│                   /verify-email?email=...&token=... (Frontend)                       │
 │                                                                                      │
 │   Kullanıcı e-postasındaki linke tıklar veya kodu girer                             │
 │                                                                                      │
@@ -66,18 +92,56 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
                                      ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                      │
-│                   POST /api/public/tenant-registration/verify-email                  │
+│                   POST /api/identity/verify-email                                    │
 │                                                                                      │
 │   VerifyEmailCommand → VerifyEmailCommandHandler                                    │
 │                                                                                      │
+│   ⚡ KRITIK: Bu handler SENKRON olarak veritabanı oluşturur!                        │
+│                                                                                      │
 │   İşlemler:                                                                          │
 │   ┌─────────────────────────────────────────────────────────────────────┐           │
-│   │ 1. Doğrulama kodunu kontrol et                                       │           │
-│   │ 2. TenantRegistration.Status = EmailVerified                         │           │
-│   │ 3. CreateTenantFromRegistrationCommand tetikle (MediatR)            │           │
+│   │ 1. Token doğrulama                                                   │           │
+│   │ 2. user.VerifyEmail() - Email doğrulandı olarak işaretle            │           │
+│   │ 3. user.Activate() - Kullanıcıyı aktif et                           │           │
+│   │ 4. Tenant'ı bul (ContactEmail'e göre)                               │           │
+│   │                                                                      │           │
+│   │ 5. TenantRegistration kaydı oluştur                                  │           │
+│   │    └─ registration.Approve("System", tenant.Id)                     │           │
+│   │                                                                      │           │
+│   │ 6. ⭐ TenantDomain kaydı oluştur (Subdomain)                        │           │
+│   │    ┌──────────────────────────────────────────────────────────┐     │           │
+│   │    │ TenantDomain.Create(                                      │     │           │
+│   │    │   tenantId: tenant.Id,                                    │     │           │
+│   │    │   domainName: "{tenant.Code}.stoocker.app",              │     │           │
+│   │    │   isPrimary: true)                                        │     │           │
+│   │    │                                                           │     │           │
+│   │    │ tenantDomain.Verify() // Otomatik doğrula                 │     │           │
+│   │    │ → MasterDb.TenantDomains tablosuna kaydet                 │     │           │
+│   │    └──────────────────────────────────────────────────────────┘     │           │
+│   │                                                                      │           │
+│   │ 7. 🔄 SENKRON Migration (VerifyEmailCommandHandler:198)             │           │
+│   │    ┌──────────────────────────────────────────────────────────┐     │           │
+│   │    │ await _migrationService.MigrateTenantDatabaseAsync(      │     │           │
+│   │    │     tenant.Id);                                           │     │           │
+│   │    │                                                           │     │           │
+│   │    │ Bu işlem BEKLER - kullanıcı bu süre boyunca bekler       │     │           │
+│   │    │ Hata olursa kullanıcıya hata mesajı gösterilir           │     │           │
+│   │    └──────────────────────────────────────────────────────────┘     │           │
+│   │                                                                      │           │
+│   │ 8. Tenant data seeding'i arka plan job olarak kuyruğa al           │           │
+│   │    └─ _backgroundJobService.Enqueue<ITenantProvisioningJob>        │           │
+│   │       (job => job.SeedTenantDataAsync(tenant.Id))                  │           │
+│   │                                                                      │           │
 │   └─────────────────────────────────────────────────────────────────────┘           │
 │                                                                                      │
-│   Return: { registrationId: Guid } → Frontend SignalR'a bağlanır                    │
+│   Return:                                                                            │
+│   {                                                                                  │
+│     success: true,                                                                   │
+│     message: "Email adresiniz başarıyla doğrulandı!",                              │
+│     redirectUrl: "/login",                                                          │
+│     tenantId: Guid,                                                                 │
+│     tenantName: string                                                              │
+│   }                                                                                  │
 │                                                                                      │
 └────────────────────────────────────┬─────────────────────────────────────────────────┘
                                      │
@@ -88,6 +152,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │                    CreateTenantFromRegistrationCommandHandler                        │
 │                                                                                      │
 │   ⚡ SignalR ile gerçek zamanlı ilerleme bildirimi                                   │
+│   ⚠️ NOT: Email doğrulama sırasında migration çalıştıysa, bu handler tekrar çalışır│
 │                                                                                      │
 │   Adımlar (TenantCreationStep enum):                                                │
 │   ┌─────────────────────────────────────────────────────────────────────┐           │
@@ -98,7 +163,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   │  └──────────────┘     └──────────────┘     └──────────────┘        │           │
 │   │         │                    │                    │                 │           │
 │   │         ▼                    ▼                    ▼                 │           │
-│   │  SignalR: 10%         SignalR: 20%         SignalR: 30%            │           │
+│   │  SignalR: 5%          SignalR: 10%         SignalR: 30%            │           │
 │   │                                                                      │           │
 │   │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐        │           │
 │   │  │ 4. Creating  │ ──▶ │ 5. Running   │ ──▶ │ 6. Seeding   │        │           │
@@ -106,7 +171,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   │  └──────────────┘     └──────────────┘     └──────────────┘        │           │
 │   │         │                    │                    │                 │           │
 │   │         ▼                    ▼                    ▼                 │           │
-│   │  SignalR: 40%         SignalR: 60%         SignalR: 70%            │           │
+│   │  SignalR: 40%         SignalR: 50%         SignalR: 60%            │           │
 │   │                                                                      │           │
 │   │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐        │           │
 │   │  │ 7. Activating│ ──▶ │ 8. Sending   │ ──▶ │ 9. Completed │        │           │
@@ -124,6 +189,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   Oluşturulan Kayıtlar:                                                             │
 │   • MasterDb.Tenants (Status: Active)                                               │
 │   • MasterDb.MasterUsers (tenant admin kullanıcısı)                                 │
+│   • MasterDb.TenantDomains ({code}.stocker.app)                                     │
 │   • TenantDb_[TenantId] (yeni PostgreSQL veritabanı)                               │
 │   • TenantDb.TenantUsers (ilk kullanıcı)                                           │
 │                                                                                      │
@@ -208,7 +274,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   Request Body:                                                                      │
 │   {                                                                                  │
 │     "tenantId": "guid",                                                             │
-│     "packageId": "guid",           // Seçilen paket                                 │
+│     "packageId": "guid",           // ⭐ ASIL PAKET SEÇİMİ BURADA                  │
 │     "selectedModules": ["CRM", "Sales", "Inventory"],  // Modül kodları            │
 │     "companyDetails": { ... }      // Şirket bilgileri                              │
 │   }                                                                                  │
@@ -282,7 +348,9 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │   │  ┌────────────────────────────────────────────────────────────┐     │           │
 │   │  │ 1. Tenant'ın aktif Subscription'ını bul                    │     │           │
 │   │  │ 2. subscription.Modules'dan modülleri al                   │     │           │
-│   │  │ 3. ModuleInfo listesi döndür                               │     │           │
+│   │  │    (SubscriptionModules tablosu - birincil kaynak)         │     │           │
+│   │  │ 3. Fallback: PackageModules (SubscriptionModules yoksa)    │     │           │
+│   │  │ 4. ModuleInfo listesi döndür                               │     │           │
 │   │  └────────────────────────────────────────────────────────────┘     │           │
 │   │                                                                      │           │
 │   │  Response:                                                           │           │
@@ -315,6 +383,222 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 
 ---
 
+## Orphaned Tenant Temizlik Mekanizması
+
+Tenant oluşturma işlemi başarısız olduğunda (örn. migration hatası), sisteme "orphaned" (yetim) kayıtlar kalabilir. Bu durum `CreateTenantFromRegistrationCommandHandler` içinde otomatik olarak ele alınır:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                      │
+│                    ORPHANED TENANT TEMİZLİK MEKANİZMASI                             │
+│                                                                                      │
+│   Tetiklenme Koşulu:                                                                │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │ registration.TenantId.HasValue && registration.TenantId != Empty    │           │
+│   │ (Yani daha önce bir tenant oluşturma denemesi yapılmış)            │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Kontrol Adımları:                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │ 1. Mevcut tenant'ı bul                                               │           │
+│   │ 2. Tenant veritabanına bağlanmayı dene                              │           │
+│   │    ┌────────────────────────────────────────────────────────────┐   │           │
+│   │    │ using var ctx = await _tenantDbContextFactory.CreateAsync()│   │           │
+│   │    │ tenantDbIsValid = await dbContext.Database.CanConnectAsync()│  │           │
+│   │    └────────────────────────────────────────────────────────────┘   │           │
+│   │                                                                      │           │
+│   │ 3. Eğer bağlantı BAŞARILI ve tenant AKTİF ise:                      │           │
+│   │    → Mevcut tenant'ı döndür (yeniden oluşturmaya gerek yok)        │           │
+│   │                                                                      │           │
+│   │ 4. Eğer bağlantı BAŞARISIZ veya tenant İNAKTİF ise:                │           │
+│   │    → Temizlik sürecini başlat                                       │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Temizlik Adımları:                                                                 │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │ 1. Orphaned Subscription'ı sil                                       │           │
+│   │    └─ _context.Subscriptions.Remove(orphanedSubscription)           │           │
+│   │                                                                      │           │
+│   │ 2. Orphaned MasterUser'ı sil                                         │           │
+│   │    └─ _context.MasterUsers.Remove(orphanedUser)                     │           │
+│   │       (admin email'e göre eşleştirme)                               │           │
+│   │                                                                      │           │
+│   │ 3. Orphaned Tenant'ı sil                                             │           │
+│   │    └─ _context.Tenants.Remove(existingTenant)                       │           │
+│   │                                                                      │           │
+│   │ 4. Registration'ın tenant referansını temizle                        │           │
+│   │    └─ registration.ClearTenantId()                                  │           │
+│   │                                                                      │           │
+│   │ 5. Değişiklikleri kaydet                                             │           │
+│   │    └─ await _unitOfWork.SaveChangesAsync()                          │           │
+│   │                                                                      │           │
+│   │ 6. (Best-effort) Orphaned veritabanını sil                          │           │
+│   │    ┌────────────────────────────────────────────────────────────┐   │           │
+│   │    │ a) Aktif bağlantıları sonlandır:                           │   │           │
+│   │    │    SELECT pg_terminate_backend(pid) FROM pg_stat_activity  │   │           │
+│   │    │    WHERE datname = '{orphanedDbName}'                      │   │           │
+│   │    │                                                            │   │           │
+│   │    │ b) Veritabanını sil:                                       │   │           │
+│   │    │    DROP DATABASE IF EXISTS "{orphanedDbName}"              │   │           │
+│   │    └────────────────────────────────────────────────────────────┘   │           │
+│   │                                                                      │           │
+│   │ 7. Yeni tenant oluşturma sürecine devam et                          │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Hata Durumu:                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │ Temizlik başarısız olursa:                                          │           │
+│   │ → Error: "Tenant.CleanupFailed"                                     │           │
+│   │ → Mesaj: "Önceki başarısız tenant oluşturma işlemi temizlenemedi.  │           │
+│   │          Lütfen destek ile iletişime geçin."                        │           │
+│   │ → Manuel müdahale gerekebilir                                       │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## TenantDomain (Subdomain) Oluşturma Detayları
+
+Her tenant için benzersiz bir subdomain oluşturulur. Bu işlem iki noktada gerçekleşir:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                      │
+│                       TENANTDOMAIN OLUŞTURMA SÜRECİ                                 │
+│                                                                                      │
+│   1. KAYNAK: VerifyEmailCommandHandler (Satır 176-184)                              │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  // TenantDomain kaydı oluştur                                      │           │
+│   │  var tenantDomain = TenantDomain.Create(                            │           │
+│   │      tenantId: tenant.Id,                                           │           │
+│   │      domainName: $"{tenant.Code}.stoocker.app",  // Örn: abc.stoocker.app     │
+│   │      isPrimary: true);                                              │           │
+│   │                                                                      │           │
+│   │  tenantDomain.Verify();  // Otomatik doğrula (manuel DNS gerekmez) │           │
+│   │                                                                      │           │
+│   │  await _unitOfWork.Repository<TenantDomain>()                       │           │
+│   │      .AddAsync(tenantDomain, cancellationToken);                    │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   2. KAYNAK: CreateTenantFromRegistrationCommandHandler (Satır 250-251)            │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  // Domain ekle (tenant entity üzerinden)                           │           │
+│   │  var domainName = $"{registration.CompanyCode.ToLower()}.stocker.app";        │
+│   │  tenant.AddDomain(domainName, isPrimary: true);                     │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Veritabanı Şeması (MasterDb.TenantDomains):                                       │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │  TenantDomains                                                       │           │
+│   │  ┌────────────────────────┐                                         │           │
+│   │  │ Id (PK, Guid)          │                                         │           │
+│   │  │ TenantId (FK)          │ → Tenants.Id                            │           │
+│   │  │ DomainName (unique)    │ → "abc-company.stoocker.app"           │           │
+│   │  │ IsPrimary (bool)       │ → true (varsayılan subdomain)          │           │
+│   │  │ IsVerified (bool)      │ → true (otomatik doğrulanır)           │           │
+│   │  │ VerifiedAt (DateTime?) │ → Doğrulama tarihi                      │           │
+│   │  │ CreatedAt (DateTime)   │                                         │           │
+│   │  └────────────────────────┘                                         │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Domain Format Kuralları:                                                           │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │  • CompanyCode küçük harfe çevrilir                                 │           │
+│   │  • Format: {company_code}.stoocker.app                              │           │
+│   │  • Örnek: "ABC-Tech" → "abc-tech.stoocker.app"                     │           │
+│   │  • Subdomain wildcard DNS ile yönlendirilir (*.stoocker.app)       │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Connection String Üretim Stratejisi
+
+Tenant veritabanları için connection string üretimi `CreateTenantFromRegistrationCommandHandler.GenerateConnectionString()` metodunda yapılır:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                      │
+│                   CONNECTION STRING ÜRETİM STRATEJİSİ                               │
+│                                                                                      │
+│   Kaynak Kod: CreateTenantFromRegistrationCommandHandler.cs (Satır 626-647)        │
+│                                                                                      │
+│   Algoritma:                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  1. Master connection string'i al                                    │           │
+│   │     └─ var masterConnectionString =                                 │           │
+│   │        _configuration.GetConnectionString("MasterConnection");      │           │
+│   │                                                                      │           │
+│   │  2. Connection string'i parse et                                     │           │
+│   │     └─ var builder = new NpgsqlConnectionStringBuilder(master...);  │           │
+│   │                                                                      │           │
+│   │  3. Sadece veritabanı adını değiştir                                │           │
+│   │     └─ builder.Database = databaseName;                             │           │
+│   │                                                                      │           │
+│   │  4. Yeni connection string'i döndür                                  │           │
+│   │     └─ return builder.ConnectionString;                             │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Veritabanı Adı Formatı:                                                           │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  var databaseName = $"Stocker_{registration.CompanyCode               │           │
+│   │                          .Replace("-", "_")}_Db";                    │           │
+│   │                                                                      │           │
+│   │  Örnekler:                                                           │           │
+│   │  • CompanyCode: "abc-tech" → Database: "Stocker_abc_tech_Db"       │           │
+│   │  • CompanyCode: "demo123"  → Database: "Stocker_demo123_Db"        │           │
+│   │  • CompanyCode: "test"     → Database: "Stocker_test_Db"           │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Güvenlik Notları:                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  ⚠️ MEVCUT DURUM:                                                   │           │
+│   │  • Tüm tenant veritabanları AYNI PostgreSQL sunucusunda            │           │
+│   │  • Tüm tenant veritabanları AYNI kullanıcı/şifre ile erişilir     │           │
+│   │  • Connection string MasterDb ile aynı server bilgilerini kullanır │           │
+│   │                                                                      │           │
+│   │  🔐 ÖNERİLEN İYİLEŞTİRMELER (Production için):                     │           │
+│   │  • Her tenant için ayrı PostgreSQL kullanıcısı oluşturulabilir     │           │
+│   │  • Connection string şifrelenmiş olarak saklanabilir               │           │
+│   │  • Azure Key Vault / AWS Secrets Manager entegrasyonu              │           │
+│   │  • Row-level security (RLS) ile ek güvenlik katmanı               │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+│   Örnek Connection String:                                                           │
+│   ┌─────────────────────────────────────────────────────────────────────┐           │
+│   │                                                                      │           │
+│   │  Master:                                                             │           │
+│   │  Host=localhost;Database=StockerMaster;Username=postgres;           │           │
+│   │  Password=xxx;Port=5432                                             │           │
+│   │                                                                      │           │
+│   │  Tenant (abc-tech):                                                  │           │
+│   │  Host=localhost;Database=Stocker_abc_tech_Db;Username=postgres;     │           │
+│   │  Password=xxx;Port=5432                                             │           │
+│   │                                                                      │           │
+│   └─────────────────────────────────────────────────────────────────────┘           │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Veritabanı Şeması
 
 ### Master Database
@@ -328,12 +612,14 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │  ┌────────────────────────┐            ┌────────────────────────┐                  │
 │  │ Id (PK)                │            │ Id (PK)                │                  │
 │  │ Email                  │            │ Name                   │                  │
-│  │ CompanyName            │───────────▶│ Subdomain              │                  │
-│  │ VerificationCode       │            │ Status                 │                  │
+│  │ CompanyName            │───────────▶│ Code (subdomain)       │                  │
+│  │ CompanyCode            │            │ Status                 │                  │
+│  │ VerificationCode       │            │ IsActive               │                  │
 │  │ Status                 │            │ SetupCompleted         │                  │
-│  │ TenantId (FK)          │            │ SetupCompletedAt       │                  │
-│  └────────────────────────┘            │ ConnectionString       │                  │
-│                                        └────────────────────────┘                  │
+│  │ EmailVerified          │            │ SetupCompletedAt       │                  │
+│  │ AdminPasswordHash      │            │ ConnectionString       │                  │
+│  │ TenantId (FK)          │            │ DatabaseName           │                  │
+│  └────────────────────────┘            └────────────────────────┘                  │
 │                                                   │                                 │
 │                                                   │ 1:N                             │
 │                                                   ▼                                 │
@@ -345,29 +631,41 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │  │ Price                  │            │ Status                 │                  │
 │  │ MaxUsers               │            │ StartDate              │                  │
 │  └────────────────────────┘            │ CurrentPeriodEnd       │                  │
-│           │                            └────────────────────────┘                  │
-│           │ 1:N                                   │                                 │
-│           ▼                                       │ 1:N                             │
-│  PackageModules                                   ▼                                 │
-│  ┌────────────────────────┐            SubscriptionModules                         │
-│  │ Id (PK)                │            ┌────────────────────────┐                  │
-│  │ PackageId (FK)         │            │ Id (PK)                │                  │
-│  │ ModuleCode             │            │ SubscriptionId (FK)    │                  │
-│  │ ModuleName             │            │ ModuleCode             │                  │
-│  │ IsIncluded             │            │ ModuleName             │                  │
-│  │ MaxEntities            │            │ MaxEntities            │                  │
-│  └────────────────────────┘            │ AddedAt                │                  │
+│           │                            │ TrialEndDate           │                  │
+│           │ 1:N                        └────────────────────────┘                  │
+│           ▼                                       │                                 │
+│  PackageModules                                   │ 1:N                             │
+│  ┌────────────────────────┐                       ▼                                 │
+│  │ Id (PK)                │            SubscriptionModules                         │
+│  │ PackageId (FK)         │            ┌────────────────────────┐                  │
+│  │ ModuleCode             │            │ Id (PK)                │                  │
+│  │ ModuleName             │            │ SubscriptionId (FK)    │                  │
+│  │ IsIncluded             │            │ ModuleCode             │                  │
+│  │ MaxEntities            │            │ ModuleName             │                  │
+│  └────────────────────────┘            │ MaxEntities            │                  │
+│                                        │ AddedAt                │                  │
 │                                        └────────────────────────┘                  │
 │                                                                                     │
-│  MasterUsers                           ModuleDefinitions                           │
+│  MasterUsers                           TenantDomains                               │
 │  ┌────────────────────────┐            ┌────────────────────────┐                  │
 │  │ Id (PK)                │            │ Id (PK)                │                  │
-│  │ Email                  │            │ Code (unique)          │                  │
-│  │ PasswordHash           │            │ Name                   │                  │
-│  │ TenantId (FK)          │            │ Description            │                  │
-│  │ IsTenantAdmin          │            │ DbContextName          │                  │
-│  └────────────────────────┘            │ IsCore                 │                  │
-│                                        └────────────────────────┘                  │
+│  │ Email                  │            │ TenantId (FK)          │                  │
+│  │ Username               │            │ DomainName (unique)    │                  │
+│  │ PasswordHash           │            │ IsPrimary              │                  │
+│  │ TenantId (FK)          │            │ IsVerified             │                  │
+│  │ IsTenantAdmin          │            │ VerifiedAt             │                  │
+│  │ IsEmailVerified        │            │ CreatedAt              │                  │
+│  └────────────────────────┘            └────────────────────────┘                  │
+│                                                                                     │
+│  ModuleDefinitions                                                                  │
+│  ┌────────────────────────┐                                                        │
+│  │ Id (PK)                │                                                        │
+│  │ Code (unique)          │                                                        │
+│  │ Name                   │                                                        │
+│  │ Description            │                                                        │
+│  │ DbContextName          │                                                        │
+│  │ IsCore                 │                                                        │
+│  └────────────────────────┘                                                        │
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -376,7 +674,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                         TENANT DATABASE (tenant_[guid])                             │
+│                         TENANT DATABASE (Stocker_{code}_Db)                         │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                     │
 │  Core Schema (tenant)                                                               │
@@ -398,6 +696,7 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 │  │ Opportunities          │  │ Payments               │  │ Transfers              ││
 │  │ Pipelines              │  │ Shipments              │  │ Categories             ││
 │  │ Campaigns              │  │ ...                    │  │ ...                    ││
+│  │ Accounts               │  │                        │  │                        ││
 │  └────────────────────────┘  └────────────────────────┘  └────────────────────────┘│
 │                                                                                     │
 │  ┌────────────────────────┐  ┌────────────────────────┐                           │
@@ -422,19 +721,20 @@ Bu dokümantasyon, kullanıcının kayıt olmasından modüllerin aktif edilmesi
 
 | Dosya | Açıklama |
 |-------|----------|
+| `RegisterTenantCommand.cs` | Kayıt formunu tanımlar (PackageId dahil ama kullanılmıyor) |
 | `RegisterTenantCommandHandler.cs` | Kayıt formunu işler, doğrulama kodu gönderir |
-| `VerifyEmailCommandHandler.cs` | E-posta doğrulamasını yapar |
-| `CreateTenantFromRegistrationCommandHandler.cs` | Tenant ve veritabanı oluşturur |
+| `VerifyEmailCommandHandler.cs` | E-posta doğrulaması + **SENKRON migration** + TenantDomain oluşturma |
+| `CreateTenantFromRegistrationCommandHandler.cs` | Tenant oluşturma + **orphaned tenant temizliği** |
 | `CompleteSetupCommandHandler.cs` | Paket seçimi sonrası subscription ve modülleri oluşturur |
 | `MigrationService.cs` | Modül migration'larını çalıştırır |
-| `UserModulesController.cs` | Aktif modülleri frontend'e döner |
+| `UserModulesController.cs` | Aktif modülleri frontend'e döner (SubscriptionModules öncelikli) |
 | `TenantCreationProgressService.cs` | SignalR ile ilerleme bildirimi |
 
 ### Frontend
 
 | Dosya | Açıklama |
 |-------|----------|
-| `TenantCreationProgress.tsx` | Tenant oluşturma ilerleme sayfası |
+| `TenantCreationProgress.tsx` | Tenant oluşturma ilerleme sayfası (animated checkmarks) |
 | `setup-wizard/page.tsx` | Setup wizard ana sayfası |
 | `useUserModules.ts` | Modül bilgilerini çeken React Query hook |
 | `user-modules.service.ts` | Modül API servisi |
@@ -500,20 +800,81 @@ enum TenantCreationStep {
 │     → Kullanıcıya hata mesajı göster                           │
 │     → Yeni kod gönderme seçeneği sun                           │
 │                                                                 │
-│  2. Tenant oluşturma hatası                                     │
+│  2. E-posta doğrulama sırasında migration hatası               │
+│     → Error: "VerifyEmail.DatabaseCreationFailed"              │
+│     → Mesaj: "Email doğrulandı ancak sistem hazırlanırken      │
+│              bir hata oluştu. Lütfen birkaç dakika sonra       │
+│              tekrar deneyin."                                   │
+│     → Email doğrulanmış durumda kalır                          │
+│                                                                 │
+│  3. Tenant oluşturma hatası (SignalR akışında)                 │
 │     → SignalR ile Failed step gönder                           │
 │     → TenantRegistration.Status = Failed                       │
 │     → Kullanıcıya "Tekrar Dene" butonu göster                  │
+│     → Sonraki denemede orphaned tenant temizliği yapılır       │
 │                                                                 │
-│  3. Migration hatası                                            │
+│  4. Orphaned tenant temizlik hatası                             │
+│     → Error: "Tenant.CleanupFailed"                            │
+│     → Mesaj: "Önceki başarısız tenant oluşturma işlemi         │
+│              temizlenemedi. Lütfen destek ile iletişime geçin."│
+│     → Manuel müdahale gerekir                                   │
+│                                                                 │
+│  5. Migration hatası (Setup Wizard'da)                          │
 │     → Log'a detaylı hata yaz                                   │
 │     → Subscription rollback yap                                │
 │     → Kullanıcıya bilgi ver                                    │
 │                                                                 │
-│  4. Subscription bulunamadı                                     │
+│  6. Subscription bulunamadı                                     │
 │     → UserModulesController boş modül listesi döner            │
 │     → Frontend sidebar'da hiç modül göstermez                  │
 │     → Setup Wizard'a yönlendir                                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## İyileştirme Önerileri
+
+### 1. PackageId Konusunda
+```
+MEVCUT DURUM:
+- RegisterTenantCommand.cs içinde PackageId zorunlu alan olarak tanımlı
+- CreateTenantFromRegistrationCommandHandler bu değeri kullanmıyor
+- Subscription oluşturma CompleteSetup'a bırakılmış
+
+ÖNERİLER:
+A) PackageId'yi RegisterTenantCommand'dan kaldır (opsiyonel yap)
+   → Kullanıcı kayıt sırasında paket seçmek zorunda kalmaz
+   → Setup Wizard'da özgürce seçim yapabilir
+
+B) Veya kayıt sırasında Trial subscription oluştur
+   → PackageId'yi kullan, Trial paket ile başlat
+   → Setup Wizard'da upgrade seçeneği sun
+```
+
+### 2. Migration Zamanlaması Konusunda
+```
+MEVCUT DURUM:
+- VerifyEmailCommandHandler SENKRON migration çalıştırıyor (satır 198)
+- CreateTenantFromRegistration TEKRAR migration çalıştırıyor
+- Bu durum bazı edge case'lerde sorun yaratabilir
+
+ÖNERİLER:
+A) VerifyEmail'den migration'ı kaldır
+   → Sadece email doğrulama + TenantDomain oluşturma yapsın
+   → Migration'lar CreateTenantFromRegistration'da yapılsın (SignalR ile takip)
+
+B) Veya CreateTenantFromRegistration'dan migration'ı kaldır
+   → Migration zaten VerifyEmail'de yapıldıysa atlansın
+   → Idempotent migration kontrolü ekle
+```
+
+### 3. Connection String Güvenliği
+```
+ÖNERİLER:
+- Her tenant için ayrı PostgreSQL kullanıcısı
+- Connection string'leri şifrelenmiş sakla (Azure Key Vault, AWS Secrets Manager)
+- Row-Level Security (RLS) ile ek güvenlik katmanı
+- Audit logging için connection bilgilerini loglamadan sakla
 ```
