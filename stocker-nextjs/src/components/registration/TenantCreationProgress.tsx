@@ -22,16 +22,16 @@ interface VerificationParams {
 }
 
 // Step configuration with icons and messages
+// NOTE: Subscription and modules are NOT created during registration.
+// They are created in Setup Wizard after user logs in and selects their package.
 const stepConfig: Record<string, { message: string; icon: string }> = {
   'EmailVerified': { message: 'E-posta doğrulandı', icon: '✉️' },
   'Starting': { message: 'Başlatılıyor', icon: '🚀' },
   'CreatingTenant': { message: 'Şirket kaydı oluşturuluyor', icon: '🏢' },
-  'CreatingSubscription': { message: 'Abonelik hazırlanıyor', icon: '📋' },
   'CreatingMasterUser': { message: 'Kullanıcı hesabı oluşturuluyor', icon: '👤' },
   'CreatingDatabase': { message: 'Veritabanı oluşturuluyor', icon: '🗄️' },
   'RunningMigrations': { message: 'Veritabanı yapılandırılıyor', icon: '⚙️' },
   'SeedingData': { message: 'İlk veriler yükleniyor', icon: '📊' },
-  'ActivatingModules': { message: 'Modüller aktifleştiriliyor', icon: '🔌' },
   'ActivatingTenant': { message: 'Hesabınız aktifleştiriliyor', icon: '✨' },
   'SendingWelcomeEmail': { message: 'Hoşgeldin e-postası gönderiliyor', icon: '📧' },
   'Completed': { message: 'Tamamlandı', icon: '🎉' },
