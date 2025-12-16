@@ -18,4 +18,7 @@ public sealed class CreateTenantRegistrationCommand : IRequest<Result<TenantRegi
     // Optional for registration
     public bool AcceptTerms { get; set; }
     public bool AcceptPrivacyPolicy { get; set; }
+
+    // Security - reCAPTCHA v3 token
+    public string? CaptchaToken { get; set; }
 }

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Input, Button, Checkbox } from 'antd'
 import { MailOutlined, LockOutlined, TeamOutlined, UserOutlined, ArrowRightOutlined, CheckCircleFilled } from '@ant-design/icons'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { showAlert } from '@/lib/sweetalert-config'
 import { cookieStorage } from '@/lib/auth/cookie-storage'
@@ -17,6 +18,9 @@ export default function RegisterPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<Step>('email')
   const [isLoading, setIsLoading] = useState(false)
+
+  // reCAPTCHA v3 hook
+  const { executeRecaptcha } = useGoogleReCaptcha()
 
   // SignalR validation hook
   const {
@@ -203,6 +207,17 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
+      // Get reCAPTCHA token
+      let captchaToken: string | undefined
+      if (executeRecaptcha) {
+        try {
+          captchaToken = await executeRecaptcha('register')
+        } catch (captchaError) {
+          console.warn('reCAPTCHA execution failed:', captchaError)
+          // Continue without CAPTCHA in development
+        }
+      }
+
       // Use new minimal registration endpoint
       const response = await authService.register({
         email,
@@ -211,7 +226,8 @@ export default function RegisterPage() {
         firstName,
         lastName,
         acceptTerms,
-        acceptPrivacyPolicy: acceptPrivacy
+        acceptPrivacyPolicy: acceptPrivacy,
+        captchaToken
       })
 
       if (response.success && response.data) {

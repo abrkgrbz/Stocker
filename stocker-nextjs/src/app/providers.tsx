@@ -9,6 +9,7 @@ import trTR from 'antd/locale/tr_TR';
 import { AuthProvider } from '@/lib/auth';
 import { TenantProvider } from '@/lib/tenant';
 import { ToastProvider } from '@/lib/notifications/toast-provider';
+import { ReCaptchaProvider } from '@/providers/ReCaptchaProvider';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -37,8 +38,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
           <TenantProvider>
             <AuthProvider>
-              <ToastProvider />
-              {children}
+              <ReCaptchaProvider>
+                <ToastProvider />
+                {children}
+              </ReCaptchaProvider>
             </AuthProvider>
           </TenantProvider>
         </ConfigProvider>

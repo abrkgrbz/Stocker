@@ -14,21 +14,52 @@ public sealed class CreateTenantRegistrationCommandHandler : IRequestHandler<Cre
     private readonly IMasterDbContext _context;
     private readonly ILogger<CreateTenantRegistrationCommandHandler> _logger;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly ICaptchaService _captchaService;
 
     public CreateTenantRegistrationCommandHandler(
         IMasterDbContext context,
         ILogger<CreateTenantRegistrationCommandHandler> logger,
-        IBackgroundJobService backgroundJobService)
+        IBackgroundJobService backgroundJobService,
+        ICaptchaService captchaService)
     {
-    _context = context;
+        _context = context;
         _logger = logger;
         _backgroundJobService = backgroundJobService;
+        _captchaService = captchaService;
     }
 
     public async Task<Result<TenantRegistrationDto>> Handle(CreateTenantRegistrationCommand request, CancellationToken cancellationToken)
     {
         try
         {
+            // Verify reCAPTCHA v3 token
+            if (!string.IsNullOrEmpty(request.CaptchaToken))
+            {
+                var captchaResult = await _captchaService.VerifyDetailedAsync(request.CaptchaToken, null, cancellationToken);
+
+                if (!captchaResult.Success)
+                {
+                    _logger.LogWarning("CAPTCHA verification failed for registration attempt. Token: {Token}",
+                        request.CaptchaToken?[..Math.Min(10, request.CaptchaToken.Length)] + "...");
+                    return Result<TenantRegistrationDto>.Failure(Error.Validation("Captcha.Invalid", "Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin."));
+                }
+
+                // For reCAPTCHA v3, check score (0.0 = likely bot, 1.0 = likely human)
+                if (captchaResult.Score < 0.5)
+                {
+                    _logger.LogWarning("CAPTCHA score too low: {Score} for registration attempt", captchaResult.Score);
+                    return Result<TenantRegistrationDto>.Failure(Error.Validation("Captcha.LowScore", "Güvenlik doğrulaması başarısız. Bot aktivitesi tespit edildi."));
+                }
+
+                _logger.LogInformation("CAPTCHA verification successful. Score: {Score}", captchaResult.Score);
+            }
+            else
+            {
+                _logger.LogWarning("No CAPTCHA token provided for registration attempt");
+                // In production, you might want to reject requests without CAPTCHA
+                // return Result<TenantRegistrationDto>.Failure(Error.Validation("Captcha.Required", "Güvenlik doğrulaması gerekli."));
+            }
+
             // Normalize team name to lowercase subdomain
             var subdomain = request.TeamName.ToLowerInvariant().Trim();
 
