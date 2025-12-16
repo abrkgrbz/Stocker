@@ -90,8 +90,8 @@ public class PriceListItemConfiguration : IEntityTypeConfiguration<PriceListItem
         builder.Property(i => i.DiscountRate)
             .HasPrecision(5, 2);
 
-        builder.Property(i => i.DiscountedPrice)
-            .HasPrecision(18, 4);
+        // DiscountedPrice is a computed property (getter-only), ignore it
+        builder.Ignore(i => i.DiscountedPrice);
 
         builder.Property(i => i.Currency)
             .HasMaxLength(10);
