@@ -115,6 +115,14 @@ import type {
   ReferralStatus,
   ReferralType,
   ReferralRewardType,
+  // Reminders
+  ReminderDto,
+  CreateReminderCommand,
+  UpdateReminderCommand,
+  ReminderFilterParams,
+  GetRemindersResponse,
+  // Email
+  SendTestEmailCommand,
   Guid,
   DateTime,
 } from './crm.types';
@@ -1957,6 +1965,80 @@ export class CRMService {
    */
   static async deleteReferral(id: Guid): Promise<void> {
     return ApiService.delete<void>(this.getPath(`referrals/${id}`));
+  }
+
+  // =====================================
+  // REMINDERS
+  // =====================================
+
+  /**
+   * Get reminders for current user
+   */
+  static async getReminders(params?: ReminderFilterParams): Promise<GetRemindersResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.pendingOnly !== undefined) {
+      queryParams.append('pendingOnly', params.pendingOnly.toString());
+    }
+    if (params?.skip !== undefined) {
+      queryParams.append('skip', params.skip.toString());
+    }
+    if (params?.take !== undefined) {
+      queryParams.append('take', params.take.toString());
+    }
+    if (params?.assignedToUserId) {
+      queryParams.append('assignedToUserId', params.assignedToUserId);
+    }
+
+    const queryString = queryParams.toString();
+    return ApiService.get<GetRemindersResponse>(
+      this.getPath(`reminders${queryString ? `?${queryString}` : ''}`)
+    );
+  }
+
+  /**
+   * Create a new reminder
+   */
+  static async createReminder(data: CreateReminderCommand): Promise<number> {
+    return ApiService.post<number>(this.getPath('reminders'), data);
+  }
+
+  /**
+   * Update a reminder
+   */
+  static async updateReminder(id: number, data: UpdateReminderCommand): Promise<void> {
+    return ApiService.put<void>(this.getPath(`reminders/${id}`), data);
+  }
+
+  /**
+   * Snooze a reminder
+   */
+  static async snoozeReminder(id: number, minutes: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`reminders/${id}/snooze`), { minutes });
+  }
+
+  /**
+   * Complete a reminder
+   */
+  static async completeReminder(id: number): Promise<void> {
+    return ApiService.post<void>(this.getPath(`reminders/${id}/complete`), {});
+  }
+
+  /**
+   * Delete a reminder
+   */
+  static async deleteReminder(id: number): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`reminders/${id}`));
+  }
+
+  // =====================================
+  // EMAIL
+  // =====================================
+
+  /**
+   * Send a test email
+   */
+  static async sendTestEmail(data: SendTestEmailCommand): Promise<{ message: string; sentTo: string }> {
+    return ApiService.post<{ message: string; sentTo: string }>(this.getPath('email/test'), data);
   }
 }
 

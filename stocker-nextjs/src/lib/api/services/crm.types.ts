@@ -1724,3 +1724,65 @@ export interface ReferralFilters {
   page?: number;
   pageSize?: number;
 }
+
+// =====================================
+// REMINDERS
+// =====================================
+
+export interface ReminderDto {
+  id: number;
+  title: string;
+  description?: string;
+  reminderDate: DateTime;
+  isCompleted: boolean;
+  completedAt?: DateTime;
+  userId: Guid;
+  tenantId: Guid;
+  entityType?: string;
+  entityId?: Guid;
+  assignedToUserId?: Guid;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateReminderCommand {
+  title: string;
+  description?: string;
+  reminderDate: DateTime;
+  entityType?: string;
+  entityId?: Guid;
+  assignedToUserId?: Guid;
+  userId?: Guid;
+  tenantId?: Guid;
+}
+
+export interface UpdateReminderCommand {
+  id?: number;
+  title: string;
+  description?: string;
+  reminderDate: DateTime;
+  entityType?: string;
+  entityId?: Guid;
+  assignedToUserId?: Guid;
+}
+
+export interface ReminderFilterParams {
+  pendingOnly?: boolean;
+  skip?: number;
+  take?: number;
+  assignedToUserId?: Guid;
+}
+
+export interface GetRemindersResponse {
+  items: ReminderDto[];
+  totalCount: number;
+}
+
+// =====================================
+// EMAIL
+// =====================================
+
+export interface SendTestEmailCommand {
+  to: string;
+  subject?: string;
+}

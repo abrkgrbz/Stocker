@@ -226,6 +226,14 @@ const MODULE_MENUS = {
     items: [
       { key: '/sales', icon: <DashboardOutlined />, label: 'Dashboard' },
       {
+        key: 'sales-quotations',
+        icon: <FileDoneOutlined />,
+        label: 'Teklifler',
+        children: [
+          { key: '/sales/quotations', icon: <FileDoneOutlined />, label: 'Satış Teklifleri' },
+        ],
+      },
+      {
         key: 'sales-orders',
         icon: <ShoppingCartOutlined />,
         label: 'İşlemler',
@@ -233,6 +241,7 @@ const MODULE_MENUS = {
           { key: '/sales/orders', icon: <ShoppingCartOutlined />, label: 'Siparişler' },
           { key: '/sales/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
           { key: '/sales/e-invoices', icon: <SafetyCertificateOutlined />, label: 'E-Fatura' },
+          { key: '/sales/returns', icon: <RollbackOutlined />, label: 'İadeler' },
         ],
       },
       {
@@ -242,6 +251,15 @@ const MODULE_MENUS = {
         children: [
           { key: '/sales/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
           { key: '/sales/customers', icon: <ContactsOutlined />, label: 'Bakiyeler' },
+          { key: '/sales/commissions', icon: <CalculatorOutlined />, label: 'Komisyonlar' },
+        ],
+      },
+      {
+        key: 'sales-marketing',
+        icon: <TagsOutlined />,
+        label: 'Pazarlama',
+        children: [
+          { key: '/sales/discounts', icon: <TagsOutlined />, label: 'İndirimler' },
         ],
       },
     ],
@@ -597,6 +615,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/sales/e-invoices': '/sales/e-invoices',
       '/sales/payments': '/sales/payments',
       '/sales/customers': '/sales/customers',
+      '/sales/quotations': '/sales/quotations',
+      '/sales/returns': '/sales/returns',
+      '/sales/commissions': '/sales/commissions',
+      '/sales/discounts': '/sales/discounts',
       // HR Module
       '/hr/employees': '/hr/employees',
       '/hr/departments': '/hr/departments',

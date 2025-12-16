@@ -56,6 +56,14 @@ import type {
   ReferralDto,
   ReferralFilters,
   CreateReferralCommand,
+  // Reminders
+  ReminderDto,
+  ReminderFilterParams,
+  CreateReminderCommand,
+  UpdateReminderCommand,
+  GetRemindersResponse,
+  // Email
+  SendTestEmailCommand,
 } from '../services/crm.types';
 import type { Activity, Lead, Deal, Customer } from '../services/crm.service';
 
@@ -159,6 +167,12 @@ export const crmKeys = {
   // Referrals
   referrals: ['crm', 'referrals'] as const,
   referral: (id: Guid) => ['crm', 'referrals', id] as const,
+
+  // Notifications
+  notifications: ['crm', 'notifications'] as const,
+
+  // Reminders
+  reminders: ['crm', 'reminders'] as const,
 };
 
 // =====================================
@@ -2271,6 +2285,173 @@ export function useDeleteReferral() {
     },
     onError: (error) => {
       showApiError(error, 'Referans silinemedi');
+    },
+  });
+}
+
+// =====================================
+// NOTIFICATIONS HOOKS
+// =====================================
+
+export interface NotificationFilterParams {
+  unreadOnly?: boolean;
+  skip?: number;
+  take?: number;
+}
+
+export function useNotifications(params?: NotificationFilterParams) {
+  return useQuery({
+    queryKey: [...crmKeys.notifications, params],
+    queryFn: () => CRMService.getNotifications(params),
+    staleTime: 10000, // 10 seconds - notifications should refresh frequently
+  });
+}
+
+export function useMarkNotificationAsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.markNotificationAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.notifications });
+    },
+    onError: (error) => {
+      showApiError(error, 'Bildirim okundu olarak işaretlenemedi');
+    },
+  });
+}
+
+export function useMarkAllNotificationsAsRead() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => CRMService.markAllNotificationsAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.notifications });
+      showSuccess('Tüm bildirimler okundu olarak işaretlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bildirimler işaretlenemedi');
+    },
+  });
+}
+
+export function useDeleteNotification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.deleteNotification(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.notifications });
+      showSuccess('Bildirim silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bildirim silinemedi');
+    },
+  });
+}
+
+// =====================================
+// REMINDERS HOOKS
+// =====================================
+
+export function useReminders(params?: ReminderFilterParams) {
+  return useQuery({
+    queryKey: [...crmKeys.reminders, params],
+    queryFn: () => CRMService.getReminders(params),
+    staleTime: 30000,
+  });
+}
+
+export function useCreateReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateReminderCommand) => CRMService.createReminder(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.reminders });
+      showSuccess('Hatırlatıcı oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hatırlatıcı oluşturulamadı');
+    },
+  });
+}
+
+export function useUpdateReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateReminderCommand }) =>
+      CRMService.updateReminder(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.reminders });
+      showSuccess('Hatırlatıcı güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hatırlatıcı güncellenemedi');
+    },
+  });
+}
+
+export function useSnoozeReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, minutes }: { id: number; minutes: number }) =>
+      CRMService.snoozeReminder(id, minutes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.reminders });
+      showInfo('Hatırlatıcı ertelendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hatırlatıcı ertelenemedi');
+    },
+  });
+}
+
+export function useCompleteReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.completeReminder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.reminders });
+      showSuccess('Hatırlatıcı tamamlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hatırlatıcı tamamlanamadı');
+    },
+  });
+}
+
+export function useDeleteReminder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => CRMService.deleteReminder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: crmKeys.reminders });
+      showSuccess('Hatırlatıcı silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Hatırlatıcı silinemedi');
+    },
+  });
+}
+
+// =====================================
+// EMAIL HOOKS
+// =====================================
+
+export function useSendTestEmail() {
+  return useMutation({
+    mutationFn: (data: SendTestEmailCommand) => CRMService.sendTestEmail(data),
+    onSuccess: (result) => {
+      showSuccess(`Test e-postası ${result.sentTo} adresine gönderildi`);
+    },
+    onError: (error) => {
+      showApiError(error, 'Test e-postası gönderilemedi');
     },
   });
 }
