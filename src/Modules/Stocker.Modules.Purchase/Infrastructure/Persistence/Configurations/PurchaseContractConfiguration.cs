@@ -129,8 +129,8 @@ public class PurchaseContractItemConfiguration : IEntityTypeConfiguration<Purcha
         builder.Property(i => i.UsedQuantity)
             .HasPrecision(18, 4);
 
-        builder.Property(i => i.RemainingQuantity)
-            .HasPrecision(18, 4);
+        // RemainingQuantity is a computed property (getter-only), ignore it
+        builder.Ignore(i => i.RemainingQuantity);
 
         builder.Property(i => i.MinOrderQuantity)
             .HasPrecision(18, 4);
