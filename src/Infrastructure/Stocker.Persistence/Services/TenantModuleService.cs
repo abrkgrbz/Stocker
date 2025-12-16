@@ -94,13 +94,33 @@ public class TenantModuleService : ITenantModuleService
             return new List<string>();
         }
 
-        // Get subscribed modules from package
+        // Get subscribed modules - PRIORITY: SubscriptionModules first (for custom packages), then PackageModules
         var subscribedModules = new List<string>();
 
-        if (subscription.PackageId != Guid.Empty)
+        // First, check SubscriptionModules table (for custom packages or explicitly added modules)
+        var subscriptionModules = await dbContext.Subscriptions
+            .AsNoTracking()
+            .Where(s => s.TenantId == tenantId &&
+                       (s.Status == Domain.Master.Enums.SubscriptionStatus.Aktif ||
+                        s.Status == Domain.Master.Enums.SubscriptionStatus.Deneme))
+            .OrderByDescending(s => s.StartDate)
+            .SelectMany(s => s.Modules)
+            .Select(m => m.ModuleCode)
+            .ToListAsync(cancellationToken);
+
+        if (subscriptionModules.Any())
         {
-            // Get package modules from PackageModules table
-            // Use ModuleCode (not ModuleName) and filter by IsIncluded
+            // Use SubscriptionModules (custom package or explicitly added modules)
+            subscribedModules = subscriptionModules;
+            _logger.LogInformation(
+                "Tenant {TenantId} using SubscriptionModules with {Count} modules: {Modules}",
+                tenantId,
+                subscribedModules.Count,
+                string.Join(", ", subscribedModules));
+        }
+        else if (subscription.PackageId.HasValue && subscription.PackageId != Guid.Empty)
+        {
+            // Fallback to PackageModules table (for ready packages without SubscriptionModules)
             var packageModules = await dbContext.PackageModules
                 .AsNoTracking()
                 .Where(pm => pm.PackageId == subscription.PackageId && pm.IsIncluded)
@@ -120,7 +140,7 @@ public class TenantModuleService : ITenantModuleService
         else
         {
             _logger.LogWarning(
-                "Tenant {TenantId} has no package selected",
+                "Tenant {TenantId} has no modules in SubscriptionModules or PackageModules",
                 tenantId);
         }
 
