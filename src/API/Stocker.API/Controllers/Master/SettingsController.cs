@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
 using Stocker.Application.Features.Settings.Queries.GetAllSettings;
 using Stocker.Application.Features.Settings.Commands.UpdateGeneralSettings;
 using Stocker.Application.Features.Settings.Commands.UpdateEmailSettings;
 using Stocker.Application.DTOs.Settings;
+using Stocker.Persistence.Contexts;
 using Swashbuckle.AspNetCore.Annotations;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
@@ -18,11 +20,17 @@ namespace Stocker.API.Controllers.Master;
 public class SettingsController : MasterControllerBase
 {
     private readonly IMemoryCache _cache;
+    private readonly MasterDbContext _masterDbContext;
 
-    public SettingsController(IMediator mediator, ILogger<SettingsController> logger, IMemoryCache cache)
+    public SettingsController(
+        IMediator mediator,
+        ILogger<SettingsController> logger,
+        IMemoryCache cache,
+        MasterDbContext masterDbContext)
         : base(mediator, logger)
     {
         _cache = cache;
+        _masterDbContext = masterDbContext;
     }
 
     /// <summary>
@@ -339,6 +347,196 @@ public class SettingsController : MasterControllerBase
                 Success = false,
                 Data = false,
                 Message = $"Error clearing tenant cache: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Sync subscription modules from CustomModuleCodes to SubscriptionModules table
+    /// Use this to fix subscriptions that have CustomModuleCodes but no SubscriptionModules
+    /// </summary>
+    [HttpPost("sync-subscription-modules/{subscriptionId}")]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    public async Task<IActionResult> SyncSubscriptionModules(Guid subscriptionId)
+    {
+        _logger.LogInformation("Syncing modules for subscription {SubscriptionId}", subscriptionId);
+
+        try
+        {
+            // Load subscription with modules
+            var subscription = await _masterDbContext.Subscriptions
+                .Include(s => s.Modules)
+                .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+
+            if (subscription == null)
+            {
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = $"Subscription {subscriptionId} not found",
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            // Get custom module codes
+            var customModuleCodes = subscription.GetCustomModuleCodes();
+            if (!customModuleCodes.Any())
+            {
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Data = new { Message = "No CustomModuleCodes found", ExistingModules = subscription.Modules.Count },
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            // Clear existing modules
+            if (subscription.Modules.Any())
+            {
+                _logger.LogInformation("Clearing {Count} existing modules", subscription.Modules.Count);
+                subscription.ClearModules();
+            }
+
+            // Get module definitions
+            var moduleDefinitions = await _masterDbContext.ModuleDefinitions
+                .AsNoTracking()
+                .Where(m => m.IsActive && customModuleCodes.Contains(m.Code))
+                .ToListAsync();
+
+            _logger.LogInformation("Found {Count} module definitions for codes: {Codes}",
+                moduleDefinitions.Count, string.Join(", ", customModuleCodes));
+
+            // Add modules
+            var addedModules = new List<string>();
+            foreach (var moduleDef in moduleDefinitions)
+            {
+                subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                addedModules.Add(moduleDef.Code);
+                _logger.LogInformation("Added module {ModuleCode} ({ModuleName})", moduleDef.Code, moduleDef.Name);
+            }
+
+            // Save changes
+            await _masterDbContext.SaveChangesAsync();
+
+            // Clear cache for this tenant
+            var cacheKey = $"tenant_modules:{subscription.TenantId}";
+            _cache.Remove(cacheKey);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new
+                {
+                    SubscriptionId = subscriptionId,
+                    TenantId = subscription.TenantId,
+                    CustomModuleCodes = customModuleCodes,
+                    AddedModules = addedModules,
+                    ModuleDefinitionsFound = moduleDefinitions.Count
+                },
+                Message = $"Synced {addedModules.Count} modules to subscription",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing modules for subscription {SubscriptionId}", subscriptionId);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = $"Error syncing modules: {ex.Message}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Sync all subscriptions that have CustomModuleCodes but no SubscriptionModules
+    /// </summary>
+    [HttpPost("sync-all-subscription-modules")]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    public async Task<IActionResult> SyncAllSubscriptionModules()
+    {
+        _logger.LogInformation("Syncing modules for all subscriptions with CustomModuleCodes");
+
+        try
+        {
+            // Find all subscriptions with CustomModuleCodes but no modules
+            var subscriptions = await _masterDbContext.Subscriptions
+                .Include(s => s.Modules)
+                .Where(s => s.CustomModuleCodes != null && s.CustomModuleCodes != "")
+                .ToListAsync();
+
+            var results = new List<object>();
+            var moduleDefinitions = await _masterDbContext.ModuleDefinitions
+                .AsNoTracking()
+                .Where(m => m.IsActive)
+                .ToListAsync();
+
+            foreach (var subscription in subscriptions)
+            {
+                var customModuleCodes = subscription.GetCustomModuleCodes();
+                if (!customModuleCodes.Any()) continue;
+
+                // Skip if already has modules
+                if (subscription.Modules.Any())
+                {
+                    results.Add(new
+                    {
+                        SubscriptionId = subscription.Id,
+                        TenantId = subscription.TenantId,
+                        Status = "Skipped",
+                        Reason = $"Already has {subscription.Modules.Count} modules"
+                    });
+                    continue;
+                }
+
+                // Add modules
+                var addedModules = new List<string>();
+                foreach (var moduleCode in customModuleCodes)
+                {
+                    var moduleDef = moduleDefinitions.FirstOrDefault(m => m.Code == moduleCode);
+                    if (moduleDef != null)
+                    {
+                        subscription.AddModule(moduleDef.Code, moduleDef.Name, null);
+                        addedModules.Add(moduleDef.Code);
+                    }
+                }
+
+                // Clear cache for this tenant
+                var cacheKey = $"tenant_modules:{subscription.TenantId}";
+                _cache.Remove(cacheKey);
+
+                results.Add(new
+                {
+                    SubscriptionId = subscription.Id,
+                    TenantId = subscription.TenantId,
+                    Status = "Synced",
+                    AddedModules = addedModules
+                });
+            }
+
+            await _masterDbContext.SaveChangesAsync();
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Data = new
+                {
+                    TotalSubscriptions = subscriptions.Count,
+                    Results = results
+                },
+                Message = $"Processed {subscriptions.Count} subscriptions",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing all subscription modules");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = $"Error syncing modules: {ex.Message}",
                 Timestamp = DateTime.UtcNow
             });
         }

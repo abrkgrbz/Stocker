@@ -216,11 +216,21 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                                 request.CustomPackage.StoragePlanCode,
                                 request.CustomPackage.SelectedAddOnCodes);
 
+                            // Clear existing modules before adding new ones (in case of re-setup)
+                            if (subscription.Modules.Any())
+                            {
+                                _logger.LogInformation("Clearing {Count} existing modules from subscription", subscription.Modules.Count);
+                                subscription.ClearModules();
+                            }
+
                             // Add modules to subscription for custom packages
                             var moduleDefinitions = await _masterDbContext.ModuleDefinitions
                                 .AsNoTracking()
                                 .Where(m => m.IsActive && request.CustomPackage.SelectedModuleCodes.Contains(m.Code))
                                 .ToListAsync(cancellationToken);
+
+                            _logger.LogInformation("Found {Count} module definitions for codes: {Codes}",
+                                moduleDefinitions.Count, string.Join(", ", request.CustomPackage.SelectedModuleCodes));
 
                             foreach (var moduleDef in moduleDefinitions)
                             {
@@ -232,6 +242,13 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
                         // Add modules from ready package
                         else if (package != null)
                         {
+                            // Clear existing modules before adding new ones (in case of re-setup)
+                            if (subscription.Modules.Any())
+                            {
+                                _logger.LogInformation("Clearing {Count} existing modules from subscription for ready package", subscription.Modules.Count);
+                                subscription.ClearModules();
+                            }
+
                             var packageWithModules = await _masterDbContext.Packages
                                 .AsNoTracking()
                                 .Include(p => p.Modules)
@@ -239,7 +256,10 @@ public sealed class CompleteSetupCommandHandler : IRequestHandler<CompleteSetupC
 
                             if (packageWithModules?.Modules != null)
                             {
-                                foreach (var module in packageWithModules.Modules.Where(m => m.IsIncluded))
+                                var includedModules = packageWithModules.Modules.Where(m => m.IsIncluded).ToList();
+                                _logger.LogInformation("Found {Count} modules in package {PackageId}", includedModules.Count, package.Id);
+
+                                foreach (var module in includedModules)
                                 {
                                     subscription.AddModule(module.ModuleCode, module.ModuleName, module.MaxEntities);
                                     _logger.LogInformation("Added module {ModuleCode} ({ModuleName}) to subscription from package",
