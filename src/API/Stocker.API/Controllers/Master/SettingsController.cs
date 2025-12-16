@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Stocker.Application.Features.Settings.Queries.GetAllSettings;
 using Stocker.Application.Features.Settings.Commands.UpdateGeneralSettings;
 using Stocker.Application.Features.Settings.Commands.UpdateEmailSettings;
@@ -16,9 +17,12 @@ namespace Stocker.API.Controllers.Master;
 [SwaggerTag("Master Admin Panel - System Settings")]
 public class SettingsController : MasterControllerBase
 {
-    public SettingsController(IMediator mediator, ILogger<SettingsController> logger) 
+    private readonly IMemoryCache _cache;
+
+    public SettingsController(IMediator mediator, ILogger<SettingsController> logger, IMemoryCache cache)
         : base(mediator, logger)
     {
+        _cache = cache;
     }
 
     /// <summary>
@@ -244,11 +248,16 @@ public class SettingsController : MasterControllerBase
     public async Task<IActionResult> ClearCache()
     {
         _logger.LogInformation("Clearing system cache");
-        
+
         try
         {
-            // TODO: Implement cache clearing using ICacheService
-            
+            // Clear all tenant module caches by disposing and recreating compact
+            if (_cache is MemoryCache memoryCache)
+            {
+                memoryCache.Compact(1.0); // Remove 100% of entries
+                _logger.LogInformation("Memory cache compacted - all entries removed");
+            }
+
             return Ok(new ApiResponse<bool>
             {
                 Success = true,
@@ -276,6 +285,60 @@ public class SettingsController : MasterControllerBase
                 Success = false,
                 Data = false,
                 Message = ex.Message,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Clear tenant module cache for a specific tenant
+    /// </summary>
+    [HttpPost("clear-tenant-cache/{tenantId}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    public async Task<IActionResult> ClearTenantCache(Guid tenantId)
+    {
+        _logger.LogInformation("Clearing cache for tenant {TenantId}", tenantId);
+
+        try
+        {
+            // Clear tenant-specific cache keys
+            var keysToRemove = new[]
+            {
+                $"tenant_modules:{tenantId}",
+                $"active_modules:{tenantId}",
+                $"module_active:{tenantId}:CRM",
+                $"module_active:{tenantId}:Inventory",
+                $"module_active:{tenantId}:Sales",
+                $"module_active:{tenantId}:Purchase",
+                $"module_active:{tenantId}:Finance",
+                $"module_active:{tenantId}:HR",
+                $"module_active:{tenantId}:Projects",
+                $"module_active:{tenantId}:ACCOUNTING"
+            };
+
+            foreach (var key in keysToRemove)
+            {
+                _cache.Remove(key);
+            }
+
+            _logger.LogInformation("Cleared {Count} cache entries for tenant {TenantId}", keysToRemove.Length, tenantId);
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = $"Cache cleared for tenant {tenantId}",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing cache for tenant {TenantId}", tenantId);
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Data = false,
+                Message = $"Error clearing tenant cache: {ex.Message}",
                 Timestamp = DateTime.UtcNow
             });
         }

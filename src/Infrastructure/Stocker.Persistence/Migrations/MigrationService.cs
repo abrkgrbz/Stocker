@@ -17,6 +17,8 @@ using Stocker.Application.Common.Interfaces;
 using Stocker.Application.Extensions;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.HR.Infrastructure.Persistence;
+using Stocker.Modules.Sales.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Infrastructure.Persistence;
 using Npgsql;
 
 namespace Stocker.Persistence.Migrations;
@@ -1850,8 +1852,44 @@ public partial class MigrationService
                         "Satış modülü yapılandırılıyor...", progressPercent));
                 }
 
-                // TODO: Implement Sales module migrations when SalesDbContext is available
-                _logger.LogInformation("Sales module migrations placeholder for tenant {TenantId}", tenantId);
+                try
+                {
+                    _logger.LogInformation("Applying Sales migrations for tenant {TenantId}...", tenantId);
+
+                    var salesOptionsBuilder = new DbContextOptionsBuilder<SalesDbContext>();
+                    salesOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    salesOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var salesDbContext = new SalesDbContext(
+                        salesOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await salesDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await salesDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"Sales:{m}"));
+                        _logger.LogInformation("Sales migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending Sales migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception salesEx)
+                {
+                    _logger.LogError(salesEx, "Error applying Sales migrations for tenant {TenantId}", tenantId);
+                }
             }
 
             // Apply Purchase module migrations
@@ -1867,8 +1905,44 @@ public partial class MigrationService
                         "Satın alma modülü yapılandırılıyor...", progressPercent));
                 }
 
-                // TODO: Implement Purchase module migrations when PurchaseDbContext is available
-                _logger.LogInformation("Purchase module migrations placeholder for tenant {TenantId}", tenantId);
+                try
+                {
+                    _logger.LogInformation("Applying Purchase migrations for tenant {TenantId}...", tenantId);
+
+                    var purchaseOptionsBuilder = new DbContextOptionsBuilder<PurchaseDbContext>();
+                    purchaseOptionsBuilder.UseNpgsql(connectionString, sqlOptions =>
+                    {
+                        sqlOptions.MigrationsAssembly(typeof(PurchaseDbContext).Assembly.FullName);
+                        sqlOptions.CommandTimeout(60);
+                        sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                    });
+                    // Suppress PendingModelChangesWarning - we're applying existing migrations
+                    purchaseOptionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+                    var mockTenantService = new MockTenantService(tenantId, connectionString!);
+
+                    using var purchaseDbContext = new PurchaseDbContext(
+                        purchaseOptionsBuilder.Options,
+                        mockTenantService);
+
+                    var pendingMigrations = await purchaseDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                    var pendingList = pendingMigrations.ToList();
+
+                    if (pendingList.Any())
+                    {
+                        await purchaseDbContext.Database.MigrateAsync(cancellationToken);
+                        appliedMigrations.AddRange(pendingList.Select(m => $"Purchase:{m}"));
+                        _logger.LogInformation("Purchase migrations applied: {Migrations}", string.Join(", ", pendingList));
+                    }
+                    else
+                    {
+                        _logger.LogInformation("No pending Purchase migrations for tenant {TenantId}", tenantId);
+                    }
+                }
+                catch (Exception purchaseEx)
+                {
+                    _logger.LogError(purchaseEx, "Error applying Purchase migrations for tenant {TenantId}", tenantId);
+                }
             }
 
             // Apply Finance module migrations

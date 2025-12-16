@@ -33,6 +33,8 @@
     <ProjectReference Include="..\..\Modules\Stocker.Modules.CRM\Stocker.Modules.CRM.csproj" />
     <ProjectReference Include="..\..\Modules\Stocker.Modules.Inventory\Stocker.Modules.Inventory.csproj" />
     <ProjectReference Include="..\..\Modules\Stocker.Modules.HR\Stocker.Modules.HR.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.Sales\Stocker.Modules.Sales.csproj" />
+    <ProjectReference Include="..\..\Modules\Stocker.Modules.Purchase\Stocker.Modules.Purchase.csproj" />
   </ItemGroup>
 
 </Project>
