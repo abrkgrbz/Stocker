@@ -1977,61 +1977,91 @@ public partial class MigrationService
             {
                 _logger.LogInformation("Activating TenantModules for tenant {TenantId}...", tenantId);
 
-                // Get package modules info from subscription
-                var packageModules = await masterContext.Subscriptions
+                // Get subscription with modules - PRIORITY: SubscriptionModules first (for custom packages)
+                var subscription = await masterContext.Subscriptions
+                    .Include(s => s.Modules)
                     .Include(s => s.Package)
                         .ThenInclude(p => p.Modules)
                     .Where(s => s.TenantId == tenantId)
-                    .SelectMany(s => s.Package.Modules)
-                    .Where(m => m.IsIncluded)
-                    .ToListAsync(cancellationToken);
-
-                // Also get trial status from package
-                var package = await masterContext.Subscriptions
-                    .Include(s => s.Package)
-                    .Where(s => s.TenantId == tenantId)
-                    .Select(s => s.Package)
+                    .OrderByDescending(s => s.StartDate)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                if (packageModules.Any())
+                if (subscription == null)
+                {
+                    _logger.LogWarning("⚠️ No subscription found for tenant {TenantId}", tenantId);
+                    return appliedMigrations;
+                }
+
+                // Determine which modules to activate:
+                // 1. First check SubscriptionModules (for custom packages or explicitly added modules)
+                // 2. Fallback to Package.Modules (for ready packages)
+                var modulesToActivate = new List<(string ModuleCode, string ModuleName, int? MaxEntities)>();
+
+                if (subscription.Modules.Any())
+                {
+                    // Use SubscriptionModules (custom package or explicitly added modules)
+                    _logger.LogInformation("Using SubscriptionModules for tenant {TenantId}, found {Count} modules",
+                        tenantId, subscription.Modules.Count);
+
+                    foreach (var module in subscription.Modules)
+                    {
+                        modulesToActivate.Add((module.ModuleCode, module.ModuleName, module.MaxEntities));
+                    }
+                }
+                else if (subscription.Package?.Modules?.Any() == true)
+                {
+                    // Fallback to Package.Modules (legacy ready packages)
+                    _logger.LogInformation("Using Package.Modules for tenant {TenantId}, found {Count} modules",
+                        tenantId, subscription.Package.Modules.Count);
+
+                    foreach (var module in subscription.Package.Modules.Where(m => m.IsIncluded))
+                    {
+                        modulesToActivate.Add((module.ModuleCode, module.ModuleName, module.MaxEntities));
+                    }
+                }
+
+                var isTrial = subscription.Package?.TrialDays > 0 || subscription.Status == Domain.Master.Enums.SubscriptionStatus.Deneme;
+                var packageName = subscription.Package?.Name ?? "Custom";
+
+                if (modulesToActivate.Any())
                 {
                     // Create TenantModules in tenant database
-                    foreach (var packageModule in packageModules)
+                    foreach (var (moduleCode, moduleName, maxEntities) in modulesToActivate)
                     {
                         // Check if module already exists
                         var existingModule = await tenantDbContext.TenantModules
-                            .FirstOrDefaultAsync(m => m.ModuleCode == packageModule.ModuleCode, cancellationToken);
+                            .FirstOrDefaultAsync(m => m.ModuleCode == moduleCode, cancellationToken);
 
                         if (existingModule == null)
                         {
                             var tenantModule = Stocker.Domain.Tenant.Entities.TenantModules.Create(
                                 tenantId: tenantId,
-                                moduleName: packageModule.ModuleName,
-                                moduleCode: packageModule.ModuleCode,
-                                description: $"Module from {package?.Name ?? "selected"} package",
+                                moduleName: moduleName,
+                                moduleCode: moduleCode,
+                                description: $"Module from {packageName} package",
                                 isEnabled: true,
-                                recordLimit: packageModule.MaxEntities,
-                                isTrial: package?.TrialDays > 0
+                                recordLimit: maxEntities,
+                                isTrial: isTrial
                             );
 
                             tenantDbContext.TenantModules.Add(tenantModule);
                             _logger.LogInformation("✅ Created TenantModule {ModuleCode} ({ModuleName}) for tenant {TenantId}",
-                                packageModule.ModuleCode, packageModule.ModuleName, tenantId);
+                                moduleCode, moduleName, tenantId);
                         }
                         else
                         {
                             _logger.LogInformation("TenantModule {ModuleCode} already exists for tenant {TenantId}",
-                                packageModule.ModuleCode, tenantId);
+                                moduleCode, tenantId);
                         }
                     }
 
                     await tenantDbContext.SaveChangesAsync(cancellationToken);
                     _logger.LogInformation("🎉 Successfully activated {Count} modules for tenant {TenantId}",
-                        packageModules.Count, tenantId);
+                        modulesToActivate.Count, tenantId);
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No modules found in subscription for tenant {TenantId}", tenantId);
+                    _logger.LogWarning("⚠️ No modules found in subscription (neither SubscriptionModules nor Package.Modules) for tenant {TenantId}", tenantId);
                 }
             }
             catch (Exception moduleEx)
