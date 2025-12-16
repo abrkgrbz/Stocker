@@ -22,6 +22,12 @@ export default function RegisterPage() {
   // reCAPTCHA v3 hook
   const { executeRecaptcha } = useGoogleReCaptcha()
 
+  // Debug: Log reCAPTCHA status
+  useEffect(() => {
+    console.log('[reCAPTCHA] Site Key:', process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
+    console.log('[reCAPTCHA] executeRecaptcha available:', !!executeRecaptcha)
+  }, [executeRecaptcha])
+
   // SignalR validation hook
   const {
     isConnected,
@@ -209,13 +215,17 @@ export default function RegisterPage() {
     try {
       // Get reCAPTCHA token
       let captchaToken: string | undefined
+      console.log('[reCAPTCHA] Attempting to get token, executeRecaptcha:', !!executeRecaptcha)
       if (executeRecaptcha) {
         try {
           captchaToken = await executeRecaptcha('register')
+          console.log('[reCAPTCHA] Token obtained:', captchaToken ? 'Yes (length: ' + captchaToken.length + ')' : 'No')
         } catch (captchaError) {
-          console.warn('reCAPTCHA execution failed:', captchaError)
+          console.warn('[reCAPTCHA] Execution failed:', captchaError)
           // Continue without CAPTCHA in development
         }
+      } else {
+        console.warn('[reCAPTCHA] executeRecaptcha is not available!')
       }
 
       // Use new minimal registration endpoint
