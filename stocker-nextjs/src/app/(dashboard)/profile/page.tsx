@@ -1,200 +1,70 @@
 'use client';
 
 /**
- * Profile Page
- * Modern card-based layout for user profile management
+ * Profile Settings Page
+ * Single-Column Professional Settings Layout
+ * Clean Corporate Design - Linear/Stripe Style
  */
 
 import React, { useState } from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Avatar,
-  Upload,
-  Typography,
-  Switch,
-  List,
-  Tag,
-  message,
-  Skeleton,
-  Progress,
-  Tooltip,
-  Badge,
-} from 'antd';
-import {
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  LockOutlined,
-  SafetyOutlined,
-  HistoryOutlined,
-  CameraOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  GlobalOutlined,
-  BellOutlined,
-  SaveOutlined,
-  SettingOutlined,
-  KeyOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  EnvironmentOutlined,
-  MobileOutlined,
-  DesktopOutlined,
-  CloudOutlined,
-  EyeInvisibleOutlined,
-} from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Shield,
+  Bell,
+  Globe,
+  Monitor,
+  Camera,
+  Check,
+  AlertCircle,
+  ChevronRight,
+  Clock,
+  MapPin,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useProfile, useUpdateProfile, useChangePassword, useActivityLog, useUploadProfileImage, useUpdatePreferences } from './hooks';
-import type { RcFile } from 'antd/es/upload/interface';
-
-const { Title, Text } = Typography;
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
-  },
-};
-
-// Profile completeness calculator
-const calculateProfileCompleteness = (profile: any): number => {
-  if (!profile) return 0;
-  let score = 0;
-  const checks = [
-    { condition: profile.firstName, weight: 15 },
-    { condition: profile.lastName, weight: 15 },
-    { condition: profile.email, weight: 15 },
-    { condition: profile.emailConfirmed, weight: 15 },
-    { condition: profile.phone, weight: 10 },
-    { condition: profile.profileImage, weight: 10 },
-    { condition: profile.twoFactorEnabled, weight: 20 },
-  ];
-  checks.forEach(({ condition, weight }) => {
-    if (condition) score += weight;
-  });
-  return Math.min(score, 100);
-};
-
-const getCompletenessColor = (score: number): string => {
-  if (score >= 80) return '#52c41a';
-  if (score >= 50) return '#faad14';
-  return '#ff4d4f';
-};
-
-const getCompletenessLabel = (score: number): string => {
-  if (score >= 80) return 'Tamamlandı';
-  if (score >= 50) return 'Orta';
-  return 'Eksik';
-};
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [activityPage, setActivityPage] = useState(1);
+  const [activityPage] = useState(1);
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
   const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword();
-  const { data: activityLog, isLoading: activityLoading } = useActivityLog(activityPage, 10);
+  const { data: activityLog, isLoading: activityLoading } = useActivityLog(activityPage, 5);
   const { mutate: uploadImage, isPending: isUploading } = useUploadProfileImage();
   const { mutate: updatePreferences, isPending: isUpdatingPrefs } = useUpdatePreferences();
 
-  const [profileForm] = Form.useForm();
-  const [passwordForm] = Form.useForm();
+  // Form states
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle profile update
-  const handleProfileUpdate = (values: any) => {
-    updateProfile(values, {
-      onSuccess: () => {
-        message.success('Profil bilgileri güncellendi');
-        refetchProfile();
-      },
-      onError: (error: any) => {
-        message.error(error?.message || 'Profil güncellenirken hata oluştu');
-      },
-    });
-  };
-
-  // Handle password change
-  const handlePasswordChange = (values: any) => {
-    changePassword(values, {
-      onSuccess: () => {
-        message.success('Şifre başarıyla değiştirildi');
-        passwordForm.resetFields();
-      },
-      onError: (error: any) => {
-        message.error(error?.message || 'Şifre değiştirilirken hata oluştu');
-      },
-    });
-  };
-
-  // Handle avatar upload
-  const handleAvatarUpload = (file: RcFile) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error('Sadece resim dosyaları yükleyebilirsiniz!');
-      return false;
+  // Initialize form data when profile loads
+  React.useEffect(() => {
+    if (profile?.data) {
+      setProfileData({
+        firstName: profile.data.firstName || '',
+        lastName: profile.data.lastName || '',
+        phone: profile.data.phone || '',
+      });
     }
-    const isLt5M = file.size / 1024 / 1024 < 5;
-    if (!isLt5M) {
-      message.error('Dosya boyutu 5MB\'dan küçük olmalıdır!');
-      return false;
-    }
+  }, [profile]);
 
-    uploadImage(file, {
-      onSuccess: (response) => {
-        if (response.success) {
-          message.success('Profil fotoğrafı güncellendi');
-          refetchProfile();
-        } else {
-          message.error(response.message || 'Fotoğraf yüklenirken hata oluştu');
-        }
-      },
-      onError: (error: any) => {
-        message.error(error?.message || 'Fotoğraf yüklenirken hata oluştu');
-      },
-    });
-
-    return false;
-  };
-
-  // Handle preference change
-  const handlePreferenceChange = (key: string, value: any) => {
-    updatePreferences({ [key]: value }, {
-      onSuccess: () => {
-        message.success('Tercih güncellendi');
-        refetchProfile();
-      },
-      onError: (error: any) => {
-        message.error(error?.message || 'Tercih güncellenirken hata oluştu');
-      },
-    });
-  };
-
-  if (profileLoading) {
-    return (
-      <div className="p-6">
-        <Skeleton active avatar paragraph={{ rows: 6 }} />
-      </div>
-    );
-  }
-
-  const profileData = profile?.data || {
+  const profileInfo = profile?.data || {
     id: user?.id,
     email: user?.email,
     firstName: user?.firstName,
@@ -204,11 +74,8 @@ export default function ProfilePage() {
     profileImage: null,
     twoFactorEnabled: false,
     emailConfirmed: false,
-    phoneConfirmed: false,
     createdDate: new Date().toISOString(),
     lastLoginDate: new Date().toISOString(),
-    department: '',
-    branch: '',
     preferences: {
       language: 'tr',
       theme: 'light',
@@ -216,572 +83,498 @@ export default function ProfilePage() {
     },
   };
 
-  const completenessScore = calculateProfileCompleteness(profileData);
+  // Handle profile input changes
+  const handleProfileChange = (field: string, value: string) => {
+    setProfileData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  // Handle profile save
+  const handleSaveProfile = () => {
+    updateProfile(profileData, {
+      onSuccess: () => {
+        setSuccessMessage('Değişiklikler kaydedildi');
+        setHasChanges(false);
+        refetchProfile();
+        setTimeout(() => setSuccessMessage(''), 3000);
+      },
+      onError: (error: Error) => {
+        setErrorMessage(error?.message || 'Kayıt sırasında hata oluştu');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  // Handle password change
+  const handlePasswordChange = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setErrorMessage('Şifreler eşleşmiyor');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+    changePassword(passwordData, {
+      onSuccess: () => {
+        setSuccessMessage('Şifre başarıyla değiştirildi');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setShowPasswordSection(false);
+        setTimeout(() => setSuccessMessage(''), 3000);
+      },
+      onError: (error: Error) => {
+        setErrorMessage(error?.message || 'Şifre değiştirilirken hata oluştu');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Sadece resim dosyaları yükleyebilirsiniz');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Dosya boyutu 5MB\'dan küçük olmalıdır');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    uploadImage(file, {
+      onSuccess: () => {
+        setSuccessMessage('Profil fotoğrafı güncellendi');
+        refetchProfile();
+        setTimeout(() => setSuccessMessage(''), 3000);
+      },
+      onError: (error: Error) => {
+        setErrorMessage(error?.message || 'Fotoğraf yüklenirken hata oluştu');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  // Handle preference change
+  const handlePreferenceChange = (key: string, value: string | boolean) => {
+    updatePreferences({ [key]: value }, {
+      onSuccess: () => {
+        setSuccessMessage('Tercih güncellendi');
+        refetchProfile();
+        setTimeout(() => setSuccessMessage(''), 3000);
+      },
+      onError: (error: Error) => {
+        setErrorMessage(error?.message || 'Tercih güncellenirken hata oluştu');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
+  // Loading state
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+          <span className="text-sm text-slate-500">Yükleniyor...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <motion.div
-        className="max-w-7xl mx-auto"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Hero Section with Profile Card */}
-        <motion.div variants={cardVariants} className="mb-8">
-          <Card className="shadow-xl border-0 overflow-hidden">
-            {/* Gradient Header */}
-            <div className="h-32 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 -mx-6 -mt-6 mb-0 relative">
-              <div className="absolute inset-0 bg-black/10" />
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
-            </div>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header with Save Button */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-200">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl font-semibold text-slate-900">Hesap Ayarları</h1>
+            {hasChanges && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={handleSaveProfile}
+                disabled={isUpdating}
+                className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isUpdating ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
 
-            <div className="flex flex-col lg:flex-row items-start lg:items-end gap-6 -mt-16 relative z-10 px-2">
-              {/* Avatar Section */}
-              <div className="relative">
-                <div className="p-1 bg-white rounded-full shadow-lg">
-                  <Avatar
-                    size={140}
-                    src={profileData.profileImage}
-                    icon={<UserOutlined />}
-                    className="bg-gradient-to-br from-blue-500 to-indigo-600"
-                  />
-                </div>
-                <Upload
-                  name="file"
-                  showUploadList={false}
-                  beforeUpload={handleAvatarUpload}
-                  disabled={isUploading}
-                >
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    icon={<CameraOutlined />}
-                    size="large"
-                    loading={isUploading}
-                    className="absolute bottom-2 right-2 shadow-lg"
-                  />
-                </Upload>
-              </div>
-
-              {/* Profile Info */}
-              <div className="flex-1 pb-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <Title level={2} className="!mb-1 !text-gray-800">
-                      {profileData.firstName} {profileData.lastName}
-                    </Title>
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <Tag color="blue" className="text-sm px-3 py-1">
-                        <TeamOutlined className="mr-1" />
-                        {profileData.role || 'Kullanıcı'}
-                      </Tag>
-                      {profileData.department && (
-                        <Tag color="cyan" className="text-sm px-3 py-1">
-                          <EnvironmentOutlined className="mr-1" />
-                          {profileData.department}
-                        </Tag>
-                      )}
-                      {profileData.twoFactorEnabled && (
-                        <Tag color="green" className="text-sm px-3 py-1">
-                          <SafetyOutlined className="mr-1" />
-                          2FA Aktif
-                        </Tag>
-                      )}
-                    </div>
-                    <Text className="text-gray-500">
-                      <MailOutlined className="mr-2" />
-                      {profileData.email}
-                    </Text>
-                  </div>
-
-                  {/* Completeness Score */}
-                  <div className="bg-gray-50 rounded-2xl p-4 text-center min-w-[160px]">
-                    <Tooltip title="Profil tamamlanma oranı">
-                      <Progress
-                        type="circle"
-                        percent={completenessScore}
-                        size={80}
-                        strokeColor={getCompletenessColor(completenessScore)}
-                        format={(percent) => (
-                          <span className="text-lg font-bold">{percent}%</span>
-                        )}
-                      />
-                    </Tooltip>
-                    <div className="mt-2">
-                      <Badge
-                        color={getCompletenessColor(completenessScore)}
-                        text={
-                          <Text className="text-sm font-medium">
-                            {getCompletenessLabel(completenessScore)}
-                          </Text>
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100">
-              <div className="text-center p-3 rounded-xl bg-blue-50/50 hover:bg-blue-50 transition-colors">
-                <MailOutlined className="text-2xl text-blue-500 mb-2" />
-                <div className="text-sm text-gray-500">E-posta</div>
-                <Badge
-                  status={profileData.emailConfirmed ? 'success' : 'warning'}
-                  text={
-                    <Text className="font-medium text-sm">
-                      {profileData.emailConfirmed ? 'Doğrulandı' : 'Bekliyor'}
-                    </Text>
-                  }
-                />
-              </div>
-              <div className="text-center p-3 rounded-xl bg-green-50/50 hover:bg-green-50 transition-colors">
-                <SafetyOutlined className="text-2xl text-green-500 mb-2" />
-                <div className="text-sm text-gray-500">2FA Durumu</div>
-                <Badge
-                  status={profileData.twoFactorEnabled ? 'success' : 'default'}
-                  text={
-                    <Text className="font-medium text-sm">
-                      {profileData.twoFactorEnabled ? 'Aktif' : 'Pasif'}
-                    </Text>
-                  }
-                />
-              </div>
-              <div className="text-center p-3 rounded-xl bg-purple-50/50 hover:bg-purple-50 transition-colors">
-                <CalendarOutlined className="text-2xl text-purple-500 mb-2" />
-                <div className="text-sm text-gray-500">Kayıt Tarihi</div>
-                <Text className="font-medium text-sm">
-                  {profileData.createdDate
-                    ? new Date(profileData.createdDate).toLocaleDateString('tr-TR')
-                    : '-'}
-                </Text>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-orange-50/50 hover:bg-orange-50 transition-colors">
-                <HistoryOutlined className="text-2xl text-orange-500 mb-2" />
-                <div className="text-sm text-gray-500">Son Giriş</div>
-                <Text className="font-medium text-sm">
-                  {profileData.lastLoginDate
-                    ? new Date(profileData.lastLoginDate).toLocaleDateString('tr-TR')
-                    : '-'}
-                </Text>
-              </div>
-            </div>
-          </Card>
+      {/* Toast Messages */}
+      {successMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg shadow-lg"
+        >
+          <Check className="w-4 h-4" />
+          <span className="text-sm font-medium">{successMessage}</span>
         </motion.div>
+      )}
+      {errorMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-red-50 text-red-700 border border-red-200 rounded-lg shadow-lg"
+        >
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm font-medium">{errorMessage}</span>
+        </motion.div>
+      )}
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Personal Information Card */}
-          <motion.div variants={cardVariants}>
-            <Card
-              className="shadow-lg border-0 h-full hover:shadow-xl transition-shadow"
-              title={
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <UserOutlined className="text-xl text-blue-600" />
-                  </div>
-                  <div>
-                    <Text className="font-semibold text-gray-800 block">Kişisel Bilgiler</Text>
-                    <Text className="text-xs text-gray-400">Temel profil bilgileriniz</Text>
-                  </div>
+      {/* Main Content */}
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+
+          {/* Profile Header Section */}
+          <div className="p-6">
+            <div className="flex items-start gap-5">
+              {/* Avatar */}
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-slate-100 ring-2 ring-slate-100 overflow-hidden flex items-center justify-center">
+                  {profileInfo.profileImage ? (
+                    <img
+                      src={profileInfo.profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-400" />
+                  )}
                 </div>
-              }
-            >
-              <Form
-                form={profileForm}
-                layout="vertical"
-                onFinish={handleProfileUpdate}
-                initialValues={{
-                  firstName: profileData.firstName,
-                  lastName: profileData.lastName,
-                  email: profileData.email,
-                  phone: profileData.phone,
-                }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item
-                    name="firstName"
-                    label={<Text className="font-medium">Ad</Text>}
-                    rules={[{ required: true, message: 'Ad zorunludur' }]}
-                  >
-                    <Input
-                      prefix={<UserOutlined className="text-gray-400" />}
+                <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
+                  <Camera className="w-4 h-4 text-slate-500" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                </label>
+              </div>
+
+              {/* User Info */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {profileInfo.firstName} {profileInfo.lastName}
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">{profileInfo.email}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-md">
+                    {profileInfo.role || 'Kullanıcı'}
+                  </span>
+                  {profileInfo.emailConfirmed && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                      <Check className="w-3 h-3" />
+                      Doğrulanmış
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Personal Information Section */}
+          <div className="p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Kişisel Bilgiler</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1.5">Ad</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={profileData.firstName}
+                      onChange={(e) => handleProfileChange('firstName', e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                       placeholder="Adınız"
-                      size="large"
-                      className="rounded-lg"
                     />
-                  </Form.Item>
-                  <Form.Item
-                    name="lastName"
-                    label={<Text className="font-medium">Soyad</Text>}
-                    rules={[{ required: true, message: 'Soyad zorunludur' }]}
-                  >
-                    <Input
-                      prefix={<UserOutlined className="text-gray-400" />}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1.5">Soyad</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={profileData.lastName}
+                      onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                       placeholder="Soyadınız"
-                      size="large"
-                      className="rounded-lg"
                     />
-                  </Form.Item>
+                  </div>
                 </div>
+              </div>
 
-                <Form.Item
-                  name="email"
-                  label={<Text className="font-medium">E-posta</Text>}
-                >
-                  <Input
-                    prefix={<MailOutlined className="text-gray-400" />}
-                    placeholder="E-posta adresiniz"
-                    size="large"
-                    className="rounded-lg"
+              <div>
+                <label className="block text-sm text-slate-600 mb-1.5">E-posta</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="email"
+                    value={profileInfo.email}
                     disabled
-                    suffix={
-                      profileData.emailConfirmed ? (
-                        <Tooltip title="E-posta doğrulandı">
-                          <CheckCircleOutlined className="text-green-500" />
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="E-posta doğrulanmadı">
-                          <CloseCircleOutlined className="text-orange-500" />
-                        </Tooltip>
-                      )
-                    }
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 text-sm cursor-not-allowed"
                   />
-                </Form.Item>
-
-                <Form.Item
-                  name="phone"
-                  label={<Text className="font-medium">Telefon</Text>}
-                >
-                  <Input
-                    prefix={<PhoneOutlined className="text-gray-400" />}
-                    placeholder="Telefon numaranız"
-                    size="large"
-                    className="rounded-lg"
-                  />
-                </Form.Item>
-
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<SaveOutlined />}
-                  loading={isUpdating}
-                  size="large"
-                  className="w-full rounded-lg h-12"
-                >
-                  Değişiklikleri Kaydet
-                </Button>
-              </Form>
-            </Card>
-          </motion.div>
-
-          {/* Security Card */}
-          <motion.div variants={cardVariants}>
-            <Card
-              className="shadow-lg border-0 h-full hover:shadow-xl transition-shadow"
-              title={
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-                    <LockOutlined className="text-xl text-red-600" />
-                  </div>
-                  <div>
-                    <Text className="font-semibold text-gray-800 block">Güvenlik</Text>
-                    <Text className="text-xs text-gray-400">Şifre ve 2FA ayarları</Text>
-                  </div>
+                  {profileInfo.emailConfirmed && (
+                    <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                  )}
                 </div>
-              }
-            >
-              <Form
-                form={passwordForm}
-                layout="vertical"
-                onFinish={handlePasswordChange}
-              >
-                <Form.Item
-                  name="currentPassword"
-                  label={<Text className="font-medium">Mevcut Şifre</Text>}
-                  rules={[{ required: true, message: 'Mevcut şifre zorunludur' }]}
-                >
-                  <Input.Password
-                    prefix={<KeyOutlined className="text-gray-400" />}
-                    placeholder="Mevcut şifreniz"
-                    size="large"
-                    className="rounded-lg"
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-600 mb-1.5">Telefon</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="tel"
+                    value={profileData.phone}
+                    onChange={(e) => handleProfileChange('phone', e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                    placeholder="+90 5XX XXX XX XX"
                   />
-                </Form.Item>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item
-                    name="newPassword"
-                    label={<Text className="font-medium">Yeni Şifre</Text>}
-                    rules={[
-                      { required: true, message: 'Yeni şifre zorunludur' },
-                      { min: 8, message: 'En az 8 karakter' },
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<LockOutlined className="text-gray-400" />}
-                      placeholder="Yeni şifre"
-                      size="large"
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="confirmPassword"
-                    label={<Text className="font-medium">Şifre Tekrar</Text>}
-                    dependencies={['newPassword']}
-                    rules={[
-                      { required: true, message: 'Şifre tekrarı zorunludur' },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('newPassword') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(new Error('Şifreler eşleşmiyor'));
-                        },
-                      }),
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<EyeInvisibleOutlined className="text-gray-400" />}
-                      placeholder="Şifre tekrar"
-                      size="large"
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<LockOutlined />}
-                  loading={isChangingPassword}
-                  size="large"
-                  className="w-full rounded-lg h-12 mb-6"
-                  danger
+          {/* Security Section */}
+          <div className="p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Güvenlik</h3>
+            <div className="space-y-3">
+              {/* Password Change */}
+              <div>
+                <button
+                  onClick={() => setShowPasswordSection(!showPasswordSection)}
+                  className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                 >
-                  Şifreyi Değiştir
-                </Button>
-              </Form>
-
-              {/* 2FA Toggle */}
-              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                      <MobileOutlined className="text-green-600" />
+                    <Lock className="w-5 h-5 text-slate-500" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-slate-900">Şifre Değiştir</p>
+                      <p className="text-xs text-slate-500">Hesap şifrenizi güncelleyin</p>
                     </div>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${showPasswordSection ? 'rotate-90' : ''}`} />
+                </button>
+
+                {showPasswordSection && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-3 p-4 border border-slate-200 rounded-lg space-y-3"
+                  >
                     <div>
-                      <Text className="font-medium block">İki Faktörlü Doğrulama</Text>
-                      <Text className="text-xs text-gray-500">
-                        Hesabınızı daha güvenli hale getirin
-                      </Text>
+                      <label className="block text-sm text-slate-600 mb-1.5">Mevcut Şifre</label>
+                      <input
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                        placeholder="••••••••"
+                      />
                     </div>
-                  </div>
-                  <Switch
-                    checked={profileData.twoFactorEnabled}
-                    checkedChildren="Aktif"
-                    unCheckedChildren="Pasif"
-                    className="bg-gray-300"
-                  />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Preferences Card */}
-          <motion.div variants={cardVariants}>
-            <Card
-              className="shadow-lg border-0 h-full hover:shadow-xl transition-shadow"
-              title={
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                    <SettingOutlined className="text-xl text-purple-600" />
-                  </div>
-                  <div>
-                    <Text className="font-semibold text-gray-800 block">Tercihler</Text>
-                    <Text className="text-xs text-gray-400">Uygulama ayarlarınız</Text>
-                  </div>
-                </div>
-              }
-            >
-              <div className="space-y-4">
-                {/* Language */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <GlobalOutlined className="text-blue-600" />
-                      </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <Text className="font-medium block">Dil</Text>
-                        <Text className="text-xs text-gray-500">Arayüz dili seçimi</Text>
-                      </div>
-                    </div>
-                    <select
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
-                      value={profileData.preferences?.language || 'tr'}
-                      onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                      disabled={isUpdatingPrefs}
-                    >
-                      <option value="tr">🇹🇷 Türkçe</option>
-                      <option value="en">🇬🇧 English</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Theme */}
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <DesktopOutlined className="text-purple-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">Tema</Text>
-                        <Text className="text-xs text-gray-500">Arayüz renk şeması</Text>
-                      </div>
-                    </div>
-                    <select
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
-                      value={profileData.preferences?.theme || 'light'}
-                      onChange={(e) => handlePreferenceChange('theme', e.target.value)}
-                      disabled={isUpdatingPrefs}
-                    >
-                      <option value="light">☀️ Açık</option>
-                      <option value="dark">🌙 Koyu</option>
-                      <option value="system">💻 Sistem</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Notifications */}
-                <div className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <BellOutlined className="text-orange-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">Bildirimler</Text>
-                        <Text className="text-xs text-gray-500">E-posta ve anlık bildirimler</Text>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={profileData.preferences?.notifications}
-                      checkedChildren="Açık"
-                      unCheckedChildren="Kapalı"
-                      loading={isUpdatingPrefs}
-                      onChange={(checked) => handlePreferenceChange('notifications', checked)}
-                      className="bg-gray-300"
-                    />
-                  </div>
-                </div>
-
-                {/* Cloud Sync */}
-                <div className="p-4 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl border border-cyan-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
-                        <CloudOutlined className="text-cyan-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">Bulut Senkronizasyon</Text>
-                        <Text className="text-xs text-gray-500">Ayarları cihazlar arası senkronize et</Text>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={true}
-                      checkedChildren="Açık"
-                      unCheckedChildren="Kapalı"
-                      className="bg-gray-300"
-                      disabled
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Activity Log Card */}
-          <motion.div variants={cardVariants}>
-            <Card
-              className="shadow-lg border-0 h-full hover:shadow-xl transition-shadow"
-              title={
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                    <HistoryOutlined className="text-xl text-orange-600" />
-                  </div>
-                  <div>
-                    <Text className="font-semibold text-gray-800 block">Aktivite Geçmişi</Text>
-                    <Text className="text-xs text-gray-400">Son hesap aktiviteleriniz</Text>
-                  </div>
-                </div>
-              }
-            >
-              <List
-                loading={activityLoading}
-                dataSource={activityLog?.data?.items || []}
-                locale={{ emptyText: 'Henüz aktivite kaydı yok' }}
-                pagination={{
-                  current: activityPage,
-                  total: activityLog?.data?.totalItems || 0,
-                  pageSize: 10,
-                  onChange: (page) => setActivityPage(page),
-                  showSizeChanger: false,
-                  size: 'small',
-                }}
-                renderItem={(item: any) => (
-                  <List.Item className="!px-0">
-                    <div className="flex items-start gap-3 w-full">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          item.status === 'Success'
-                            ? 'bg-green-100'
-                            : 'bg-red-100'
-                        }`}
-                      >
-                        <HistoryOutlined
-                          className={
-                            item.status === 'Success'
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }
+                        <label className="block text-sm text-slate-600 mb-1.5">Yeni Şifre</label>
+                        <input
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          placeholder="••••••••"
                         />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Text className="font-medium truncate">{item.description}</Text>
-                          <Tag
-                            color={item.status === 'Success' ? 'success' : 'error'}
-                            className="flex-shrink-0"
-                          >
-                            {item.status === 'Success' ? 'Başarılı' : 'Başarısız'}
-                          </Tag>
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
-                          <span>
-                            <CalendarOutlined className="mr-1" />
-                            {item.timestamp
-                              ? new Date(item.timestamp).toLocaleString('tr-TR')
-                              : '-'}
-                          </span>
-                          {item.ipAddress && (
-                            <span>
-                              <GlobalOutlined className="mr-1" />
-                              {item.ipAddress}
-                            </span>
-                          )}
-                        </div>
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1.5">Şifre Tekrar</label>
+                        <input
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                          placeholder="••••••••"
+                        />
                       </div>
                     </div>
-                  </List.Item>
+                    <button
+                      onClick={handlePasswordChange}
+                      disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword}
+                      className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isChangingPassword ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
+                    </button>
+                  </motion.div>
                 )}
-              />
-            </Card>
-          </motion.div>
+              </div>
+
+              {/* 2FA Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">İki Faktörlü Doğrulama</p>
+                    <p className="text-xs text-slate-500">Ekstra güvenlik katmanı</p>
+                  </div>
+                </div>
+                <button
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    profileInfo.twoFactorEnabled ? 'bg-slate-900' : 'bg-slate-200'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      profileInfo.twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Preferences Section */}
+          <div className="p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Tercihler</h3>
+            <div className="space-y-3">
+              {/* Language */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Globe className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Dil</p>
+                    <p className="text-xs text-slate-500">Arayüz dili</p>
+                  </div>
+                </div>
+                <select
+                  value={profileInfo.preferences?.language || 'tr'}
+                  onChange={(e) => handlePreferenceChange('language', e.target.value)}
+                  disabled={isUpdatingPrefs}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
+                >
+                  <option value="tr">Türkçe</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+
+              {/* Theme */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Monitor className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Tema</p>
+                    <p className="text-xs text-slate-500">Görünüm tercihi</p>
+                  </div>
+                </div>
+                <select
+                  value={profileInfo.preferences?.theme || 'light'}
+                  onChange={(e) => handlePreferenceChange('theme', e.target.value)}
+                  disabled={isUpdatingPrefs}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
+                >
+                  <option value="light">Açık</option>
+                  <option value="dark">Koyu</option>
+                  <option value="system">Sistem</option>
+                </select>
+              </div>
+
+              {/* Notifications */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Bildirimler</p>
+                    <p className="text-xs text-slate-500">E-posta ve anlık bildirimler</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handlePreferenceChange('notifications', !profileInfo.preferences?.notifications)}
+                  disabled={isUpdatingPrefs}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    profileInfo.preferences?.notifications ? 'bg-slate-900' : 'bg-slate-200'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      profileInfo.preferences?.notifications ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Log Section */}
+          <div className="p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Son Aktiviteler</h3>
+            {activityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+              </div>
+            ) : activityLog?.data?.items && activityLog.data.items.length > 0 ? (
+              <div className="space-y-2">
+                {activityLog.data.items.slice(0, 5).map((item: {
+                  id: string;
+                  description: string;
+                  status: string;
+                  timestamp: string;
+                  ipAddress?: string;
+                }) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                      item.status === 'Success' ? 'bg-emerald-500' : 'bg-red-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-900">{item.description}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {item.timestamp
+                            ? new Date(item.timestamp).toLocaleString('tr-TR')
+                            : '-'}
+                        </span>
+                        {item.ipAddress && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {item.ipAddress}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-8">
+                Henüz aktivite kaydı yok
+              </p>
+            )}
+          </div>
+
+          {/* Account Info Footer */}
+          <div className="p-6 bg-slate-50/50">
+            <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+              <div className="flex items-center gap-4">
+                <span>Kayıt: {profileInfo.createdDate ? new Date(profileInfo.createdDate).toLocaleDateString('tr-TR') : '-'}</span>
+                <span>Son Giriş: {profileInfo.lastLoginDate ? new Date(profileInfo.lastLoginDate).toLocaleDateString('tr-TR') : '-'}</span>
+              </div>
+              <button className="text-red-500 hover:text-red-600 font-medium transition-colors">
+                Hesabı Sil
+              </button>
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </main>
     </div>
   );
 }
