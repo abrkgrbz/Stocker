@@ -109,7 +109,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           fontWeight: 600,
         }}>
           <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: '#f1f5f9',
             borderRadius: 10,
             width: 40,
             height: 40,
@@ -117,7 +117,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <UserOutlined style={{ fontSize: 20, color: 'white' }} />
+            <UserOutlined style={{ fontSize: 20, color: '#0f172a' }} />
           </div>
           <span>{isEditMode ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Oluştur'}</span>
         </div>
@@ -164,10 +164,11 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             onClick={handleSubmit}
             style={{
               minWidth: 120,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: '#0f172a',
               border: 'none',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.25)',
             }}
+            className="hover:!bg-slate-800"
           >
             {isEditMode ? 'Güncelle' : 'Oluştur'}
           </Button>
@@ -215,7 +216,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           >
             <Input
               size="large"
-              prefix={<MailOutlined style={{ color: '#667eea' }} />}
+              prefix={<MailOutlined style={{ color: '#64748b' }} />}
               placeholder="ahmet.yilmaz@example.com"
               style={{ borderRadius: 8 }}
             />
@@ -234,7 +235,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           >
             <Input
               size="large"
-              prefix={<PhoneOutlined style={{ color: '#667eea' }} />}
+              prefix={<PhoneOutlined style={{ color: '#64748b' }} />}
               placeholder="+90 555 123 4567"
               style={{ borderRadius: 8 }}
             />
@@ -263,7 +264,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             >
               <Input.Password
                 size="large"
-                prefix={<LockOutlined style={{ color: '#667eea' }} />}
+                prefix={<LockOutlined style={{ color: '#64748b' }} />}
                 placeholder="••••••••"
                 style={{ borderRadius: 8 }}
               />
@@ -298,7 +299,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               {roles?.map((role) => (
                 <Option key={role.id} value={role.id}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: role.isSystemRole ? '#667eea' : '#52c41a', fontSize: 16 }}>
+                    <span style={{ color: role.isSystemRole ? '#0f172a' : '#64748b', fontSize: 16 }}>
                       {role.isSystemRole ? '★' : '●'}
                     </span>
                     <div>
@@ -329,7 +330,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               {departments?.map((department) => (
                 <Option key={department.id} value={department.id}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <TeamOutlined style={{ color: '#667eea' }} />
+                    <TeamOutlined style={{ color: '#64748b' }} />
                     <div>
                       <div>{department.name}</div>
                       {department.code && (
@@ -362,9 +363,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               checkedChildren="Aktif"
               unCheckedChildren="Pasif"
               defaultChecked
-              style={{
-                background: '#52c41a',
-              }}
+              className="user-modal-switch"
             />
           </Form.Item>
           <div style={{ marginTop: 8, fontSize: 13, color: '#8c8c8c' }}>
