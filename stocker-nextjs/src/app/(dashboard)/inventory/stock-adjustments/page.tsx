@@ -1,27 +1,23 @@
 'use client';
 
+/**
+ * Stock Adjustments Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
-  Card,
+  Tag,
   Input,
   Select,
-  Row,
-  Col,
   Modal,
   Form,
   InputNumber,
-  message,
-  Tag,
-  Tooltip,
-  Statistic,
   Tabs,
-  Popconfirm,
-  DatePicker,
+  Dropdown,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -38,6 +34,7 @@ import {
   PlusCircleOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import {
   useProducts,
@@ -48,10 +45,20 @@ import {
 import type { ProductDto, StockAdjustmentDto, StockMovementDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+} from '@/lib/utils/sweetalert';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { TabPane } = Tabs;
 
 // Adjustment status for approval workflow (simulated in frontend for now)
 type AdjustmentStatus = 'Pending' | 'Approved' | 'Rejected';
@@ -176,7 +183,7 @@ export default function StockAdjustmentsPage() {
       const warehouse = warehouses.find((w) => w.id === values.warehouseId);
 
       if (!product || !warehouse) {
-        message.error('Ürün veya depo bulunamadı');
+        showError('Ürün veya depo bulunamadı');
         return;
       }
 
@@ -198,14 +205,14 @@ export default function StockAdjustmentsPage() {
         notes: values.notes,
         status: 'Pending',
         createdAt: new Date().toISOString(),
-        createdBy: 'Kullanıcı', // Would come from auth context
+        createdBy: 'Kullanıcı',
       };
 
       setPendingAdjustments((prev) => [newAdjustment, ...prev]);
       setCreateModalOpen(false);
-      message.success('Stok düzeltme talebi oluşturuldu ve onay bekliyor');
+      showSuccess('Başarılı', 'Stok düzeltme talebi oluşturuldu ve onay bekliyor');
     } catch {
-      message.error('Form doğrulama hatası');
+      showError('Form doğrulama hatası');
     }
   };
 
@@ -215,7 +222,7 @@ export default function StockAdjustmentsPage() {
       const product = products.find((p) => p.id === values.productId);
 
       if (!product) {
-        message.error('Ürün bulunamadı');
+        showError('Ürün bulunamadı');
         return;
       }
 
@@ -230,7 +237,7 @@ export default function StockAdjustmentsPage() {
       await adjustStock.mutateAsync(adjustmentData);
       setCreateModalOpen(false);
       refetchProducts();
-      message.success('Stok düzeltmesi başarıyla uygulandı');
+      showSuccess('Başarılı', 'Stok düzeltmesi başarıyla uygulandı');
     } catch {
       // Error handled by mutation
     }
@@ -246,7 +253,6 @@ export default function StockAdjustmentsPage() {
     if (!selectedAdjustment) return;
 
     try {
-      // Apply the adjustment via API
       const adjustmentData: StockAdjustmentDto = {
         productId: selectedAdjustment.productId,
         warehouseId: selectedAdjustment.warehouseId,
@@ -257,7 +263,6 @@ export default function StockAdjustmentsPage() {
 
       await adjustStock.mutateAsync(adjustmentData);
 
-      // Update local state
       setPendingAdjustments((prev) =>
         prev.map((adj) =>
           adj.id === selectedAdjustment.id
@@ -274,7 +279,7 @@ export default function StockAdjustmentsPage() {
 
       setReviewModalOpen(false);
       refetchProducts();
-      message.success('Stok düzeltmesi onaylandı ve uygulandı');
+      showSuccess('Başarılı', 'Stok düzeltmesi onaylandı ve uygulandı');
     } catch {
       // Error handled by mutation
     }
@@ -284,7 +289,7 @@ export default function StockAdjustmentsPage() {
     if (!selectedAdjustment) return;
 
     if (!reviewNotes.trim()) {
-      message.warning('Reddetme sebebi girmelisiniz');
+      showWarning('Uyarı', 'Reddetme sebebi girmelisiniz');
       return;
     }
 
@@ -303,12 +308,12 @@ export default function StockAdjustmentsPage() {
     );
 
     setReviewModalOpen(false);
-    message.info('Stok düzeltme talebi reddedildi');
+    showInfo('Bilgi', 'Stok düzeltme talebi reddedildi');
   };
 
   const handleDeletePending = (id: string) => {
     setPendingAdjustments((prev) => prev.filter((adj) => adj.id !== id));
-    message.success('Talep silindi');
+    showSuccess('Başarılı', 'Talep silindi');
   };
 
   // Pending adjustments columns
@@ -317,9 +322,21 @@ export default function StockAdjustmentsPage() {
       title: 'Ürün',
       key: 'product',
       render: (_, record) => (
-        <div>
-          <div className="font-medium">{record.productName}</div>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: record.difference > 0 ? '#10b98115' : '#ef444415' }}
+          >
+            {record.difference > 0 ? (
+              <PlusCircleOutlined style={{ color: '#10b981' }} />
+            ) : (
+              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+            )}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{record.productName}</div>
+            <div className="text-xs text-slate-500">Kod: {record.productCode}</div>
+          </div>
         </div>
       ),
     },
@@ -327,28 +344,33 @@ export default function StockAdjustmentsPage() {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
+      width: 150,
+      render: (name) => <span className="text-sm text-slate-600">{name}</span>,
     },
     {
-      title: 'Mevcut Miktar',
+      title: 'Mevcut',
       dataIndex: 'currentQuantity',
       key: 'currentQuantity',
+      width: 100,
       align: 'right',
-      render: (qty) => qty.toLocaleString('tr-TR'),
+      render: (qty) => <span className="text-sm text-slate-600">{qty.toLocaleString('tr-TR')}</span>,
     },
     {
-      title: 'Yeni Miktar',
+      title: 'Yeni',
       dataIndex: 'newQuantity',
       key: 'newQuantity',
+      width: 100,
       align: 'right',
-      render: (qty) => qty.toLocaleString('tr-TR'),
+      render: (qty) => <span className="text-sm font-medium text-slate-900">{qty.toLocaleString('tr-TR')}</span>,
     },
     {
       title: 'Fark',
       dataIndex: 'difference',
       key: 'difference',
+      width: 100,
       align: 'right',
       render: (diff) => (
-        <span className={diff > 0 ? 'text-green-600 font-medium' : diff < 0 ? 'text-red-600 font-medium' : ''}>
+        <span className={`text-sm font-medium ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-slate-500'}`}>
           {diff > 0 ? '+' : ''}{diff.toLocaleString('tr-TR')}
         </span>
       ),
@@ -357,21 +379,24 @@ export default function StockAdjustmentsPage() {
       title: 'Sebep',
       dataIndex: 'reason',
       key: 'reason',
+      width: 140,
       render: (reason) => {
         const reasonInfo = adjustmentReasons.find((r) => r.value === reason);
-        return reasonInfo?.label || reason;
+        return <span className="text-sm text-slate-600">{reasonInfo?.label || reason}</span>;
       },
     },
     {
       title: 'Tarih',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => dayjs(date).format('DD.MM.YYYY HH:mm'),
+      width: 140,
+      render: (date) => <span className="text-sm text-slate-500">{dayjs(date).format('DD.MM.YYYY HH:mm')}</span>,
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
+      width: 110,
       render: (status: AdjustmentStatus) => {
         const config = statusConfig[status];
         return (
@@ -382,42 +407,43 @@ export default function StockAdjustmentsPage() {
       },
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 120,
-      render: (_, record) => (
-        <Space>
-          {record.status === 'Pending' && (
-            <>
-              <Tooltip title="İncele ve Onayla/Reddet">
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  onClick={() => handleReviewClick(record)}
-                />
-              </Tooltip>
-              <Popconfirm
-                title="Bu talebi silmek istediğinizden emin misiniz?"
-                onConfirm={() => handleDeletePending(record.id)}
-                okText="Sil"
-                cancelText="İptal"
-              >
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Popconfirm>
-            </>
-          )}
-          {record.status !== 'Pending' && (
-            <Tooltip title="Detay">
-              <Button
-                size="small"
-                icon={<FileTextOutlined />}
-                onClick={() => handleReviewClick(record)}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = record.status === 'Pending' ? [
+          {
+            key: 'review',
+            icon: <CheckOutlined />,
+            label: 'İncele ve Onayla',
+            onClick: () => handleReviewClick(record),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDeletePending(record.id),
+          },
+        ] : [
+          {
+            key: 'detail',
+            icon: <FileTextOutlined />,
+            label: 'Detay',
+            onClick: () => handleReviewClick(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -427,15 +453,28 @@ export default function StockAdjustmentsPage() {
       title: 'Tarih',
       dataIndex: 'movementDate',
       key: 'movementDate',
-      render: (date) => dayjs(date).format('DD.MM.YYYY HH:mm'),
+      width: 140,
+      render: (date) => <span className="text-sm text-slate-500">{dayjs(date).format('DD.MM.YYYY HH:mm')}</span>,
     },
     {
       title: 'Ürün',
       key: 'product',
       render: (_, record) => (
-        <div>
-          <div className="font-medium">{record.productName}</div>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: record.movementType === 'AdjustmentIncrease' ? '#10b98115' : '#ef444415' }}
+          >
+            {record.movementType === 'AdjustmentIncrease' ? (
+              <PlusCircleOutlined style={{ color: '#10b981' }} />
+            ) : (
+              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+            )}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{record.productName}</div>
+            <div className="text-xs text-slate-500">Kod: {record.productCode}</div>
+          </div>
         </div>
       ),
     },
@@ -443,11 +482,14 @@ export default function StockAdjustmentsPage() {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
+      width: 150,
+      render: (name) => <span className="text-sm text-slate-600">{name}</span>,
     },
     {
       title: 'Tür',
       dataIndex: 'movementType',
       key: 'movementType',
+      width: 100,
       render: (type) => (
         <Tag color={type === 'AdjustmentIncrease' ? 'success' : 'error'}>
           {type === 'AdjustmentIncrease' ? 'Artış' : 'Azalış'}
@@ -458,9 +500,10 @@ export default function StockAdjustmentsPage() {
       title: 'Miktar',
       dataIndex: 'quantity',
       key: 'quantity',
+      width: 100,
       align: 'right',
       render: (qty, record) => (
-        <span className={record.movementType === 'AdjustmentIncrease' ? 'text-green-600' : 'text-red-600'}>
+        <span className={`text-sm font-medium ${record.movementType === 'AdjustmentIncrease' ? 'text-green-600' : 'text-red-600'}`}>
           {record.movementType === 'AdjustmentIncrease' ? '+' : '-'}{qty.toLocaleString('tr-TR')}
         </span>
       ),
@@ -470,241 +513,300 @@ export default function StockAdjustmentsPage() {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      render: (desc) => <span className="text-sm text-slate-600">{desc || '-'}</span>,
     },
     {
       title: 'Referans',
       dataIndex: 'referenceNumber',
       key: 'referenceNumber',
+      width: 120,
+      render: (ref) => <span className="text-sm text-slate-500">{ref || '-'}</span>,
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 60,
+      fixed: 'right',
       render: (_, record) => (
-        <Tooltip title="Detay">
-          <Button
-            size="small"
-            icon={<FileTextOutlined />}
-            onClick={() => router.push(`/inventory/stock-movements/${record.id}`)}
-          />
-        </Tooltip>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'detail',
+                icon: <FileTextOutlined />,
+                label: 'Detay',
+                onClick: () => router.push(`/inventory/stock-movements/${record.id}`),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <MoreOutlined className="text-sm" />
+          </button>
+        </Dropdown>
+      ),
+    },
+  ];
+
+  const tabItems = [
+    {
+      key: 'pending',
+      label: (
+        <span className="flex items-center gap-2">
+          <ClockCircleOutlined />
+          Bekleyen ({stats.pending})
+        </span>
+      ),
+    },
+    {
+      key: 'approved',
+      label: (
+        <span className="flex items-center gap-2">
+          <CheckCircleOutlined />
+          Onaylanan ({stats.approved})
+        </span>
+      ),
+    },
+    {
+      key: 'rejected',
+      label: (
+        <span className="flex items-center gap-2">
+          <CloseOutlined />
+          Reddedilen ({stats.rejected})
+        </span>
+      ),
+    },
+    {
+      key: 'history',
+      label: (
+        <span className="flex items-center gap-2">
+          <HistoryOutlined />
+          Geçmiş
+        </span>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Stok Düzeltme</Title>
-          <Text type="secondary">Stok miktarlarını düzeltin ve onay süreçlerini yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <ClockCircleOutlined style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetchProducts()} loading={productsLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateAdjustment}>
-            Yeni Düzeltme
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Onaylanan</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.approved}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Reddedilen</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.rejected}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.rejected > 0 ? '#ef444415' : '#64748b15' }}>
+              <CloseOutlined style={{ color: stats.rejected > 0 ? '#ef4444' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Artış</span>
+              <div className="text-2xl font-semibold text-green-600">+{stats.totalIncrease.toLocaleString('tr-TR')}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <PlusCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Azalış</span>
+              <div className="text-2xl font-semibold text-red-600">-{stats.totalDecrease.toLocaleString('tr-TR')}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={4}>
-          <Card>
-            <Statistic
-              title="Bekleyen Talepler"
-              value={stats.pending}
-              prefix={<ClockCircleOutlined className="text-yellow-500" />}
-              valueStyle={stats.pending > 0 ? { color: '#faad14' } : undefined}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={4}>
-          <Card>
-            <Statistic
-              title="Onaylanan"
-              value={stats.approved}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={4}>
-          <Card>
-            <Statistic
-              title="Reddedilen"
-              value={stats.rejected}
-              prefix={<CloseOutlined className="text-red-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Artış"
-              value={stats.totalIncrease}
-              prefix={<PlusCircleOutlined className="text-green-500" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Azalış"
-              value={stats.totalDecrease}
-              prefix={<MinusCircleOutlined className="text-red-500" />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<EditOutlined />}
+        iconColor="#8b5cf6"
+        title="Stok Düzeltme"
+        description="Stok miktarlarını düzeltin ve onay süreçlerini yönetin"
+        itemCount={filteredPendingAdjustments.length}
+        primaryAction={{
+          label: 'Yeni Düzeltme',
+          onClick: handleCreateAdjustment,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetchProducts()}
+            disabled={productsLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={productsLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={8}>
-            <Input
-              placeholder="Ürün adı veya kodu ara..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              prefix={<SearchOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Select
-              placeholder="Depo Seçin"
-              value={selectedWarehouse}
-              onChange={setSelectedWarehouse}
-              allowClear
-              style={{ width: '100%' }}
-              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Select
+            placeholder="Depo seçin"
+            allowClear
+            style={{ width: 200 }}
+            value={selectedWarehouse}
+            onChange={setSelectedWarehouse}
+            options={warehouses.map((w) => ({
+              value: w.id,
+              label: w.name,
+            }))}
+          />
+          <Input
+            placeholder="Ürün ara... (ad, kod)"
+            prefix={<SearchOutlined className="text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 400 }}
+            allowClear
+            className="h-10"
+          />
+        </div>
+      </div>
 
-      {/* Tabs */}
-      <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane
-            tab={
-              <span>
-                <ClockCircleOutlined />
-                Bekleyen ({stats.pending})
-              </span>
-            }
-            key="pending"
-          />
-          <TabPane
-            tab={
-              <span>
-                <CheckCircleOutlined />
-                Onaylanan ({stats.approved})
-              </span>
-            }
-            key="approved"
-          />
-          <TabPane
-            tab={
-              <span>
-                <CloseOutlined />
-                Reddedilen ({stats.rejected})
-              </span>
-            }
-            key="rejected"
-          />
-          <TabPane
-            tab={
-              <span>
-                <HistoryOutlined />
-                Geçmiş
-              </span>
-            }
-            key="history"
-          />
-        </Tabs>
+      {/* Tabs and Table */}
+      {productsLoading || movementsLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
-        {activeTab !== 'history' ? (
-          <Table
-            columns={pendingColumns}
-            dataSource={filteredPendingAdjustments}
-            rowKey="id"
-            loading={productsLoading}
-            pagination={{
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
-            }}
-          />
-        ) : (
-          <Table
-            columns={historyColumns}
-            dataSource={adjustmentMovements}
-            rowKey="id"
-            loading={movementsLoading}
-            pagination={{
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
-            }}
-          />
-        )}
-      </Card>
+          {activeTab !== 'history' ? (
+            <Table
+              columns={pendingColumns}
+              dataSource={filteredPendingAdjustments}
+              rowKey="id"
+              loading={productsLoading}
+              scroll={{ x: 1200 }}
+              pagination={{
+                showSizeChanger: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+              }}
+            />
+          ) : (
+            <Table
+              columns={historyColumns}
+              dataSource={adjustmentMovements}
+              rowKey="id"
+              loading={movementsLoading}
+              scroll={{ x: 1200 }}
+              pagination={{
+                showSizeChanger: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+              }}
+            />
+          )}
+        </DataTableWrapper>
+      )}
 
       {/* Create Adjustment Modal */}
       <Modal
-        title="Yeni Stok Düzeltme"
+        title={
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <PlusOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">Yeni Stok Düzeltme</div>
+              <div className="text-sm text-slate-500">Stok miktarını düzeltin</div>
+            </div>
+          </div>
+        }
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setCreateModalOpen(false)}>
-            İptal
-          </Button>,
-          <Button key="submit" type="default" onClick={handleSubmitAdjustment}>
-            Onaya Gönder
-          </Button>,
-          <Button key="direct" type="primary" onClick={handleDirectAdjustment} loading={adjustStock.isPending}>
-            Direkt Uygula
-          </Button>,
-        ]}
+        footer={
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              onClick={() => setCreateModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              İptal
+            </button>
+            <button
+              onClick={handleSubmitAdjustment}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+            >
+              Onaya Gönder
+            </button>
+            <button
+              onClick={handleDirectAdjustment}
+              disabled={adjustStock.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {adjustStock.isPending ? 'Uygulanıyor...' : 'Direkt Uygula'}
+            </button>
+          </div>
+        }
         width={700}
       >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçiniz' }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Ürün ara ve seç"
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  options={filteredProducts.map((p) => ({
-                    value: p.id,
-                    label: `${p.code} - ${p.name}`,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="warehouseId"
-                label="Depo"
-                rules={[{ required: true, message: 'Depo seçiniz' }]}
-              >
-                <Select
-                  placeholder="Depo seçin"
-                  options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+        <Form form={form} layout="vertical" className="pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="productId"
+              label="Ürün"
+              rules={[{ required: true, message: 'Ürün seçiniz' }]}
+            >
+              <Select
+                showSearch
+                placeholder="Ürün ara ve seç"
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={filteredProducts.map((p) => ({
+                  value: p.id,
+                  label: `${p.code} - ${p.name}`,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              name="warehouseId"
+              label="Depo"
+              rules={[{ required: true, message: 'Depo seçiniz' }]}
+            >
+              <Select
+                placeholder="Depo seçin"
+                options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item noStyle shouldUpdate={(prev, cur) => prev.productId !== cur.productId}>
             {({ getFieldValue }) => {
@@ -713,192 +815,222 @@ export default function StockAdjustmentsPage() {
               if (!product) return null;
 
               return (
-                <Card size="small" className="mb-4" style={{ backgroundColor: '#f6f8fa' }}>
-                  <Row gutter={16}>
-                    <Col span={8}>
-                      <Text type="secondary">Mevcut Stok:</Text>
-                      <div className="font-semibold text-lg">{product.totalStockQuantity}</div>
-                    </Col>
-                    <Col span={8}>
-                      <Text type="secondary">Kullanılabilir:</Text>
-                      <div className="font-semibold text-lg">{product.availableStockQuantity}</div>
-                    </Col>
-                    <Col span={8}>
-                      <Text type="secondary">Min. Seviye:</Text>
-                      <div className="font-semibold text-lg">{product.minStockLevel}</div>
-                    </Col>
-                  </Row>
-                </Card>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-xs text-slate-500 uppercase tracking-wide">Mevcut Stok</span>
+                      <div className="text-xl font-semibold text-slate-900">{product.totalStockQuantity}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 uppercase tracking-wide">Kullanılabilir</span>
+                      <div className="text-xl font-semibold text-slate-900">{product.availableStockQuantity}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-500 uppercase tracking-wide">Min. Seviye</span>
+                      <div className="text-xl font-semibold text-slate-900">{product.minStockLevel}</div>
+                    </div>
+                  </div>
+                </div>
               );
             }}
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="newQuantity"
-                label="Yeni Miktar"
-                rules={[
-                  { required: true, message: 'Yeni miktar giriniz' },
-                  { type: 'number', min: 0, message: 'Miktar 0 veya daha büyük olmalı' },
-                ]}
-              >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  placeholder="Yeni stok miktarını girin"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="reason"
-                label="Düzeltme Sebebi"
-                rules={[{ required: true, message: 'Sebep seçiniz' }]}
-              >
-                <Select
-                  placeholder="Sebep seçin"
-                  options={adjustmentReasons}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="newQuantity"
+              label="Yeni Miktar"
+              rules={[
+                { required: true, message: 'Yeni miktar giriniz' },
+                { type: 'number', min: 0, message: 'Miktar 0 veya daha büyük olmalı' },
+              ]}
+            >
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                placeholder="Yeni stok miktarını girin"
+              />
+            </Form.Item>
+            <Form.Item
+              name="reason"
+              label="Düzeltme Sebebi"
+              rules={[{ required: true, message: 'Sebep seçiniz' }]}
+            >
+              <Select
+                placeholder="Sebep seçin"
+                options={adjustmentReasons}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item name="notes" label="Notlar">
             <TextArea rows={3} placeholder="Ek açıklama veya not ekleyin..." />
           </Form.Item>
 
-          <div style={{ padding: 12, backgroundColor: '#fffbe6', borderRadius: 8, border: '1px solid #ffe58f' }}>
-            <Space>
-              <WarningOutlined className="text-yellow-600" />
-              <Text>
-                <strong>Onaya Gönder:</strong> Düzeltme talebi oluşturulur ve onay bekler.<br />
-                <strong>Direkt Uygula:</strong> Düzeltme anında sisteme uygulanır.
-              </Text>
-            </Space>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+            <WarningOutlined className="text-amber-600 mt-0.5" />
+            <div className="text-sm text-amber-800">
+              <strong>Onaya Gönder:</strong> Düzeltme talebi oluşturulur ve onay bekler.<br />
+              <strong>Direkt Uygula:</strong> Düzeltme anında sisteme uygulanır.
+            </div>
           </div>
         </Form>
       </Modal>
 
       {/* Review Modal */}
       <Modal
-        title={selectedAdjustment?.status === 'Pending' ? 'Düzeltme Talebini İncele' : 'Düzeltme Detayı'}
+        title={
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: selectedAdjustment?.status === 'Pending' ? '#f59e0b15' : '#8b5cf615' }}
+            >
+              {selectedAdjustment?.status === 'Pending' ? (
+                <CheckOutlined style={{ color: '#f59e0b' }} />
+              ) : (
+                <FileTextOutlined style={{ color: '#8b5cf6' }} />
+              )}
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">
+                {selectedAdjustment?.status === 'Pending' ? 'Düzeltme Talebini İncele' : 'Düzeltme Detayı'}
+              </div>
+              <div className="text-sm text-slate-500">{selectedAdjustment?.productName}</div>
+            </div>
+          </div>
+        }
         open={reviewModalOpen}
         onCancel={() => setReviewModalOpen(false)}
         footer={
-          selectedAdjustment?.status === 'Pending'
-            ? [
-                <Button key="cancel" onClick={() => setReviewModalOpen(false)}>
-                  İptal
-                </Button>,
-                <Button key="reject" danger onClick={handleReject}>
-                  Reddet
-                </Button>,
-                <Button key="approve" type="primary" onClick={handleApprove} loading={adjustStock.isPending}>
-                  Onayla ve Uygula
-                </Button>,
-              ]
-            : [
-                <Button key="close" type="primary" onClick={() => setReviewModalOpen(false)}>
-                  Kapat
-                </Button>,
-              ]
+          selectedAdjustment?.status === 'Pending' ? (
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                onClick={() => setReviewModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleReject}
+                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+              >
+                Reddet
+              </button>
+              <button
+                onClick={handleApprove}
+                disabled={adjustStock.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {adjustStock.isPending ? 'Onaylanıyor...' : 'Onayla ve Uygula'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-end pt-4 border-t border-slate-200">
+              <button
+                onClick={() => setReviewModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+              >
+                Kapat
+              </button>
+            </div>
+          )
         }
         width={600}
       >
         {selectedAdjustment && (
-          <>
-            <div className="space-y-4">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Text type="secondary">Ürün:</Text>
-                  <div className="font-semibold">{selectedAdjustment.productName}</div>
-                  <Text type="secondary" className="text-xs">{selectedAdjustment.productCode}</Text>
-                </Col>
-                <Col span={12}>
-                  <Text type="secondary">Depo:</Text>
-                  <div className="font-semibold">{selectedAdjustment.warehouseName}</div>
-                </Col>
-              </Row>
+          <div className="space-y-6 pt-4">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Ürün</span>
+                <div className="text-sm font-medium text-slate-900 mt-1">{selectedAdjustment.productName}</div>
+                <div className="text-xs text-slate-500">{selectedAdjustment.productCode}</div>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Depo</span>
+                <div className="text-sm font-medium text-slate-900 mt-1">{selectedAdjustment.warehouseName}</div>
+              </div>
+            </div>
 
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Text type="secondary">Mevcut Miktar:</Text>
-                  <div className="font-semibold text-lg">{selectedAdjustment.currentQuantity}</div>
-                </Col>
-                <Col span={8}>
-                  <Text type="secondary">Yeni Miktar:</Text>
-                  <div className="font-semibold text-lg">{selectedAdjustment.newQuantity}</div>
-                </Col>
-                <Col span={8}>
-                  <Text type="secondary">Fark:</Text>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Mevcut Miktar</span>
+                  <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.currentQuantity}</div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Yeni Miktar</span>
+                  <div className="text-xl font-semibold text-slate-900">{selectedAdjustment.newQuantity}</div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Fark</span>
                   <div
-                    className={`font-semibold text-lg ${
+                    className={`text-xl font-semibold ${
                       selectedAdjustment.difference > 0
                         ? 'text-green-600'
                         : selectedAdjustment.difference < 0
                         ? 'text-red-600'
-                        : ''
+                        : 'text-slate-500'
                     }`}
                   >
                     {selectedAdjustment.difference > 0 ? '+' : ''}
                     {selectedAdjustment.difference}
                   </div>
-                </Col>
-              </Row>
-
-              <div>
-                <Text type="secondary">Sebep:</Text>
-                <div className="font-semibold">
-                  {adjustmentReasons.find((r) => r.value === selectedAdjustment.reason)?.label ||
-                    selectedAdjustment.reason}
                 </div>
               </div>
-
-              {selectedAdjustment.notes && (
-                <div>
-                  <Text type="secondary">Notlar:</Text>
-                  <div>{selectedAdjustment.notes}</div>
-                </div>
-              )}
-
-              <div>
-                <Text type="secondary">Oluşturulma:</Text>
-                <div>
-                  {dayjs(selectedAdjustment.createdAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.createdBy}
-                </div>
-              </div>
-
-              {selectedAdjustment.reviewedAt && (
-                <div>
-                  <Text type="secondary">
-                    {selectedAdjustment.status === 'Approved' ? 'Onaylanma:' : 'Reddedilme:'}
-                  </Text>
-                  <div>
-                    {dayjs(selectedAdjustment.reviewedAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.reviewedBy}
-                  </div>
-                  {selectedAdjustment.reviewNotes && (
-                    <div className="mt-1 text-gray-600">{selectedAdjustment.reviewNotes}</div>
-                  )}
-                </div>
-              )}
             </div>
 
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Sebep</span>
+              <div className="text-sm font-medium text-slate-900 mt-1">
+                {adjustmentReasons.find((r) => r.value === selectedAdjustment.reason)?.label ||
+                  selectedAdjustment.reason}
+              </div>
+            </div>
+
+            {selectedAdjustment.notes && (
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Notlar</span>
+                <div className="text-sm text-slate-700 mt-1">{selectedAdjustment.notes}</div>
+              </div>
+            )}
+
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Oluşturulma</span>
+              <div className="text-sm text-slate-700 mt-1">
+                {dayjs(selectedAdjustment.createdAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.createdBy}
+              </div>
+            </div>
+
+            {selectedAdjustment.reviewedAt && (
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">
+                  {selectedAdjustment.status === 'Approved' ? 'Onaylanma' : 'Reddedilme'}
+                </span>
+                <div className="text-sm text-slate-700 mt-1">
+                  {dayjs(selectedAdjustment.reviewedAt).format('DD.MM.YYYY HH:mm')} - {selectedAdjustment.reviewedBy}
+                </div>
+                {selectedAdjustment.reviewNotes && (
+                  <div className="text-sm text-slate-600 mt-1 bg-slate-50 p-3 rounded-lg">
+                    {selectedAdjustment.reviewNotes}
+                  </div>
+                )}
+              </div>
+            )}
+
             {selectedAdjustment.status === 'Pending' && (
-              <div className="mt-4">
-                <Text type="secondary">İnceleme Notu:</Text>
+              <div>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">İnceleme Notu</span>
                 <TextArea
                   rows={3}
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   placeholder="Onay veya red sebebini yazın..."
-                  className="mt-1"
+                  className="mt-2"
                 />
               </div>
             )}
-          </>
+          </div>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

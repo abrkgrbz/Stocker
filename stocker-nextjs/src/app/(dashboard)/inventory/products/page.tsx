@@ -1,31 +1,28 @@
 'use client';
 
+/**
+ * Products List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
   Input,
   Select,
-  Row,
-  Col,
-  Statistic,
   Modal,
-  message,
-  Dropdown,
-  Tooltip,
   Form,
   InputNumber,
-  Collapse,
   Slider,
   Divider,
   Badge,
-  Popconfirm,
   Empty,
+  Dropdown,
+  Tooltip,
+  Spin,
+  Checkbox,
 } from 'antd';
 import {
   PlusOutlined,
@@ -59,13 +56,21 @@ import {
   useDeactivateProduct,
   useUpdateProduct,
 } from '@/lib/api/hooks/useInventory';
-import type { ProductDto, ProductType } from '@/lib/api/services/inventory.types';
+import type { ProductDto, ProductType, UpdateProductDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import { generateInventoryPDF, exportInventoryToExcel } from '@/lib/utils/inventory-export';
-
-const { Title, Text } = Typography;
-const { Search } = Input;
-const { Panel } = Collapse;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  confirmDelete,
+} from '@/lib/utils/sweetalert';
 
 // Product type configuration
 const productTypeConfig: Record<ProductType, { color: string; label: string }> = {
@@ -341,7 +346,7 @@ export default function ProductsPage() {
   // Filter handlers
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setActiveViewId(null); // Clear active view when filters change
+    setActiveViewId(null);
   };
 
   const clearFilters = () => {
@@ -376,7 +381,6 @@ export default function ProductsPage() {
 
       let updatedViews = [...savedViews];
 
-      // If setting as default, remove default from others
       if (newView.isDefault) {
         updatedViews = updatedViews.map(v => ({ ...v, isDefault: false }));
       }
@@ -386,7 +390,7 @@ export default function ProductsPage() {
       saveSavedViews(updatedViews);
       setActiveViewId(newView.id);
       setSaveViewModalOpen(false);
-      message.success('Görünüm kaydedildi');
+      showSuccess('Başarılı', 'Görünüm kaydedildi');
     } catch {
       // Validation error
     }
@@ -395,7 +399,7 @@ export default function ProductsPage() {
   const handleApplyView = (view: SavedView) => {
     setFilters(view.filters);
     setActiveViewId(view.id);
-    message.success(`"${view.name}" görünümü uygulandı`);
+    showSuccess('Başarılı', `"${view.name}" görünümü uygulandı`);
   };
 
   const handleDeleteView = (viewId: string) => {
@@ -405,7 +409,7 @@ export default function ProductsPage() {
     if (activeViewId === viewId) {
       setActiveViewId(null);
     }
-    message.success('Görünüm silindi');
+    showSuccess('Başarılı', 'Görünüm silindi');
   };
 
   const handleSetDefaultView = (viewId: string) => {
@@ -415,7 +419,7 @@ export default function ProductsPage() {
     }));
     setSavedViews(updatedViews);
     saveSavedViews(updatedViews);
-    message.success('Varsayılan görünüm ayarlandı');
+    showSuccess('Başarılı', 'Varsayılan görünüm ayarlandı');
   };
 
   // CRUD Handlers
@@ -427,21 +431,15 @@ export default function ProductsPage() {
     router.push(`/inventory/products/${id}/edit`);
   };
 
-  const handleDelete = (product: ProductDto) => {
-    Modal.confirm({
-      title: 'Ürünü Sil',
-      content: `"${product.name}" ürününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteProduct.mutateAsync(product.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleDelete = async (product: ProductDto) => {
+    const confirmed = await confirmDelete('Ürün', product.name);
+    if (confirmed) {
+      try {
+        await deleteProduct.mutateAsync(product.id);
+      } catch {
+        // Error handled by hook
+      }
+    }
   };
 
   const handleToggleActive = async (product: ProductDto) => {
@@ -451,7 +449,7 @@ export default function ProductsPage() {
       } else {
         await activateProduct.mutateAsync(product.id);
       }
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -459,7 +457,7 @@ export default function ProductsPage() {
   // Bulk operations handlers
   const handleBulkEdit = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('Lütfen düzenlemek için ürün seçin');
+      showWarning('Uyarı', 'Lütfen düzenlemek için ürün seçin');
       return;
     }
     form.resetFields();
@@ -472,7 +470,7 @@ export default function ProductsPage() {
       const hasChanges = values.categoryId || values.brandId || values.priceChange !== undefined;
 
       if (!hasChanges) {
-        message.warning('En az bir alan değiştirmelisiniz');
+        showWarning('Uyarı', 'En az bir alan değiştirmelisiniz');
         return;
       }
 
@@ -485,7 +483,7 @@ export default function ProductsPage() {
           const product = products.find(p => p.id === productId);
           if (!product) continue;
 
-          const updateData: any = {};
+          const updateData: Partial<UpdateProductDto> = {};
 
           if (values.categoryId) {
             updateData.categoryId = values.categoryId;
@@ -509,7 +507,7 @@ export default function ProductsPage() {
           }
 
           if (Object.keys(updateData).length > 0) {
-            await updateProduct.mutateAsync({ id: productId, data: updateData });
+            await updateProduct.mutateAsync({ id: productId, data: updateData as UpdateProductDto });
             successCount++;
           }
         } catch {
@@ -518,65 +516,59 @@ export default function ProductsPage() {
       }
 
       if (successCount > 0) {
-        message.success(`${successCount} ürün başarıyla güncellendi`);
+        showSuccess('Başarılı', `${successCount} ürün başarıyla güncellendi`);
         refetch();
       }
       if (errorCount > 0) {
-        message.error(`${errorCount} ürün güncellenemedi`);
+        showError(`${errorCount} ürün güncellenemedi`);
       }
 
       setBulkEditModalOpen(false);
       setSelectedRowKeys([]);
-    } catch (error) {
-      message.error('Form doğrulama hatası');
+    } catch {
+      showError('Form doğrulama hatası');
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('Lütfen silmek için ürün seçin');
+      showWarning('Uyarı', 'Lütfen silmek için ürün seçin');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Silme',
-      content: `${selectedRowKeys.length} ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        let errorCount = 0;
+    const confirmed = await confirmDelete('Ürün', `${selectedRowKeys.length} ürün`);
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      let errorCount = 0;
 
-        for (const productId of selectedRowKeys) {
-          try {
-            await deleteProduct.mutateAsync(productId);
-            successCount++;
-          } catch {
-            errorCount++;
-          }
+      for (const productId of selectedRowKeys) {
+        try {
+          await deleteProduct.mutateAsync(productId);
+          successCount++;
+        } catch {
+          errorCount++;
         }
+      }
 
-        if (successCount > 0) {
-          message.success(`${successCount} ürün başarıyla silindi`);
-          refetch();
-        }
-        if (errorCount > 0) {
-          message.error(`${errorCount} ürün silinemedi`);
-        }
+      if (successCount > 0) {
+        showSuccess('Başarılı', `${successCount} ürün başarıyla silindi`);
+        refetch();
+      }
+      if (errorCount > 0) {
+        showError(`${errorCount} ürün silinemedi`);
+      }
 
-        setSelectedRowKeys([]);
-        setBulkLoading(false);
-      },
-    });
+      setSelectedRowKeys([]);
+      setBulkLoading(false);
+    }
   };
 
   const handleBulkActivate = async (activate: boolean) => {
     if (selectedRowKeys.length === 0) {
-      message.warning(`Lütfen ${activate ? 'aktifleştirmek' : 'pasifleştirmek'} için ürün seçin`);
+      showWarning('Uyarı', `Lütfen ${activate ? 'aktifleştirmek' : 'pasifleştirmek'} için ürün seçin`);
       return;
     }
 
@@ -598,11 +590,11 @@ export default function ProductsPage() {
     }
 
     if (successCount > 0) {
-      message.success(`${successCount} ürün başarıyla ${activate ? 'aktifleştirildi' : 'pasifleştirildi'}`);
+      showSuccess('Başarılı', `${successCount} ürün başarıyla ${activate ? 'aktifleştirildi' : 'pasifleştirildi'}`);
       refetch();
     }
     if (errorCount > 0) {
-      message.error(`${errorCount} ürün ${activate ? 'aktifleştirilemedi' : 'pasifleştirilemedi'}`);
+      showError(`${errorCount} ürün ${activate ? 'aktifleştirilemedi' : 'pasifleştirilemedi'}`);
     }
 
     setSelectedRowKeys([]);
@@ -617,16 +609,16 @@ export default function ProductsPage() {
         : filteredProducts;
 
       if (dataToExport.length === 0) {
-        message.warning('Dışa aktarılacak ürün bulunamadı');
+        showWarning('Uyarı', 'Dışa aktarılacak ürün bulunamadı');
         return;
       }
 
       generateInventoryPDF(dataToExport, {
         title: selectedRowKeys.length > 0 ? `Seçili Ürünler (${dataToExport.length} adet)` : 'Ürün Listesi',
       });
-      message.success('PDF başarıyla oluşturuldu');
-    } catch (error) {
-      message.error('PDF oluşturulurken hata oluştu');
+      showSuccess('Başarılı', 'PDF başarıyla oluşturuldu');
+    } catch {
+      showError('PDF oluşturulurken hata oluştu');
     }
   };
 
@@ -637,16 +629,16 @@ export default function ProductsPage() {
         : filteredProducts;
 
       if (dataToExport.length === 0) {
-        message.warning('Dışa aktarılacak ürün bulunamadı');
+        showWarning('Uyarı', 'Dışa aktarılacak ürün bulunamadı');
         return;
       }
 
       exportInventoryToExcel(dataToExport, {
         title: selectedRowKeys.length > 0 ? `Seçili Ürünler (${dataToExport.length} adet)` : 'Ürün Listesi',
       });
-      message.success('Excel dosyası başarıyla oluşturuldu');
-    } catch (error) {
-      message.error('Excel oluşturulurken hata oluştu');
+      showSuccess('Başarılı', 'Excel dosyası başarıyla oluşturuldu');
+    } catch {
+      showError('Excel oluşturulurken hata oluştu');
     }
   };
 
@@ -690,32 +682,40 @@ export default function ProductsPage() {
   // Table columns
   const columns: ColumnsType<ProductDto> = [
     {
-      title: 'Ürün Kodu',
-      dataIndex: 'code',
-      key: 'code',
-      width: 120,
-      render: (code, record) => (
-        <div>
-          <div className="font-medium">{code}</div>
-          {record.barcode && (
-            <Text type="secondary" className="text-xs">{record.barcode}</Text>
-          )}
+      title: 'Ürün',
+      key: 'product',
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: '#3b82f615' }}
+          >
+            <AppstoreOutlined style={{ color: '#3b82f6' }} />
+          </div>
+          <div>
+            <div
+              className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+              onClick={() => handleView(record.id)}
+            >
+              {record.name}
+            </div>
+            <div className="text-xs text-slate-500">
+              {record.code}
+              {record.barcode && ` • ${record.barcode}`}
+            </div>
+          </div>
         </div>
       ),
     },
     {
-      title: 'Ürün Adı',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name, record) => (
-        <div>
-          <div className="font-medium text-blue-600 cursor-pointer hover:text-blue-800" onClick={() => handleView(record.id)}>
-            {name}
-          </div>
-          {record.categoryName && (
-            <Tag color="default" className="text-xs mt-1">{record.categoryName}</Tag>
-          )}
-        </div>
+      title: 'Kategori',
+      dataIndex: 'categoryName',
+      key: 'categoryName',
+      width: 140,
+      render: (name) => name ? (
+        <Tag color="default">{name}</Tag>
+      ) : (
+        <span className="text-slate-400">-</span>
       ),
     },
     {
@@ -733,7 +733,7 @@ export default function ProductsPage() {
       dataIndex: 'brandName',
       key: 'brandName',
       width: 120,
-      render: (brand) => brand || '-',
+      render: (brand) => <span className="text-sm text-slate-600">{brand || '-'}</span>,
     },
     {
       title: 'Birim Fiyat',
@@ -744,12 +744,12 @@ export default function ProductsPage() {
       render: (price, record) => (
         price ? (
           <div>
-            <div className="font-semibold">₺{price.toLocaleString('tr-TR')}</div>
+            <div className="text-sm font-medium text-slate-900">₺{price.toLocaleString('tr-TR')}</div>
             {record.unitPriceCurrency && record.unitPriceCurrency !== 'TRY' && (
-              <Text type="secondary" className="text-xs">{record.unitPriceCurrency}</Text>
+              <div className="text-xs text-slate-500">{record.unitPriceCurrency}</div>
             )}
           </div>
-        ) : '-'
+        ) : <span className="text-slate-400">-</span>
       ),
     },
     {
@@ -758,22 +758,23 @@ export default function ProductsPage() {
       key: 'totalStockQuantity',
       width: 100,
       align: 'right',
+      sorter: (a, b) => a.totalStockQuantity - b.totalStockQuantity,
       render: (qty, record) => {
         const isLow = qty < record.minStockLevel;
         const isZero = qty === 0;
         return (
-          <div>
-            <span className={isZero ? 'text-red-600 font-bold' : isLow ? 'text-orange-600 font-semibold' : 'font-medium'}>
+          <div className="flex items-center justify-end gap-2">
+            <span className={`text-sm font-medium ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-slate-900'}`}>
               {qty}
             </span>
             {isLow && !isZero && (
               <Tooltip title="Düşük stok">
-                <WarningOutlined className="text-orange-500 ml-2" />
+                <WarningOutlined className="text-amber-500" />
               </Tooltip>
             )}
             {isZero && (
               <Tooltip title="Stok yok">
-                <WarningOutlined className="text-red-500 ml-2" />
+                <WarningOutlined className="text-red-500" />
               </Tooltip>
             )}
           </div>
@@ -786,6 +787,7 @@ export default function ProductsPage() {
       key: 'availableStockQuantity',
       width: 100,
       align: 'right',
+      render: (qty) => <span className="text-sm text-slate-600">{qty}</span>,
     },
     {
       title: 'Takip',
@@ -793,7 +795,7 @@ export default function ProductsPage() {
       width: 80,
       align: 'center',
       render: (_, record) => (
-        <Space size={4}>
+        <div className="flex items-center justify-center gap-1">
           {record.trackSerialNumbers && (
             <Tooltip title="Seri No Takibi">
               <Tag color="blue" style={{ margin: 0 }}>S</Tag>
@@ -804,8 +806,8 @@ export default function ProductsPage() {
               <Tag color="green" style={{ margin: 0 }}>L</Tag>
             </Tooltip>
           )}
-          {!record.trackSerialNumbers && !record.trackLotNumbers && '-'}
-        </Space>
+          {!record.trackSerialNumbers && !record.trackLotNumbers && <span className="text-slate-400">-</span>}
+        </div>
       ),
     },
     {
@@ -813,204 +815,211 @@ export default function ProductsPage() {
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
-      align: 'center',
       render: (isActive) => (
-        isActive ? (
-          <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
-        ) : (
-          <Tag color="default" icon={<StopOutlined />}>Pasif</Tag>
-        )
+        <Tag color={isActive ? 'green' : 'default'}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </Tag>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: 'Görüntüle',
-                onClick: () => handleView(record.id),
-              },
-              {
-                key: 'edit',
-                icon: <EditOutlined />,
-                label: 'Düzenle',
-                onClick: () => handleEdit(record.id),
-              },
-              {
-                type: 'divider',
-              },
-              {
-                key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
-                label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-                onClick: () => handleToggleActive(record),
-              },
-              {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => handleView(record.id),
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Düzenle',
+            onClick: () => handleEdit(record.id),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'toggle',
+            icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+            label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
+            onClick: () => handleToggleActive(record),
+          },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Ürünler</Title>
-          <Text type="secondary">Ürün kataloğunuzu yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <AppstoreOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'pdf',
-                  icon: <FilePdfOutlined />,
-                  label: 'PDF İndir',
-                  onClick: handleExportPDF,
-                },
-                {
-                  key: 'excel',
-                  icon: <FileExcelOutlined />,
-                  label: 'Excel İndir',
-                  onClick: handleExportExcel,
-                },
-              ],
-            }}
-          >
-            <Button icon={<DownloadOutlined />}>
-              Dışa Aktar
-            </Button>
-          </Dropdown>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/inventory/products/new')}>
-            Yeni Ürün
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Düşük Stok</span>
+              <div className="text-2xl font-semibold text-slate-900">{lowStockProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: lowStockProducts > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <WarningOutlined style={{ color: lowStockProducts > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Değer</span>
+              <div className="text-2xl font-semibold text-slate-900">₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <AppstoreOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bulk Actions Bar */}
       {selectedRowKeys.length > 0 && (
-        <Card className="mb-4" style={{ backgroundColor: '#e6f7ff', borderColor: '#91d5ff' }}>
-          <div className="flex items-center justify-between">
-            <Space>
-              <Text strong>{selectedRowKeys.length} ürün seçildi</Text>
-            </Space>
-            <Space>
-              <Button icon={<EditOutlined />} onClick={handleBulkEdit} loading={bulkLoading}>
-                Toplu Düzenle
-              </Button>
-              <Button icon={<CheckCircleOutlined />} onClick={() => handleBulkActivate(true)} loading={bulkLoading}>
-                Aktifleştir
-              </Button>
-              <Button icon={<StopOutlined />} onClick={() => handleBulkActivate(false)} loading={bulkLoading}>
-                Pasifleştir
-              </Button>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <span className="text-sm font-medium text-blue-800">{selectedRowKeys.length} ürün seçildi</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleBulkEdit}
+                disabled={bulkLoading}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <EditOutlined className="mr-1" /> Toplu Düzenle
+              </button>
+              <button
+                onClick={() => handleBulkActivate(true)}
+                disabled={bulkLoading}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <CheckCircleOutlined className="mr-1" /> Aktifleştir
+              </button>
+              <button
+                onClick={() => handleBulkActivate(false)}
+                disabled={bulkLoading}
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <StopOutlined className="mr-1" /> Pasifleştir
+              </button>
               <Dropdown
                 menu={{
                   items: [
-                    {
-                      key: 'pdf',
-                      icon: <FilePdfOutlined />,
-                      label: 'Seçilenleri PDF İndir',
-                      onClick: handleExportPDF,
-                    },
-                    {
-                      key: 'excel',
-                      icon: <FileExcelOutlined />,
-                      label: 'Seçilenleri Excel İndir',
-                      onClick: handleExportExcel,
-                    },
+                    { key: 'pdf', icon: <FilePdfOutlined />, label: 'Seçilenleri PDF İndir', onClick: handleExportPDF },
+                    { key: 'excel', icon: <FileExcelOutlined />, label: 'Seçilenleri Excel İndir', onClick: handleExportExcel },
                   ],
                 }}
               >
-                <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
+                <button className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors">
+                  <DownloadOutlined className="mr-1" /> Dışa Aktar
+                </button>
               </Dropdown>
-              <Button danger icon={<DeleteOutlined />} onClick={handleBulkDelete} loading={bulkLoading}>
-                Sil
-              </Button>
-              <Button onClick={() => setSelectedRowKeys([])}>Seçimi Temizle</Button>
-            </Space>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <DeleteOutlined className="mr-1" /> Sil
+              </button>
+              <button
+                onClick={() => setSelectedRowKeys([])}
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                Seçimi Temizle
+              </button>
+            </div>
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Ürün"
-              value={totalProducts}
-              prefix={<AppstoreOutlined className="text-blue-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Aktif Ürün"
-              value={activeProducts}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className={lowStockProducts > 0 ? 'border-orange-200' : ''}>
-            <Statistic
-              title="Düşük Stok"
-              value={lowStockProducts}
-              prefix={<WarningOutlined className={lowStockProducts > 0 ? 'text-orange-500' : 'text-gray-400'} />}
-              valueStyle={lowStockProducts > 0 ? { color: '#fa8c16' } : undefined}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Stok Değeri"
-              value={totalValue}
-              prefix="₺"
-              precision={0}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<AppstoreOutlined />}
+        iconColor="#3b82f6"
+        title="Ürünler"
+        description="Ürün kataloğunuzu yönetin"
+        itemCount={filteredProducts.length}
+        primaryAction={{
+          label: 'Yeni Ürün',
+          onClick: () => router.push('/inventory/products/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <Dropdown
+              menu={{
+                items: [
+                  { key: 'pdf', icon: <FilePdfOutlined />, label: 'PDF İndir', onClick: handleExportPDF },
+                  { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
+                ],
+              }}
+            >
+              <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+                <DownloadOutlined />
+              </button>
+            </Dropdown>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
 
-      {/* Saved Views & Quick Filters Bar */}
-      <Card className="mb-4" size="small">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          {/* Saved Views */}
-          <Space wrap>
-            <Text strong style={{ marginRight: 8 }}>
-              <FolderOutlined /> Görünümler:
-            </Text>
+      {/* Saved Views & Quick Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
+              <FolderOutlined className="text-slate-400" /> Görünümler:
+            </span>
             {savedViews.length === 0 ? (
-              <Text type="secondary">Henüz kayıtlı görünüm yok</Text>
+              <span className="text-sm text-slate-400">Henüz kayıtlı görünüm yok</span>
             ) : (
               savedViews.slice(0, 5).map(view => (
                 <Tag
@@ -1025,23 +1034,22 @@ export default function ProductsPage() {
               ))
             )}
             {savedViews.length > 5 && (
-              <Button type="link" size="small" onClick={() => setManageViewsModalOpen(true)}>
+              <button
+                onClick={() => setManageViewsModalOpen(true)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
                 +{savedViews.length - 5} daha
-              </Button>
+              </button>
             )}
-            <Button
-              type="link"
-              size="small"
-              icon={<SettingOutlined />}
+            <button
               onClick={() => setManageViewsModalOpen(true)}
+              className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
             >
-              Yönet
-            </Button>
-          </Space>
-
-          {/* Quick Filter Presets */}
-          <Space wrap>
-            <Text type="secondary">Hızlı Filtre:</Text>
+              <SettingOutlined /> Yönet
+            </button>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-slate-500">Hızlı Filtre:</span>
             {filterPresets.map(preset => (
               <Tag
                 key={preset.key}
@@ -1052,89 +1060,84 @@ export default function ProductsPage() {
                 {preset.label}
               </Tag>
             ))}
-          </Space>
+          </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Filters Card */}
-      <Card className="mb-4">
-        {/* Basic Filters Row */}
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={6}>
-            <Search
-              placeholder="Ürün adı, kodu veya barkod ara..."
-              value={filters.searchText}
-              onChange={(e) => updateFilter('searchText', e.target.value)}
-              allowClear
-              prefix={<SearchOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Select
-              placeholder="Kategori"
-              value={filters.categoryId}
-              onChange={(v) => updateFilter('categoryId', v)}
-              allowClear
-              style={{ width: '100%' }}
-              options={categories.map((c) => ({ value: c.id, label: c.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Select
-              placeholder="Marka"
-              value={filters.brandId}
-              onChange={(v) => updateFilter('brandId', v)}
-              allowClear
-              style={{ width: '100%' }}
-              options={brands.map((b) => ({ value: b.id, label: b.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Select
-              value={filters.includeInactive}
-              onChange={(v) => updateFilter('includeInactive', v)}
-              style={{ width: '100%' }}
-              options={[
-                { value: false, label: 'Sadece Aktif' },
-                { value: true, label: 'Tümü' },
-              ]}
-            />
-          </Col>
-          <Col xs={24} sm={24} lg={6}>
-            <Space>
-              <Badge count={activeFilterCount} size="small" offset={[-5, 5]}>
-                <Button
-                  icon={<FilterOutlined />}
-                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  type={showAdvancedFilters ? 'primary' : 'default'}
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <Input
+            placeholder="Ürün adı, kodu veya barkod ara..."
+            prefix={<SearchOutlined className="text-slate-400" />}
+            value={filters.searchText}
+            onChange={(e) => updateFilter('searchText', e.target.value)}
+            allowClear
+            style={{ maxWidth: 300 }}
+            className="h-10"
+          />
+          <Select
+            placeholder="Kategori"
+            value={filters.categoryId}
+            onChange={(v) => updateFilter('categoryId', v)}
+            allowClear
+            style={{ width: 160 }}
+            options={categories.map((c) => ({ value: c.id, label: c.name }))}
+          />
+          <Select
+            placeholder="Marka"
+            value={filters.brandId}
+            onChange={(v) => updateFilter('brandId', v)}
+            allowClear
+            style={{ width: 160 }}
+            options={brands.map((b) => ({ value: b.id, label: b.name }))}
+          />
+          <Select
+            value={filters.includeInactive}
+            onChange={(v) => updateFilter('includeInactive', v)}
+            style={{ width: 130 }}
+            options={[
+              { value: false, label: 'Sadece Aktif' },
+              { value: true, label: 'Tümü' },
+            ]}
+          />
+          <div className="flex items-center gap-2 ml-auto">
+            <Badge count={activeFilterCount} size="small" offset={[-5, 5]}>
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                  showAdvancedFilters ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <FilterOutlined /> Gelişmiş
+              </button>
+            </Badge>
+            {hasActiveFilters && (
+              <>
+                <button
+                  onClick={handleSaveView}
+                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
                 >
-                  Gelişmiş
-                </Button>
-              </Badge>
-              {hasActiveFilters && (
-                <>
-                  <Button icon={<SaveOutlined />} onClick={handleSaveView}>
-                    Kaydet
-                  </Button>
-                  <Button icon={<ClearOutlined />} onClick={clearFilters}>
-                    Temizle
-                  </Button>
-                </>
-              )}
-            </Space>
-          </Col>
-        </Row>
+                  <SaveOutlined /> Kaydet
+                </button>
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <ClearOutlined /> Temizle
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
-        {/* Advanced Filters Panel */}
+        {/* Advanced Filters */}
         {showAdvancedFilters && (
           <>
             <Divider style={{ margin: '16px 0' }} />
-            <Row gutter={[16, 16]}>
-              {/* Product Types */}
-              <Col xs={24} sm={12} lg={6}>
-                <div className="mb-2">
-                  <Text strong>Ürün Türü</Text>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Ürün Türü</label>
                 <Select
                   mode="multiple"
                   placeholder="Tür seçin"
@@ -1146,13 +1149,9 @@ export default function ProductsPage() {
                     label: config.label,
                   }))}
                 />
-              </Col>
-
-              {/* Stock Status */}
-              <Col xs={24} sm={12} lg={6}>
-                <div className="mb-2">
-                  <Text strong>Stok Durumu</Text>
-                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Stok Durumu</label>
                 <Select
                   mode="multiple"
                   placeholder="Stok durumu"
@@ -1165,13 +1164,9 @@ export default function ProductsPage() {
                     { value: 'outOfStock', label: 'Stokta Yok' },
                   ]}
                 />
-              </Col>
-
-              {/* Tracking Type */}
-              <Col xs={24} sm={12} lg={6}>
-                <div className="mb-2">
-                  <Text strong>Takip Türü</Text>
-                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Takip Türü</label>
                 <Select
                   mode="multiple"
                   placeholder="Takip türü"
@@ -1184,20 +1179,16 @@ export default function ProductsPage() {
                     { value: 'none', label: 'Takip Yok' },
                   ]}
                 />
-              </Col>
-
-              {/* Price Range */}
-              <Col xs={24} sm={12} lg={6}>
-                <div className="mb-2">
-                  <Text strong>
-                    Fiyat Aralığı
-                    {filters.priceRange && (
-                      <Text type="secondary" style={{ marginLeft: 8 }}>
-                        ₺{filters.priceRange[0].toLocaleString()} - ₺{filters.priceRange[1].toLocaleString()}
-                      </Text>
-                    )}
-                  </Text>
-                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+                  Fiyat Aralığı
+                  {filters.priceRange && (
+                    <span className="font-normal ml-2">
+                      ₺{filters.priceRange[0].toLocaleString()} - ₺{filters.priceRange[1].toLocaleString()}
+                    </span>
+                  )}
+                </label>
                 <Slider
                   range
                   min={priceStats.min}
@@ -1206,29 +1197,8 @@ export default function ProductsPage() {
                   onChange={(v) => updateFilter('priceRange', v as [number, number])}
                   tooltip={{ formatter: (v) => `₺${v?.toLocaleString()}` }}
                 />
-              </Col>
-
-              {/* Stock Range */}
-              <Col xs={24} sm={12} lg={6}>
-                <div className="mb-2">
-                  <Text strong>
-                    Stok Aralığı
-                    {filters.stockRange && (
-                      <Text type="secondary" style={{ marginLeft: 8 }}>
-                        {filters.stockRange[0]} - {filters.stockRange[1]}
-                      </Text>
-                    )}
-                  </Text>
-                </div>
-                <Slider
-                  range
-                  min={stockStats.min}
-                  max={stockStats.max}
-                  value={filters.stockRange || [stockStats.min, stockStats.max]}
-                  onChange={(v) => updateFilter('stockRange', v as [number, number])}
-                />
-              </Col>
-            </Row>
+              </div>
+            </div>
           </>
         )}
 
@@ -1237,7 +1207,7 @@ export default function ProductsPage() {
           <>
             <Divider style={{ margin: '16px 0' }} />
             <div className="flex items-center gap-2 flex-wrap">
-              <Text type="secondary">Aktif Filtreler:</Text>
+              <span className="text-sm text-slate-500">Aktif Filtreler:</span>
               {filters.categoryId && (
                 <Tag closable onClose={() => updateFilter('categoryId', undefined)}>
                   Kategori: {categories.find(c => c.id === filters.categoryId)?.name}
@@ -1272,50 +1242,63 @@ export default function ProductsPage() {
                   Fiyat: ₺{filters.priceRange[0].toLocaleString()} - ₺{filters.priceRange[1].toLocaleString()}
                 </Tag>
               )}
-              {filters.stockRange && (
-                <Tag closable onClose={() => updateFilter('stockRange', null)}>
-                  Stok: {filters.stockRange[0]} - {filters.stockRange[1]}
-                </Tag>
-              )}
               {filters.includeInactive && (
                 <Tag closable onClose={() => updateFilter('includeInactive', false)}>
                   Pasifler Dahil
                 </Tag>
               )}
-              <Text type="secondary">
+              <span className="text-sm text-slate-500">
                 ({filteredProducts.length} / {products.length} ürün)
-              </Text>
+              </span>
             </div>
           </>
         )}
-      </Card>
+      </div>
 
-      {/* Products Table */}
-      <Card>
-        <Table
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={filteredProducts}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: filteredProducts.length,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ürün`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-          }}
-          scroll={{ x: 1400 }}
-        />
-      </Card>
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={filteredProducts}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1400 }}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: filteredProducts.length,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} ürün`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+          />
+        </DataTableWrapper>
+      )}
 
       {/* Bulk Edit Modal */}
       <Modal
-        title={`Toplu Düzenleme (${selectedRowKeys.length} ürün)`}
+        title={
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <EditOutlined style={{ color: '#3b82f6' }} />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">Toplu Düzenleme</div>
+              <div className="text-sm text-slate-500">{selectedRowKeys.length} ürün seçildi</div>
+            </div>
+          </div>
+        }
         open={bulkEditModalOpen}
         onOk={handleBulkEditConfirm}
         onCancel={() => setBulkEditModalOpen(false)}
@@ -1324,10 +1307,10 @@ export default function ProductsPage() {
         confirmLoading={bulkLoading}
         width={600}
       >
-        <Form form={form} layout="vertical">
-          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+        <Form form={form} layout="vertical" className="pt-4">
+          <div className="text-sm text-slate-500 mb-4 p-3 bg-slate-50 rounded-lg">
             Sadece değiştirmek istediğiniz alanları doldurun. Boş bırakılan alanlar değiştirilmeyecektir.
-          </Text>
+          </div>
 
           <Form.Item name="categoryId" label="Kategori">
             <Select
@@ -1345,55 +1328,59 @@ export default function ProductsPage() {
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="priceChangeType" label="Fiyat Değişiklik Türü" initialValue="fixed">
-                <Select
-                  options={[
-                    { value: 'fixed', label: 'Sabit Fiyat' },
-                    { value: 'percentage', label: 'Yüzde Değişim (%)' },
-                    { value: 'increase', label: 'Tutar Artırma/Azaltma' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="priceChange"
-                label="Fiyat Değeri"
-                tooltip="Sabit fiyat: yeni fiyat, Yüzde: +10 veya -10, Tutar: +100 veya -100"
-              >
-                <InputNumber
-                  placeholder="Değer girin"
-                  style={{ width: '100%' }}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as unknown as number}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="priceChangeType" label="Fiyat Değişiklik Türü" initialValue="fixed">
+              <Select
+                options={[
+                  { value: 'fixed', label: 'Sabit Fiyat' },
+                  { value: 'percentage', label: 'Yüzde Değişim (%)' },
+                  { value: 'increase', label: 'Tutar Artırma/Azaltma' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item
+              name="priceChange"
+              label="Fiyat Değeri"
+              tooltip="Sabit fiyat: yeni fiyat, Yüzde: +10 veya -10, Tutar: +100 veya -100"
+            >
+              <InputNumber
+                placeholder="Değer girin"
+                style={{ width: '100%' }}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as unknown as number}
+              />
+            </Form.Item>
+          </div>
 
-          <div style={{ padding: 12, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              <strong>Fiyat Değişiklik Örnekleri:</strong><br />
-              • Sabit Fiyat: 100 → Tüm seçili ürünlerin fiyatı 100₺ olur<br />
-              • Yüzde Değişim: 10 → %10 artış, -10 → %10 indirim<br />
-              • Tutar Artırma: 50 → 50₺ artış, -50 → 50₺ düşüş
-            </Text>
+          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+            <strong>Fiyat Değişiklik Örnekleri:</strong><br />
+            • Sabit Fiyat: 100 → Tüm seçili ürünlerin fiyatı 100₺ olur<br />
+            • Yüzde Değişim: 10 → %10 artış, -10 → %10 indirim<br />
+            • Tutar Artırma: 50 → 50₺ artış, -50 → 50₺ düşüş
           </div>
         </Form>
       </Modal>
 
       {/* Save View Modal */}
       <Modal
-        title="Görünümü Kaydet"
+        title={
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <SaveOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">Görünümü Kaydet</div>
+              <div className="text-sm text-slate-500">Mevcut filtreleri kaydedin</div>
+            </div>
+          </div>
+        }
         open={saveViewModalOpen}
         onOk={handleSaveViewConfirm}
         onCancel={() => setSaveViewModalOpen(false)}
         okText="Kaydet"
         cancelText="İptal"
       >
-        <Form form={saveViewForm} layout="vertical">
+        <Form form={saveViewForm} layout="vertical" className="pt-4">
           <Form.Item
             name="name"
             label="Görünüm Adı"
@@ -1402,31 +1389,40 @@ export default function ProductsPage() {
             <Input placeholder="Örn: Düşük Stoklu Ürünler" />
           </Form.Item>
           <Form.Item name="isDefault" valuePropName="checked">
-            <Space>
-              <StarOutlined style={{ color: '#faad14' }} />
-              <span>Varsayılan görünüm olarak ayarla</span>
-            </Space>
+            <Checkbox>
+              <span className="flex items-center gap-1">
+                <StarOutlined style={{ color: '#faad14' }} />
+                Varsayılan görünüm olarak ayarla
+              </span>
+            </Checkbox>
           </Form.Item>
-          <div style={{ padding: 12, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              <strong>Kaydedilecek Filtreler:</strong><br />
-              {filters.categoryId && `• Kategori: ${categories.find(c => c.id === filters.categoryId)?.name}\n`}
-              {filters.brandId && `• Marka: ${brands.find(b => b.id === filters.brandId)?.name}\n`}
-              {filters.productTypes.length > 0 && `• Tür: ${filters.productTypes.map(t => productTypeConfig[t]?.label).join(', ')}\n`}
-              {filters.stockStatus.length > 0 && `• Stok Durumu: ${filters.stockStatus.length} kriter\n`}
-              {filters.trackingType.length > 0 && `• Takip Türü: ${filters.trackingType.length} kriter\n`}
-              {filters.priceRange && `• Fiyat: ₺${filters.priceRange[0]} - ₺${filters.priceRange[1]}\n`}
-              {filters.stockRange && `• Stok: ${filters.stockRange[0]} - ${filters.stockRange[1]}\n`}
-              {filters.includeInactive && `• Pasifler Dahil\n`}
-              {!hasActiveFilters && 'Henüz filtre uygulanmadı'}
-            </Text>
+          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+            <strong>Kaydedilecek Filtreler:</strong><br />
+            {filters.categoryId && `• Kategori: ${categories.find(c => c.id === filters.categoryId)?.name}\n`}
+            {filters.brandId && `• Marka: ${brands.find(b => b.id === filters.brandId)?.name}\n`}
+            {filters.productTypes.length > 0 && `• Tür: ${filters.productTypes.map(t => productTypeConfig[t]?.label).join(', ')}\n`}
+            {filters.stockStatus.length > 0 && `• Stok Durumu: ${filters.stockStatus.length} kriter\n`}
+            {filters.trackingType.length > 0 && `• Takip Türü: ${filters.trackingType.length} kriter\n`}
+            {filters.priceRange && `• Fiyat: ₺${filters.priceRange[0]} - ₺${filters.priceRange[1]}\n`}
+            {filters.includeInactive && `• Pasifler Dahil\n`}
+            {!hasActiveFilters && 'Henüz filtre uygulanmadı'}
           </div>
         </Form>
       </Modal>
 
       {/* Manage Views Modal */}
       <Modal
-        title="Kayıtlı Görünümleri Yönet"
+        title={
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#64748b15' }}>
+              <FolderOutlined style={{ color: '#64748b' }} />
+            </div>
+            <div>
+              <div className="text-lg font-semibold text-slate-900">Kayıtlı Görünümler</div>
+              <div className="text-sm text-slate-500">Görünümlerinizi yönetin</div>
+            </div>
+          </div>
+        }
         open={manageViewsModalOpen}
         onCancel={() => setManageViewsModalOpen(false)}
         footer={null}
@@ -1438,56 +1434,54 @@ export default function ProductsPage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 pt-4">
             {savedViews.map(view => (
-              <Card key={view.id} size="small" className="hover:shadow-md transition-shadow">
+              <div key={view.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Space>
+                    <div className="flex items-center gap-2">
                       {view.isDefault && <StarFilled style={{ color: '#faad14' }} />}
-                      <Text strong>{view.name}</Text>
-                    </Space>
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(view.createdAt).toLocaleDateString('tr-TR')} tarihinde oluşturuldu
-                      </Text>
+                      <span className="font-medium text-slate-900">{view.name}</span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {new Date(view.createdAt).toLocaleDateString('tr-TR')} tarihinde oluşturuldu
                     </div>
                   </div>
-                  <Space>
-                    <Button
-                      type="primary"
-                      size="small"
+                  <div className="flex items-center gap-2">
+                    <button
                       onClick={() => {
                         handleApplyView(view);
                         setManageViewsModalOpen(false);
                       }}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                     >
                       Uygula
-                    </Button>
+                    </button>
                     {!view.isDefault && (
                       <Tooltip title="Varsayılan Yap">
-                        <Button
-                          size="small"
-                          icon={<StarOutlined />}
+                        <button
                           onClick={() => handleSetDefaultView(view.id)}
-                        />
+                          className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                        >
+                          <StarOutlined />
+                        </button>
                       </Tooltip>
                     )}
-                    <Popconfirm
-                      title="Bu görünümü silmek istediğinizden emin misiniz?"
-                      onConfirm={() => handleDeleteView(view.id)}
-                      okText="Sil"
-                      cancelText="İptal"
-                    >
-                      <Button size="small" danger icon={<DeleteOutlined />} />
-                    </Popconfirm>
-                  </Space>
+                    <Tooltip title="Sil">
+                      <button
+                        onClick={() => handleDeleteView(view.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <DeleteOutlined />
+                      </button>
+                    </Tooltip>
+                  </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

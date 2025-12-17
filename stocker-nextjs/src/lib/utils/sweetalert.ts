@@ -57,6 +57,20 @@ export const showDeleteSuccess = (entityName: string, itemName?: string) => {
 };
 
 /**
+ * Generic success alert for any operation
+ */
+export const showSuccess = (title: string, message?: string) => {
+  return Swal.fire({
+    icon: 'success',
+    title,
+    text: message,
+    confirmButtonColor: BRAND_COLOR,
+    timer: 2000,
+    timerProgressBar: true,
+  });
+};
+
+/**
  * Error alert for any operation
  */
 export const showError = (message: string, title: string = 'Hata!') => {
