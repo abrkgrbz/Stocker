@@ -2,8 +2,8 @@
 
 /**
  * Edit Role Page
- * Modern full-page layout with module-based permission organization
- * Only shows resources for modules the tenant has access to
+ * Clean SaaS design with module-based permission organization
+ * Stripe/Linear inspired - white cards, minimal color accents
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -20,20 +20,17 @@ import {
   Badge,
   Tag,
   Alert,
-  Skeleton,
   Spin,
-  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   LockOutlined,
-  SafetyOutlined,
-  CheckCircleOutlined,
   WarningOutlined,
-  TeamOutlined,
+  RightOutlined,
+  DownOutlined,
+  UserOutlined,
   CalendarOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useRole, useUpdateRole } from '@/hooks/useRoles';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
@@ -51,24 +48,28 @@ import {
 
 const { Text } = Typography;
 
-// Get color based on permission count
-const getPermissionColor = (count: number): string => {
-  if (count >= 50) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  if (count >= 20) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-  if (count >= 10) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-  return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+// Module accent colors (only for left border)
+const MODULE_ACCENT_COLORS: Record<string, string> = {
+  CORE: '#6366f1',      // Indigo
+  INVENTORY: '#8b5cf6', // Purple
+  SALES: '#10b981',     // Green
+  PURCHASE: '#f59e0b',  // Amber
+  CRM: '#3b82f6',       // Blue
+  HR: '#ec4899',        // Pink
+  FINANCE: '#14b8a6',   // Teal
+  CMS: '#f97316',       // Orange
 };
 
-// Permission type icons
-const PERMISSION_TYPE_ICONS: Record<PermissionType, string> = {
-  [PermissionType.View]: '👁️',
-  [PermissionType.Create]: '➕',
-  [PermissionType.Edit]: '✏️',
-  [PermissionType.Delete]: '🗑️',
-  [PermissionType.Export]: '📤',
-  [PermissionType.Import]: '📥',
-  [PermissionType.Approve]: '✅',
-  [PermissionType.Execute]: '▶️',
+// Module icons (text-based for cleaner look)
+const MODULE_ICONS: Record<string, string> = {
+  CORE: '⚙️',
+  INVENTORY: '📦',
+  SALES: '💰',
+  PURCHASE: '🛒',
+  CRM: '🤝',
+  HR: '👥',
+  FINANCE: '📊',
+  CMS: '📰',
 };
 
 export default function EditRolePage() {
@@ -204,54 +205,48 @@ export default function EditRolePage() {
     const hasAll = hasAllPermissionsForResource(resource.value);
 
     return (
-      <div key={resource.value} className="p-3 bg-white rounded-lg border border-gray-100 mb-2">
-        <div className="flex items-center justify-between mb-2">
+      <div key={resource.value} className="py-3 border-b border-gray-100 last:border-b-0">
+        <div className="flex items-center justify-between">
           <Checkbox
             checked={hasAll}
             indeterminate={resourcePerms.length > 0 && !hasAll}
             disabled={isSystemRole}
             onChange={(e) => handleToggleAllForResource(resource.value, e.target.checked)}
           >
-            <span className="font-medium text-gray-800">{resource.label}</span>
+            <span className="text-slate-700 font-medium">{resource.label}</span>
           </Checkbox>
-          {resourcePerms.length > 0 && (
-            <Badge
-              count={resourcePerms.length}
-              style={{ backgroundColor: hasAll ? '#52c41a' : '#1890ff' }}
-              size="small"
-            />
-          )}
+          <span className="text-xs text-slate-400">
+            {resourcePerms.length}/{Object.values(PermissionType).filter((v) => typeof v === 'number').length}
+          </span>
         </div>
-        <div className="flex flex-wrap gap-1 ml-6">
+        <div className="flex flex-wrap gap-2 mt-2 ml-6">
           {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
             const permType = parseInt(type) as PermissionType;
             const isSelected = resourcePerms.some((p) => p.permissionType === permType);
 
             return (
-              <Tooltip key={type} title={label}>
-                <button
-                  type="button"
-                  disabled={isSystemRole}
-                  onClick={() => {
-                    if (isSelected) {
-                      handleRemovePermission({ resource: resource.value, permissionType: permType });
-                    } else {
-                      handleAddPermission(resource.value, permType);
-                    }
-                  }}
-                  className={`
-                    px-2 py-1 text-xs rounded-md transition-all duration-200
-                    ${isSystemRole ? 'cursor-not-allowed opacity-60' : ''}
-                    ${isSelected
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }
-                  `}
-                >
-                  <span className="mr-1">{PERMISSION_TYPE_ICONS[permType]}</span>
-                  {label}
-                </button>
-              </Tooltip>
+              <button
+                key={type}
+                type="button"
+                disabled={isSystemRole}
+                onClick={() => {
+                  if (isSelected) {
+                    handleRemovePermission({ resource: resource.value, permissionType: permType });
+                  } else {
+                    handleAddPermission(resource.value, permType);
+                  }
+                }}
+                className={`
+                  px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150
+                  ${isSystemRole ? 'cursor-not-allowed opacity-60' : ''}
+                  ${isSelected
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }
+                `}
+              >
+                {label}
+              </button>
             );
           })}
         </div>
@@ -262,8 +257,6 @@ export default function EditRolePage() {
   const renderModuleSection = (
     moduleCode: string,
     moduleName: string,
-    icon: string,
-    color: string,
     resources: ResourceDefinition[],
     isSystemRole: boolean
   ) => {
@@ -272,23 +265,28 @@ export default function EditRolePage() {
     const hasAll = hasAllPermissionsForModule(resources);
     const allTypes = Object.values(PermissionType).filter((v) => typeof v === 'number');
     const maxPerms = resources.length * allTypes.length;
+    const accentColor = MODULE_ACCENT_COLORS[moduleCode] || '#6366f1';
 
     return (
-      <div key={moduleCode} className="mb-4">
+      <div
+        key={moduleCode}
+        className="bg-white rounded-lg border border-gray-200 shadow-sm mb-3 overflow-hidden"
+      >
+        {/* Module Header */}
         <div
-          className="p-4 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md"
-          style={{ background: color }}
+          className="px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
           onClick={() => toggleModule(moduleCode)}
+          style={{ borderLeft: `4px solid ${accentColor}` }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{icon}</span>
+              <span className="text-lg">{MODULE_ICONS[moduleCode]}</span>
               <div>
-                <div className="font-semibold text-white">{moduleName}</div>
-                <div className="text-xs text-white/70">{resources.length} kaynak</div>
+                <span className="text-slate-900 font-semibold">{moduleName}</span>
+                <span className="text-slate-400 text-sm ml-2">({resources.length} kaynak)</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Checkbox
                 checked={hasAll}
                 indeterminate={permCount > 0 && !hasAll}
@@ -298,17 +296,23 @@ export default function EditRolePage() {
                   handleToggleAllForModule(moduleCode, resources, e.target.checked);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="permission-checkbox-white"
               />
-              <div className="text-right">
-                <div className="text-lg font-bold text-white">{permCount}</div>
-                <div className="text-xs text-white/70">/ {maxPerms}</div>
+              <div className="text-right min-w-[60px]">
+                <span className="text-slate-900 font-semibold">{permCount}</span>
+                <span className="text-slate-400">/{maxPerms}</span>
               </div>
+              {isExpanded ? (
+                <DownOutlined className="text-slate-400 text-xs" />
+              ) : (
+                <RightOutlined className="text-slate-400 text-xs" />
+              )}
             </div>
           </div>
         </div>
+
+        {/* Expanded Content */}
         {isExpanded && (
-          <div className="mt-2 p-3 bg-gray-50 rounded-xl">
+          <div className="px-4 pb-3 border-t border-gray-100">
             {resources.map(resource => renderResourcePermissions(resource, isSystemRole))}
           </div>
         )}
@@ -318,7 +322,7 @@ export default function EditRolePage() {
 
   if (isLoading || modulesLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" tip="Yükleniyor..." />
       </div>
     );
@@ -326,7 +330,7 @@ export default function EditRolePage() {
 
   if (!role) {
     return (
-      <div className="min-h-screen bg-white p-8">
+      <div className="min-h-screen bg-slate-50 p-8">
         <Alert
           message="Rol bulunamadı"
           description="İstenen rol sistemde bulunamadı."
@@ -340,29 +344,22 @@ export default function EditRolePage() {
   const isSystemRole = role.isSystemRole;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
+      {/* Clean Header */}
+      <div className="sticky top-0 z-50 px-6 py-4 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => router.back()}
               type="text"
-              className="text-gray-500 hover:text-gray-800"
+              className="text-slate-500 hover:text-slate-800"
             />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
+              <h1 className="text-lg font-semibold text-slate-900 m-0">
                 Rol Düzenle
               </h1>
-              <p className="text-sm text-gray-400 m-0">{role.name}</p>
+              <p className="text-sm text-slate-500 m-0">{role.name}</p>
             </div>
           </div>
           <Space>
@@ -375,10 +372,7 @@ export default function EditRolePage() {
               loading={updateMutation.isPending}
               onClick={() => form.submit()}
               disabled={isSystemRole}
-              style={{
-                background: isSystemRole ? undefined : '#1a1a1a',
-                borderColor: isSystemRole ? undefined : '#1a1a1a',
-              }}
+              className={isSystemRole ? '' : 'bg-slate-900 hover:bg-slate-800 border-slate-900'}
             >
               Güncelle
             </Button>
@@ -388,106 +382,122 @@ export default function EditRolePage() {
 
       {/* System Role Warning */}
       {isSystemRole && (
-        <div className="px-8 pt-4 max-w-7xl mx-auto">
+        <div className="px-6 pt-4 max-w-6xl mx-auto">
           <Alert
             message="Sistem Rolü"
             description="Bu rol sistem tarafından oluşturulmuştur ve düzenlenemez. Sadece görüntüleyebilirsiniz."
             type="warning"
             showIcon
             icon={<LockOutlined />}
+            className="border-amber-200 bg-amber-50"
           />
         </div>
       )}
 
       {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+      <div className="px-6 py-6 max-w-6xl mx-auto">
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
           disabled={updateMutation.isPending || isSystemRole}
         >
-          <Row gutter={48}>
-            {/* Left Panel - Visual & Stats (35%) */}
+          <Row gutter={24}>
+            {/* Left Panel - Form & Info (30%) */}
             <Col xs={24} lg={8}>
-              {/* Role Visual Card */}
-              <div className="mb-6">
-                <div
-                  style={{
-                    background: isSystemRole
-                      ? 'linear-gradient(135deg, #ffa940 0%, #fa8c16 100%)'
-                      : getPermissionColor(selectedPermissions.length),
-                    borderRadius: '16px',
-                    padding: '32px 20px',
-                    minHeight: '180px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+              {/* Role Info Card */}
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-4">Rol Bilgileri</h3>
+
+                <Form.Item
+                  name="name"
+                  label={<span className="text-slate-700">Rol Adı</span>}
+                  rules={[
+                    { required: true, message: 'Rol adı zorunludur' },
+                    { min: 2, message: 'En az 2 karakter' },
+                  ]}
                 >
-                  {isSystemRole ? (
-                    <LockOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
-                  ) : (
-                    <SafetyOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
-                  )}
-                  <p className="mt-3 text-base font-medium text-white/90">
-                    {isSystemRole ? 'Sistem Rolü' :
-                     selectedPermissions.length >= 50 ? 'Süper Admin' :
-                     selectedPermissions.length >= 20 ? 'Yönetici' :
-                     selectedPermissions.length >= 10 ? 'Moderatör' : 'Standart Rol'}
-                  </p>
-                  <p className="text-sm text-white/60">
-                    {selectedPermissions.length} yetki atanmış
-                  </p>
-                </div>
+                  <Input
+                    placeholder="örn: Satış Yöneticisi"
+                    size="large"
+                    disabled={isSystemRole}
+                    className="rounded-md"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="description"
+                  label={<span className="text-slate-700">Açıklama</span>}
+                >
+                  <Input.TextArea
+                    placeholder="Rolün görev ve sorumluluklarını açıklayın..."
+                    autoSize={{ minRows: 3, maxRows: 5 }}
+                    disabled={isSystemRole}
+                    className="rounded-md"
+                  />
+                </Form.Item>
               </div>
 
-              {/* Role Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="p-4 bg-blue-50/50 rounded-xl text-center border border-blue-100">
-                  <div className="text-2xl font-semibold text-blue-600">
-                    {selectedPermissions.length}
+              {/* Stats Card */}
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-4">Özet</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Toplam Yetki</span>
+                    <span className="text-slate-900 font-semibold text-lg">{selectedPermissions.length}</span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Toplam Yetki</div>
-                </div>
-                <div className="p-4 bg-green-50/50 rounded-xl text-center border border-green-100">
-                  <div className="text-2xl font-semibold text-green-600">
-                    {role.userCount || 0}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Aktif Modül</span>
+                    <span className="text-slate-900 font-semibold text-lg">{moduleResources.length + 1}</span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Kullanıcı</div>
-                </div>
-              </div>
-
-              {/* Role Info */}
-              <div className="space-y-3 mb-6">
-                <div className="p-3 bg-gray-50/50 rounded-lg flex items-center gap-3">
-                  <TeamOutlined className="text-gray-400" />
-                  <div>
-                    <div className="text-xs text-gray-400">Atanan Kullanıcı</div>
-                    <div className="font-medium">{role.userCount || 0} kullanıcı</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Kullanıcı Sayısı</span>
+                    <span className="text-slate-900 font-semibold text-lg">{role.userCount || 0}</span>
                   </div>
-                </div>
-                <div className="p-3 bg-gray-50/50 rounded-lg flex items-center gap-3">
-                  <CalendarOutlined className="text-gray-400" />
-                  <div>
-                    <div className="text-xs text-gray-400">Oluşturulma Tarihi</div>
-                    <div className="font-medium">
-                      {role.createdDate ? new Date(role.createdDate).toLocaleDateString('tr-TR') : '-'}
+                  {modulesData?.packageName && (
+                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                      <span className="text-slate-600">Paket</span>
+                      <span className="text-slate-900 font-medium">{modulesData.packageName}</span>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              {/* Selected Permissions Summary */}
+              {/* Role Meta Info */}
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-4">Detaylar</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <UserOutlined className="text-slate-400" />
+                    <span className="text-slate-600">Atanan Kullanıcı:</span>
+                    <span className="text-slate-900 font-medium">{role.userCount || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-slate-600">Oluşturulma:</span>
+                    <span className="text-slate-900 font-medium">
+                      {role.createdDate ? new Date(role.createdDate).toLocaleDateString('tr-TR') : '-'}
+                    </span>
+                  </div>
+                  {isSystemRole && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <LockOutlined className="text-amber-500" />
+                      <span className="text-amber-600 font-medium">Sistem Rolü</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Selected Permissions */}
               {selectedPermissions.length > 0 && (
-                <div className="mb-6">
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                    <CheckCircleOutlined className="mr-1" /> Mevcut Yetkiler
-                  </Text>
-                  <div className="p-4 bg-gray-50 rounded-xl max-h-64 overflow-y-auto">
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-900">Mevcut Yetkiler</h3>
+                    <Badge count={selectedPermissions.length} style={{ backgroundColor: '#334155' }} />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
                     <div className="flex flex-wrap gap-1">
-                      {selectedPermissions.slice(0, 15).map((perm, index) => {
+                      {selectedPermissions.slice(0, 12).map((perm, index) => {
                         const allResources = [...CORE_RESOURCES, ...MODULE_RESOURCES.flatMap(m => m.resources)];
                         const resource = allResources.find((r) => r.value === perm.resource);
                         return (
@@ -495,166 +505,74 @@ export default function EditRolePage() {
                             key={index}
                             closable={!isSystemRole}
                             onClose={() => handleRemovePermission(perm)}
-                            color="blue"
-                            className="mb-1 text-xs"
+                            className="text-xs bg-slate-100 border-slate-200 text-slate-700"
                           >
                             {resource?.label} - {PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType]}
                           </Tag>
                         );
                       })}
-                      {selectedPermissions.length > 15 && (
-                        <Tag color="default">+{selectedPermissions.length - 15} daha</Tag>
+                      {selectedPermissions.length > 12 && (
+                        <Tag className="text-xs bg-slate-50 border-slate-200 text-slate-500">
+                          +{selectedPermissions.length - 12} daha
+                        </Tag>
                       )}
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* Module Info */}
-              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                <div className="flex items-start gap-2">
-                  <InfoCircleOutlined className="text-amber-500 mt-0.5" />
-                  <div>
-                    <Text className="font-medium text-amber-800 block text-sm">Modül Bilgisi</Text>
-                    <Text className="text-xs text-amber-700">
-                      Sadece aboneliğinize dahil modüller için yetki atayabilirsiniz.
-                      {modulesData?.packageName && (
-                        <span className="block mt-1 font-medium">
-                          Paket: {modulesData.packageName}
-                        </span>
-                      )}
-                    </Text>
-                  </div>
-                </div>
-              </div>
             </Col>
 
-            {/* Right Panel - Form Content (65%) */}
+            {/* Right Panel - Permissions (70%) */}
             <Col xs={24} lg={16}>
-              {/* Role Name - Hero Input */}
-              <div className="mb-6">
-                <Form.Item
-                  name="name"
-                  rules={[
-                    { required: true, message: 'Rol adı zorunludur' },
-                    { min: 2, message: 'En az 2 karakter' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Rol Adı"
-                    variant="borderless"
-                    disabled={isSystemRole}
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
-                <Form.Item name="description" className="mb-0 mt-2">
-                  <Input.TextArea
-                    placeholder="Rolün görev ve sorumluluklarını açıklayın..."
-                    variant="borderless"
-                    disabled={isSystemRole}
-                    autoSize={{ minRows: 2, maxRows: 3 }}
-                    style={{
-                      fontSize: '15px',
-                      padding: '0',
-                      color: '#666',
-                      resize: 'none'
-                    }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-slate-900">Yetkiler</h2>
+                  <span className="text-xs text-slate-500">
+                    Modüle tıklayarak kaynakları görüntüleyin
+                  </span>
+                </div>
               </div>
 
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-6" />
+              {selectedPermissions.length === 0 && (
+                <Alert
+                  message="Henüz yetki atanmamış"
+                  description="Bu rol için en az bir yetki seçmelisiniz."
+                  type="warning"
+                  showIcon
+                  icon={<WarningOutlined />}
+                  className="mb-4 border-amber-200 bg-amber-50"
+                />
+              )}
 
-              {/* Permissions Section */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <LockOutlined className="mr-1" /> Yetkiler
-                  </Text>
-                  <Text className="text-xs text-gray-400">
-                    Modüle tıklayarak kaynakları görüntüleyin
+              {/* Core Resources */}
+              {renderModuleSection('CORE', 'Sistem Yönetimi', coreResources, isSystemRole)}
+
+              {/* Module Resources */}
+              {moduleResources.map((module) =>
+                renderModuleSection(
+                  module.moduleCode,
+                  module.moduleName,
+                  module.resources,
+                  isSystemRole
+                )
+              )}
+
+              {/* No modules message */}
+              {moduleResources.length === 0 && (
+                <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                  <Text className="text-slate-500">
+                    Aboneliğinize dahil ek modül bulunmuyor.
                   </Text>
                 </div>
-
-                {selectedPermissions.length === 0 && (
-                  <Alert
-                    message="Henüz yetki atanmamış"
-                    description="Bu rol için en az bir yetki seçmelisiniz."
-                    type="warning"
-                    showIcon
-                    icon={<WarningOutlined />}
-                    className="mb-4"
-                    style={{ backgroundColor: '#fffbe6', borderColor: '#ffe58f' }}
-                  />
-                )}
-
-                {/* Core Resources */}
-                {renderModuleSection(
-                  'CORE',
-                  'Sistem Yönetimi',
-                  '⚙️',
-                  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  coreResources,
-                  isSystemRole
-                )}
-
-                {/* Module Resources */}
-                {moduleResources.map((module) =>
-                  renderModuleSection(
-                    module.moduleCode,
-                    module.moduleName,
-                    module.icon,
-                    module.color,
-                    module.resources,
-                    isSystemRole
-                  )
-                )}
-
-                {/* No modules message */}
-                {moduleResources.length === 0 && (
-                  <div className="p-6 bg-gray-50 rounded-xl text-center">
-                    <Text className="text-gray-500">
-                      Aboneliğinize dahil ek modül bulunmuyor.
-                    </Text>
-                  </div>
-                )}
-              </div>
+              )}
             </Col>
           </Row>
 
-          {/* Hidden submit button */}
           <Form.Item hidden>
             <button type="submit" />
           </Form.Item>
         </Form>
       </div>
-
-      {/* Custom styles for white checkbox */}
-      <style jsx global>{`
-        .permission-checkbox-white .ant-checkbox-inner {
-          background-color: rgba(255, 255, 255, 0.3);
-          border-color: rgba(255, 255, 255, 0.6);
-        }
-        .permission-checkbox-white .ant-checkbox-checked .ant-checkbox-inner {
-          background-color: white;
-          border-color: white;
-        }
-        .permission-checkbox-white .ant-checkbox-checked .ant-checkbox-inner::after {
-          border-color: #667eea;
-        }
-        .permission-checkbox-white .ant-checkbox-indeterminate .ant-checkbox-inner::after {
-          background-color: white;
-        }
-      `}</style>
     </div>
   );
 }
