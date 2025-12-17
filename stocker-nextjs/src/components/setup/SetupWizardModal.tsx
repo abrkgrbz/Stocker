@@ -673,13 +673,13 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
     if (!showPriceSummary) return null
 
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
             {/* Module Count */}
             <div className="text-center">
-              <div className="text-xs text-gray-500">Modüller</div>
-              <div className="font-semibold text-gray-900">
+              <div className="text-xs text-slate-500">Modüller</div>
+              <div className="font-semibold text-slate-900">
                 {selectedModuleCodes.filter(code => {
                   const m = modules.find(mod => mod.code === code)
                   return m && !m.isCore
@@ -689,15 +689,15 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
             {/* Users */}
             <div className="text-center">
-              <div className="text-xs text-gray-500">Kullanıcı</div>
-              <div className="font-semibold text-gray-900">{userCount}</div>
+              <div className="text-xs text-slate-500">Kullanıcı</div>
+              <div className="font-semibold text-slate-900">{userCount}</div>
             </div>
 
             {/* Storage */}
             {selectedStoragePlanCode && setupOptions && (
               <div className="text-center">
-                <div className="text-xs text-gray-500">Depolama</div>
-                <div className="font-semibold text-gray-900">
+                <div className="text-xs text-slate-500">Depolama</div>
+                <div className="font-semibold text-slate-900">
                   {setupOptions.storagePlans.find(p => p.code === selectedStoragePlanCode)?.storageGB || 0} GB
                 </div>
               </div>
@@ -706,16 +706,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             {/* Add-ons */}
             {selectedAddOnCodes.length > 0 && (
               <div className="text-center">
-                <div className="text-xs text-gray-500">Ek Özellik</div>
-                <div className="font-semibold text-gray-900">{selectedAddOnCodes.length}</div>
+                <div className="text-xs text-slate-500">Ek Özellik</div>
+                <div className="font-semibold text-slate-900">{selectedAddOnCodes.length}</div>
               </div>
             )}
 
             {/* Industry */}
             {selectedIndustryCode && setupOptions && (
               <div className="text-center">
-                <div className="text-xs text-gray-500">Sektör</div>
-                <div className="font-semibold text-gray-900 text-sm">
+                <div className="text-xs text-slate-500">Sektör</div>
+                <div className="font-semibold text-slate-900 text-sm">
                   {setupOptions.industries.find(i => i.code === selectedIndustryCode)?.name || '-'}
                 </div>
               </div>
@@ -726,8 +726,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           <div className="flex items-center gap-4">
             {/* SignalR Connection Status */}
             {!isPricingConnected && (
-              <div className="flex items-center gap-1 text-xs text-yellow-600">
-                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+              <div className="flex items-center gap-1 text-xs text-amber-600">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                 <span>Bağlanıyor...</span>
               </div>
             )}
@@ -736,17 +736,17 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             )}
             {loadingPrice ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm text-gray-500">Hesaplanıyor...</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
+                <span className="text-sm text-slate-500">Hesaplanıyor...</span>
               </div>
             ) : customPrice ? (
               <div className="text-right">
-                <div className="text-xs text-gray-500">{getBillingLabel()} Toplam</div>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-xs text-slate-500">{getBillingLabel()} Toplam</div>
+                <div className="text-2xl font-bold text-slate-900">
                   ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                 </div>
                 {billingCycle !== 'monthly' && (
-                  <div className="text-xs text-green-600">
+                  <div className="text-xs text-emerald-600">
                     %{billingCycle === 'quarterly' ? customPrice.quarterlyDiscount :
                       billingCycle === 'semiannual' ? customPrice.semiAnnualDiscount :
                       customPrice.annualDiscount} indirim
@@ -755,8 +755,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </div>
             ) : (
               <div className="text-right">
-                <div className="text-xs text-gray-500">Toplam</div>
-                <div className="text-xl font-semibold text-gray-400">₺0,00</div>
+                <div className="text-xs text-slate-500">Toplam</div>
+                <div className="text-xl font-semibold text-slate-400">₺0,00</div>
               </div>
             )}
           </div>
@@ -788,28 +788,48 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
           </p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar - Minimal & Non-intimidating */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Adım {getStepNumber()} / {getTotalSteps()}
-            </span>
-            <span className="text-sm text-gray-500">
-              {currentStep === 'package-type' && 'Paket Türü'}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-slate-600">
+              {currentStep === 'package-type' && 'Başlangıç'}
               {currentStep === 'package' && 'Paket Seçimi'}
-              {currentStep === 'custom-package' && 'Modül Seçimi'}
-              {currentStep === 'users' && 'Kullanıcı Sayısı'}
-              {currentStep === 'storage' && 'Depolama Planı'}
-              {currentStep === 'addons' && 'Ek Özellikler'}
-              {currentStep === 'industry' && 'Sektör Seçimi'}
-              {currentStep === 'complete' && 'Tamamlandı'}
+              {currentStep === 'custom-package' && 'Modüller'}
+              {currentStep === 'users' && 'Detaylar'}
+              {currentStep === 'storage' && 'Detaylar'}
+              {currentStep === 'addons' && 'Detaylar'}
+              {currentStep === 'industry' && 'Tamamla'}
+              {currentStep === 'complete' && 'Hazır'}
             </span>
+            {/* Grouped steps indicator */}
+            <div className="flex items-center gap-2">
+              {packageType === 'ready' ? (
+                // Ready package: 3 dots
+                <>
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        getStepNumber() >= step ? 'bg-slate-900' : 'bg-slate-200'
+                      }`}
+                    />
+                  ))}
+                </>
+              ) : (
+                // Custom package: 3 grouped dots (Paket -> Detaylar -> Tamamla)
+                <>
+                  <div className={`w-2 h-2 rounded-full transition-all ${getStepNumber() >= 1 ? 'bg-slate-900' : 'bg-slate-200'}`} />
+                  <div className={`w-2 h-2 rounded-full transition-all ${getStepNumber() >= 2 ? 'bg-slate-900' : 'bg-slate-200'}`} />
+                  <div className={`w-2 h-2 rounded-full transition-all ${getStepNumber() >= 3 ? 'bg-slate-900' : 'bg-slate-200'}`} />
+                </>
+              )}
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-slate-100 rounded-full h-1.5">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-slate-900 h-1.5 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${(getStepNumber() / getTotalSteps()) * 100}%` }}
-            ></div>
+            />
           </div>
         </div>
 
@@ -818,7 +838,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step 1: Package Type Selection */}
         {currentStep === 'package-type' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Nasıl Başlamak İstersiniz?
             </h2>
 
@@ -826,30 +846,38 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               {/* Ready Package Option */}
               <div
                 onClick={() => setPackageType('ready')}
-                className={`border-2 rounded-xl p-8 cursor-pointer transition-all ${
+                className={`relative border-2 rounded-2xl p-8 cursor-pointer transition-all duration-200 ${
                   packageType === 'ready'
-                    ? 'border-blue-600 bg-blue-50 shadow-lg'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow'
+                    ? 'border-slate-900 bg-slate-50 shadow-lg'
+                    : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                 }`}
               >
-                <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                    packageType === 'ready' ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}>
-                    <svg className={`w-8 h-8 ${packageType === 'ready' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                {/* Check Circle */}
+                {packageType === 'ready' && (
+                  <div className="absolute top-4 right-4">
+                    <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                )}
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center transition-colors ${
+                    packageType === 'ready' ? 'bg-slate-900' : 'bg-slate-100'
+                  }`}>
+                    <svg className={`w-8 h-8 ${packageType === 'ready' ? 'text-white' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
                     Hazır Paketler
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4">
+                  <p className="text-slate-500 text-sm mb-5">
                     Önceden yapılandırılmış paketlerden birini seçin. Hızlı ve kolay başlangıç.
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Starter</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Professional</span>
-                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Enterprise</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Starter</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Pro</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Enterprise</span>
                   </div>
                 </div>
               </div>
@@ -857,30 +885,38 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               {/* Custom Package Option */}
               <div
                 onClick={() => setPackageType('custom')}
-                className={`border-2 rounded-xl p-8 cursor-pointer transition-all ${
+                className={`relative border-2 rounded-2xl p-8 cursor-pointer transition-all duration-200 ${
                   packageType === 'custom'
-                    ? 'border-blue-600 bg-blue-50 shadow-lg'
-                    : 'border-gray-200 hover:border-gray-300 hover:shadow'
+                    ? 'border-slate-900 bg-slate-50 shadow-lg'
+                    : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                 }`}
               >
-                <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                    packageType === 'custom' ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}>
-                    <svg className={`w-8 h-8 ${packageType === 'custom' ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                {/* Check Circle */}
+                {packageType === 'custom' && (
+                  <div className="absolute top-4 right-4">
+                    <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                )}
+                <div className="text-center">
+                  <div className={`w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center transition-colors ${
+                    packageType === 'custom' ? 'bg-slate-900' : 'bg-slate-100'
+                  }`}>
+                    <svg className={`w-8 h-8 ${packageType === 'custom' ? 'text-white' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
                     Özel Paket Oluştur
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4">
+                  <p className="text-slate-500 text-sm mb-5">
                     İhtiyacınız olan modülleri seçin, size özel fiyatlandırma alın.
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">Esnek</span>
-                    <span className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs">Uygun Fiyat</span>
-                    <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs">Özelleştirilebilir</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Esnek</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Uygun Fiyat</span>
+                    <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">Özel</span>
                   </div>
                 </div>
               </div>
@@ -889,7 +925,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             <div className="flex justify-center pt-6">
               <button
                 onClick={handlePackageTypeNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
               >
                 Devam Et
               </button>
@@ -900,53 +936,61 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step 2A: Ready Package Selection */}
         {currentStep === 'package' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Size Uygun Paketi Seçin
             </h2>
 
             {loadingPackages ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Paketler yükleniyor...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
+                <p className="mt-4 text-slate-500">Paketler yükleniyor...</p>
               </div>
             ) : packages.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600">Henüz paket bulunamadı</p>
+                <p className="text-slate-500">Henüz paket bulunamadı</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-h-[420px] overflow-y-auto">
                 {packages.map((pkg) => (
                   <div
                     key={pkg.id}
                     onClick={() => setSelectedPackageId(pkg.id)}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                    className={`relative border-2 rounded-2xl p-6 cursor-pointer transition-all duration-200 ${
                       selectedPackageId === pkg.id
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-slate-900 bg-slate-50 shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {/* Check Circle */}
+                    {selectedPackageId === pkg.id && (
+                      <div className="absolute top-4 right-4">
+                        <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
                       {pkg.name}
                     </h3>
-                    <div className="text-3xl font-bold text-gray-900 mb-2">
+                    <div className="text-3xl font-bold text-slate-900 mb-2">
                       ₺{pkg.basePrice.amount}
-                      <span className="text-sm text-gray-600 font-normal">/ay</span>
+                      <span className="text-sm text-slate-500 font-normal">/ay</span>
                     </div>
                     {pkg.trialDays > 0 && (
-                      <div className="text-sm text-green-600 font-medium mb-4">
+                      <div className="text-sm text-emerald-600 font-medium mb-4">
                         {pkg.trialDays} gün ücretsiz deneme
                       </div>
                     )}
                     {pkg.description && (
-                      <p className="text-sm text-gray-600 mb-4">{pkg.description}</p>
+                      <p className="text-sm text-slate-500 mb-4">{pkg.description}</p>
                     )}
 
                     <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-900">Modüller:</div>
-                      <ul className="space-y-1">
+                      <div className="text-sm font-medium text-slate-700">Modüller:</div>
+                      <ul className="space-y-1.5">
                         {pkg.modules.filter(m => m.isIncluded).slice(0, 5).map((module) => (
-                          <li key={module.moduleCode} className="text-sm text-gray-600 flex items-center">
-                            <svg className="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <li key={module.moduleCode} className="text-sm text-slate-600 flex items-center">
+                            <svg className="w-4 h-4 mr-2 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                             {module.moduleName}
@@ -962,14 +1006,14 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             <div className="flex justify-between pt-6">
               <button
                 onClick={() => setCurrentStep('package-type')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handlePackageNext}
                 disabled={!selectedPackageId}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
               >
                 Devam Et
               </button>
@@ -1147,17 +1191,17 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('package-type')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handleCustomPackageNext}
                 disabled={selectedModuleCodes.filter(code => !modules.find(m => m.code === code)?.isCore).length === 0}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
               >
                 Devam Et
               </button>
@@ -1168,17 +1212,17 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step: User Count Selection */}
         {currentStep === 'users' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Kaç Kullanıcı Kullanacak?
             </h2>
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-slate-500 text-center mb-6">
               Sistemde aynı anda çalışacak kullanıcı sayısını belirleyin
             </p>
 
             {loadingSetupOptions ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Yükleniyor...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
+                <p className="mt-4 text-slate-500">Yükleniyor...</p>
               </div>
             ) : (
               <>
@@ -1187,17 +1231,17 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                   <div className="flex items-center justify-center gap-4 mb-6">
                     <button
                       onClick={() => setUserCount(Math.max(1, userCount - 1))}
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xl font-bold"
+                      className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-700 transition-colors"
                     >
                       -
                     </button>
                     <div className="text-center">
-                      <div className="text-5xl font-bold text-blue-600">{userCount}</div>
-                      <div className="text-gray-500 text-sm">Kullanıcı</div>
+                      <div className="text-5xl font-bold text-slate-900">{userCount}</div>
+                      <div className="text-slate-500 text-sm">Kullanıcı</div>
                     </div>
                     <button
                       onClick={() => setUserCount(userCount + 1)}
-                      className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xl font-bold"
+                      className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-700 transition-colors"
                     >
                       +
                     </button>
@@ -1209,9 +1253,9 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                     max="100"
                     value={userCount}
                     onChange={(e) => setUserCount(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <div className="flex justify-between text-xs text-slate-400 mt-2">
                     <span>1</span>
                     <span>25</span>
                     <span>50</span>
@@ -1228,27 +1272,29 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                       return (
                         <div
                           key={tier.id}
-                          className={`border-2 rounded-lg p-4 transition-all ${
+                          className={`relative border-2 rounded-2xl p-4 transition-all duration-200 ${
                             isActive
-                              ? 'border-blue-600 bg-blue-50'
-                              : 'border-gray-200'
+                              ? 'border-slate-900 bg-slate-50 shadow-md'
+                              : 'border-slate-200'
                           }`}
                         >
-                          <h3 className="font-semibold text-gray-900">{tier.name}</h3>
-                          <p className="text-sm text-gray-500 mb-2">
+                          {isActive && (
+                            <div className="absolute top-3 right-3">
+                              <svg className="w-5 h-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          <h3 className="font-semibold text-slate-900">{tier.name}</h3>
+                          <p className="text-sm text-slate-500 mb-2">
                             {tier.minUsers}-{tier.maxUsers === -1 ? '∞' : tier.maxUsers} kullanıcı
                           </p>
-                          <div className="text-lg font-bold text-blue-600">
+                          <div className="text-lg font-bold text-slate-900">
                             ₺{tier.pricePerUser}/kullanıcı/ay
                           </div>
                           {tier.basePrice && tier.basePrice > 0 && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-slate-500">
                               + ₺{tier.basePrice} temel ücret
-                            </div>
-                          )}
-                          {isActive && (
-                            <div className="mt-2 px-2 py-1 bg-blue-600 text-white rounded text-xs inline-block">
-                              Seçili
                             </div>
                           )}
                         </div>
@@ -1260,8 +1306,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                 {/* Current Price Display */}
                 {customPrice?.userPricing && (
                   <div className="mt-6 text-center">
-                    <div className="text-gray-600">Kullanıcı maliyeti:</div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-slate-500">Kullanıcı maliyeti:</div>
+                    <div className="text-2xl font-bold text-slate-900">
                       ₺{customPrice.userPricing.totalMonthly}/ay
                     </div>
                   </div>
@@ -1269,16 +1315,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </>
             )}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('custom-package')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handleUsersNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
               >
                 Devam Et
               </button>
@@ -1289,16 +1335,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step: Storage Plan Selection */}
         {currentStep === 'storage' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Depolama Planı Seçin
             </h2>
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-slate-500 text-center mb-6">
               Dosya, belge ve veritabanı depolama ihtiyacınıza göre plan seçin
             </p>
 
             {loadingSetupOptions ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
               </div>
             ) : setupOptions && (
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
@@ -1306,52 +1352,55 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                   <div
                     key={plan.id}
                     onClick={() => setSelectedStoragePlanCode(plan.code)}
-                    className={`border-2 rounded-xl p-6 cursor-pointer transition-all text-center ${
+                    className={`relative border-2 rounded-2xl p-6 cursor-pointer transition-all duration-200 text-center ${
                       selectedStoragePlanCode === plan.code
-                        ? 'border-blue-600 bg-blue-50 shadow-lg'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-slate-900 bg-slate-50 shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
-                    {plan.isDefault && (
-                      <div className="text-xs text-green-600 font-medium mb-2">Ücretsiz</div>
-                    )}
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-gray-900">{plan.name}</h3>
-                    <div className="text-2xl font-bold text-gray-900 my-2">
-                      {plan.storageGB} GB
-                    </div>
-                    {plan.description && (
-                      <p className="text-xs text-gray-500 mb-3">{plan.description}</p>
-                    )}
-                    <div className="text-lg font-bold text-blue-600">
-                      {plan.monthlyPrice === 0 ? 'Ücretsiz' : `₺${plan.monthlyPrice}/ay`}
-                    </div>
+                    {/* Check Circle */}
                     {selectedStoragePlanCode === plan.code && (
-                      <div className="mt-3">
-                        <svg className="w-6 h-6 text-blue-600 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute top-3 right-3">
+                        <svg className="w-5 h-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       </div>
                     )}
+                    {plan.isDefault && (
+                      <div className="text-xs text-emerald-600 font-medium mb-2">Ücretsiz</div>
+                    )}
+                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors ${
+                      selectedStoragePlanCode === plan.code ? 'bg-slate-900' : 'bg-slate-100'
+                    }`}>
+                      <svg className={`w-6 h-6 ${selectedStoragePlanCode === plan.code ? 'text-white' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-slate-900">{plan.name}</h3>
+                    <div className="text-2xl font-bold text-slate-900 my-2">
+                      {plan.storageGB} GB
+                    </div>
+                    {plan.description && (
+                      <p className="text-xs text-slate-500 mb-3">{plan.description}</p>
+                    )}
+                    <div className="text-lg font-bold text-slate-700">
+                      {plan.monthlyPrice === 0 ? 'Ücretsiz' : `₺${plan.monthlyPrice}/ay`}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('users')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handleStorageNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
               >
                 Devam Et
               </button>
@@ -1362,16 +1411,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step: Add-ons Selection */}
         {currentStep === 'addons' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Ek Özellikler
             </h2>
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-slate-500 text-center mb-6">
               İhtiyacınıza göre ek özellikler ekleyin (isteğe bağlı)
             </p>
 
             {loadingSetupOptions ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
               </div>
             ) : setupOptions && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
@@ -1379,41 +1428,38 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                   <div
                     key={addOn.id}
                     onClick={() => toggleAddOn(addOn.code)}
-                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all ${
+                    className={`relative border-2 rounded-2xl p-5 cursor-pointer transition-all duration-200 ${
                       selectedAddOnCodes.includes(addOn.code)
-                        ? 'border-blue-600 bg-blue-50 shadow-lg'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-slate-900 bg-slate-50 shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors ${
+                        selectedAddOnCodes.includes(addOn.code) ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}>
                         {addOn.icon || '⚡'}
                       </div>
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        selectedAddOnCodes.includes(addOn.code)
-                          ? 'bg-blue-600 border-blue-600'
-                          : 'border-gray-300'
-                      }`}>
-                        {selectedAddOnCodes.includes(addOn.code) && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
+                      {/* Check Circle */}
+                      {selectedAddOnCodes.includes(addOn.code) && (
+                        <svg className="w-5 h-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      )}
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{addOn.name}</h3>
+                    <h3 className="font-semibold text-slate-900 mb-1">{addOn.name}</h3>
                     {addOn.description && (
-                      <p className="text-xs text-gray-500 mb-3 line-clamp-2">{addOn.description}</p>
+                      <p className="text-xs text-slate-500 mb-3 line-clamp-2">{addOn.description}</p>
                     )}
-                    <div className="text-lg font-bold text-blue-600">
+                    <div className="text-lg font-bold text-slate-700">
                       ₺{addOn.monthlyPrice}/ay
                     </div>
                     {addOn.features.length > 0 && selectedAddOnCodes.includes(addOn.code) && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="mt-3 pt-3 border-t border-slate-100">
                         <ul className="space-y-1">
                           {addOn.features.slice(0, 3).map((feature, idx) => (
-                            <li key={idx} className="text-xs text-gray-500 flex items-center">
-                              <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <li key={idx} className="text-xs text-slate-500 flex items-center">
+                              <svg className="w-3 h-3 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
                               {feature.featureName}
@@ -1430,23 +1476,23 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
             {/* Selected Add-ons Total */}
             {selectedAddOnCodes.length > 0 && customPrice && (
               <div className="text-center mt-4">
-                <div className="text-gray-600">Seçili ek özellikler toplam:</div>
-                <div className="text-xl font-bold text-blue-600">
+                <div className="text-slate-500">Seçili ek özellikler toplam:</div>
+                <div className="text-xl font-bold text-slate-900">
                   ₺{customPrice.addOns.reduce((sum, a) => sum + a.monthlyPrice, 0)}/ay
                 </div>
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('storage')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handleAddOnsNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
               >
                 {selectedAddOnCodes.length === 0 ? 'Atla' : 'Devam Et'}
               </button>
@@ -1457,16 +1503,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step: Industry Selection */}
         {currentStep === 'industry' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4 text-center">
               Sektörünüzü Seçin
             </h2>
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-slate-500 text-center mb-6">
               Sektörünüze özel modül önerileri alın (isteğe bağlı)
             </p>
 
             {loadingSetupOptions ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
               </div>
             ) : setupOptions && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -1476,20 +1522,28 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                     onClick={() => setSelectedIndustryCode(
                       selectedIndustryCode === industry.code ? '' : industry.code
                     )}
-                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all text-center ${
+                    className={`relative border-2 rounded-2xl p-4 cursor-pointer transition-all duration-200 text-center ${
                       selectedIndustryCode === industry.code
-                        ? 'border-blue-600 bg-blue-50 shadow-lg'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-slate-900 bg-slate-50 shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                     }`}
                   >
+                    {/* Check Circle */}
+                    {selectedIndustryCode === industry.code && (
+                      <div className="absolute top-3 right-3">
+                        <svg className="w-5 h-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="text-3xl mb-2">{industry.icon || '🏢'}</div>
-                    <h3 className="font-semibold text-gray-900 text-sm">{industry.name}</h3>
+                    <h3 className="font-semibold text-slate-900 text-sm">{industry.name}</h3>
                     {industry.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{industry.description}</p>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{industry.description}</p>
                     )}
                     {selectedIndustryCode === industry.code && industry.recommendedModules.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="text-xs text-blue-600 font-medium">
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <div className="text-xs text-slate-600 font-medium">
                           +{industry.recommendedModules.length} önerilen modül
                         </div>
                       </div>
@@ -1506,8 +1560,8 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                   const industry = setupOptions.industries.find(i => i.code === selectedIndustryCode)
                   if (!industry || industry.recommendedModules.length === 0) return null
                   return (
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-blue-900 mb-2">
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                      <h4 className="font-semibold text-slate-900 mb-2">
                         {industry.name} için Önerilen Modüller:
                       </h4>
                       <div className="flex flex-wrap gap-2">
@@ -1516,10 +1570,10 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                           return (
                             <span
                               key={moduleCode}
-                              className={`px-2 py-1 rounded text-xs ${
+                              className={`px-2.5 py-1 rounded-md text-xs font-medium ${
                                 selectedModuleCodes.includes(moduleCode)
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-blue-100 text-blue-700'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-slate-100 text-slate-600'
                               }`}
                             >
                               {module?.name || moduleCode}
@@ -1528,7 +1582,7 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
                           )
                         })}
                       </div>
-                      <p className="text-xs text-blue-700 mt-2">
+                      <p className="text-xs text-slate-500 mt-2">
                         Bu modüller devam ettiğinizde otomatik olarak eklenecektir.
                       </p>
                     </div>
@@ -1537,16 +1591,16 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t">
+            <div className="flex justify-between pt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('addons')}
-                className="px-6 py-2 text-gray-600 hover:text-gray-900"
+                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
                 Geri
               </button>
               <button
                 onClick={handleIndustryNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
               >
                 {selectedIndustryCode ? 'Devam Et' : 'Atla'}
               </button>
@@ -1557,18 +1611,18 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
         {/* Step: Complete */}
         {currentStep === 'complete' && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
               Kurulum Tamamlandı!
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-slate-500 mb-6">
               Hesabınız başarıyla oluşturuldu. Dashboard yükleniyor...
             </p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto"></div>
           </div>
         )}
 
