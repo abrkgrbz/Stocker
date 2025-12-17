@@ -1,31 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-} from 'antd';
+import { Form, Input, InputNumber, Select } from 'antd';
 import {
   UserOutlined,
   BankOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  GlobalOutlined,
-  EnvironmentOutlined,
-  DollarOutlined,
-  IdcardOutlined,
   CameraOutlined,
 } from '@ant-design/icons';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { getCityNames, getDistrictsByCity } from '@/lib/data/turkey-cities';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Customer status options
 const statusOptions = [
@@ -37,11 +22,11 @@ const statusOptions = [
 // Payment terms options
 const paymentTermsOptions = [
   { value: 'Immediate', label: 'Peşin' },
-  { value: '15 Days', label: '15 Gün Vadeli' },
-  { value: '30 Days', label: '30 Gün Vadeli' },
-  { value: '45 Days', label: '45 Gün Vadeli' },
-  { value: '60 Days', label: '60 Gün Vadeli' },
-  { value: '90 Days', label: '90 Gün Vadeli' },
+  { value: '15 Days', label: '15 Gün' },
+  { value: '30 Days', label: '30 Gün' },
+  { value: '45 Days', label: '45 Gün' },
+  { value: '60 Days', label: '60 Gün' },
+  { value: '90 Days', label: '90 Gün' },
 ];
 
 interface CustomerFormProps {
@@ -92,308 +77,287 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="customer-form-modern"
+      className="max-w-4xl mx-auto"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Logo & Status (30%) */}
-        <Col xs={24} lg={8}>
-          {/* Logo Placeholder */}
-          <div className="mb-6">
-            <div className="w-32 h-32 mx-auto rounded-full bg-slate-100 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all">
-              {customerType === 'Corporate' ? (
-                <BankOutlined className="text-3xl text-slate-300 mb-1" />
-              ) : (
-                <UserOutlined className="text-3xl text-slate-300 mb-1" />
-              )}
-              <CameraOutlined className="text-xs text-slate-400" />
-            </div>
-            <p className="text-center text-xs text-slate-400 mt-2">Logo Ekle</p>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
-              Durum
-            </Text>
-            <Form.Item name="status" className="mb-0" initialValue="Active">
-              <Select
-                options={statusOptions}
-                className="w-full"
-                size="large"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="space-y-3 mt-6">
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <div className="text-xs text-slate-400 mb-1">Kredi Limiti</div>
-                <div className="text-xl font-semibold text-slate-900">
-                  ₺{(initialValues.creditLimit || 0).toLocaleString('tr-TR')}
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <div className="text-xs text-slate-400 mb-1">Toplam Alışveriş</div>
-                <div className="text-xl font-semibold text-slate-900">
-                  ₺{(initialValues.totalPurchases || 0).toLocaleString('tr-TR')}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Logo + Name + Type Selector (Inline)
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-100">
+          <div className="flex items-center gap-6">
+            {/* Logo Upload */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-slate-300 hover:bg-slate-100 transition-all">
+                {customerType === 'Corporate' ? (
+                  <BankOutlined className="text-xl text-slate-400" />
+                ) : (
+                  <UserOutlined className="text-xl text-slate-400" />
+                )}
               </div>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (70%) */}
-        <Col xs={24} lg={16}>
-          {/* Customer Type - Segmented Control at Top */}
-          <div className="mb-6">
-            <Form.Item name="customerType" className="mb-0" initialValue="Corporate">
-              <div className="flex w-full bg-slate-100 p-1 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomerType('Corporate');
-                    form.setFieldValue('customerType', 'Corporate');
-                  }}
-                  className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-                    customerType === 'Corporate'
-                      ? 'bg-white shadow-sm text-slate-900'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <BankOutlined className="mr-2" />
-                  Kurumsal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomerType('Individual');
-                    form.setFieldValue('customerType', 'Individual');
-                  }}
-                  className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-                    customerType === 'Individual'
-                      ? 'bg-white shadow-sm text-slate-900'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <UserOutlined className="mr-2" />
-                  Bireysel
-                </button>
-              </div>
-            </Form.Item>
+            {/* Company/Customer Name */}
+            <div className="flex-1">
+              <Form.Item
+                name="companyName"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder={customerType === 'Corporate' ? 'Firma Adı' : 'Ad Soyad'}
+                  variant="borderless"
+                  className="!text-xl !font-semibold !text-slate-900 !p-0 placeholder:!text-slate-300"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="customerType" className="mb-0" initialValue="Corporate">
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomerType('Corporate');
+                      form.setFieldValue('customerType', 'Corporate');
+                    }}
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      customerType === 'Corporate'
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Kurumsal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomerType('Individual');
+                      form.setFieldValue('customerType', 'Individual');
+                    }}
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      customerType === 'Individual'
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Bireysel
+                  </button>
+                </div>
+              </Form.Item>
+            </div>
           </div>
+        </div>
 
-          {/* Company Name - Hero Input */}
-          <div className="mb-6">
-            <Form.Item
-              name="companyName"
-              rules={[
-                { required: true, message: 'Firma/Ad zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder={customerType === 'Corporate' ? 'Firma Adı' : 'Ad Soyad'}
-                variant="borderless"
-                style={{
-                  fontSize: '24px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#0f172a',
-                }}
-                className="placeholder:text-slate-300"
-              />
-            </Form.Item>
-            <Form.Item name="notes" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Müşteri hakkında notlar ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '14px',
-                  padding: '0',
-                  color: '#64748b',
-                  resize: 'none'
-                }}
-                className="placeholder:text-slate-300"
-              />
-            </Form.Item>
-          </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Divider */}
-          <div className="h-px bg-slate-100 mb-6" />
-
-          {/* Contact Info */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
-              <MailOutlined className="mr-1" /> İletişim Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">İrtibat Kişisi</div>
-                <Form.Item name="contactPerson" className="mb-3">
+          {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              İletişim Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">İrtibat Kişisi</label>
+                <Form.Item name="contactPerson" className="mb-0">
                   <Input
-                    placeholder="Mehmet Demir"
-                    prefix={<UserOutlined className="text-slate-400" />}
+                    placeholder="—"
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">E-posta *</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">E-posta <span className="text-slate-400">*</span></label>
                 <Form.Item
                   name="email"
                   rules={[
-                    { required: true, message: 'Gerekli' },
-                    { type: 'email', message: 'Geçerli e-posta girin' },
+                    { required: true, message: '' },
+                    { type: 'email', message: '' },
                   ]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Input
                     placeholder="ornek@firma.com"
-                    prefix={<MailOutlined className="text-slate-400" />}
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">Telefon</div>
-                <Form.Item name="phone" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="phone" className="mb-0">
                   <Input
-                    placeholder="+90 (555) 123-4567"
-                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    placeholder="+90 (___) ___ ____"
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">Web Sitesi</div>
-                <Form.Item name="website" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">Web Sitesi</label>
+                <Form.Item name="website" className="mb-0">
                   <Input
-                    placeholder="https://www.firma.com"
-                    prefix={<GlobalOutlined className="text-slate-400" />}
+                    placeholder="https://"
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-slate-100 mb-6" />
-
-          {/* Address Info */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
-              <EnvironmentOutlined className="mr-1" /> Adres Bilgileri
-            </Text>
-            <Form.Item name="address" className="mb-3">
-              <TextArea
-                placeholder="Sokak, Mahalle, Bina No..."
-                rows={2}
-                maxLength={200}
-              />
-            </Form.Item>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-slate-400 mb-1">Şehir</div>
-                <Form.Item name="city" className="mb-3">
+          {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              Adres Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm text-slate-600 mb-1.5">Adres</label>
+                <Form.Item name="address" className="mb-0">
+                  <TextArea
+                    placeholder="Sokak, mahalle, bina no..."
+                    rows={2}
+                    maxLength={200}
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">Şehir</label>
+                <Form.Item name="city" className="mb-0">
                   <Select
-                    placeholder="Şehir seçin"
+                    placeholder="Seçin"
                     showSearch
                     optionFilterProp="children"
                     onChange={handleCityChange}
+                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!shadow-none"
                   >
                     {cityNames.map((city) => (
-                      <Select.Option key={city} value={city}>
-                        {city}
-                      </Select.Option>
+                      <Select.Option key={city} value={city}>{city}</Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-slate-400 mb-1">İlçe</div>
-                <Form.Item name="state" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">İlçe</label>
+                <Form.Item name="state" className="mb-0">
                   <Select
-                    placeholder={selectedCity ? 'İlçe seçin' : 'Önce şehir seçin'}
+                    placeholder={selectedCity ? 'Seçin' : '—'}
                     showSearch
                     optionFilterProp="children"
                     disabled={!selectedCity}
+                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900"
                   >
                     {districts.map((district) => (
-                      <Select.Option key={district} value={district}>
-                        {district}
-                      </Select.Option>
+                      <Select.Option key={district} value={district}>{district}</Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-slate-400 mb-1">Posta Kodu</div>
-                <Form.Item name="postalCode" className="mb-3">
-                  <Input placeholder="34000" maxLength={10} />
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">Posta Kodu</label>
+                <Form.Item name="postalCode" className="mb-0">
+                  <Input
+                    placeholder="34000"
+                    maxLength={10}
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="country" className="mb-0" initialValue="Türkiye">
+              </div>
+            </div>
+            <Form.Item name="country" className="hidden" initialValue="Türkiye">
               <Input type="hidden" />
             </Form.Item>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-slate-100 mb-6" />
-
-          {/* Financial Info */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Mali Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">Vergi Numarası</div>
+          {/* ─────────────── MALİ BİLGİLER ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              Mali Bilgiler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">Vergi Numarası</label>
                 <Form.Item
                   name="taxId"
-                  rules={[
-                    { pattern: /^[0-9]{10,11}$/, message: '10-11 haneli vergi no' },
-                  ]}
-                  className="mb-3"
+                  rules={[{ pattern: /^[0-9]{10,11}$/, message: '' }]}
+                  className="mb-0"
                 >
                   <Input
-                    placeholder="1234567890"
-                    prefix={<IdcardOutlined className="text-slate-400" />}
+                    placeholder="10-11 haneli"
                     maxLength={11}
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-slate-400 mb-1">Kredi Limiti</div>
-                <Form.Item name="creditLimit" className="mb-3" initialValue={0}>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm text-slate-600 mb-1.5">Vergi Dairesi</label>
+                <Form.Item name="taxOffice" className="mb-0">
+                  <Input
+                    placeholder="—"
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">Kredi Limiti</label>
+                <Form.Item name="creditLimit" className="mb-0" initialValue={0}>
                   <InputNumber
-                    style={{ width: '100%' }}
+                    className="!w-full [&_.ant-input-number-input]:!border-slate-200"
                     formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-slate-400 mb-1">Ödeme Koşulları</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">Ödeme Vadesi</label>
                 <Form.Item name="paymentTerms" className="mb-0">
                   <Select
-                    placeholder="Ödeme koşulu seçin"
+                    placeholder="Seçin"
                     options={paymentTermsOptions}
                     allowClear
+                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm text-slate-600 mb-1.5">Durum</label>
+                <Form.Item name="status" className="mb-0" initialValue="Active">
+                  <Select
+                    options={statusOptions}
+                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Müşteri hakkında ek notlar..."
+                    rows={3}
+                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>
