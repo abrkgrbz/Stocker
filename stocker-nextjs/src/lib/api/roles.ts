@@ -55,25 +55,157 @@ export const PERMISSION_TYPE_LABELS: Record<PermissionType, string> = {
   [PermissionType.Execute]: 'Yürütme',
 };
 
-// Common resources in the system
-export const AVAILABLE_RESOURCES = [
-  { value: 'Users', label: 'Kullanıcılar' },
-  { value: 'Roles', label: 'Roller' },
-  { value: 'Tenants', label: 'Tenant\'lar' },
-  { value: 'Modules', label: 'Modüller' },
-  { value: 'Settings', label: 'Ayarlar' },
-  { value: 'Reports', label: 'Raporlar' },
-  { value: 'Integrations', label: 'Entegrasyonlar' },
-  { value: 'Billing', label: 'Faturalandırma' },
-  { value: 'Security', label: 'Güvenlik' },
-  { value: 'Audit', label: 'Denetim' },
-  { value: 'CRM.Customers', label: 'CRM - Müşteriler' },
-  { value: 'CRM.Leads', label: 'CRM - Potansiyel Müşteriler' },
-  { value: 'CRM.Deals', label: 'CRM - Fırsatlar' },
-  { value: 'CRM.Activities', label: 'CRM - Aktiviteler' },
-  { value: 'CRM.Pipelines', label: 'CRM - Satış Hattı' },
-  { value: 'CRM.Campaigns', label: 'CRM - Kampanyalar' },
+// Resource definition with module mapping
+export interface ResourceDefinition {
+  value: string;
+  label: string;
+  moduleCode?: string; // If null, it's a core/system resource available to all
+  icon?: string;
+}
+
+// Module-based resource categories
+export interface ModuleResourceCategory {
+  moduleCode: string;
+  moduleName: string;
+  icon: string;
+  color: string;
+  resources: ResourceDefinition[];
+}
+
+// Core/System resources - available to all tenants
+export const CORE_RESOURCES: ResourceDefinition[] = [
+  { value: 'Users', label: 'Kullanıcılar', icon: '👥' },
+  { value: 'Roles', label: 'Roller', icon: '🔐' },
+  { value: 'Settings', label: 'Ayarlar', icon: '⚙️' },
+  { value: 'Reports', label: 'Raporlar', icon: '📊' },
+  { value: 'Security', label: 'Güvenlik', icon: '🛡️' },
+  { value: 'Audit', label: 'Denetim', icon: '📋' },
 ];
+
+// Module-specific resources
+export const MODULE_RESOURCES: ModuleResourceCategory[] = [
+  {
+    moduleCode: 'INVENTORY',
+    moduleName: 'Stok Yönetimi',
+    icon: '📦',
+    color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    resources: [
+      { value: 'Inventory.Products', label: 'Ürünler', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.Categories', label: 'Kategoriler', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.Warehouses', label: 'Depolar', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.StockMovements', label: 'Stok Hareketleri', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.Transfers', label: 'Transferler', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.Adjustments', label: 'Stok Düzeltmeleri', moduleCode: 'INVENTORY' },
+      { value: 'Inventory.Counts', label: 'Sayımlar', moduleCode: 'INVENTORY' },
+    ],
+  },
+  {
+    moduleCode: 'SALES',
+    moduleName: 'Satış Yönetimi',
+    icon: '💰',
+    color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    resources: [
+      { value: 'Sales.Orders', label: 'Siparişler', moduleCode: 'SALES' },
+      { value: 'Sales.Invoices', label: 'Faturalar', moduleCode: 'SALES' },
+      { value: 'Sales.Quotations', label: 'Teklifler', moduleCode: 'SALES' },
+      { value: 'Sales.Returns', label: 'İadeler', moduleCode: 'SALES' },
+      { value: 'Sales.Payments', label: 'Ödemeler', moduleCode: 'SALES' },
+      { value: 'Sales.PriceLists', label: 'Fiyat Listeleri', moduleCode: 'SALES' },
+    ],
+  },
+  {
+    moduleCode: 'PURCHASE',
+    moduleName: 'Satınalma Yönetimi',
+    icon: '🛒',
+    color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    resources: [
+      { value: 'Purchase.Orders', label: 'Satınalma Siparişleri', moduleCode: 'PURCHASE' },
+      { value: 'Purchase.Invoices', label: 'Alış Faturaları', moduleCode: 'PURCHASE' },
+      { value: 'Purchase.Returns', label: 'Tedarikçi İadeleri', moduleCode: 'PURCHASE' },
+      { value: 'Purchase.Suppliers', label: 'Tedarikçiler', moduleCode: 'PURCHASE' },
+    ],
+  },
+  {
+    moduleCode: 'CRM',
+    moduleName: 'Müşteri İlişkileri',
+    icon: '💼',
+    color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    resources: [
+      { value: 'CRM.Customers', label: 'Müşteriler', moduleCode: 'CRM' },
+      { value: 'CRM.Leads', label: 'Potansiyel Müşteriler', moduleCode: 'CRM' },
+      { value: 'CRM.Opportunities', label: 'Fırsatlar', moduleCode: 'CRM' },
+      { value: 'CRM.Contacts', label: 'Kişiler', moduleCode: 'CRM' },
+      { value: 'CRM.Activities', label: 'Aktiviteler', moduleCode: 'CRM' },
+      { value: 'CRM.Pipelines', label: 'Satış Hattı', moduleCode: 'CRM' },
+      { value: 'CRM.Campaigns', label: 'Kampanyalar', moduleCode: 'CRM' },
+      { value: 'CRM.Segments', label: 'Segmentler', moduleCode: 'CRM' },
+    ],
+  },
+  {
+    moduleCode: 'HR',
+    moduleName: 'İnsan Kaynakları',
+    icon: '👔',
+    color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    resources: [
+      { value: 'HR.Employees', label: 'Çalışanlar', moduleCode: 'HR' },
+      { value: 'HR.Departments', label: 'Departmanlar', moduleCode: 'HR' },
+      { value: 'HR.Positions', label: 'Pozisyonlar', moduleCode: 'HR' },
+      { value: 'HR.Attendance', label: 'Devam Takibi', moduleCode: 'HR' },
+      { value: 'HR.Leave', label: 'İzinler', moduleCode: 'HR' },
+      { value: 'HR.Payroll', label: 'Bordro', moduleCode: 'HR' },
+      { value: 'HR.Performance', label: 'Performans', moduleCode: 'HR' },
+    ],
+  },
+  {
+    moduleCode: 'FINANCE',
+    moduleName: 'Finans Yönetimi',
+    icon: '💳',
+    color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    resources: [
+      { value: 'Finance.Accounts', label: 'Hesaplar', moduleCode: 'FINANCE' },
+      { value: 'Finance.Transactions', label: 'İşlemler', moduleCode: 'FINANCE' },
+      { value: 'Finance.Banks', label: 'Bankalar', moduleCode: 'FINANCE' },
+      { value: 'Finance.CashFlow', label: 'Nakit Akışı', moduleCode: 'FINANCE' },
+      { value: 'Finance.Budgets', label: 'Bütçeler', moduleCode: 'FINANCE' },
+      { value: 'Finance.Taxes', label: 'Vergiler', moduleCode: 'FINANCE' },
+    ],
+  },
+  {
+    moduleCode: 'CMS',
+    moduleName: 'İçerik Yönetimi',
+    icon: '📝',
+    color: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    resources: [
+      { value: 'CMS.Pages', label: 'Sayfalar', moduleCode: 'CMS' },
+      { value: 'CMS.Posts', label: 'Yazılar', moduleCode: 'CMS' },
+      { value: 'CMS.Media', label: 'Medya', moduleCode: 'CMS' },
+      { value: 'CMS.Menus', label: 'Menüler', moduleCode: 'CMS' },
+    ],
+  },
+];
+
+// Legacy flat list for backward compatibility
+export const AVAILABLE_RESOURCES: ResourceDefinition[] = [
+  ...CORE_RESOURCES,
+  ...MODULE_RESOURCES.flatMap(m => m.resources),
+];
+
+/**
+ * Get resources available to a tenant based on their active modules
+ */
+export function getAvailableResourcesForModules(activeModuleCodes: string[]): {
+  coreResources: ResourceDefinition[];
+  moduleResources: ModuleResourceCategory[];
+} {
+  const normalizedCodes = activeModuleCodes.map(c => c.toUpperCase());
+
+  return {
+    coreResources: CORE_RESOURCES,
+    moduleResources: MODULE_RESOURCES.filter(m =>
+      normalizedCodes.includes(m.moduleCode.toUpperCase())
+    ),
+  };
+}
 
 /**
  * Get all roles for current tenant

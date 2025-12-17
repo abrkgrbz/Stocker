@@ -2,10 +2,11 @@
 
 /**
  * New Role Page
- * Modern full-page layout for creating roles (CRM Customer style)
+ * Modern full-page layout with module-based permission organization
+ * Only shows resources for modules the tenant has access to
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Button,
@@ -18,49 +19,34 @@ import {
   Checkbox,
   Badge,
   Tag,
-  Collapse,
   Alert,
   Select,
+  Spin,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  LockOutlined,
   SafetyOutlined,
   CheckCircleOutlined,
-  DownOutlined,
-  RightOutlined,
   WarningOutlined,
+  LockOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useCreateRole, useRoles } from '@/hooks/useRoles';
+import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import {
-  AVAILABLE_RESOURCES,
+  CORE_RESOURCES,
+  MODULE_RESOURCES,
   PERMISSION_TYPE_LABELS,
   PermissionType,
   formatPermission,
+  getAvailableResourcesForModules,
   type Permission,
+  type ResourceDefinition,
 } from '@/lib/api/roles';
 
 const { Text } = Typography;
-const { Panel } = Collapse;
-
-// Resource icon mapping
-const getResourceIcon = (resourceValue: string): string => {
-  if (resourceValue.startsWith('CRM.')) return '💼';
-  const iconMap: Record<string, string> = {
-    'Users': '👥',
-    'Roles': '🔐',
-    'Tenants': '🏢',
-    'Modules': '🧩',
-    'Settings': '⚙️',
-    'Reports': '📊',
-    'Integrations': '🔌',
-    'Billing': '💳',
-    'Security': '🛡️',
-    'Audit': '📋',
-  };
-  return iconMap[resourceValue] || '📦';
-};
 
 // Get color based on permission count
 const getPermissionColor = (count: number): string => {
@@ -70,14 +56,39 @@ const getPermissionColor = (count: number): string => {
   return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
 };
 
+// Permission type icons
+const PERMISSION_TYPE_ICONS: Record<PermissionType, string> = {
+  [PermissionType.View]: '👁️',
+  [PermissionType.Create]: '➕',
+  [PermissionType.Edit]: '✏️',
+  [PermissionType.Delete]: '🗑️',
+  [PermissionType.Export]: '📤',
+  [PermissionType.Import]: '📥',
+  [PermissionType.Approve]: '✅',
+  [PermissionType.Execute]: '▶️',
+};
+
 export default function NewRolePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([]);
   const [copyFromRoleId, setCopyFromRoleId] = useState<string | undefined>(undefined);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set(['CORE']));
 
   const createMutation = useCreateRole();
   const { data: allRoles } = useRoles();
+  const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
+
+  // Get available resources based on tenant's active modules
+  const { coreResources, moduleResources } = useMemo(() => {
+    if (!modulesData?.modules) {
+      return { coreResources: CORE_RESOURCES, moduleResources: [] };
+    }
+    const activeCodes = modulesData.modules
+      .filter(m => m.isActive)
+      .map(m => m.code);
+    return getAvailableResourcesForModules(activeCodes);
+  }, [modulesData]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -97,12 +108,23 @@ export default function NewRolePage() {
     if (roleId) {
       const selectedRole = allRoles?.find((r) => r.id === roleId);
       if (selectedRole) {
-        setSelectedPermissions(selectedRole.permissions.map((p) => {
-          const [resource, type] = p.split('.');
+        const permissions = selectedRole.permissions.map((p) => {
+          const [resource, type] = p.split(':');
           return { resource, permissionType: parseInt(type) as PermissionType };
-        }));
+        });
+        setSelectedPermissions(permissions);
       }
     }
+  };
+
+  const toggleModule = (moduleCode: string) => {
+    const newExpanded = new Set(expandedModules);
+    if (newExpanded.has(moduleCode)) {
+      newExpanded.delete(moduleCode);
+    } else {
+      newExpanded.add(moduleCode);
+    }
+    setExpandedModules(newExpanded);
   };
 
   const handleAddPermission = (resource: string, permissionType: PermissionType) => {
@@ -120,7 +142,7 @@ export default function NewRolePage() {
     );
   };
 
-  const handleToggleAllPermissionsForResource = (resource: string, checked: boolean) => {
+  const handleToggleAllForResource = (resource: string, checked: boolean) => {
     if (checked) {
       const newPermissions = Object.values(PermissionType)
         .filter((v) => typeof v === 'number')
@@ -130,6 +152,25 @@ export default function NewRolePage() {
       setSelectedPermissions([...selectedPermissions, ...toAdd]);
     } else {
       setSelectedPermissions(selectedPermissions.filter((p) => p.resource !== resource));
+    }
+  };
+
+  const handleToggleAllForModule = (moduleCode: string, resources: ResourceDefinition[], checked: boolean) => {
+    if (checked) {
+      const newPermissions: Permission[] = [];
+      resources.forEach(res => {
+        Object.values(PermissionType)
+          .filter((v) => typeof v === 'number')
+          .forEach((type) => {
+            newPermissions.push({ resource: res.value, permissionType: type as PermissionType });
+          });
+      });
+      const existingPermStrs = selectedPermissions.map(formatPermission);
+      const toAdd = newPermissions.filter((p) => !existingPermStrs.includes(formatPermission(p)));
+      setSelectedPermissions([...selectedPermissions, ...toAdd]);
+    } else {
+      const resourceValues = new Set(resources.map(r => r.value));
+      setSelectedPermissions(selectedPermissions.filter((p) => !resourceValues.has(p.resource)));
     }
   };
 
@@ -143,11 +184,136 @@ export default function NewRolePage() {
     return resourcePerms.length === allTypes.length;
   };
 
-  const groupedPermissions = AVAILABLE_RESOURCES.map((res) => ({
-    ...res,
-    permissions: getResourcePermissions(res.value),
-    hasAll: hasAllPermissionsForResource(res.value),
-  }));
+  const getModulePermissionCount = (resources: ResourceDefinition[]) => {
+    const resourceValues = new Set(resources.map(r => r.value));
+    return selectedPermissions.filter(p => resourceValues.has(p.resource)).length;
+  };
+
+  const hasAllPermissionsForModule = (resources: ResourceDefinition[]) => {
+    const allTypes = Object.values(PermissionType).filter((v) => typeof v === 'number');
+    const maxPerms = resources.length * allTypes.length;
+    return getModulePermissionCount(resources) === maxPerms;
+  };
+
+  const renderResourcePermissions = (resource: ResourceDefinition) => {
+    const resourcePerms = getResourcePermissions(resource.value);
+    const hasAll = hasAllPermissionsForResource(resource.value);
+
+    return (
+      <div key={resource.value} className="p-3 bg-white rounded-lg border border-gray-100 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <Checkbox
+            checked={hasAll}
+            indeterminate={resourcePerms.length > 0 && !hasAll}
+            onChange={(e) => handleToggleAllForResource(resource.value, e.target.checked)}
+          >
+            <span className="font-medium text-gray-800">{resource.label}</span>
+          </Checkbox>
+          {resourcePerms.length > 0 && (
+            <Badge
+              count={resourcePerms.length}
+              style={{ backgroundColor: hasAll ? '#52c41a' : '#1890ff' }}
+              size="small"
+            />
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1 ml-6">
+          {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
+            const permType = parseInt(type) as PermissionType;
+            const isSelected = resourcePerms.some((p) => p.permissionType === permType);
+
+            return (
+              <Tooltip key={type} title={label}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      handleRemovePermission({ resource: resource.value, permissionType: permType });
+                    } else {
+                      handleAddPermission(resource.value, permType);
+                    }
+                  }}
+                  className={`
+                    px-2 py-1 text-xs rounded-md transition-all duration-200
+                    ${isSelected
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  <span className="mr-1">{PERMISSION_TYPE_ICONS[permType]}</span>
+                  {label}
+                </button>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const renderModuleSection = (
+    moduleCode: string,
+    moduleName: string,
+    icon: string,
+    color: string,
+    resources: ResourceDefinition[]
+  ) => {
+    const isExpanded = expandedModules.has(moduleCode);
+    const permCount = getModulePermissionCount(resources);
+    const hasAll = hasAllPermissionsForModule(resources);
+    const allTypes = Object.values(PermissionType).filter((v) => typeof v === 'number');
+    const maxPerms = resources.length * allTypes.length;
+
+    return (
+      <div key={moduleCode} className="mb-4">
+        <div
+          className="p-4 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md"
+          style={{ background: color }}
+          onClick={() => toggleModule(moduleCode)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{icon}</span>
+              <div>
+                <div className="font-semibold text-white">{moduleName}</div>
+                <div className="text-xs text-white/70">{resources.length} kaynak</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={hasAll}
+                indeterminate={permCount > 0 && !hasAll}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  handleToggleAllForModule(moduleCode, resources, e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="permission-checkbox-white"
+              />
+              <div className="text-right">
+                <div className="text-lg font-bold text-white">{permCount}</div>
+                <div className="text-xs text-white/70">/ {maxPerms}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {isExpanded && (
+          <div className="mt-2 p-3 bg-gray-50 rounded-xl">
+            {resources.map(resource => renderResourcePermissions(resource))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (modulesLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Spin size="large" tip="Modüller yükleniyor..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -204,24 +370,24 @@ export default function NewRolePage() {
           disabled={createMutation.isPending}
         >
           <Row gutter={48}>
-            {/* Left Panel - Visual & Stats (40%) */}
-            <Col xs={24} lg={10}>
+            {/* Left Panel - Visual & Stats (35%) */}
+            <Col xs={24} lg={8}>
               {/* Role Visual Card */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <div
                   style={{
                     background: getPermissionColor(selectedPermissions.length),
                     borderRadius: '16px',
-                    padding: '40px 20px',
-                    minHeight: '200px',
+                    padding: '32px 20px',
+                    minHeight: '180px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <SafetyOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-                  <p className="mt-4 text-lg font-medium text-white/90">
+                  <SafetyOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                  <p className="mt-3 text-base font-medium text-white/90">
                     {selectedPermissions.length >= 50 ? 'Süper Admin' :
                      selectedPermissions.length >= 20 ? 'Yönetici' :
                      selectedPermissions.length >= 10 ? 'Moderatör' : 'Standart Rol'}
@@ -242,9 +408,9 @@ export default function NewRolePage() {
                 </div>
                 <div className="p-4 bg-green-50/50 rounded-xl text-center border border-green-100">
                   <div className="text-2xl font-semibold text-green-600">
-                    {groupedPermissions.filter(g => g.permissions.length > 0).length}
+                    {moduleResources.length + 1}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Aktif Kaynak</div>
+                  <div className="text-xs text-gray-500 mt-1">Aktif Modül</div>
                 </div>
               </div>
 
@@ -278,34 +444,53 @@ export default function NewRolePage() {
                     <CheckCircleOutlined className="mr-1" /> Seçilen Yetkiler
                   </Text>
                   <div className="p-4 bg-gray-50 rounded-xl max-h-64 overflow-y-auto">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPermissions.slice(0, 20).map((perm, index) => {
-                        const resource = AVAILABLE_RESOURCES.find((r) => r.value === perm.resource);
+                    <div className="flex flex-wrap gap-1">
+                      {selectedPermissions.slice(0, 15).map((perm, index) => {
+                        const allResources = [...CORE_RESOURCES, ...MODULE_RESOURCES.flatMap(m => m.resources)];
+                        const resource = allResources.find((r) => r.value === perm.resource);
                         return (
                           <Tag
                             key={index}
                             closable
                             onClose={() => handleRemovePermission(perm)}
                             color="blue"
-                            className="mb-1"
+                            className="mb-1 text-xs"
                           >
-                            {resource?.label} - {(PERMISSION_TYPE_LABELS as any)[perm.permissionType]}
+                            {resource?.label} - {PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType]}
                           </Tag>
                         );
                       })}
-                      {selectedPermissions.length > 20 && (
-                        <Tag color="default">+{selectedPermissions.length - 20} daha</Tag>
+                      {selectedPermissions.length > 15 && (
+                        <Tag color="default">+{selectedPermissions.length - 15} daha</Tag>
                       )}
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Module Info */}
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <div className="flex items-start gap-2">
+                  <InfoCircleOutlined className="text-amber-500 mt-0.5" />
+                  <div>
+                    <Text className="font-medium text-amber-800 block text-sm">Modül Bilgisi</Text>
+                    <Text className="text-xs text-amber-700">
+                      Sadece aboneliğinize dahil modüller için yetki atayabilirsiniz.
+                      {modulesData?.packageName && (
+                        <span className="block mt-1 font-medium">
+                          Paket: {modulesData.packageName}
+                        </span>
+                      )}
+                    </Text>
+                  </div>
+                </div>
+              </div>
             </Col>
 
-            {/* Right Panel - Form Content (60%) */}
-            <Col xs={24} lg={14}>
+            {/* Right Panel - Form Content (65%) */}
+            <Col xs={24} lg={16}>
               {/* Role Name - Hero Input */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <Form.Item
                   name="name"
                   rules={[
@@ -330,7 +515,7 @@ export default function NewRolePage() {
                   <Input.TextArea
                     placeholder="Rolün görev ve sorumluluklarını açıklayın..."
                     variant="borderless"
-                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    autoSize={{ minRows: 2, maxRows: 3 }}
                     style={{
                       fontSize: '15px',
                       padding: '0',
@@ -343,18 +528,23 @@ export default function NewRolePage() {
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-6" />
 
               {/* Permissions Section */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <LockOutlined className="mr-1" /> Yetkiler
-                </Text>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <LockOutlined className="mr-1" /> Yetkiler
+                  </Text>
+                  <Text className="text-xs text-gray-400">
+                    Modüle tıklayarak kaynakları görüntüleyin
+                  </Text>
+                </div>
 
                 {selectedPermissions.length === 0 && (
                   <Alert
                     message="Henüz yetki seçilmedi"
-                    description="Bu rol için en az bir yetki seçmelisiniz. Aşağıdaki kaynaklardan yetkileri seçerek başlayın."
+                    description="Bu rol için en az bir yetki seçmelisiniz. Aşağıdaki modüllerden yetkileri seçerek başlayın."
                     type="warning"
                     showIcon
                     icon={<WarningOutlined />}
@@ -363,81 +553,34 @@ export default function NewRolePage() {
                   />
                 )}
 
-                <Collapse
-                  defaultActiveKey={[]}
-                  accordion
-                  ghost
-                  expandIcon={({ isActive }) => (
-                    isActive ? <DownOutlined className="text-gray-400" /> : <RightOutlined className="text-gray-400" />
-                  )}
-                  className="permission-collapse"
-                >
-                  {groupedPermissions.map((resource) => (
-                    <Panel
-                      key={resource.value}
-                      header={
-                        <div className="flex justify-between items-center w-full py-1">
-                          <div className="flex items-center gap-3">
-                            <span style={{ fontSize: 24 }}>
-                              {getResourceIcon(resource.value)}
-                            </span>
-                            <Checkbox
-                              checked={resource.hasAll}
-                              indeterminate={resource.permissions.length > 0 && !resource.hasAll}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                handleToggleAllPermissionsForResource(resource.value, e.target.checked);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <span className="font-medium text-gray-800">{resource.label}</span>
-                            </Checkbox>
-                          </div>
-                          {resource.permissions.length > 0 && (
-                            <Badge
-                              count={resource.permissions.length}
-                              style={{
-                                backgroundColor: resource.hasAll ? '#52c41a' : '#1890ff',
-                                marginRight: 8
-                              }}
-                            />
-                          )}
-                        </div>
-                      }
-                      className="mb-2 bg-gray-50/50 rounded-lg overflow-hidden border-0"
-                    >
-                      <div className="px-4 py-3 bg-white rounded-lg mx-2 mb-2">
-                        <Row gutter={[12, 12]}>
-                          {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
-                            const permType = parseInt(type) as PermissionType;
-                            const isSelected = resource.permissions.some((p) => p.permissionType === permType);
+                {/* Core Resources */}
+                {renderModuleSection(
+                  'CORE',
+                  'Sistem Yönetimi',
+                  '⚙️',
+                  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  coreResources
+                )}
 
-                            return (
-                              <Col span={12} key={type}>
-                                <Checkbox
-                                  checked={isSelected}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      handleAddPermission(resource.value, permType);
-                                    } else {
-                                      handleRemovePermission({
-                                        resource: resource.value,
-                                        permissionType: permType,
-                                      });
-                                    }
-                                  }}
-                                  className="w-full"
-                                >
-                                  <span className="text-sm text-gray-700">{label}</span>
-                                </Checkbox>
-                              </Col>
-                            );
-                          })}
-                        </Row>
-                      </div>
-                    </Panel>
-                  ))}
-                </Collapse>
+                {/* Module Resources */}
+                {moduleResources.map((module) =>
+                  renderModuleSection(
+                    module.moduleCode,
+                    module.moduleName,
+                    module.icon,
+                    module.color,
+                    module.resources
+                  )
+                )}
+
+                {/* No modules message */}
+                {moduleResources.length === 0 && (
+                  <div className="p-6 bg-gray-50 rounded-xl text-center">
+                    <Text className="text-gray-500">
+                      Aboneliğinize dahil ek modül bulunmuyor.
+                    </Text>
+                  </div>
+                )}
               </div>
             </Col>
           </Row>
@@ -448,6 +591,24 @@ export default function NewRolePage() {
           </Form.Item>
         </Form>
       </div>
+
+      {/* Custom styles for white checkbox */}
+      <style jsx global>{`
+        .permission-checkbox-white .ant-checkbox-inner {
+          background-color: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.6);
+        }
+        .permission-checkbox-white .ant-checkbox-checked .ant-checkbox-inner {
+          background-color: white;
+          border-color: white;
+        }
+        .permission-checkbox-white .ant-checkbox-checked .ant-checkbox-inner::after {
+          border-color: #667eea;
+        }
+        .permission-checkbox-white .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+          background-color: white;
+        }
+      `}</style>
     </div>
   );
 }
