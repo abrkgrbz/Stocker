@@ -1023,166 +1023,173 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
 
         {/* Step 2B: Custom Package Selection */}
         {currentStep === 'custom-package' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Modüllerinizi Seçin
-              </h2>
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Modüllerinizi Seçin
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  İhtiyacınız olan özellikleri seçerek kendi paketinizi oluşturun
+                </p>
+              </div>
               {/* Billing Cycle Selection */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Ödeme Periyodu:</span>
+              <div className="flex items-center gap-2">
                 <select
                   value={billingCycle}
                   onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-colors"
                 >
                   <option value="monthly">Aylık</option>
-                  <option value="quarterly">3 Aylık (%10 indirim)</option>
-                  <option value="semiannual">6 Aylık (%15 indirim)</option>
-                  <option value="annual">Yıllık (%20 indirim)</option>
+                  <option value="quarterly">3 Aylık (%10)</option>
+                  <option value="semiannual">6 Aylık (%15)</option>
+                  <option value="annual">Yıllık (%20)</option>
                 </select>
               </div>
             </div>
 
             {loadingModules ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Modüller yükleniyor...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
+                <p className="mt-4 text-slate-500">Modüller yükleniyor...</p>
               </div>
             ) : (
-              <div className="flex gap-6">
-                {/* Module List */}
-                <div className="flex-1 max-h-[450px] overflow-y-auto pr-2">
+              <div className="flex gap-6 flex-1 min-h-0">
+                {/* Module List - Scrollable */}
+                <div className="flex-1 overflow-y-auto pr-2 scrollbar-hide" style={{ maxHeight: '400px' }}>
                   {Object.entries(modulesByCategory).map(([category, categoryModules]) => (
                     <div key={category} className="mb-6">
-                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                         {category}
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {categoryModules.map((module) => (
-                          <div
-                            key={module.id}
-                            onClick={() => toggleModule(module.code)}
-                            className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                              selectedModuleCodes.includes(module.code)
-                                ? module.isCore
-                                  ? 'border-green-400 bg-green-50'
-                                  : 'border-blue-600 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            } ${module.isCore ? 'cursor-default' : ''}`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium text-gray-900">{module.name}</h4>
+                        {categoryModules.map((module) => {
+                          const isSelected = selectedModuleCodes.includes(module.code)
+                          return (
+                            <div
+                              key={module.id}
+                              onClick={() => !module.isCore && toggleModule(module.code)}
+                              className={`relative border-2 rounded-xl p-4 transition-all duration-200 ${
+                                isSelected
+                                  ? 'border-slate-900 bg-white shadow-sm'
+                                  : 'border-slate-200 bg-white hover:border-slate-300'
+                              } ${module.isCore ? 'cursor-default' : 'cursor-pointer'}`}
+                            >
+                              {/* Check Circle - Top Right */}
+                              {isSelected && (
+                                <div className="absolute top-3 right-3">
+                                  <svg className="w-5 h-5 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              )}
+
+                              <div className="pr-6">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-slate-900">{module.name}</h4>
                                   {module.isCore && (
-                                    <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">
-                                      Zorunlu
+                                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
+                                      Temel
                                     </span>
                                   )}
                                 </div>
                                 {module.description && (
-                                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                  <p className="text-xs text-slate-500 line-clamp-2 mb-2">
                                     {module.description}
                                   </p>
                                 )}
-                                <div className="text-sm font-medium text-blue-600 mt-2">
-                                  ₺{module.monthlyPrice}/ay
+                                <div className="text-sm font-semibold text-slate-900">
+                                  ₺{module.monthlyPrice}<span className="text-slate-400 font-normal">/ay</span>
                                 </div>
                               </div>
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                selectedModuleCodes.includes(module.code)
-                                  ? 'bg-blue-600 border-blue-600'
-                                  : 'border-gray-300'
-                              }`}>
-                                {selectedModuleCodes.includes(module.code) && (
-                                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </div>
+
+                              {/* Features - Show when selected */}
+                              {module.features.length > 0 && isSelected && (
+                                <div className="mt-3 pt-3 border-t border-slate-100">
+                                  <ul className="space-y-1">
+                                    {module.features.slice(0, 3).map((feature, idx) => (
+                                      <li key={idx} className="text-xs text-slate-500 flex items-center">
+                                        <svg className="w-3 h-3 mr-1.5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        {feature.featureName}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
-                            {/* Features */}
-                            {module.features.length > 0 && selectedModuleCodes.includes(module.code) && (
-                              <div className="mt-3 pt-3 border-t border-gray-100">
-                                <ul className="space-y-1">
-                                  {module.features.slice(0, 3).map((feature, idx) => (
-                                    <li key={idx} className="text-xs text-gray-500 flex items-center">
-                                      <svg className="w-3 h-3 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      {feature.featureName}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Price Summary */}
-                <div className="w-80 flex-shrink-0">
-                  <div className="bg-gray-50 rounded-xl p-6 sticky top-0">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Fiyat Özeti
+                {/* Price Summary - Right Panel */}
+                <div className="w-72 flex-shrink-0">
+                  <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                    <h3 className="text-sm font-semibold text-slate-900 mb-4">
+                      Konfigürasyon Özeti
                     </h3>
 
                     {loadingPrice ? (
                       <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-900 mx-auto"></div>
                       </div>
                     ) : customPrice ? (
                       <>
-                        {/* Breakdown */}
-                        <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                        {/* Module Breakdown */}
+                        <div className="space-y-2 mb-4 max-h-40 overflow-y-auto scrollbar-hide">
                           {customPrice.breakdown.map((item) => (
                             <div key={item.moduleCode} className="flex justify-between text-sm">
-                              <span className={`${item.isCore ? 'text-green-700' : item.isRequired ? 'text-orange-600' : 'text-gray-600'}`}>
+                              <span className="text-slate-600 truncate pr-2">
                                 {item.moduleName}
-                                {item.isCore && ' (Zorunlu)'}
-                                {item.isRequired && !item.isCore && ' (Bağımlılık)'}
+                                {item.isCore && <span className="text-slate-400 text-xs ml-1">(Temel)</span>}
                               </span>
-                              <span className="font-medium">₺{item.monthlyPrice}</span>
+                              <span className="font-medium text-slate-900 flex-shrink-0">₺{item.monthlyPrice}</span>
                             </div>
                           ))}
                         </div>
 
-                        <div className="border-t pt-4">
-                          {/* Billing Cycle Prices */}
-                          <div className="space-y-2 mb-4">
-                            <div className={`flex justify-between text-sm ${billingCycle === 'monthly' ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
-                              <span>Aylık</span>
-                              <span>₺{customPrice.monthlyTotal}</span>
-                            </div>
-                            <div className={`flex justify-between text-sm ${billingCycle === 'quarterly' ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
-                              <span>3 Aylık <span className="text-green-600">(%{customPrice.quarterlyDiscount} indirim)</span></span>
-                              <span>₺{customPrice.quarterlyTotal}</span>
-                            </div>
-                            <div className={`flex justify-between text-sm ${billingCycle === 'semiannual' ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
-                              <span>6 Aylık <span className="text-green-600">(%{customPrice.semiAnnualDiscount} indirim)</span></span>
-                              <span>₺{customPrice.semiAnnualTotal}</span>
-                            </div>
-                            <div className={`flex justify-between text-sm ${billingCycle === 'annual' ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
-                              <span>Yıllık <span className="text-green-600">(%{customPrice.annualDiscount} indirim)</span></span>
-                              <span>₺{customPrice.annualTotal}</span>
-                            </div>
+                        {/* Divider */}
+                        <div className="border-t border-slate-200 pt-4">
+                          {/* Billing Options - Compact */}
+                          <div className="space-y-1.5 mb-4">
+                            {[
+                              { key: 'monthly', label: 'Aylık', price: customPrice.monthlyTotal },
+                              { key: 'quarterly', label: '3 Aylık', price: customPrice.quarterlyTotal, discount: customPrice.quarterlyDiscount },
+                              { key: 'semiannual', label: '6 Aylık', price: customPrice.semiAnnualTotal, discount: customPrice.semiAnnualDiscount },
+                              { key: 'annual', label: 'Yıllık', price: customPrice.annualTotal, discount: customPrice.annualDiscount },
+                            ].map((option) => (
+                              <div
+                                key={option.key}
+                                className={`flex justify-between text-xs py-1 ${
+                                  billingCycle === option.key ? 'text-slate-900 font-medium' : 'text-slate-400'
+                                }`}
+                              >
+                                <span>
+                                  {option.label}
+                                  {option.discount && <span className="text-emerald-600 ml-1">-%{option.discount}</span>}
+                                </span>
+                                <span>₺{option.price}</span>
+                              </div>
+                            ))}
                           </div>
 
-                          {/* Selected Total */}
-                          <div className="bg-blue-600 text-white rounded-lg p-4 text-center">
-                            <div className="text-sm opacity-90">{getBillingLabel()} Toplam</div>
-                            <div className="text-3xl font-bold">
-                              ₺{getCurrentPrice()}
+                          {/* Total Price - Clean Display */}
+                          <div className="pt-3 border-t border-slate-200">
+                            <div className="text-xs text-slate-500 mb-1">{getBillingLabel()} Toplam</div>
+                            <div className="text-2xl font-bold text-slate-900">
+                              ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                             </div>
+                            <div className="text-xs text-slate-400 mt-1">KDV Dahil</div>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <p className="text-gray-500 text-sm text-center py-4">
+                      <p className="text-slate-400 text-sm text-center py-4">
                         Modül seçin
                       </p>
                     )}
@@ -1191,20 +1198,34 @@ export default function SetupWizardModal({ open, onComplete }: SetupWizardModalP
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t border-slate-200">
+            {/* Sticky Footer - Main Action Area */}
+            <div className="flex items-center justify-between pt-6 mt-6 border-t border-slate-200">
               <button
                 onClick={() => setCurrentStep('package-type')}
-                className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                className="text-slate-500 hover:text-slate-900 text-sm font-medium transition-colors"
               >
-                Geri
+                ← Geri
               </button>
-              <button
-                onClick={handleCustomPackageNext}
-                disabled={selectedModuleCodes.filter(code => !modules.find(m => m.code === code)?.isCore).length === 0}
-                className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
-              >
-                Devam Et
-              </button>
+
+              <div className="flex items-center gap-6">
+                {/* Price Display in Footer */}
+                {customPrice && (
+                  <div className="text-right">
+                    <span className="text-sm text-slate-500">Toplam: </span>
+                    <span className="text-lg font-bold text-slate-900">
+                      ₺{getCurrentPrice().toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleCustomPackageNext}
+                  disabled={selectedModuleCodes.filter(code => !modules.find(m => m.code === code)?.isCore).length === 0}
+                  className="px-8 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Devam Et
+                </button>
+              </div>
             </div>
           </div>
         )}
