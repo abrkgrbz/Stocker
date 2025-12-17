@@ -2,23 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Dropdown,
-  Card,
-  Typography,
-  Tooltip,
-  Modal,
-  Select,
-  Row,
-  Col,
-  Statistic,
-  message,
-} from 'antd';
+import { Table, Input, Tag, Dropdown, Spin, Select } from 'antd';
+import type { ColumnsType, TableProps } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -31,14 +17,10 @@ import {
   StopOutlined,
   PhoneOutlined,
   MailOutlined,
-  FilterOutlined,
-  ReloadOutlined,
-  ExportOutlined,
   FileExcelOutlined,
+  StarOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import type { TableProps } from 'antd';
-import type { MenuProps } from 'antd';
 import {
   useSuppliers,
   useDeleteSupplier,
@@ -47,26 +29,22 @@ import {
   useBlockSupplier,
 } from '@/lib/api/hooks/usePurchase';
 import type { SupplierListDto, SupplierStatus, SupplierType } from '@/lib/api/services/purchase.types';
-import { exportToCSV, exportToExcel, type ExportColumn } from '@/lib/utils/export';
+import { exportToExcel, type ExportColumn } from '@/lib/utils/export';
+import { confirmDelete, showSuccess, showError, showWarning, confirmAction } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
-const { confirm } = Modal;
-
-const statusColors: Record<SupplierStatus, string> = {
-  Active: 'green',
-  Inactive: 'default',
-  Pending: 'orange',
-  Blacklisted: 'red',
-  OnHold: 'yellow',
-};
-
-const statusLabels: Record<SupplierStatus, string> = {
-  Active: 'Aktif',
-  Inactive: 'Pasif',
-  Pending: 'Onay Bekliyor',
-  Blacklisted: 'Bloklu',
-  OnHold: 'Beklemede',
+const statusConfig: Record<SupplierStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
+  Active: { color: '#10b981', label: 'Aktif', bgColor: '#10b98115', tagColor: 'green' },
+  Inactive: { color: '#64748b', label: 'Pasif', bgColor: '#64748b15', tagColor: 'default' },
+  Pending: { color: '#f59e0b', label: 'Onay Bekliyor', bgColor: '#f59e0b15', tagColor: 'orange' },
+  Blacklisted: { color: '#ef4444', label: 'Bloklu', bgColor: '#ef444415', tagColor: 'red' },
+  OnHold: { color: '#eab308', label: 'Beklemede', bgColor: '#eab30815', tagColor: 'gold' },
 };
 
 const typeLabels: Record<SupplierType, string> = {
@@ -111,35 +89,39 @@ export default function SuppliersPage() {
       total: totalCount,
       active: all.filter(s => s.status === 'Active').length,
       inactive: all.filter(s => s.status === 'Inactive').length,
-      blocked: all.filter(s => s.status === 'Blocked').length,
+      blocked: all.filter(s => s.status === 'Blacklisted').length,
     };
   }, [suppliers, totalCount]);
 
-  const handleDelete = (record: SupplierListDto) => {
-    confirm({
-      title: 'Tedarikçiyi Sil',
-      content: `"${record.name}" tedarikçisini silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => deleteSupplier.mutate(record.id),
-    });
+  const handleDelete = async (record: SupplierListDto) => {
+    const confirmed = await confirmDelete('Tedarikçi', record.name, 'Bu işlem geri alınamaz!');
+    if (confirmed) {
+      try {
+        await deleteSupplier.mutateAsync(record.id);
+        showSuccess('Başarılı', 'Tedarikçi silindi');
+      } catch {
+        showError('Tedarikçi silinemedi');
+      }
+    }
   };
 
-  const handleStatusChange = (record: SupplierListDto, newStatus: 'activate' | 'deactivate' | 'block') => {
-    if (newStatus === 'activate') {
-      activateSupplier.mutate(record.id);
-    } else if (newStatus === 'deactivate') {
-      deactivateSupplier.mutate(record.id);
-    } else if (newStatus === 'block') {
-      Modal.confirm({
-        title: 'Tedarikçiyi Blokla',
-        content: 'Bu tedarikçiyi bloklamak istediğinizden emin misiniz?',
-        okText: 'Blokla',
-        okType: 'danger',
-        cancelText: 'İptal',
-        onOk: () => blockSupplier.mutate({ id: record.id, reason: 'Manual block' }),
-      });
+  const handleStatusChange = async (record: SupplierListDto, newStatus: 'activate' | 'deactivate' | 'block') => {
+    try {
+      if (newStatus === 'activate') {
+        await activateSupplier.mutateAsync(record.id);
+        showSuccess('Başarılı', 'Tedarikçi aktifleştirildi');
+      } else if (newStatus === 'deactivate') {
+        await deactivateSupplier.mutateAsync(record.id);
+        showSuccess('Başarılı', 'Tedarikçi pasifleştirildi');
+      } else if (newStatus === 'block') {
+        const confirmed = await confirmAction('Tedarikçiyi Blokla', 'Bu tedarikçiyi bloklamak istediğinizden emin misiniz?', 'Blokla');
+        if (confirmed) {
+          await blockSupplier.mutateAsync({ id: record.id, reason: 'Manual block' });
+          showSuccess('Başarılı', 'Tedarikçi bloklandı');
+        }
+      }
+    } catch {
+      showError('İşlem başarısız oldu');
     }
   };
 
@@ -149,17 +131,17 @@ export default function SuppliersPage() {
   const handleBulkActivate = async () => {
     const inactiveSuppliers = selectedSuppliers.filter(s => s.status !== 'Active');
     if (inactiveSuppliers.length === 0) {
-      message.warning('Seçili tedarikçiler arasında aktifleştirilecek tedarikçi yok');
+      showWarning('Uyarı', 'Seçili tedarikçiler arasında aktifleştirilecek tedarikçi yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(inactiveSuppliers.map(s => activateSupplier.mutateAsync(s.id)));
-      message.success(`${inactiveSuppliers.length} tedarikçi aktifleştirildi`);
+      showSuccess('Başarılı', `${inactiveSuppliers.length} tedarikçi aktifleştirildi`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı tedarikçiler aktifleştirilemedi');
+      showError('Bazı tedarikçiler aktifleştirilemedi');
     } finally {
       setBulkLoading(false);
     }
@@ -168,72 +150,60 @@ export default function SuppliersPage() {
   const handleBulkDeactivate = async () => {
     const activeSuppliers = selectedSuppliers.filter(s => s.status === 'Active');
     if (activeSuppliers.length === 0) {
-      message.warning('Seçili tedarikçiler arasında pasifleştirilecek tedarikçi yok');
+      showWarning('Uyarı', 'Seçili tedarikçiler arasında pasifleştirilecek tedarikçi yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(activeSuppliers.map(s => deactivateSupplier.mutateAsync(s.id)));
-      message.success(`${activeSuppliers.length} tedarikçi pasifleştirildi`);
+      showSuccess('Başarılı', `${activeSuppliers.length} tedarikçi pasifleştirildi`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı tedarikçiler pasifleştirilemedi');
+      showError('Bazı tedarikçiler pasifleştirilemedi');
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleBulkBlock = () => {
+  const handleBulkBlock = async () => {
     const blockableSuppliers = selectedSuppliers.filter(s => s.status !== 'Blacklisted');
     if (blockableSuppliers.length === 0) {
-      message.warning('Seçili tedarikçiler arasında bloklanacak tedarikçi yok');
+      showWarning('Uyarı', 'Seçili tedarikçiler arasında bloklanacak tedarikçi yok');
       return;
     }
-    Modal.confirm({
-      title: 'Toplu Blokla',
-      content: `${blockableSuppliers.length} tedarikçiyi bloklamak istediğinizden emin misiniz?`,
-      okText: 'Blokla',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(blockableSuppliers.map(s => blockSupplier.mutateAsync({ id: s.id, reason: 'Bulk block' })));
-          message.success(`${blockableSuppliers.length} tedarikçi bloklandı`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı tedarikçiler bloklanamadı');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
+    const confirmed = await confirmAction('Toplu Blokla', `${blockableSuppliers.length} tedarikçiyi bloklamak istediğinizden emin misiniz?`, 'Blokla');
+    if (confirmed) {
+      setBulkLoading(true);
+      try {
+        await Promise.all(blockableSuppliers.map(s => blockSupplier.mutateAsync({ id: s.id, reason: 'Bulk block' })));
+        showSuccess('Başarılı', `${blockableSuppliers.length} tedarikçi bloklandı`);
+        setSelectedRowKeys([]);
+        refetch();
+      } catch {
+        showError('Bazı tedarikçiler bloklanamadı');
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedSuppliers.length === 0) return;
-    Modal.confirm({
-      title: 'Toplu Sil',
-      content: `${selectedSuppliers.length} tedarikçiyi silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(selectedSuppliers.map(s => deleteSupplier.mutateAsync(s.id)));
-          message.success(`${selectedSuppliers.length} tedarikçi silindi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı tedarikçiler silinemedi');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
+    const confirmed = await confirmDelete('tedarikçi', `${selectedSuppliers.length} adet`, 'Bu işlem geri alınamaz!');
+    if (confirmed) {
+      setBulkLoading(true);
+      try {
+        await Promise.all(selectedSuppliers.map(s => deleteSupplier.mutateAsync(s.id)));
+        showSuccess('Başarılı', `${selectedSuppliers.length} tedarikçi silindi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } catch {
+        showError('Bazı tedarikçiler silinemedi');
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   // Export Functions
@@ -246,19 +216,13 @@ export default function SuppliersPage() {
     { key: 'city', title: 'Şehir' },
     { key: 'currentBalance', title: 'Bakiye', render: (v, r) => `${(v || 0).toLocaleString('tr-TR')} ${r.currency || 'TRY'}` },
     { key: 'rating', title: 'Puan', render: (v) => v?.toFixed(1) || '-' },
-    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as SupplierStatus] || v },
+    { key: 'status', title: 'Durum', render: (v) => statusConfig[v as SupplierStatus]?.label || v },
   ];
-
-  const handleExportCSV = () => {
-    const dataToExport = selectedRowKeys.length > 0 ? selectedSuppliers : suppliers;
-    exportToCSV(dataToExport, exportColumns, `tedarikciler-${dayjs().format('YYYY-MM-DD')}`);
-    message.success('CSV dosyası indirildi');
-  };
 
   const handleExportExcel = async () => {
     const dataToExport = selectedRowKeys.length > 0 ? selectedSuppliers : suppliers;
     await exportToExcel(dataToExport, exportColumns, `tedarikciler-${dayjs().format('YYYY-MM-DD')}`, 'Tedarikçiler');
-    message.success('Excel dosyası indirildi');
+    showSuccess('Başarılı', 'Excel dosyası indirildi');
   };
 
   // Row Selection
@@ -278,14 +242,19 @@ export default function SuppliersPage() {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
-            style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: statusConfig[record.status as SupplierStatus]?.bgColor || '#64748b15' }}
           >
-            {record.name.charAt(0).toUpperCase()}
+            <ShopOutlined style={{ color: statusConfig[record.status as SupplierStatus]?.color || '#64748b' }} />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{record.name}</div>
-            <div className="text-xs text-gray-500">{record.code}</div>
+            <div
+              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-indigo-600"
+              onClick={(e) => { e.stopPropagation(); router.push(`/purchase/suppliers/${record.id}`); }}
+            >
+              {record.name}
+            </div>
+            <div className="text-xs text-slate-500">{record.code}</div>
           </div>
         </div>
       ),
@@ -296,7 +265,7 @@ export default function SuppliersPage() {
       key: 'type',
       width: 130,
       render: (type: string) => (
-        <Tag>{typeLabels[type as SupplierType] || type}</Tag>
+        <span className="text-sm text-slate-600">{typeLabels[type as SupplierType] || type}</span>
       ),
     },
     {
@@ -306,14 +275,14 @@ export default function SuppliersPage() {
       render: (_, record) => (
         <div className="space-y-1">
           {record.email && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <MailOutlined />
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <MailOutlined className="text-slate-400" />
               <span className="truncate max-w-[150px]">{record.email}</span>
             </div>
           )}
           {record.phone && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <PhoneOutlined />
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <PhoneOutlined className="text-slate-400" />
               <span>{record.phone}</span>
             </div>
           )}
@@ -325,7 +294,7 @@ export default function SuppliersPage() {
       dataIndex: 'city',
       key: 'city',
       width: 120,
-      render: (city) => city || '-',
+      render: (city) => <span className="text-sm text-slate-600">{city || '-'}</span>,
     },
     {
       title: 'Bakiye',
@@ -334,7 +303,7 @@ export default function SuppliersPage() {
       width: 130,
       align: 'right',
       render: (balance, record) => (
-        <span className={balance > 0 ? 'text-orange-600 font-medium' : 'text-gray-500'}>
+        <span className={`text-sm font-medium ${balance > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
           {(balance || 0).toLocaleString('tr-TR')} {record.currency}
         </span>
       ),
@@ -346,9 +315,10 @@ export default function SuppliersPage() {
       width: 80,
       align: 'center',
       render: (rating) => (
-        <span className="font-medium text-yellow-600">
-          {rating?.toFixed(1) || '-'}
-        </span>
+        <div className="flex items-center justify-center gap-1">
+          <StarOutlined className="text-amber-400 text-xs" />
+          <span className="font-medium text-slate-700">{rating?.toFixed(1) || '-'}</span>
+        </div>
       ),
     },
     {
@@ -356,252 +326,215 @@ export default function SuppliersPage() {
       dataIndex: 'status',
       key: 'status',
       width: 110,
-      render: (status: SupplierStatus) => (
-        <Tag color={statusColors[status]}>
-          {statusLabels[status] || status}
-        </Tag>
-      ),
+      render: (status: SupplierStatus) => {
+        const config = statusConfig[status] || statusConfig.Inactive;
+        return <Tag color={config.tagColor}>{config.label}</Tag>;
+      },
     },
     {
       title: '',
       key: 'actions',
       fixed: 'right',
-      width: 60,
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/purchase/suppliers/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <EditOutlined />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/purchase/suppliers/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              record.status !== 'Active' && {
-                key: 'activate',
-                icon: <CheckCircleOutlined />,
-                label: 'Aktifleştir',
-                onClick: () => handleStatusChange(record, 'activate'),
-              },
-              record.status === 'Active' && {
-                key: 'deactivate',
-                icon: <StopOutlined />,
-                label: 'Devre Dışı Bırak',
-                onClick: () => handleStatusChange(record, 'deactivate'),
-              },
-              record.status !== 'Blacklisted' && {
-                key: 'block',
-                icon: <StopOutlined />,
-                label: 'Blokla',
-                danger: true,
-                onClick: () => handleStatusChange(record, 'block'),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ].filter(Boolean) as MenuProps['items'],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 50,
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          { key: 'view', icon: <EyeOutlined />, label: 'Görüntüle', onClick: () => router.push(`/purchase/suppliers/${record.id}`) },
+          { key: 'edit', icon: <EditOutlined />, label: 'Düzenle', onClick: () => router.push(`/purchase/suppliers/${record.id}/edit`) },
+          { type: 'divider' },
+          ...(record.status !== 'Active' ? [{ key: 'activate', icon: <CheckCircleOutlined />, label: 'Aktifleştir', onClick: () => handleStatusChange(record, 'activate') }] : []),
+          ...(record.status === 'Active' ? [{ key: 'deactivate', icon: <StopOutlined />, label: 'Devre Dışı Bırak', onClick: () => handleStatusChange(record, 'deactivate') }] : []),
+          ...(record.status !== 'Blacklisted' ? [{ key: 'block', icon: <StopOutlined />, label: 'Blokla', danger: true, onClick: () => handleStatusChange(record, 'block') }] : []),
+          { type: 'divider' },
+          { key: 'delete', icon: <DeleteOutlined />, label: 'Sil', danger: true, onClick: () => handleDelete(record) },
+        ];
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+            <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" onClick={(e) => e.stopPropagation()}>
+              <MoreOutlined className="text-slate-400" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <ShopOutlined className="text-purple-500" />
-            Tedarikçiler
-          </Title>
-          <Text type="secondary">Tedarikçi firmalarınızı yönetin</Text>
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center h-96">
+          <Spin size="large" />
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={() => router.push('/purchase/suppliers/new')}
-        >
-          Yeni Tedarikçi
-        </Button>
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <ListPageHeader
+        title="Tedarikçiler"
+        description="Tedarikçi firmalarınızı yönetin"
+        icon={<ShopOutlined className="text-purple-600" />}
+        primaryAction={{
+          label: 'Yeni Tedarikçi',
+          icon: <PlusOutlined />,
+          onClick: () => router.push('/purchase/suppliers/new'),
+        }}
+        secondaryActions={
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            <FileExcelOutlined />
+            Excel İndir
+          </button>
+        }
+      />
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
+              <ShopOutlined className="text-xl" style={{ color: '#6366f1' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
+              <div className="text-sm text-slate-500">Toplam Tedarikçi</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined className="text-xl" style={{ color: '#10b981' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
+              <div className="text-sm text-slate-500">Aktif</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#64748b15' }}>
+              <StopOutlined className="text-xl" style={{ color: '#64748b' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.inactive}</div>
+              <div className="text-sm text-slate-500">Pasif</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <DollarOutlined className="text-xl" style={{ color: '#ef4444' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.blocked}</div>
+              <div className="text-sm text-slate-500">Bloklu</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Toplam"
-              value={stats.total}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Aktif"
-              value={stats.active}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Pasif"
-              value={stats.inactive}
-              valueStyle={{ color: '#8c8c8c' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Bloklu"
-              value={stats.blocked}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* Filters */}
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-4">
-          <Input
-            placeholder="Tedarikçi ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
-          />
-
-          <Select
-            placeholder="Durum"
-            allowClear
-            style={{ width: 150 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: 'Active', label: 'Aktif' },
-              { value: 'Inactive', label: 'Pasif' },
-              { value: 'Blocked', label: 'Bloklu' },
-              { value: 'PendingApproval', label: 'Onay Bekliyor' },
-              { value: 'OnHold', label: 'Beklemede' },
-            ]}
-          />
-
-          <Select
-            placeholder="Tip"
-            allowClear
-            style={{ width: 150 }}
-            value={typeFilter}
-            onChange={setTypeFilter}
-            options={[
-              { value: 'Manufacturer', label: 'Üretici' },
-              { value: 'Distributor', label: 'Distribütör' },
-              { value: 'Wholesaler', label: 'Toptancı' },
-              { value: 'Retailer', label: 'Perakendeci' },
-              { value: 'ServiceProvider', label: 'Hizmet Sağlayıcı' },
-              { value: 'Contractor', label: 'Yüklenici' },
-              { value: 'Other', label: 'Diğer' },
-            ]}
-          />
-
-          <div className="flex-1" />
-
-          <Space>
-            <Tooltip title="Yenile">
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
-            </Tooltip>
-            <Dropdown
-              menu={{
-                items: [
-                  { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
-                  { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
-                ],
-              }}
-            >
-              <Button icon={<ExportOutlined />}>
-                Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
-              </Button>
-            </Dropdown>
-          </Space>
-        </div>
-
-        {/* Bulk Actions Bar */}
-        {selectedRowKeys.length > 0 && (
-          <div className="mt-4 p-3 bg-purple-50 rounded-lg flex items-center justify-between">
-            <span className="text-purple-700 font-medium">
-              {selectedRowKeys.length} tedarikçi seçildi
-            </span>
-            <Space>
-              <Button
-                size="small"
-                icon={<CheckCircleOutlined />}
-                onClick={handleBulkActivate}
-                loading={bulkLoading}
-              >
-                Toplu Aktifleştir
-              </Button>
-              <Button
-                size="small"
-                icon={<StopOutlined />}
-                onClick={handleBulkDeactivate}
-                loading={bulkLoading}
-              >
-                Toplu Pasifleştir
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<StopOutlined />}
-                onClick={handleBulkBlock}
-                loading={bulkLoading}
-              >
-                Toplu Blokla
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleBulkDelete}
-                loading={bulkLoading}
-              >
-                Toplu Sil
-              </Button>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => setSelectedRowKeys([])}
-              >
-                Seçimi Temizle
-              </Button>
-            </Space>
+      <Card className="bg-white border border-slate-200 mb-6">
+        <div className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Tedarikçi ara..."
+              prefix={<SearchOutlined className="text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-72"
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              allowClear
+              className="w-40"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'Active', label: 'Aktif' },
+                { value: 'Inactive', label: 'Pasif' },
+                { value: 'Blacklisted', label: 'Bloklu' },
+                { value: 'Pending', label: 'Onay Bekliyor' },
+                { value: 'OnHold', label: 'Beklemede' },
+              ]}
+            />
+            <Select
+              placeholder="Tip"
+              allowClear
+              className="w-40"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={[
+                { value: 'Manufacturer', label: 'Üretici' },
+                { value: 'Distributor', label: 'Distribütör' },
+                { value: 'Wholesaler', label: 'Toptancı' },
+                { value: 'Retailer', label: 'Perakendeci' },
+                { value: 'ServiceProvider', label: 'Hizmet Sağlayıcı' },
+                { value: 'Importer', label: 'İthalatçı' },
+                { value: 'Other', label: 'Diğer' },
+              ]}
+            />
           </div>
-        )}
+
+          {/* Bulk Actions Bar */}
+          {selectedRowKeys.length > 0 && (
+            <div className="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+              <span className="text-sm font-medium text-indigo-700">
+                {selectedRowKeys.length} tedarikçi seçildi
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkActivate}
+                  disabled={bulkLoading}
+                >
+                  <CheckCircleOutlined className="text-xs" />
+                  Aktifleştir
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkDeactivate}
+                  disabled={bulkLoading}
+                >
+                  <StopOutlined className="text-xs" />
+                  Pasifleştir
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkBlock}
+                  disabled={bulkLoading}
+                >
+                  <StopOutlined className="text-xs" />
+                  Blokla
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkDelete}
+                  disabled={bulkLoading}
+                >
+                  <DeleteOutlined className="text-xs" />
+                  Sil
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                  onClick={() => setSelectedRowKeys([])}
+                >
+                  Temizle
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
+      <DataTableWrapper>
         <Table
           columns={columns}
           dataSource={suppliers}
@@ -614,15 +547,15 @@ export default function SuppliersPage() {
             pageSize: pagination.pageSize,
             total: totalCount,
             showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} tedarikçi`,
+            showTotal: (total) => <span className="text-sm text-slate-500">Toplam {total} tedarikçi</span>,
             onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
           }}
           onRow={(record) => ({
             onClick: () => router.push(`/purchase/suppliers/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
+            className: 'cursor-pointer',
           })}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

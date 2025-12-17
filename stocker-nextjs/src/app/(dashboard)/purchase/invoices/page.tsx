@@ -1,25 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Table,
-  Button,
-  Input,
-  Tag,
-  Dropdown,
-  Card,
-  Typography,
-  Tooltip,
-  Modal,
-  Select,
-  Row,
-  Col,
-  Statistic,
-  DatePicker,
-  Space,
-  message,
-} from 'antd';
+import { Table, Input, Tag, Dropdown, Spin, Select, DatePicker } from 'antd';
+import type { ColumnsType, TableProps } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -31,13 +16,10 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DollarOutlined,
-  ReloadOutlined,
-  ExportOutlined,
   FileExcelOutlined,
+  WarningOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import type { TableProps } from 'antd';
-import type { MenuProps } from 'antd';
 import {
   usePurchaseInvoices,
   useDeletePurchaseInvoice,
@@ -46,31 +28,26 @@ import {
   useMarkInvoiceAsPaid,
 } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseInvoiceListDto, PurchaseInvoiceStatus } from '@/lib/api/services/purchase.types';
-import { exportToCSV, exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
+import { exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
+import { confirmDelete, showSuccess, showError, showWarning, confirmAction } from '@/lib/utils/sweetalert';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { confirm } = Modal;
 
-const statusColors: Record<PurchaseInvoiceStatus, string> = {
-  Draft: 'default',
-  PendingApproval: 'orange',
-  Approved: 'purple',
-  Rejected: 'red',
-  PartiallyPaid: 'geekblue',
-  Paid: 'green',
-  Cancelled: 'default',
-};
-
-const statusLabels: Record<PurchaseInvoiceStatus, string> = {
-  Draft: 'Taslak',
-  PendingApproval: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  PartiallyPaid: 'Kısmen Ödendi',
-  Paid: 'Ödendi',
-  Cancelled: 'İptal',
+const statusConfig: Record<PurchaseInvoiceStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15', tagColor: 'default' },
+  PendingApproval: { color: '#f59e0b', label: 'Onay Bekliyor', bgColor: '#f59e0b15', tagColor: 'orange' },
+  Approved: { color: '#8b5cf6', label: 'Onaylandı', bgColor: '#8b5cf615', tagColor: 'purple' },
+  Rejected: { color: '#ef4444', label: 'Reddedildi', bgColor: '#ef444415', tagColor: 'red' },
+  PartiallyPaid: { color: '#3b82f6', label: 'Kısmen Ödendi', bgColor: '#3b82f615', tagColor: 'blue' },
+  Paid: { color: '#10b981', label: 'Ödendi', bgColor: '#10b98115', tagColor: 'green' },
+  Cancelled: { color: '#6b7280', label: 'İptal', bgColor: '#6b728015', tagColor: 'default' },
 };
 
 export default function PurchaseInvoicesPage() {
@@ -99,15 +76,26 @@ export default function PurchaseInvoicesPage() {
   const invoices = invoicesData?.items || [];
   const totalCount = invoicesData?.totalCount || 0;
 
-  const handleDelete = (record: PurchaseInvoiceListDto) => {
-    confirm({
-      title: 'Faturayı Sil',
-      content: `"${record.invoiceNumber}" faturasını silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => deleteInvoice.mutate(record.id),
-    });
+  // Statistics
+  const stats = useMemo(() => {
+    return {
+      total: totalCount,
+      pending: invoices.filter(i => i.status === 'PendingApproval').length,
+      overdue: invoices.filter(i => i.dueDate && dayjs(i.dueDate).isBefore(dayjs(), 'day') && i.status !== 'Paid').length,
+      totalBalance: invoices.reduce((sum, i) => sum + (i.remainingAmount || 0), 0),
+    };
+  }, [invoices, totalCount]);
+
+  const handleDelete = async (record: PurchaseInvoiceListDto) => {
+    const confirmed = await confirmDelete('Fatura', record.invoiceNumber, 'Bu işlem geri alınamaz!');
+    if (confirmed) {
+      try {
+        await deleteInvoice.mutateAsync(record.id);
+        showSuccess('Başarılı', 'Fatura silindi');
+      } catch {
+        showError('Fatura silinemedi');
+      }
+    }
   };
 
   // Bulk Actions
@@ -116,95 +104,83 @@ export default function PurchaseInvoicesPage() {
   const handleBulkApprove = async () => {
     const pendingInvoices = selectedInvoices.filter(i => i.status === 'PendingApproval');
     if (pendingInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında onay bekleyen fatura yok');
+      showWarning('Uyarı', 'Seçili faturalar arasında onay bekleyen fatura yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(pendingInvoices.map(i => approveInvoice.mutateAsync({ id: i.id })));
-      message.success(`${pendingInvoices.length} fatura onaylandı`);
+      showSuccess('Başarılı', `${pendingInvoices.length} fatura onaylandı`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı faturalar onaylanamadı');
+      showError('Bazı faturalar onaylanamadı');
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleBulkReject = () => {
+  const handleBulkReject = async () => {
     const pendingInvoices = selectedInvoices.filter(i => i.status === 'PendingApproval');
     if (pendingInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında onay bekleyen fatura yok');
+      showWarning('Uyarı', 'Seçili faturalar arasında onay bekleyen fatura yok');
       return;
     }
-    Modal.confirm({
-      title: 'Toplu Reddet',
-      content: `${pendingInvoices.length} faturayı reddetmek istediğinizden emin misiniz?`,
-      okText: 'Reddet',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(pendingInvoices.map(i => rejectInvoice.mutateAsync({ id: i.id, reason: 'Bulk rejection' })));
-          message.success(`${pendingInvoices.length} fatura reddedildi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı faturalar reddedilemedi');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
+    const confirmed = await confirmAction('Toplu Reddet', `${pendingInvoices.length} faturayı reddetmek istediğinizden emin misiniz?`, 'Reddet');
+    if (confirmed) {
+      setBulkLoading(true);
+      try {
+        await Promise.all(pendingInvoices.map(i => rejectInvoice.mutateAsync({ id: i.id, reason: 'Bulk rejection' })));
+        showSuccess('Başarılı', `${pendingInvoices.length} fatura reddedildi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } catch {
+        showError('Bazı faturalar reddedilemedi');
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const handleBulkMarkPaid = async () => {
     const approvedInvoices = selectedInvoices.filter(i => i.status === 'Approved' || i.status === 'PartiallyPaid');
     if (approvedInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında ödendi işaretlenecek fatura yok');
+      showWarning('Uyarı', 'Seçili faturalar arasında ödendi işaretlenecek fatura yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(approvedInvoices.map(i => markAsPaid.mutateAsync({ id: i.id })));
-      message.success(`${approvedInvoices.length} fatura ödendi olarak işaretlendi`);
+      showSuccess('Başarılı', `${approvedInvoices.length} fatura ödendi olarak işaretlendi`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı faturalar güncellenemedi');
+      showError('Bazı faturalar güncellenemedi');
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     const draftInvoices = selectedInvoices.filter(i => i.status === 'Draft');
     if (draftInvoices.length === 0) {
-      message.warning('Sadece taslak faturalar silinebilir');
+      showWarning('Uyarı', 'Sadece taslak faturalar silinebilir');
       return;
     }
-    Modal.confirm({
-      title: 'Toplu Sil',
-      content: `${draftInvoices.length} faturayı silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(draftInvoices.map(i => deleteInvoice.mutateAsync(i.id)));
-          message.success(`${draftInvoices.length} fatura silindi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı faturalar silinemedi');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
+    const confirmed = await confirmDelete('fatura', `${draftInvoices.length} adet`, 'Bu işlem geri alınamaz!');
+    if (confirmed) {
+      setBulkLoading(true);
+      try {
+        await Promise.all(draftInvoices.map(i => deleteInvoice.mutateAsync(i.id)));
+        showSuccess('Başarılı', `${draftInvoices.length} fatura silindi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } catch {
+        showError('Bazı faturalar silinemedi');
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   // Export Functions
@@ -212,23 +188,17 @@ export default function PurchaseInvoicesPage() {
     { key: 'invoiceNumber', title: 'Fatura No' },
     { key: 'invoiceDate', title: 'Fatura Tarihi', render: (v) => formatDateForExport(v) },
     { key: 'supplierName', title: 'Tedarikçi' },
-    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as PurchaseInvoiceStatus] || v },
+    { key: 'status', title: 'Durum', render: (v) => statusConfig[v as PurchaseInvoiceStatus]?.label || v },
     { key: 'totalAmount', title: 'Toplam Tutar', render: (v, r) => formatCurrencyForExport(v, r.currency) },
     { key: 'paidAmount', title: 'Ödenen', render: (v) => formatCurrencyForExport(v, 'TRY') },
     { key: 'remainingAmount', title: 'Kalan', render: (v) => formatCurrencyForExport(v, 'TRY') },
     { key: 'dueDate', title: 'Vade Tarihi', render: (v) => formatDateForExport(v) },
   ];
 
-  const handleExportCSV = () => {
-    const dataToExport = selectedRowKeys.length > 0 ? selectedInvoices : invoices;
-    exportToCSV(dataToExport, exportColumns, `satin-alma-faturalari-${dayjs().format('YYYY-MM-DD')}`);
-    message.success('CSV dosyası indirildi');
-  };
-
   const handleExportExcel = async () => {
     const dataToExport = selectedRowKeys.length > 0 ? selectedInvoices : invoices;
     await exportToExcel(dataToExport, exportColumns, `satin-alma-faturalari-${dayjs().format('YYYY-MM-DD')}`, 'Faturalar');
-    message.success('Excel dosyası indirildi');
+    showSuccess('Başarılı', 'Excel dosyası indirildi');
   };
 
   // Row Selection
@@ -240,16 +210,29 @@ export default function PurchaseInvoicesPage() {
 
   const columns: ColumnsType<PurchaseInvoiceListDto> = [
     {
-      title: 'Fatura No',
+      title: 'Fatura',
       dataIndex: 'invoiceNumber',
       key: 'invoiceNumber',
       fixed: 'left',
-      width: 150,
-      render: (num, record) => (
-        <div>
-          <div className="font-medium text-blue-600">{num}</div>
-          <div className="text-xs text-gray-500">
-            {dayjs(record.invoiceDate).format('DD.MM.YYYY')}
+      width: 180,
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: statusConfig[record.status as PurchaseInvoiceStatus]?.bgColor || '#64748b15' }}
+          >
+            <FileTextOutlined style={{ color: statusConfig[record.status as PurchaseInvoiceStatus]?.color || '#64748b' }} />
+          </div>
+          <div>
+            <div
+              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-indigo-600"
+              onClick={(e) => { e.stopPropagation(); router.push(`/purchase/invoices/${record.id}`); }}
+            >
+              {record.invoiceNumber}
+            </div>
+            <div className="text-xs text-slate-500">
+              {dayjs(record.invoiceDate).format('DD.MM.YYYY')}
+            </div>
           </div>
         </div>
       ),
@@ -259,15 +242,17 @@ export default function PurchaseInvoicesPage() {
       dataIndex: 'supplierName',
       key: 'supplierName',
       width: 200,
+      render: (name) => <span className="text-sm text-slate-700">{name}</span>,
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      render: (status: PurchaseInvoiceStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: PurchaseInvoiceStatus) => {
+        const config = statusConfig[status] || statusConfig.Draft;
+        return <Tag color={config.tagColor}>{config.label}</Tag>;
+      },
     },
     {
       title: 'Toplam Tutar',
@@ -276,7 +261,9 @@ export default function PurchaseInvoicesPage() {
       width: 140,
       align: 'right',
       render: (amount, record) => (
-        <Text strong>{(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency || '₺'}</Text>
+        <span className="text-sm font-semibold text-slate-900">
+          {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency || '₺'}
+        </span>
       ),
     },
     {
@@ -286,7 +273,9 @@ export default function PurchaseInvoicesPage() {
       width: 120,
       align: 'right',
       render: (amount) => (
-        <span className="text-green-600">{(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
+        <span className="text-sm text-emerald-600">
+          {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        </span>
       ),
     },
     {
@@ -296,7 +285,7 @@ export default function PurchaseInvoicesPage() {
       width: 120,
       align: 'right',
       render: (amount) => (
-        <span className={amount > 0 ? 'text-orange-600 font-medium' : 'text-gray-400'}>
+        <span className={`text-sm font-medium ${amount > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
           {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
         </span>
       ),
@@ -306,11 +295,11 @@ export default function PurchaseInvoicesPage() {
       dataIndex: 'dueDate',
       key: 'dueDate',
       width: 120,
-      render: (date) => {
-        if (!date) return '-';
-        const isOverdue = dayjs(date).isBefore(dayjs(), 'day');
+      render: (date, record) => {
+        if (!date) return <span className="text-slate-400">-</span>;
+        const isOverdue = dayjs(date).isBefore(dayjs(), 'day') && record.status !== 'Paid';
         return (
-          <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+          <span className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-600'}`}>
             {dayjs(date).format('DD.MM.YYYY')}
           </span>
         );
@@ -320,172 +309,191 @@ export default function PurchaseInvoicesPage() {
       title: '',
       key: 'actions',
       fixed: 'right',
-      width: 60,
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/purchase/invoices/${record.id}`),
-              },
-              record.status === 'Draft' && {
-                key: 'edit',
-                icon: <EditOutlined />,
-                label: 'Düzenle',
-              },
-              { type: 'divider' },
-              record.status === 'PendingApproval' && {
-                key: 'approve',
-                icon: <CheckCircleOutlined />,
-                label: 'Onayla',
-                onClick: () => approveInvoice.mutate({ id: record.id }),
-              },
-              record.status === 'Approved' && {
-                key: 'pay',
-                icon: <DollarOutlined />,
-                label: 'Ödendi İşaretle',
-                onClick: () => markAsPaid.mutate({ id: record.id }),
-              },
-              { type: 'divider' },
-              record.status === 'Draft' && {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ].filter(Boolean) as MenuProps['items'],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 50,
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          { key: 'view', icon: <EyeOutlined />, label: 'Görüntüle', onClick: () => router.push(`/purchase/invoices/${record.id}`) },
+          ...(record.status === 'Draft' ? [{ key: 'edit', icon: <EditOutlined />, label: 'Düzenle', onClick: () => router.push(`/purchase/invoices/${record.id}/edit`) }] : []),
+          { type: 'divider' },
+          ...(record.status === 'PendingApproval' ? [{ key: 'approve', icon: <CheckCircleOutlined />, label: 'Onayla', onClick: () => approveInvoice.mutate({ id: record.id }) }] : []),
+          ...(record.status === 'Approved' ? [{ key: 'pay', icon: <DollarOutlined />, label: 'Ödendi İşaretle', onClick: () => markAsPaid.mutate({ id: record.id }) }] : []),
+          { type: 'divider' },
+          ...(record.status === 'Draft' ? [{ key: 'delete', icon: <DeleteOutlined />, label: 'Sil', danger: true, onClick: () => handleDelete(record) }] : []),
+        ];
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+            <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" onClick={(e) => e.stopPropagation()}>
+              <MoreOutlined className="text-slate-400" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <FileTextOutlined className="text-blue-500" />
-            Satın Alma Faturaları
-          </Title>
-          <Text type="secondary">Tedarikçi faturalarını yönetin</Text>
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center h-96">
+          <Spin size="large" />
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={() => router.push('/purchase/invoices/new')}
-        >
-          Yeni Fatura
-        </Button>
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <ListPageHeader
+        title="Satın Alma Faturaları"
+        description="Tedarikçi faturalarını yönetin"
+        icon={<FileTextOutlined className="text-blue-600" />}
+        primaryAction={{
+          label: 'Yeni Fatura',
+          icon: <PlusOutlined />,
+          onClick: () => router.push('/purchase/invoices/new'),
+        }}
+        secondaryActions={
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            <FileExcelOutlined />
+            Excel İndir
+          </button>
+        }
+      />
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
+              <FileTextOutlined className="text-xl" style={{ color: '#6366f1' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
+              <div className="text-sm text-slate-500">Toplam Fatura</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <ClockCircleOutlined className="text-xl" style={{ color: '#f59e0b' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+              <div className="text-sm text-slate-500">Onay Bekliyor</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <WarningOutlined className="text-xl" style={{ color: '#ef4444' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">{stats.overdue}</div>
+              <div className="text-sm text-slate-500">Vadesi Geçmiş</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-white border border-slate-200">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <DollarOutlined className="text-xl" style={{ color: '#10b981' }} />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">
+                {stats.totalBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ₺
+              </div>
+              <div className="text-sm text-slate-500">Toplam Bakiye</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Filters */}
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-4">
-          <Input
-            placeholder="Fatura ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
-          />
-          <Select
-            placeholder="Durum"
-            allowClear
-            style={{ width: 150 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
-          />
-          <RangePicker
-            placeholder={['Başlangıç', 'Bitiş']}
-            format="DD.MM.YYYY"
-            value={dateRange}
-            onChange={(dates) => setDateRange(dates)}
-          />
-          <div className="flex-1" />
-          <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
-          </Tooltip>
-          <Dropdown
-            menu={{
-              items: [
-                { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
-                { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
-              ],
-            }}
-          >
-            <Button icon={<ExportOutlined />}>
-              Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
-            </Button>
-          </Dropdown>
-        </div>
-
-        {/* Bulk Actions Bar */}
-        {selectedRowKeys.length > 0 && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
-            <span className="text-blue-700 font-medium">
-              {selectedRowKeys.length} fatura seçildi
-            </span>
-            <Space>
-              <Button
-                size="small"
-                icon={<CheckCircleOutlined />}
-                onClick={handleBulkApprove}
-                loading={bulkLoading}
-              >
-                Toplu Onayla
-              </Button>
-              <Button
-                size="small"
-                icon={<DollarOutlined />}
-                onClick={handleBulkMarkPaid}
-                loading={bulkLoading}
-              >
-                Toplu Ödendi İşaretle
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={handleBulkReject}
-                loading={bulkLoading}
-              >
-                Toplu Reddet
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleBulkDelete}
-                loading={bulkLoading}
-              >
-                Toplu Sil
-              </Button>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => setSelectedRowKeys([])}
-              >
-                Seçimi Temizle
-              </Button>
-            </Space>
+      <Card className="bg-white border border-slate-200 mb-6">
+        <div className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Fatura ara..."
+              prefix={<SearchOutlined className="text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-72"
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              allowClear
+              className="w-40"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusConfig).map(([value, config]) => ({ value, label: config.label }))}
+            />
+            <RangePicker
+              placeholder={['Başlangıç', 'Bitiş']}
+              format="DD.MM.YYYY"
+              value={dateRange}
+              onChange={(dates) => setDateRange(dates)}
+            />
           </div>
-        )}
+
+          {/* Bulk Actions Bar */}
+          {selectedRowKeys.length > 0 && (
+            <div className="mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between">
+              <span className="text-sm font-medium text-indigo-700">
+                {selectedRowKeys.length} fatura seçildi
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkApprove}
+                  disabled={bulkLoading}
+                >
+                  <CheckCircleOutlined className="text-xs" />
+                  Onayla
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkMarkPaid}
+                  disabled={bulkLoading}
+                >
+                  <DollarOutlined className="text-xs" />
+                  Ödendi İşaretle
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkReject}
+                  disabled={bulkLoading}
+                >
+                  <CloseCircleOutlined className="text-xs" />
+                  Reddet
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5"
+                  onClick={handleBulkDelete}
+                  disabled={bulkLoading}
+                >
+                  <DeleteOutlined className="text-xs" />
+                  Sil
+                </button>
+                <button
+                  className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                  onClick={() => setSelectedRowKeys([])}
+                >
+                  Temizle
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
+      <DataTableWrapper>
         <Table
           columns={columns}
           dataSource={invoices}
@@ -498,15 +506,15 @@ export default function PurchaseInvoicesPage() {
             pageSize: pagination.pageSize,
             total: totalCount,
             showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} fatura`,
+            showTotal: (total) => <span className="text-sm text-slate-500">Toplam {total} fatura</span>,
             onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
           }}
           onRow={(record) => ({
             onClick: () => router.push(`/purchase/invoices/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
+            className: 'cursor-pointer',
           })}
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }

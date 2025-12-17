@@ -1,25 +1,22 @@
 'use client';
 
+/**
+ * Purchase Orders List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
-  Button,
-  Input,
   Tag,
-  Dropdown,
-  Card,
-  Typography,
-  Tooltip,
-  Modal,
+  Input,
   Select,
-  Row,
-  Col,
-  Statistic,
   DatePicker,
-  Space,
-  message,
+  Dropdown,
+  Spin,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -31,15 +28,13 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   SendOutlined,
-  PrinterOutlined,
   ReloadOutlined,
-  ExportOutlined,
-  FilterOutlined,
   FileExcelOutlined,
+  ClockCircleOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableProps } from 'antd';
-import type { MenuProps } from 'antd';
 import {
   usePurchaseOrders,
   useDeletePurchaseOrder,
@@ -51,36 +46,39 @@ import {
 import type { PurchaseOrderListDto, PurchaseOrderStatus } from '@/lib/api/services/purchase.types';
 import { exportToCSV, exportToExcel, type ExportColumn, formatDateForExport, formatCurrencyForExport } from '@/lib/utils/export';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  confirmDelete,
+  confirmAction,
+} from '@/lib/utils/sweetalert';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { confirm } = Modal;
 
-const statusColors: Record<PurchaseOrderStatus, string> = {
-  Draft: 'default',
-  PendingApproval: 'orange',
-  Confirmed: 'blue',
-  Rejected: 'red',
-  Sent: 'cyan',
-  PartiallyReceived: 'geekblue',
-  Received: 'purple',
-  Completed: 'green',
-  Cancelled: 'default',
-  Closed: 'default',
+const statusConfig: Record<PurchaseOrderStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15', tagColor: 'default' },
+  PendingApproval: { color: '#f59e0b', label: 'Onay Bekliyor', bgColor: '#f59e0b15', tagColor: 'orange' },
+  Confirmed: { color: '#3b82f6', label: 'Onaylandı', bgColor: '#3b82f615', tagColor: 'blue' },
+  Rejected: { color: '#ef4444', label: 'Reddedildi', bgColor: '#ef444415', tagColor: 'red' },
+  Sent: { color: '#06b6d4', label: 'Gönderildi', bgColor: '#06b6d415', tagColor: 'cyan' },
+  PartiallyReceived: { color: '#8b5cf6', label: 'Kısmen Alındı', bgColor: '#8b5cf615', tagColor: 'purple' },
+  Received: { color: '#6366f1', label: 'Teslim Alındı', bgColor: '#6366f115', tagColor: 'geekblue' },
+  Completed: { color: '#10b981', label: 'Tamamlandı', bgColor: '#10b98115', tagColor: 'green' },
+  Cancelled: { color: '#64748b', label: 'İptal', bgColor: '#64748b15', tagColor: 'default' },
+  Closed: { color: '#64748b', label: 'Kapatıldı', bgColor: '#64748b15', tagColor: 'default' },
 };
 
-const statusLabels: Record<PurchaseOrderStatus, string> = {
-  Draft: 'Taslak',
-  PendingApproval: 'Onay Bekliyor',
-  Confirmed: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  Sent: 'Gönderildi',
-  PartiallyReceived: 'Kısmen Alındı',
-  Received: 'Teslim Alındı',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
-  Closed: 'Kapatıldı',
-};
+const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
+  value,
+  label: config.label,
+}));
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -123,45 +121,66 @@ export default function PurchaseOrdersPage() {
     };
   }, [orders, totalCount]);
 
-  const handleDelete = (record: PurchaseOrderListDto) => {
-    confirm({
-      title: 'Siparişi Sil',
-      content: `"${record.orderNumber}" siparişini silmek istediğinizden emin misiniz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => deleteOrder.mutate(record.id),
-    });
+  const handleDelete = async (record: PurchaseOrderListDto) => {
+    const confirmed = await confirmDelete('Sipariş', record.orderNumber);
+    if (confirmed) {
+      try {
+        await deleteOrder.mutateAsync(record.id);
+        showSuccess('Başarılı', 'Sipariş silindi');
+      } catch {
+        showError('Sipariş silinemedi');
+      }
+    }
   };
 
-  const handleApprove = (record: PurchaseOrderListDto) => {
-    approveOrder.mutate({ id: record.id });
+  const handleApprove = async (record: PurchaseOrderListDto) => {
+    try {
+      await approveOrder.mutateAsync({ id: record.id });
+      showSuccess('Başarılı', 'Sipariş onaylandı');
+    } catch {
+      showError('Sipariş onaylanamadı');
+    }
   };
 
-  const handleReject = (record: PurchaseOrderListDto) => {
-    Modal.confirm({
-      title: 'Siparişi Reddet',
-      content: 'Bu siparişi reddetmek istediğinizden emin misiniz?',
-      okText: 'Reddet',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: () => rejectOrder.mutate({ id: record.id, reason: 'Manual rejection' }),
-    });
+  const handleReject = async (record: PurchaseOrderListDto) => {
+    const confirmed = await confirmAction(
+      'Siparişi Reddet',
+      'Bu siparişi reddetmek istediğinizden emin misiniz?',
+      'Reddet'
+    );
+    if (confirmed) {
+      try {
+        await rejectOrder.mutateAsync({ id: record.id, reason: 'Manual rejection' });
+        showSuccess('Başarılı', 'Sipariş reddedildi');
+      } catch {
+        showError('Sipariş reddedilemedi');
+      }
+    }
   };
 
-  const handleSend = (record: PurchaseOrderListDto) => {
-    sendOrder.mutate(record.id);
+  const handleSend = async (record: PurchaseOrderListDto) => {
+    try {
+      await sendOrder.mutateAsync(record.id);
+      showSuccess('Başarılı', 'Sipariş tedarikçiye gönderildi');
+    } catch {
+      showError('Sipariş gönderilemedi');
+    }
   };
 
-  const handleCancel = (record: PurchaseOrderListDto) => {
-    Modal.confirm({
-      title: 'Siparişi İptal Et',
-      content: 'Bu siparişi iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: () => cancelOrder.mutate({ id: record.id, reason: 'Manual cancellation' }),
-    });
+  const handleCancel = async (record: PurchaseOrderListDto) => {
+    const confirmed = await confirmAction(
+      'Siparişi İptal Et',
+      'Bu siparişi iptal etmek istediğinizden emin misiniz?',
+      'İptal Et'
+    );
+    if (confirmed) {
+      try {
+        await cancelOrder.mutateAsync({ id: record.id, reason: 'Manual cancellation' });
+        showSuccess('Başarılı', 'Sipariş iptal edildi');
+      } catch {
+        showError('Sipariş iptal edilemedi');
+      }
+    }
   };
 
   // Bulk Actions
@@ -170,95 +189,65 @@ export default function PurchaseOrdersPage() {
   const handleBulkApprove = async () => {
     const pendingOrders = selectedOrders.filter(o => o.status === 'PendingApproval');
     if (pendingOrders.length === 0) {
-      message.warning('Seçili siparişler arasında onay bekleyen sipariş yok');
+      showWarning('Uyarı', 'Seçili siparişler arasında onay bekleyen sipariş yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(pendingOrders.map(o => approveOrder.mutateAsync({ id: o.id })));
-      message.success(`${pendingOrders.length} sipariş onaylandı`);
+      showSuccess('Başarılı', `${pendingOrders.length} sipariş onaylandı`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı siparişler onaylanamadı');
+      showError('Bazı siparişler onaylanamadı');
     } finally {
       setBulkLoading(false);
     }
-  };
-
-  const handleBulkReject = () => {
-    const pendingOrders = selectedOrders.filter(o => o.status === 'PendingApproval');
-    if (pendingOrders.length === 0) {
-      message.warning('Seçili siparişler arasında onay bekleyen sipariş yok');
-      return;
-    }
-    Modal.confirm({
-      title: 'Toplu Reddet',
-      content: `${pendingOrders.length} siparişi reddetmek istediğinizden emin misiniz?`,
-      okText: 'Reddet',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(pendingOrders.map(o => rejectOrder.mutateAsync({ id: o.id, reason: 'Bulk rejection' })));
-          message.success(`${pendingOrders.length} sipariş reddedildi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı siparişler reddedilemedi');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
   };
 
   const handleBulkSend = async () => {
     const confirmedOrders = selectedOrders.filter(o => o.status === 'Confirmed');
     if (confirmedOrders.length === 0) {
-      message.warning('Seçili siparişler arasında gönderilebilecek sipariş yok');
+      showWarning('Uyarı', 'Seçili siparişler arasında gönderilebilecek sipariş yok');
       return;
     }
     setBulkLoading(true);
     try {
       await Promise.all(confirmedOrders.map(o => sendOrder.mutateAsync(o.id)));
-      message.success(`${confirmedOrders.length} sipariş tedarikçilere gönderildi`);
+      showSuccess('Başarılı', `${confirmedOrders.length} sipariş tedarikçilere gönderildi`);
       setSelectedRowKeys([]);
       refetch();
     } catch {
-      message.error('Bazı siparişler gönderilemedi');
+      showError('Bazı siparişler gönderilemedi');
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleBulkCancel = () => {
+  const handleBulkCancel = async () => {
     const cancellableOrders = selectedOrders.filter(o => !['Cancelled', 'Completed', 'Closed'].includes(o.status));
     if (cancellableOrders.length === 0) {
-      message.warning('Seçili siparişler arasında iptal edilebilecek sipariş yok');
+      showWarning('Uyarı', 'Seçili siparişler arasında iptal edilebilecek sipariş yok');
       return;
     }
-    Modal.confirm({
-      title: 'Toplu İptal',
-      content: `${cancellableOrders.length} siparişi iptal etmek istediğinizden emin misiniz?`,
-      okText: 'İptal Et',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          await Promise.all(cancellableOrders.map(o => cancelOrder.mutateAsync({ id: o.id, reason: 'Bulk cancellation' })));
-          message.success(`${cancellableOrders.length} sipariş iptal edildi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } catch {
-          message.error('Bazı siparişler iptal edilemedi');
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
+    const confirmed = await confirmAction(
+      'Toplu İptal',
+      `${cancellableOrders.length} siparişi iptal etmek istediğinizden emin misiniz?`,
+      'İptal Et'
+    );
+    if (confirmed) {
+      setBulkLoading(true);
+      try {
+        await Promise.all(cancellableOrders.map(o => cancelOrder.mutateAsync({ id: o.id, reason: 'Bulk cancellation' })));
+        showSuccess('Başarılı', `${cancellableOrders.length} sipariş iptal edildi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } catch {
+        showError('Bazı siparişler iptal edilemedi');
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   // Export Functions
@@ -266,22 +255,16 @@ export default function PurchaseOrdersPage() {
     { key: 'orderNumber', title: 'Sipariş No' },
     { key: 'orderDate', title: 'Sipariş Tarihi', render: (v) => formatDateForExport(v) },
     { key: 'supplierName', title: 'Tedarikçi' },
-    { key: 'status', title: 'Durum', render: (v) => statusLabels[v as PurchaseOrderStatus] || v },
+    { key: 'status', title: 'Durum', render: (v) => statusConfig[v as PurchaseOrderStatus]?.label || v },
     { key: 'itemCount', title: 'Kalem Sayısı' },
     { key: 'totalAmount', title: 'Toplam Tutar', render: (v, r) => formatCurrencyForExport(v, r.currency) },
     { key: 'expectedDeliveryDate', title: 'Beklenen Teslim', render: (v) => formatDateForExport(v) },
   ];
 
-  const handleExportCSV = () => {
-    const dataToExport = selectedRowKeys.length > 0 ? selectedOrders : orders;
-    exportToCSV(dataToExport, exportColumns, `satin-alma-siparisleri-${dayjs().format('YYYY-MM-DD')}`);
-    message.success('CSV dosyası indirildi');
-  };
-
   const handleExportExcel = async () => {
     const dataToExport = selectedRowKeys.length > 0 ? selectedOrders : orders;
     await exportToExcel(dataToExport, exportColumns, `satin-alma-siparisleri-${dayjs().format('YYYY-MM-DD')}`, 'Siparişler');
-    message.success('Excel dosyası indirildi');
+    showSuccess('Başarılı', 'Excel dosyası indirildi');
   };
 
   // Row Selection
@@ -291,77 +274,28 @@ export default function PurchaseOrdersPage() {
     preserveSelectedRowKeys: true,
   };
 
-  const getActionMenu = (record: PurchaseOrderListDto) => {
-    const items = [
-      {
-        key: 'view',
-        icon: <EyeOutlined />,
-        label: 'Görüntüle',
-        onClick: () => router.push(`/purchase/orders/${record.id}`),
-      },
-      record.status === 'Draft' && {
-        key: 'edit',
-        icon: <EditOutlined />,
-        label: 'Düzenle',
-        onClick: () => router.push(`/purchase/orders/${record.id}/edit`),
-      },
-      { type: 'divider' },
-      record.status === 'PendingApproval' && {
-        key: 'approve',
-        icon: <CheckCircleOutlined />,
-        label: 'Onayla',
-        onClick: () => handleApprove(record),
-      },
-      record.status === 'PendingApproval' && {
-        key: 'reject',
-        icon: <CloseCircleOutlined />,
-        label: 'Reddet',
-        danger: true,
-        onClick: () => handleReject(record),
-      },
-      record.status === 'Confirmed' && {
-        key: 'send',
-        icon: <SendOutlined />,
-        label: 'Tedarikçiye Gönder',
-        onClick: () => handleSend(record),
-      },
-      {
-        key: 'print',
-        icon: <PrinterOutlined />,
-        label: 'Yazdır',
-      },
-      { type: 'divider' },
-      !['Cancelled', 'Completed', 'Closed'].includes(record.status) && {
-        key: 'cancel',
-        icon: <CloseCircleOutlined />,
-        label: 'İptal Et',
-        danger: true,
-        onClick: () => handleCancel(record),
-      },
-      record.status === 'Draft' && {
-        key: 'delete',
-        icon: <DeleteOutlined />,
-        label: 'Sil',
-        danger: true,
-        onClick: () => handleDelete(record),
-      },
-    ].filter(Boolean) as MenuProps['items'];
-
-    return { items };
-  };
-
   const columns: ColumnsType<PurchaseOrderListDto> = [
     {
-      title: 'Sipariş No',
-      dataIndex: 'orderNumber',
-      key: 'orderNumber',
-      fixed: 'left',
-      width: 150,
-      render: (orderNumber, record) => (
-        <div>
-          <div className="font-medium text-blue-600">{orderNumber}</div>
-          <div className="text-xs text-gray-500">
-            {dayjs(record.orderDate).format('DD.MM.YYYY')}
+      title: 'Sipariş',
+      key: 'order',
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: statusConfig[record.status as PurchaseOrderStatus]?.bgColor || '#64748b15' }}
+          >
+            <ShoppingCartOutlined style={{ color: statusConfig[record.status as PurchaseOrderStatus]?.color || '#64748b' }} />
+          </div>
+          <div>
+            <div
+              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-indigo-600"
+              onClick={(e) => { e.stopPropagation(); router.push(`/purchase/orders/${record.id}`); }}
+            >
+              {record.orderNumber}
+            </div>
+            <div className="text-xs text-slate-500">
+              {dayjs(record.orderDate).format('DD.MM.YYYY')}
+            </div>
           </div>
         </div>
       ),
@@ -372,7 +306,7 @@ export default function PurchaseOrdersPage() {
       key: 'supplierName',
       width: 200,
       render: (name) => (
-        <div className="font-medium text-gray-900">{name}</div>
+        <div className="text-sm font-medium text-slate-900">{name}</div>
       ),
     },
     {
@@ -381,8 +315,8 @@ export default function PurchaseOrdersPage() {
       key: 'status',
       width: 130,
       render: (status: PurchaseOrderStatus) => (
-        <Tag color={statusColors[status]}>
-          {statusLabels[status] || status}
+        <Tag color={statusConfig[status]?.tagColor}>
+          {statusConfig[status]?.label || status}
         </Tag>
       ),
     },
@@ -392,7 +326,11 @@ export default function PurchaseOrdersPage() {
       key: 'itemCount',
       width: 80,
       align: 'center',
-      render: (count) => count || 0,
+      render: (count) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+          {count || 0}
+        </span>
+      ),
     },
     {
       title: 'Toplam Tutar',
@@ -401,8 +339,8 @@ export default function PurchaseOrdersPage() {
       width: 140,
       align: 'right',
       render: (amount, record) => (
-        <div>
-          <div className="font-medium">{(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency || '₺'}</div>
+        <div className="text-sm font-medium text-slate-900">
+          {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency || '₺'}
         </div>
       ),
     },
@@ -411,210 +349,283 @@ export default function PurchaseOrdersPage() {
       dataIndex: 'expectedDeliveryDate',
       key: 'expectedDeliveryDate',
       width: 130,
-      render: (date) => date ? dayjs(date).format('DD.MM.YYYY') : '-',
+      render: (date) => (
+        <div className="text-sm text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY') : '-'}
+        </div>
+      ),
     },
     {
       title: '',
       key: 'actions',
       fixed: 'right',
       width: 60,
-      render: (_, record) => (
-        <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => router.push(`/purchase/orders/${record.id}`),
+          },
+        ];
+
+        if (record.status === 'Draft') {
+          menuItems.push({
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Düzenle',
+            onClick: () => router.push(`/purchase/orders/${record.id}/edit`),
+          });
+        }
+
+        menuItems.push({ type: 'divider' });
+
+        if (record.status === 'PendingApproval') {
+          menuItems.push(
+            {
+              key: 'approve',
+              icon: <CheckCircleOutlined />,
+              label: 'Onayla',
+              onClick: () => handleApprove(record),
+            },
+            {
+              key: 'reject',
+              icon: <CloseCircleOutlined />,
+              label: 'Reddet',
+              danger: true,
+              onClick: () => handleReject(record),
+            }
+          );
+        }
+
+        if (record.status === 'Confirmed') {
+          menuItems.push({
+            key: 'send',
+            icon: <SendOutlined />,
+            label: 'Tedarikçiye Gönder',
+            onClick: () => handleSend(record),
+          });
+        }
+
+        if (!['Cancelled', 'Completed', 'Closed'].includes(record.status)) {
+          menuItems.push({
+            key: 'cancel',
+            icon: <CloseCircleOutlined />,
+            label: 'İptal Et',
+            danger: true,
+            onClick: () => handleCancel(record),
+          });
+        }
+
+        if (record.status === 'Draft') {
+          menuItems.push({
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          });
+        }
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={3} className="!mb-1 flex items-center gap-2">
-            <ShoppingCartOutlined className="text-green-500" />
-            Satın Alma Siparişleri
-          </Title>
-          <Text type="secondary">Tedarikçilere verilen siparişleri yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Sipariş</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
+              <ShoppingCartOutlined style={{ color: '#6366f1' }} />
+            </div>
+          </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={() => router.push('/purchase/orders/new')}
-        >
-          Yeni Sipariş
-        </Button>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Onay Bekleyen</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <ClockCircleOutlined style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Gönderilen</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.sent}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d415' }}>
+              <SendOutlined style={{ color: '#06b6d4' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tutar</span>
+              <div className="text-2xl font-semibold text-slate-900">
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalAmount)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <DollarOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Statistics */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Toplam Sipariş"
-              value={stats.total}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Onay Bekleyen"
-              value={stats.pending}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Gönderilen"
-              value={stats.sent}
-              valueStyle={{ color: '#13c2c2' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small" className="text-center">
-            <Statistic
-              title="Toplam Tutar"
-              value={stats.totalAmount}
-              precision={2}
-              suffix="₺"
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<ShoppingCartOutlined />}
+        iconColor="#10b981"
+        title="Satın Alma Siparişleri"
+        description="Tedarikçilere verilen siparişleri yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Sipariş',
+          onClick: () => router.push('/purchase/orders/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+            >
+              <FileExcelOutlined />
+              Excel {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
+            </button>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
+
+      {/* Bulk Actions Bar */}
+      {selectedRowKeys.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-indigo-700 font-medium">
+              {selectedRowKeys.length} sipariş seçildi
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkApprove}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <CheckCircleOutlined />
+                Onayla
+              </button>
+              <button
+                onClick={handleBulkSend}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <SendOutlined />
+                Gönder
+              </button>
+              <button
+                onClick={handleBulkCancel}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
+              >
+                <CloseCircleOutlined />
+                İptal
+              </button>
+              <button
+                onClick={() => setSelectedRowKeys([])}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+              >
+                Temizle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
           <Input
             placeholder="Sipariş ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
+            style={{ maxWidth: 300 }}
             allowClear
+            className="h-10"
           />
-
           <Select
-            placeholder="Durum"
+            placeholder="Durum seçin"
             allowClear
-            style={{ width: 150 }}
+            style={{ width: 180 }}
             value={statusFilter}
             onChange={setStatusFilter}
-            options={Object.entries(statusLabels).map(([value, label]) => ({
-              value,
-              label,
-            }))}
+            options={statusOptions}
           />
-
           <RangePicker
             placeholder={['Başlangıç', 'Bitiş']}
             format="DD.MM.YYYY"
             value={dateRange}
             onChange={(dates) => setDateRange(dates)}
+            style={{ width: 280 }}
           />
-
-          <div className="flex-1" />
-
-          <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
-          </Tooltip>
-          <Dropdown
-            menu={{
-              items: [
-                { key: 'csv', icon: <ExportOutlined />, label: 'CSV İndir', onClick: handleExportCSV },
-                { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
-              ],
-            }}
-          >
-            <Button icon={<ExportOutlined />}>
-              Dışa Aktar {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
-            </Button>
-          </Dropdown>
         </div>
-
-        {/* Bulk Actions Bar */}
-        {selectedRowKeys.length > 0 && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
-            <span className="text-blue-700 font-medium">
-              {selectedRowKeys.length} sipariş seçildi
-            </span>
-            <Space>
-              <Button
-                size="small"
-                icon={<CheckCircleOutlined />}
-                onClick={handleBulkApprove}
-                loading={bulkLoading}
-              >
-                Toplu Onayla
-              </Button>
-              <Button
-                size="small"
-                icon={<SendOutlined />}
-                onClick={handleBulkSend}
-                loading={bulkLoading}
-              >
-                Toplu Gönder
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={handleBulkReject}
-                loading={bulkLoading}
-              >
-                Toplu Reddet
-              </Button>
-              <Button
-                size="small"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={handleBulkCancel}
-                loading={bulkLoading}
-              >
-                Toplu İptal
-              </Button>
-              <Button
-                size="small"
-                type="link"
-                onClick={() => setSelectedRowKeys([])}
-              >
-                Seçimi Temizle
-              </Button>
-            </Space>
-          </div>
-        )}
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={orders}
-          rowKey="id"
-          loading={isLoading || bulkLoading}
-          rowSelection={rowSelection}
-          scroll={{ x: 1200 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} sipariş`,
-            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/purchase/orders/${record.id}`),
-            className: 'cursor-pointer hover:bg-gray-50',
-          })}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={orders}
+            rowKey="id"
+            loading={isLoading || bulkLoading}
+            rowSelection={rowSelection}
+            scroll={{ x: 1100 }}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sipariş`,
+              onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
