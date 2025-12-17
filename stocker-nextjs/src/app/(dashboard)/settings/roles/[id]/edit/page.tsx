@@ -205,48 +205,38 @@ export default function EditRolePage() {
     const hasAll = hasAllPermissionsForResource(resource.value);
 
     return (
-      <div key={resource.value} className="py-3 border-b border-gray-100 last:border-b-0">
-        <div className="flex items-center justify-between">
+      <div key={resource.value} className="py-2.5 border-b border-gray-100 last:border-b-0">
+        <div className="flex items-center justify-between mb-1">
           <Checkbox
             checked={hasAll}
             indeterminate={resourcePerms.length > 0 && !hasAll}
             disabled={isSystemRole}
             onChange={(e) => handleToggleAllForResource(resource.value, e.target.checked)}
           >
-            <span className="text-slate-700 font-medium">{resource.label}</span>
+            <span className="text-slate-700 font-medium text-sm">{resource.label}</span>
           </Checkbox>
-          <span className="text-xs text-slate-400">
-            {resourcePerms.length}/{Object.values(PermissionType).filter((v) => typeof v === 'number').length}
-          </span>
         </div>
-        <div className="flex flex-wrap gap-2 mt-2 ml-6">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 ml-6">
           {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
             const permType = parseInt(type) as PermissionType;
             const isSelected = resourcePerms.some((p) => p.permissionType === permType);
 
             return (
-              <button
+              <Checkbox
                 key={type}
-                type="button"
+                checked={isSelected}
                 disabled={isSystemRole}
-                onClick={() => {
-                  if (isSelected) {
-                    handleRemovePermission({ resource: resource.value, permissionType: permType });
-                  } else {
+                onChange={(e) => {
+                  if (e.target.checked) {
                     handleAddPermission(resource.value, permType);
+                  } else {
+                    handleRemovePermission({ resource: resource.value, permissionType: permType });
                   }
                 }}
-                className={`
-                  px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150
-                  ${isSystemRole ? 'cursor-not-allowed opacity-60' : ''}
-                  ${isSelected
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }
-                `}
+                className="text-xs"
               >
-                {label}
-              </button>
+                <span className="text-slate-500 text-xs">{label}</span>
+              </Checkbox>
             );
           })}
         </div>
