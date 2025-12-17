@@ -2,66 +2,62 @@
 
 /**
  * Settings Main Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * - Clean white cards with subtle borders
- * - Stacked list layout for navigation items
- * - Minimal accent colors (only on icons)
+ * High-Density Professional Dashboard - Linear/Stripe style
+ * - Compact stat cards (h-24, grid-cols-4)
+ * - Dense navigation lists with minimal padding
+ * - Dark gray stroke icons without pastel backgrounds
+ * - Hover effects with chevron appearing
  */
 
 import React, { useState } from 'react';
-import { Input } from 'antd';
-import {
-  SettingOutlined,
-  SafetyOutlined,
-  TeamOutlined,
-  SafetyCertificateOutlined,
-  ApartmentOutlined,
-  BellOutlined,
-  MailOutlined,
-  CloudUploadOutlined,
-  FileTextOutlined,
-  ApiOutlined,
-  GlobalOutlined,
-  RightOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SearchOutlined,
-  ControlOutlined,
-} from '@ant-design/icons';
 import Link from 'next/link';
-import { StorageUsageCard } from '@/components/settings';
-import { PageContainer } from '@/components/ui/enterprise-page';
+import {
+  Settings,
+  Shield,
+  Users,
+  KeyRound,
+  Building2,
+  Bell,
+  Mail,
+  CloudUpload,
+  FileText,
+  Plug,
+  Globe,
+  ChevronRight,
+  Search,
+  CheckCircle2,
+  Clock,
+  Layers,
+  HardDrive,
+} from 'lucide-react';
 
 // Settings organized by logical groups
 const settingsGroups = [
   {
     id: 'organization',
-    title: 'Organizasyon ve Kullanıcılar',
+    title: 'ORGANİZASYON VE KULLANICILAR',
     items: [
       {
         id: 'users',
         name: 'Kullanıcı Yönetimi',
-        description: 'Kullanıcıları ekleyin, düzenleyin, silin ve profil ayarlarını yönetin',
-        icon: <TeamOutlined />,
-        iconColor: '#3b82f6',
+        description: 'Kullanıcıları ekleyin, düzenleyin ve yönetin',
+        icon: Users,
         path: '/settings/users',
         enabled: true,
       },
       {
         id: 'roles',
         name: 'Rol ve Yetki Yönetimi',
-        description: 'Farklı roller oluşturun ve bu rollerin hangi modüllere erişebileceğini belirleyin',
-        icon: <SafetyCertificateOutlined />,
-        iconColor: '#6366f1',
+        description: 'Roller ve erişim izinlerini yapılandırın',
+        icon: KeyRound,
         path: '/settings/roles',
         enabled: true,
       },
       {
         id: 'departments',
         name: 'Departman Yönetimi',
-        description: 'Şirketinizin departman yapısını, hiyerarşisini ve organizasyon şemasını yönetin',
-        icon: <ApartmentOutlined />,
-        iconColor: '#8b5cf6',
+        description: 'Departman yapısını ve hiyerarşiyi yönetin',
+        icon: Building2,
         path: '/settings/departments',
         enabled: true,
       },
@@ -69,32 +65,29 @@ const settingsGroups = [
   },
   {
     id: 'security',
-    title: 'Güvenlik ve Uyumluluk',
+    title: 'GÜVENLİK VE UYUMLULUK',
     items: [
       {
         id: 'security',
         name: 'Güvenlik Ayarları',
-        description: 'Parola politikaları, oturum süreleri, IP kısıtlamaları ve 2FA ayarları',
-        icon: <SafetyOutlined />,
-        iconColor: '#ef4444',
+        description: 'Parola politikaları, 2FA ve oturum ayarları',
+        icon: Shield,
         path: '/settings/security',
         enabled: true,
       },
       {
         id: 'audit-logs',
         name: 'Denetim Günlükleri',
-        description: 'Sistemde kimin, ne zaman, hangi değişikliği yaptığını takip edin',
-        icon: <FileTextOutlined />,
-        iconColor: '#64748b',
+        description: 'Sistem aktivitelerini ve değişiklikleri izleyin',
+        icon: FileText,
         path: '/settings/audit-logs',
         enabled: false,
       },
       {
         id: 'backup',
         name: 'Yedekleme ve Geri Yükleme',
-        description: 'Önemli verileri yedekleyin, market yerinden geri yükleme yapın',
-        icon: <CloudUploadOutlined />,
-        iconColor: '#64748b',
+        description: 'Veri yedekleme ve kurtarma işlemleri',
+        icon: CloudUpload,
         path: '/settings/backup',
         enabled: false,
       },
@@ -102,32 +95,29 @@ const settingsGroups = [
   },
   {
     id: 'application',
-    title: 'Uygulama Ayarları',
+    title: 'UYGULAMA AYARLARI',
     items: [
       {
         id: 'general',
         name: 'Genel Ayarlar',
-        description: 'Şirket bilgileri, logolar, diller, varsayılan para birimi ve temel sistem ayarları',
-        icon: <ControlOutlined />,
-        iconColor: '#10b981',
+        description: 'Şirket bilgileri, logo ve temel yapılandırma',
+        icon: Settings,
         path: '/settings/general',
         enabled: true,
       },
       {
         id: 'notifications',
         name: 'Bildirim Ayarları',
-        description: 'E-posta, SMS ve uygulama içi bildirimlerin şablonlarını ve kurallarını yönetin',
-        icon: <BellOutlined />,
-        iconColor: '#64748b',
+        description: 'E-posta, SMS ve uygulama bildirimleri',
+        icon: Bell,
         path: '/settings/notifications',
         enabled: false,
       },
       {
         id: 'regional',
         name: 'Bölgesel Ayarlar',
-        description: 'Zaman dilimi, para birimi formatları ve tarih/saat lokalizasyonu',
-        icon: <GlobalOutlined />,
-        iconColor: '#64748b',
+        description: 'Zaman dilimi, para birimi ve dil',
+        icon: Globe,
         path: '/settings/regional',
         enabled: false,
       },
@@ -135,23 +125,21 @@ const settingsGroups = [
   },
   {
     id: 'integrations',
-    title: 'Entegrasyonlar ve Veri',
+    title: 'ENTEGRASYONLAR VE VERİ',
     items: [
       {
         id: 'email',
         name: 'Email / SMTP Ayarları',
-        description: 'Giden ve gelen e-postalarınız için e-posta sunucu ayarları',
-        icon: <MailOutlined />,
-        iconColor: '#64748b',
+        description: 'E-posta sunucu yapılandırması',
+        icon: Mail,
         path: '/settings/email',
         enabled: false,
       },
       {
         id: 'integrations',
         name: 'Entegrasyonlar',
-        description: 'Gmail, Slack, Zapier, API ve diğer 3. parti uygulamalara bağlanın',
-        icon: <ApiOutlined />,
-        iconColor: '#64748b',
+        description: 'Üçüncü parti uygulama bağlantıları',
+        icon: Plug,
         path: '/settings/integrations',
         enabled: false,
       },
@@ -166,6 +154,7 @@ export default function SettingsPage() {
   const allItems = settingsGroups.flatMap(group => group.items);
   const activeCount = allItems.filter(item => item.enabled).length;
   const totalCount = allItems.length;
+  const comingSoonCount = totalCount - activeCount;
 
   // Filter items based on search
   const filteredGroups = settingsGroups
@@ -180,139 +169,142 @@ export default function SettingsPage() {
     .filter(group => group.items.length > 0);
 
   return (
-    <PageContainer maxWidth="5xl">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-2">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: '#64748b15' }}
-          >
-            <SettingOutlined style={{ color: '#64748b', fontSize: 18 }} />
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">Sistem Ayarları</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Sistem Ayarları</h1>
             <p className="text-sm text-slate-500">Sisteminizi yapılandırın ve özelleştirin</p>
           </div>
         </div>
-      </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif</span>
-              <div className="text-2xl font-semibold text-slate-900">{activeCount}</div>
+        {/* Compact Stat Cards - 4 columns, h-24 */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          {/* Active Settings */}
+          <div className="h-24 bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aktif</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            <div className="text-2xl font-semibold text-slate-900">{activeCount}</div>
+          </div>
+
+          {/* Coming Soon */}
+          <div className="h-24 bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Yakında</span>
+              <Clock className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">{comingSoonCount}</div>
+          </div>
+
+          {/* Total Modules */}
+          <div className="h-24 bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Toplam</span>
+              <Layers className="w-4 h-4 text-slate-400" />
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">{totalCount}</div>
+          </div>
+
+          {/* Storage */}
+          <div className="h-24 bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Depolama</span>
+              <HardDrive className="w-4 h-4 text-slate-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">2.4 GB</div>
+              <div className="w-full h-1 bg-slate-100 rounded-full mt-1">
+                <div className="h-1 bg-slate-900 rounded-full" style={{ width: '24%' }} />
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Yakında</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalCount - activeCount}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockCircleOutlined style={{ color: '#f59e0b' }} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
-              <div className="text-2xl font-semibold text-slate-900">{totalCount}</div>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <SettingOutlined style={{ color: '#3b82f6' }} />
-            </div>
-          </div>
-        </div>
-        <StorageUsageCard showDetails={false} />
-      </div>
 
-      {/* Search Bar */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <Input
-          placeholder="Ayarlarda ara... (ör: 'parola', 'kullanıcı', 'e-posta')"
-          prefix={<SearchOutlined className="text-slate-400" />}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          allowClear
-          className="h-10"
-        />
-      </div>
+        {/* Search Bar - Compact */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Ayarlarda ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+          />
+        </div>
 
-      {/* Settings Groups */}
-      <div className="space-y-6">
-        {filteredGroups.map((group) => (
-          <div key={group.id}>
-            <h2 className="text-sm font-medium text-slate-900 mb-3">{group.title}</h2>
-            <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-              {group.items.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.enabled ? item.path : '#'}
-                  className={item.enabled ? '' : 'pointer-events-none'}
-                >
-                  <div
-                    className={`
-                      flex items-center justify-between p-4
-                      ${item.enabled ? 'hover:bg-slate-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
-                      transition-colors
-                    `}
-                  >
-                    {/* Left: Icon + Content */}
-                    <div className="flex items-center gap-4 flex-1">
+        {/* Settings Groups - High Density */}
+        <div className="space-y-6">
+          {filteredGroups.map((group) => (
+            <div key={group.id}>
+              {/* Section Header - Bold Uppercase with border */}
+              <div className="flex items-center gap-3 pb-2 mb-0 border-b border-slate-200">
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {group.title}
+                </h2>
+              </div>
+
+              {/* Settings List - Dense rows */}
+              <div className="bg-white border border-slate-200 border-t-0 rounded-b-lg divide-y divide-slate-100">
+                {group.items.map((item) => {
+                  const IconComponent = item.icon;
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.enabled ? item.path : '#'}
+                      className={item.enabled ? '' : 'pointer-events-none'}
+                    >
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${item.iconColor}15` }}
+                        className={`
+                          group flex items-center justify-between py-3 px-4
+                          ${item.enabled ? 'hover:bg-slate-50 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                          transition-colors
+                        `}
                       >
-                        {React.cloneElement(item.icon, { style: { color: item.iconColor, fontSize: 18 } })}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-0.5">
-                          <span className="text-sm font-medium text-slate-900">{item.name}</span>
-                          {!item.enabled && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-amber-50 text-amber-700">
-                              <ClockCircleOutlined className="text-[10px]" />
-                              Yakında
-                            </span>
-                          )}
+                        {/* Left: Icon + Content */}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {/* Icon - No background, dark gray stroke */}
+                          <IconComponent className="w-5 h-5 text-slate-600 flex-shrink-0" strokeWidth={1.5} />
+
+                          {/* Text Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-slate-900">{item.name}</span>
+                              {!item.enabled && (
+                                <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-500">
+                                  Yakında
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-500">{item.description}</p>
+
+                        {/* Right: Arrow - appears on hover */}
+                        {item.enabled && (
+                          <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity ml-3 flex-shrink-0" />
+                        )}
                       </div>
-                    </div>
-
-                    {/* Right: Arrow */}
-                    {item.enabled && (
-                      <RightOutlined className="text-slate-300 text-xs ml-4" />
-                    )}
-                  </div>
-                </Link>
-              ))}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* No Results */}
-      {searchQuery && filteredGroups.length === 0 && (
-        <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4"
-            style={{ backgroundColor: '#64748b15' }}
-          >
-            <SearchOutlined style={{ color: '#64748b', fontSize: 20 }} />
-          </div>
-          <h3 className="text-sm font-medium text-slate-900 mb-1">Sonuç Bulunamadı</h3>
-          <p className="text-xs text-slate-500">"{searchQuery}" için eşleşen ayar bulunamadı</p>
+          ))}
         </div>
-      )}
-    </PageContainer>
+
+        {/* No Results */}
+        {searchQuery && filteredGroups.length === 0 && (
+          <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+            <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-sm font-medium text-slate-900 mb-1">Sonuç Bulunamadı</h3>
+            <p className="text-xs text-slate-500">"{searchQuery}" için eşleşen ayar bulunamadı</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
