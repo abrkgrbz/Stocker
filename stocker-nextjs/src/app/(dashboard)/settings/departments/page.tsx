@@ -2,22 +2,16 @@
 
 /**
  * Department Management Page
- * Allows administrators to manage organizational departments
- * Uses full-page forms for consistency with CRM-style pages
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Stacked list layout for data
+ * - Action buttons only in designated areas
  */
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Card,
-  Button,
-  Table,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-} from 'antd';
+import { Table, Tooltip } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -36,17 +30,21 @@ import {
   showError,
   confirmDelete,
 } from '@/lib/utils/sweetalert';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+  EmptyState,
+  LoadingState,
+} from '@/components/ui/enterprise-page';
 
 export default function DepartmentsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Fetch departments using hook
   const { data: departments = [], isLoading } = useDepartments();
 
-  // Delete department mutation
   const deleteMutation = useMutation({
     mutationFn: deleteDepartment,
     onSuccess: () => {
@@ -81,123 +79,130 @@ export default function DepartmentsPage() {
 
   const columns: ColumnsType<Department> = [
     {
-      title: 'Departman Adı',
+      title: 'Departman',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string) => (
-        <Space>
-          <ApartmentOutlined style={{ color: '#667eea' }} />
-          <Text strong>{name}</Text>
-        </Space>
+      render: (name: string, record: Department) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-8 h-8 rounded-md flex items-center justify-center"
+            style={{ backgroundColor: '#8b5cf615' }}
+          >
+            <ApartmentOutlined style={{ color: '#8b5cf6', fontSize: 14 }} />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{name}</div>
+            {record.code && (
+              <div className="text-xs text-slate-400">{record.code}</div>
+            )}
+          </div>
+        </div>
       ),
-    },
-    {
-      title: 'Kod',
-      dataIndex: 'code',
-      key: 'code',
-      render: (code?: string) => code || '-',
     },
     {
       title: 'Açıklama',
       dataIndex: 'description',
       key: 'description',
-      render: (description?: string) => description || '-',
-    },
-    {
-      title: 'Çalışan Sayısı',
-      dataIndex: 'employeeCount',
-      key: 'employeeCount',
-      align: 'center',
-      render: (count: number) => (
-        <Tag color={count > 0 ? 'blue' : 'default'} icon={<TeamOutlined />}>
-          {count}
-        </Tag>
+      render: (description?: string) => (
+        <span className="text-sm text-slate-500">
+          {description || <span className="text-slate-300">—</span>}
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: 'Çalışan',
+      dataIndex: 'employeeCount',
+      key: 'employeeCount',
+      align: 'center',
+      width: 100,
+      render: (count: number) => (
+        <div className="flex items-center justify-center gap-1.5">
+          <TeamOutlined className="text-slate-400 text-xs" />
+          <span className={`text-sm ${count > 0 ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
+            {count}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: '',
       key: 'actions',
       align: 'right',
+      width: 120,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            style={{ color: '#667eea' }}
-          >
-            Düzenle
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-          >
-            Sil
-          </Button>
-        </Space>
+        <div className="flex items-center justify-end gap-1">
+          <Tooltip title="Düzenle">
+            <button
+              onClick={() => handleEdit(record)}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <EditOutlined className="text-sm" />
+            </button>
+          </Tooltip>
+          <Tooltip title="Sil">
+            <button
+              onClick={() => handleDelete(record)}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              disabled={record.employeeCount > 0}
+            >
+              <DeleteOutlined className="text-sm" />
+            </button>
+          </Tooltip>
+        </div>
       ),
     },
   ];
 
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
   return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <div>
-                <Title level={4} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div
-                    style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      borderRadius: 10,
-                      width: 40,
-                      height: 40,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <ApartmentOutlined style={{ fontSize: 20, color: 'white' }} />
-                  </div>
-                  Departman Yönetimi
-                </Title>
-                <Text type="secondary" style={{ marginLeft: 52 }}>
-                  Organizasyonunuzun departmanlarını yönetin
-                </Text>
-              </div>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreate}
-                size="large"
-                style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  border: 'none',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
-                }}
-              >
-                Yeni Departman
-              </Button>
-            </div>
+    <PageContainer maxWidth="5xl">
+      <ListPageHeader
+        icon={<ApartmentOutlined />}
+        iconColor="#8b5cf6"
+        title="Departmanlar"
+        description="Organizasyonunuzun departmanlarını yönetin"
+        itemCount={departments.length}
+        primaryAction={{
+          label: 'Yeni Departman',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+      />
 
-            <Table
-              columns={columns}
-              dataSource={departments}
-              loading={isLoading}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} departman`,
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-    </div>
+      {departments.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<ApartmentOutlined className="text-xl" />}
+            title="Henüz departman eklenmemiş"
+            description="Organizasyonunuzu yapılandırmak için ilk departmanınızı oluşturun."
+            action={{
+              label: 'Departman Oluştur',
+              onClick: handleCreate,
+            }}
+          />
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={departments}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => (
+                <span className="text-sm text-slate-500">
+                  Toplam {total} departman
+                </span>
+              ),
+            }}
+            className="enterprise-table"
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

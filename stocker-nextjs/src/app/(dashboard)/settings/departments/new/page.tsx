@@ -2,29 +2,20 @@
 
 /**
  * New Department Page
- * Modern full-page layout for creating departments (CRM Customer style)
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Sticky action bar at bottom
+ * - No colored backgrounds on content cards
  */
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Button,
-  Form,
-  Input,
-  Space,
-  Row,
-  Col,
-  Typography,
-  Select,
-} from 'antd';
+import { Form, Input, Select, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
-  SaveOutlined,
   ApartmentOutlined,
-  TeamOutlined,
-  CodeOutlined,
-  FileTextOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import {
   createDepartment,
@@ -34,16 +25,7 @@ import {
 } from '@/lib/api/departments';
 import { showCreateSuccess, showError } from '@/lib/utils/sweetalert';
 
-const { Text } = Typography;
 const { TextArea } = Input;
-
-// Get color based on employee count
-const getDepartmentColor = (count: number): string => {
-  if (count >= 50) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  if (count >= 20) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-  if (count >= 10) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-  return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
-};
 
 export default function NewDepartmentPage() {
   const router = useRouter();
@@ -51,13 +33,11 @@ export default function NewDepartmentPage() {
   const [form] = Form.useForm();
   const [autoCode, setAutoCode] = useState('');
 
-  // Fetch existing departments for parent selection
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: getDepartments,
   });
 
-  // Create mutation
   const createMutation = useMutation({
     mutationFn: createDepartment,
     onSuccess: () => {
@@ -80,7 +60,6 @@ export default function NewDepartmentPage() {
     await createMutation.mutateAsync(data);
   };
 
-  // Auto-generate department code from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     if (!form.getFieldValue('code')) {
@@ -95,144 +74,41 @@ export default function NewDepartmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Minimal Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
+            <button
               onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
+              className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <ArrowLeftOutlined />
+            </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                Yeni Departman
-              </h1>
-              <p className="text-sm text-gray-400 m-0">Yeni bir departman oluşturun</p>
+              <h1 className="text-lg font-semibold text-slate-900">Yeni Departman</h1>
+              <p className="text-sm text-slate-500">Departman bilgilerini girin</p>
             </div>
           </div>
-          <Space>
-            <Button onClick={() => router.push('/settings/departments')}>
-              Vazgeç
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={createMutation.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
           disabled={createMutation.isPending}
         >
-          <Row gutter={48}>
-            {/* Left Panel - Visual & Stats (40%) */}
-            <Col xs={24} lg={10}>
-              {/* Department Visual Card */}
-              <div className="mb-8">
-                <div
-                  style={{
-                    background: getDepartmentColor(0),
-                    borderRadius: '16px',
-                    padding: '40px 20px',
-                    minHeight: '200px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ApartmentOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-                  <p className="mt-4 text-lg font-medium text-white/90">
-                    Yeni Departman
-                  </p>
-                  <p className="text-sm text-white/60">
-                    Organizasyon yapısını genişletin
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats Preview */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="p-4 bg-purple-50/50 rounded-xl text-center border border-purple-100">
-                  <div className="text-2xl font-semibold text-purple-600">
-                    {departments.length}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Mevcut Departman</div>
-                </div>
-                <div className="p-4 bg-blue-50/50 rounded-xl text-center border border-blue-100">
-                  <div className="text-2xl font-semibold text-blue-600">
-                    {departments.reduce((sum, d) => sum + d.employeeCount, 0)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Toplam Çalışan</div>
-                </div>
-              </div>
-
-              {/* Auto Code Preview */}
-              {autoCode && (
-                <div className="mb-6">
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                    <CodeOutlined className="mr-1" /> Otomatik Oluşturulan Kod
-                  </Text>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <div className="text-2xl font-bold text-gray-800 text-center">
-                      {autoCode}
-                    </div>
-                    <div className="text-xs text-gray-400 text-center mt-1">
-                      İsimden otomatik oluşturuldu
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Parent Department Info */}
-              <div className="mb-6">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ApartmentOutlined className="mr-1" /> Üst Departman (Opsiyonel)
-                </Text>
-                <Form.Item name="parentDepartmentId" className="mb-0">
-                  <Select
-                    placeholder="Üst departman seçin"
-                    allowClear
-                    size="large"
-                    options={departments.map((d) => ({
-                      label: d.name,
-                      value: d.id,
-                    }))}
-                  />
-                </Form.Item>
-              </div>
-            </Col>
-
-            {/* Right Panel - Form Content (60%) */}
-            <Col xs={24} lg={14}>
-              {/* Department Name - Hero Input */}
-              <div className="mb-8">
+          {/* Department Details Section */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Departman Bilgileri</h2>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="name"
+                  label={<span className="text-sm text-slate-600">Departman Adı</span>}
                   rules={[
                     { required: true, message: 'Departman adı zorunludur' },
                     { min: 2, message: 'En az 2 karakter' },
@@ -240,94 +116,140 @@ export default function NewDepartmentPage() {
                   className="mb-0"
                 >
                   <Input
-                    placeholder="Departman Adı"
-                    variant="borderless"
+                    placeholder="örn: İnsan Kaynakları"
+                    className="h-10"
                     onChange={handleNameChange}
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
                   />
                 </Form.Item>
-                <Form.Item name="description" className="mb-0 mt-2">
-                  <TextArea
-                    placeholder="Departman hakkında kısa bir açıklama yazın..."
-                    variant="borderless"
-                    autoSize={{ minRows: 2, maxRows: 4 }}
-                    style={{
-                      fontSize: '15px',
-                      padding: '0',
-                      color: '#666',
-                      resize: 'none'
-                    }}
-                    className="placeholder:text-gray-300"
+
+                <Form.Item
+                  name="code"
+                  label={<span className="text-sm text-slate-600">Departman Kodu</span>}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder={autoCode || 'Otomatik oluşturulacak'}
+                    className="h-10"
                   />
                 </Form.Item>
               </div>
 
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+              <Form.Item
+                name="description"
+                label={<span className="text-sm text-slate-600">Açıklama</span>}
+                className="mb-0 mt-6"
+              >
+                <TextArea
+                  placeholder="Departman hakkında kısa bir açıklama yazın..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                />
+              </Form.Item>
+            </div>
+          </section>
 
-              {/* Department Details */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <FileTextOutlined className="mr-1" /> Departman Detayları
-                </Text>
+          {/* Parent Department Section */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Organizasyon Yapısı</h2>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <Form.Item
+                name="parentDepartmentId"
+                label={<span className="text-sm text-slate-600">Üst Departman</span>}
+                className="mb-0"
+              >
+                <Select
+                  placeholder="Üst departman seçin (isteğe bağlı)"
+                  allowClear
+                  className="h-10"
+                  options={departments.map((d) => ({
+                    label: d.name,
+                    value: d.id,
+                  }))}
+                />
+              </Form.Item>
+              <p className="text-xs text-slate-400 mt-2">
+                Bu departmanın bağlı olduğu üst departmanı seçin. Boş bırakabilirsiniz.
+              </p>
+            </div>
+          </section>
 
-                {/* Department Code */}
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <CodeOutlined className="text-purple-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">Departman Kodu</Text>
-                        <Text className="text-xs text-gray-500">
-                          İsimden otomatik oluşturulur veya manuel girin
-                        </Text>
-                      </div>
-                    </div>
-                  </div>
-                  <Form.Item name="code" className="mb-0 mt-3">
-                    <Input
-                      placeholder={autoCode || 'Otomatik oluşturulacak'}
-                      size="large"
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </div>
-
-                {/* Employee Info */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+          {/* Stats Preview */}
+          {departments.length > 0 && (
+            <section className="mb-8">
+              <h2 className="text-sm font-medium text-slate-900 mb-4">Mevcut Durum</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <TeamOutlined className="text-blue-600" />
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: '#8b5cf615' }}
+                    >
+                      <ApartmentOutlined style={{ color: '#8b5cf6' }} />
                     </div>
                     <div>
-                      <Text className="font-medium block">Çalışan Sayısı</Text>
-                      <Text className="text-xs text-gray-500">
-                        Departman oluşturulduktan sonra kullanıcılar atanabilir
-                      </Text>
+                      <div className="text-2xl font-semibold text-slate-900">{departments.length}</div>
+                      <div className="text-xs text-slate-500">Mevcut Departman</div>
                     </div>
                   </div>
-                  <div className="mt-3 p-3 bg-white/50 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
-                    <div className="text-xs text-gray-400">Başlangıç</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: '#3b82f615' }}
+                    >
+                      <span style={{ color: '#3b82f6' }}>👥</span>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-semibold text-slate-900">
+                        {departments.reduce((sum, d) => sum + d.employeeCount, 0)}
+                      </div>
+                      <div className="text-xs text-slate-500">Toplam Çalışan</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </Col>
-          </Row>
+            </section>
+          )}
 
-          {/* Hidden submit button */}
           <Form.Item hidden>
             <button type="submit" />
           </Form.Item>
         </Form>
+      </div>
+
+      {/* Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-500">
+              {autoCode ? (
+                <span className="flex items-center gap-2">
+                  <CheckOutlined className="text-emerald-500" />
+                  Kod otomatik oluşturulacak: <span className="font-medium text-slate-700">{autoCode}</span>
+                </span>
+              ) : (
+                <span>Departman bilgilerini doldurun</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/settings/departments')}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => form.submit()}
+                disabled={createMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {createMutation.isPending ? 'Kaydediliyor...' : 'Departman Oluştur'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

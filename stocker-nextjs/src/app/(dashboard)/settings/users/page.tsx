@@ -1,8 +1,11 @@
 'use client';
 
 /**
- * User Management Page - API Integrated
- * Real-time user management with comprehensive features
+ * User Management Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Stacked list layout for data
+ * - Action buttons only in designated areas
  */
 
 import { useState, useEffect } from 'react';
@@ -15,26 +18,8 @@ import {
   confirmDelete,
   confirmAction,
 } from '@/lib/utils/sweetalert';
-import {
-  Card,
-  Row,
-  Col,
-  Button,
-  Input,
-  Avatar,
-  Tag,
-  Dropdown,
-  Space,
-  Typography,
-  Badge,
-  Select,
-  Modal,
-  Segmented,
-  List,
-  Divider,
-  Spin,
-  Tooltip,
-} from 'antd';
+import { Table, Input, Select, Tooltip, Dropdown, Spin } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   UserOutlined,
   PlusOutlined,
@@ -45,12 +30,9 @@ import {
   LockOutlined,
   UnlockOutlined,
   MailOutlined,
-  PhoneOutlined,
   TeamOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  AppstoreOutlined,
-  BarsOutlined,
   SafetyOutlined,
   EyeOutlined,
   CrownOutlined,
@@ -69,39 +51,32 @@ import {
   toggleUserStatus,
   getRoleLabel,
   type UserListItem,
-  type User,
   type CreateUserRequest,
   type UpdateUserRequest,
 } from '@/lib/api/users';
 import { getSubscriptionInfo } from '@/lib/api/subscription';
-
-const { Text, Title } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+  EmptyState,
+  Badge,
+} from '@/components/ui/enterprise-page';
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // DEBUG: Check auth and role
   const { user } = useAuth();
   const { role, isAdmin } = useRole();
 
-  useEffect(() => {
-    console.log('🔍 UsersPage - Auth Debug:', {
-      user,
-      role,
-      isAdmin,
-      userRole: user?.role
-    });
-  }, [user, role, isAdmin]);
-
-  // Fetch users list
   const {
     data: usersData,
     isLoading,
@@ -111,64 +86,55 @@ export default function UsersPage() {
     queryFn: () => getUsers(1, 100, searchText || undefined),
   });
 
-  // Fetch subscription info for user limits
   const { data: subscriptionInfo } = useQuery({
     queryKey: ['subscription-info'],
     queryFn: getSubscriptionInfo,
-    staleTime: 60 * 1000, // Cache for 1 minute
+    staleTime: 60 * 1000,
   });
 
-  // Fetch selected user details
   const { data: selectedUserDetails } = useQuery({
     queryKey: ['user', selectedUserId],
     queryFn: () => getUserById(selectedUserId!),
     enabled: !!selectedUserId && detailsDrawerOpen,
   });
 
-  // Delete user mutation
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
       showDeleteSuccess('kullanıcı');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
+      queryClient.invalidateQueries({ queryKey: ['subscription-info'] });
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || 'Kullanıcı silinirken bir hata oluştu';
-      showError(errorMessage);
+      showError(error?.message || 'Kullanıcı silinirken bir hata oluştu');
     },
   });
 
-  // Toggle user status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: toggleUserStatus,
-    onSuccess: (result) => {
+    onSuccess: () => {
       showUpdateSuccess('kullanıcı durumu');
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || 'Kullanıcı durumu değiştirilirken bir hata oluştu';
-      showError(errorMessage);
+      showError(error?.message || 'Kullanıcı durumu değiştirilirken bir hata oluştu');
     },
   });
 
-  // Create user mutation
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: (response) => {
+    onSuccess: () => {
       showCreateSuccess('kullanıcı');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription-info'] }); // Refresh subscription info
+      queryClient.invalidateQueries({ queryKey: ['subscription-info'] });
       setModalOpen(false);
       setEditingUser(null);
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || 'Kullanıcı oluşturulurken bir hata oluştu';
-      showError(errorMessage);
+      showError(error?.message || 'Kullanıcı oluşturulurken bir hata oluştu');
     },
   });
 
-  // Update user mutation
   const updateMutation = useMutation({
     mutationFn: ({ userId, data }: { userId: string; data: UpdateUserRequest }) => updateUser(userId, data),
     onSuccess: () => {
@@ -178,8 +144,7 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || 'Kullanıcı güncellenirken bir hata oluştu';
-      showError(errorMessage);
+      showError(error?.message || 'Kullanıcı güncellenirken bir hata oluştu');
     },
   });
 
@@ -195,7 +160,6 @@ export default function UsersPage() {
 
   const handleSubmitUser = async (values: any) => {
     if (editingUser) {
-      // Update existing user
       const updateData: UpdateUserRequest = {
         firstName: values.firstName,
         lastName: values.lastName,
@@ -204,7 +168,6 @@ export default function UsersPage() {
       };
       await updateMutation.mutateAsync({ userId: editingUser.id, data: updateData });
     } else {
-      // Create new user
       const createData: CreateUserRequest = {
         username: values.username,
         email: values.email,
@@ -212,7 +175,7 @@ export default function UsersPage() {
         firstName: values.firstName,
         lastName: values.lastName,
         phoneNumber: values.phoneNumber,
-        roleIds: values.roleIds, // Changed from role to roleIds (array)
+        roleIds: values.roleIds,
         department: values.department,
       };
       await createMutation.mutateAsync(createData);
@@ -232,7 +195,6 @@ export default function UsersPage() {
       } istediğinizden emin misiniz?`,
       user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et'
     );
-
     if (confirmed) {
       toggleStatusMutation.mutate(user.id);
     }
@@ -244,7 +206,6 @@ export default function UsersPage() {
       `${user.firstName} ${user.lastName}`,
       'Bu işlem geri alınamaz.'
     );
-
     if (confirmed) {
       deleteMutation.mutate(user.id);
     }
@@ -270,9 +231,7 @@ export default function UsersPage() {
         icon: user.isActive ? <LockOutlined /> : <UnlockOutlined />,
         onClick: () => handleToggleStatus(user),
       },
-      {
-        type: 'divider' as const,
-      },
+      { type: 'divider' as const },
       {
         key: 'delete',
         label: 'Sil',
@@ -284,47 +243,19 @@ export default function UsersPage() {
     ],
   });
 
-  const getRoleBadge = (roles: string[]) => {
-    if (roles.length === 0) return <Tag>Rol Yok</Tag>;
-
-    const primaryRole = roles[0];
-    const config: Record<string, { color: string; label: string }> = {
-      FirmaYöneticisi: { color: 'red', label: 'Admin' },
-      Admin: { color: 'red', label: 'Admin' },
-      Yönetici: { color: 'blue', label: 'Yönetici' },
-      Manager: { color: 'blue', label: 'Yönetici' },
-      Kullanıcı: { color: 'default', label: 'Kullanıcı' },
-      User: { color: 'default', label: 'Kullanıcı' },
-    };
-
-    const { color, label } = config[primaryRole] || { color: 'default', label: getRoleLabel(primaryRole) };
-    return (
-      <>
-        <Tag color={color}>{label}</Tag>
-        {roles.length > 1 && <Tag>+{roles.length - 1}</Tag>}
-      </>
-    );
-  };
-
-  // Get users array safely
   const users = usersData?.items || [];
 
-  // Filter users
   const filteredUsers = users.filter((user) => {
     const matchesRole =
       filterRole === 'all' ||
-      user.roles.some(
-        (r) => r === filterRole || getRoleLabel(r).toLowerCase() === filterRole.toLowerCase()
-      );
+      user.roles.some((r) => r === filterRole || getRoleLabel(r).toLowerCase() === filterRole.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && user.isActive) ||
       (filterStatus === 'inactive' && !user.isActive);
-
     return matchesRole && matchesStatus;
   });
 
-  // Calculate stats
   const stats = {
     total: users.length,
     active: users.filter((u) => u.isActive).length,
@@ -332,449 +263,276 @@ export default function UsersPage() {
     admins: users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length,
   };
 
+  const columns: ColumnsType<UserListItem> = [
+    {
+      title: 'Kullanıcı',
+      key: 'user',
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium text-white ${
+              record.isActive ? 'bg-blue-500' : 'bg-slate-400'
+            }`}
+          >
+            {record.firstName[0]}{record.lastName[0]}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">
+              {record.firstName} {record.lastName}
+            </div>
+            <div className="text-xs text-slate-400">@{record.username}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'E-posta',
+      dataIndex: 'email',
+      key: 'email',
+      render: (email: string) => (
+        <div className="flex items-center gap-2">
+          <MailOutlined className="text-slate-400 text-xs" />
+          <span className="text-sm text-slate-600">{email}</span>
+        </div>
+      ),
+    },
+    {
+      title: 'Roller',
+      dataIndex: 'roles',
+      key: 'roles',
+      render: (roles: string[]) => (
+        <div className="flex items-center gap-1 flex-wrap">
+          {roles.length === 0 ? (
+            <Badge variant="default">Rol Yok</Badge>
+          ) : (
+            <>
+              <Badge variant={roles[0] === 'FirmaYöneticisi' || roles[0] === 'Admin' ? 'error' : 'info'}>
+                {getRoleLabel(roles[0])}
+              </Badge>
+              {roles.length > 1 && (
+                <Badge variant="default">+{roles.length - 1}</Badge>
+              )}
+            </>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Departman',
+      dataIndex: 'department',
+      key: 'department',
+      render: (department?: string) => (
+        <span className="text-sm text-slate-500">
+          {department || <span className="text-slate-300">—</span>}
+        </span>
+      ),
+    },
+    {
+      title: 'Durum',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      width: 100,
+      render: (isActive: boolean) => (
+        <Badge variant={isActive ? 'success' : 'default'}>
+          {isActive ? 'Aktif' : 'Pasif'}
+        </Badge>
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      align: 'right',
+      width: 60,
+      render: (_, record) => (
+        <AdminOnly>
+          <Dropdown menu={getUserMenu(record)} trigger={['click']}>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <MoreOutlined />
+            </button>
+          </Dropdown>
+        </AdminOnly>
+      ),
+    },
+  ];
+
   if (error) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <Text type="danger">Kullanıcılar yüklenirken bir hata oluştu</Text>
-      </div>
+      <PageContainer maxWidth="5xl">
+        <Card>
+          <EmptyState
+            icon={<UserOutlined className="text-xl" />}
+            title="Hata oluştu"
+            description="Kullanıcılar yüklenirken bir hata oluştu"
+          />
+        </Card>
+      </PageContainer>
     );
   }
 
   return (
-    <div style={{ padding: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+    <PageContainer maxWidth="7xl">
       {/* Stats Cards */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            hoverable
-            style={{
-              background: 'white',
-              border: '1px solid #f0f0f0',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              transition: 'all 0.3s ease',
-            }}
-            bodyStyle={{ padding: '20px 24px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Text style={{ color: '#8c8c8c', fontSize: 13, fontWeight: 500 }}>
-                    TOPLAM KULLANICI
-                  </Text>
-                  {subscriptionInfo && (
-                    <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
-                      <CrownOutlined style={{ color: '#faad14', fontSize: 14 }} />
-                    </Tooltip>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
-                    {stats.total}
-                  </Title>
-                  {subscriptionInfo && (
-                    <Text style={{ color: '#8c8c8c', fontSize: 16 }}>
-                      / {subscriptionInfo.maxUsers}
-                    </Text>
-                  )}
-                </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
                 {subscriptionInfo && (
-                  <Text
-                    type={subscriptionInfo.canAddUser ? 'secondary' : 'danger'}
-                    style={{ fontSize: 12, marginTop: 4, display: 'block' }}
-                  >
-                    {subscriptionInfo.canAddUser
-                      ? `${subscriptionInfo.maxUsers - subscriptionInfo.currentUserCount} kullanıcı eklenebilir`
-                      : 'Limit doldu'}
-                  </Text>
+                  <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
+                    <CrownOutlined className="text-amber-500 text-xs" />
+                  </Tooltip>
                 )}
               </div>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  background: '#f0f5ff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <TeamOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-semibold text-slate-900">{stats.total}</span>
+                {subscriptionInfo && (
+                  <span className="text-sm text-slate-400">/ {subscriptionInfo.maxUsers}</span>
+                )}
               </div>
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            hoverable
-            style={{
-              background: 'white',
-              border: '1px solid #f0f0f0',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              transition: 'all 0.3s ease',
-            }}
-            bodyStyle={{ padding: '20px 24px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                  AKTİF
-                </Text>
-                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
-                  {stats.active}
-                </Title>
-              </div>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  background: '#f6ffed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CheckCircleOutlined style={{ fontSize: 24, color: '#52c41a' }} />
-              </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <TeamOutlined style={{ color: '#3b82f6' }} />
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            hoverable
-            style={{
-              background: 'white',
-              border: '1px solid #f0f0f0',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              transition: 'all 0.3s ease',
-            }}
-            bodyStyle={{ padding: '20px 24px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                  PASİF
-                </Text>
-                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
-                  {stats.inactive}
-                </Title>
-              </div>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  background: '#fff1f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CloseCircleOutlined style={{ fontSize: 24, color: '#ff4d4f' }} />
-              </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
             </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            hoverable
-            style={{
-              background: 'white',
-              border: '1px solid #f0f0f0',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              transition: 'all 0.3s ease',
-            }}
-            bodyStyle={{ padding: '20px 24px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <Text style={{ color: '#8c8c8c', fontSize: 13, display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                  YÖNETİCİ
-                </Text>
-                <Title level={2} style={{ color: '#262626', margin: 0, fontSize: 32, fontWeight: 600 }}>
-                  {stats.admins}
-                </Title>
-              </div>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 8,
-                  background: '#fff7e6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <SafetyOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
-              </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Pasif</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.inactive}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <CloseCircleOutlined style={{ color: '#ef4444' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Yönetici</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.admins}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <SafetyOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Main Card */}
-      <Card
-        style={{
-          borderRadius: 8,
-          border: '1px solid #f0f0f0',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-        }}
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Title level={4} style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#262626' }}>
-              Kullanıcı Yönetimi
-            </Title>
-            <Badge
-              count={filteredUsers.length}
-              style={{ backgroundColor: '#f0f0f0', color: '#595959', boxShadow: 'none' }}
+      {/* Header */}
+      <ListPageHeader
+        icon={<UserOutlined />}
+        iconColor="#3b82f6"
+        title="Kullanıcılar"
+        description="Sistem kullanıcılarını yönetin"
+        itemCount={filteredUsers.length}
+        primaryAction={
+          isAdmin
+            ? {
+                label: 'Yeni Kullanıcı',
+                onClick: handleCreateUser,
+                icon: <PlusOutlined />,
+              }
+            : undefined
+        }
+      />
+
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <Input
+              placeholder="Kullanıcı ara..."
+              prefix={<SearchOutlined className="text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              className="h-10"
             />
           </div>
-        }
-        extra={
-          <AdminOnly>
-            <Tooltip
-              title={
-                subscriptionInfo && !subscriptionInfo.canAddUser
-                  ? `Kullanıcı limiti doldu (${subscriptionInfo.currentUserCount}/${subscriptionInfo.maxUsers}). Paketinizi yükseltin.`
-                  : ''
-              }
-            >
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                size="large"
-                onClick={handleCreateUser}
-                disabled={subscriptionInfo && !subscriptionInfo.canAddUser}
-              >
-                Yeni Kullanıcı
-              </Button>
-            </Tooltip>
-          </AdminOnly>
-        }
-      >
-        {/* Filters */}
-        <div style={{ marginBottom: 24 }}>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={24} md={10}>
-              <Input
-                size="large"
-                placeholder="Kullanıcı ara..."
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                allowClear
-              />
-            </Col>
-            <Col xs={12} sm={8} md={5}>
-              <Select
-                size="large"
-                style={{ width: '100%' }}
-                placeholder="Rol"
-                value={filterRole}
-                onChange={setFilterRole}
-              >
-                <Select.Option value="all">Tüm Roller</Select.Option>
-                <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
-                <Select.Option value="Yönetici">Yönetici</Select.Option>
-                <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
-              </Select>
-            </Col>
-            <Col xs={12} sm={8} md={5}>
-              <Select
-                size="large"
-                style={{ width: '100%' }}
-                placeholder="Durum"
-                value={filterStatus}
-                onChange={setFilterStatus}
-              >
-                <Select.Option value="all">Tüm Durumlar</Select.Option>
-                <Select.Option value="active">Aktif</Select.Option>
-                <Select.Option value="inactive">Pasif</Select.Option>
-              </Select>
-            </Col>
-            <Col xs={24} sm={8} md={4}>
-              <Segmented
-                size="large"
-                block
-                value={viewMode}
-                onChange={(value) => setViewMode(value as 'grid' | 'list')}
-                options={[
-                  { value: 'grid', icon: <AppstoreOutlined /> },
-                  { value: 'list', icon: <BarsOutlined /> },
-                ]}
-              />
-            </Col>
-          </Row>
+          <Select
+            value={filterRole}
+            onChange={setFilterRole}
+            className="w-40 h-10"
+          >
+            <Select.Option value="all">Tüm Roller</Select.Option>
+            <Select.Option value="FirmaYöneticisi">Admin</Select.Option>
+            <Select.Option value="Yönetici">Yönetici</Select.Option>
+            <Select.Option value="Kullanıcı">Kullanıcı</Select.Option>
+          </Select>
+          <Select
+            value={filterStatus}
+            onChange={setFilterStatus}
+            className="w-40 h-10"
+          >
+            <Select.Option value="all">Tüm Durumlar</Select.Option>
+            <Select.Option value="active">Aktif</Select.Option>
+            <Select.Option value="inactive">Pasif</Select.Option>
+          </Select>
         </div>
+      </div>
 
-        {/* Loading State */}
-        {isLoading && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      {/* Data Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
             <Spin size="large" />
-            <div style={{ marginTop: 16 }}>
-              <Text type="secondary">Kullanıcılar yükleniyor...</Text>
-            </div>
           </div>
-        )}
-
-        {/* User Cards - Grid View */}
-        {!isLoading && viewMode === 'grid' && (
-          <Row gutter={[16, 16]}>
-            {filteredUsers.map((user) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={user.id}>
-                <Card
-                  hoverable
-                  onClick={() => handleViewDetails(user.id)}
-                  style={{
-                    borderRadius: 8,
-                    border: '1px solid #f0f0f0',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                    height: '100%',
-                    cursor: 'pointer',
-                  }}
-                  bodyStyle={{ padding: 20 }}
-                >
-                  {/* Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <Avatar
-                      size={56}
-                      style={{
-                        backgroundColor: user.isActive ? '#1890ff' : '#d9d9d9',
-                        fontWeight: 600,
-                        fontSize: 20,
-                      }}
-                    >
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </Avatar>
-                    <AdminOnly>
-                      <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                        <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
-                      </Dropdown>
-                    </AdminOnly>
-                  </div>
-
-                  {/* User Info */}
-                  <Title level={5} style={{ marginBottom: 4, fontSize: 16, fontWeight: 600 }}>
-                    {user.firstName} {user.lastName}
-                  </Title>
-                  <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>
-                    @{user.username}
-                  </Text>
-
-                  {/* Role and Status */}
-                  <div style={{ marginBottom: 16 }}>
-                    {getRoleBadge(user.roles)}
-                    <Badge
-                      status={user.isActive ? 'success' : 'default'}
-                      text={user.isActive ? 'Aktif' : 'Pasif'}
-                      style={{ marginLeft: 8 }}
-                    />
-                  </div>
-
-                  <Divider style={{ margin: '16px 0' }} />
-
-                  {/* Contact Info */}
-                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <MailOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                      <Text style={{ fontSize: 13 }} ellipsis>
-                        {user.email}
-                      </Text>
-                    </div>
-                    {user.department && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <TeamOutlined style={{ color: '#8c8c8c', fontSize: 14 }} />
-                        <Text style={{ fontSize: 13 }}>{user.department}</Text>
-                      </div>
-                    )}
-                  </Space>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
-
-        {/* User List - List View */}
-        {!isLoading && viewMode === 'list' && (
-          <List
-            dataSource={filteredUsers}
-            renderItem={(user) => (
-              <List.Item
-                onClick={() => handleViewDetails(user.id)}
-                style={{ cursor: 'pointer' }}
-                actions={[
-                  <AdminOnly key="actions">
-                    <Dropdown menu={getUserMenu(user)} trigger={['click']}>
-                      <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
-                    </Dropdown>
-                  </AdminOnly>,
-                ]}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Avatar
-                      size={48}
-                      style={{
-                        backgroundColor: user.isActive ? '#1890ff' : '#999',
-                      }}
-                    >
-                      {user.firstName[0]}
-                      {user.lastName[0]}
-                    </Avatar>
+        </Card>
+      ) : filteredUsers.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<UserOutlined className="text-xl" />}
+            title="Kullanıcı bulunamadı"
+            description="Arama kriterlerinizi değiştirmeyi deneyin"
+            action={
+              isAdmin
+                ? {
+                    label: 'Kullanıcı Oluştur',
+                    onClick: handleCreateUser,
                   }
-                  title={
-                    <Space>
-                      <span>
-                        {user.firstName} {user.lastName}
-                      </span>
-                      {getRoleBadge(user.roles)}
-                      <Badge
-                        status={user.isActive ? 'success' : 'error'}
-                        text={user.isActive ? 'Aktif' : 'Pasif'}
-                      />
-                    </Space>
-                  }
-                  description={
-                    <Space direction="vertical" size={2}>
-                      <Text type="secondary">@{user.username}</Text>
-                      <Space size="large">
-                        <span>
-                          <MailOutlined /> {user.email}
-                        </span>
-                        {user.department && (
-                          <span>
-                            <TeamOutlined /> {user.department}
-                          </span>
-                        )}
-                      </Space>
-                    </Space>
-                  }
-                />
-              </List.Item>
-            )}
+                : undefined
+            }
           />
-        )}
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredUsers}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => (
+                <span className="text-sm text-slate-500">Toplam {total} kullanıcı</span>
+              ),
+            }}
+            onRow={(record) => ({
+              onClick: () => handleViewDetails(record.id),
+              className: 'cursor-pointer hover:bg-slate-50',
+            })}
+            className="enterprise-table"
+          />
+        </DataTableWrapper>
+      )}
 
-        {/* Empty State */}
-        {!isLoading && filteredUsers.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <UserOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
-            <Title level={4} style={{ color: '#595959', marginBottom: 8 }}>
-              Kullanıcı Bulunamadı
-            </Title>
-            <Text type="secondary">Arama kriterlerinizi değiştirmeyi deneyin</Text>
-          </div>
-        )}
-      </Card>
-
-      {/* User Modal */}
+      {/* Modals */}
       <UserModal
         open={modalOpen}
         user={editingUser as any}
@@ -785,7 +543,6 @@ export default function UsersPage() {
         onSubmit={handleSubmitUser}
       />
 
-      {/* User Details Drawer */}
       <UserDetailsDrawer
         user={selectedUserDetails || null}
         open={detailsDrawerOpen}
@@ -794,6 +551,6 @@ export default function UsersPage() {
           setSelectedUserId(null);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

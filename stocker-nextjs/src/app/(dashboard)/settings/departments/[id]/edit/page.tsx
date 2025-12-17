@@ -2,46 +2,25 @@
 
 /**
  * Edit Department Page
- * Modern full-page layout for editing departments (CRM Customer style)
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Sticky action bar at bottom
+ * - No colored backgrounds on content cards
  */
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Button,
-  Form,
-  Input,
-  Space,
-  Row,
-  Col,
-  Typography,
-  Select,
-  Spin,
-  Tag,
-} from 'antd';
+import { Form, Input, Select, Spin } from 'antd';
 import {
   ArrowLeftOutlined,
-  SaveOutlined,
   ApartmentOutlined,
   TeamOutlined,
-  CodeOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import { useDepartment, useDepartments, useUpdateDepartment } from '@/hooks/useDepartments';
 import type { UpdateDepartmentRequest } from '@/lib/api/departments';
 
-const { Text } = Typography;
 const { TextArea } = Input;
-
-// Get color based on employee count
-const getDepartmentColor = (count: number): string => {
-  if (count >= 50) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  if (count >= 20) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-  if (count >= 10) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-  return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
-};
 
 export default function EditDepartmentPage() {
   const router = useRouter();
@@ -50,17 +29,12 @@ export default function EditDepartmentPage() {
   const [form] = Form.useForm();
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Fetch department data
   const { data: department, isLoading } = useDepartment(departmentId);
-
-  // Fetch all departments for parent selection (excluding current)
   const { data: allDepartments = [] } = useDepartments();
   const availableParents = allDepartments.filter(d => d.id !== departmentId);
 
-  // Update mutation
   const updateMutation = useUpdateDepartment();
 
-  // Populate form when data loads
   useEffect(() => {
     if (department) {
       form.setFieldsValue({
@@ -93,7 +67,7 @@ export default function EditDepartmentPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -101,67 +75,42 @@ export default function EditDepartmentPage() {
 
   if (!department) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <Text type="secondary">Departman bulunamadı</Text>
-          <br />
-          <Button type="link" onClick={() => router.push('/settings/departments')}>
+          <p className="text-slate-500 mb-4">Departman bulunamadı</p>
+          <button
+            onClick={() => router.push('/settings/departments')}
+            className="text-sm text-slate-600 hover:text-slate-900"
+          >
             Departmanlara Dön
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Minimal Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
+            <button
               onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
+              className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <ArrowLeftOutlined />
+            </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                Departman Düzenle
-              </h1>
-              <p className="text-sm text-gray-400 m-0">{department.name}</p>
+              <h1 className="text-lg font-semibold text-slate-900">Departman Düzenle</h1>
+              <p className="text-sm text-slate-500">{department.name}</p>
             </div>
           </div>
-          <Space>
-            <Button onClick={() => router.push('/settings/departments')}>
-              Vazgeç
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={updateMutation.isPending}
-              onClick={() => form.submit()}
-              disabled={!hasChanges}
-              style={{
-                background: hasChanges ? '#1a1a1a' : undefined,
-                borderColor: hasChanges ? '#1a1a1a' : undefined,
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
@@ -169,94 +118,88 @@ export default function EditDepartmentPage() {
           onValuesChange={handleValuesChange}
           disabled={updateMutation.isPending}
         >
-          <Row gutter={48}>
-            {/* Left Panel - Visual & Stats (40%) */}
-            <Col xs={24} lg={10}>
-              {/* Department Visual Card */}
-              <div className="mb-8">
-                <div
-                  style={{
-                    background: getDepartmentColor(department.employeeCount),
-                    borderRadius: '16px',
-                    padding: '40px 20px',
-                    minHeight: '200px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ApartmentOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-                  <p className="mt-4 text-lg font-medium text-white/90">
-                    {department.name}
-                  </p>
-                  <p className="text-sm text-white/60">
-                    {department.employeeCount} çalışan
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="p-4 bg-blue-50/50 rounded-xl text-center border border-blue-100">
-                  <div className="text-2xl font-semibold text-blue-600">
-                    {department.employeeCount}
+          {/* Department Stats */}
+          <section className="mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#8b5cf615' }}
+                  >
+                    <ApartmentOutlined style={{ color: '#8b5cf6' }} />
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Çalışan Sayısı</div>
-                </div>
-                <div className="p-4 bg-green-50/50 rounded-xl text-center border border-green-100">
-                  <div className="flex items-center justify-center">
-                    {department.isActive ? (
-                      <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
-                    ) : (
-                      <Tag color="error" icon={<CloseCircleOutlined />}>Pasif</Tag>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-2">Durum</div>
-                </div>
-              </div>
-
-              {/* Code Display */}
-              {department.code && (
-                <div className="mb-6">
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                    <CodeOutlined className="mr-1" /> Mevcut Kod
-                  </Text>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <div className="text-2xl font-bold text-gray-800 text-center">
-                      {department.code}
+                  <div>
+                    <div className="text-xs text-slate-500">Kod</div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {department.code || '—'}
                     </div>
                   </div>
                 </div>
-              )}
-
-              {/* Parent Department Info */}
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#3b82f615' }}
+                  >
+                    <TeamOutlined style={{ color: '#3b82f6' }} />
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Çalışan</div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {department.employeeCount}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: department.isActive ? '#10b98115' : '#ef444415' }}
+                  >
+                    <span style={{ color: department.isActive ? '#10b981' : '#ef4444' }}>
+                      {department.isActive ? '✓' : '✕'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Durum</div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {department.isActive ? 'Aktif' : 'Pasif'}
+                    </div>
+                  </div>
+                </div>
+              </div>
               {department.parentDepartmentName && (
-                <div className="mb-6">
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                    <ApartmentOutlined className="mr-1" /> Üst Departman
-                  </Text>
-                  <div className="p-4 bg-purple-50/50 rounded-xl border border-purple-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <ApartmentOutlined className="text-purple-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">{department.parentDepartmentName}</Text>
-                        <Text className="text-xs text-gray-500">Üst Departman</Text>
+                <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: '#6366f115' }}
+                    >
+                      <ApartmentOutlined style={{ color: '#6366f1' }} />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500">Üst Departman</div>
+                      <div className="text-sm font-semibold text-slate-900 truncate max-w-[100px]">
+                        {department.parentDepartmentName}
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-            </Col>
+            </div>
+          </section>
 
-            {/* Right Panel - Form Content (60%) */}
-            <Col xs={24} lg={14}>
-              {/* Department Name - Hero Input */}
-              <div className="mb-8">
+          {/* Department Details Section */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Departman Bilgileri</h2>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="name"
+                  label={<span className="text-sm text-slate-600">Departman Adı</span>}
                   rules={[
                     { required: true, message: 'Departman adı zorunludur' },
                     { min: 2, message: 'En az 2 karakter' },
@@ -264,119 +207,103 @@ export default function EditDepartmentPage() {
                   className="mb-0"
                 >
                   <Input
-                    placeholder="Departman Adı"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    placeholder="örn: İnsan Kaynakları"
+                    className="h-10"
                   />
                 </Form.Item>
-                <Form.Item name="description" className="mb-0 mt-2">
-                  <TextArea
-                    placeholder="Departman hakkında kısa bir açıklama yazın..."
-                    variant="borderless"
-                    autoSize={{ minRows: 2, maxRows: 4 }}
-                    style={{
-                      fontSize: '15px',
-                      padding: '0',
-                      color: '#666',
-                      resize: 'none'
-                    }}
-                    className="placeholder:text-gray-300"
+
+                <Form.Item
+                  name="code"
+                  label={<span className="text-sm text-slate-600">Departman Kodu</span>}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Departman kodu girin"
+                    className="h-10"
                   />
                 </Form.Item>
               </div>
 
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+              <Form.Item
+                name="description"
+                label={<span className="text-sm text-slate-600">Açıklama</span>}
+                className="mb-0 mt-6"
+              >
+                <TextArea
+                  placeholder="Departman hakkında kısa bir açıklama yazın..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                />
+              </Form.Item>
+            </div>
+          </section>
 
-              {/* Department Details */}
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <FileTextOutlined className="mr-1" /> Departman Detayları
-                </Text>
+          {/* Parent Department Section */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Organizasyon Yapısı</h2>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <Form.Item
+                name="parentDepartmentId"
+                label={<span className="text-sm text-slate-600">Üst Departman</span>}
+                className="mb-0"
+              >
+                <Select
+                  placeholder="Üst departman seçin (isteğe bağlı)"
+                  allowClear
+                  className="h-10"
+                  options={availableParents.map((d) => ({
+                    label: d.name,
+                    value: d.id,
+                  }))}
+                />
+              </Form.Item>
+              <p className="text-xs text-slate-400 mt-2">
+                Bu departmanın bağlı olduğu üst departmanı seçin. Boş bırakabilirsiniz.
+              </p>
+            </div>
+          </section>
 
-                {/* Department Code */}
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                        <CodeOutlined className="text-purple-600" />
-                      </div>
-                      <div>
-                        <Text className="font-medium block">Departman Kodu</Text>
-                        <Text className="text-xs text-gray-500">
-                          Benzersiz tanımlayıcı kod
-                        </Text>
-                      </div>
-                    </div>
-                  </div>
-                  <Form.Item name="code" className="mb-0 mt-3">
-                    <Input
-                      placeholder="Departman kodu girin"
-                      size="large"
-                      className="rounded-lg"
-                    />
-                  </Form.Item>
-                </div>
-
-                {/* Parent Department Selector */}
-                <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 mb-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                      <ApartmentOutlined className="text-indigo-600" />
-                    </div>
-                    <div>
-                      <Text className="font-medium block">Üst Departman</Text>
-                      <Text className="text-xs text-gray-500">
-                        Bu departmanın bağlı olduğu üst departman
-                      </Text>
-                    </div>
-                  </div>
-                  <Form.Item name="parentDepartmentId" className="mb-0">
-                    <Select
-                      placeholder="Üst departman seçin (opsiyonel)"
-                      allowClear
-                      size="large"
-                      options={availableParents.map((d) => ({
-                        label: d.name,
-                        value: d.id,
-                      }))}
-                    />
-                  </Form.Item>
-                </div>
-
-                {/* Employee Info */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <TeamOutlined className="text-blue-600" />
-                    </div>
-                    <div>
-                      <Text className="font-medium block">Çalışan Bilgisi</Text>
-                      <Text className="text-xs text-gray-500">
-                        Bu departmana atanmış çalışanlar
-                      </Text>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-3 bg-white/50 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-blue-600">{department.employeeCount}</div>
-                    <div className="text-xs text-gray-400">Aktif Çalışan</div>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          {/* Hidden submit button */}
           <Form.Item hidden>
             <button type="submit" />
           </Form.Item>
         </Form>
+      </div>
+
+      {/* Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-500">
+              {hasChanges ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                  Kaydedilmemiş değişiklikler var
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <CheckOutlined className="text-emerald-500" />
+                  Tüm değişiklikler kaydedildi
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/settings/departments')}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => form.submit()}
+                disabled={updateMutation.isPending || !hasChanges}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {updateMutation.isPending ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
