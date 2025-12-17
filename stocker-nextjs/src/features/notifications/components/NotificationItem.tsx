@@ -1,18 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Notification, NotificationType } from '../types/notification.types';
+import { Notification } from '../types/notification.types';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import {
-  InfoCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  CloseCircleOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
-} from '@ant-design/icons';
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Trash2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { Tooltip } from 'antd';
 
 interface NotificationItemProps {
@@ -23,42 +23,30 @@ interface NotificationItemProps {
   onClick?: (notification: Notification) => void;
 }
 
-type TypeConfigValue = {
+const typeConfig: Record<string, {
   icon: React.ReactNode;
-  gradient: string;
-  bgLight: string;
-  borderColor: string;
-  iconBg: string;
-};
-
-const typeConfig: Record<string, TypeConfigValue> = {
+  color: string;
+  bgColor: string;
+}> = {
   success: {
-    icon: <CheckCircleOutlined />,
-    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    bgLight: 'rgba(16, 185, 129, 0.06)',
-    borderColor: 'rgba(16, 185, 129, 0.15)',
-    iconBg: 'rgba(16, 185, 129, 0.1)',
+    icon: <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
   },
   warning: {
-    icon: <WarningOutlined />,
-    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    bgLight: 'rgba(245, 158, 11, 0.06)',
-    borderColor: 'rgba(245, 158, 11, 0.15)',
-    iconBg: 'rgba(245, 158, 11, 0.1)',
+    icon: <AlertTriangle className="w-4 h-4" strokeWidth={1.75} />,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
   },
   error: {
-    icon: <CloseCircleOutlined />,
-    gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-    bgLight: 'rgba(239, 68, 68, 0.06)',
-    borderColor: 'rgba(239, 68, 68, 0.15)',
-    iconBg: 'rgba(239, 68, 68, 0.1)',
+    icon: <XCircle className="w-4 h-4" strokeWidth={1.75} />,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
   },
   info: {
-    icon: <InfoCircleOutlined />,
-    gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    bgLight: 'rgba(59, 130, 246, 0.06)',
-    borderColor: 'rgba(59, 130, 246, 0.15)',
-    iconBg: 'rgba(59, 130, 246, 0.1)',
+    icon: <Info className="w-4 h-4" strokeWidth={1.75} />,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
   },
 };
 
@@ -82,132 +70,96 @@ export default function NotificationItem({
 
   return (
     <div
-      className={`relative group transition-all duration-200 ${
-        onClick || notification.link ? 'cursor-pointer' : ''
-      }`}
+      className={`
+        relative group px-4 py-3 transition-colors
+        ${onClick || notification.link ? 'cursor-pointer' : ''}
+        ${notification.isRead ? 'bg-white' : 'bg-slate-50'}
+        hover:bg-slate-50
+      `}
       onClick={handleClick}
-      style={{
-        background: notification.isRead ? 'transparent' : config.bgLight,
-        borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
-      }}
     >
-      {/* Unread Indicator Bar */}
+      {/* Unread Indicator */}
       {!notification.isRead && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1"
-          style={{ background: config.gradient }}
-        />
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-900" />
       )}
 
-      <div className="p-4 pl-5">
-        <div className="flex items-start gap-3.5">
-          {/* Icon Container */}
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
-            style={{
-              background: notification.isRead ? 'rgba(156, 163, 175, 0.1)' : config.iconBg,
-              color: notification.isRead ? '#9ca3af' : undefined,
-            }}
-          >
-            {!notification.isRead ? (
-              <span
-                style={{
-                  background: config.gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
+      <div className="flex items-start gap-3">
+        {/* Icon */}
+        <div
+          className={`
+            w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+            ${notification.isRead ? 'bg-slate-100 text-slate-400' : `${config.bgColor} ${config.color}`}
+          `}
+        >
+          {config.icon}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1">
+              <p
+                className={`text-sm leading-snug mb-0.5 ${
+                  notification.isRead
+                    ? 'font-medium text-slate-600'
+                    : 'font-semibold text-slate-900'
+                }`}
               >
-                {config.icon}
-              </span>
-            ) : (
-              config.icon
-            )}
+                {notification.title}
+              </p>
+              <p
+                className={`text-sm leading-relaxed ${
+                  notification.isRead ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                {notification.message}
+              </p>
+            </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h4
-                    className={`text-sm m-0 leading-snug ${
-                      notification.isRead
-                        ? 'font-medium text-gray-600'
-                        : 'font-semibold text-gray-900'
-                    }`}
-                  >
-                    {notification.title}
-                  </h4>
-                  {!notification.isRead && (
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: config.gradient }}
-                    />
-                  )}
-                </div>
-                <p
-                  className={`text-sm mt-1 mb-0 leading-relaxed ${
-                    notification.isRead ? 'text-gray-500' : 'text-gray-600'
-                  }`}
+          {/* Footer */}
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-[11px] text-slate-400">
+              {formatDistanceToNow(new Date(notification.createdAt), {
+                addSuffix: true,
+                locale: tr,
+              })}
+            </span>
+
+            {/* Actions - Show on hover */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Tooltip title={notification.isRead ? 'Okunmadı işaretle' : 'Okundu işaretle'}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    notification.isRead
+                      ? onMarkAsUnread(notification.id)
+                      : onMarkAsRead(notification.id);
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 >
-                  {notification.message}
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between mt-3">
-              <span className="text-xs text-gray-400 font-medium">
-                {formatDistanceToNow(new Date(notification.createdAt), {
-                  addSuffix: true,
-                  locale: tr,
-                })}
-              </span>
-
-              {/* Actions - Show on hover */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <Tooltip title={notification.isRead ? 'Okunmadı işaretle' : 'Okundu işaretle'}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      notification.isRead
-                        ? onMarkAsUnread(notification.id)
-                        : onMarkAsRead(notification.id);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition-all duration-200"
-                  >
-                    {notification.isRead ? (
-                      <EyeInvisibleOutlined className="text-sm" />
-                    ) : (
-                      <EyeOutlined className="text-sm" />
-                    )}
-                  </button>
-                </Tooltip>
-                <Tooltip title="Sil">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(notification.id);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
-                  >
-                    <DeleteOutlined className="text-sm" />
-                  </button>
-                </Tooltip>
-              </div>
+                  {notification.isRead ? (
+                    <EyeOff className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip title="Sil">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(notification.id);
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Hover Effect */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-        style={{
-          background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.02) 0%, transparent 100%)',
-        }}
-      />
     </div>
   );
 }

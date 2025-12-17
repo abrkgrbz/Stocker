@@ -270,8 +270,8 @@ export default function UsersPage() {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium text-white ${
-              record.isActive ? 'bg-blue-500' : 'bg-slate-400'
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${
+              record.isActive ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'
             }`}
           >
             {record.firstName[0]}{record.lastName[0]}

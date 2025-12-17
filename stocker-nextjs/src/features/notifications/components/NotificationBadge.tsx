@@ -22,41 +22,10 @@ export default function NotificationBadge({
     <div className="relative inline-flex">
       {children}
       {showBadge && (
-        <span
-          className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-[11px] font-semibold text-white rounded-full animate-pulse-subtle"
-          style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            boxShadow: '0 2px 8px -2px rgba(239, 68, 68, 0.5)',
-            border: '2px solid white',
-          }}
-        >
+        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center px-1 text-[10px] font-semibold text-white bg-red-500 rounded-full border-2 border-white">
           {displayCount}
         </span>
       )}
-
-      {/* Ping animation for unread notifications */}
-      {count > 0 && (
-        <span
-          className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 rounded-full animate-ping opacity-30"
-          style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          }}
-        />
-      )}
-
-      <style jsx>{`
-        @keyframes pulse-subtle {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-        .animate-pulse-subtle {
-          animation: pulse-subtle 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Dropdown } from 'antd';
-import { BellOutlined } from '@ant-design/icons';
+import { Bell } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationBadge from './NotificationBadge';
@@ -65,33 +65,17 @@ export default function NotificationCenter() {
     >
       <button
         type="button"
-        className="relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 group"
-        style={{
-          background: open ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)' : 'rgba(243, 244, 246, 0.8)',
-          border: open ? '1px solid rgba(139, 92, 246, 0.2)' : '1px solid transparent',
-        }}
+        className={`
+          relative w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150
+          ${open
+            ? 'bg-slate-100 text-slate-900'
+            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+          }
+        `}
       >
         <NotificationBadge count={unreadCount}>
-          <BellOutlined
-            className={`text-lg transition-all duration-200 ${
-              open
-                ? 'text-violet-600'
-                : 'text-gray-500 group-hover:text-violet-600'
-            }`}
-            style={{
-              transform: unreadCount > 0 ? 'rotate(-12deg)' : 'rotate(0deg)',
-              transition: 'transform 0.3s ease',
-            }}
-          />
+          <Bell className="w-[18px] h-[18px]" strokeWidth={1.75} />
         </NotificationBadge>
-
-        {/* Hover ring effect */}
-        <span
-          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          style={{
-            boxShadow: '0 0 0 2px rgba(139, 92, 246, 0.1)',
-          }}
-        />
       </button>
     </Dropdown>
   );
