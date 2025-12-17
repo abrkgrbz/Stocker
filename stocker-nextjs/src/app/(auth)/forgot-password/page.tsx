@@ -12,6 +12,7 @@ type UserType = 'owner' | 'employee' | null
 export default function ForgotPasswordPage() {
   const router = useRouter()
   const [userType, setUserType] = useState<UserType>(null)
+  const [workspaceCode, setWorkspaceCode] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,6 +22,13 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // Validate workspace code for employees
+    if (userType === 'employee' && !workspaceCode.trim()) {
+      setError('Çalışma alanı kodu gereklidir')
+      setLoading(false)
+      return
+    }
 
     // Validate email
     const validation = validatePasswordResetRequest(email)
@@ -32,7 +40,8 @@ export default function ForgotPasswordPage() {
 
     try {
       const { authService } = await import('@/lib/api/services')
-      const response = await authService.forgotPassword(email)
+      // Pass workspace code for employees
+      const response = await authService.forgotPassword(email, userType === 'employee' ? workspaceCode.trim().toLowerCase() : undefined)
 
       if (response.success) {
         setEmailSent(true)
@@ -111,6 +120,7 @@ export default function ForgotPasswordPage() {
               onClick={() => {
                 setEmailSent(false)
                 setEmail('')
+                setWorkspaceCode('')
                 setUserType(null)
               }}
               className="w-full text-slate-500 hover:text-slate-700 py-2 text-sm font-medium transition-colors"
@@ -154,7 +164,9 @@ export default function ForgotPasswordPage() {
           <p className="text-slate-500">
             {!userType
               ? 'Hesap türünüzü seçerek başlayın'
-              : 'E-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.'
+              : userType === 'employee'
+                ? 'Çalışma alanı ve e-posta bilgilerinizi girin'
+                : 'E-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.'
             }
           </p>
         </div>
@@ -239,6 +251,7 @@ export default function ForgotPasswordPage() {
                   onClick={() => {
                     setUserType(null)
                     setEmail('')
+                    setWorkspaceCode('')
                     setError('')
                   }}
                   className="text-sm text-slate-500 hover:text-slate-900 transition-colors"
@@ -260,6 +273,34 @@ export default function ForgotPasswordPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Workspace Code Field - Only for Employees */}
+              {userType === 'employee' && (
+                <div>
+                  <label htmlFor="workspace" className="block text-sm font-medium text-slate-700 mb-2">
+                    Çalışma Alanı Kodu
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="workspace"
+                      type="text"
+                      value={workspaceCode}
+                      onChange={(e) => setWorkspaceCode(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                      placeholder="firma-adi"
+                      required
+                      autoFocus
+                      autoComplete="organization"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                      .stoocker.app
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    Firmanızın Stoocker çalışma alanı kodunu girin
+                  </p>
+                </div>
+              )}
+
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
@@ -273,7 +314,7 @@ export default function ForgotPasswordPage() {
                   className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                   placeholder={userType === 'owner' ? 'sahip@sirket.com' : 'calisan@sirket.com'}
                   required
-                  autoFocus
+                  autoFocus={userType === 'owner'}
                   autoComplete="email"
                 />
               </div>
@@ -281,7 +322,7 @@ export default function ForgotPasswordPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !email}
+                disabled={loading || !email || (userType === 'employee' && !workspaceCode)}
                 className="w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? (
