@@ -1,20 +1,18 @@
 'use client';
 
+/**
+ * Warehouses List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Dropdown,
-  Progress,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -28,6 +26,8 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   StarOutlined,
+  StarFilled,
+  InboxOutlined,
 } from '@ant-design/icons';
 import {
   useWarehouses,
@@ -36,8 +36,12 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { WarehouseDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 export default function WarehousesPage() {
   const router = useRouter();
@@ -109,27 +113,23 @@ export default function WarehousesPage() {
   // Table columns
   const columns: ColumnsType<WarehouseDto> = [
     {
-      title: 'Depo Kodu',
-      dataIndex: 'code',
-      key: 'code',
-      width: 120,
-      render: (code) => <span className="font-medium">{code}</span>,
-    },
-    {
-      title: 'Depo Adı',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name, record) => (
-        <div className="flex items-center gap-2">
-          <div
-            className="font-medium text-blue-600 cursor-pointer hover:text-blue-800"
-            onClick={() => handleView(record.id)}
-          >
-            {name}
+      title: 'Depo',
+      key: 'warehouse',
+      width: 280,
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: record.isDefault ? '#f59e0b15' : '#3b82f615' }}>
+            <ShopOutlined style={{ color: record.isDefault ? '#f59e0b' : '#3b82f6' }} />
           </div>
-          {record.isDefault && (
-            <Tag color="gold" icon={<StarOutlined />}>Varsayılan</Tag>
-          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-900">{record.name}</span>
+              {record.isDefault && (
+                <Tag color="gold" icon={<StarFilled />} style={{ margin: 0 }}>Varsayılan</Tag>
+              )}
+            </div>
+            <div className="text-xs text-slate-500">{record.code}</div>
+          </div>
         </div>
       ),
     },
@@ -139,12 +139,12 @@ export default function WarehousesPage() {
       width: 200,
       render: (_, record) => (
         record.city ? (
-          <div className="flex items-center gap-1">
-            <EnvironmentOutlined className="text-gray-400" />
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <EnvironmentOutlined className="text-slate-400" />
             <span>{record.city}{record.state ? `, ${record.state}` : ''}</span>
           </div>
         ) : (
-          <Text type="secondary">-</Text>
+          <span className="text-slate-400">-</span>
         )
       ),
     },
@@ -153,171 +153,192 @@ export default function WarehousesPage() {
       dataIndex: 'manager',
       key: 'manager',
       width: 150,
-      render: (manager) => manager || '-',
+      render: (manager) => <span className="text-sm text-slate-600">{manager || <span className="text-slate-400">-</span>}</span>,
     },
     {
-      title: 'Konum Sayısı',
+      title: 'Konumlar',
       dataIndex: 'locationCount',
       key: 'locationCount',
-      width: 120,
+      width: 100,
       align: 'center',
-      render: (count) => <Tag color="blue">{count || 0}</Tag>,
+      render: (count) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 rounded">
+          {count || 0}
+        </span>
+      ),
     },
     {
-      title: 'Ürün Sayısı',
+      title: 'Ürünler',
       dataIndex: 'productCount',
       key: 'productCount',
-      width: 120,
+      width: 100,
       align: 'center',
-      render: (count) => <Tag color="green">{count || 0}</Tag>,
+      render: (count) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">
+          {count || 0}
+        </span>
+      ),
     },
     {
-      title: 'Toplam Alan (m²)',
+      title: 'Alan (m²)',
       dataIndex: 'totalArea',
       key: 'totalArea',
-      width: 120,
+      width: 100,
       align: 'right',
-      render: (area) => area ? area.toLocaleString('tr-TR') : '-',
+      render: (area) => <span className="text-sm text-slate-600">{area ? area.toLocaleString('tr-TR') : '-'}</span>,
     },
     {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
-      align: 'center',
       render: (isActive) => (
-        isActive ? (
-          <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
-        ) : (
-          <Tag color="default" icon={<StopOutlined />}>Pasif</Tag>
-        )
+        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: 'Görüntüle',
-                onClick: () => handleView(record.id),
-              },
-              {
-                key: 'edit',
-                icon: <EditOutlined />,
-                label: 'Düzenle',
-                onClick: () => handleEdit(record.id),
-              },
-              {
-                key: 'setDefault',
-                icon: <StarOutlined />,
-                label: 'Varsayılan Yap',
-                disabled: record.isDefault,
-                onClick: () => handleSetDefault(record),
-              },
-              {
-                type: 'divider',
-              },
-              {
-                key: 'delete',
-                icon: <DeleteOutlined />,
-                label: 'Sil',
-                danger: true,
-                disabled: record.isDefault,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => handleView(record.id),
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Düzenle',
+            onClick: () => handleEdit(record.id),
+          },
+          {
+            key: 'setDefault',
+            icon: <StarOutlined />,
+            label: 'Varsayılan Yap',
+            disabled: record.isDefault,
+            onClick: () => handleSetDefault(record),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            disabled: record.isDefault,
+            onClick: () => handleDelete(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Depolar</Title>
-          <Text type="secondary">Depo ve lokasyonlarınızı yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Depo</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalWarehouses}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <ShopOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/inventory/warehouses/new')}>
-            Yeni Depo
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Depo</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeWarehouses}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Konum</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <EnvironmentOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Depolardaki Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <InboxOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Depo"
-              value={totalWarehouses}
-              prefix={<ShopOutlined className="text-blue-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Aktif Depo"
-              value={activeWarehouses}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Konum"
-              value={totalLocations}
-              prefix={<EnvironmentOutlined className="text-purple-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Depolardaki Ürün"
-              value={totalProducts}
-              suffix="çeşit"
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<ShopOutlined />}
+        iconColor="#3b82f6"
+        title="Depolar"
+        description="Depo ve lokasyonlarınızı yönetin"
+        itemCount={totalWarehouses}
+        primaryAction={{
+          label: 'Yeni Depo',
+          onClick: () => router.push('/inventory/warehouses/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-      {/* Warehouses Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={warehouses}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} depo`,
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
-    </div>
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={warehouses}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1200 }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} depo`,
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

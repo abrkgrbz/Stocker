@@ -1,20 +1,22 @@
 'use client';
 
+/**
+ * Categories List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
   Table,
-  Space,
   Tag,
   Input,
-  Typography,
   Popconfirm,
   message,
   Segmented,
   Badge,
   Tooltip,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -26,14 +28,19 @@ import {
   FolderOutlined,
   ApartmentOutlined,
   UnorderedListOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useCategories, useCategoryTree, useDeleteCategory } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
-
-// Tree table item interface with optional children for antd Table
+// Tree table item interface
 interface TreeTableItem {
   id: number;
   code: string;
@@ -56,7 +63,6 @@ function convertToTreeTable(categories: CategoryTreeDto[]): TreeTableItem[] {
   }));
 }
 
-// Count total subcategories recursively
 function countSubCategories(category: TreeTableItem): number {
   if (!category.children || category.children.length === 0) return 0;
   return category.children.length + category.children.reduce((sum, child) => sum + countSubCategories(child), 0);
@@ -78,7 +84,7 @@ export default function CategoriesPage() {
       await deleteCategory.mutateAsync(id);
       message.success('Kategori silindi');
     } catch (error) {
-      message.error('Silme islemi basarisiz');
+      message.error('Silme işlemi başarısız');
     }
   };
 
@@ -86,6 +92,12 @@ export default function CategoriesPage() {
     refetchFlat();
     refetchTree();
   };
+
+  // Calculate stats
+  const totalCategories = categories.length;
+  const activeCategories = categories.filter((c) => c.isActive).length;
+  const rootCategories = categories.filter((c) => !c.parentCategoryId).length;
+  const totalProducts = categories.reduce((sum, c) => sum + (c.productCount || 0), 0);
 
   // Filter flat categories
   const filteredCategories = useMemo(() => {
@@ -96,7 +108,7 @@ export default function CategoriesPage() {
     );
   }, [categories, searchText]);
 
-  // Filter tree categories (search in all levels)
+  // Filter tree categories
   const filteredTreeData = useMemo(() => {
     if (!searchText) return convertToTreeTable(categoryTree);
 
@@ -136,19 +148,19 @@ export default function CategoriesPage() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: '#10b98115' }}
+            style={{ backgroundColor: '#10b98115' }}
           >
             {record.parentCategoryId ? (
-              <FolderOutlined style={{ fontSize: 18, color: '#10b981' }} />
+              <FolderOutlined style={{ color: '#10b981' }} />
             ) : (
-              <TagsOutlined style={{ fontSize: 18, color: '#10b981' }} />
+              <TagsOutlined style={{ color: '#10b981' }} />
             )}
           </div>
           <div>
-            <div className="font-medium text-gray-900">{name}</div>
+            <div className="text-sm font-medium text-slate-900">{name}</div>
             {record.parentCategoryName && (
-              <div className="text-xs text-gray-400">
-                Ust Kategori: {record.parentCategoryName}
+              <div className="text-xs text-slate-500">
+                Üst: {record.parentCategoryName}
               </div>
             )}
           </div>
@@ -156,55 +168,59 @@ export default function CategoriesPage() {
       ),
     },
     {
-      title: 'Aciklama',
+      title: 'Açıklama',
       dataIndex: 'description',
       key: 'description',
+      ellipsis: true,
       render: (desc: string) => (
-        <Text type="secondary" className="text-sm">
-          {desc || '-'}
-        </Text>
+        <span className="text-sm text-slate-600">{desc || <span className="text-slate-400">-</span>}</span>
       ),
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'productCount',
       key: 'productCount',
+      width: 120,
       align: 'center',
       render: (count: number) => (
-        <Tag color="blue">{count || 0}</Tag>
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+          {count || 0}
+        </span>
       ),
     },
     {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
-      align: 'center',
+      width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'}>
-          {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
       ),
     },
     {
-      title: 'Islemler',
+      title: '',
       key: 'actions',
+      width: 100,
       align: 'right',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
+        <div className="flex items-center justify-end gap-1">
+          <button
             onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
-          />
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+          >
+            <EditOutlined />
+          </button>
           <Popconfirm
-            title="Kategoriyi silmek istediginize emin misiniz?"
+            title="Kategoriyi silmek istediğinize emin misiniz?"
             onConfirm={() => handleDelete(record.id)}
             okText="Evet"
-            cancelText="Hayir"
+            cancelText="Hayır"
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+              <DeleteOutlined />
+            </button>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -221,32 +237,30 @@ export default function CategoriesPage() {
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: record.level === 0 ? '#10b98115' : '#f3f4f6' }}
+              style={{ backgroundColor: record.level === 0 ? '#10b98115' : '#f1f5f9' }}
             >
               {record.level === 0 ? (
-                <TagsOutlined style={{ fontSize: 18, color: '#10b981' }} />
+                <TagsOutlined style={{ color: '#10b981' }} />
               ) : (
-                <FolderOutlined style={{ fontSize: 18, color: '#6b7280' }} />
+                <FolderOutlined style={{ color: '#64748b' }} />
               )}
             </div>
-            <div>
-              <div className="font-medium text-gray-900 flex items-center gap-2">
-                {name}
-                {subCount > 0 && (
-                  <Tooltip title={`${subCount} alt kategori`}>
-                    <Badge
-                      count={subCount}
-                      style={{
-                        backgroundColor: '#10b981',
-                        fontSize: 10,
-                        height: 16,
-                        minWidth: 16,
-                        lineHeight: '16px'
-                      }}
-                    />
-                  </Tooltip>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-900">{name}</span>
+              {subCount > 0 && (
+                <Tooltip title={`${subCount} alt kategori`}>
+                  <Badge
+                    count={subCount}
+                    style={{
+                      backgroundColor: '#10b981',
+                      fontSize: 10,
+                      height: 16,
+                      minWidth: 16,
+                      lineHeight: '16px'
+                    }}
+                  />
+                </Tooltip>
+              )}
             </div>
           </div>
         );
@@ -258,7 +272,9 @@ export default function CategoriesPage() {
       key: 'code',
       width: 120,
       render: (code: string) => (
-        <Tag>{code}</Tag>
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+          {code}
+        </span>
       ),
     },
     {
@@ -267,11 +283,14 @@ export default function CategoriesPage() {
       key: 'level',
       width: 100,
       align: 'center',
-      render: (level: number) => (
-        <Tag color={level === 0 ? 'green' : level === 1 ? 'blue' : 'purple'}>
-          Seviye {level + 1}
-        </Tag>
-      ),
+      render: (level: number) => {
+        const colors = ['green', 'blue', 'purple'];
+        return (
+          <Tag color={colors[level] || 'default'}>
+            Seviye {level + 1}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Alt Kategori',
@@ -285,68 +304,122 @@ export default function CategoriesPage() {
       ),
     },
     {
-      title: 'Islemler',
+      title: '',
       key: 'actions',
-      align: 'right',
       width: 100,
+      align: 'right',
       render: (_, record) => (
-        <Space>
-          <Tooltip title="Duzenle">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
+        <div className="flex items-center justify-end gap-1">
+          <Tooltip title="Düzenle">
+            <button
               onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
-            />
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <EditOutlined />
+            </button>
           </Tooltip>
           <Popconfirm
-            title="Kategoriyi silmek istediginize emin misiniz?"
+            title="Kategoriyi silmek istediğinize emin misiniz?"
             description={record.children ? 'Alt kategoriler de silinecektir!' : undefined}
             onConfirm={() => handleDelete(record.id)}
             okText="Evet"
-            cancelText="Hayir"
+            cancelText="Hayır"
           >
             <Tooltip title="Sil">
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                <DeleteOutlined />
+              </button>
             </Tooltip>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="!mb-1">Kategoriler</Title>
-          <Text type="secondary">Urun kategorilerini yonetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Kategori</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalCategories}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <TagsOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/inventory/categories/new')}
-            style={{ background: '#10b981', borderColor: '#10b981' }}
-          >
-            Yeni Kategori
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Kategori</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeCategories}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Ana Kategori</span>
+              <div className="text-2xl font-semibold text-slate-900">{rootCategories}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <ApartmentOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <FolderOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Header */}
+      <ListPageHeader
+        icon={<TagsOutlined />}
+        iconColor="#10b981"
+        title="Kategoriler"
+        description="Ürün kategorilerini yönetin"
+        itemCount={viewMode === 'tree' ? filteredTreeData.length : filteredCategories.length}
+        primaryAction={{
+          label: 'Yeni Kategori',
+          onClick: () => router.push('/inventory/categories/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
       {/* Search and View Toggle */}
-      <Card className="mb-4">
-        <div className="flex justify-between items-center gap-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Input
             placeholder="Kategori ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 300 }}
             allowClear
+            className="h-10"
           />
           <Segmented
             value={viewMode}
@@ -355,46 +428,53 @@ export default function CategoriesPage() {
               {
                 value: 'tree',
                 icon: <ApartmentOutlined />,
-                label: 'Agac Gorunumu',
+                label: 'Ağaç Görünümü',
               },
               {
                 value: 'flat',
                 icon: <UnorderedListOutlined />,
-                label: 'Liste Gorunumu',
+                label: 'Liste Görünümü',
               },
             ]}
           />
         </div>
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card>
-        {viewMode === 'tree' ? (
-          <Table
-            columns={treeColumns}
-            dataSource={filteredTreeData}
-            rowKey="id"
-            loading={isLoading}
-            expandable={{
-              defaultExpandAllRows: true,
-              indentSize: 24,
-            }}
-            pagination={false}
-          />
-        ) : (
-          <Table
-            columns={flatColumns}
-            dataSource={filteredCategories}
-            rowKey="id"
-            loading={isLoading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kategori`,
-            }}
-          />
-        )}
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          {viewMode === 'tree' ? (
+            <Table
+              columns={treeColumns}
+              dataSource={filteredTreeData}
+              rowKey="id"
+              loading={isLoading}
+              expandable={{
+                defaultExpandAllRows: true,
+                indentSize: 24,
+              }}
+              pagination={false}
+            />
+          ) : (
+            <Table
+              columns={flatColumns}
+              dataSource={filteredCategories}
+              rowKey="id"
+              loading={isLoading}
+              pagination={{
+                showSizeChanger: true,
+                showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kategori`,
+              }}
+            />
+          )}
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
