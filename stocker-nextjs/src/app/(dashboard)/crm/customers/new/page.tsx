@@ -32,7 +32,7 @@ export default function NewCustomerPage() {
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
               icon={<ArrowLeftOutlined />}
@@ -68,7 +68,7 @@ export default function NewCustomerPage() {
       </div>
 
       {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
+      <div className="px-8 py-8 max-w-4xl mx-auto">
         <CustomerForm
           form={form}
           onFinish={handleSubmit}

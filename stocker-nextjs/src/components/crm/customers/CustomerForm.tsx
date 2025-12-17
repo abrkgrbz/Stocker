@@ -77,7 +77,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="max-w-4xl mx-auto"
+      className="w-full"
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
