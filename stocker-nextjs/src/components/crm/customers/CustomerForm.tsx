@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   Typography,
-  Segmented,
 } from 'antd';
 import {
   UserOutlined,
@@ -20,18 +19,13 @@ import {
   EnvironmentOutlined,
   DollarOutlined,
   IdcardOutlined,
+  CameraOutlined,
 } from '@ant-design/icons';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { getCityNames, getDistrictsByCity } from '@/lib/data/turkey-cities';
 
 const { TextArea } = Input;
 const { Text } = Typography;
-
-// Customer type options
-const customerTypeOptions = [
-  { value: 'Corporate', label: '🏢 Kurumsal' },
-  { value: 'Individual', label: '👤 Bireysel' },
-];
 
 // Customer status options
 const statusOptions = [
@@ -101,64 +95,30 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
       className="customer-form-modern"
     >
       <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Customer Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {customerType === 'Corporate' ? (
-                <BankOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              ) : (
-                <UserOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              )}
-              <p className="mt-4 text-lg font-medium text-white/90">
-                {customerType === 'Corporate' ? 'Kurumsal Müşteri' : 'Bireysel Müşteri'}
-              </p>
-              <p className="text-sm text-white/60">
-                Müşteri bilgilerini yönetin
-              </p>
-            </div>
-          </div>
-
-          {/* Customer Type Selection */}
+        {/* Left Panel - Logo & Status (30%) */}
+        <Col xs={24} lg={8}>
+          {/* Logo Placeholder */}
           <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Müşteri Tipi
-            </Text>
-            <Form.Item name="customerType" className="mb-0" initialValue="Corporate">
-              <Segmented
-                block
-                options={customerTypeOptions}
-                value={customerType}
-                onChange={(val) => {
-                  setCustomerType(val as string);
-                  form.setFieldValue('customerType', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
+            <div className="w-32 h-32 mx-auto rounded-full bg-slate-100 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all">
+              {customerType === 'Corporate' ? (
+                <BankOutlined className="text-3xl text-slate-300 mb-1" />
+              ) : (
+                <UserOutlined className="text-3xl text-slate-300 mb-1" />
+              )}
+              <CameraOutlined className="text-xs text-slate-400" />
+            </div>
+            <p className="text-center text-xs text-slate-400 mt-2">Logo Ekle</p>
           </div>
 
           {/* Status Selection */}
           <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2 block">
               Durum
             </Text>
             <Form.Item name="status" className="mb-0" initialValue="Active">
               <Select
                 options={statusOptions}
-                variant="filled"
+                className="w-full"
                 size="large"
               />
             </Form.Item>
@@ -166,27 +126,65 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
 
           {/* Quick Stats for Edit Mode */}
           {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
+            <div className="space-y-3 mt-6">
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <div className="text-xs text-slate-400 mb-1">Kredi Limiti</div>
+                <div className="text-xl font-semibold text-slate-900">
                   ₺{(initialValues.creditLimit || 0).toLocaleString('tr-TR')}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Kredi Limiti</div>
               </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.status === 'Active' ? '✓ Aktif' : initialValues.status}
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <div className="text-xs text-slate-400 mb-1">Toplam Alışveriş</div>
+                <div className="text-xl font-semibold text-slate-900">
+                  ₺{(initialValues.totalPurchases || 0).toLocaleString('tr-TR')}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Durum</div>
               </div>
             </div>
           )}
         </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
+        {/* Right Panel - Form Content (70%) */}
+        <Col xs={24} lg={16}>
+          {/* Customer Type - Segmented Control at Top */}
+          <div className="mb-6">
+            <Form.Item name="customerType" className="mb-0" initialValue="Corporate">
+              <div className="flex w-full bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomerType('Corporate');
+                    form.setFieldValue('customerType', 'Corporate');
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
+                    customerType === 'Corporate'
+                      ? 'bg-white shadow-sm text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <BankOutlined className="mr-2" />
+                  Kurumsal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomerType('Individual');
+                    form.setFieldValue('customerType', 'Individual');
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
+                    customerType === 'Individual'
+                      ? 'bg-white shadow-sm text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <UserOutlined className="mr-2" />
+                  Bireysel
+                </button>
+              </div>
+            </Form.Item>
+          </div>
+
           {/* Company Name - Hero Input */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Form.Item
               name="companyName"
               rules={[
@@ -199,12 +197,12 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 placeholder={customerType === 'Corporate' ? 'Firma Adı' : 'Ad Soyad'}
                 variant="borderless"
                 style={{
-                  fontSize: '28px',
+                  fontSize: '24px',
                   fontWeight: 600,
                   padding: '0',
-                  color: '#1a1a1a',
+                  color: '#0f172a',
                 }}
-                className="placeholder:text-gray-300"
+                className="placeholder:text-slate-300"
               />
             </Form.Item>
             <Form.Item name="notes" className="mb-0 mt-2">
@@ -213,37 +211,36 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 variant="borderless"
                 autoSize={{ minRows: 2, maxRows: 4 }}
                 style={{
-                  fontSize: '15px',
+                  fontSize: '14px',
                   padding: '0',
-                  color: '#666',
+                  color: '#64748b',
                   resize: 'none'
                 }}
-                className="placeholder:text-gray-300"
+                className="placeholder:text-slate-300"
               />
             </Form.Item>
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+          <div className="h-px bg-slate-100 mb-6" />
 
           {/* Contact Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+          <div className="mb-6">
+            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
               <MailOutlined className="mr-1" /> İletişim Bilgileri
             </Text>
             <Row gutter={16}>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">İrtibat Kişisi</div>
+                <div className="text-xs text-slate-400 mb-1">İrtibat Kişisi</div>
                 <Form.Item name="contactPerson" className="mb-3">
                   <Input
                     placeholder="Mehmet Demir"
-                    variant="filled"
-                    prefix={<UserOutlined className="text-gray-400" />}
+                    prefix={<UserOutlined className="text-slate-400" />}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">E-posta *</div>
+                <div className="text-xs text-slate-400 mb-1">E-posta *</div>
                 <Form.Item
                   name="email"
                   rules={[
@@ -254,30 +251,27 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 >
                   <Input
                     placeholder="ornek@firma.com"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
+                    prefix={<MailOutlined className="text-slate-400" />}
                   />
                 </Form.Item>
               </Col>
             </Row>
             <Row gutter={16}>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Telefon</div>
+                <div className="text-xs text-slate-400 mb-1">Telefon</div>
                 <Form.Item name="phone" className="mb-3">
                   <Input
                     placeholder="+90 (555) 123-4567"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
+                    prefix={<PhoneOutlined className="text-slate-400" />}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Web Sitesi</div>
+                <div className="text-xs text-slate-400 mb-1">Web Sitesi</div>
                 <Form.Item name="website" className="mb-3">
                   <Input
                     placeholder="https://www.firma.com"
-                    variant="filled"
-                    prefix={<GlobalOutlined className="text-gray-400" />}
+                    prefix={<GlobalOutlined className="text-slate-400" />}
                   />
                 </Form.Item>
               </Col>
@@ -285,28 +279,26 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+          <div className="h-px bg-slate-100 mb-6" />
 
           {/* Address Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+          <div className="mb-6">
+            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
               <EnvironmentOutlined className="mr-1" /> Adres Bilgileri
             </Text>
             <Form.Item name="address" className="mb-3">
               <TextArea
                 placeholder="Sokak, Mahalle, Bina No..."
-                variant="filled"
                 rows={2}
                 maxLength={200}
               />
             </Form.Item>
             <Row gutter={16}>
               <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Şehir</div>
+                <div className="text-xs text-slate-400 mb-1">Şehir</div>
                 <Form.Item name="city" className="mb-3">
                   <Select
                     placeholder="Şehir seçin"
-                    variant="filled"
                     showSearch
                     optionFilterProp="children"
                     onChange={handleCityChange}
@@ -320,11 +312,10 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">İlçe</div>
+                <div className="text-xs text-slate-400 mb-1">İlçe</div>
                 <Form.Item name="state" className="mb-3">
                   <Select
                     placeholder={selectedCity ? 'İlçe seçin' : 'Önce şehir seçin'}
-                    variant="filled"
                     showSearch
                     optionFilterProp="children"
                     disabled={!selectedCity}
@@ -338,9 +329,9 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Posta Kodu</div>
+                <div className="text-xs text-slate-400 mb-1">Posta Kodu</div>
                 <Form.Item name="postalCode" className="mb-3">
-                  <Input placeholder="34000" variant="filled" maxLength={10} />
+                  <Input placeholder="34000" maxLength={10} />
                 </Form.Item>
               </Col>
             </Row>
@@ -350,16 +341,16 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+          <div className="h-px bg-slate-100 mb-6" />
 
           {/* Financial Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+          <div className="mb-6">
+            <Text className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3 block">
               <DollarOutlined className="mr-1" /> Mali Bilgiler
             </Text>
             <Row gutter={16}>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Vergi Numarası</div>
+                <div className="text-xs text-slate-400 mb-1">Vergi Numarası</div>
                 <Form.Item
                   name="taxId"
                   rules={[
@@ -369,18 +360,16 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 >
                   <Input
                     placeholder="1234567890"
-                    variant="filled"
-                    prefix={<IdcardOutlined className="text-gray-400" />}
+                    prefix={<IdcardOutlined className="text-slate-400" />}
                     maxLength={11}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kredi Limiti</div>
+                <div className="text-xs text-slate-400 mb-1">Kredi Limiti</div>
                 <Form.Item name="creditLimit" className="mb-3" initialValue={0}>
                   <InputNumber
                     style={{ width: '100%' }}
-                    variant="filled"
                     formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
                     min={0}
@@ -390,11 +379,10 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
             </Row>
             <Row gutter={16}>
               <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Ödeme Koşulları</div>
+                <div className="text-xs text-slate-400 mb-1">Ödeme Koşulları</div>
                 <Form.Item name="paymentTerms" className="mb-0">
                   <Select
                     placeholder="Ödeme koşulu seçin"
-                    variant="filled"
                     options={paymentTermsOptions}
                     allowClear
                   />
