@@ -1,10 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Progress } from 'antd';
 import { AnimatedCard } from '../shared/AnimatedCard';
-
-const { Text } = Typography;
 
 interface SalesFunnelProps {
   totalLeads: number;
@@ -25,53 +22,31 @@ export function SalesFunnel({
   const dealsPercent = totalLeads > 0 ? (openDeals / totalLeads) * 100 : 0;
   const wonPercent = totalLeads > 0 ? (wonDeals / totalLeads) * 100 : 0;
 
+  const stages = [
+    { label: 'Potansiyel Müşteriler', value: totalLeads, percent: 100, shade: 'bg-slate-900' },
+    { label: 'Nitelikli Leads', value: qualifiedLeads, percent: qualifiedPercent, shade: 'bg-slate-700' },
+    { label: 'Açık Fırsatlar', value: openDeals, percent: dealsPercent, shade: 'bg-slate-500' },
+    { label: 'Kazanılan Anlaşmalar', value: wonDeals, percent: wonPercent, shade: 'bg-slate-400' },
+  ];
+
   return (
     <AnimatedCard title="Satış Hunisi" loading={loading}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
-        <div>
-          <div className="flex justify-between mb-2">
-            <Text>Potansiyel Müşteriler</Text>
-            <Text strong>{totalLeads}</Text>
+      <div className="space-y-5">
+        {stages.map((stage, index) => (
+          <div key={stage.label}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-slate-600">{stage.label}</span>
+              <span className="text-sm font-semibold text-slate-900">{stage.value}</span>
+            </div>
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${stage.shade} rounded-full transition-all duration-500`}
+                style={{ width: `${stage.percent}%` }}
+              />
+            </div>
           </div>
-          <Progress percent={100} strokeColor="#1890ff" showInfo={false} />
-        </div>
-
-        <div>
-          <div className="flex justify-between mb-2">
-            <Text>Nitelikli Leads</Text>
-            <Text strong>{qualifiedLeads}</Text>
-          </div>
-          <Progress
-            percent={qualifiedPercent}
-            strokeColor="#52c41a"
-            showInfo={false}
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between mb-2">
-            <Text>Açık Fırsatlar</Text>
-            <Text strong>{openDeals}</Text>
-          </div>
-          <Progress
-            percent={dealsPercent}
-            strokeColor="#fa8c16"
-            showInfo={false}
-          />
-        </div>
-
-        <div>
-          <div className="flex justify-between mb-2">
-            <Text>Kazanılan Anlaşmalar</Text>
-            <Text strong>{wonDeals}</Text>
-          </div>
-          <Progress
-            percent={wonPercent}
-            strokeColor="#722ed1"
-            showInfo={false}
-          />
-        </div>
-      </Space>
+        ))}
+      </div>
     </AnimatedCard>
   );
 }

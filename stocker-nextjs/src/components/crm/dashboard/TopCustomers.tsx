@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { List, Typography, Tag } from 'antd';
+import { List, Typography } from 'antd';
 import Link from 'next/link';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import { formatCurrency } from '@/lib/crm';
@@ -23,8 +23,8 @@ export function TopCustomers({ customers, loading = false }: TopCustomersProps) 
           <List.Item>
             <List.Item.Meta
               avatar={
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Text strong className="text-blue-600">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Text strong className="text-slate-600">
                     #{index + 1}
                   </Text>
                 </div>
@@ -32,20 +32,24 @@ export function TopCustomers({ customers, loading = false }: TopCustomersProps) 
               title={
                 <Link
                   href={`/crm/customers/${customer.id}`}
-                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                  className="text-slate-900 hover:text-slate-600"
                 >
                   {customer.companyName}
                 </Link>
               }
-              description={customer.contactPerson}
+              description={<span className="text-slate-400">{customer.contactPerson}</span>}
             />
             <div className="text-right">
-              <div className="font-semibold text-lg">
+              <div className="font-semibold text-lg text-slate-900">
                 {formatCurrency(customer.totalPurchases)}
               </div>
-              <Tag color={customer.status === 'Active' ? 'success' : 'default'}>
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                customer.status === 'Active'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-500'
+              }`}>
                 {customer.status === 'Active' ? 'Aktif' : 'Pasif'}
-              </Tag>
+              </span>
             </div>
           </List.Item>
         )}

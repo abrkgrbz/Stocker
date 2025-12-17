@@ -28,32 +28,24 @@ export function MetricsOverview({
       title: 'Toplam Müşteri',
       value: totalCustomers.toLocaleString('tr-TR'),
       icon: TeamOutlined,
-      color: '#1890ff',
-      bgColor: 'bg-blue-50',
       subtitle: activationRate > 0 ? `${formatPercent(activationRate)} aktivasyon` : 'Son aya göre artış',
     },
     {
       title: 'Aktif Müşteri',
       value: activeCustomers.toLocaleString('tr-TR'),
       icon: UserOutlined,
-      color: '#52c41a',
-      bgColor: 'bg-green-50',
       subtitle: 'Aktif müşteri sayısı',
     },
     {
       title: 'Toplam Gelir',
       value: formatCurrency(totalRevenue),
       icon: DollarOutlined,
-      color: '#722ed1',
-      bgColor: 'bg-purple-50',
       subtitle: 'Bu ayki toplam',
     },
     {
       title: 'Ortalama Değer',
       value: formatCurrency(avgCustomerValue),
       icon: TrophyOutlined,
-      color: '#fa8c16',
-      bgColor: 'bg-orange-50',
       subtitle: 'Müşteri başına',
     },
   ];
@@ -82,22 +74,22 @@ export function MetricsOverview({
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card
-                className="hover:shadow-lg transition-shadow duration-300 h-full"
-                bordered={false}
+                className="hover:shadow-lg transition-shadow duration-300 h-full border-slate-200"
+                bordered
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className={`p-3 rounded-lg ${metric.bgColor}`}>
-                    <Icon style={{ fontSize: 24, color: metric.color }} />
+                  <div className="p-3 rounded-lg bg-slate-100">
+                    <Icon className="text-slate-600" style={{ fontSize: 20 }} />
                   </div>
                 </div>
 
                 <Statistic
-                  title={<span className="text-gray-600 font-normal">{metric.title}</span>}
+                  title={<span className="text-slate-500 font-normal text-sm">{metric.title}</span>}
                   value={metric.value}
-                  valueStyle={{ fontSize: 24, fontWeight: 600, color: '#262626' }}
+                  valueStyle={{ fontSize: 24, fontWeight: 600, color: '#0f172a' }}
                 />
 
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-slate-400">
                   {metric.subtitle}
                 </div>
               </Card>

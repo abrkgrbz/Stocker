@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Tag, Empty, Alert } from 'antd';
+import { Typography, Space, Empty, Alert } from 'antd';
 import {
   WarningOutlined,
   PhoneOutlined,
   MailOutlined,
   TeamOutlined,
   FileTextOutlined,
-  ClockCircleOutlined,
   CalendarOutlined,
   CheckCircleOutlined
 } from '@ant-design/icons';
@@ -27,13 +26,6 @@ const activityIcons: Record<string, any> = {
   Email: MailOutlined,
   Meeting: TeamOutlined,
   Task: FileTextOutlined,
-};
-
-const activityColors: Record<string, string> = {
-  Call: 'blue',
-  Email: 'cyan',
-  Meeting: 'purple',
-  Task: 'green',
 };
 
 export function OverdueTasks({
@@ -62,14 +54,18 @@ export function OverdueTasks({
     return (
       <AnimatedCard title="Gecikmiş Görevler" loading={loading}>
         <Empty
-          image={<CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a' }} />}
+          image={
+            <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
+              <CheckCircleOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+            </div>
+          }
           imageStyle={{ height: 60 }}
           description={
             <div className="text-center">
-              <div className="text-base text-green-600 font-medium mb-2">
-                Harika! Gecikmiş görev yok
+              <div className="text-sm font-medium text-slate-600 mb-1">
+                Gecikmiş görev yok
               </div>
-              <Text type="secondary">Tüm görevler zamanında tamamlanıyor</Text>
+              <Text type="secondary" className="text-xs text-slate-400">Tüm görevler zamanında</Text>
             </div>
           }
         />
@@ -83,28 +79,29 @@ export function OverdueTasks({
     <AnimatedCard
       title={
         <div className="flex items-center gap-2">
-          <WarningOutlined className="text-orange-500" />
+          <WarningOutlined className="text-slate-500" />
           <span>Gecikmiş Görevler</span>
-          <Tag color="error">{overdueActivities.length}</Tag>
+          <span className="px-2 py-0.5 text-xs rounded-full bg-slate-900 text-white">
+            {overdueActivities.length}
+          </span>
         </div>
       }
       loading={loading}
-      extra={<Link href="/crm/activities?filter=overdue">Tümünü Gör</Link>}
+      extra={<Link href="/crm/activities?filter=overdue" className="!text-slate-500 hover:!text-slate-700">Tümünü Gör</Link>}
     >
       {criticalCount > 0 && (
         <Alert
-          message={`${criticalCount} kritik görev 7 günden fazla gecikmiş!`}
-          type="error"
+          message={`${criticalCount} kritik görev 7 günden fazla gecikmiş`}
+          type="warning"
           showIcon
           icon={<WarningOutlined />}
-          className="mb-3"
+          className="mb-3 !bg-slate-50 !border-slate-200"
         />
       )}
 
       <Space direction="vertical" style={{ width: '100%' }} size="small">
         {overdueActivities.slice(0, 6).map((activity) => {
           const Icon = activityIcons[activity.type] || FileTextOutlined;
-          const color = activityColors[activity.type] || 'default';
           const daysOverdue = activity.scheduledAt ? getDaysOverdue(activity.scheduledAt) : 0;
           const isCritical = daysOverdue > 7;
           const dueDate = activity.scheduledAt ? new Date(activity.scheduledAt).toLocaleDateString('tr-TR') : 'N/A';
@@ -112,26 +109,28 @@ export function OverdueTasks({
           return (
             <div
               key={activity.id}
-              className={`p-3 border rounded-lg hover:shadow-md transition-all ${
+              className={`p-3 border rounded-lg hover:shadow-sm transition-all ${
                 isCritical
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-orange-200 bg-orange-50'
+                  ? 'border-slate-300 bg-slate-50'
+                  : 'border-slate-200 bg-white'
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isCritical ? 'bg-red-200' : 'bg-orange-200'}`}>
-                  <Icon className={`text-lg ${isCritical ? 'text-red-600' : 'text-orange-600'}`} />
+                <div className={`p-2 rounded-lg ${isCritical ? 'bg-slate-200' : 'bg-slate-100'}`}>
+                  <Icon className={`text-base ${isCritical ? 'text-slate-700' : 'text-slate-500'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Text strong className="truncate text-gray-900">
+                    <Text strong className="truncate text-slate-900">
                       {activity.subject}
                     </Text>
-                    <Tag color={isCritical ? 'error' : 'warning'} className="flex-shrink-0">
+                    <span className={`px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${
+                      isCritical ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
+                    }`}>
                       {daysOverdue} gün
-                    </Tag>
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
                     <CalendarOutlined />
                     <span>Termin: {dueDate}</span>
                     {activity.relatedToName && (
@@ -142,16 +141,22 @@ export function OverdueTasks({
                     )}
                   </div>
                   {activity.description && (
-                    <Text type="secondary" className="text-xs line-clamp-1">
+                    <Text type="secondary" className="text-xs line-clamp-1 text-slate-400">
                       {activity.description}
                     </Text>
                   )}
                 </div>
                 <div className="flex flex-col gap-1 items-end flex-shrink-0">
-                  <Tag color={color}>{activity.type}</Tag>
-                  <Tag color={activity.priority === 'High' ? 'red' : activity.priority === 'Medium' ? 'orange' : 'default'}>
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
+                    {activity.type}
+                  </span>
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    activity.priority === 'High' ? 'bg-slate-900 text-white' :
+                    activity.priority === 'Medium' ? 'bg-slate-200 text-slate-700' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>
                     {activity.priority}
-                  </Tag>
+                  </span>
                 </div>
               </div>
             </div>
@@ -161,7 +166,7 @@ export function OverdueTasks({
 
       {overdueActivities.length > 6 && (
         <div className="mt-3 text-center">
-          <Link href="/crm/activities?filter=overdue" className="text-orange-600 hover:text-orange-700">
+          <Link href="/crm/activities?filter=overdue" className="text-slate-500 hover:text-slate-700">
             +{overdueActivities.length - 6} gecikmiş görev daha
           </Link>
         </div>

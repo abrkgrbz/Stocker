@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Tag, Empty, Badge, Button } from 'antd';
+import { Typography, Space, Empty, Badge, Button } from 'antd';
 import {
   CalendarOutlined,
   PhoneOutlined,
@@ -29,13 +29,6 @@ const activityIcons: Record<string, any> = {
   Task: FileTextOutlined,
 };
 
-const activityColors: Record<string, string> = {
-  Call: 'blue',
-  Email: 'cyan',
-  Meeting: 'purple',
-  Task: 'green',
-};
-
 export function TodaysActivities({
   activities,
   loading = false,
@@ -61,18 +54,26 @@ export function TodaysActivities({
     return (
       <AnimatedCard title="Bugünün Aktiviteleri" loading={loading}>
         <Empty
-          image={<CalendarOutlined style={{ fontSize: 64, color: '#1890ff' }} />}
-          imageStyle={{ height: 80 }}
+          image={
+            <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
+              <CalendarOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+            </div>
+          }
+          imageStyle={{ height: 60 }}
           description={
             <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 mb-2">
-                Bugün İçin Planlanmış Aktivite Yok
+              <div className="text-sm font-medium text-slate-600 mb-1">
+                Bugün planlanmış aktivite yok
               </div>
-              <div className="text-sm text-gray-500 mb-4">
-                Gününüzü planlamak için yeni bir görev, toplantı veya arama oluşturun.
+              <div className="text-xs text-slate-400 mb-4">
+                Yeni bir görev veya toplantı oluşturun
               </div>
               <Link href="/crm/activities">
-                <Button type="primary" icon={<PlusOutlined />}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
+                >
                   Aktivite Planla
                 </Button>
               </Link>
@@ -88,19 +89,19 @@ export function TodaysActivities({
       title={
         <div className="flex items-center gap-2">
           <span>Bugünün Aktiviteleri</span>
-          <Badge count={pendingCount} style={{ backgroundColor: '#1890ff' }} />
+          <Badge count={pendingCount} style={{ backgroundColor: '#0f172a' }} />
         </div>
       }
       loading={loading}
-      extra={<Link href="/crm/activities">Tümünü Gör</Link>}
+      extra={<Link href="/crm/activities" className="!text-slate-500 hover:!text-slate-700">Tümünü Gör</Link>}
     >
       <div className="mb-3 flex gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <CheckCircleOutlined className="text-green-500" />
+          <CheckCircleOutlined className="text-slate-400" />
           <Text type="secondary">{completedCount} Tamamlandı</Text>
         </div>
         <div className="flex items-center gap-2">
-          <ClockCircleOutlined className="text-blue-500" />
+          <ClockCircleOutlined className="text-slate-600" />
           <Text type="secondary">{pendingCount} Bekliyor</Text>
         </div>
       </div>
@@ -108,7 +109,6 @@ export function TodaysActivities({
       <Space direction="vertical" style={{ width: '100%' }} size="small">
         {todaysActivities.slice(0, 8).map((activity) => {
           const Icon = activityIcons[activity.type] || FileTextOutlined;
-          const color = activityColors[activity.type] || 'default';
           const time = new Intl.DateTimeFormat('tr-TR', {
             hour: '2-digit',
             minute: '2-digit'
@@ -119,26 +119,26 @@ export function TodaysActivities({
             <div
               key={activity.id}
               className={`p-3 border rounded-lg hover:shadow-sm transition-all ${
-                isCompleted ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'
+                isCompleted ? 'border-slate-100 bg-slate-50' : 'border-slate-200 bg-white'
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isCompleted ? 'bg-gray-200' : `bg-${color}-100`}`}>
-                  <Icon className={`text-lg ${isCompleted ? 'text-gray-500' : `text-${color}-600`}`} />
+                <div className={`p-2 rounded-lg ${isCompleted ? 'bg-slate-100' : 'bg-slate-100'}`}>
+                  <Icon className={`text-base ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Text
                       strong={!isCompleted}
-                      className={`truncate ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}
+                      className={`truncate ${isCompleted ? 'line-through text-slate-400' : 'text-slate-900'}`}
                     >
                       {activity.subject}
                     </Text>
                     {isCompleted && (
-                      <CheckCircleOutlined className="text-green-500 flex-shrink-0" />
+                      <CheckCircleOutlined className="text-slate-400 flex-shrink-0" />
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
                     <ClockCircleOutlined />
                     <span>{time}</span>
                     {activity.relatedToName && (
@@ -149,7 +149,9 @@ export function TodaysActivities({
                     )}
                   </div>
                 </div>
-                <Tag color={color}>{activity.type}</Tag>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
+                  {activity.type}
+                </span>
               </div>
             </div>
           );
@@ -158,7 +160,7 @@ export function TodaysActivities({
 
       {todaysActivities.length > 8 && (
         <div className="mt-3 text-center">
-          <Link href="/crm/activities">
+          <Link href="/crm/activities" className="text-slate-500 hover:text-slate-700">
             +{todaysActivities.length - 8} aktivite daha
           </Link>
         </div>

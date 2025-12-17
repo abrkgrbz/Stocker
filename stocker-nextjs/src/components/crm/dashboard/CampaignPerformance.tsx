@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Typography, Space, Tag, Progress, Empty, Button } from 'antd';
+import { Typography, Space, Empty, Button } from 'antd';
 import {
   MailOutlined,
   EyeOutlined,
   LinkOutlined,
-  DollarOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   PlusOutlined
@@ -28,26 +27,34 @@ export function CampaignPerformance({
 }: CampaignPerformanceProps) {
   // Filter active campaigns and sort by ROI
   const activeCampaigns = campaigns
-    .filter(c => c.status === 'InProgress') // Changed from 'Active' to 'InProgress'
+    .filter(c => c.status === 'InProgress')
     .sort((a, b) => (b.roi || 0) - (a.roi || 0))
-    .slice(0, 5); // Top 5
+    .slice(0, 5);
 
   if (!loading && activeCampaigns.length === 0) {
     return (
       <AnimatedCard title="Kampanya Performansı" loading={loading}>
         <Empty
-          image={<MailOutlined style={{ fontSize: 64, color: '#fa8c16' }} />}
-          imageStyle={{ height: 80 }}
+          image={
+            <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
+              <MailOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+            </div>
+          }
+          imageStyle={{ height: 60 }}
           description={
             <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 mb-2">
-                Aktif Kampanya Bulunmuyor
+              <div className="text-sm font-medium text-slate-600 mb-1">
+                Aktif kampanya yok
               </div>
-              <div className="text-sm text-gray-500 mb-4">
-                İlk kampanyanızı oluşturun ve müşterilerinizle etkileşime geçin.
+              <div className="text-xs text-slate-400 mb-4">
+                Yeni kampanya oluşturarak müşterilerinizle etkileşime geçin
               </div>
               <Link href="/crm/campaigns">
-                <Button type="primary" icon={<PlusOutlined />}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
+                >
                   Yeni Kampanya
                 </Button>
               </Link>
@@ -62,7 +69,7 @@ export function CampaignPerformance({
     <AnimatedCard
       title="Kampanya Performansı"
       loading={loading}
-      extra={<Link href="/crm/campaigns">Tümünü Gör</Link>}
+      extra={<Link href="/crm/campaigns" className="!text-slate-500 hover:!text-slate-700">Tümünü Gör</Link>}
     >
       <Space direction="vertical" style={{ width: '100%' }} size="middle">
         {activeCampaigns.map((campaign) => {
@@ -81,24 +88,26 @@ export function CampaignPerformance({
           return (
             <div
               key={campaign.id}
-              className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+              className="p-4 border border-slate-200 rounded-lg hover:shadow-sm transition-shadow"
             >
               {/* Campaign Header */}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <Link href={`/crm/campaigns?id=${campaign.id}`} className="font-semibold text-gray-900">
+                  <Link href={`/crm/campaigns?id=${campaign.id}`} className="font-semibold text-slate-900 hover:text-slate-700">
                     {campaign.name}
                   </Link>
                   <div className="flex gap-2 mt-1">
-                    <Tag color={campaign.type === 'Email' ? 'blue' : 'purple'}>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
                       {campaign.type === 'Email' ? '📧 E-posta' : '🔔 ' + campaign.type}
-                    </Tag>
+                    </span>
                     {campaign.targetSegmentName && (
-                      <Tag>{campaign.targetSegmentName}</Tag>
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-slate-50 text-slate-500">
+                        {campaign.targetSegmentName}
+                      </span>
                     )}
                   </div>
                 </div>
-                <div className={`flex items-center gap-1 ${roiPositive ? 'text-green-600' : 'text-red-600'} font-bold`}>
+                <div className={`flex items-center gap-1 ${roiPositive ? 'text-slate-900' : 'text-slate-400'} font-bold text-sm`}>
                   {roiPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
                   {formatPercent(roi)} ROI
                 </div>
@@ -107,48 +116,48 @@ export function CampaignPerformance({
               {/* Campaign Metrics */}
               <div className="grid grid-cols-3 gap-3 mb-3">
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Teslim</div>
+                  <div className="text-xs text-slate-400 mb-1">Teslim</div>
                   <div className="flex items-center justify-center gap-1">
-                    <MailOutlined className="text-blue-500" />
-                    <Text strong>{campaign.deliveredCount}</Text>
+                    <MailOutlined className="text-slate-500" />
+                    <Text strong className="text-slate-900">{campaign.deliveredCount}</Text>
                   </div>
-                  <Progress
-                    percent={deliveryRate}
-                    size="small"
-                    showInfo={false}
-                    strokeColor="#1890ff"
-                  />
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="h-full bg-slate-900 rounded-full"
+                      style={{ width: `${deliveryRate}%` }}
+                    />
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Açılma</div>
+                  <div className="text-xs text-slate-400 mb-1">Açılma</div>
                   <div className="flex items-center justify-center gap-1">
-                    <EyeOutlined className="text-green-500" />
-                    <Text strong>{campaign.openedCount}</Text>
+                    <EyeOutlined className="text-slate-500" />
+                    <Text strong className="text-slate-900">{campaign.openedCount}</Text>
                   </div>
-                  <Progress
-                    percent={openRate}
-                    size="small"
-                    showInfo={false}
-                    strokeColor="#52c41a"
-                  />
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="h-full bg-slate-700 rounded-full"
+                      style={{ width: `${openRate}%` }}
+                    />
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Tıklama</div>
+                  <div className="text-xs text-slate-400 mb-1">Tıklama</div>
                   <div className="flex items-center justify-center gap-1">
-                    <LinkOutlined className="text-purple-500" />
-                    <Text strong>{campaign.clickedCount}</Text>
+                    <LinkOutlined className="text-slate-500" />
+                    <Text strong className="text-slate-900">{campaign.clickedCount}</Text>
                   </div>
-                  <Progress
-                    percent={clickRate}
-                    size="small"
-                    showInfo={false}
-                    strokeColor="#722ed1"
-                  />
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div
+                      className="h-full bg-slate-500 rounded-full"
+                      style={{ width: `${clickRate}%` }}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Budget and Revenue */}
-              <div className="flex justify-between text-xs text-gray-600 pt-2 border-t border-gray-100">
+              <div className="flex justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
                 <span>Bütçe: {formatCurrency(campaign.budget || 0)}</span>
                 <span>Gelir: {formatCurrency(campaign.revenue || 0)}</span>
               </div>

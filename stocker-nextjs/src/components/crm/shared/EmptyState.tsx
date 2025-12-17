@@ -1,12 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Typography } from 'antd';
-
-const { Text } = Typography;
 
 interface EmptyStateProps {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   title: string;
   description: string;
   action?: React.ReactNode;
@@ -15,11 +12,13 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <Icon className="text-6xl text-gray-300 mb-4" />
-      <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
-      <Text type="secondary" className="mb-6 text-center">
+      <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mb-4">
+        <Icon className="text-slate-300" style={{ fontSize: 20 }} />
+      </div>
+      <h3 className="text-sm font-medium text-slate-600 mb-1">{title}</h3>
+      <p className="text-xs text-slate-400 mb-4 text-center max-w-xs">
         {description}
-      </Text>
+      </p>
       {action}
     </div>
   );

@@ -21,7 +21,6 @@ import {
 import Link from 'next/link';
 import { useCustomers, useLeads, useDeals, useActivities, useCampaigns, usePipelines } from '@/lib/api/hooks/useCRM';
 import {
-  MetricsOverview,
   SalesFunnel,
   TopCustomers,
   CampaignPerformance,
@@ -74,12 +73,12 @@ export default function CRMDashboardPage() {
   // Calculate all metrics using utility function
   const metrics = calculateDashboardMetrics({ customers, leads, deals });
 
-  // Quick navigation items
+  // Quick navigation items - monochrome slate colors
   const quickNavItems = [
-    { label: 'Müşteriler', href: '/crm/customers', icon: <TeamOutlined />, color: '#3b82f6' },
-    { label: 'Potansiyel Müşteriler', href: '/crm/leads', icon: <UserAddOutlined />, color: '#8b5cf6' },
-    { label: 'Fırsatlar', href: '/crm/deals', icon: <TrophyOutlined />, color: '#f59e0b' },
-    { label: 'Aktiviteler', href: '/crm/activities', icon: <CalendarOutlined />, color: '#10b981' },
+    { label: 'Müşteriler', href: '/crm/customers', icon: <TeamOutlined />, count: metrics.totalCustomers },
+    { label: 'Potansiyel Müşteriler', href: '/crm/leads', icon: <UserAddOutlined />, count: metrics.totalLeads },
+    { label: 'Fırsatlar', href: '/crm/deals', icon: <TrophyOutlined />, count: metrics.openDeals },
+    { label: 'Aktiviteler', href: '/crm/activities', icon: <CalendarOutlined />, count: activities.length },
   ];
 
   // Recent activities columns
@@ -107,16 +106,13 @@ export default function CRMDashboardPage() {
       key: 'status',
       render: (status) => {
         const variants: Record<string, { bg: string; text: string; label: string }> = {
-          Completed: { bg: '#10b98115', text: '#10b981', label: 'Tamamlandı' },
-          Scheduled: { bg: '#3b82f615', text: '#3b82f6', label: 'Planlandı' },
-          Cancelled: { bg: '#64748b15', text: '#64748b', label: 'İptal' },
+          Completed: { bg: 'bg-slate-100', text: 'text-slate-700', label: 'Tamamlandı' },
+          Scheduled: { bg: 'bg-slate-900', text: 'text-white', label: 'Planlandı' },
+          Cancelled: { bg: 'bg-slate-50', text: 'text-slate-400', label: 'İptal' },
         };
         const variant = variants[status] || variants.Cancelled;
         return (
-          <span
-            className="px-2 py-0.5 text-xs rounded-full"
-            style={{ backgroundColor: variant.bg, color: variant.text }}
-          >
+          <span className={`px-2 py-0.5 text-xs rounded-full ${variant.bg} ${variant.text}`}>
             {variant.label}
           </span>
         );
@@ -126,20 +122,12 @@ export default function CRMDashboardPage() {
 
   return (
     <PageContainer maxWidth="7xl">
-      {/* Page Header */}
+      {/* Page Header - Clean & Minimal */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#3b82f615' }}
-            >
-              <TeamOutlined style={{ color: '#3b82f6', fontSize: 24 }} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">CRM Dashboard</h1>
-              <p className="text-sm text-slate-500">Müşteri ilişkileri ve satış performansı</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">CRM Dashboard</h1>
+            <p className="text-sm text-slate-500">Müşteri ilişkileri ve satış performansı</p>
           </div>
           <Link href="/crm/leads/new">
             <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
@@ -150,37 +138,60 @@ export default function CRMDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Navigation */}
+      {/* Combined Overview Cards - Navigation + KPI */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {quickNavItems.map((item) => (
           <Link key={item.href} href={item.href}>
-            <div className="bg-white border border-slate-200 rounded-lg p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${item.color}15` }}
-                  >
-                    {React.cloneElement(item.icon, { style: { color: item.color, fontSize: 18 } })}
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">{item.label}</span>
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+                  {React.cloneElement(item.icon, { className: 'text-slate-500', style: { fontSize: 16 } })}
                 </div>
-                <RightOutlined className="text-slate-300 text-xs group-hover:text-slate-400 transition-colors" />
+                <RightOutlined className="text-slate-300 text-xs group-hover:text-slate-500 transition-colors" />
               </div>
+              <div className="text-2xl font-semibold text-slate-900 mb-1">
+                {item.count?.toLocaleString('tr-TR') || '0'}
+              </div>
+              <div className="text-sm text-slate-500">{item.label}</div>
             </div>
           </Link>
         ))}
       </div>
 
-      {/* Metrics Overview */}
-      <div className="mb-8">
-        <MetricsOverview
-          totalCustomers={metrics.totalCustomers}
-          activeCustomers={metrics.activeCustomers}
-          totalRevenue={metrics.totalRevenue}
-          avgCustomerValue={metrics.avgCustomerValue}
-          loading={customersLoading}
-        />
+      {/* Secondary Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aktif</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">{metrics.activeCustomers.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Aktif Müşteri</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-slate-900" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gelir</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">₺{metrics.totalRevenue.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Toplam Gelir</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ortalama</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">₺{metrics.avgCustomerValue.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Müşteri Değeri</div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Kazanılan</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">{metrics.wonDeals.toLocaleString('tr-TR')}</div>
+          <div className="text-sm text-slate-500">Anlaşma</div>
+        </div>
       </div>
 
       {/* Today's Activities & Overdue Tasks */}
@@ -249,21 +260,17 @@ export default function CRMDashboardPage() {
                 <Spin />
               </div>
             ) : metrics.upcomingDeals.length === 0 ? (
-              <div className="text-center py-8">
-                <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: '#f59e0b15' }}
-                >
-                  <TrophyOutlined style={{ color: '#f59e0b', fontSize: 24 }} />
+              <div className="text-center py-10">
+                <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                  <TrophyOutlined className="text-slate-300" style={{ fontSize: 18 }} />
                 </div>
-                <h3 className="text-sm font-medium text-slate-900 mb-1">Yaklaşan Fırsat Bulunmuyor</h3>
-                <p className="text-xs text-slate-500 mb-4">
-                  Yeni fırsatlar oluşturun ve satış hedeflerinize ulaşın.
+                <h3 className="text-sm font-medium text-slate-600 mb-1">Yaklaşan fırsat yok</h3>
+                <p className="text-xs text-slate-400 mb-4">
+                  Yeni fırsatlar oluşturun
                 </p>
                 <Link href="/crm/deals/new">
-                  <button className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
-                    <PlusOutlined className="mr-2" />
-                    Yeni Fırsat
+                  <button className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
+                    Fırsat Ekle
                   </button>
                 </Link>
               </div>
@@ -273,11 +280,8 @@ export default function CRMDashboardPage() {
                   <Link key={deal.id} href={`/crm/deals/${deal.id}`}>
                     <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 cursor-pointer transition-colors">
                       <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: '#f59e0b15' }}
-                        >
-                          <TrophyOutlined style={{ color: '#f59e0b', fontSize: 14 }} />
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <TrophyOutlined className="text-slate-500" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{deal.title}</div>
