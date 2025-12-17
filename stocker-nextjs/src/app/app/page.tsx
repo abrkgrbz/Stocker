@@ -8,7 +8,6 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -294,21 +293,32 @@ export default function AppHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 relative">
+      {/* Subtle Dot Matrix Background Pattern */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo & Team Name */}
             <div className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="Stoocker"
-                width={100}
-                height={32}
-                className="h-7 w-auto"
-                priority
-              />
+              {/* Stoocker Logo - Black SVG */}
+              <svg viewBox="0 0 180 40" fill="none" className="h-7 w-auto" xmlns="http://www.w3.org/2000/svg">
+                {/* Icon - Stacked layers */}
+                <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
+                <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
+                <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
+                <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
+                {/* Text */}
+                <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
+              </svg>
               <span className="text-slate-300 hidden sm:block">/</span>
               <span className="text-sm text-slate-500 hidden sm:block font-light">
                 {tenant?.name || 'Workspace'}
