@@ -1,38 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Suppliers List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
   Table,
-  Space,
   Tag,
   Input,
-  Typography,
-  Popconfirm,
-  message,
   Dropdown,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
+  ReloadOutlined,
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  ReloadOutlined,
+  EyeOutlined,
+  MoreOutlined,
   ShopOutlined,
   PhoneOutlined,
   EnvironmentOutlined,
-  MoreOutlined,
   StarFilled,
-  EyeOutlined,
+  CheckCircleOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
 import type { SupplierDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-import type { MenuProps } from 'antd';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+} from '@/lib/utils/sweetalert';
 
 export default function SuppliersPage() {
   const router = useRouter();
@@ -41,43 +51,32 @@ export default function SuppliersPage() {
   const { data: suppliers = [], isLoading, refetch } = useSuppliers(true);
   const deleteSupplier = useDeleteSupplier();
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteSupplier.mutateAsync(id);
-      message.success('Tedarikçi silindi');
-    } catch (error) {
-      message.error('Silme işlemi başarısız');
+  const handleDelete = async (supplier: SupplierDto) => {
+    const confirmed = await confirmDelete('Tedarikçi', supplier.name);
+    if (confirmed) {
+      try {
+        await deleteSupplier.mutateAsync(supplier.id);
+        showDeleteSuccess('tedarikçi');
+      } catch (error) {
+        showError('Silme işlemi başarısız');
+      }
     }
   };
 
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    supplier.code?.toLowerCase().includes(searchText.toLowerCase()) ||
-    supplier.city?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredSuppliers = useMemo(() => {
+    if (!searchText) return suppliers;
+    return suppliers.filter((supplier) =>
+      supplier.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      supplier.code?.toLowerCase().includes(searchText.toLowerCase()) ||
+      supplier.city?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [suppliers, searchText]);
 
-  const getActionMenuItems = (record: SupplierDto): MenuProps['items'] => [
-    {
-      key: 'view',
-      label: 'Detay Göster',
-      icon: <EyeOutlined />,
-      onClick: () => router.push(`/inventory/suppliers/${record.id}`),
-    },
-    {
-      key: 'edit',
-      label: 'Düzenle',
-      icon: <EditOutlined />,
-      onClick: () => router.push(`/inventory/suppliers/${record.id}/edit`),
-    },
-    { type: 'divider' },
-    {
-      key: 'delete',
-      label: 'Sil',
-      icon: <DeleteOutlined />,
-      danger: true,
-      onClick: () => handleDelete(record.id),
-    },
-  ];
+  // Calculate stats
+  const totalSuppliers = suppliers.length;
+  const activeSuppliers = suppliers.filter((s) => s.isActive).length;
+  const preferredSuppliers = suppliers.filter((s) => s.isPreferred).length;
+  const totalProducts = suppliers.reduce((sum, s) => sum + (s.productCount || 0), 0);
 
   const columns: ColumnsType<SupplierDto> = [
     {
@@ -89,20 +88,20 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: '#10b98115' }}
+            style={{ backgroundColor: record.isPreferred ? '#f59e0b15' : '#10b98115' }}
           >
-            <ShopOutlined style={{ fontSize: 18, color: '#10b981' }} />
+            <ShopOutlined style={{ color: record.isPreferred ? '#f59e0b' : '#10b981' }} />
           </div>
           <div>
-            <div className="font-medium text-gray-900 flex items-center gap-2">
-              {name}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-900">{name}</span>
               {record.isPreferred && (
                 <StarFilled style={{ fontSize: 12, color: '#f59e0b' }} />
               )}
             </div>
             {record.code && (
-              <div className="text-xs text-gray-400">
-                Kod: {record.code}
+              <div className="text-xs text-slate-500">
+                {record.code}
               </div>
             )}
           </div>
@@ -112,20 +111,22 @@ export default function SuppliersPage() {
     {
       title: 'İletişim',
       key: 'contact',
+      width: 200,
       render: (_, record) => (
         <div className="text-sm">
           {record.phone && (
-            <div className="flex items-center gap-1 text-gray-600">
-              <PhoneOutlined className="text-gray-400" />
+            <div className="flex items-center gap-1 text-slate-600">
+              <PhoneOutlined className="text-slate-400" />
               {record.phone}
             </div>
           )}
           {record.city && (
-            <div className="flex items-center gap-1 text-gray-500 text-xs mt-1">
-              <EnvironmentOutlined className="text-gray-400" />
+            <div className="flex items-center gap-1 text-slate-500 text-xs mt-1">
+              <EnvironmentOutlined className="text-slate-400" />
               {record.city}
             </div>
           )}
+          {!record.phone && !record.city && <span className="text-slate-400">-</span>}
         </div>
       ),
     },
@@ -133,16 +134,20 @@ export default function SuppliersPage() {
       title: 'Ürün Sayısı',
       dataIndex: 'productCount',
       key: 'productCount',
+      width: 120,
       align: 'center',
       sorter: (a, b) => (a.productCount || 0) - (b.productCount || 0),
       render: (count: number) => (
-        <Tag color="green">{count || 0}</Tag>
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-50 text-green-700 rounded">
+          {count || 0}
+        </span>
       ),
     },
     {
       title: 'Tercih',
       dataIndex: 'isPreferred',
       key: 'isPreferred',
+      width: 130,
       align: 'center',
       filters: [
         { text: 'Tercih Edilen', value: true },
@@ -161,14 +166,14 @@ export default function SuppliersPage() {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
-      align: 'center',
+      width: 100,
       filters: [
         { text: 'Aktif', value: true },
         { text: 'Pasif', value: false },
       ],
       onFilter: (value, record) => record.isActive === value,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'}>
+        <Tag color={isActive ? 'green' : 'default'}>
           {isActive ? 'Aktif' : 'Pasif'}
         </Tag>
       ),
@@ -176,75 +181,155 @@ export default function SuppliersPage() {
     {
       title: '',
       key: 'actions',
-      align: 'right',
-      width: 50,
-      render: (_, record) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <Dropdown
-            menu={{ items: getActionMenuItems(record) }}
-            trigger={['click']}
-            placement="bottomRight"
-          >
-            <Button type="text" icon={<MoreOutlined />} />
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => router.push(`/inventory/suppliers/${record.id}`),
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Düzenle',
+            onClick: () => router.push(`/inventory/suppliers/${record.id}/edit`),
+          },
+          { type: 'divider' as const },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
           </Dropdown>
-        </div>
-      ),
+        );
+      },
     },
   ];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="!mb-1">Tedarikçiler</Title>
-          <Text type="secondary">Tedarikçi ve satıcı bilgilerini yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tedarikçi</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalSuppliers}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <ShopOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/inventory/suppliers/new')}
-            style={{ background: '#10b981', borderColor: '#10b981' }}
-          >
-            Yeni Tedarikçi
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Tedarikçi</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeSuppliers}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Tercih Edilen</span>
+              <div className="text-2xl font-semibold text-slate-900">{preferredSuppliers}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <StarFilled style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <InboxOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Header */}
+      <ListPageHeader
+        icon={<ShopOutlined />}
+        iconColor="#10b981"
+        title="Tedarikçiler"
+        description="Tedarikçi ve satıcı bilgilerini yönetin"
+        itemCount={filteredSuppliers.length}
+        primaryAction={{
+          label: 'Yeni Tedarikçi',
+          onClick: () => router.push('/inventory/suppliers/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
       {/* Search */}
-      <Card className="mb-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
-          placeholder="Tedarikçi ara..."
-          prefix={<SearchOutlined className="text-gray-400" />}
+          placeholder="Tedarikçi ara... (ad, kod, şehir)"
+          prefix={<SearchOutlined className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          style={{ maxWidth: 300 }}
+          style={{ maxWidth: 400 }}
           allowClear
+          className="h-10"
         />
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredSuppliers}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} tedarikçi`,
-          }}
-          onRow={(record) => ({
-            onClick: () => router.push(`/inventory/suppliers/${record.id}`),
-            style: { cursor: 'pointer' },
-          })}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredSuppliers}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 900 }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} tedarikçi`,
+            }}
+            onRow={(record) => ({
+              onClick: () => router.push(`/inventory/suppliers/${record.id}`),
+              style: { cursor: 'pointer' },
+            })}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

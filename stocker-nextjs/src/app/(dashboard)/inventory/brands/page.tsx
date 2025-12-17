@@ -1,33 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Brands List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
   Table,
-  Space,
   Tag,
   Input,
-  Typography,
-  Popconfirm,
-  message,
   Avatar,
+  Popconfirm,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
+  ReloadOutlined,
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
-  ReloadOutlined,
   TrademarkOutlined,
-  LinkOutlined,
+  CheckCircleOutlined,
+  InboxOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { useBrands, useDeleteBrand } from '@/lib/api/hooks/useInventory';
 import type { BrandDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showDeleteSuccess,
+  showError,
+  confirmDelete,
+} from '@/lib/utils/sweetalert';
 
 export default function BrandsPage() {
   const router = useRouter();
@@ -36,19 +48,31 @@ export default function BrandsPage() {
   const { data: brands = [], isLoading, refetch } = useBrands();
   const deleteBrand = useDeleteBrand();
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteBrand.mutateAsync(id);
-      message.success('Marka silindi');
-    } catch (error) {
-      message.error('Silme islemi basarisiz');
+  const handleDelete = async (brand: BrandDto) => {
+    const confirmed = await confirmDelete('Marka', brand.name);
+    if (confirmed) {
+      try {
+        await deleteBrand.mutateAsync(brand.id);
+        showDeleteSuccess('marka');
+      } catch (error) {
+        showError('Silme işlemi başarısız');
+      }
     }
   };
 
-  const filteredBrands = brands.filter((brand) =>
-    brand.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    brand.description?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredBrands = useMemo(() => {
+    if (!searchText) return brands;
+    return brands.filter((brand) =>
+      brand.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      brand.description?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [brands, searchText]);
+
+  // Calculate stats
+  const totalBrands = brands.length;
+  const activeBrands = brands.filter((b) => b.isActive).length;
+  const brandsWithWebsite = brands.filter((b) => b.website).length;
+  const totalProducts = brands.reduce((sum, b) => sum + (b.productCount || 0), 0);
 
   const columns: ColumnsType<BrandDto> = [
     {
@@ -62,16 +86,16 @@ export default function BrandsPage() {
           ) : (
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: '#f59e0b15' }}
+              style={{ backgroundColor: '#f59e0b15' }}
             >
-              <TrademarkOutlined style={{ fontSize: 18, color: '#f59e0b' }} />
+              <TrademarkOutlined style={{ color: '#f59e0b' }} />
             </div>
           )}
           <div>
-            <div className="font-medium text-gray-900">{name}</div>
+            <div className="text-sm font-medium text-slate-900">{name}</div>
             {record.code && (
-              <div className="text-xs text-gray-400">
-                Kod: {record.code}
+              <div className="text-xs text-slate-500">
+                {record.code}
               </div>
             )}
           </div>
@@ -79,121 +103,201 @@ export default function BrandsPage() {
       ),
     },
     {
-      title: 'Aciklama',
+      title: 'Açıklama',
       dataIndex: 'description',
       key: 'description',
+      ellipsis: true,
       render: (desc: string) => (
-        <Text type="secondary" className="text-sm">
-          {desc || '-'}
-        </Text>
+        <span className="text-sm text-slate-600">{desc || <span className="text-slate-400">-</span>}</span>
       ),
     },
     {
       title: 'Web Sitesi',
       dataIndex: 'website',
       key: 'website',
+      width: 200,
       render: (url: string) =>
         url ? (
-          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-            {url}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GlobalOutlined />
+            <span className="truncate max-w-[150px]">{url.replace(/^https?:\/\//, '')}</span>
           </a>
         ) : (
-          '-'
+          <span className="text-slate-400">-</span>
         ),
     },
     {
-      title: 'Urun Sayisi',
+      title: 'Ürün Sayısı',
       dataIndex: 'productCount',
       key: 'productCount',
+      width: 120,
       align: 'center',
       render: (count: number) => (
-        <Tag color="orange">{count || 0}</Tag>
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-amber-50 text-amber-700 rounded">
+          {count || 0}
+        </span>
       ),
     },
     {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
-      align: 'center',
+      width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'}>
-          {isActive ? 'Aktif' : 'Pasif'}
-        </Tag>
+        <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Aktif' : 'Pasif'}</Tag>
       ),
     },
     {
-      title: 'Islemler',
+      title: '',
       key: 'actions',
+      width: 100,
       align: 'right',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/inventory/brands/${record.id}/edit`)}
-          />
-          <Popconfirm
-            title="Markayi silmek istediginize emin misiniz?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Evet"
-            cancelText="Hayir"
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/inventory/brands/${record.id}/edit`);
+            }}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <EditOutlined />
+          </button>
+          <Popconfirm
+            title="Markayı silmek istediğinize emin misiniz?"
+            onConfirm={(e) => {
+              e?.stopPropagation();
+              handleDelete(record);
+            }}
+            onCancel={(e) => e?.stopPropagation()}
+            okText="Evet"
+            cancelText="Hayır"
+          >
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <DeleteOutlined />
+            </button>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="!mb-1">Markalar</Title>
-          <Text type="secondary">Urun markalarini yonetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Marka</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalBrands}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <TrademarkOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/inventory/brands/new')}
-            style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
-          >
-            Yeni Marka
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Marka</span>
+              <div className="text-2xl font-semibold text-slate-900">{activeBrands}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Web Siteli</span>
+              <div className="text-2xl font-semibold text-slate-900">{brandsWithWebsite}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <GlobalOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Ürün</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <InboxOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Header */}
+      <ListPageHeader
+        icon={<TrademarkOutlined />}
+        iconColor="#f59e0b"
+        title="Markalar"
+        description="Ürün markalarını yönetin"
+        itemCount={filteredBrands.length}
+        primaryAction={{
+          label: 'Yeni Marka',
+          onClick: () => router.push('/inventory/brands/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
       {/* Search */}
-      <Card className="mb-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
-          placeholder="Marka ara..."
-          prefix={<SearchOutlined className="text-gray-400" />}
+          placeholder="Marka ara... (ad, açıklama)"
+          prefix={<SearchOutlined className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          style={{ maxWidth: 300 }}
+          style={{ maxWidth: 400 }}
           allowClear
+          className="h-10"
         />
-      </Card>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredBrands}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} marka`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredBrands}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} marka`,
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
