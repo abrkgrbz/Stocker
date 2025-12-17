@@ -6,8 +6,9 @@
  * Clean Light Theme - Linear/Stripe Style
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -158,6 +159,23 @@ export default function AppHomePage() {
   const [setupModalOpen, setSetupModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut for search (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'Escape' && isSearchFocused) {
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchFocused]);
 
   // Active module codes for fast lookup
   const activeModuleCodes = useMemo(() => {
@@ -278,20 +296,23 @@ export default function AppHomePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo & Team Name */}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-sm font-semibold text-slate-900">
-                  {tenant?.name || 'Stocker'}
-                </h1>
-                <p className="text-xs text-slate-500">İşletme Yönetim Sistemi</p>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Stoocker"
+                width={100}
+                height={32}
+                className="h-7 w-auto"
+                priority
+              />
+              <span className="text-slate-300 hidden sm:block">/</span>
+              <span className="text-sm text-slate-500 hidden sm:block font-light">
+                {tenant?.name || 'Workspace'}
+              </span>
             </div>
 
             {/* Right: Profile Menu */}
@@ -372,29 +393,49 @@ export default function AppHomePage() {
           </p>
         </div>
 
-        {/* Search / Command Palette */}
-        <div className="mb-10">
+        {/* Search / Command Palette - Hero Element */}
+        <div className="mb-12">
           <div className="relative max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-slate-400" />
+            <div className={`
+              absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors duration-200
+              ${isSearchFocused ? 'text-indigo-500' : 'text-slate-400'}
+            `}>
+              <Search className="w-5 h-5" />
             </div>
             <input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Modül ara..."
-              className="w-full pl-12 pr-20 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow shadow-sm hover:shadow-md"
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              placeholder="Modül ara veya komut yazın..."
+              className={`
+                w-full pl-14 pr-24 py-4 h-14 bg-white border-2 rounded-2xl text-slate-900 text-base
+                placeholder-slate-400 transition-all duration-200
+                ${isSearchFocused
+                  ? 'border-indigo-400 ring-4 ring-indigo-100 shadow-xl shadow-indigo-500/10'
+                  : 'border-slate-200 shadow-lg shadow-slate-900/5 hover:shadow-xl hover:border-slate-300'
+                }
+                focus:outline-none
+              `}
             />
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200">
+            <div className="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+              <kbd className={`
+                hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors duration-200
+                ${isSearchFocused
+                  ? 'text-indigo-500 bg-indigo-50 border-indigo-200'
+                  : 'text-slate-400 bg-slate-100 border-slate-200'
+                }
+              `}>
                 <Command className="w-3 h-3" />K
               </kbd>
             </div>
           </div>
         </div>
 
-        {/* Module Grid - Bento Style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* Module Grid - Bento Style with Premium Hover Effects */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredModules.map((module, index) => {
             const Icon = module.icon;
 
@@ -403,28 +444,34 @@ export default function AppHomePage() {
                 key={module.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
               >
                 <button
                   onClick={() => handleModuleClick(module)}
                   disabled={module.disabled}
                   className={`
-                    w-full text-left p-5 bg-white rounded-xl border transition-all duration-200 group relative
+                    w-full text-left p-6 bg-white rounded-2xl border-2 group relative overflow-hidden
+                    transition-all duration-200 ease-out
                     ${module.disabled
-                      ? 'opacity-60 cursor-not-allowed border-slate-200'
-                      : 'border-slate-200 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
+                      ? 'opacity-50 cursor-not-allowed border-slate-200 bg-slate-50'
+                      : 'border-slate-200 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1.5 cursor-pointer'
                     }
                   `}
                 >
+                  {/* Subtle gradient overlay on hover */}
+                  {!module.disabled && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/0 to-indigo-50/0 group-hover:from-indigo-50/50 group-hover:to-purple-50/30 transition-all duration-300 rounded-2xl" />
+                  )}
+
                   {/* Badge */}
                   {module.badge && (
                     <span
                       className={`
-                        absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full
+                        absolute top-4 right-4 px-2.5 py-1 text-[11px] font-semibold rounded-full uppercase tracking-wide
                         ${module.badgeType === 'active'
-                          ? 'bg-emerald-50 text-emerald-700'
+                          ? 'bg-emerald-100 text-emerald-700'
                           : module.badgeType === 'coming-soon'
-                            ? 'bg-amber-50 text-amber-700'
+                            ? 'bg-amber-100 text-amber-700'
                             : 'bg-slate-100 text-slate-600'
                         }
                       `}
@@ -433,18 +480,40 @@ export default function AppHomePage() {
                     </span>
                   )}
 
-                  {/* Icon */}
-                  <div className={`w-12 h-12 ${module.iconBg} rounded-xl flex items-center justify-center mb-4`}>
-                    <Icon className={`w-6 h-6 ${module.iconColor}`} />
+                  {/* Icon with enhanced hover */}
+                  <div className={`
+                    relative w-14 h-14 rounded-xl flex items-center justify-center mb-5
+                    transition-all duration-200
+                    ${module.iconBg}
+                    ${!module.disabled ? 'group-hover:scale-110 group-hover:shadow-lg' : ''}
+                  `}>
+                    <Icon className={`w-7 h-7 ${module.iconColor} transition-transform duration-200`} />
                   </div>
 
                   {/* Content */}
-                  <h3 className="font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">
-                    {module.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 line-clamp-2">
-                    {module.description}
-                  </p>
+                  <div className="relative">
+                    <h3 className={`
+                      text-base font-semibold mb-1.5 transition-colors duration-200
+                      ${module.disabled ? 'text-slate-400' : 'text-slate-900 group-hover:text-indigo-600'}
+                    `}>
+                      {module.title}
+                    </h3>
+                    <p className={`
+                      text-sm leading-relaxed line-clamp-2
+                      ${module.disabled ? 'text-slate-400' : 'text-slate-500'}
+                    `}>
+                      {module.description}
+                    </p>
+                  </div>
+
+                  {/* Arrow indicator on hover */}
+                  {!module.disabled && (
+                    <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+                      <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </div>
+                  )}
                 </button>
               </motion.div>
             );

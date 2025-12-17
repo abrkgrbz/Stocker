@@ -14,7 +14,7 @@ const ParticleWave = dynamic(() => import('./ParticleWave'), {
 });
 
 export default function HeroSection() {
-  const { t } = useTranslations();
+  const { t, locale, setLocale } = useTranslations();
 
   return (
     <section className="relative bg-white min-h-screen overflow-hidden">
@@ -64,8 +64,32 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          {/* Auth */}
+          {/* Auth & Language */}
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="flex items-center border border-slate-200 rounded-md overflow-hidden">
+              <button
+                onClick={() => locale !== 'tr' && setLocale('tr')}
+                className={`px-2 py-1 text-[12px] font-medium transition-colors ${
+                  locale === 'tr'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                TR
+              </button>
+              <button
+                onClick={() => locale !== 'en' && setLocale('en')}
+                className={`px-2 py-1 text-[12px] font-medium transition-colors ${
+                  locale === 'en'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             <Link href="/login" className="text-[13px] text-slate-600 hover:text-slate-900 transition-colors">
               {t('landing.navbar.signIn')}
             </Link>
@@ -145,7 +169,7 @@ export default function HeroSection() {
           transition={{ duration: 0.4, delay: 0.4 }}
           className="text-[13px] text-slate-400 mt-8"
         >
-          14 gün ücretsiz deneme · Kredi kartı gerekmez
+          {t('landing.hero.trustLine')}
         </motion.p>
       </div>
 
