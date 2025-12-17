@@ -77,6 +77,7 @@ import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/use-onboarding';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import { message } from 'antd';
+import GlobalSearch from '@/components/common/GlobalSearch';
 
 const { Header, Sider, Content } = Layout;
 
@@ -509,6 +510,19 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [moduleSwitcherOpen, setModuleSwitcherOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global keyboard shortcut for search (Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Fetch active modules for the user
   const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
@@ -767,6 +781,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   return (
+    <>
     <Layout style={{ minHeight: '100dvh' }}>
         <Sider
           theme="light"
@@ -1082,10 +1097,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1
                   group
                 "
-                onClick={() => {
-                  // TODO: Open command palette / global search
-                  message.info('Global arama yakında aktif olacak (⌘K)');
-                }}
+                onClick={() => setSearchOpen(true)}
               >
                 <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-500" strokeWidth={2} />
                 <span className="flex-1 text-left text-sm text-slate-400 group-hover:text-slate-500">
@@ -1175,7 +1187,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </Content>
         </Layout>
       </Layout>
-    );
+
+      {/* Global Search Modal */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
+  );
 }
 
 export default function DashboardLayout({
