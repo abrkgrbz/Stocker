@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createRole,
   deleteRole,
+  getRole,
   getRoles,
   updateRole,
   type CreateRoleRequest,
@@ -28,6 +29,17 @@ export function useRoles() {
   return useQuery<Role[]>({
     queryKey: ROLES_QUERY_KEY,
     queryFn: getRoles,
+  });
+}
+
+/**
+ * Fetch a single role by ID
+ */
+export function useRole(roleId: string) {
+  return useQuery<Role>({
+    queryKey: [...ROLES_QUERY_KEY, roleId],
+    queryFn: () => getRole(roleId),
+    enabled: !!roleId,
   });
 }
 

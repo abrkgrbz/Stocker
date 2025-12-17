@@ -88,6 +88,16 @@ export async function getRoles(): Promise<Role[]> {
 }
 
 /**
+ * Get a single role by ID
+ */
+export async function getRole(roleId: string): Promise<Role> {
+  const response = await apiClient.get<{ success: boolean; data: Role; message: string }>(
+    `/api/tenant/roles/${roleId}`
+  );
+  return (response.data as any).data as Role;
+}
+
+/**
  * Create a new role
  */
 export async function createRole(data: CreateRoleRequest): Promise<Role> {

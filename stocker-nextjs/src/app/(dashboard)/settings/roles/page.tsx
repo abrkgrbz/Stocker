@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * Role Management Page - Compact List Layout
+ * Role Management Page - Modern List Layout
  * Search-focused, scalable role management interface
  */
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Card,
@@ -31,22 +32,17 @@ import {
   MoreOutlined,
   CheckCircleOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';
-import { RoleModal } from '@/features/roles/components/RoleModal';
 import { RoleDetailsDrawer } from '@/features/roles/components/RoleDetailsDrawer';
-import {
-  parsePermission,
-  getPermissionLabel,
-  type Role,
-} from '@/lib/api/roles';
+import { type Role } from '@/lib/api/roles';
 import { confirmDelete } from '@/lib/utils/sweetalert';
 
 const { Title, Text } = Typography;
 
 export default function RolesPage() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const router = useRouter();
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,13 +70,11 @@ export default function RolesPage() {
   };
 
   const handleCreate = () => {
-    setEditingRole(null);
-    setModalOpen(true);
+    router.push('/settings/roles/new');
   };
 
   const handleEdit = (role: Role) => {
-    setEditingRole(role);
-    setModalOpen(true);
+    router.push(`/settings/roles/${role.id}/edit`);
   };
 
   const handleDelete = async (role: Role) => {
@@ -106,6 +100,7 @@ export default function RolesPage() {
     {
       key: 'view',
       label: 'Detayları Görüntüle',
+      icon: <EyeOutlined />,
       onClick: () => handleViewDetails(role),
     },
     {
@@ -131,11 +126,7 @@ export default function RolesPage() {
   return (
     <div style={{ padding: '24px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
-      <div
-        style={{
-          marginBottom: 24,
-        }}
-      >
+      <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <Title level={2} style={{ margin: 0, marginBottom: 8 }}>
@@ -306,7 +297,7 @@ export default function RolesPage() {
             size="large"
             icon={<PlusOutlined />}
             onClick={handleCreate}
-            style={{ minWidth: 160 }}
+            style={{ minWidth: 160, background: '#1a1a1a', borderColor: '#1a1a1a' }}
           >
             Yeni Rol Oluştur
           </Button>
@@ -457,15 +448,6 @@ export default function RolesPage() {
           </Card>
         )}
       </Spin>
-
-      <RoleModal
-        open={modalOpen}
-        role={editingRole}
-        onClose={() => {
-          setModalOpen(false);
-          setEditingRole(null);
-        }}
-      />
 
       <RoleDetailsDrawer
         role={selectedRole}
