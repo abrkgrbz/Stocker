@@ -1,14 +1,18 @@
 'use client';
 
+/**
+ * HR Dashboard Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useMemo } from 'react';
-import { Typography, Space, Button, Row, Col, Card, Statistic, Table, Tag, List, Empty, Progress, Spin, Alert } from 'antd';
+import { Table, Tag, List, Empty, Spin } from 'antd';
 import {
   TeamOutlined,
   IdcardOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
   DollarOutlined,
-  TrophyOutlined,
   BookOutlined,
   NotificationOutlined,
   CheckCircleOutlined,
@@ -17,9 +21,7 @@ import {
   BankOutlined,
   FieldTimeOutlined,
   GiftOutlined,
-  SyncOutlined,
-  RiseOutlined,
-  FallOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -32,7 +34,6 @@ import {
   useTrainings,
   useAnnouncements,
   useHolidays,
-  usePerformanceReviews,
 } from '@/lib/api/hooks/useHR';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -47,10 +48,12 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  Legend,
 } from 'recharts';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+} from '@/components/ui/enterprise-page';
 
 // Color palette
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
@@ -90,10 +93,9 @@ export default function HRDashboardPage() {
   const { data: attendances = [], isLoading: attendancesLoading } = useAttendance();
   const { data: leaves = [], isLoading: leavesLoading } = useLeaves();
   const { data: payrolls = [], isLoading: payrollsLoading } = usePayrolls();
-  const { data: trainings = [], isLoading: trainingsLoading } = useTrainings();
+  const { data: trainings = [] } = useTrainings();
   const { data: announcements = [], isLoading: announcementsLoading } = useAnnouncements();
   const { data: holidays = [], isLoading: holidaysLoading } = useHolidays();
-  const { data: performanceReviews = [], isLoading: performanceLoading } = usePerformanceReviews();
 
   // Calculate stats
   const totalEmployees = employees.length;
@@ -172,11 +174,6 @@ export default function HRDashboardPage() {
   // Combined loading state
   const isLoading = employeesLoading || departmentsLoading;
 
-  // Refresh data
-  const handleRefresh = () => {
-    refetchEmployees();
-  };
-
   // Pending leaves columns
   const pendingLeavesColumns: ColumnsType<any> = [
     {
@@ -185,7 +182,7 @@ export default function HRDashboardPage() {
       key: 'employeeName',
       render: (text: string, record: any) => (
         <Link href={`/hr/leaves/${record.id}`}>
-          <span className="text-blue-600 hover:text-blue-800">{text}</span>
+          <span className="text-sm font-medium text-slate-900 hover:text-violet-600">{text}</span>
         </Link>
       ),
     },
@@ -193,12 +190,13 @@ export default function HRDashboardPage() {
       title: 'İzin Türü',
       dataIndex: 'leaveTypeName',
       key: 'leaveTypeName',
+      render: (text: string) => <span className="text-sm text-slate-600">{text}</span>,
     },
     {
       title: 'Tarih',
       key: 'dates',
       render: (_: any, record: any) => (
-        <span>
+        <span className="text-sm text-slate-500">
           {dayjs(record.startDate).format('DD.MM')} - {dayjs(record.endDate).format('DD.MM.YYYY')}
         </span>
       ),
@@ -220,18 +218,19 @@ export default function HRDashboardPage() {
       title: 'Çalışan',
       dataIndex: 'employeeName',
       key: 'employeeName',
+      render: (text: string) => <span className="text-sm font-medium text-slate-900">{text}</span>,
     },
     {
       title: 'Giriş',
       dataIndex: 'checkInTime',
       key: 'checkInTime',
-      render: (time: string) => time ? time.substring(0, 5) : '-',
+      render: (time: string) => <span className="text-sm text-slate-600">{time ? time.substring(0, 5) : '-'}</span>,
     },
     {
       title: 'Çıkış',
       dataIndex: 'checkOutTime',
       key: 'checkOutTime',
-      render: (time: string) => time ? time.substring(0, 5) : '-',
+      render: (time: string) => <span className="text-sm text-slate-600">{time ? time.substring(0, 5) : '-'}</span>,
     },
     {
       title: 'Durum',
@@ -245,367 +244,376 @@ export default function HRDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>
-            <IdcardOutlined className="mr-2" />
-            İnsan Kaynakları
-          </Title>
-          <Text type="secondary">İK yönetim paneli</Text>
-        </div>
-        <Space wrap>
-          <Button
-            icon={<SyncOutlined spin={isLoading} />}
-            onClick={handleRefresh}
-            loading={isLoading}
-          >
-            Yenile
-          </Button>
-          <Link href="/hr/employees">
-            <Button type="primary" icon={<TeamOutlined />}>Çalışanlar</Button>
-          </Link>
-          <Link href="/hr/departments">
-            <Button icon={<BankOutlined />}>Departmanlar</Button>
-          </Link>
-          <Link href="/hr/attendance">
-            <Button icon={<FieldTimeOutlined />}>Yoklama</Button>
-          </Link>
-        </Space>
-      </div>
+    <PageContainer maxWidth="7xl">
+      {/* Header */}
+      <ListPageHeader
+        icon={<IdcardOutlined />}
+        iconColor="#7c3aed"
+        title="İnsan Kaynakları"
+        description="İK yönetim paneli ve genel bakış"
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refetchEmployees()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+            <Link href="/hr/employees">
+              <button className="px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 transition-colors flex items-center gap-2">
+                <TeamOutlined />
+                Çalışanlar
+              </button>
+            </Link>
+          </div>
+        }
+      />
 
       {/* Main Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className="h-full">
-            <Statistic
-              title="Toplam Çalışan"
-              value={totalEmployees}
-              prefix={<TeamOutlined className="text-blue-500" />}
-              suffix={<Text type="secondary" className="text-sm">/ {activeEmployees} aktif</Text>}
-              loading={employeesLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className="h-full">
-            <Statistic
-              title="Departmanlar"
-              value={totalDepartments}
-              prefix={<BankOutlined className="text-green-500" />}
-              suffix={<Text type="secondary" className="text-sm">/ {activeDepartments} aktif</Text>}
-              loading={departmentsLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className="h-full">
-            <Statistic
-              title="Pozisyonlar"
-              value={positions.length}
-              prefix={<IdcardOutlined className="text-purple-500" />}
-              loading={positionsLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className="h-full">
-            <Statistic
-              title="Bu Ay Bordro"
-              value={totalPayrollAmount}
-              prefix={<DollarOutlined className="text-orange-500" />}
-              formatter={(value) => formatCurrency(Number(value))}
-              loading={payrollsLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Çalışan</span>
+              <div className="text-2xl font-semibold text-slate-900">{employeesLoading ? '-' : totalEmployees}</div>
+              <span className="text-xs text-slate-400">{activeEmployees} aktif</span>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <TeamOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Departmanlar</span>
+              <div className="text-2xl font-semibold text-slate-900">{departmentsLoading ? '-' : totalDepartments}</div>
+              <span className="text-xs text-slate-400">{activeDepartments} aktif</span>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <BankOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Pozisyonlar</span>
+              <div className="text-2xl font-semibold text-slate-900">{positionsLoading ? '-' : positions.length}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <IdcardOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Bu Ay Bordro</span>
+              <div className="text-2xl font-semibold text-slate-900">{payrollsLoading ? '-' : formatCurrency(totalPayrollAmount)}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <DollarOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Alert Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={8}>
-          <Card className={`h-full ${pendingLeaves > 0 ? 'border-orange-200 bg-orange-50' : ''}`} hoverable>
-            <Link href="/hr/leaves?status=Pending">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-full ${pendingLeaves > 0 ? 'bg-orange-100' : 'bg-gray-100'}`}>
-                    <CalendarOutlined className={`text-2xl ${pendingLeaves > 0 ? 'text-orange-500' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <Text strong className="text-lg">{pendingLeaves}</Text>
-                    <div className="text-gray-500">Bekleyen İzin Talebi</div>
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Link href="/hr/leaves?status=Pending">
+          <div className={`bg-white border rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer ${pendingLeaves > 0 ? 'border-orange-200' : 'border-slate-200'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${pendingLeaves > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
+                  <CalendarOutlined className={pendingLeaves > 0 ? 'text-orange-500' : 'text-slate-400'} />
                 </div>
-                {pendingLeaves > 0 && <Tag color="orange">Onay Bekliyor</Tag>}
-              </div>
-            </Link>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="h-full" hoverable>
-            <Link href="/hr/trainings">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-full ${activeTrainings > 0 ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                    <BookOutlined className={`text-2xl ${activeTrainings > 0 ? 'text-blue-500' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <Text strong className="text-lg">{activeTrainings}</Text>
-                    <div className="text-gray-500">Aktif Eğitim</div>
-                  </div>
+                <div>
+                  <div className="text-lg font-semibold text-slate-900">{pendingLeaves}</div>
+                  <div className="text-sm text-slate-500">Bekleyen İzin Talebi</div>
                 </div>
-                {activeTrainings > 0 && <Tag color="blue">Devam Ediyor</Tag>}
               </div>
-            </Link>
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="h-full" hoverable>
-            <Link href="/hr/announcements">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-full ${activeAnnouncements > 0 ? 'bg-purple-100' : 'bg-gray-100'}`}>
-                    <NotificationOutlined className={`text-2xl ${activeAnnouncements > 0 ? 'text-purple-500' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <Text strong className="text-lg">{activeAnnouncements}</Text>
-                    <div className="text-gray-500">Aktif Duyuru</div>
-                  </div>
+              {pendingLeaves > 0 && <Tag color="orange">Onay Bekliyor</Tag>}
+            </div>
+          </div>
+        </Link>
+        <Link href="/hr/trainings">
+          <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTrainings > 0 ? 'bg-blue-50' : 'bg-slate-50'}`}>
+                  <BookOutlined className={activeTrainings > 0 ? 'text-blue-500' : 'text-slate-400'} />
                 </div>
-                {pinnedAnnouncements.length > 0 && <Tag color="purple">{pinnedAnnouncements.length} Sabitlenmiş</Tag>}
+                <div>
+                  <div className="text-lg font-semibold text-slate-900">{activeTrainings}</div>
+                  <div className="text-sm text-slate-500">Aktif Eğitim</div>
+                </div>
               </div>
-            </Link>
-          </Card>
-        </Col>
-      </Row>
+              {activeTrainings > 0 && <Tag color="blue">Devam Ediyor</Tag>}
+            </div>
+          </div>
+        </Link>
+        <Link href="/hr/announcements">
+          <div className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeAnnouncements > 0 ? 'bg-purple-50' : 'bg-slate-50'}`}>
+                  <NotificationOutlined className={activeAnnouncements > 0 ? 'text-purple-500' : 'text-slate-400'} />
+                </div>
+                <div>
+                  <div className="text-lg font-semibold text-slate-900">{activeAnnouncements}</div>
+                  <div className="text-sm text-slate-500">Aktif Duyuru</div>
+                </div>
+              </div>
+              {pinnedAnnouncements.length > 0 && <Tag color="purple">{pinnedAnnouncements.length} Sabitlenmiş</Tag>}
+            </div>
+          </div>
+        </Link>
+      </div>
 
       {/* Today's Attendance Summary */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24}>
-          <Card title={<><FieldTimeOutlined className="text-green-500 mr-2" />Bugünkü Yoklama Özeti</>}>
-            <Row gutter={[16, 16]}>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title="Mevcut"
-                  value={presentToday}
-                  valueStyle={{ color: '#10b981' }}
-                  prefix={<CheckCircleOutlined />}
-                />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title="Yok"
-                  value={absentToday}
-                  valueStyle={{ color: '#ef4444' }}
-                  prefix={<WarningOutlined />}
-                />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title="Geç Kalan"
-                  value={lateToday}
-                  valueStyle={{ color: '#f59e0b' }}
-                  prefix={<ClockCircleOutlined />}
-                />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title="Katılım Oranı"
-                  value={activeEmployees > 0 ? ((presentToday + lateToday) / activeEmployees * 100).toFixed(1) : 0}
-                  suffix="%"
-                  valueStyle={{ color: '#3b82f6' }}
-                />
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
+      <Card className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+            <FieldTimeOutlined style={{ color: '#10b981' }} />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">Bugünkü Yoklama Özeti</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <CheckCircleOutlined className="text-green-500 text-lg mb-1" />
+            <div className="text-xl font-semibold text-slate-900">{presentToday}</div>
+            <div className="text-xs text-slate-500">Mevcut</div>
+          </div>
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <WarningOutlined className="text-red-500 text-lg mb-1" />
+            <div className="text-xl font-semibold text-slate-900">{absentToday}</div>
+            <div className="text-xs text-slate-500">Yok</div>
+          </div>
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <ClockCircleOutlined className="text-orange-500 text-lg mb-1" />
+            <div className="text-xl font-semibold text-slate-900">{lateToday}</div>
+            <div className="text-xs text-slate-500">Geç Kalan</div>
+          </div>
+          <div className="text-center p-3 bg-slate-50 rounded-lg">
+            <TeamOutlined className="text-blue-500 text-lg mb-1" />
+            <div className="text-xl font-semibold text-slate-900">
+              {activeEmployees > 0 ? ((presentToday + lateToday) / activeEmployees * 100).toFixed(1) : 0}%
+            </div>
+            <div className="text-xs text-slate-500">Katılım Oranı</div>
+          </div>
+        </div>
+      </Card>
 
       {/* Charts Row */}
-      <Row gutter={[16, 16]} className="mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Department Distribution */}
-        <Col xs={24} lg={12}>
-          <Card title={<><BankOutlined className="text-blue-500 mr-2" />Departman Dağılımı</>}>
-            {departmentDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={departmentDistribution} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
-                  <RechartsTooltip />
-                  <Bar dataKey="value" name="Çalışan Sayısı" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Empty description="Veri yok" />
-            )}
-          </Card>
-        </Col>
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <BankOutlined style={{ color: '#3b82f6' }} />
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">Departman Dağılımı</h3>
+          </div>
+          {departmentDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={departmentDistribution} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} />
+                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <RechartsTooltip />
+                <Bar dataKey="value" name="Çalışan Sayısı" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <Empty description="Veri yok" />
+          )}
+        </Card>
 
         {/* Employment Type Distribution */}
-        <Col xs={24} lg={12}>
-          <Card title={<><UserOutlined className="text-purple-500 mr-2" />Çalışma Türü Dağılımı</>}>
-            {employmentTypeDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={employmentTypeDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={(props: any) => `${props.name}: ${props.value} (%${(props.percent * 100).toFixed(0)})`}
-                  >
-                    {employmentTypeDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Empty description="Veri yok" />
-            )}
-          </Card>
-        </Col>
-      </Row>
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <UserOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">Çalışma Türü Dağılımı</h3>
+          </div>
+          {employmentTypeDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={employmentTypeDistribution}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label={(props: any) => `${props.name}: ${props.value}`}
+                >
+                  {employmentTypeDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <Empty description="Veri yok" />
+          )}
+        </Card>
+      </div>
 
       {/* Bottom Row */}
-      <Row gutter={[16, 16]}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Leaves */}
-        <Col xs={24} lg={8}>
-          <Card
-            title={<><CalendarOutlined className="text-orange-500 mr-2" />Son İzin Talepleri</>}
-            extra={<Link href="/hr/leaves"><Button type="link" size="small">Tümünü Gör</Button></Link>}
-          >
-            {recentLeaves.length > 0 ? (
-              <Table
-                columns={pendingLeavesColumns}
-                dataSource={recentLeaves}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                loading={leavesLoading}
-              />
-            ) : (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="İzin talebi yok" />
-            )}
-          </Card>
-        </Col>
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+                <CalendarOutlined style={{ color: '#f59e0b' }} />
+              </div>
+              <h3 className="text-base font-semibold text-slate-900">Son İzin Talepleri</h3>
+            </div>
+            <Link href="/hr/leaves" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
+              Tümünü Gör →
+            </Link>
+          </div>
+          {recentLeaves.length > 0 ? (
+            <Table
+              columns={pendingLeavesColumns}
+              dataSource={recentLeaves}
+              rowKey="id"
+              pagination={false}
+              size="small"
+              loading={leavesLoading}
+              className="enterprise-table"
+            />
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="İzin talebi yok" />
+          )}
+        </Card>
 
         {/* Today's Attendance */}
-        <Col xs={24} lg={8}>
-          <Card
-            title={<><FieldTimeOutlined className="text-green-500 mr-2" />Bugünkü Yoklama</>}
-            extra={<Link href="/hr/attendance"><Button type="link" size="small">Tümünü Gör</Button></Link>}
-          >
-            {todayAttendances.length > 0 ? (
-              <Table
-                columns={attendanceColumns}
-                dataSource={todayAttendances.slice(0, 5)}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                loading={attendancesLoading}
-              />
-            ) : (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bugün yoklama kaydı yok" />
-            )}
-          </Card>
-        </Col>
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+                <FieldTimeOutlined style={{ color: '#10b981' }} />
+              </div>
+              <h3 className="text-base font-semibold text-slate-900">Bugünkü Yoklama</h3>
+            </div>
+            <Link href="/hr/attendance" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
+              Tümünü Gör →
+            </Link>
+          </div>
+          {todayAttendances.length > 0 ? (
+            <Table
+              columns={attendanceColumns}
+              dataSource={todayAttendances.slice(0, 5)}
+              rowKey="id"
+              pagination={false}
+              size="small"
+              loading={attendancesLoading}
+              className="enterprise-table"
+            />
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bugün yoklama kaydı yok" />
+          )}
+        </Card>
 
         {/* Upcoming Holidays */}
-        <Col xs={24} lg={8}>
-          <Card
-            title={<><GiftOutlined className="text-red-500 mr-2" />Yaklaşan Tatiller</>}
-            extra={<Link href="/hr/holidays"><Button type="link" size="small">Tümünü Gör</Button></Link>}
-          >
-            {upcomingHolidays.length > 0 ? (
-              <List
-                dataSource={upcomingHolidays}
-                loading={holidaysLoading}
-                renderItem={(holiday: any) => {
-                  const daysUntil = dayjs(holiday.date).diff(dayjs(), 'day');
-                  return (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                          <div className="p-2 rounded-full bg-red-100">
-                            <GiftOutlined className="text-red-500" />
-                          </div>
-                        }
-                        title={holiday.name}
-                        description={dayjs(holiday.date).format('DD MMMM YYYY')}
-                      />
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+                <GiftOutlined style={{ color: '#ef4444' }} />
+              </div>
+              <h3 className="text-base font-semibold text-slate-900">Yaklaşan Tatiller</h3>
+            </div>
+            <Link href="/hr/holidays" className="text-xs text-violet-600 hover:text-violet-700 font-medium">
+              Tümünü Gör →
+            </Link>
+          </div>
+          {upcomingHolidays.length > 0 ? (
+            <List
+              dataSource={upcomingHolidays}
+              loading={holidaysLoading}
+              renderItem={(holiday: any) => {
+                const daysUntil = dayjs(holiday.date).diff(dayjs(), 'day');
+                return (
+                  <List.Item className="!px-0 !py-2">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50">
+                          <GiftOutlined className="text-red-500 text-sm" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-slate-900">{holiday.name}</div>
+                          <div className="text-xs text-slate-500">{dayjs(holiday.date).format('DD MMMM YYYY')}</div>
+                        </div>
+                      </div>
                       <Tag color={daysUntil <= 7 ? 'red' : daysUntil <= 30 ? 'orange' : 'blue'}>
                         {daysUntil} gün
                       </Tag>
-                    </List.Item>
-                  );
-                }}
-              />
-            ) : (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Yaklaşan tatil yok" />
-            )}
-          </Card>
-        </Col>
-      </Row>
+                    </div>
+                  </List.Item>
+                );
+              }}
+            />
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Yaklaşan tatil yok" />
+          )}
+        </Card>
+      </div>
 
       {/* Pinned Announcements */}
       {pinnedAnnouncements.length > 0 && (
-        <Row gutter={[16, 16]} className="mt-6">
-          <Col span={24}>
-            <Card
-              title={<><NotificationOutlined className="text-purple-500 mr-2" />Sabitlenmiş Duyurular</>}
-            >
-              <List
-                dataSource={pinnedAnnouncements}
-                loading={announcementsLoading}
-                renderItem={(announcement: any) => {
-                  const priorityColors: Record<string, string> = {
-                    Low: 'default',
-                    Normal: 'blue',
-                    High: 'orange',
-                    Urgent: 'red',
-                  };
-                  return (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                          <div className="p-2 rounded-full bg-purple-100">
-                            <NotificationOutlined className="text-purple-500" />
-                          </div>
-                        }
-                        title={
-                          <Link href={`/hr/announcements/${announcement.id}`}>
-                            <span className="text-blue-600 hover:text-blue-800">{announcement.title}</span>
-                          </Link>
-                        }
-                        description={
-                          <div>
-                            <Text type="secondary" className="line-clamp-2">
-                              {announcement.content?.substring(0, 150)}...
-                            </Text>
-                            <div className="mt-1">
-                              <Tag color={priorityColors[announcement.priority] || 'default'}>
-                                {announcement.priority}
-                              </Tag>
-                              <Text type="secondary" className="text-xs ml-2">
-                                {dayjs(announcement.publishDate).format('DD.MM.YYYY')}
-                              </Text>
-                            </div>
-                          </div>
-                        }
-                      />
-                    </List.Item>
-                  );
-                }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <Card className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <NotificationOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">Sabitlenmiş Duyurular</h3>
+          </div>
+          <List
+            dataSource={pinnedAnnouncements}
+            loading={announcementsLoading}
+            renderItem={(announcement: any) => {
+              const priorityColors: Record<string, string> = {
+                Low: 'default',
+                Normal: 'blue',
+                High: 'orange',
+                Urgent: 'red',
+              };
+              return (
+                <List.Item className="!px-0">
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50 shrink-0">
+                      <NotificationOutlined className="text-purple-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/hr/announcements/${announcement.id}`}>
+                        <div className="text-sm font-medium text-slate-900 hover:text-violet-600">{announcement.title}</div>
+                      </Link>
+                      <div className="text-sm text-slate-500 line-clamp-2 mt-1">
+                        {announcement.content?.substring(0, 150)}...
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Tag color={priorityColors[announcement.priority] || 'default'}>
+                          {announcement.priority}
+                        </Tag>
+                        <span className="text-xs text-slate-400">
+                          {dayjs(announcement.publishDate).format('DD.MM.YYYY')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </List.Item>
+              );
+            }}
+          />
+        </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

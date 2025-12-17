@@ -1,23 +1,23 @@
 'use client';
 
+/**
+ * Attendance Tracking Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
   Table,
   Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
   Select,
   DatePicker,
+  Dropdown,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
+  ReloadOutlined,
   FieldTimeOutlined,
   MoreOutlined,
   EditOutlined,
@@ -25,14 +25,20 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   UserOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAttendance, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AttendanceDto, AttendanceFilterDto } from '@/lib/api/services/hr.types';
 import { AttendanceStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 export default function AttendancePage() {
@@ -40,7 +46,7 @@ export default function AttendancePage() {
   const [filters, setFilters] = useState<AttendanceFilterDto>({});
 
   // API Hooks
-  const { data: attendances = [], isLoading } = useAttendance(filters);
+  const { data: attendances = [], isLoading, refetch } = useAttendance(filters);
   const { data: employees = [] } = useEmployees();
 
   // Stats
@@ -74,15 +80,25 @@ export default function AttendancePage() {
     return statusMap[status] || defaultConfig;
   };
 
+  // Clear filters
+  const clearFilters = () => {
+    setFilters({});
+  };
+
   const columns: ColumnsType<AttendanceDto> = [
     {
       title: 'Çalışan',
       key: 'employee',
+      width: 220,
       render: (_, record: AttendanceDto) => (
-        <Space>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
-          <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
-        </Space>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+            <UserOutlined style={{ color: '#8b5cf6' }} />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{record.employeeName || `Çalışan #${record.employeeId}`}</div>
+          </div>
+        </div>
       ),
     },
     {
@@ -91,43 +107,46 @@ export default function AttendancePage() {
       key: 'date',
       width: 120,
       sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
+      render: (date: string) => <span className="text-sm text-slate-600">{dayjs(date).format('DD.MM.YYYY')}</span>,
     },
     {
       title: 'Giriş',
       dataIndex: 'checkInTime',
       key: 'checkIn',
       width: 100,
-      render: (time: string) => formatTime(time),
+      render: (time: string) => <span className="text-sm text-slate-600">{formatTime(time)}</span>,
     },
     {
       title: 'Çıkış',
       dataIndex: 'checkOutTime',
       key: 'checkOut',
       width: 100,
-      render: (time: string) => formatTime(time),
+      render: (time: string) => <span className="text-sm text-slate-600">{formatTime(time)}</span>,
     },
     {
       title: 'Çalışma Süresi',
       dataIndex: 'workedHours',
       key: 'workedHours',
-      width: 120,
-      render: (hours: number) => (hours ? `${hours.toFixed(1)} saat` : '-'),
+      width: 130,
+      render: (hours: number) => (
+        <span className="text-sm text-slate-600">{hours ? `${hours.toFixed(1)} saat` : '-'}</span>
+      ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
+      width: 120,
       render: (status: AttendanceStatus) => {
         const config = getStatusConfig(status);
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 60,
+      fixed: 'right',
       render: (_, record: AttendanceDto) => (
         <Dropdown
           menu={{
@@ -148,135 +167,162 @@ export default function AttendancePage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <MoreOutlined className="text-sm" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <FieldTimeOutlined className="mr-2" />
-          Yoklama Takibi
-        </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/attendance/new')}>
-          Yeni Kayıt
-        </Button>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Kayıt</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalRecords}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7c3aed15' }}>
+              <FieldTimeOutlined style={{ color: '#7c3aed' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Mevcut</span>
+              <div className="text-2xl font-semibold text-slate-900">{presentCount}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Geç Kalan</span>
+              <div className="text-2xl font-semibold text-slate-900">{lateCount}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <ClockCircleOutlined style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Yok</span>
+              <div className="text-2xl font-semibold text-slate-900">{absentCount}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <WarningOutlined style={{ color: '#ef4444' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Kayıt"
-              value={totalRecords}
-              prefix={<FieldTimeOutlined />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Mevcut"
-              value={presentCount}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Geç Kalan"
-              value={lateCount}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
-            <Statistic
-              title="Yok"
-              value={absentCount}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<FieldTimeOutlined />}
+        iconColor="#7c3aed"
+        title="Yoklama Takibi"
+        description="Çalışan yoklama kayıtlarını görüntüle ve yönet"
+        itemCount={totalRecords}
+        primaryAction={{
+          label: 'Yeni Kayıt',
+          onClick: () => router.push('/hr/attendance/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Çalışan seçin"
-              allowClear
-              showSearch
-              optionFilterProp="children"
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
-              options={employees.map((e) => ({
-                value: e.id,
-                label: e.fullName,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <RangePicker
-              style={{ width: '100%' }}
-              format="DD.MM.YYYY"
-              placeholder={['Başlangıç', 'Bitiş']}
-              onChange={(dates) => {
-                if (dates) {
-                  setFilters((prev) => ({
-                    ...prev,
-                    startDate: dates[0]?.format('YYYY-MM-DD'),
-                    endDate: dates[1]?.format('YYYY-MM-DD'),
-                  }));
-                } else {
-                  setFilters((prev) => ({ ...prev, startDate: undefined, endDate: undefined }));
-                }
-              }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Durum"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-              options={[
-                { value: AttendanceStatus.Present, label: 'Mevcut' },
-                { value: AttendanceStatus.Absent, label: 'Yok' },
-                { value: AttendanceStatus.Late, label: 'Geç' },
-                { value: AttendanceStatus.HalfDay, label: 'Yarım Gün' },
-                { value: AttendanceStatus.OnLeave, label: 'İzinli' },
-              ]}
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Select
+            placeholder="Çalışan seçin"
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            className="h-10"
+            onChange={(value) => setFilters((prev) => ({ ...prev, employeeId: value }))}
+            options={employees.map((e) => ({
+              value: e.id,
+              label: e.fullName,
+            }))}
+          />
+          <RangePicker
+            className="h-10"
+            format="DD.MM.YYYY"
+            placeholder={['Başlangıç', 'Bitiş']}
+            onChange={(dates) => {
+              if (dates) {
+                setFilters((prev) => ({
+                  ...prev,
+                  startDate: dates[0]?.format('YYYY-MM-DD'),
+                  endDate: dates[1]?.format('YYYY-MM-DD'),
+                }));
+              } else {
+                setFilters((prev) => ({ ...prev, startDate: undefined, endDate: undefined }));
+              }
+            }}
+          />
+          <Select
+            placeholder="Durum"
+            allowClear
+            className="h-10"
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+            options={[
+              { value: AttendanceStatus.Present, label: 'Mevcut' },
+              { value: AttendanceStatus.Absent, label: 'Yok' },
+              { value: AttendanceStatus.Late, label: 'Geç' },
+              { value: AttendanceStatus.HalfDay, label: 'Yarım Gün' },
+              { value: AttendanceStatus.OnLeave, label: 'İzinli' },
+            ]}
+          />
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={attendances}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kayıt`,
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={attendances}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 900 }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

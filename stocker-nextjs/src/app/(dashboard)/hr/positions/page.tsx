@@ -1,21 +1,20 @@
 'use client';
 
+/**
+ * Positions List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
   Input,
-  Row,
-  Col,
-  Statistic,
-  Modal,
-  Dropdown,
   Select,
+  Dropdown,
+  Modal,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -40,9 +39,12 @@ import {
 } from '@/lib/api/hooks/useHR';
 import type { PositionDto } from '@/lib/api/services/hr.types';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Title, Text } = Typography;
-const { Search } = Input;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 export default function PositionsPage() {
   const router = useRouter();
@@ -145,35 +147,39 @@ export default function PositionsPage() {
   // Table columns
   const columns: ColumnsType<PositionDto> = [
     {
-      title: 'Pozisyon Kodu',
-      dataIndex: 'code',
-      key: 'code',
-      width: 120,
-      render: (code) => <Text strong>{code}</Text>,
-    },
-    {
-      title: 'Pozisyon Adı',
-      dataIndex: 'title',
-      key: 'title',
-      width: 200,
+      title: 'Pozisyon',
+      key: 'position',
+      width: 280,
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+            <SafetyCertificateOutlined style={{ color: '#8b5cf6' }} />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{record.title}</div>
+            <div className="text-xs text-slate-500">{record.code || '-'}</div>
+          </div>
+        </div>
+      ),
     },
     {
       title: 'Departman',
       dataIndex: 'departmentName',
       key: 'department',
       width: 150,
-      render: (name) => name || <Text type="secondary">-</Text>,
+      render: (name) => <span className="text-sm text-slate-600">{name || <span className="text-slate-400">-</span>}</span>,
     },
     {
       title: 'Maaş Aralığı',
       key: 'salary',
       width: 200,
       render: (_, record) => {
-        if (!record.minSalary && !record.maxSalary) return <Text type="secondary">-</Text>;
+        if (!record.minSalary && !record.maxSalary) return <span className="text-slate-400">-</span>;
         return (
-          <Text>
-            {formatCurrency(record.minSalary)} - {formatCurrency(record.maxSalary)}
-          </Text>
+          <div className="flex items-center gap-1 text-xs text-slate-600">
+            <DollarOutlined className="text-slate-400" />
+            <span>{formatCurrency(record.minSalary)} - {formatCurrency(record.maxSalary)}</span>
+          </div>
         );
       },
     },
@@ -183,7 +189,11 @@ export default function PositionsPage() {
       key: 'employees',
       width: 100,
       align: 'center',
-      render: (count) => <Tag color="blue">{count || 0}</Tag>,
+      render: (count) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+          {count || 0}
+        </span>
+      ),
     },
     {
       title: 'Durum',
@@ -195,9 +205,9 @@ export default function PositionsPage() {
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 100,
+      width: 60,
       fixed: 'right',
       render: (_, record) => {
         const menuItems = [
@@ -232,7 +242,9 @@ export default function PositionsPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} />
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
           </Dropdown>
         );
       },
@@ -240,122 +252,135 @@ export default function PositionsPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>
-            <SafetyCertificateOutlined className="mr-2" />
-            Pozisyonlar
-          </Title>
-          <Text type="secondary">Tüm pozisyonları görüntüle ve yönet</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Pozisyon</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalPositions}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <SafetyCertificateOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/positions/new')}>
-            Yeni Pozisyon
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Aktif Pozisyon</span>
+              <div className="text-2xl font-semibold text-slate-900">{activePositions}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Çalışan</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalEmployees}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <TeamOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Pozisyon"
-              value={totalPositions}
-              prefix={<SafetyCertificateOutlined />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Aktif Pozisyon"
-              value={activePositions}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Çalışan"
-              value={totalEmployees}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<SafetyCertificateOutlined />}
+        iconColor="#8b5cf6"
+        title="Pozisyonlar"
+        description="Tüm pozisyonları görüntüle ve yönet"
+        itemCount={filteredPositions.length}
+        primaryAction={{
+          label: 'Yeni Pozisyon',
+          onClick: () => router.push('/hr/positions/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <Card className="mb-6">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8}>
-            <Search
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="md:col-span-2">
+            <Input
               placeholder="Pozisyon adı, kod veya açıklama ara..."
+              prefix={<SearchOutlined className="text-slate-400" />}
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
+              className="h-10"
             />
-          </Col>
-          <Col xs={12} md={5}>
-            <Select
-              placeholder="Departman"
-              allowClear
-              style={{ width: '100%' }}
-              value={selectedDepartment}
-              onChange={setSelectedDepartment}
-              options={departments.map((d) => ({ value: d.id, label: d.name }))}
-            />
-          </Col>
-          <Col xs={12} md={5}>
-            <Select
-              style={{ width: '100%' }}
-              value={includeInactive}
-              onChange={setIncludeInactive}
-              options={[
-                { value: false, label: 'Sadece Aktifler' },
-                { value: true, label: 'Tümü' },
-              ]}
-            />
-          </Col>
-          <Col xs={24} md={6}>
-            <Button block onClick={clearFilters}>
-              Temizle
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <Select
+            placeholder="Departman"
+            allowClear
+            className="h-10"
+            value={selectedDepartment}
+            onChange={setSelectedDepartment}
+            options={departments.map((d) => ({ value: d.id, label: d.name }))}
+          />
+          <Select
+            className="h-10"
+            value={includeInactive}
+            onChange={setIncludeInactive}
+            options={[
+              { value: false, label: 'Sadece Aktifler' },
+              { value: true, label: 'Tümü' },
+            ]}
+          />
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredPositions}
-          rowKey="id"
-          loading={isLoading}
-          scroll={{ x: 1000 }}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: filteredPositions.length,
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} pozisyon`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-          }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredPositions}
+            rowKey="id"
+            loading={isLoading}
+            scroll={{ x: 1000 }}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: filteredPositions.length,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} pozisyon`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
