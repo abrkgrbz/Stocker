@@ -2,37 +2,27 @@
 
 /**
  * Security Settings Page
- * Enterprise-grade design following Linear/Stripe/Vercel design principles
- * - Clean white cards with subtle borders
- * - Stacked form layouts
- * - Minimal accent colors (only on icons/critical elements)
+ * Corporate Professional Design - Monochrome Palette
+ * - Single global save bar (sticky bottom)
+ * - Black/slate color scheme only
+ * - Dense layout with compact spacing
+ * - Native toggle switches (black when active)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Form, InputNumber, Spin } from 'antd';
 import {
-  Form,
-  Switch,
-  InputNumber,
-  Spin,
-  Progress,
-} from 'antd';
-import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  LockOutlined,
-  ClockCircleOutlined,
-  KeyOutlined,
-  SecurityScanOutlined,
-  CheckOutlined,
-  ExclamationCircleOutlined,
-  SafetyCertificateOutlined,
-  ThunderboltOutlined,
-  EyeInvisibleOutlined,
-  ApiOutlined,
-  FieldTimeOutlined,
-  UserSwitchOutlined,
-  MobileOutlined,
-} from '@ant-design/icons';
+  ArrowLeft,
+  Shield,
+  Clock,
+  Key,
+  Lock,
+  Smartphone,
+  Monitor,
+  Zap,
+  Save,
+  AlertCircle,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { securitySettingsService } from '@/lib/api/services';
@@ -77,19 +67,39 @@ const calculateSecurityScore = (settings: SecuritySettingsDto | null): number =>
   return Math.min(score, 100);
 };
 
-const getScoreColor = (score: number): string => {
-  if (score >= 80) return '#10b981';
-  if (score >= 60) return '#f59e0b';
-  if (score >= 40) return '#f97316';
-  return '#ef4444';
-};
-
 const getScoreLabel = (score: number): string => {
   if (score >= 80) return 'Mükemmel';
   if (score >= 60) return 'İyi';
   if (score >= 40) return 'Orta';
   return 'Zayıf';
 };
+
+// Custom Toggle Switch Component - Black when active
+function Toggle({ checked, onChange, disabled }: { checked?: boolean; onChange?: (checked: boolean) => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange?.(!checked)}
+      className={`
+        relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+        transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2
+        ${checked ? 'bg-slate-900' : 'bg-slate-200'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+      `}
+    >
+      <span
+        className={`
+          pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0
+          transition duration-200 ease-in-out
+          ${checked ? 'translate-x-4' : 'translate-x-0'}
+        `}
+      />
+    </button>
+  );
+}
 
 export default function SecurityPage() {
   const router = useRouter();
@@ -99,8 +109,14 @@ export default function SecurityPage() {
   const [apiForm] = Form.useForm();
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<SecuritySettingsDto | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Track form changes
+  const markAsChanged = useCallback(() => {
+    setHasChanges(true);
+  }, []);
 
   useEffect(() => {
     loadSecuritySettings();
@@ -156,106 +172,63 @@ export default function SecurityPage() {
     });
   };
 
-  const handleSavePasswordPolicy = async (values: any) => {
+  // Global Save - saves all sections
+  const handleSaveAll = async () => {
     try {
-      setSaving('password');
-      const request: UpdatePasswordPolicyRequest = {
-        minPasswordLength: values.minPasswordLength,
-        requireUppercase: values.requireUppercase,
-        requireLowercase: values.requireLowercase,
-        requireNumbers: values.requireNumbers,
-        requireSpecialChars: values.requireSpecialChars,
-        passwordExpiryDays: values.passwordExpiry,
-        preventPasswordReuse: values.preventReuse,
+      setSaving(true);
+
+      // Get all form values
+      const passwordValues = passwordForm.getFieldsValue();
+      const twoFactorValues = twoFactorForm.getFieldsValue();
+      const sessionValues = sessionForm.getFieldsValue();
+      const apiValues = apiForm.getFieldsValue();
+
+      // Save Password Policy
+      const passwordRequest: UpdatePasswordPolicyRequest = {
+        minPasswordLength: passwordValues.minPasswordLength,
+        requireUppercase: passwordValues.requireUppercase,
+        requireLowercase: passwordValues.requireLowercase,
+        requireNumbers: passwordValues.requireNumbers,
+        requireSpecialChars: passwordValues.requireSpecialChars,
+        passwordExpiryDays: passwordValues.passwordExpiry,
+        preventPasswordReuse: passwordValues.preventReuse,
       };
+      await securitySettingsService.updatePasswordPolicy(passwordRequest);
 
-      const response = await securitySettingsService.updatePasswordPolicy(request);
+      // Save 2FA Settings
+      const twoFactorRequest: UpdateTwoFactorSettingsRequest = {
+        require2FA: twoFactorValues.require2FA,
+        allow2FA: twoFactorValues.allow2FA,
+        trustedDevices: twoFactorValues.trustedDevices,
+        trustedDeviceDays: twoFactorValues.trustedDeviceDays || 30,
+      };
+      await securitySettingsService.updateTwoFactorSettings(twoFactorRequest);
 
-      if (response.success) {
-        showUpdateSuccess('şifre politikası');
-        await loadSecuritySettings();
-      } else {
-        showError(response.message || 'Ayarlar kaydedilirken bir hata oluştu');
-      }
+      // Save Session Settings
+      const sessionRequest: UpdateSessionSettingsRequest = {
+        sessionTimeoutMinutes: sessionValues.sessionTimeout,
+        maxConcurrentSessions: sessionValues.maxConcurrentSessions,
+        requireReauthForCriticalOps: sessionValues.requireReauth,
+      };
+      await securitySettingsService.updateSessionSettings(sessionRequest);
+
+      // Save API Security
+      const apiRequest: UpdateApiSecurityRequest = {
+        allowApiAccess: apiValues.allowApiAccess,
+        requireApiKey: apiValues.requireApiKey,
+        apiKeyExpiryDays: apiValues.apiKeyExpiry,
+        rateLimitEnabled: apiValues.rateLimitEnabled,
+        rateLimitRequestsPerHour: apiValues.rateLimitRequests,
+      };
+      await securitySettingsService.updateApiSecurity(apiRequest);
+
+      showUpdateSuccess('güvenlik ayarları');
+      setHasChanges(false);
+      await loadSecuritySettings();
     } catch (error) {
       showError('Ayarlar kaydedilirken bir hata oluştu');
     } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleSaveTwoFactor = async (values: any) => {
-    try {
-      setSaving('2fa');
-      const request: UpdateTwoFactorSettingsRequest = {
-        require2FA: values.require2FA,
-        allow2FA: values.allow2FA,
-        trustedDevices: values.trustedDevices,
-        trustedDeviceDays: values.trustedDeviceDays || 30,
-      };
-
-      const response = await securitySettingsService.updateTwoFactorSettings(request);
-
-      if (response.success) {
-        showUpdateSuccess('2FA ayarları');
-        await loadSecuritySettings();
-      } else {
-        showError(response.message || 'Ayarlar kaydedilirken bir hata oluştu');
-      }
-    } catch (error) {
-      showError('Ayarlar kaydedilirken bir hata oluştu');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleSaveSession = async (values: any) => {
-    try {
-      setSaving('session');
-      const request: UpdateSessionSettingsRequest = {
-        sessionTimeoutMinutes: values.sessionTimeout,
-        maxConcurrentSessions: values.maxConcurrentSessions,
-        requireReauthForCriticalOps: values.requireReauth,
-      };
-
-      const response = await securitySettingsService.updateSessionSettings(request);
-
-      if (response.success) {
-        showUpdateSuccess('oturum ayarları');
-        await loadSecuritySettings();
-      } else {
-        showError(response.message || 'Ayarlar kaydedilirken bir hata oluştu');
-      }
-    } catch (error) {
-      showError('Ayarlar kaydedilirken bir hata oluştu');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleSaveApiSecurity = async (values: any) => {
-    try {
-      setSaving('api');
-      const request: UpdateApiSecurityRequest = {
-        allowApiAccess: values.allowApiAccess,
-        requireApiKey: values.requireApiKey,
-        apiKeyExpiryDays: values.apiKeyExpiry,
-        rateLimitEnabled: values.rateLimitEnabled,
-        rateLimitRequestsPerHour: values.rateLimitRequests,
-      };
-
-      const response = await securitySettingsService.updateApiSecurity(request);
-
-      if (response.success) {
-        showUpdateSuccess('API güvenlik ayarları');
-        await loadSecuritySettings();
-      } else {
-        showError(response.message || 'Ayarlar kaydedilirken bir hata oluştu');
-      }
-    } catch (error) {
-      showError('Ayarlar kaydedilirken bir hata oluştu');
-    } finally {
-      setSaving(null);
+      setSaving(false);
     }
   };
 
@@ -275,12 +248,7 @@ export default function SecurityPage() {
         <div className="min-h-screen bg-slate-50 p-6">
           <div className="max-w-5xl mx-auto">
             <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-              <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: '#ef444415' }}
-              >
-                <ExclamationCircleOutlined style={{ color: '#ef4444', fontSize: 24 }} />
-              </div>
+              <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Yetkisiz Erişim</h3>
               <p className="text-sm text-slate-500">
                 Güvenlik ayarlarına erişim yetkiniz bulunmamaktadır.
@@ -290,399 +258,378 @@ export default function SecurityPage() {
         </div>
       }
     >
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 pb-20">
         {/* Minimal Header */}
         <div className="bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
                 className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
               >
-                <ArrowLeftOutlined />
+                <ArrowLeft className="w-4 h-4" />
               </button>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-lg font-semibold text-slate-900">Güvenlik Ayarları</h1>
-                <p className="text-sm text-slate-500">Hesap güvenliği, erişim kontrolü ve API güvenlik yapılandırmaları</p>
+                <p className="text-sm text-slate-500">Hesap güvenliği ve erişim kontrolü</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Security Score Card */}
-          <div className="bg-white border border-slate-200 rounded-lg p-6 mb-8">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative">
-                <Progress
-                  type="circle"
-                  percent={securityScore}
-                  size={100}
-                  strokeColor={getScoreColor(securityScore)}
-                  trailColor="#e2e8f0"
-                  format={(percent) => (
-                    <span className="text-xl font-semibold text-slate-900">{percent}</span>
-                  )}
-                />
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          {/* Compact Security Score - Horizontal Bar */}
+          <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-6">
+              {/* Score Circle - Smaller */}
+              <div className="flex-shrink-0">
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 transform -rotate-90">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="#e2e8f0"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="#0f172a"
+                      strokeWidth="4"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(securityScore / 100) * 176} 176`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-lg font-bold text-slate-900">{securityScore}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
-                  <span className="text-lg font-semibold text-slate-900">Güvenlik Skoru</span>
-                  <span
-                    className="px-2 py-0.5 text-xs font-medium rounded-full"
-                    style={{
-                      backgroundColor: `${getScoreColor(securityScore)}15`,
-                      color: getScoreColor(securityScore),
-                    }}
-                  >
+
+              {/* Score Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-slate-900">Güvenlik Skoru</span>
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
                     {getScoreLabel(securityScore)}
                   </span>
                 </div>
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-xs text-slate-500">
                   {securityScore >= 80
                     ? 'Sisteminiz yüksek güvenlik standartlarına sahip.'
-                    : securityScore >= 60
-                    ? 'Güvenliğinizi artırmak için bazı iyileştirmeler yapabilirsiniz.'
                     : 'Güvenlik ayarlarınızı gözden geçirmenizi öneririz.'
                   }
                 </p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-md text-xs text-slate-600">
-                    <LockOutlined />
-                    <span>Şifre Politikası</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-md text-xs text-slate-600">
-                    <MobileOutlined />
-                    <span>2FA</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-md text-xs text-slate-600">
-                    <ClockCircleOutlined />
-                    <span>Oturum</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-md text-xs text-slate-600">
-                    <ApiOutlined />
-                    <span>API</span>
-                  </div>
-                </div>
+              </div>
+
+              {/* Score Components - Compact Pills */}
+              <div className="hidden md:flex items-center gap-2">
+                <span className="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded">Şifre</span>
+                <span className="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded">2FA</span>
+                <span className="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded">Oturum</span>
+                <span className="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded">API</span>
               </div>
             </div>
           </div>
 
-          {/* Settings Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Settings Grid - 2 columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Password Policy Card */}
             <section>
-              <h2 className="text-sm font-medium text-slate-900 mb-4 flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded flex items-center justify-center"
-                  style={{ backgroundColor: '#3b82f615' }}
-                >
-                  <LockOutlined style={{ color: '#3b82f6', fontSize: 12 }} />
-                </div>
-                Şifre Politikası
-              </h2>
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                <Lock className="w-4 h-4 text-slate-500" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Şifre Politikası</h2>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <Form
                   form={passwordForm}
                   layout="vertical"
-                  onFinish={handleSavePasswordPolicy}
+                  onValuesChange={markAsChanged}
+                  className="space-y-3"
                 >
-                  <Form.Item
-                    label={
-                      <span className="flex items-center gap-2 text-sm text-slate-600">
-                        <ThunderboltOutlined className="text-amber-500" />
-                        Minimum Şifre Uzunluğu
-                      </span>
-                    }
-                    name="minPasswordLength"
-                    rules={[{ required: true, message: 'Zorunlu alan' }]}
-                  >
-                    <InputNumber min={6} max={32} className="w-full" addonAfter="karakter" />
-                  </Form.Item>
+                  {/* Min Length */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm text-slate-700">Min. Şifre Uzunluğu</span>
+                    </div>
+                    <Form.Item name="minPasswordLength" className="mb-0">
+                      <InputNumber min={6} max={32} className="w-20" size="small" />
+                    </Form.Item>
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* Toggle Grid - Compact */}
+                  <div className="grid grid-cols-2 gap-2">
                     <Form.Item name="requireUppercase" valuePropName="checked" className="mb-0">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span className="text-xs text-slate-600">Büyük Harf (A-Z)</span>
-                        <Switch size="small" />
+                      <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                        <span className="text-xs text-slate-600">Büyük Harf</span>
+                        <Form.Item name="requireUppercase" valuePropName="checked" noStyle>
+                          <Toggle />
+                        </Form.Item>
                       </div>
                     </Form.Item>
 
                     <Form.Item name="requireLowercase" valuePropName="checked" className="mb-0">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span className="text-xs text-slate-600">Küçük Harf (a-z)</span>
-                        <Switch size="small" />
+                      <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                        <span className="text-xs text-slate-600">Küçük Harf</span>
+                        <Form.Item name="requireLowercase" valuePropName="checked" noStyle>
+                          <Toggle />
+                        </Form.Item>
                       </div>
                     </Form.Item>
 
                     <Form.Item name="requireNumbers" valuePropName="checked" className="mb-0">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span className="text-xs text-slate-600">Rakam (0-9)</span>
-                        <Switch size="small" />
+                      <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                        <span className="text-xs text-slate-600">Rakam</span>
+                        <Form.Item name="requireNumbers" valuePropName="checked" noStyle>
+                          <Toggle />
+                        </Form.Item>
                       </div>
                     </Form.Item>
 
                     <Form.Item name="requireSpecialChars" valuePropName="checked" className="mb-0">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                        <span className="text-xs text-slate-600">Özel Karakter (!@#)</span>
-                        <Switch size="small" />
+                      <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-100">
+                        <span className="text-xs text-slate-600">Özel Karakter</span>
+                        <Form.Item name="requireSpecialChars" valuePropName="checked" noStyle>
+                          <Toggle />
+                        </Form.Item>
                       </div>
                     </Form.Item>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Form.Item
-                      label={<span className="text-xs text-slate-600">Şifre Geçerliliği (0=Süresiz)</span>}
-                      name="passwordExpiry"
-                      className="mb-4"
-                    >
-                      <InputNumber min={0} max={365} className="w-full" addonAfter="gün" />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<span className="text-xs text-slate-600">Tekrar Kullanma Engeli</span>}
-                      name="preventReuse"
-                      className="mb-4"
-                    >
-                      <InputNumber min={0} max={10} className="w-full" addonAfter="şifre" />
-                    </Form.Item>
+                  {/* Expiry Settings - Inline */}
+                  <div className="flex gap-3 pt-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-slate-500 block mb-1">Geçerlilik (gün)</label>
+                      <Form.Item name="passwordExpiry" className="mb-0">
+                        <InputNumber min={0} max={365} className="w-full" size="small" placeholder="0=Süresiz" />
+                      </Form.Item>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-slate-500 block mb-1">Tekrar Engeli</label>
+                      <Form.Item name="preventReuse" className="mb-0">
+                        <InputNumber min={0} max={10} className="w-full" size="small" placeholder="şifre" />
+                      </Form.Item>
+                    </div>
                   </div>
-
-                  <button
-                    type="submit"
-                    disabled={saving === 'password'}
-                    className="w-full px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                  >
-                    <SaveOutlined />
-                    {saving === 'password' ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
                 </Form>
               </div>
             </section>
 
             {/* 2FA Card */}
             <section>
-              <h2 className="text-sm font-medium text-slate-900 mb-4 flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded flex items-center justify-center"
-                  style={{ backgroundColor: '#10b98115' }}
-                >
-                  <SecurityScanOutlined style={{ color: '#10b981', fontSize: 12 }} />
-                </div>
-                İki Faktörlü Doğrulama
-              </h2>
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                <Smartphone className="w-4 h-4 text-slate-500" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">İki Faktörlü Doğrulama</h2>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <Form
                   form={twoFactorForm}
                   layout="vertical"
-                  onFinish={handleSaveTwoFactor}
+                  onValuesChange={markAsChanged}
+                  className="space-y-2"
                 >
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100 mb-4">
-                    <div className="flex items-start gap-3">
-                      <CheckOutlined className="text-emerald-500 mt-0.5" />
-                      <div>
-                        <span className="text-sm font-medium text-emerald-800 block">2FA Neden Önemli?</span>
-                        <span className="text-xs text-emerald-700">
-                          Şifre çalınsa bile hesaplarınız güvende kalır.
-                        </span>
-                      </div>
+                  {/* 2FA Required */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">2FA Zorunlu</span>
+                      <span className="text-xs text-slate-500">Tüm kullanıcılar için zorunlu</span>
                     </div>
+                    <Form.Item name="require2FA" valuePropName="checked" noStyle>
+                      <Toggle />
+                    </Form.Item>
                   </div>
 
-                  <Form.Item name="require2FA" valuePropName="checked" className="mb-3">
-                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100">
-                      <div>
-                        <span className="text-sm font-medium text-red-800 block">2FA Zorunlu</span>
-                        <span className="text-xs text-red-600">Tüm kullanıcılar için zorunlu</span>
-                      </div>
-                      <Switch />
+                  {/* Allow 2FA */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">2FA İzin Ver</span>
+                      <span className="text-xs text-slate-500">Kullanıcılar aktif edebilir</span>
                     </div>
-                  </Form.Item>
+                    <Form.Item name="allow2FA" valuePropName="checked" noStyle>
+                      <Toggle />
+                    </Form.Item>
+                  </div>
 
-                  <Form.Item name="allow2FA" valuePropName="checked" className="mb-3">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div>
-                        <span className="text-sm font-medium text-slate-700 block">2FA İzin Ver</span>
-                        <span className="text-xs text-slate-500">Kullanıcılar isteğe bağlı aktif edebilir</span>
-                      </div>
-                      <Switch />
+                  {/* Trusted Devices */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">Güvenilir Cihazlar</span>
+                      <span className="text-xs text-slate-500">Cihazı hatırla</span>
                     </div>
-                  </Form.Item>
+                    <Form.Item name="trustedDevices" valuePropName="checked" noStyle>
+                      <Toggle />
+                    </Form.Item>
+                  </div>
 
-                  <Form.Item name="trustedDevices" valuePropName="checked" className="mb-3">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div>
-                        <span className="text-sm font-medium text-slate-700 block">Güvenilir Cihazlar</span>
-                        <span className="text-xs text-slate-500">Cihazı hatırla, tekrar sorma</span>
-                      </div>
-                      <Switch />
-                    </div>
-                  </Form.Item>
-
-                  <Form.Item
-                    label={<span className="text-xs text-slate-600">Güvenilir Cihaz Süresi</span>}
-                    name="trustedDeviceDays"
-                    className="mb-4"
-                  >
-                    <InputNumber min={1} max={90} className="w-full" addonAfter="gün" />
-                  </Form.Item>
-
-                  <button
-                    type="submit"
-                    disabled={saving === '2fa'}
-                    className="w-full px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                  >
-                    <SaveOutlined />
-                    {saving === '2fa' ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
+                  {/* Trusted Device Days */}
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-slate-600">Güvenilir Cihaz Süresi</span>
+                    <Form.Item name="trustedDeviceDays" className="mb-0">
+                      <InputNumber min={1} max={90} className="w-20" size="small" addonAfter="gün" />
+                    </Form.Item>
+                  </div>
                 </Form>
               </div>
             </section>
 
             {/* Session Management Card */}
             <section>
-              <h2 className="text-sm font-medium text-slate-900 mb-4 flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded flex items-center justify-center"
-                  style={{ backgroundColor: '#f59e0b15' }}
-                >
-                  <ClockCircleOutlined style={{ color: '#f59e0b', fontSize: 12 }} />
-                </div>
-                Oturum Yönetimi
-              </h2>
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                <Clock className="w-4 h-4 text-slate-500" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Oturum Yönetimi</h2>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <Form
                   form={sessionForm}
                   layout="vertical"
-                  onFinish={handleSaveSession}
+                  onValuesChange={markAsChanged}
+                  className="space-y-3"
                 >
-                  <Form.Item
-                    label={
-                      <span className="flex items-center gap-2 text-sm text-slate-600">
-                        <FieldTimeOutlined className="text-amber-500" />
-                        Oturum Zaman Aşımı
-                      </span>
-                    }
-                    name="sessionTimeout"
-                  >
-                    <InputNumber min={5} max={1440} className="w-full" addonAfter="dakika" />
-                  </Form.Item>
-
-                  <Form.Item
-                    label={
-                      <span className="flex items-center gap-2 text-sm text-slate-600">
-                        <UserSwitchOutlined className="text-blue-500" />
-                        Maksimum Eşzamanlı Oturum
-                      </span>
-                    }
-                    name="maxConcurrentSessions"
-                  >
-                    <InputNumber min={1} max={10} className="w-full" addonAfter="oturum" />
-                  </Form.Item>
-
-                  <Form.Item name="requireReauth" valuePropName="checked" className="mb-4">
-                    <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-100">
-                      <div>
-                        <span className="text-sm font-medium text-amber-800 block flex items-center gap-2">
-                          <EyeInvisibleOutlined />
-                          Kritik İşlem Doğrulaması
-                        </span>
-                        <span className="text-xs text-amber-700">Önemli değişiklikler için şifre sor</span>
-                      </div>
-                      <Switch />
+                  {/* Session Timeout */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm text-slate-700">Oturum Zaman Aşımı</span>
                     </div>
-                  </Form.Item>
+                    <Form.Item name="sessionTimeout" className="mb-0">
+                      <InputNumber min={5} max={1440} className="w-24" size="small" addonAfter="dk" />
+                    </Form.Item>
+                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={saving === 'session'}
-                    className="w-full px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                  >
-                    <SaveOutlined />
-                    {saving === 'session' ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
+                  {/* Max Concurrent Sessions */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-slate-400" />
+                      <span className="text-sm text-slate-700">Maks. Eşzamanlı Oturum</span>
+                    </div>
+                    <Form.Item name="maxConcurrentSessions" className="mb-0">
+                      <InputNumber min={1} max={10} className="w-20" size="small" />
+                    </Form.Item>
+                  </div>
+
+                  {/* Require Reauth */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">Kritik İşlem Doğrulaması</span>
+                      <span className="text-xs text-slate-500">Önemli değişiklikler için şifre sor</span>
+                    </div>
+                    <Form.Item name="requireReauth" valuePropName="checked" noStyle>
+                      <Toggle />
+                    </Form.Item>
+                  </div>
                 </Form>
               </div>
             </section>
 
             {/* API Security Card */}
             <section>
-              <h2 className="text-sm font-medium text-slate-900 mb-4 flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded flex items-center justify-center"
-                  style={{ backgroundColor: '#8b5cf615' }}
-                >
-                  <KeyOutlined style={{ color: '#8b5cf6', fontSize: 12 }} />
-                </div>
-                API Güvenliği
-              </h2>
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-3 border-b border-slate-200 pb-2">
+                <Key className="w-4 h-4 text-slate-500" />
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">API Güvenliği</h2>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <Form
                   form={apiForm}
                   layout="vertical"
-                  onFinish={handleSaveApiSecurity}
+                  onValuesChange={markAsChanged}
+                  className="space-y-2"
                 >
-                  <Form.Item name="allowApiAccess" valuePropName="checked" className="mb-3">
-                    <div className="flex items-center justify-between p-4 bg-violet-50 rounded-lg border border-violet-100">
-                      <div>
-                        <span className="text-sm font-medium text-violet-800 block">API Erişimi</span>
-                        <span className="text-xs text-violet-600">Harici uygulamalara izin ver</span>
-                      </div>
-                      <Switch />
+                  {/* Allow API Access */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">API Erişimi</span>
+                      <span className="text-xs text-slate-500">Harici uygulamalara izin ver</span>
                     </div>
-                  </Form.Item>
-
-                  <Form.Item name="requireApiKey" valuePropName="checked" className="mb-3">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <div>
-                        <span className="text-sm font-medium text-slate-700 block">API Key Zorunlu</span>
-                        <span className="text-xs text-slate-500">Her istek için anahtar gerekli</span>
-                      </div>
-                      <Switch />
-                    </div>
-                  </Form.Item>
-
-                  <Form.Item
-                    label={<span className="text-xs text-slate-600">API Key Geçerlilik Süresi (0=Süresiz)</span>}
-                    name="apiKeyExpiry"
-                  >
-                    <InputNumber min={0} max={365} className="w-full" addonAfter="gün" />
-                  </Form.Item>
-
-                  <div className="border-t border-slate-100 pt-4 mt-4">
-                    <span className="text-xs font-medium text-slate-700 block mb-3">Rate Limiting</span>
-
-                    <Form.Item name="rateLimitEnabled" valuePropName="checked" className="mb-3">
-                      <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100">
-                        <div>
-                          <span className="text-sm font-medium text-red-800 block">Rate Limiting Aktif</span>
-                          <span className="text-xs text-red-600">Aşırı istek saldırılarını engelle</span>
-                        </div>
-                        <Switch />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<span className="text-xs text-slate-600">Saatlik İstek Limiti</span>}
-                      name="rateLimitRequests"
-                      className="mb-4"
-                    >
-                      <InputNumber min={100} max={10000} className="w-full" addonAfter="istek/saat" />
+                    <Form.Item name="allowApiAccess" valuePropName="checked" noStyle>
+                      <Toggle />
                     </Form.Item>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={saving === 'api'}
-                    className="w-full px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                  >
-                    <SaveOutlined />
-                    {saving === 'api' ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
+                  {/* Require API Key */}
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+                    <div>
+                      <span className="text-sm font-medium text-slate-700 block">API Key Zorunlu</span>
+                      <span className="text-xs text-slate-500">Her istek için anahtar gerekli</span>
+                    </div>
+                    <Form.Item name="requireApiKey" valuePropName="checked" noStyle>
+                      <Toggle />
+                    </Form.Item>
+                  </div>
+
+                  {/* API Key Expiry */}
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-slate-600">API Key Geçerliliği</span>
+                    <Form.Item name="apiKeyExpiry" className="mb-0">
+                      <InputNumber min={0} max={365} className="w-24" size="small" addonAfter="gün" />
+                    </Form.Item>
+                  </div>
+
+                  {/* Rate Limiting Section */}
+                  <div className="border-t border-slate-100 pt-3 mt-3">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block mb-2">Rate Limiting</span>
+
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100 mb-2">
+                      <div>
+                        <span className="text-sm font-medium text-slate-700 block">Rate Limiting Aktif</span>
+                        <span className="text-xs text-slate-500">Aşırı istek saldırılarını engelle</span>
+                      </div>
+                      <Form.Item name="rateLimitEnabled" valuePropName="checked" noStyle>
+                        <Toggle />
+                      </Form.Item>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm text-slate-600">Saatlik İstek Limiti</span>
+                      <Form.Item name="rateLimitRequests" className="mb-0">
+                        <InputNumber min={100} max={10000} className="w-24" size="small" />
+                      </Form.Item>
+                    </div>
+                  </div>
                 </Form>
               </div>
             </section>
+          </div>
+        </div>
+
+        {/* Sticky Save Bar - Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+          <div className="max-w-6xl mx-auto px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                {hasChanges ? (
+                  <>
+                    <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                    <span>Kaydedilmemiş değişiklikler var</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-4 h-4" />
+                    <span>Tüm güvenlik ayarları güncel</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={handleSaveAll}
+                disabled={saving || !hasChanges}
+                className={`
+                  px-6 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2
+                  ${hasChanges
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }
+                  disabled:opacity-50
+                `}
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
