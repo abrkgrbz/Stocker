@@ -5,33 +5,33 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, User, Shield, Bell, CreditCard } from 'lucide-react';
 
-// Settings navigation items
-const settingsNavItems = [
+// Account settings navigation items
+const accountNavItems = [
   {
     key: 'profile',
     label: 'Profilim',
-    href: '/settings/profile',
+    href: '/account/profile',
     icon: User,
     description: 'Kişisel bilgilerinizi yönetin',
   },
   {
     key: 'security',
     label: 'Hesap Güvenliği',
-    href: '/settings/security',
+    href: '/account/security',
     icon: Shield,
     description: 'Şifre ve güvenlik ayarları',
   },
   {
     key: 'notifications',
     label: 'Bildirimler',
-    href: '/settings/notifications',
+    href: '/account/notifications',
     icon: Bell,
     description: 'Bildirim tercihlerinizi ayarlayın',
   },
   {
     key: 'billing',
     label: 'Faturalandırma',
-    href: '/settings/billing',
+    href: '/account/billing',
     icon: CreditCard,
     description: 'Ödeme ve fatura bilgileri',
   },
@@ -67,7 +67,7 @@ export default function SettingsLayout({
         {/* Settings Navigation - Left Sidebar */}
         <aside className="w-64 min-h-[calc(100vh-65px)] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <nav className="p-4 space-y-1">
-            {settingsNavItems.map((item) => {
+            {accountNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
 
