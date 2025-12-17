@@ -1,31 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  Button,
-  Card,
-  Tag,
-} from 'antd';
+import { Form, Input, InputNumber, Select, Switch, Button, Card, Tag } from 'antd';
 import {
   FunnelPlotOutlined,
   PlusOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  StarOutlined,
 } from '@ant-design/icons';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Stage color options
 const STAGE_COLORS = [
@@ -82,7 +68,6 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
   }, [form, initialValues]);
 
   const handleFormFinish = (values: any) => {
-    // Ensure stages have proper order
     if (values.stages) {
       values.stages = values.stages.map((stage: any, index: number) => ({
         ...stage,
@@ -101,7 +86,6 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
   const stages = Form.useWatch('stages', form) || [];
   const stageCount = stages.length;
   const wonStage = stages.find((s: any) => s?.isWon);
-  const lostStage = stages.find((s: any) => s?.isLost);
 
   return (
     <Form
@@ -109,186 +93,123 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={handleFormFinish}
       disabled={loading}
-      className="pipeline-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Pipeline Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <FunnelPlotOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Satış Süreci
-              </p>
-              <p className="text-sm text-white/60">
-                Fırsatlarınızın aşamalarını yönetin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
 
-          {/* Pipeline Stats */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Pipeline Özeti
-            </Text>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-blue-50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-blue-600">
-                  {stageCount}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Aşama</div>
-              </div>
-              <div className="p-4 bg-green-50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-green-600">
-                  {wonStage ? '✓' : '-'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kazanıldı Aşaması</div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Pipeline Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <FunnelPlotOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          </div>
 
-          {/* Status Toggles */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Pipeline aktif ve kullanılabilir' : 'Pipeline pasif durumda'}
-                </div>
-              </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
-                  onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
-                  }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+            {/* Pipeline Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 100, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Pipeline Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Pipeline hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-yellow-50/50 rounded-xl border border-yellow-200">
-              <div>
-                <Text strong className="text-gray-700">
-                  <StarOutlined className="mr-1 text-yellow-500" /> Varsayılan Pipeline
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Yeni kayıtlar için varsayılan olarak kullanılsın
-                </div>
-              </div>
-              <Form.Item name="isDefault" valuePropName="checked" noStyle initialValue={false}>
-                <Switch
-                  checked={isDefault}
-                  onChange={(val) => {
-                    setIsDefault(val);
-                    form.setFieldValue('isDefault', val);
-                  }}
-                  checkedChildren="Evet"
-                  unCheckedChildren="Hayır"
-                  style={{
-                    backgroundColor: isDefault ? '#faad14' : '#d9d9d9',
-                    minWidth: '70px'
-                  }}
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="type" className="mb-0" initialValue="Deal">
+                <Select
+                  options={pipelineTypeOptions}
+                  className="w-40 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
                 />
               </Form.Item>
             </div>
           </div>
-        </Col>
+        </div>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Pipeline Name - Hero Input */}
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── DURUM AYARLARI ─────────────── */}
           <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Pipeline adı zorunludur' },
-                { max: 100, message: 'En fazla 100 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Pipeline adı (örn: Kurumsal Satış Süreci)"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Pipeline hakkında açıklama..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Durum Ayarları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700">Durum</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {isActive ? 'Pipeline aktif' : 'Pipeline pasif'}
+                    </div>
+                  </div>
+                  <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                    <Switch
+                      checked={isActive}
+                      onChange={(val) => {
+                        setIsActive(val);
+                        form.setFieldValue('isActive', val);
+                      }}
+                      checkedChildren="Aktif"
+                      unCheckedChildren="Pasif"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700">Varsayılan</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      Yeni kayıtlarda kullanılsın
+                    </div>
+                  </div>
+                  <Form.Item name="isDefault" valuePropName="checked" noStyle initialValue={false}>
+                    <Switch
+                      checked={isDefault}
+                      onChange={(val) => {
+                        setIsDefault(val);
+                        form.setFieldValue('isDefault', val);
+                      }}
+                      checkedChildren="Evet"
+                      unCheckedChildren="Hayır"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Basic Info */}
+          {/* ─────────────── PIPELINE AŞAMALARI ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Pipeline Tipi *</div>
-                <Form.Item
-                  name="type"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
-                >
-                  <Select
-                    placeholder="Tip seçin"
-                    options={pipelineTypeOptions}
-                    variant="filled"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Stages Section */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-3">
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                <FunnelPlotOutlined className="mr-1" /> Pipeline Aşamaları
-              </Text>
-              <Button size="small" type="link" onClick={handleUseDefaultStages}>
+            <div className="flex justify-between items-center pb-2 mb-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Pipeline Aşamaları ({stageCount} aşama{wonStage ? ' • Kazanıldı aşaması var' : ''})
+              </h3>
+              <Button size="small" type="link" onClick={handleUseDefaultStages} className="!text-slate-500 hover:!text-slate-700">
                 Varsayılan Aşamaları Kullan
               </Button>
             </div>
@@ -309,127 +230,127 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                 <>
                   <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                     {fields.map((field, index) => (
-                      <Card
+                      <div
                         key={field.key}
-                        size="small"
-                        className="bg-gray-50/50"
-                        title={
-                          <div className="flex items-center gap-2">
-                            <Tag color="blue">#{index + 1}</Tag>
-                            <span className="text-sm font-medium">
-                              {stages[field.name]?.name || `Aşama ${index + 1}`}
-                            </span>
-                          </div>
-                        }
-                        extra={
-                          fields.length > 1 && (
+                        className="p-4 bg-slate-50 rounded-lg border border-slate-200"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <Tag color="blue" className="!m-0">#{index + 1}</Tag>
+                          <span className="text-sm font-medium text-slate-700">
+                            {stages[field.name]?.name || `Aşama ${index + 1}`}
+                          </span>
+                          {fields.length > 1 && (
                             <Button
                               type="text"
                               danger
                               size="small"
                               icon={<DeleteOutlined />}
                               onClick={() => remove(field.name)}
+                              className="ml-auto"
                             />
-                          )
-                        }
-                      >
-                        <div className="space-y-3">
-                          <Row gutter={12}>
-                            <Col span={12}>
-                              <Form.Item
-                                {...field}
-                                name={[field.name, 'name']}
-                                rules={[{ required: true, message: 'Gerekli' }]}
-                                className="mb-0"
-                              >
-                                <Input placeholder="Aşama adı" variant="filled" />
-                              </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                              <Form.Item
-                                {...field}
-                                name={[field.name, 'probability']}
-                                rules={[{ required: true, message: 'Gerekli' }]}
-                                className="mb-0"
-                              >
-                                <InputNumber
-                                  placeholder="%"
-                                  min={0}
-                                  max={100}
-                                  style={{ width: '100%' }}
-                                  variant="filled"
-                                  addonAfter="%"
-                                />
-                              </Form.Item>
-                            </Col>
-                            <Col span={6}>
-                              <Form.Item
-                                {...field}
-                                name={[field.name, 'color']}
-                                initialValue="#1890ff"
-                                className="mb-0"
-                              >
-                                <Select variant="filled">
-                                  {STAGE_COLORS.map((c) => (
-                                    <Select.Option key={c.value} value={c.value}>
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className="w-3 h-3 rounded"
-                                          style={{ backgroundColor: c.value }}
-                                        />
-                                        {c.label}
-                                      </div>
-                                    </Select.Option>
-                                  ))}
-                                </Select>
-                              </Form.Item>
-                            </Col>
-                          </Row>
+                          )}
+                        </div>
 
-                          <div className="flex gap-4">
+                        <div className="grid grid-cols-12 gap-3">
+                          <div className="col-span-5">
                             <Form.Item
                               {...field}
-                              name={[field.name, 'isWon']}
-                              valuePropName="checked"
+                              name={[field.name, 'name']}
+                              rules={[{ required: true, message: '' }]}
                               className="mb-0"
                             >
-                              <div className="flex items-center gap-2 p-2 border rounded-lg bg-green-50/50 cursor-pointer">
-                                <Switch size="small" />
-                                <span className="text-xs">
-                                  <CheckCircleOutlined className="text-green-500 mr-1" />
-                                  Kazanıldı
-                                </span>
-                              </div>
+                              <Input
+                                placeholder="Aşama adı"
+                                className="!bg-white !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
+                              />
                             </Form.Item>
-
+                          </div>
+                          <div className="col-span-3">
                             <Form.Item
                               {...field}
-                              name={[field.name, 'isLost']}
-                              valuePropName="checked"
+                              name={[field.name, 'probability']}
+                              rules={[{ required: true, message: '' }]}
                               className="mb-0"
                             >
-                              <div className="flex items-center gap-2 p-2 border rounded-lg bg-red-50/50 cursor-pointer">
-                                <Switch size="small" />
-                                <span className="text-xs">
-                                  <CloseCircleOutlined className="text-red-500 mr-1" />
-                                  Kaybedildi
-                                </span>
-                              </div>
+                              <InputNumber
+                                placeholder="%"
+                                min={0}
+                                max={100}
+                                className="!w-full [&.ant-input-number]:!bg-white [&.ant-input-number]:!border-slate-300"
+                                addonAfter="%"
+                              />
+                            </Form.Item>
+                          </div>
+                          <div className="col-span-4">
+                            <Form.Item
+                              {...field}
+                              name={[field.name, 'color']}
+                              initialValue="#1890ff"
+                              className="mb-0"
+                            >
+                              <Select className="w-full [&_.ant-select-selector]:!bg-white [&_.ant-select-selector]:!border-slate-300">
+                                {STAGE_COLORS.map((c) => (
+                                  <Select.Option key={c.value} value={c.value}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded" style={{ backgroundColor: c.value }} />
+                                      {c.label}
+                                    </div>
+                                  </Select.Option>
+                                ))}
+                              </Select>
                             </Form.Item>
                           </div>
                         </div>
-                      </Card>
+
+                        <div className="flex gap-4 mt-3">
+                          <Form.Item
+                            {...field}
+                            name={[field.name, 'isWon']}
+                            valuePropName="checked"
+                            className="mb-0"
+                          >
+                            <div className="flex items-center gap-2 px-3 py-1.5 border rounded-lg bg-green-50 border-green-200">
+                              <Switch size="small" checked={stages[field.name]?.isWon} onChange={(val) => {
+                                const newStages = [...stages];
+                                newStages[field.name] = { ...newStages[field.name], isWon: val, isLost: val ? false : newStages[field.name]?.isLost };
+                                form.setFieldsValue({ stages: newStages });
+                              }} />
+                              <span className="text-xs text-green-700">
+                                <CheckCircleOutlined className="mr-1" />
+                                Kazanıldı
+                              </span>
+                            </div>
+                          </Form.Item>
+
+                          <Form.Item
+                            {...field}
+                            name={[field.name, 'isLost']}
+                            valuePropName="checked"
+                            className="mb-0"
+                          >
+                            <div className="flex items-center gap-2 px-3 py-1.5 border rounded-lg bg-red-50 border-red-200">
+                              <Switch size="small" checked={stages[field.name]?.isLost} onChange={(val) => {
+                                const newStages = [...stages];
+                                newStages[field.name] = { ...newStages[field.name], isLost: val, isWon: val ? false : newStages[field.name]?.isWon };
+                                form.setFieldsValue({ stages: newStages });
+                              }} />
+                              <span className="text-xs text-red-700">
+                                <CloseCircleOutlined className="mr-1" />
+                                Kaybedildi
+                              </span>
+                            </div>
+                          </Form.Item>
+                        </div>
+                      </div>
                     ))}
                   </div>
 
                   <Button
                     type="dashed"
-                    onClick={() =>
-                      add({ name: '', probability: 50, color: '#1890ff', isWon: false, isLost: false })
-                    }
+                    onClick={() => add({ name: '', probability: 50, color: '#1890ff', isWon: false, isLost: false })}
                     block
                     icon={<PlusOutlined />}
-                    className="mt-3"
+                    className="mt-3 !border-slate-300 !text-slate-600 hover:!border-slate-400 hover:!text-slate-700"
                   >
                     Yeni Aşama Ekle
                   </Button>
@@ -437,10 +358,11 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
               )}
             </Form.List>
           </div>
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>

@@ -1,49 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  DatePicker,
-  Segmented,
-  Progress,
-} from 'antd';
-import {
-  MailOutlined,
-  UserAddOutlined,
-  PlayCircleOutlined,
-  CheckCircleOutlined,
-  CalendarOutlined,
-  TrophyOutlined,
-  DollarOutlined,
-  PhoneOutlined,
-  AimOutlined,
-  CalculatorOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select, DatePicker } from 'antd';
+import { TrophyOutlined } from '@ant-design/icons';
 import type { Campaign } from '@/lib/api/services/crm.service';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 // Campaign type options
 const campaignTypeOptions = [
-  { value: 'Email', label: 'E-posta', icon: <MailOutlined /> },
-  { value: 'SocialMedia', label: 'Sosyal Medya', icon: <UserAddOutlined /> },
-  { value: 'Webinar', label: 'Webinar', icon: <PlayCircleOutlined /> },
-  { value: 'Event', label: 'Etkinlik', icon: <CheckCircleOutlined /> },
-  { value: 'Conference', label: 'Konferans', icon: <CalendarOutlined /> },
-  { value: 'Advertisement', label: 'Reklam', icon: <TrophyOutlined /> },
-  { value: 'Banner', label: 'Banner', icon: <DollarOutlined /> },
-  { value: 'Telemarketing', label: 'Telefonla Pazarlama', icon: <PhoneOutlined /> },
-  { value: 'PublicRelations', label: 'Halkla İlişkiler', icon: <UserAddOutlined /> },
+  { value: 'Email', label: 'E-posta' },
+  { value: 'SocialMedia', label: 'Sosyal Medya' },
+  { value: 'Webinar', label: 'Webinar' },
+  { value: 'Event', label: 'Etkinlik' },
+  { value: 'Conference', label: 'Konferans' },
+  { value: 'Advertisement', label: 'Reklam' },
+  { value: 'Banner', label: 'Banner' },
+  { value: 'Telemarketing', label: 'Telefonla Pazarlama' },
+  { value: 'PublicRelations', label: 'Halkla İlişkiler' },
 ];
 
 // Campaign status options
@@ -84,6 +60,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
     } else {
       form.setFieldsValue({
         status: 'Planned',
+        type: 'Email',
         budgetedCost: 0,
         expectedRevenue: 0,
         targetLeads: 0,
@@ -97,7 +74,6 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
   const costPerLead = targetLeads > 0 ? (budgetedCost / targetLeads) : 0;
 
   const handleFormFinish = (values: any) => {
-    // Format dates
     if (values.dateRange) {
       values.startDate = values.dateRange[0].format('YYYY-MM-DD');
       values.endDate = values.dateRange[1].format('YYYY-MM-DD');
@@ -112,310 +88,224 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={handleFormFinish}
       disabled={loading}
-      className="campaign-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Metrics (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Campaign Visual Representation */}
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Campaign Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <TrophyOutlined className="text-xl text-slate-500" />
+              </div>
+            </div>
+
+            {/* Campaign Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Kampanya Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Kampanya hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="type" className="mb-0" initialValue="Email">
+                <Select
+                  options={campaignTypeOptions}
+                  onChange={(val) => {
+                    setCampaignType(val);
+                    form.setFieldValue('type', val);
+                  }}
+                  className="w-40 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
+                />
+              </Form.Item>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── BÜTÇE BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TrophyOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Pazarlama Kampanyası
-              </p>
-              <p className="text-sm text-white/60">
-                Hedef kitlenize ulaşın ve dönüşüm elde edin
-              </p>
-            </div>
-          </div>
-
-          {/* Campaign Type Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <MailOutlined className="mr-1" /> Kampanya Tipi
-            </Text>
-            <Form.Item
-              name="type"
-              rules={[{ required: true, message: 'Kampanya tipi zorunludur' }]}
-              className="mb-0"
-              initialValue="Email"
-            >
-              <Select
-                size="large"
-                placeholder="Tip seçin"
-                variant="filled"
-                options={campaignTypeOptions.map(opt => ({
-                  value: opt.value,
-                  label: (
-                    <span className="flex items-center gap-2">
-                      {opt.icon} {opt.label}
-                    </span>
-                  ),
-                }))}
-                onChange={(val) => {
-                  setCampaignType(val);
-                  form.setFieldValue('type', val);
-                }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* ROI Analysis Card */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CalculatorOutlined className="mr-1" /> Bütçe Analizi
-            </Text>
-            <div
-              className={`p-4 rounded-xl border-2 ${
-                expectedProfit >= 0
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-red-50 border-red-200'
-              }`}
-            >
-              <div className="text-center mb-3">
-                <div className="text-xs text-gray-500 mb-1">Beklenen Kar</div>
-                <div
-                  className={`text-3xl font-bold ${
-                    expectedProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  ₺{expectedProfit.toLocaleString('tr-TR')}
-                </div>
-              </div>
-              {budgetedCost > 0 && (
-                <div className="text-center pt-3 border-t border-gray-200">
-                  <div className="text-sm text-gray-600">
-                    ROI: <span className="font-bold">{roi.toFixed(1)}%</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Target Performance Card */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <AimOutlined className="mr-1" /> Hedef Performans
-            </Text>
-            <div className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Hedef Lead</div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {targetLeads}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-500 mb-1">Lead Maliyeti</div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    ₺{costPerLead.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Edit Mode Stats */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.actualLeads || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Gerçek Lead</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.conversionRate?.toFixed(1) || 0}%
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Dönüşüm Oranı</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Campaign Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Kampanya adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Kampanya adı (örn: Yılbaşı İndirimleri)"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Kampanya hakkında detaylı açıklama..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Budget Section */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Bütçe Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Planlanan Bütçe (₺) *</div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Bütçe Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Planlanan Bütçe (₺) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="budgetedCost"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <InputNumber
-                    style={{ width: '100%' }}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                     placeholder="0"
-                    variant="filled"
                     formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => Number(value?.replace(/,/g, '') || 0) as any}
                     onChange={(val) => setBudgetedCost(val || 0)}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Beklenen Gelir (₺) *</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Gelir (₺) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="expectedRevenue"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <InputNumber
-                    style={{ width: '100%' }}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                     placeholder="0"
-                    variant="filled"
                     formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => Number(value?.replace(/,/g, '') || 0) as any}
                     onChange={(val) => setExpectedRevenue(val || 0)}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Kar</label>
+                <div className={`h-[32px] flex items-center px-3 rounded-md text-sm font-semibold ${
+                  expectedProfit >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                  ₺{expectedProfit.toLocaleString('tr-TR')}
+                  {budgetedCost > 0 && (
+                    <span className="ml-2 text-xs font-normal">
+                      (ROI: %{roi.toFixed(1)})
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Targets Section */}
+          {/* ─────────────── HEDEF BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <AimOutlined className="mr-1" /> Hedefler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Hedef Lead Sayısı *</div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Hedef Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Lead Sayısı <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="targetLeads"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <InputNumber
-                    style={{ width: '100%' }}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                     placeholder="0"
-                    variant="filled"
                     onChange={(val) => setTargetLeads(val || 0)}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Hedef Kitle</div>
-                <Form.Item name="targetAudience" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lead Başına Maliyet</label>
+                <div className="h-[32px] flex items-center px-3 rounded-md text-sm font-semibold bg-slate-50 text-slate-700">
+                  ₺{costPerLead.toFixed(2)}
+                </div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Kitle</label>
+                <Form.Item name="targetAudience" className="mb-0">
                   <Input
                     placeholder="örn: 25-40 yaş profesyoneller"
-                    variant="filled"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Schedule Section */}
+          {/* ─────────────── ZAMANLAMA ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CalendarOutlined className="mr-1" /> Zamanlama
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kampanya Tarihleri *</div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Zamanlama
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kampanya Tarihleri <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="dateRange"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <RangePicker
-                    style={{ width: '100%' }}
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                     format="DD/MM/YYYY"
                     placeholder={['Başlangıç', 'Bitiş']}
-                    variant="filled"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Durum *</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="status"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                   initialValue="Planned"
                 >
                   <Select
-                    placeholder="Durum seçin"
+                    placeholder="Seçin"
                     options={campaignStatusOptions}
-                    variant="filled"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Kampanya hakkında ek notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>

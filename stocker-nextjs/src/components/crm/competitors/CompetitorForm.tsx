@@ -1,38 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Segmented,
-  InputNumber,
-  Switch,
-} from 'antd';
-import {
-  AimOutlined,
-  GlobalOutlined,
-  BankOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+import { Form, Input, Select, InputNumber, Switch } from 'antd';
+import { AimOutlined } from '@ant-design/icons';
 import type { CompetitorDto } from '@/lib/api/services/crm.types';
 import { ThreatLevel, PriceComparison } from '@/lib/api/services/crm.types';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Threat level options
 const threatLevelOptions = [
-  { value: ThreatLevel.VeryLow, label: '🟢 Çok Düşük' },
-  { value: ThreatLevel.Low, label: '🟡 Düşük' },
-  { value: ThreatLevel.Medium, label: '🟠 Orta' },
-  { value: ThreatLevel.High, label: '🔴 Yüksek' },
-  { value: ThreatLevel.VeryHigh, label: '⚫ Çok Yüksek' },
+  { value: ThreatLevel.VeryLow, label: 'Çok Düşük' },
+  { value: ThreatLevel.Low, label: 'Düşük' },
+  { value: ThreatLevel.Medium, label: 'Orta' },
+  { value: ThreatLevel.High, label: 'Yüksek' },
+  { value: ThreatLevel.VeryHigh, label: 'Çok Yüksek' },
 ];
 
 // Price comparison options
@@ -53,6 +35,7 @@ interface CompetitorFormProps {
 
 export default function CompetitorForm({ form, initialValues, onFinish, loading }: CompetitorFormProps) {
   const [threatLevel, setThreatLevel] = useState<ThreatLevel>(ThreatLevel.Medium);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (initialValues) {
@@ -60,6 +43,7 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
         ...initialValues,
       });
       setThreatLevel(initialValues.threatLevel || ThreatLevel.Medium);
+      setIsActive(initialValues.isActive ?? true);
     } else {
       form.setFieldsValue({
         threatLevel: ThreatLevel.Medium,
@@ -74,290 +58,231 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="competitor-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Competitor Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #232526 0%, #414345 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <AimOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Rakip
-              </p>
-              <p className="text-sm text-white/60">
-                Rakip analizi yapın
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
 
-          {/* Threat Level Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <AimOutlined className="mr-1" /> Tehdit Seviyesi
-            </Text>
-            <Form.Item name="threatLevel" className="mb-0" initialValue={ThreatLevel.Medium}>
-              <Select
-                options={threatLevelOptions}
-                variant="filled"
-                size="large"
-                className="w-full"
-                onChange={(val) => {
-                  setThreatLevel(val);
-                  form.setFieldValue('threatLevel', val);
-                }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Active Status */}
-          <div className="mb-6">
-            <div className="p-4 bg-gray-50/50 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-sm font-medium text-gray-700 block">Aktif</Text>
-                  <Text className="text-xs text-gray-400">Rakip takip ediliyor mu?</Text>
-                </div>
-                <Form.Item name="isActive" valuePropName="checked" className="mb-0" initialValue={true}>
-                  <Switch />
-                </Form.Item>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Threat Level
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Competitor Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <AimOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-3 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.encounterCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Karşılaşma</div>
-              </div>
-              <div className="p-4 bg-green-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-green-600">
-                  {initialValues.winCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kazanılan</div>
-              </div>
-              <div className="p-4 bg-red-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-red-600">
-                  {initialValues.lossCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kaybedilen</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Competitor Name - Hero Input */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={16}>
+            {/* Competitor Name - Title Style */}
+            <div className="flex-1">
+              <div className="flex items-center gap-4">
                 <Form.Item
                   name="name"
                   rules={[
-                    { required: true, message: 'Rakip adı zorunludur' },
-                    { max: 200, message: 'En fazla 200 karakter' },
+                    { required: true, message: '' },
+                    { max: 200, message: '' },
                   ]}
-                  className="mb-0"
+                  className="mb-0 flex-1"
                 >
                   <Input
-                    placeholder="Rakip Adı"
+                    placeholder="Rakip Adı Girin..."
                     variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item
-                  name="code"
-                  className="mb-0"
-                >
+                <Form.Item name="code" className="mb-0 w-32">
                   <Input
                     placeholder="Kod"
                     variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    className="!text-lg !font-medium !text-slate-500 !p-0 placeholder:!text-slate-400"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Rakip hakkında açıklama ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
+              </div>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Rakip hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Threat Level Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="threatLevel" className="mb-0" initialValue={ThreatLevel.Medium}>
+                <Select
+                  options={threatLevelOptions}
+                  onChange={(val) => {
+                    setThreatLevel(val);
+                    form.setFieldValue('threatLevel', val);
+                  }}
+                  className="w-36 [&_.ant-select-selector]:!bg-slate-100 [&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!rounded-lg"
+                />
+              </Form.Item>
+            </div>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Company Info */}
+          {/* ─────────────── FİRMA BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <BankOutlined className="mr-1" /> Firma Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Website</div>
-                <Form.Item name="website" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Firma Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Website</label>
+                <Form.Item name="website" className="mb-0">
                   <Input
                     placeholder="https://www.rakip.com"
-                    variant="filled"
-                    prefix={<GlobalOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Merkez</div>
-                <Form.Item name="headquarters" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Merkez</label>
+                <Form.Item name="headquarters" className="mb-0">
                   <Input
                     placeholder="İstanbul, Türkiye"
-                    variant="filled"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kuruluş Yılı</div>
-                <Form.Item name="foundedYear" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kuruluş Yılı</label>
+                <Form.Item name="foundedYear" className="mb-0">
                   <InputNumber
                     placeholder="2010"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={1900}
                     max={2100}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Çalışan Sayısı</div>
-                <Form.Item name="employeeCount" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Çalışan Sayısı</label>
+                <Form.Item name="employeeCount" className="mb-0">
                   <Input
                     placeholder="100-500"
-                    variant="filled"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Market Info */}
+          {/* ─────────────── PAZAR BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <FileTextOutlined className="mr-1" /> Pazar Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Fiyat Karşılaştırması</div>
-                <Form.Item name="priceComparison" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Pazar Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fiyat Karşılaştırması</label>
+                <Form.Item name="priceComparison" className="mb-0">
                   <Select
-                    placeholder="Bizimle karşılaştır"
+                    placeholder="Seçin"
                     options={priceComparisonOptions}
-                    variant="filled"
                     allowClear
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Pazar Payı (%)</div>
-                <Form.Item name="marketShare" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Pazar Payı (%)</label>
+                <Form.Item name="marketShare" className="mb-0">
                   <InputNumber
                     placeholder="15"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                     max={100}
                     addonAfter="%"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
+                <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-md border border-slate-300 h-[32px]">
+                  <span className="text-sm text-slate-600">{isActive ? 'Aktif' : 'Pasif'}</span>
+                  <Form.Item name="isActive" valuePropName="checked" className="mb-0" initialValue={true}>
+                    <Switch
+                      size="small"
+                      checked={isActive}
+                      onChange={(val) => {
+                        setIsActive(val);
+                        form.setFieldValue('isActive', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Contact Info */}
+          {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <MailOutlined className="mr-1" /> İletişim Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">İletişim Kişisi</div>
-                <Form.Item name="contactPerson" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              İletişim Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İletişim Kişisi</label>
+                <Form.Item name="contactPerson" className="mb-0">
                   <Input
                     placeholder="Ad Soyad"
-                    variant="filled"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">E-posta</div>
-                <Form.Item name="email" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="email" className="mb-0">
                   <Input
                     placeholder="info@rakip.com"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Telefon</div>
-                <Form.Item name="phone" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="phone" className="mb-0">
                   <Input
                     placeholder="+90 (555) 123-4567"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Rakip hakkında ek notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>

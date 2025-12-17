@@ -243,7 +243,7 @@ export default function LeadsPage() {
       {/* Header */}
       <ListPageHeader
         icon={<UserAddOutlined />}
-        iconColor="#8b5cf6"
+        iconColor="#0f172a"
         title="Potansiyel Müşteriler"
         description="Lead'leri yönetin ve müşteriye dönüştürün"
         itemCount={totalCount}

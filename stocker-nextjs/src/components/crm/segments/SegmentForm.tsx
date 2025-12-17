@@ -1,34 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  ColorPicker,
-  Tag,
-  Segmented,
-} from 'antd';
-import {
-  TeamOutlined,
-  ApartmentOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { Form, Input, Switch, ColorPicker, Segmented } from 'antd';
+import { TeamOutlined } from '@ant-design/icons';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { RuleBuilder } from './RuleBuilder';
 
 const { TextArea } = Input;
-const { Text } = Typography;
-
-// Segment type options
-const segmentTypeOptions = [
-  { value: 'Static', label: 'Statik (Manuel)' },
-  { value: 'Dynamic', label: 'Dinamik (Otomatik)' },
-];
 
 // Preset colors
 const PRESET_COLORS = [
@@ -70,7 +48,6 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
   }, [form, initialValues]);
 
   const handleFormFinish = (values: any) => {
-    // Handle color picker value
     if (values.color && typeof values.color === 'object') {
       values.color = values.color.toHexString();
     }
@@ -83,205 +60,138 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
       layout="vertical"
       onFinish={handleFormFinish}
       disabled={loading}
-      className="segment-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Segment Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}dd 100%)`,
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TeamOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Müşteri Segmenti
-              </p>
-              <p className="text-sm text-white/60">
-                Doğru kişilere doğru mesajı gönderin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
 
-          {/* Segment Type Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <ApartmentOutlined className="mr-1" /> Segment Tipi
-            </Text>
-            <Form.Item
-              name="type"
-              rules={[{ required: true, message: 'Segment tipi zorunludur' }]}
-              className="mb-0"
-              initialValue="Static"
-            >
-              <Segmented
-                block
-                options={[
-                  {
-                    value: 'Static',
-                    label: (
-                      <div className="py-2">
-                        <div className="font-medium">Statik</div>
-                        <div className="text-xs text-gray-500">Manuel ekleme</div>
-                      </div>
-                    ),
-                  },
-                  {
-                    value: 'Dynamic',
-                    label: (
-                      <div className="py-2">
-                        <div className="font-medium">Dinamik</div>
-                        <div className="text-xs text-gray-500">Otomatik güncelleme</div>
-                      </div>
-                    ),
-                  },
-                ]}
-                value={segmentType}
-                onChange={(val) => {
-                  setSegmentType(val as 'Static' | 'Dynamic');
-                  form.setFieldValue('type', val);
-                }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Color Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Segment Rengi
-            </Text>
-            <Form.Item name="color" className="mb-0" initialValue="#1890ff">
-              <ColorPicker
-                showText
-                format="hex"
-                presets={[
-                  {
-                    label: 'Önerilen',
-                    colors: PRESET_COLORS,
-                  },
-                ]}
-                onChange={(color) => {
-                  const hexColor = color.toHexString();
-                  setSelectedColor(hexColor);
-                  form.setFieldValue('color', hexColor);
-                }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Status Toggle */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Segment aktif ve kullanılabilir' : 'Segment pasif durumda'}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Segment Icon with Color */}
+            <div className="flex-shrink-0">
+              <div
+                className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center"
+                style={{ backgroundColor: `${selectedColor}20`, borderColor: selectedColor }}
+              >
+                <TeamOutlined className="text-xl" style={{ color: selectedColor }} />
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
+            </div>
+
+            {/* Segment Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 100, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Segment Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Segment hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="type" className="mb-0" initialValue="Static">
+                <Segmented
+                  options={[
+                    { value: 'Static', label: 'Statik' },
+                    { value: 'Dynamic', label: 'Dinamik' },
+                  ]}
+                  value={segmentType}
                   onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
+                    setSegmentType(val as 'Static' | 'Dynamic');
+                    form.setFieldValue('type', val);
                   }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+                  className="!bg-slate-100"
                 />
               </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Edit Mode Stats */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.memberCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Üye Sayısı</div>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── SEGMENT AYARLARI ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Segment Ayarları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Segment Rengi</label>
+                <Form.Item name="color" className="mb-0" initialValue="#1890ff">
+                  <ColorPicker
+                    showText
+                    format="hex"
+                    presets={[
+                      {
+                        label: 'Önerilen',
+                        colors: PRESET_COLORS,
+                      },
+                    ]}
+                    onChange={(color) => {
+                      const hexColor = color.toHexString();
+                      setSelectedColor(hexColor);
+                      form.setFieldValue('color', hexColor);
+                    }}
+                  />
+                </Form.Item>
               </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  <Tag color={segmentType === 'Dynamic' ? 'processing' : 'default'}>
-                    {segmentType === 'Dynamic' ? 'Dinamik' : 'Statik'}
-                  </Tag>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm text-slate-700">
+                      {isActive ? 'Segment aktif' : 'Segment pasif'}
+                    </div>
+                  </div>
+                  <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                    <Switch
+                      checked={isActive}
+                      onChange={(val) => {
+                        setIsActive(val);
+                        form.setFieldValue('isActive', val);
+                      }}
+                      checkedChildren="Aktif"
+                      unCheckedChildren="Pasif"
+                    />
+                  </Form.Item>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Tip</div>
               </div>
             </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Segment Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Segment adı zorunludur' },
-                { max: 100, message: 'En fazla 100 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Segment adı (örn: VIP Müşteriler)"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Segment hakkında açıklama..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Criteria Section */}
+          {/* ─────────────── SEGMENT KRİTERLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Segment Kriterleri
-            </Text>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Segment Kriterleri
+            </h3>
 
             {segmentType === 'Dynamic' ? (
               <>
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
-                  <h4 className="font-medium text-blue-900 mb-2">Dinamik Segment</h4>
+                  <h4 className="font-medium text-blue-900 mb-1">Dinamik Segment</h4>
                   <p className="text-sm text-blue-800">
-                    Dinamik segmentler belirlediğiniz kriterlere göre otomatik olarak güncellenir.
-                    Kriterlere uyan yeni müşteriler otomatik olarak eklenir.
+                    Kriterlere uyan müşteriler otomatik olarak eklenir/çıkarılır.
                   </p>
                 </div>
 
@@ -294,11 +204,11 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
               </>
             ) : (
               <>
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <h4 className="font-medium text-gray-700 mb-2">Statik Segment</h4>
-                  <p className="text-sm text-gray-600">
-                    Statik segmentlere müşterileri manuel olarak ekleyeceksiniz. Segment oluşturduktan sonra
-                    müşteri listesinden istediğiniz müşterileri bu segmente ekleyebilirsiniz.
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                  <h4 className="font-medium text-slate-700 mb-1">Statik Segment</h4>
+                  <p className="text-sm text-slate-600">
+                    Müşterileri manuel olarak ekleyeceksiniz. Segment oluşturduktan sonra müşteri listesinden
+                    istediğiniz müşterileri bu segmente ekleyebilirsiniz.
                   </p>
                 </div>
 
@@ -309,25 +219,21 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
             )}
           </div>
 
-          {/* Info Section for Dynamic */}
+          {/* ─────────────── BİLGİ NOTU ─────────────── */}
           {segmentType === 'Dynamic' && (
-            <>
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-yellow-900 mb-1">Dinamik Segment Bilgisi</h4>
-                <p className="text-sm text-yellow-800">
-                  Dinamik segmentler her gün otomatik olarak güncellenir. Kriterlere uyan yeni müşteriler
-                  otomatik olarak eklenir, uymayanlar çıkarılır.
-                </p>
-              </div>
-            </>
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <h4 className="font-medium text-amber-900 mb-1">Güncelleme Bilgisi</h4>
+              <p className="text-sm text-amber-800">
+                Dinamik segmentler her gün otomatik olarak güncellenir. Kriterlere uyan yeni müşteriler
+                eklenir, uymayanlar çıkarılır.
+              </p>
+            </div>
           )}
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>

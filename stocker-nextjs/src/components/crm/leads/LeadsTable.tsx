@@ -73,39 +73,40 @@ export function LeadsTable({
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="mb-6">
+        {/* Modern thin-stroke icon - Gray */}
         <svg
-          className="w-24 h-24 text-gray-300"
+          className="w-20 h-20 text-slate-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          strokeWidth={1}
         >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-slate-900 mb-2">
         Henüz potansiyel müşteri eklenmemiş
       </h3>
-      <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+      <p className="text-sm text-slate-500 text-center mb-6 max-w-sm">
         İlk potansiyel müşterinizi ekleyerek satış hunisini oluşturmaya başlayın
       </p>
-      <Button
-        type="primary"
-        size="large"
-        icon={<UserOutlined />}
-        className="bg-purple-600 hover:bg-purple-700"
+      {/* Black button - Matching header button */}
+      <button
+        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
         onClick={() => {
-          // This will be handled by the parent component through context
           const createButton = document.querySelector('[data-action="create-lead"]') as HTMLElement;
           createButton?.click();
         }}
       >
-        + Yeni Potansiyel Müşteri Ekle
-      </Button>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Yeni Potansiyel Müşteri Ekle
+      </button>
     </div>
   );
   const columns: ColumnsType<Lead> = [
@@ -116,19 +117,16 @@ export function LeadsTable({
         `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'tr'),
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <Avatar
-            size={40}
-            className="bg-gradient-to-br from-purple-500 to-purple-600 flex-shrink-0"
-            icon={<UserOutlined />}
-          >
+          {/* Monochrome Avatar */}
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-600 flex-shrink-0">
             {record.firstName.charAt(0)}{record.lastName.charAt(0)}
-          </Avatar>
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">
+            <div className="font-semibold text-slate-900 truncate">
               {`${record.firstName} ${record.lastName}`}
             </div>
             {record.companyName && (
-              <div className="text-xs text-gray-500 truncate">{record.companyName}</div>
+              <div className="text-xs text-slate-500 truncate">{record.companyName}</div>
             )}
           </div>
         </div>
@@ -139,13 +137,13 @@ export function LeadsTable({
       key: 'contact',
       render: (_, record) => (
         <div className="space-y-1">
-          <div className="text-sm flex items-center gap-2 text-gray-700">
-            <MailOutlined className="text-blue-500" />
+          <div className="text-sm flex items-center gap-2 text-slate-700">
+            <MailOutlined className="text-slate-400" />
             <span className="truncate">{record.email}</span>
           </div>
           {record.phone && (
-            <div className="text-xs flex items-center gap-2 text-gray-500">
-              <PhoneOutlined className="text-green-500" />
+            <div className="text-xs flex items-center gap-2 text-slate-500">
+              <PhoneOutlined className="text-slate-400" />
               <span>{record.phone}</span>
             </div>
           )}
@@ -198,8 +196,8 @@ export function LeadsTable({
       sorter: (a, b) => a.score - b.score,
       render: (score: number) => (
         <div className="flex items-center gap-1">
-          <StarOutlined className={score >= 70 ? 'text-yellow-500' : 'text-gray-400'} />
-          <span className={score >= 70 ? 'font-medium' : ''}>{score}</span>
+          <StarOutlined className={score >= 70 ? 'text-slate-900' : 'text-slate-300'} />
+          <span className={score >= 70 ? 'font-medium text-slate-900' : 'text-slate-500'}>{score}</span>
         </div>
       ),
     },
@@ -265,7 +263,7 @@ export function LeadsTable({
             ],
           }}
         >
-          <Button type="text" icon={<MoreOutlined />} className="hover:bg-gray-100" />
+          <Button type="text" icon={<MoreOutlined />} className="hover:bg-slate-100" />
         </Dropdown>
       ),
     },
@@ -300,8 +298,8 @@ export function LeadsTable({
         filterReset: 'Sıfırla',
         filterTitle: 'Filtrele',
       }}
-      className="rounded-lg overflow-hidden"
-      rowClassName="hover:bg-purple-50 transition-colors cursor-pointer"
+      className="rounded-lg overflow-hidden crm-enterprise-table"
+      rowClassName="hover:bg-slate-50 transition-colors cursor-pointer"
     />
   );
 }

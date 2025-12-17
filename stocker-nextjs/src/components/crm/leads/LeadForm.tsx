@@ -1,29 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  Segmented,
-} from 'antd';
-import {
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  BankOutlined,
-  IdcardOutlined,
-  StarOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import type { Lead } from '@/lib/api/services/crm.service';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Lead source options
 const sourceOptions = [
@@ -36,7 +18,7 @@ const sourceOptions = [
   { value: 'Other', label: 'Diğer' },
 ];
 
-// Lead status options (string enum)
+// Lead status options
 const statusOptions = [
   { value: 'New', label: 'Yeni' },
   { value: 'Contacted', label: 'İletişime Geçildi' },
@@ -49,9 +31,9 @@ const statusOptions = [
 
 // Lead rating options
 const ratingOptions = [
-  { value: 'Hot', label: '🔥 Sıcak' },
-  { value: 'Warm', label: '☀️ Ilık' },
-  { value: 'Cold', label: '❄️ Soğuk' },
+  { value: 'Hot', label: 'Sıcak' },
+  { value: 'Warm', label: 'Ilık' },
+  { value: 'Cold', label: 'Soğuk' },
 ];
 
 interface LeadFormProps {
@@ -68,13 +50,14 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        status: initialValues.status ?? 0,
+        status: initialValues.status ?? 'New',
       });
       setRating(initialValues.rating || 'Warm');
     } else {
       form.setFieldsValue({
-        status: 0,
+        status: 'New',
         score: 50,
+        rating: 'Warm',
       });
     }
   }, [form, initialValues]);
@@ -85,276 +68,224 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="lead-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Lead Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <UserOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Potansiyel Müşteri
-              </p>
-              <p className="text-sm text-white/60">
-                Yeni iş fırsatlarını takip edin
-              </p>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Avatar + Name Fields + Rating Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-200 transition-all">
+                <UserOutlined className="text-xl text-slate-500" />
+              </div>
             </div>
-          </div>
 
-          {/* Rating Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <StarOutlined className="mr-1" /> Değerlendirme
-            </Text>
-            <Form.Item name="rating" className="mb-0" initialValue="Warm">
-              <Segmented
-                block
-                options={ratingOptions}
-                value={rating}
-                onChange={(val) => {
-                  setRating(val as string);
-                  form.setFieldValue('rating', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Lead Score */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Lead Puanı
-            </Text>
-            <div className="p-4 bg-gray-50/50 rounded-xl">
-              <Form.Item name="score" className="mb-0" initialValue={50}>
-                <InputNumber
-                  min={0}
-                  max={100}
-                  style={{ width: '100%' }}
-                  size="large"
-                  variant="filled"
-                  addonAfter="/ 100"
+            {/* Name Fields - Title Style */}
+            <div className="flex-1 flex gap-4">
+              <Form.Item
+                name="firstName"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0 flex-1"
+              >
+                <Input
+                  placeholder="Ad"
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
                 />
               </Form.Item>
-              <div className="text-xs text-gray-400 mt-2">
-                Lead&apos;in potansiyel değerini 0-100 arasında puanlayın
-              </div>
+              <Form.Item
+                name="lastName"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0 flex-1"
+              >
+                <Input
+                  placeholder="Soyad"
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Rating Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="rating" className="mb-0" initialValue="Warm">
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  {ratingOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setRating(opt.value);
+                        form.setFieldValue('rating', opt.value);
+                      }}
+                      className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        rating === opt.value
+                          ? 'bg-white shadow-sm text-slate-900'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </Form.Item>
             </div>
           </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.score || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Puan</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {statusOptions.find(s => s.value === initialValues.status)?.label || 'Yeni'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Durum</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Lead Name - Hero Inputs */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="firstName"
-                  rules={[
-                    { required: true, message: 'Ad zorunludur' },
-                    { max: 100, message: 'En fazla 100 karakter' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Ad"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="lastName"
-                  rules={[
-                    { required: true, message: 'Soyad zorunludur' },
-                    { max: 100, message: 'En fazla 100 karakter' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Soyad"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Lead hakkında notlar ekleyin..."
+          {/* Description under name */}
+          <div className="mt-3 ml-[88px]">
+            <Form.Item name="description" className="mb-0">
+              <Input
+                placeholder="Lead hakkında kısa not..."
                 variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
+                className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
               />
             </Form.Item>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Contact Info */}
+          {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <MailOutlined className="mr-1" /> İletişim Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">E-posta *</div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              İletişim Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="email"
                   rules={[
-                    { required: true, message: 'Gerekli' },
-                    { type: 'email', message: 'Geçerli e-posta girin' },
+                    { required: true, message: '' },
+                    { type: 'email', message: '' },
                   ]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Input
                     placeholder="ornek@firma.com"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Telefon</div>
-                <Form.Item name="phone" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="phone" className="mb-0">
                   <Input
-                    placeholder="+90 (555) 123-4567"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
+                    placeholder="+90 (___) ___ ____"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Company Info */}
+          {/* ─────────────── FİRMA BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <BankOutlined className="mr-1" /> Firma Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Firma Adı</div>
-                <Form.Item name="companyName" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Firma Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Firma Adı</label>
+                <Form.Item name="companyName" className="mb-0">
                   <Input
                     placeholder="ABC Teknoloji A.Ş."
-                    variant="filled"
-                    prefix={<BankOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Pozisyon</div>
-                <Form.Item name="jobTitle" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Pozisyon</label>
+                <Form.Item name="jobTitle" className="mb-0">
                   <Input
                     placeholder="Satın Alma Müdürü"
-                    variant="filled"
-                    prefix={<IdcardOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Lead Info */}
+          {/* ─────────────── LEAD BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Lead Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kaynak *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kaynak <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="source"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <Select
-                    placeholder="Kaynak seçin"
+                    placeholder="Seçin"
                     options={sourceOptions}
-                    variant="filled"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Durum *</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="status"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                   initialValue="New"
                 >
                   <Select
-                    placeholder="Durum seçin"
+                    placeholder="Seçin"
                     options={statusOptions}
-                    variant="filled"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lead Puanı</label>
+                <Form.Item name="score" className="mb-0" initialValue={50}>
+                  <InputNumber
+                    min={0}
+                    max={100}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    addonAfter="/ 100"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
 
-      {/* Hidden submit button */}
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Lead hakkında ek notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Hidden submit */}
       <Form.Item hidden>
         <button type="submit" />
       </Form.Item>
