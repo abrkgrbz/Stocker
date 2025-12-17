@@ -1,27 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Invoices List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Typography,
   Table,
-  Card,
-  Button,
-  Input,
-  Space,
   Tag,
+  Input,
   Select,
   DatePicker,
-  Row,
-  Col,
   Dropdown,
-  Modal,
-  message,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
-  SearchOutlined,
   ReloadOutlined,
+  SearchOutlined,
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -33,7 +31,8 @@ import {
   DollarOutlined,
   MailOutlined,
   FilePdfOutlined,
-  ExportOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {
@@ -43,34 +42,43 @@ import {
   useSendInvoice,
   useCancelInvoice,
 } from '@/lib/api/hooks/useInvoices';
-import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams, Invoice } from '@/lib/api/services/invoice.service';
+import type { InvoiceListItem, InvoiceStatus, GetInvoicesParams } from '@/lib/api/services/invoice.service';
 import { InvoiceService } from '@/lib/api/services/invoice.service';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { generateInvoicePDF } from '@/lib/utils/pdf-export';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  confirmDelete,
+  confirmAction,
+} from '@/lib/utils/sweetalert';
 
-const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const statusConfig: Record<InvoiceStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <FileTextOutlined /> },
-  Issued: { color: 'blue', label: 'Kesildi', icon: <CheckCircleOutlined /> },
-  Sent: { color: 'cyan', label: 'Gönderildi', icon: <SendOutlined /> },
-  PartiallyPaid: { color: 'orange', label: 'Kısmi Ödendi', icon: <DollarOutlined /> },
-  Paid: { color: 'green', label: 'Ödendi', icon: <CheckCircleOutlined /> },
-  Overdue: { color: 'red', label: 'Vadesi Geçmiş', icon: <CloseCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal Edildi', icon: <CloseCircleOutlined /> },
+const statusConfig: Record<InvoiceStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15', tagColor: 'default' },
+  Issued: { color: '#3b82f6', label: 'Kesildi', bgColor: '#3b82f615', tagColor: 'blue' },
+  Sent: { color: '#06b6d4', label: 'Gönderildi', bgColor: '#06b6d415', tagColor: 'cyan' },
+  PartiallyPaid: { color: '#f59e0b', label: 'Kısmi Ödendi', bgColor: '#f59e0b15', tagColor: 'orange' },
+  Paid: { color: '#10b981', label: 'Ödendi', bgColor: '#10b98115', tagColor: 'green' },
+  Overdue: { color: '#ef4444', label: 'Vadesi Geçmiş', bgColor: '#ef444415', tagColor: 'red' },
+  Cancelled: { color: '#ef4444', label: 'İptal Edildi', bgColor: '#ef444415', tagColor: 'red' },
 };
 
 const statusOptions = [
   { value: '', label: 'Tüm Durumlar' },
-  { value: 'Draft', label: 'Taslak' },
-  { value: 'Issued', label: 'Kesildi' },
-  { value: 'Sent', label: 'Gönderildi' },
-  { value: 'PartiallyPaid', label: 'Kısmi Ödendi' },
-  { value: 'Paid', label: 'Ödendi' },
-  { value: 'Overdue', label: 'Vadesi Geçmiş' },
-  { value: 'Cancelled', label: 'İptal Edildi' },
+  ...Object.entries(statusConfig).map(([value, config]) => ({
+    value,
+    label: config.label,
+  })),
 ];
 
 const typeOptions = [
@@ -85,7 +93,6 @@ export default function InvoicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Filter state
   const [filters, setFilters] = useState<GetInvoicesParams>({
     page: 1,
     pageSize: 20,
@@ -96,11 +103,9 @@ export default function InvoicesPage() {
     sortDescending: true,
   });
 
-  // Bulk operations state
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  // API hooks
   const { data, isLoading, refetch } = useInvoices(filters);
   const deleteInvoice = useDeleteInvoice();
   const issueInvoice = useIssueInvoice();
@@ -110,104 +115,65 @@ export default function InvoicesPage() {
   const invoices = data?.items || [];
   const totalCount = data?.totalCount || 0;
 
-  const handleSearch = (value: string) => {
-    setFilters((prev) => ({ ...prev, searchTerm: value, page: 1 }));
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, status: value, page: 1 }));
-  };
-
-  const handleTypeChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, type: value, page: 1 }));
-  };
-
-  const handleDateRangeChange = (dates: any) => {
-    if (dates) {
-      setFilters((prev) => ({
-        ...prev,
-        fromDate: dates[0]?.toISOString(),
-        toDate: dates[1]?.toISOString(),
-        page: 1,
-      }));
-    } else {
-      setFilters((prev) => ({
-        ...prev,
-        fromDate: undefined,
-        toDate: undefined,
-        page: 1,
-      }));
-    }
-  };
-
-  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
-    setFilters((prev) => ({
-      ...prev,
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-      sortBy: sorter.field || 'InvoiceDate',
-      sortDescending: sorter.order === 'descend',
-    }));
-  };
+  // Calculate stats
+  const stats = useMemo(() => {
+    const draft = invoices.filter(i => i.status === 'Draft').length;
+    const overdue = invoices.filter(i => i.status === 'Overdue').length;
+    const totalValue = invoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
+    const totalDue = invoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
+    return { draft, overdue, totalValue, totalDue };
+  }, [invoices]);
 
   const handleIssue = async (id: string) => {
     try {
       await issueInvoice.mutateAsync(id);
-      message.success('Fatura kesildi');
-    } catch (error: any) {
-      message.error(error.response?.data?.error || 'Fatura kesme başarısız');
+      showSuccess('Başarılı', 'Fatura kesildi');
+    } catch {
+      showError('Fatura kesme başarısız');
     }
   };
 
   const handleSend = async (id: string) => {
     try {
       await sendInvoice.mutateAsync(id);
-      message.success('Fatura gönderildi');
-    } catch (error: any) {
-      message.error(error.response?.data?.error || 'Gönderim başarısız');
+      showSuccess('Başarılı', 'Fatura gönderildi');
+    } catch {
+      showError('Gönderim başarısız');
     }
   };
 
-  const handleCancel = async (id: string) => {
-    Modal.confirm({
-      title: 'Faturayı İptal Et',
-      content: 'Bu faturayı iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        try {
-          await cancelInvoice.mutateAsync(id);
-          message.success('Fatura iptal edildi');
-        } catch (error: any) {
-          message.error(error.response?.data?.error || 'İptal işlemi başarısız');
-        }
-      },
-    });
+  const handleCancel = async (invoice: InvoiceListItem) => {
+    const confirmed = await confirmAction(
+      'Faturayı İptal Et',
+      'Bu faturayı iptal etmek istediğinizden emin misiniz?',
+      'İptal Et'
+    );
+    if (confirmed) {
+      try {
+        await cancelInvoice.mutateAsync(invoice.id);
+        showSuccess('Başarılı', 'Fatura iptal edildi');
+      } catch {
+        showError('İptal işlemi başarısız');
+      }
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    Modal.confirm({
-      title: 'Faturayı Sil',
-      content: 'Bu faturayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteInvoice.mutateAsync(id);
-          message.success('Fatura silindi');
-        } catch (error: any) {
-          message.error(error.response?.data?.error || 'Silme işlemi başarısız');
-        }
-      },
-    });
+  const handleDelete = async (invoice: InvoiceListItem) => {
+    const confirmed = await confirmDelete('Fatura', invoice.invoiceNumber);
+    if (confirmed) {
+      try {
+        await deleteInvoice.mutateAsync(invoice.id);
+        showSuccess('Başarılı', 'Fatura silindi');
+      } catch {
+        showError('Silme işlemi başarısız');
+      }
+    }
   };
 
   // Bulk operations
   const handleBulkPdfExport = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('Lütfen PDF oluşturmak için fatura seçiniz');
+      showWarning('Uyarı', 'Lütfen PDF oluşturmak için fatura seçiniz');
       return;
     }
     setBulkLoading(true);
@@ -216,9 +182,9 @@ export default function InvoicesPage() {
         const invoice = await InvoiceService.getInvoiceById(id);
         await generateInvoicePDF(invoice);
       }
-      message.success(`${selectedRowKeys.length} fatura PDF olarak indirildi`);
-    } catch (error) {
-      message.error('PDF oluşturulurken hata oluştu');
+      showSuccess('Başarılı', `${selectedRowKeys.length} fatura PDF olarak indirildi`);
+    } catch {
+      showError('PDF oluşturulurken hata oluştu');
     } finally {
       setBulkLoading(false);
     }
@@ -231,35 +197,35 @@ export default function InvoicesPage() {
     });
 
     if (draftInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında kesilebilecek taslak fatura bulunamadı');
+      showWarning('Uyarı', 'Seçili faturalar arasında kesilebilecek taslak fatura bulunamadı');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Fatura Kesme',
-      content: `${draftInvoices.length} adet taslak fatura kesilecek. Devam etmek istiyor musunuz?`,
-      okText: 'Kes',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        try {
-          for (const id of draftInvoices) {
-            try {
-              await issueInvoice.mutateAsync(id);
-              successCount++;
-            } catch {
-              // Continue with others
-            }
+    const confirmed = await confirmAction(
+      'Toplu Fatura Kesme',
+      `${draftInvoices.length} adet taslak fatura kesilecek. Devam etmek istiyor musunuz?`,
+      'Kes'
+    );
+
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      try {
+        for (const id of draftInvoices) {
+          try {
+            await issueInvoice.mutateAsync(id);
+            successCount++;
+          } catch {
+            // Continue with others
           }
-          message.success(`${successCount} fatura başarıyla kesildi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } finally {
-          setBulkLoading(false);
         }
-      },
-    });
+        showSuccess('Başarılı', `${successCount} fatura başarıyla kesildi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const handleBulkSend = async () => {
@@ -269,35 +235,35 @@ export default function InvoicesPage() {
     });
 
     if (issuedInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında gönderilebilecek fatura bulunamadı');
+      showWarning('Uyarı', 'Seçili faturalar arasında gönderilebilecek fatura bulunamadı');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Fatura Gönderimi',
-      content: `${issuedInvoices.length} adet fatura gönderilecek. Devam etmek istiyor musunuz?`,
-      okText: 'Gönder',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        try {
-          for (const id of issuedInvoices) {
-            try {
-              await sendInvoice.mutateAsync(id);
-              successCount++;
-            } catch {
-              // Continue with others
-            }
+    const confirmed = await confirmAction(
+      'Toplu Fatura Gönderimi',
+      `${issuedInvoices.length} adet fatura gönderilecek. Devam etmek istiyor musunuz?`,
+      'Gönder'
+    );
+
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      try {
+        for (const id of issuedInvoices) {
+          try {
+            await sendInvoice.mutateAsync(id);
+            successCount++;
+          } catch {
+            // Continue with others
           }
-          message.success(`${successCount} fatura başarıyla gönderildi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } finally {
-          setBulkLoading(false);
         }
-      },
-    });
+        showSuccess('Başarılı', `${successCount} fatura başarıyla gönderildi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -307,36 +273,30 @@ export default function InvoicesPage() {
     });
 
     if (deletableInvoices.length === 0) {
-      message.warning('Seçili faturalar arasında silinebilecek fatura bulunamadı (sadece taslak veya iptal edilmiş faturalar silinebilir)');
+      showWarning('Uyarı', 'Seçili faturalar arasında silinebilecek fatura bulunamadı (sadece taslak veya iptal edilmiş faturalar silinebilir)');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Fatura Silme',
-      content: `${deletableInvoices.length} adet fatura silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        try {
-          for (const id of deletableInvoices) {
-            try {
-              await deleteInvoice.mutateAsync(id);
-              successCount++;
-            } catch {
-              // Continue with others
-            }
+    const confirmed = await confirmDelete('Fatura', `${deletableInvoices.length} fatura`);
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      try {
+        for (const id of deletableInvoices) {
+          try {
+            await deleteInvoice.mutateAsync(id);
+            successCount++;
+          } catch {
+            // Continue with others
           }
-          message.success(`${successCount} fatura başarıyla silindi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } finally {
-          setBulkLoading(false);
         }
-      },
-    });
+        showSuccess('Başarılı', `${successCount} fatura başarıyla silindi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const rowSelection = {
@@ -344,298 +304,413 @@ export default function InvoicesPage() {
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
   };
 
-  const getActionItems = (record: InvoiceListItem) => {
-    const items: any[] = [
-      {
-        key: 'view',
-        icon: <EyeOutlined />,
-        label: 'Görüntüle',
-        onClick: () => router.push(`/sales/invoices/${record.id}`),
-      },
-    ];
-
-    if (record.status === 'Draft') {
-      items.push(
-        {
-          key: 'edit',
-          icon: <EditOutlined />,
-          label: 'Düzenle',
-          onClick: () => router.push(`/sales/invoices/${record.id}/edit`),
-        },
-        {
-          key: 'issue',
-          icon: <CheckCircleOutlined />,
-          label: 'Kes',
-          onClick: () => handleIssue(record.id),
-        },
-        {
-          type: 'divider',
-        },
-        {
-          key: 'delete',
-          icon: <DeleteOutlined />,
-          label: 'Sil',
-          danger: true,
-          onClick: () => handleDelete(record.id),
-        }
-      );
-    }
-
-    if (record.status === 'Issued') {
-      items.push({
-        key: 'send',
-        icon: <MailOutlined />,
-        label: 'Gönder',
-        onClick: () => handleSend(record.id),
-      });
-    }
-
-    if (record.status !== 'Cancelled' && record.status !== 'Paid' && record.status !== 'Draft') {
-      items.push({
-        key: 'cancel',
-        icon: <CloseCircleOutlined />,
-        label: 'İptal Et',
-        danger: true,
-        onClick: () => handleCancel(record.id),
-      });
-    }
-
-    if (record.status === 'Cancelled') {
-      items.push({
-        key: 'delete',
-        icon: <DeleteOutlined />,
-        label: 'Sil',
-        danger: true,
-        onClick: () => handleDelete(record.id),
-      });
-    }
-
-    return items;
+  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+      sortBy: sorter.field || 'InvoiceDate',
+      sortDescending: sorter.order === 'descend',
+    }));
   };
 
   const columns: ColumnsType<InvoiceListItem> = [
     {
-      title: 'Fatura No',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      sorter: true,
-      render: (text, record) => (
-        <Link href={`/sales/invoices/${record.id}`} className="font-medium text-blue-600 hover:text-blue-800">
-          {text}
-        </Link>
+      title: 'Fatura',
+      key: 'invoice',
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: statusConfig[record.status]?.bgColor || '#64748b15' }}
+          >
+            <FileTextOutlined style={{ color: statusConfig[record.status]?.color || '#64748b' }} />
+          </div>
+          <div>
+            <Link
+              href={`/sales/invoices/${record.id}`}
+              className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+            >
+              {record.invoiceNumber}
+            </Link>
+            <div className="text-xs text-slate-500">
+              {record.customerName}
+            </div>
+          </div>
+        </div>
       ),
     },
     {
       title: 'Tarih',
       dataIndex: 'invoiceDate',
       key: 'invoiceDate',
+      width: 100,
       sorter: true,
-      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      render: (date) => (
+        <div className="text-sm text-slate-600">
+          {dayjs(date).format('DD.MM.YYYY')}
+        </div>
+      ),
     },
     {
       title: 'Vade',
       dataIndex: 'dueDate',
       key: 'dueDate',
+      width: 100,
       sorter: true,
-      render: (date) => dayjs(date).format('DD/MM/YYYY'),
-    },
-    {
-      title: 'Müşteri',
-      dataIndex: 'customerName',
-      key: 'customerName',
-      sorter: true,
+      render: (date, record) => {
+        const isOverdue = record.status === 'Overdue';
+        return (
+          <div className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-600'}`}>
+            {dayjs(date).format('DD.MM.YYYY')}
+          </div>
+        );
+      },
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: InvoiceStatus) => {
-        const config = statusConfig[status];
-        return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.label}
-          </Tag>
-        );
-      },
+      width: 120,
+      render: (status: InvoiceStatus) => (
+        <Tag color={statusConfig[status]?.tagColor}>
+          {statusConfig[status]?.label}
+        </Tag>
+      ),
     },
     {
       title: 'Toplam',
       dataIndex: 'grandTotal',
       key: 'grandTotal',
+      width: 130,
       sorter: true,
       align: 'right',
       render: (total, record) => (
-        <span className="font-semibold">
+        <div className="text-sm font-medium text-slate-900">
           {total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </span>
+        </div>
       ),
     },
     {
       title: 'Ödenen',
       dataIndex: 'paidAmount',
       key: 'paidAmount',
+      width: 130,
       align: 'right',
       render: (amount, record) => (
-        <span className="text-green-600">
+        <div className="text-sm text-emerald-600">
           {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </span>
+        </div>
       ),
     },
     {
       title: 'Kalan',
       dataIndex: 'balanceDue',
       key: 'balanceDue',
+      width: 130,
       align: 'right',
       render: (balance, record) => (
-        <span className={balance > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}>
+        <div className={`text-sm font-medium ${balance > 0 ? 'text-red-600' : 'text-slate-500'}`}>
           {balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
-        </span>
+        </div>
       ),
     },
     {
       title: 'E-Fatura',
       dataIndex: 'isEInvoice',
       key: 'isEInvoice',
+      width: 90,
       align: 'center',
       render: (isEInvoice) => (
-        isEInvoice ? <Tag color="blue">E-Fatura</Tag> : <Tag>Normal</Tag>
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${isEInvoice ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+          {isEInvoice ? 'E-Fatura' : 'Normal'}
+        </span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      align: 'center',
-      width: 80,
-      render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionItems(record) }}
-          trigger={['click']}
-        >
-          <Button icon={<MoreOutlined />} size="small" />
-        </Dropdown>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems: any[] = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => router.push(`/sales/invoices/${record.id}`),
+          },
+        ];
+
+        if (record.status === 'Draft') {
+          menuItems.push(
+            {
+              key: 'edit',
+              icon: <EditOutlined />,
+              label: 'Düzenle',
+              onClick: () => router.push(`/sales/invoices/${record.id}/edit`),
+            },
+            {
+              key: 'issue',
+              icon: <CheckCircleOutlined />,
+              label: 'Kes',
+              onClick: () => handleIssue(record.id),
+            },
+            { type: 'divider' as const },
+            {
+              key: 'delete',
+              icon: <DeleteOutlined />,
+              label: 'Sil',
+              danger: true,
+              onClick: () => handleDelete(record),
+            }
+          );
+        }
+
+        if (record.status === 'Issued') {
+          menuItems.push({
+            key: 'send',
+            icon: <MailOutlined />,
+            label: 'Gönder',
+            onClick: () => handleSend(record.id),
+          });
+        }
+
+        if (record.status !== 'Cancelled' && record.status !== 'Paid' && record.status !== 'Draft') {
+          menuItems.push({
+            key: 'cancel',
+            icon: <CloseCircleOutlined />,
+            label: 'İptal Et',
+            danger: true,
+            onClick: () => handleCancel(record),
+          });
+        }
+
+        if (record.status === 'Cancelled') {
+          menuItems.push({
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Sil',
+            danger: true,
+            onClick: () => handleDelete(record),
+          });
+        }
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <FileTextOutlined className="text-3xl text-green-500" />
-          <Title level={2} className="!mb-0">
-            Faturalar
-          </Title>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Fatura</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalCount}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
+              <FileTextOutlined style={{ color: '#6366f1' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          {selectedRowKeys.length > 0 && (
-            <>
-              <span style={{ color: '#1890ff' }}>
-                {selectedRowKeys.length} fatura seçildi
-              </span>
-              <Button
-                icon={<FilePdfOutlined />}
-                onClick={handleBulkPdfExport}
-                loading={bulkLoading}
-              >
-                PDF İndir
-              </Button>
-              <Button
-                icon={<CheckCircleOutlined />}
-                onClick={handleBulkIssue}
-                loading={bulkLoading}
-              >
-                Kes
-              </Button>
-              <Button
-                icon={<SendOutlined />}
-                onClick={handleBulkSend}
-                loading={bulkLoading}
-              >
-                Gönder
-              </Button>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleBulkDelete}
-                loading={bulkLoading}
-              >
-                Sil
-              </Button>
-              <Button onClick={() => setSelectedRowKeys([])}>
-                Seçimi Temizle
-              </Button>
-            </>
-          )}
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/sales/invoices/new')}>
-            Yeni Fatura
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Taslak</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.draft}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.draft > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <ClockCircleOutlined style={{ color: stats.draft > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Vadesi Geçmiş</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.overdue}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.overdue > 0 ? '#ef444415' : '#64748b15' }}>
+              <WarningOutlined style={{ color: stats.overdue > 0 ? '#ef4444' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Bakiye</span>
+              <div className="text-2xl font-semibold text-slate-900">
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalDue)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.totalDue > 0 ? '#ef444415' : '#10b98115' }}>
+              <DollarOutlined style={{ color: stats.totalDue > 0 ? '#ef4444' : '#10b981' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Header */}
+      <ListPageHeader
+        icon={<FileTextOutlined />}
+        iconColor="#10b981"
+        title="Faturalar"
+        description="Satış faturalarını yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Fatura',
+          onClick: () => router.push('/sales/invoices/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Bulk Actions Bar */}
+      {selectedRowKeys.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-indigo-700 font-medium">
+              {selectedRowKeys.length} fatura seçildi
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkPdfExport}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <FilePdfOutlined />
+                PDF
+              </button>
+              <button
+                onClick={handleBulkIssue}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <CheckCircleOutlined />
+                Kes
+              </button>
+              <button
+                onClick={handleBulkSend}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <SendOutlined />
+                Gönder
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
+              >
+                <DeleteOutlined />
+                Sil
+              </button>
+              <button
+                onClick={() => setSelectedRowKeys([])}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+              >
+                Temizle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
-      <Card className="mb-6">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={6}>
-            <Input
-              placeholder="Fatura ara..."
-              prefix={<SearchOutlined />}
-              allowClear
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} md={5}>
-            <Select
-              placeholder="Durum seçin"
-              options={statusOptions}
-              value={filters.status}
-              onChange={handleStatusChange}
-              style={{ width: '100%' }}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} md={5}>
-            <Select
-              placeholder="Tip seçin"
-              options={typeOptions}
-              value={filters.type}
-              onChange={handleTypeChange}
-              style={{ width: '100%' }}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} md={8}>
-            <RangePicker
-              placeholder={['Başlangıç', 'Bitiş']}
-              onChange={handleDateRangeChange}
-              style={{ width: '100%' }}
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Input
+            placeholder="Fatura ara..."
+            prefix={<SearchOutlined className="text-slate-400" />}
+            allowClear
+            style={{ maxWidth: 300 }}
+            onChange={(e) => setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))}
+            className="h-10"
+          />
+          <Select
+            placeholder="Durum seçin"
+            options={statusOptions}
+            value={filters.status}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
+            style={{ width: 160 }}
+            allowClear
+          />
+          <Select
+            placeholder="Tip seçin"
+            options={typeOptions}
+            value={filters.type}
+            onChange={(value) => setFilters((prev) => ({ ...prev, type: value, page: 1 }))}
+            style={{ width: 140 }}
+            allowClear
+          />
+          <RangePicker
+            placeholder={['Başlangıç', 'Bitiş']}
+            style={{ width: 280 }}
+            onChange={(dates) => {
+              if (dates) {
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate: dates[0]?.toISOString(),
+                  toDate: dates[1]?.toISOString(),
+                  page: 1,
+                }));
+              } else {
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate: undefined,
+                  toDate: undefined,
+                  page: 1,
+                }));
+              }
+            }}
+          />
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={invoices}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: filters.page,
-            pageSize: filters.pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} fatura`,
-          }}
-          onChange={handleTableChange}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={invoices}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: filters.page,
+              pageSize: filters.pageSize,
+              total: totalCount,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} fatura`,
+            }}
+            onChange={handleTableChange}
+            scroll={{ x: 1200 }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

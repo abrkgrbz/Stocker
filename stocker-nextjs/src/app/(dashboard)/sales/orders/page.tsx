@@ -1,35 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Sales Orders List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  Card,
   Table,
-  Button,
+  Tag,
   Input,
   Select,
-  Space,
-  Tag,
-  Typography,
   DatePicker,
   Dropdown,
   Modal,
-  message,
-  Row,
-  Col,
+  Spin,
+  Checkbox,
 } from 'antd';
 import {
   PlusOutlined,
+  ReloadOutlined,
   SearchOutlined,
-  MoreOutlined,
   EyeOutlined,
   EditOutlined,
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
-  ReloadOutlined,
+  MoreOutlined,
   FilePdfOutlined,
+  ShoppingCartOutlined,
+  DollarOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useSalesOrders,
   useApproveSalesOrder,
@@ -42,33 +46,35 @@ import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import { generateSalesOrderPDF } from '@/lib/utils/pdf-export';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
+import {
+  showSuccess,
+  showError,
+  showWarning,
+  confirmDelete,
+  confirmAction,
+} from '@/lib/utils/sweetalert';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-const statusColors: Record<SalesOrderStatus, string> = {
-  Draft: 'default',
-  Approved: 'processing',
-  Confirmed: 'cyan',
-  Shipped: 'blue',
-  Delivered: 'geekblue',
-  Completed: 'success',
-  Cancelled: 'error',
+const statusConfig: Record<SalesOrderStatus, { color: string; label: string; bgColor: string }> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15' },
+  Approved: { color: '#3b82f6', label: 'Onaylı', bgColor: '#3b82f615' },
+  Confirmed: { color: '#06b6d4', label: 'Onaylandı', bgColor: '#06b6d415' },
+  Shipped: { color: '#8b5cf6', label: 'Gönderildi', bgColor: '#8b5cf615' },
+  Delivered: { color: '#6366f1', label: 'Teslim Edildi', bgColor: '#6366f115' },
+  Completed: { color: '#10b981', label: 'Tamamlandı', bgColor: '#10b98115' },
+  Cancelled: { color: '#ef4444', label: 'İptal', bgColor: '#ef444415' },
 };
 
-const statusLabels: Record<SalesOrderStatus, string> = {
-  Draft: 'Taslak',
-  Approved: 'Onaylı',
-  Confirmed: 'Onaylandı',
-  Shipped: 'Gönderildi',
-  Delivered: 'Teslim Edildi',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
-};
-
-const statusOptions = Object.entries(statusLabels).map(([value, label]) => ({
+const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
   value,
-  label,
+  label: config.label,
 }));
 
 export default function SalesOrdersPage() {
@@ -88,12 +94,23 @@ export default function SalesOrdersPage() {
   const cancelMutation = useCancelSalesOrder();
   const deleteMutation = useDeleteSalesOrder();
 
+  const orders = data?.items ?? [];
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = data?.totalCount ?? 0;
+    const draft = orders.filter(o => o.status === 'Draft').length;
+    const pending = orders.filter(o => ['Approved', 'Confirmed', 'Shipped'].includes(o.status)).length;
+    const totalValue = orders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+    return { total, draft, pending, totalValue };
+  }, [orders, data?.totalCount]);
+
   const handleApprove = async (id: string) => {
     try {
       await approveMutation.mutateAsync(id);
-      message.success('Sipariş onaylandı');
+      showSuccess('Başarılı', 'Sipariş onaylandı');
     } catch {
-      message.error('Sipariş onaylanamadı');
+      showError('Sipariş onaylanamadı');
     }
   };
 
@@ -105,43 +122,35 @@ export default function SalesOrdersPage() {
 
   const handleCancelConfirm = async () => {
     if (!selectedOrder || !cancelReason.trim()) {
-      message.error('İptal sebebi girilmelidir');
+      showWarning('Uyarı', 'İptal sebebi girilmelidir');
       return;
     }
     try {
       await cancelMutation.mutateAsync({ id: selectedOrder.id, reason: cancelReason });
-      message.success('Sipariş iptal edildi');
+      showSuccess('Başarılı', 'Sipariş iptal edildi');
       setCancelModalOpen(false);
       setSelectedOrder(null);
     } catch {
-      message.error('Sipariş iptal edilemedi');
+      showError('Sipariş iptal edilemedi');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    Modal.confirm({
-      title: 'Siparişi Sil',
-      content: 'Bu siparişi silmek istediğinizden emin misiniz?',
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteMutation.mutateAsync(id);
-          message.success('Sipariş silindi');
-        } catch {
-          message.error('Sipariş silinemedi');
-        }
-      },
-    });
+  const handleDelete = async (order: SalesOrderListItem) => {
+    const confirmed = await confirmDelete('Sipariş', order.orderNumber);
+    if (confirmed) {
+      try {
+        await deleteMutation.mutateAsync(order.id);
+        showSuccess('Başarılı', 'Sipariş silindi');
+      } catch {
+        showError('Sipariş silinemedi');
+      }
+    }
   };
-
-  const orders = data?.items ?? [];
 
   // Bulk operations
   const handleBulkPdfExport = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('Lütfen PDF oluşturmak için sipariş seçiniz');
+      showWarning('Uyarı', 'Lütfen PDF oluşturmak için sipariş seçiniz');
       return;
     }
     setBulkLoading(true);
@@ -150,9 +159,9 @@ export default function SalesOrdersPage() {
         const order = await SalesService.getOrderById(id);
         await generateSalesOrderPDF(order);
       }
-      message.success(`${selectedRowKeys.length} sipariş PDF olarak indirildi`);
-    } catch (error) {
-      message.error('PDF oluşturulurken hata oluştu');
+      showSuccess('Başarılı', `${selectedRowKeys.length} sipariş PDF olarak indirildi`);
+    } catch {
+      showError('PDF oluşturulurken hata oluştu');
     } finally {
       setBulkLoading(false);
     }
@@ -165,35 +174,35 @@ export default function SalesOrdersPage() {
     });
 
     if (draftOrders.length === 0) {
-      message.warning('Seçili siparişler arasında onaylanabilecek taslak sipariş bulunamadı');
+      showWarning('Uyarı', 'Seçili siparişler arasında onaylanabilecek taslak sipariş bulunamadı');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Sipariş Onaylama',
-      content: `${draftOrders.length} adet taslak sipariş onaylanacak. Devam etmek istiyor musunuz?`,
-      okText: 'Onayla',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        try {
-          for (const id of draftOrders) {
-            try {
-              await approveMutation.mutateAsync(id);
-              successCount++;
-            } catch {
-              // Continue with others
-            }
+    const confirmed = await confirmAction(
+      'Toplu Sipariş Onaylama',
+      `${draftOrders.length} adet taslak sipariş onaylanacak. Devam etmek istiyor musunuz?`,
+      'Onayla'
+    );
+
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      try {
+        for (const id of draftOrders) {
+          try {
+            await approveMutation.mutateAsync(id);
+            successCount++;
+          } catch {
+            // Continue with others
           }
-          message.success(`${successCount} sipariş başarıyla onaylandı`);
-          setSelectedRowKeys([]);
-          refetch();
-        } finally {
-          setBulkLoading(false);
         }
-      },
-    });
+        showSuccess('Başarılı', `${successCount} sipariş başarıyla onaylandı`);
+        setSelectedRowKeys([]);
+        refetch();
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -203,36 +212,30 @@ export default function SalesOrdersPage() {
     });
 
     if (deletableOrders.length === 0) {
-      message.warning('Seçili siparişler arasında silinebilecek sipariş bulunamadı (sadece taslak siparişler silinebilir)');
+      showWarning('Uyarı', 'Seçili siparişler arasında silinebilecek sipariş bulunamadı (sadece taslak siparişler silinebilir)');
       return;
     }
 
-    Modal.confirm({
-      title: 'Toplu Sipariş Silme',
-      content: `${deletableOrders.length} adet sipariş silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'Vazgeç',
-      onOk: async () => {
-        setBulkLoading(true);
-        let successCount = 0;
-        try {
-          for (const id of deletableOrders) {
-            try {
-              await deleteMutation.mutateAsync(id);
-              successCount++;
-            } catch {
-              // Continue with others
-            }
+    const confirmed = await confirmDelete('Sipariş', `${deletableOrders.length} sipariş`);
+    if (confirmed) {
+      setBulkLoading(true);
+      let successCount = 0;
+      try {
+        for (const id of deletableOrders) {
+          try {
+            await deleteMutation.mutateAsync(id);
+            successCount++;
+          } catch {
+            // Continue with others
           }
-          message.success(`${successCount} sipariş başarıyla silindi`);
-          setSelectedRowKeys([]);
-          refetch();
-        } finally {
-          setBulkLoading(false);
         }
-      },
-    });
+        showSuccess('Başarılı', `${successCount} sipariş başarıyla silindi`);
+        setSelectedRowKeys([]);
+        refetch();
+      } finally {
+        setBulkLoading(false);
+      }
+    }
   };
 
   const rowSelection = {
@@ -240,120 +243,164 @@ export default function SalesOrdersPage() {
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
   };
 
-  const getActionMenu = (record: SalesOrderListItem): MenuProps['items'] => {
-    const items: MenuProps['items'] = [
-      {
-        key: 'view',
-        icon: <EyeOutlined />,
-        label: 'Görüntüle',
-        onClick: () => router.push(`/sales/orders/${record.id}`),
-      },
-    ];
-
-    if (record.status === 'Draft') {
-      items.push(
-        {
-          key: 'edit',
-          icon: <EditOutlined />,
-          label: 'Düzenle',
-          onClick: () => router.push(`/sales/orders/${record.id}/edit`),
-        },
-        {
-          key: 'approve',
-          icon: <CheckOutlined />,
-          label: 'Onayla',
-          onClick: () => handleApprove(record.id),
-        },
-        {
-          key: 'delete',
-          icon: <DeleteOutlined />,
-          label: 'Sil',
-          danger: true,
-          onClick: () => handleDelete(record.id),
-        }
-      );
-    }
-
-    if (record.status !== 'Cancelled' && record.status !== 'Completed') {
-      items.push({
-        key: 'cancel',
-        icon: <CloseOutlined />,
-        label: 'İptal Et',
-        danger: true,
-        onClick: () => handleCancelClick(record),
-      });
-    }
-
-    return items;
-  };
-
   const columns: ColumnsType<SalesOrderListItem> = [
     {
-      title: 'Sipariş No',
-      dataIndex: 'orderNumber',
-      key: 'orderNumber',
-      render: (text: string, record) => (
-        <a onClick={() => router.push(`/sales/orders/${record.id}`)}>{text}</a>
+      title: 'Sipariş',
+      key: 'order',
+      render: (_, record) => (
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: statusConfig[record.status]?.bgColor || '#64748b15' }}
+          >
+            <ShoppingCartOutlined style={{ color: statusConfig[record.status]?.color || '#64748b' }} />
+          </div>
+          <div>
+            <div
+              className="text-sm font-medium text-slate-900 cursor-pointer hover:text-indigo-600"
+              onClick={() => router.push(`/sales/orders/${record.id}`)}
+            >
+              {record.orderNumber}
+            </div>
+            <div className="text-xs text-slate-500">
+              {record.customerName}
+            </div>
+          </div>
+        </div>
       ),
-      sorter: true,
-    },
-    {
-      title: 'Müşteri',
-      dataIndex: 'customerName',
-      key: 'customerName',
     },
     {
       title: 'Tarih',
       dataIndex: 'orderDate',
       key: 'orderDate',
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
+      width: 120,
+      render: (date: string) => (
+        <div className="text-sm text-slate-600">
+          {dayjs(date).format('DD.MM.YYYY')}
+        </div>
+      ),
       sorter: true,
     },
     {
       title: 'Teslim Tarihi',
       dataIndex: 'deliveryDate',
       key: 'deliveryDate',
-      render: (date: string | null) => (date ? dayjs(date).format('DD.MM.YYYY') : '-'),
+      width: 120,
+      render: (date: string | null) => (
+        <div className="text-sm text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY') : '-'}
+        </div>
+      ),
     },
     {
       title: 'Kalem',
       dataIndex: 'itemCount',
       key: 'itemCount',
+      width: 80,
       align: 'center',
+      render: (count: number) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded">
+          {count}
+        </span>
+      ),
     },
     {
       title: 'Tutar',
       dataIndex: 'grandTotal',
       key: 'grandTotal',
-      render: (amount: number, record) =>
-        new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount),
-      sorter: true,
+      width: 140,
       align: 'right',
+      render: (amount: number, record) => (
+        <div className="text-sm font-medium text-slate-900">
+          {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
+        </div>
+      ),
+      sorter: true,
     },
     {
-      title: 'Satış Temsilcisi',
+      title: 'Temsilci',
       dataIndex: 'salesPersonName',
       key: 'salesPersonName',
-      render: (name: string | null) => name || '-',
+      width: 150,
+      render: (name: string | null) => (
+        <div className="text-sm text-slate-600">{name || '-'}</div>
+      ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      render: (status: SalesOrderStatus) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      width: 120,
       filters: statusOptions.map((s) => ({ text: s.label, value: s.value })),
+      render: (status: SalesOrderStatus) => (
+        <Tag color={statusConfig[status]?.color === '#10b981' ? 'green' :
+                    statusConfig[status]?.color === '#ef4444' ? 'red' :
+                    statusConfig[status]?.color === '#3b82f6' ? 'blue' :
+                    statusConfig[status]?.color === '#06b6d4' ? 'cyan' :
+                    statusConfig[status]?.color === '#8b5cf6' ? 'purple' :
+                    statusConfig[status]?.color === '#6366f1' ? 'geekblue' : 'default'}>
+          {statusConfig[status]?.label}
+        </Tag>
+      ),
     },
     {
       title: '',
       key: 'actions',
-      width: 50,
-      render: (_, record) => (
-        <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => router.push(`/sales/orders/${record.id}`),
+          },
+        ];
+
+        if (record.status === 'Draft') {
+          menuItems.push(
+            {
+              key: 'edit',
+              icon: <EditOutlined />,
+              label: 'Düzenle',
+              onClick: () => router.push(`/sales/orders/${record.id}/edit`),
+            },
+            {
+              key: 'approve',
+              icon: <CheckOutlined />,
+              label: 'Onayla',
+              onClick: () => handleApprove(record.id),
+            },
+            { type: 'divider' },
+            {
+              key: 'delete',
+              icon: <DeleteOutlined />,
+              label: 'Sil',
+              danger: true,
+              onClick: () => handleDelete(record),
+            }
+          );
+        }
+
+        if (record.status !== 'Cancelled' && record.status !== 'Completed') {
+          menuItems.push({
+            key: 'cancel',
+            icon: <CloseOutlined />,
+            label: 'İptal Et',
+            danger: true,
+            onClick: () => handleCancelClick(record),
+          });
+        }
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -369,115 +416,185 @@ export default function SalesOrdersPage() {
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Siparişler</Title>
-          <Text type="secondary">Satış siparişlerini yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Sipariş</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
+              <ShoppingCartOutlined style={{ color: '#6366f1' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          {selectedRowKeys.length > 0 && (
-            <>
-              <span style={{ color: '#1890ff' }}>
-                {selectedRowKeys.length} sipariş seçildi
-              </span>
-              <Button
-                icon={<FilePdfOutlined />}
-                onClick={handleBulkPdfExport}
-                loading={bulkLoading}
-              >
-                PDF İndir
-              </Button>
-              <Button
-                icon={<CheckOutlined />}
-                onClick={handleBulkApprove}
-                loading={bulkLoading}
-              >
-                Onayla
-              </Button>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleBulkDelete}
-                loading={bulkLoading}
-              >
-                Sil
-              </Button>
-              <Button onClick={() => setSelectedRowKeys([])}>
-                Seçimi Temizle
-              </Button>
-            </>
-          )}
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/sales/orders/new')}
-          >
-            Yeni Sipariş
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Taslak</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.draft}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.draft > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <ClockCircleOutlined style={{ color: stats.draft > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">İşlemde</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Tutar</span>
+              <div className="text-2xl font-semibold text-slate-900">
+                {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(stats.totalValue)}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <DollarOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Header */}
+      <ListPageHeader
+        icon={<ShoppingCartOutlined />}
+        iconColor="#6366f1"
+        title="Siparişler"
+        description="Satış siparişlerini yönetin"
+        itemCount={data?.totalCount ?? 0}
+        primaryAction={{
+          label: 'Yeni Sipariş',
+          onClick: () => router.push('/sales/orders/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Bulk Actions Bar */}
+      {selectedRowKeys.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-indigo-700 font-medium">
+              {selectedRowKeys.length} sipariş seçildi
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBulkPdfExport}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <FilePdfOutlined />
+                PDF İndir
+              </button>
+              <button
+                onClick={handleBulkApprove}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
+              >
+                <CheckOutlined />
+                Onayla
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
+              >
+                <DeleteOutlined />
+                Sil
+              </button>
+              <button
+                onClick={() => setSelectedRowKeys([])}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+              >
+                Temizle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Input
-              placeholder="Ara..."
-              prefix={<SearchOutlined />}
-              allowClear
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
-              }
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Select
-              placeholder="Durum"
-              allowClear
-              style={{ width: '100%' }}
-              options={statusOptions}
-              onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <RangePicker
-              style={{ width: '100%' }}
-              placeholder={['Başlangıç', 'Bitiş']}
-              onChange={(dates) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate: dates?.[0]?.toISOString(),
-                  toDate: dates?.[1]?.toISOString(),
-                  page: 1,
-                }))
-              }
-            />
-          </Col>
-        </Row>
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Input
+            placeholder="Sipariş ara..."
+            prefix={<SearchOutlined className="text-slate-400" />}
+            allowClear
+            style={{ maxWidth: 300 }}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
+            }
+            className="h-10"
+          />
+          <Select
+            placeholder="Durum seçin"
+            allowClear
+            style={{ width: 180 }}
+            options={statusOptions}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value, page: 1 }))}
+          />
+          <RangePicker
+            style={{ width: 280 }}
+            placeholder={['Başlangıç', 'Bitiş']}
+            onChange={(dates) =>
+              setFilters((prev) => ({
+                ...prev,
+                fromDate: dates?.[0]?.toISOString(),
+                toDate: dates?.[1]?.toISOString(),
+                page: 1,
+              }))
+            }
+          />
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <Table
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={orders}
-          rowKey="id"
-          loading={isLoading}
-          onChange={handleTableChange}
-          pagination={{
-            current: filters.page,
-            pageSize: filters.pageSize,
-            total: data?.totalCount ?? 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} sipariş`,
-          }}
-        />
-      </Card>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={orders}
+            rowKey="id"
+            loading={isLoading}
+            onChange={handleTableChange}
+            scroll={{ x: 1100 }}
+            pagination={{
+              current: filters.page,
+              pageSize: filters.pageSize,
+              total: data?.totalCount ?? 0,
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sipariş`,
+            }}
+          />
+        </DataTableWrapper>
+      )}
 
       {/* Cancel Modal */}
       <Modal
@@ -490,10 +607,10 @@ export default function SalesOrdersPage() {
         cancelText="Vazgeç"
         confirmLoading={cancelMutation.isPending}
       >
-        <div style={{ marginBottom: 16 }}>
-          <Text>
-            <strong>{selectedOrder?.orderNumber}</strong> numaralı siparişi iptal etmek üzeresiniz.
-          </Text>
+        <div className="mb-4">
+          <p className="text-sm text-slate-600">
+            <strong className="text-slate-900">{selectedOrder?.orderNumber}</strong> numaralı siparişi iptal etmek üzeresiniz.
+          </p>
         </div>
         <Input.TextArea
           placeholder="İptal sebebini giriniz..."
@@ -502,6 +619,6 @@ export default function SalesOrdersPage() {
           onChange={(e) => setCancelReason(e.target.value)}
         />
       </Modal>
-    </div>
+    </PageContainer>
   );
 }
