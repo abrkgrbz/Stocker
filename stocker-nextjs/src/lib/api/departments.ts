@@ -31,6 +31,16 @@ export interface UpdateDepartmentRequest {
 }
 
 /**
+ * Get a single department by ID
+ */
+export async function getDepartment(departmentId: string): Promise<Department> {
+  const response = await apiClient.get<{ success: boolean; data: Department; message: string }>(
+    `/api/tenant/department/${departmentId}`
+  );
+  return (response.data as any).data as Department;
+}
+
+/**
  * Get all departments for current tenant
  */
 export async function getDepartments(): Promise<Department[]> {

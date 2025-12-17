@@ -3,11 +3,11 @@
 /**
  * Department Management Page
  * Allows administrators to manage organizational departments
- * Uses Drawer pattern for consistency with User/Role management
+ * Uses full-page forms for consistency with CRM-style pages
  */
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   Button,
@@ -27,18 +27,11 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  getDepartments,
-  createDepartment,
-  updateDepartment,
   deleteDepartment,
   type Department,
-  type CreateDepartmentRequest,
-  type UpdateDepartmentRequest,
 } from '@/lib/api/departments';
-import { DepartmentDrawer } from '@/features/departments/components';
+import { useDepartments } from '@/hooks/useDepartments';
 import {
-  showCreateSuccess,
-  showUpdateSuccess,
   showDeleteSuccess,
   showError,
   confirmDelete,
@@ -47,49 +40,11 @@ import {
 const { Title, Text } = Typography;
 
 export default function DepartmentsPage() {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+  const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Fetch departments
-  const { data: departments = [], isLoading } = useQuery<Department[]>({
-    queryKey: ['departments'],
-    queryFn: getDepartments,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
-
-  // Create department mutation
-  const createMutation = useMutation({
-    mutationFn: createDepartment,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
-      setIsDrawerOpen(false);
-      showCreateSuccess('departman');
-    },
-    onError: (error: any) => {
-      const errorMessage = error?.message || 'Departman oluşturulurken bir hata oluştu';
-      showError(errorMessage);
-    },
-  });
-
-  // Update department mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateDepartmentRequest }) =>
-      updateDepartment(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
-      setIsDrawerOpen(false);
-      setEditingDepartment(null);
-      showUpdateSuccess('departman');
-    },
-    onError: (error: any) => {
-      const errorMessage = error?.message || 'Departman güncellenirken bir hata oluştu';
-      showError(errorMessage);
-    },
-  });
+  // Fetch departments using hook
+  const { data: departments = [], isLoading } = useDepartments();
 
   // Delete department mutation
   const deleteMutation = useMutation({
@@ -105,13 +60,11 @@ export default function DepartmentsPage() {
   });
 
   const handleCreate = () => {
-    setEditingDepartment(null);
-    setIsDrawerOpen(true);
+    router.push('/settings/departments/new');
   };
 
   const handleEdit = (department: Department) => {
-    setEditingDepartment(department);
-    setIsDrawerOpen(true);
+    router.push(`/settings/departments/${department.id}/edit`);
   };
 
   const handleDelete = async (department: Department) => {
@@ -123,19 +76,6 @@ export default function DepartmentsPage() {
 
     if (confirmed && department.employeeCount === 0) {
       deleteMutation.mutate(department.id);
-    }
-  };
-
-  const handleSubmit = async (values: any) => {
-    if (editingDepartment) {
-      // Update existing department
-      await updateMutation.mutateAsync({
-        id: editingDepartment.id,
-        data: values,
-      });
-    } else {
-      // Create new department
-      await createMutation.mutateAsync(values);
     }
   };
 
@@ -258,15 +198,6 @@ export default function DepartmentsPage() {
         </Col>
       </Row>
 
-      <DepartmentDrawer
-        open={isDrawerOpen}
-        department={editingDepartment}
-        onClose={() => {
-          setIsDrawerOpen(false);
-          setEditingDepartment(null);
-        }}
-        onSubmit={handleSubmit}
-      />
     </div>
   );
 }
