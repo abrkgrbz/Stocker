@@ -1,10 +1,45 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
+
+// Testimonials data for Register page
+const TESTIMONIALS = [
+  {
+    id: 1,
+    quote: "Kurulum 5 dakika sürdü. İlk gün tüm ekip kullanmaya başladı. Bu kadar basit olacağını düşünmemiştik.",
+    author: "Elif Kaya",
+    role: "Kurucu Ortak",
+    company: "ModernBiz",
+    initials: "EK",
+  },
+  {
+    id: 2,
+    quote: "Rakiplerden geçiş çok kolay oldu. Tüm verilerimizi sorunsuz aktardık. Harika bir onboarding deneyimi.",
+    author: "Can Özdemir",
+    role: "IT Direktörü",
+    company: "FastGrowth",
+    initials: "CÖ",
+  },
+  {
+    id: 3,
+    quote: "14 günlük deneme süresi yeterli oldu. Ekibimiz ürünü o kadar sevdi ki hemen premium'a geçtik.",
+    author: "Selin Arslan",
+    role: "Finans Müdürü",
+    company: "SmartRetail",
+    initials: "SA",
+  },
+  {
+    id: 4,
+    quote: "Kurulumdan itibaren her adımda destek aldık. Canlı chat ile anında çözüm buluyoruz.",
+    author: "Burak Yıldız",
+    role: "Operasyon Şefi",
+    company: "QuickLogistics",
+    initials: "BY",
+  },
+]
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { showAlert } from '@/lib/sweetalert-config'
 import { authService } from '@/lib/api/services/auth.service'
@@ -44,6 +79,24 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  // Testimonial slider state
+  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Auto-rotate testimonials
+  const nextTestimonial = useCallback(() => {
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length)
+      setIsTransitioning(false)
+    }, 300)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(nextTestimonial, 6000) // Change every 6 seconds
+    return () => clearInterval(interval)
+  }, [nextTestimonial])
 
   // Validation states
   const [emailValid, setEmailValid] = useState(false)
@@ -617,9 +670,9 @@ export default function RegisterPage() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
-          {/* Testimonial - Vertically Centered */}
+          {/* Testimonial Slider - Vertically Centered */}
           <div className="flex-1 flex items-center">
-            <div className="max-w-md">
+            <div className="max-w-md w-full">
               {/* Quote Icon */}
               <svg
                 className="w-12 h-12 text-slate-700 mb-6"
@@ -629,18 +682,43 @@ export default function RegisterPage() {
                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
               </svg>
 
-              <blockquote className="text-2xl font-light text-white leading-relaxed mb-8">
-                "Kurulum 5 dakika sürdü. İlk gün tüm ekip kullanmaya başladı. Bu kadar basit olacağını düşünmemiştik."
-              </blockquote>
+              {/* Testimonial Content with Fade Animation */}
+              <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
+                <blockquote className="text-2xl font-light text-white leading-relaxed mb-8 min-h-[120px]">
+                  "{TESTIMONIALS[currentTestimonial].quote}"
+                </blockquote>
 
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
-                  EK
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
+                    {TESTIMONIALS[currentTestimonial].initials}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">{TESTIMONIALS[currentTestimonial].author}</div>
+                    <div className="text-slate-400 text-sm">{TESTIMONIALS[currentTestimonial].role}, {TESTIMONIALS[currentTestimonial].company}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-white font-medium">Elif Kaya</div>
-                  <div className="text-slate-400 text-sm">Kurucu Ortak, ModernBiz</div>
-                </div>
+              </div>
+
+              {/* Slider Dots */}
+              <div className="flex items-center gap-2 mt-8">
+                {TESTIMONIALS.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setIsTransitioning(true)
+                      setTimeout(() => {
+                        setCurrentTestimonial(index)
+                        setIsTransitioning(false)
+                      }, 300)
+                    }}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentTestimonial
+                        ? 'w-8 bg-white'
+                        : 'w-1.5 bg-slate-600 hover:bg-slate-500'
+                    }`}
+                    aria-label={`Testimonial ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
           </div>

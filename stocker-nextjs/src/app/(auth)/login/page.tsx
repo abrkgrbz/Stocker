@@ -1,10 +1,45 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Tenant, TenantInfo } from '@/lib/types/auth'
+
+// Testimonials data
+const TESTIMONIALS = [
+  {
+    id: 1,
+    quote: "Stoocker ile stok yönetimimiz tamamen değişti. Artık her şey tek bir yerden, gerçek zamanlı olarak takip ediliyor.",
+    author: "Ahmet Yılmaz",
+    role: "Operasyon Müdürü",
+    company: "TechCorp",
+    initials: "AY",
+  },
+  {
+    id: 2,
+    quote: "Envanter takibi hiç bu kadar kolay olmamıştı. Stoocker sayesinde stok maliyetlerimizi %30 azalttık.",
+    author: "Elif Demir",
+    role: "Satın Alma Direktörü",
+    company: "RetailPlus",
+    initials: "ED",
+  },
+  {
+    id: 3,
+    quote: "Müşteri desteği mükemmel. Her sorumuz anında çözüme kavuşuyor. Kesinlikle tavsiye ederim.",
+    author: "Mehmet Kaya",
+    role: "Genel Müdür",
+    company: "LogiTech Solutions",
+    initials: "MK",
+  },
+  {
+    id: 4,
+    quote: "Çoklu depo yönetimi özelliği işimizi inanılmaz kolaylaştırdı. Tüm lokasyonları tek panelden yönetiyoruz.",
+    author: "Zeynep Aksoy",
+    role: "Lojistik Müdürü",
+    company: "GlobalTrade",
+    initials: "ZA",
+  },
+]
 import { calculateBackoff } from '@/lib/auth/backoff'
 import { getClientTenantUrl } from '@/lib/env'
 import { normalizeAuthDomain, isRootDomain } from '@/lib/utils/auth'
@@ -54,6 +89,24 @@ function LoginForm() {
   const [failedAttempts, setFailedAttempts] = useState(0)
   const [backoffUntil, setBackoffUntil] = useState<number | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+
+  // Testimonial slider state
+  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  // Auto-rotate testimonials
+  const nextTestimonial = useCallback(() => {
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length)
+      setIsTransitioning(false)
+    }, 300)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(nextTestimonial, 6000) // Change every 6 seconds
+    return () => clearInterval(interval)
+  }, [nextTestimonial])
 
   // Detect if we're on tenant subdomain (not auth domain)
   const isOnTenantSubdomain = () => {
@@ -365,9 +418,9 @@ function LoginForm() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
-          {/* Testimonial - Vertically Centered */}
+          {/* Testimonial Slider - Vertically Centered */}
           <div className="flex-1 flex items-center">
-            <div className="max-w-md">
+            <div className="max-w-md w-full">
               {/* Quote Icon */}
               <svg
                 className="w-12 h-12 text-slate-700 mb-6"
@@ -377,18 +430,43 @@ function LoginForm() {
                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
               </svg>
 
-              <blockquote className="text-2xl font-light text-white leading-relaxed mb-8">
-                "Stoocker ile stok yönetimimiz tamamen değişti. Artık her şey tek bir yerden, gerçek zamanlı olarak takip ediliyor."
-              </blockquote>
+              {/* Testimonial Content with Fade Animation */}
+              <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}>
+                <blockquote className="text-2xl font-light text-white leading-relaxed mb-8 min-h-[120px]">
+                  "{TESTIMONIALS[currentTestimonial].quote}"
+                </blockquote>
 
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
-                  AY
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
+                    {TESTIMONIALS[currentTestimonial].initials}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">{TESTIMONIALS[currentTestimonial].author}</div>
+                    <div className="text-slate-400 text-sm">{TESTIMONIALS[currentTestimonial].role}, {TESTIMONIALS[currentTestimonial].company}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-white font-medium">Ahmet Yılmaz</div>
-                  <div className="text-slate-400 text-sm">Operasyon Müdürü, TechCorp</div>
-                </div>
+              </div>
+
+              {/* Slider Dots */}
+              <div className="flex items-center gap-2 mt-8">
+                {TESTIMONIALS.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setIsTransitioning(true)
+                      setTimeout(() => {
+                        setCurrentTestimonial(index)
+                        setIsTransitioning(false)
+                      }, 300)
+                    }}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentTestimonial
+                        ? 'w-8 bg-white'
+                        : 'w-1.5 bg-slate-600 hover:bg-slate-500'
+                    }`}
+                    aria-label={`Testimonial ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
           </div>
