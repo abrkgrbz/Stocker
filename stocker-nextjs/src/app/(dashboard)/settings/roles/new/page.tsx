@@ -2,35 +2,21 @@
 
 /**
  * New Role Page
- * Clean SaaS design with module-based permission organization
- * Stripe/Linear inspired - white cards, minimal color accents
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Stacked list layouts for permissions
+ * - Sticky action bar at bottom
+ * - Minimal accent colors (only on icons/critical elements)
  */
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Button,
-  Form,
-  Input,
-  Space,
-  Row,
-  Col,
-  Typography,
-  Checkbox,
-  Badge,
-  Tag,
-  Alert,
-  Select,
-  Spin,
-  Tooltip,
-} from 'antd';
+import { Form, Input, Select, Spin, Checkbox } from 'antd';
 import {
   ArrowLeftOutlined,
-  SaveOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  RightOutlined,
+  CheckOutlined,
   DownOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import { useCreateRole, useRoles } from '@/hooks/useRoles';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
@@ -45,30 +31,16 @@ import {
   type ResourceDefinition,
 } from '@/lib/api/roles';
 
-const { Text } = Typography;
-
-// Module accent colors (only for left border)
-const MODULE_ACCENT_COLORS: Record<string, string> = {
-  CORE: '#6366f1',      // Indigo
-  INVENTORY: '#8b5cf6', // Purple
-  SALES: '#10b981',     // Green
-  PURCHASE: '#f59e0b',  // Amber
-  CRM: '#3b82f6',       // Blue
-  HR: '#ec4899',        // Pink
-  FINANCE: '#14b8a6',   // Teal
-  CMS: '#f97316',       // Orange
-};
-
-// Module icons (text-based for cleaner look)
-const MODULE_ICONS: Record<string, string> = {
-  CORE: '⚙️',
-  INVENTORY: '📦',
-  SALES: '💰',
-  PURCHASE: '🛒',
-  CRM: '🤝',
-  HR: '👥',
-  FINANCE: '📊',
-  CMS: '📰',
+// Subtle accent colors for module icons only
+const MODULE_ICON_COLORS: Record<string, string> = {
+  CORE: '#6366f1',
+  INVENTORY: '#8b5cf6',
+  SALES: '#10b981',
+  PURCHASE: '#f59e0b',
+  CRM: '#3b82f6',
+  HR: '#ec4899',
+  FINANCE: '#14b8a6',
+  CMS: '#f97316',
 };
 
 export default function NewRolePage() {
@@ -82,7 +54,6 @@ export default function NewRolePage() {
   const { data: allRoles } = useRoles();
   const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
 
-  // Get available resources based on tenant's active modules
   const { coreResources, moduleResources } = useMemo(() => {
     if (!modulesData?.modules) {
       return { coreResources: CORE_RESOURCES, moduleResources: [] };
@@ -158,7 +129,7 @@ export default function NewRolePage() {
     }
   };
 
-  const handleToggleAllForModule = (moduleCode: string, resources: ResourceDefinition[], checked: boolean) => {
+  const handleToggleAllForModule = (resources: ResourceDefinition[], checked: boolean) => {
     if (checked) {
       const newPermissions: Permission[] = [];
       resources.forEach(res => {
@@ -198,41 +169,44 @@ export default function NewRolePage() {
     return getModulePermissionCount(resources) === maxPerms;
   };
 
-  const renderResourcePermissions = (resource: ResourceDefinition) => {
+  // Stacked list item for each resource
+  const renderResourceRow = (resource: ResourceDefinition) => {
     const resourcePerms = getResourcePermissions(resource.value);
     const hasAll = hasAllPermissionsForResource(resource.value);
 
     return (
-      <div key={resource.value} className="py-2.5 border-b border-gray-100 last:border-b-0">
-        <div className="flex items-center justify-between mb-1">
+      <div
+        key={resource.value}
+        className="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"
+      >
+        <div className="flex items-center gap-3">
           <Checkbox
             checked={hasAll}
             indeterminate={resourcePerms.length > 0 && !hasAll}
             onChange={(e) => handleToggleAllForResource(resource.value, e.target.checked)}
-          >
-            <span className="text-slate-700 font-medium text-sm">{resource.label}</span>
-          </Checkbox>
+          />
+          <span className="text-sm text-slate-700">{resource.label}</span>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 ml-6">
+        <div className="flex items-center gap-4">
           {Object.entries(PERMISSION_TYPE_LABELS).map(([type, label]) => {
             const permType = parseInt(type) as PermissionType;
             const isSelected = resourcePerms.some((p) => p.permissionType === permType);
 
             return (
-              <Checkbox
-                key={type}
-                checked={isSelected}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    handleAddPermission(resource.value, permType);
-                  } else {
-                    handleRemovePermission({ resource: resource.value, permissionType: permType });
-                  }
-                }}
-                className="text-xs"
-              >
-                <span className="text-slate-500 text-xs">{label}</span>
-              </Checkbox>
+              <label key={type} className="flex items-center gap-1.5 cursor-pointer">
+                <Checkbox
+                  checked={isSelected}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      handleAddPermission(resource.value, permType);
+                    } else {
+                      handleRemovePermission({ resource: resource.value, permissionType: permType });
+                    }
+                  }}
+                  className="[&_.ant-checkbox-inner]:w-4 [&_.ant-checkbox-inner]:h-4"
+                />
+                <span className="text-xs text-slate-500">{label}</span>
+              </label>
             );
           })}
         </div>
@@ -240,6 +214,7 @@ export default function NewRolePage() {
     );
   };
 
+  // Module section with stacked list
   const renderModuleSection = (
     moduleCode: string,
     moduleName: string,
@@ -250,54 +225,54 @@ export default function NewRolePage() {
     const hasAll = hasAllPermissionsForModule(resources);
     const allTypes = Object.values(PermissionType).filter((v) => typeof v === 'number');
     const maxPerms = resources.length * allTypes.length;
-    const accentColor = MODULE_ACCENT_COLORS[moduleCode] || '#6366f1';
+    const iconColor = MODULE_ICON_COLORS[moduleCode] || '#6366f1';
 
     return (
-      <div
-        key={moduleCode}
-        className="bg-white rounded-lg border border-gray-200 shadow-sm mb-3 overflow-hidden"
-      >
+      <div key={moduleCode} className="mb-4">
         {/* Module Header */}
         <div
-          className="px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+          className="flex items-center justify-between py-3 px-4 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
           onClick={() => toggleModule(moduleCode)}
-          style={{ borderLeft: `4px solid ${accentColor}` }}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{MODULE_ICONS[moduleCode]}</span>
-              <div>
-                <span className="text-slate-900 font-semibold">{moduleName}</span>
-                <span className="text-slate-400 text-sm ml-2">({resources.length} kaynak)</span>
-              </div>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-md flex items-center justify-center"
+              style={{ backgroundColor: `${iconColor}15` }}
+            >
+              <span style={{ color: iconColor }} className="text-sm font-medium">
+                {moduleName.charAt(0)}
+              </span>
             </div>
-            <div className="flex items-center gap-4">
-              <Checkbox
-                checked={hasAll}
-                indeterminate={permCount > 0 && !hasAll}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  handleToggleAllForModule(moduleCode, resources, e.target.checked);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="text-right min-w-[60px]">
-                <span className="text-slate-900 font-semibold">{permCount}</span>
-                <span className="text-slate-400">/{maxPerms}</span>
-              </div>
-              {isExpanded ? (
-                <DownOutlined className="text-slate-400 text-xs" />
-              ) : (
-                <RightOutlined className="text-slate-400 text-xs" />
-              )}
+            <div>
+              <span className="text-sm font-medium text-slate-900">{moduleName}</span>
+              <span className="text-xs text-slate-400 ml-2">{resources.length} kaynak</span>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Checkbox
+              checked={hasAll}
+              indeterminate={permCount > 0 && !hasAll}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleToggleAllForModule(resources, e.target.checked);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span className="text-xs text-slate-500 min-w-[50px] text-right">
+              {permCount}/{maxPerms}
+            </span>
+            {isExpanded ? (
+              <DownOutlined className="text-slate-400 text-xs" />
+            ) : (
+              <RightOutlined className="text-slate-400 text-xs" />
+            )}
           </div>
         </div>
 
-        {/* Expanded Content */}
+        {/* Expanded Resources - Stacked List */}
         {isExpanded && (
-          <div className="px-4 pb-3 border-t border-gray-100">
-            {resources.map(resource => renderResourcePermissions(resource))}
+          <div className="mt-1 bg-white border border-slate-200 rounded-lg px-4">
+            {resources.map(resource => renderResourceRow(resource))}
           </div>
         )}
       </div>
@@ -307,99 +282,68 @@ export default function NewRolePage() {
   if (modulesLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" tip="Modüller yükleniyor..." />
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Clean Header */}
-      <div
-        className="sticky top-0 z-50 px-6 py-4 bg-white border-b border-gray-200"
-      >
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Minimal Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
+            <button
               onClick={() => router.back()}
-              type="text"
-              className="text-slate-500 hover:text-slate-800"
-            />
+              className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+            >
+              <ArrowLeftOutlined />
+            </button>
             <div>
-              <h1 className="text-lg font-semibold text-slate-900 m-0">
-                Yeni Rol Oluştur
-              </h1>
-              <p className="text-sm text-slate-500 m-0">Rol bilgilerini girin ve yetkileri belirleyin</p>
+              <h1 className="text-lg font-semibold text-slate-900">Yeni Rol</h1>
+              <p className="text-sm text-slate-500">Rol bilgilerini ve yetkilerini tanımlayın</p>
             </div>
           </div>
-          <Space>
-            <Button onClick={() => router.push('/settings/roles')}>
-              Vazgeç
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={createMutation.isPending}
-              onClick={() => form.submit()}
-              className="bg-slate-900 hover:bg-slate-800 border-slate-900"
-            >
-              Kaydet
-            </Button>
-          </Space>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="px-6 py-6 max-w-6xl mx-auto">
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
           disabled={createMutation.isPending}
         >
-          <Row gutter={24}>
-            {/* Left Panel - Form & Info (30%) */}
-            <Col xs={24} lg={8}>
-              {/* Role Info Card */}
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-4">
-                <h3 className="text-sm font-semibold text-slate-900 mb-4">Rol Bilgileri</h3>
-
+          {/* Role Details Section */}
+          <section className="mb-8">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Rol Bilgileri</h2>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="name"
-                  label={<span className="text-slate-700">Rol Adı</span>}
+                  label={<span className="text-sm text-slate-600">Rol Adı</span>}
                   rules={[
                     { required: true, message: 'Rol adı zorunludur' },
                     { min: 2, message: 'En az 2 karakter' },
                   ]}
+                  className="mb-0"
                 >
                   <Input
                     placeholder="örn: Satış Yöneticisi"
-                    size="large"
-                    className="rounded-md"
+                    className="h-10"
                   />
                 </Form.Item>
 
-                <Form.Item
-                  name="description"
-                  label={<span className="text-slate-700">Açıklama</span>}
-                >
-                  <Input.TextArea
-                    placeholder="Rolün görev ve sorumluluklarını açıklayın..."
-                    autoSize={{ minRows: 3, maxRows: 5 }}
-                    className="rounded-md"
-                  />
-                </Form.Item>
-
-                {/* Copy from existing role */}
                 {allRoles && allRoles.length > 0 && (
                   <Form.Item
-                    label={<span className="text-slate-700">Mevcut Rolden Kopyala</span>}
+                    label={<span className="text-sm text-slate-600">Şablondan Kopyala</span>}
+                    className="mb-0"
                   >
                     <Select
-                      placeholder="Bir rol seçin (isteğe bağlı)"
+                      placeholder="Mevcut rolden kopyala (isteğe bağlı)"
                       allowClear
-                      style={{ width: '100%' }}
+                      className="h-10"
                       value={copyFromRoleId}
                       onChange={handleCopyFromRole}
                       options={allRoles
@@ -413,110 +357,87 @@ export default function NewRolePage() {
                 )}
               </div>
 
-              {/* Stats Card */}
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 mb-4">
-                <h3 className="text-sm font-semibold text-slate-900 mb-4">Özet</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Toplam Yetki</span>
-                    <span className="text-slate-900 font-semibold text-lg">{selectedPermissions.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Aktif Modül</span>
-                    <span className="text-slate-900 font-semibold text-lg">{moduleResources.length + 1}</span>
-                  </div>
-                  {modulesData?.packageName && (
-                    <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                      <span className="text-slate-600">Paket</span>
-                      <span className="text-slate-900 font-medium">{modulesData.packageName}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Selected Permissions */}
-              {selectedPermissions.length > 0 && (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-slate-900">Seçilen Yetkiler</h3>
-                    <Badge count={selectedPermissions.length} style={{ backgroundColor: '#334155' }} />
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    <div className="flex flex-wrap gap-1">
-                      {selectedPermissions.slice(0, 12).map((perm, index) => {
-                        const allResources = [...CORE_RESOURCES, ...MODULE_RESOURCES.flatMap(m => m.resources)];
-                        const resource = allResources.find((r) => r.value === perm.resource);
-                        return (
-                          <Tag
-                            key={index}
-                            closable
-                            onClose={() => handleRemovePermission(perm)}
-                            className="text-xs bg-slate-100 border-slate-200 text-slate-700"
-                          >
-                            {resource?.label} - {PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType]}
-                          </Tag>
-                        );
-                      })}
-                      {selectedPermissions.length > 12 && (
-                        <Tag className="text-xs bg-slate-50 border-slate-200 text-slate-500">
-                          +{selectedPermissions.length - 12} daha
-                        </Tag>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Col>
-
-            {/* Right Panel - Permissions (70%) */}
-            <Col xs={24} lg={16}>
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-slate-900">Yetkiler</h2>
-                  <span className="text-xs text-slate-500">
-                    Modüle tıklayarak kaynakları görüntüleyin
-                  </span>
-                </div>
-              </div>
-
-              {selectedPermissions.length === 0 && (
-                <Alert
-                  message="Henüz yetki seçilmedi"
-                  description="Bu rol için en az bir yetki seçmelisiniz."
-                  type="warning"
-                  showIcon
-                  icon={<WarningOutlined />}
-                  className="mb-4 border-amber-200 bg-amber-50"
+              <Form.Item
+                name="description"
+                label={<span className="text-sm text-slate-600">Açıklama</span>}
+                className="mb-0 mt-6"
+              >
+                <Input.TextArea
+                  placeholder="Bu rolün görev ve sorumluluklarını açıklayın..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
                 />
-              )}
+              </Form.Item>
+            </div>
+          </section>
 
-              {/* Core Resources */}
-              {renderModuleSection('CORE', 'Sistem Yönetimi', coreResources)}
+          {/* Permissions Section */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-medium text-slate-900">Yetkiler</h2>
+              <span className="text-xs text-slate-500">
+                {selectedPermissions.length} yetki seçildi
+              </span>
+            </div>
 
-              {/* Module Resources */}
-              {moduleResources.map((module) =>
-                renderModuleSection(
-                  module.moduleCode,
-                  module.moduleName,
-                  module.resources
-                )
-              )}
+            {/* Permission Modules - Stacked List */}
+            {renderModuleSection('CORE', 'Sistem Yönetimi', coreResources)}
 
-              {/* No modules message */}
-              {moduleResources.length === 0 && (
-                <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-                  <Text className="text-slate-500">
-                    Aboneliğinize dahil ek modül bulunmuyor.
-                  </Text>
-                </div>
-              )}
-            </Col>
-          </Row>
+            {moduleResources.map((module) =>
+              renderModuleSection(
+                module.moduleCode,
+                module.moduleName,
+                module.resources
+              )
+            )}
+
+            {moduleResources.length === 0 && (
+              <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+                <p className="text-sm text-slate-500">
+                  Aboneliğinize dahil ek modül bulunmuyor.
+                </p>
+              </div>
+            )}
+          </section>
 
           <Form.Item hidden>
             <button type="submit" />
           </Form.Item>
         </Form>
+      </div>
+
+      {/* Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-500">
+              {selectedPermissions.length > 0 ? (
+                <span className="flex items-center gap-2">
+                  <CheckOutlined className="text-green-500" />
+                  {selectedPermissions.length} yetki seçildi
+                </span>
+              ) : (
+                <span>Henüz yetki seçilmedi</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push('/settings/roles')}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => form.submit()}
+                disabled={createMutation.isPending || selectedPermissions.length === 0}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {createMutation.isPending ? 'Kaydediliyor...' : 'Rolü Oluştur'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
