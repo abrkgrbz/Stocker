@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import AnimatedBackground from '@/components/landing/AnimatedBackground'
 
 const contactMethods = [
   {
@@ -68,42 +67,40 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-gray-100">
-      <AnimatedBackground />
-
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-700/50 bg-gray-900/80 backdrop-blur-sm sticky top-0">
+      <header className="border-b border-slate-200 bg-white backdrop-blur-sm sticky top-0">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="brightness-0 invert object-contain" priority /></Link>
+          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="object-contain" priority /></Link>
           <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/about" className="text-gray-400 hover:text-white transition-colors">Hakkımızda</Link>
-            <Link href="/support" className="text-gray-400 hover:text-white transition-colors">Destek</Link>
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">Giriş Yap</Link>
+            <Link href="/about" className="text-slate-500 hover:text-slate-900 transition-colors">Hakkımızda</Link>
+            <Link href="/support" className="text-slate-500 hover:text-slate-900 transition-colors">Destek</Link>
+            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium transition-colors">Giriş Yap</Link>
           </nav>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-violet-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">İletişim</h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">Sorularınız mı var? Size yardımcı olmaktan mutluluk duyarız.</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">İletişim</h1>
+          <p className="text-slate-500 max-w-2xl mx-auto">Sorularınız mı var? Size yardımcı olmaktan mutluluk duyarız.</p>
         </motion.div>
 
         {/* Contact Methods */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {contactMethods.map((method, index) => (
-            <motion.a key={index} href={method.href} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50 hover:border-purple-500/30 transition-all group">
+            <motion.a key={index} href={method.href} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="p-6 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-all group">
               <div className={`w-12 h-12 bg-gradient-to-br ${method.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
                 {method.icon}
               </div>
-              <h3 className="font-semibold text-white mb-1">{method.title}</h3>
-              <p className="text-gray-400 text-sm">{method.value}</p>
+              <h3 className="font-semibold text-slate-900 mb-1">{method.title}</h3>
+              <p className="text-slate-500 text-sm">{method.value}</p>
             </motion.a>
           ))}
         </div>
@@ -111,34 +108,34 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            <div className="p-8 bg-gray-800/50 rounded-2xl border border-gray-700/50">
-              <h2 className="text-2xl font-bold text-white mb-6">Bize Yazın</h2>
+            <div className="p-8 bg-white rounded-2xl border border-slate-200">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Bize Yazın</h2>
 
               {submitted ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Mesajınız Alındı!</h3>
-                  <p className="text-gray-400">En kısa sürede size dönüş yapacağız.</p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Mesajınız Alındı!</h3>
+                  <p className="text-slate-500">En kısa sürede size dönüş yapacağız.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">Adınız</label>
-                      <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500" placeholder="Ahmet Yılmaz" />
+                      <label className="block text-sm text-slate-500 mb-2">Adınız</label>
+                      <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900" placeholder="Ahmet Yılmaz" />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">E-posta</label>
-                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500" placeholder="ahmet@sirket.com" />
+                      <label className="block text-sm text-slate-500 mb-2">E-posta</label>
+                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900" placeholder="ahmet@sirket.com" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Konu</label>
-                    <select value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-purple-500">
+                    <label className="block text-sm text-slate-500 mb-2">Konu</label>
+                    <select value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-slate-900">
                       <option value="">Konu seçin</option>
                       <option value="sales">Satış</option>
                       <option value="support">Teknik Destek</option>
@@ -147,10 +144,10 @@ export default function ContactPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Mesajınız</label>
-                    <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none" placeholder="Mesajınızı yazın..." />
+                    <label className="block text-sm text-slate-500 mb-2">Mesajınız</label>
+                    <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 resize-none" placeholder="Mesajınızı yazın..." />
                   </div>
-                  <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50">
+                  <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-slate-900 hover:bg-slate-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50">
                     {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
                   </button>
                 </form>
@@ -160,18 +157,18 @@ export default function ContactPage() {
 
           {/* Map & Info */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
-            <div className="p-8 bg-gray-800/50 rounded-2xl border border-gray-700/50 h-64 flex items-center justify-center">
+            <div className="p-8 bg-white rounded-2xl border border-slate-200 h-64 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-4">🗺️</div>
-                <p className="text-gray-400">Maslak, Sarıyer, İstanbul</p>
+                <p className="text-slate-500">Maslak, Sarıyer, İstanbul</p>
               </div>
             </div>
-            <div className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50">
-              <h3 className="font-bold text-white mb-4">Çalışma Saatleri</h3>
+            <div className="p-6 bg-white rounded-2xl border border-slate-200">
+              <h3 className="font-bold text-slate-900 mb-4">Çalışma Saatleri</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">Pazartesi - Cuma</span><span className="text-white">09:00 - 18:00</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Cumartesi</span><span className="text-white">10:00 - 14:00</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Pazar</span><span className="text-gray-500">Kapalı</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Pazartesi - Cuma</span><span className="text-slate-900">09:00 - 18:00</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Cumartesi</span><span className="text-slate-900">10:00 - 14:00</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">Pazar</span><span className="text-slate-500">Kapalı</span></div>
               </div>
             </div>
           </motion.div>
@@ -179,7 +176,7 @@ export default function ContactPage() {
 
         {/* Back Link */}
         <div className="text-center mt-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group">
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors group">
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -189,14 +186,14 @@ export default function ContactPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50 mt-12">
+      <footer className="border-t border-slate-200 mt-12">
         <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
             <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:text-white transition-colors">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Şartlar</Link>
-              <Link href="/contact" className="text-purple-400">İletişim</Link>
+              <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
+              <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>
+              <Link href="/contact" className="text-slate-900">İletişim</Link>
             </div>
           </div>
         </div>

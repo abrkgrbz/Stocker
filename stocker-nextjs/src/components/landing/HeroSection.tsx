@@ -1,108 +1,242 @@
 'use client';
 
-import React from 'react';
-import { Button } from 'antd';
-import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { useTranslations } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for ParticleWave to avoid SSR issues with Three.js
+const ParticleWave = dynamic(() => import('./ParticleWave'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function HeroSection() {
+  const { t } = useTranslations();
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+    <section className="relative bg-white min-h-screen overflow-hidden">
+      {/* Particle Wave Background - z-0 */}
+      <Suspense fallback={null}>
+        <ParticleWave className="z-0" />
+      </Suspense>
+
+      {/* Dot Pattern Background - z-1 */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          backgroundImage: `radial-gradient(circle, #e2e8f0 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+          opacity: 0.4,
+        }}
+      />
+
+      {/* Radial Fade Overlay - z-2 */}
+      <div className="absolute inset-0 z-[2] bg-gradient-to-b from-white/80 via-white/60 to-white/90" />
+
+      {/* Navigation - z-10 */}
+      <nav className="relative z-10 border-b border-slate-200/60 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo.png"
+              alt="Stoocker Logo"
+              width={120}
+              height={40}
+              className="object-contain"
+              priority
+            />
+          </Link>
+
+          {/* Nav Links */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="#features" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">
+              {t('landing.navbar.features')}
+            </Link>
+            <Link href="#pricing" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">
+              {t('landing.navbar.pricing')}
+            </Link>
+            <Link href="#faq" className="text-[13px] text-slate-500 hover:text-slate-900 transition-colors">
+              {t('landing.navbar.faq')}
+            </Link>
+          </div>
+
+          {/* Auth */}
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-[13px] text-slate-600 hover:text-slate-900 transition-colors">
+              {t('landing.navbar.signIn')}
+            </Link>
+            <Link
+              href="/register"
+              className="text-[13px] font-medium text-white bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 rounded-md transition-colors"
+            >
+              {t('landing.navbar.getStarted')}
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Content */}
+      <div className="relative z-10 max-w-3xl mx-auto px-6 pt-32 pb-20 text-center">
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white/80 backdrop-blur-sm mb-8"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="text-[12px] text-slate-600">{t('landing.hero.badge')}</span>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="text-[52px] md:text-[64px] font-semibold text-slate-900 tracking-tight leading-[1.1] mb-6"
+        >
+          {t('landing.hero.title1')}
+          <br />
+          {t('landing.hero.title2')}
+        </motion.h1>
+
+        {/* Subheadline */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="text-[17px] text-slate-500 max-w-xl mx-auto mb-10 leading-relaxed"
+        >
+          {t('landing.hero.subtitle')}
+        </motion.p>
+
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="flex items-center justify-center gap-3"
+        >
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-[14px] font-medium px-5 py-2.5 rounded-lg transition-colors"
+          >
+            {t('landing.hero.cta')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+          <Link
+            href="/demo"
+            className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 text-[14px] font-medium px-5 py-2.5 rounded-lg border border-slate-200 transition-colors"
+          >
+            {t('landing.hero.watchDemo')}
+          </Link>
+        </motion.div>
+
+        {/* Trust Line */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="text-[13px] text-slate-400 mt-8"
+        >
+          14 gün ücretsiz deneme · Kredi kartı gerekmez
+        </motion.p>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-        <div className="space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-            </span>
-            Yeni Özellikler Eklendi
+      {/* Dashboard Mockup */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="relative z-10 max-w-5xl mx-auto px-6 pb-24"
+      >
+        <div className="rounded-xl border border-slate-200 bg-white/90 backdrop-blur-sm shadow-2xl shadow-slate-900/10 overflow-hidden">
+          {/* Window Chrome */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50/80">
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            </div>
+            <div className="flex-1 flex justify-center">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded border border-slate-200 text-[11px] text-slate-400">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                app.stoocker.com
+              </div>
+            </div>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
-            Modern Stok Yönetim
-            <br />
-            <span className="bg-gradient-to-r from-yellow-200 to-pink-200 bg-clip-text text-transparent">
-              Sistemi
-            </span>
-          </h1>
+          {/* Dashboard UI */}
+          <div className="p-4 bg-slate-50/30">
+            <div className="flex gap-4">
+              {/* Sidebar */}
+              <div className="w-44 shrink-0 space-y-1">
+                <div className="h-7 bg-slate-900 rounded-md mb-4" />
+                <div className="h-6 bg-slate-100 rounded-md" />
+                <div className="h-6 bg-slate-200 rounded-md" />
+                <div className="h-6 bg-slate-100 rounded-md" />
+                <div className="h-6 bg-slate-100 rounded-md" />
+                <div className="h-6 bg-slate-100 rounded-md w-3/4" />
+              </div>
 
-          {/* Tagline - Kritik: Marka gürültüsünü bastırmak için */}
-          <div className="mt-6 mb-4 text-xl md:text-2xl font-semibold text-white/95 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl inline-block border border-white/20">
-            🏢 KOBİ'ler için Bulut Tabanlı Stok ve Fatura Yönetimi
-          </div>
+              {/* Main Content */}
+              <div className="flex-1 space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-28 bg-slate-200 rounded" />
+                  <div className="h-7 w-20 bg-slate-900 rounded-md" />
+                </div>
 
-          {/* Description */}
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-            İşletmenizi bir üst seviyeye taşıyın. Güçlü stok takibi,
-            anlık raporlama ve akıllı analizlerle işlerinizi kolaylaştırın.
-          </p>
+                {/* Stats Row */}
+                <div className="grid grid-cols-4 gap-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-white rounded-lg border border-slate-200 p-3">
+                      <div className="h-2.5 w-14 bg-slate-100 rounded mb-2" />
+                      <div className="h-4 w-16 bg-slate-200 rounded" />
+                    </div>
+                  ))}
+                </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Link href="/register">
-              <Button
-                size="large"
-                icon={<RocketOutlined />}
-                className="btn-neon-green h-16 px-10 text-lg shadow-2xl flex flex-col items-center"
-              >
-                <span className="font-bold">14 Gün Ücretsiz Deneyin</span>
-                <span className="text-xs opacity-90 mt-1">Kredi kartı gerekmez</span>
-              </Button>
-            </Link>
-            <Button
-              size="large"
-              icon={<PlayCircleOutlined />}
-              className="btn-ghost-white h-16 px-10 text-lg"
-            >
-              Canlı Demo İzle
-            </Button>
-          </div>
+                {/* Chart */}
+                <div className="bg-white rounded-lg border border-slate-200 p-4">
+                  <div className="h-2.5 w-20 bg-slate-100 rounded mb-4" />
+                  <div className="flex items-end gap-1.5 h-20">
+                    {[32, 48, 36, 64, 44, 56, 72, 48, 60, 80, 40, 88].map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 bg-slate-900 rounded-sm"
+                        style={{ height: `${h}%` }}
+                      />
+                    ))}
+                  </div>
+                </div>
 
-          {/* Trust Indicators - Güçlendirilmiş */}
-          <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-center items-center text-white">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="font-semibold">14 Gün Ücretsiz</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="font-semibold">Kredi Kartı Gerekmez</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="font-semibold">İstediğiniz Zaman İptal</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span className="font-semibold">GİB Uyumlu</span>
+                {/* Table Preview */}
+                <div className="bg-white rounded-lg border border-slate-200 p-3">
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-3 w-3 bg-slate-100 rounded" />
+                        <div className="h-2.5 flex-1 bg-slate-100 rounded" />
+                        <div className="h-2.5 w-16 bg-slate-100 rounded" />
+                        <div className="h-2.5 w-12 bg-slate-200 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Wave */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-          <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
-        </svg>
-      </div>
+      </motion.div>
     </section>
   );
 }

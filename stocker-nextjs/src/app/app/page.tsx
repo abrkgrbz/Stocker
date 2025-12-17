@@ -2,146 +2,148 @@
 
 /**
  * App Home - Module Selection Page
- * Standalone page without sidebar/header
+ * Modern SaaS Launcher / Dashboard Hub
+ * Clean Light Theme - Linear/Stripe Style
  */
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Typography, Badge, Tooltip, Avatar, Dropdown, Spin } from 'antd';
+import { motion } from 'framer-motion';
 import {
-  MessageOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  TeamOutlined,
-  DashboardOutlined,
-  AppstoreOutlined,
-  SettingOutlined,
-  RocketOutlined,
-  LogoutOutlined,
-  ShoppingCartOutlined,
-  InboxOutlined,
-  IdcardOutlined,
-  ReconciliationOutlined,
-} from '@ant-design/icons';
+  Search,
+  User,
+  LogOut,
+  Settings,
+  ChevronDown,
+  Package,
+  Users,
+  ShoppingCart,
+  BarChart3,
+  Briefcase,
+  MessageSquare,
+  Calendar,
+  Boxes,
+  TrendingUp,
+  Command,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import SetupWizardModal from '@/components/setup/SetupWizardModal';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 
-const { Title, Text } = Typography;
-
 interface ModuleCard {
   id: string;
   title: string;
-  icon: React.ReactNode;
-  color: string;
-  gradient: string;
-  path: string;
   description: string;
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  path: string;
   badge?: string;
+  badgeType?: 'active' | 'subscription' | 'coming-soon';
   disabled?: boolean;
 }
 
-// Define module configurations outside component to avoid recreating on each render
+// Module configurations
 const MODULE_CONFIGS = [
   {
     id: 'crm',
     title: 'CRM',
-    icon: <TeamOutlined />,
-    color: '#7c3aed',
-    gradient: 'linear-gradient(135deg, #7c3aed 0%, #c026d3 100%)',
+    description: 'Müşteri ilişkileri ve satış fırsatları',
+    icon: Users,
+    iconBg: 'bg-violet-50',
+    iconColor: 'text-violet-600',
     path: '/crm',
-    description: 'Müşteri ilişkileri yönetimi',
     moduleCode: 'crm',
   },
   {
     id: 'sales',
     title: 'Satış',
-    icon: <ShoppingCartOutlined />,
-    color: '#f59e0b',
-    gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    description: 'Sipariş, fatura ve ödeme yönetimi',
+    icon: ShoppingCart,
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
     path: '/sales',
-    description: 'Sipariş, fatura ve ödeme',
     moduleCode: 'sales',
   },
   {
     id: 'inventory',
     title: 'Stok',
-    icon: <InboxOutlined />,
-    color: '#10b981',
-    gradient: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+    description: 'Envanter ve depo yönetimi',
+    icon: Boxes,
+    iconBg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
     path: '/inventory',
-    description: 'Envanter yönetimi',
     moduleCode: 'inventory',
   },
   {
     id: 'hr',
-    title: 'İK',
-    icon: <IdcardOutlined />,
-    color: '#0ea5e9',
-    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
+    title: 'İnsan Kaynakları',
+    description: 'Personel ve bordro yönetimi',
+    icon: Briefcase,
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
     path: '/hr',
-    description: 'İnsan kaynakları',
     moduleCode: 'hr',
   },
   {
     id: 'purchase',
     title: 'Satın Alma',
-    icon: <ReconciliationOutlined />,
-    color: '#8b5cf6',
-    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
+    description: 'Tedarik ve satın alma süreçleri',
+    icon: Package,
+    iconBg: 'bg-purple-50',
+    iconColor: 'text-purple-600',
     path: '/purchase',
-    description: 'Tedarik ve satın alma',
     moduleCode: 'purchase',
   },
   {
     id: 'dashboards',
-    title: 'Dashboards',
-    icon: <DashboardOutlined />,
-    color: '#c026d3',
-    gradient: 'linear-gradient(135deg, #c026d3 0%, #0891b2 100%)',
+    title: 'Analitik',
+    description: 'Raporlar ve iş zekası',
+    icon: BarChart3,
+    iconBg: 'bg-rose-50',
+    iconColor: 'text-rose-600',
     path: '/dashboard',
-    description: 'Analiz ve raporlar',
     alwaysEnabled: true,
   },
   {
     id: 'apps',
     title: 'Uygulamalar',
-    icon: <AppstoreOutlined />,
-    color: '#0891b2',
-    gradient: 'linear-gradient(135deg, #0891b2 0%, #7c3aed 100%)',
+    description: 'Modül yönetimi ve entegrasyonlar',
+    icon: TrendingUp,
+    iconBg: 'bg-cyan-50',
+    iconColor: 'text-cyan-600',
     path: '/modules',
-    description: 'Modül yönetimi',
     alwaysEnabled: true,
   },
   {
     id: 'settings',
     title: 'Ayarlar',
-    icon: <SettingOutlined />,
-    color: '#6b7280',
-    gradient: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+    description: 'Sistem ve hesap ayarları',
+    icon: Settings,
+    iconBg: 'bg-slate-100',
+    iconColor: 'text-slate-600',
     path: '/settings',
-    description: 'Sistem ayarları',
     alwaysEnabled: true,
   },
   {
     id: 'messaging',
     title: 'Mesajlaşma',
-    icon: <MessageOutlined />,
-    color: '#c026d3',
-    gradient: 'linear-gradient(135deg, #c026d3 0%, #e879f9 100%)',
+    description: 'İletişim ve bildirimler',
+    icon: MessageSquare,
+    iconBg: 'bg-pink-50',
+    iconColor: 'text-pink-600',
     path: '/messaging',
-    description: 'İletişim ve mesajlaşma',
     comingSoon: true,
   },
   {
     id: 'calendar',
     title: 'Takvim',
-    icon: <CalendarOutlined />,
-    color: '#7c3aed',
-    gradient: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+    description: 'Etkinlik ve toplantı yönetimi',
+    icon: Calendar,
+    iconBg: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
     path: '/calendar',
-    description: 'Etkinlik ve toplantılar',
     comingSoon: true,
   },
 ];
@@ -152,10 +154,12 @@ export default function AppHomePage() {
   const { tenant } = useTenant();
   const { data: modulesData, isLoading: modulesLoading } = useActiveModules();
 
-  // Setup modal state
+  // States
   const [setupModalOpen, setSetupModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // Create a Set of active module codes for fast lookup
+  // Active module codes for fast lookup
   const activeModuleCodes = useMemo(() => {
     const codes = new Set<string>();
     modulesData?.modules?.forEach(m => {
@@ -166,316 +170,314 @@ export default function AppHomePage() {
     return codes;
   }, [modulesData]);
 
-  // Build modules list with dynamic enabled status - MUST be before any early returns
+  // Build modules list with dynamic enabled status
   const modules: ModuleCard[] = useMemo(() => {
     return MODULE_CONFIGS.map(config => {
-      // Always-enabled modules (dashboard, settings, apps)
+      const Icon = config.icon;
+
+      // Always-enabled modules
       if (config.alwaysEnabled) {
         return {
           id: config.id,
           title: config.title,
-          icon: config.icon,
-          color: config.color,
-          gradient: config.gradient,
-          path: config.path,
           description: config.description,
+          icon: Icon,
+          iconBg: config.iconBg,
+          iconColor: config.iconColor,
+          path: config.path,
           disabled: false,
         };
       }
 
-      // Coming soon features (not implemented yet)
+      // Coming soon features
       if (config.comingSoon) {
         return {
           id: config.id,
           title: config.title,
-          icon: config.icon,
-          color: config.color,
-          gradient: config.gradient,
-          path: config.path,
           description: config.description,
+          icon: Icon,
+          iconBg: config.iconBg,
+          iconColor: config.iconColor,
+          path: config.path,
           badge: 'Yakında',
+          badgeType: 'coming-soon' as const,
           disabled: true,
         };
       }
 
-      // Subscription-based modules - check if tenant has access
+      // Subscription-based modules
       const hasAccess = config.moduleCode && activeModuleCodes.has(config.moduleCode.toLowerCase());
       return {
         id: config.id,
         title: config.title,
-        icon: config.icon,
-        color: config.color,
-        gradient: config.gradient,
-        path: config.path,
         description: config.description,
+        icon: Icon,
+        iconBg: config.iconBg,
+        iconColor: config.iconColor,
+        path: config.path,
         badge: hasAccess ? 'Aktif' : 'Abonelik Gerekli',
+        badgeType: hasAccess ? 'active' as const : 'subscription' as const,
         disabled: !hasAccess,
       };
     });
   }, [activeModuleCodes]);
 
-  // Redirect to login if not authenticated (after loading completes)
+  // Filter modules by search query
+  const filteredModules = useMemo(() => {
+    if (!searchQuery.trim()) return modules;
+    const query = searchQuery.toLowerCase();
+    return modules.filter(
+      m => m.title.toLowerCase().includes(query) || m.description.toLowerCase().includes(query)
+    );
+  }, [modules, searchQuery]);
+
+  // Auth redirect
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Check if setup is required on mount
+  // Setup check
   useEffect(() => {
-    const checkSetupRequired = () => {
-      // Get requiresSetup from localStorage (set during login)
-      const requiresSetup = localStorage.getItem('requiresSetup');
-      console.log('🔍 Checking setup required...');
-      console.log('📦 localStorage requiresSetup:', requiresSetup);
-      console.log('✅ Should open modal:', requiresSetup === 'true');
-
-      if (requiresSetup === 'true') {
-        console.log('🎉 Opening setup modal!');
-        setSetupModalOpen(true);
-      } else {
-        console.log('❌ Setup not required or flag not set');
-      }
-    };
-
-    // Only check after auth is loaded and user is authenticated
     if (!isLoading && isAuthenticated) {
-      console.log('✅ Auth loaded and authenticated, checking setup...');
-      checkSetupRequired();
-    } else {
-      console.log('⏳ Waiting for auth... isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+      const requiresSetup = localStorage.getItem('requiresSetup');
+      if (requiresSetup === 'true') {
+        setSetupModalOpen(true);
+      }
     }
   }, [isLoading, isAuthenticated]);
 
   const handleSetupComplete = () => {
-    // Remove requiresSetup flag from localStorage
     localStorage.removeItem('requiresSetup');
     setSetupModalOpen(false);
-
-    // Reload the page to refresh with new data
     window.location.reload();
   };
-
-  // Don't render until auth check completes
-  if (isLoading || !isAuthenticated || !user) {
-    return null;
-  }
-
-  // Show loading while fetching modules
-  if (modulesLoading) {
-    return (
-      <div
-        style={{
-          minHeight: '100dvh',
-          background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Spin size="large" />
-      </div>
-    );
-  }
 
   const handleModuleClick = (module: ModuleCard) => {
     if (module.disabled) return;
     router.push(module.path);
   };
 
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profil',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Çıkış Yap',
-      danger: true,
-    },
-  ];
-
-  const handleUserMenuClick = (key: string) => {
-    if (key === 'logout') {
-      logout();
-    } else if (key === 'profile') {
-      router.push('/profile');
-    }
+  const handleLogout = () => {
+    logout();
   };
 
+  // Loading state
+  if (isLoading || !isAuthenticated || !user || modulesLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
+          <span className="text-sm text-slate-500">Yükleniyor...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        background: 'linear-gradient(135deg, #28002D 0%, #1A315A 100%)',
-        padding: '48px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        overflowX: 'hidden',
-      }}
-    >
-      {/* Main Content Wrapper */}
-      <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Header with User Menu */}
-      <div
-        style={{
-          maxWidth: 1200,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 32,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Text
-            style={{
-              color: 'white',
-              fontSize: 24,
-              fontWeight: 700,
-            }}
-          >
-            {tenant?.name || 'Stocker'}
-          </Text>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Logo & Team Name */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">S</span>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-sm font-semibold text-slate-900">
+                  {tenant?.name || 'Stocker'}
+                </h1>
+                <p className="text-xs text-slate-500">İşletme Yönetim Sistemi</p>
+              </div>
+            </div>
+
+            {/* Right: Profile Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-slate-600" />
+                </div>
+                <span className="hidden sm:block text-sm font-medium text-slate-700">
+                  {user?.firstName} {user?.lastName}
+                </span>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="text-sm font-medium text-slate-900">
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        router.push('/profile');
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Profil
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        router.push('/settings');
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Ayarlar
+                    </button>
+                    <div className="border-t border-slate-100 mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Çıkış Yap
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Page Title */}
+        <div className="mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+            Çalışma Alanı
+          </h2>
+          <p className="text-slate-500">
+            Erişmek istediğiniz modülü seçin veya arayın
+          </p>
         </div>
 
-        <Dropdown
-          menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
-          placement="bottomRight"
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              padding: '8px 16px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: 24,
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
-            <span style={{ color: 'white', fontWeight: 500 }}>
-              {user?.firstName} {user?.lastName}
-            </span>
+        {/* Search / Command Palette */}
+        <div className="mb-10">
+          <div className="relative max-w-2xl">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-slate-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Modül ara..."
+              className="w-full pl-12 pr-20 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow shadow-sm hover:shadow-md"
+            />
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200">
+                <Command className="w-3 h-3" />K
+              </kbd>
+            </div>
           </div>
-        </Dropdown>
-      </div>
+        </div>
 
-      {/* Welcome Header */}
-      <div style={{ textAlign: 'center', marginBottom: 48, maxWidth: 800 }}>
-        <Title
-          level={1}
-          style={{
-            color: 'white',
-            fontSize: 48,
-            fontWeight: 700,
-            marginBottom: 16,
-            textShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          }}
-        >
-          Hoş Geldiniz! 👋
-        </Title>
-        <Text
-          style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: 18,
-            display: 'block',
-          }}
-        >
-          İşletmenizi yönetmek için bir modül seçin
-        </Text>
-      </div>
+        {/* Module Grid - Bento Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredModules.map((module, index) => {
+            const Icon = module.icon;
 
-      {/* Module Grid - 4x2 Balanced Layout */}
-      <div style={{ maxWidth: 900, width: '100%' }}>
-        <Row gutter={[32, 32]} justify="center">
-          {modules.map((module) => (
-            <Col xs={12} sm={12} md={6} lg={6} key={module.id}>
-              <div
-                onClick={() => handleModuleClick(module)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  cursor: module.disabled ? 'not-allowed' : 'pointer',
-                  opacity: module.disabled ? 0.5 : 1,
-                  transition: 'all 0.3s ease',
-                  padding: '16px',
-                  position: 'relative',
-                }}
-                onMouseEnter={(e) => {
-                  if (!module.disabled) {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!module.disabled) {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }
-                }}
+            return (
+              <motion.div
+                key={module.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
               >
-                {/* Single Badge - No Confusion */}
-                {module.badge && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      background: module.disabled
-                        ? 'rgba(250, 173, 20, 0.9)'
-                        : 'rgba(16, 185, 129, 0.9)',
-                      color: 'white',
-                      padding: '4px 10px',
-                      borderRadius: 12,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    {module.badge}
-                  </div>
-                )}
-
-                {/* Icon */}
-                {React.cloneElement(module.icon as any, {
-                  style: {
-                    fontSize: 56,
-                    color: module.disabled ? 'rgba(255,255,255,0.5)' : 'white',
-                    marginBottom: 8,
-                  },
-                })}
-
-                {/* Description */}
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: module.disabled ? 'rgba(255,255,255,0.5)' : 'white',
-                  }}
+                <button
+                  onClick={() => handleModuleClick(module)}
+                  disabled={module.disabled}
+                  className={`
+                    w-full text-left p-5 bg-white rounded-xl border transition-all duration-200 group relative
+                    ${module.disabled
+                      ? 'opacity-60 cursor-not-allowed border-slate-200'
+                      : 'border-slate-200 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer'
+                    }
+                  `}
                 >
-                  {module.description}
-                </Text>
-              </div>
-            </Col>
-          ))}
-        </Row>
-      </div>
-      </div>
+                  {/* Badge */}
+                  {module.badge && (
+                    <span
+                      className={`
+                        absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full
+                        ${module.badgeType === 'active'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : module.badgeType === 'coming-soon'
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                        }
+                      `}
+                    >
+                      {module.badge}
+                    </span>
+                  )}
 
-      {/* Footer Info */}
-      <div style={{ width: '100%', textAlign: 'center', padding: '24px 0' }}>
-        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>
-          <RocketOutlined style={{ marginRight: 8 }} />
-          {/* @ts-ignore */}
-          Stocker - Modern İşletme Yönetim Sistemi
-        </Text>
-      </div>
+                  {/* Icon */}
+                  <div className={`w-12 h-12 ${module.iconBg} rounded-xl flex items-center justify-center mb-4`}>
+                    <Icon className={`w-6 h-6 ${module.iconColor}`} />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="font-semibold text-slate-900 mb-1 group-hover:text-indigo-600 transition-colors">
+                    {module.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 line-clamp-2">
+                    {module.description}
+                  </p>
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Empty State */}
+        {filteredModules.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-medium text-slate-900 mb-2">
+              Modül bulunamadı
+            </h3>
+            <p className="text-slate-500">
+              &ldquo;{searchQuery}&rdquo; için sonuç yok. Farklı bir arama deneyin.
+            </p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer className="mt-16 pt-8 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <p>© 2024 Stocker. Tüm hakları saklıdır.</p>
+            <div className="flex items-center gap-6">
+              <a href="/help" className="hover:text-slate-900 transition-colors">Yardım</a>
+              <a href="/docs" className="hover:text-slate-900 transition-colors">Dokümantasyon</a>
+              <a href="/support" className="hover:text-slate-900 transition-colors">Destek</a>
+            </div>
+          </div>
+        </footer>
+      </main>
 
       {/* Setup Modal */}
       <SetupWizardModal open={setupModalOpen} onComplete={handleSetupComplete} />

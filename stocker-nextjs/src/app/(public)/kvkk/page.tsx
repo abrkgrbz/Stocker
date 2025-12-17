@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import AnimatedBackground from '@/components/landing/AnimatedBackground'
 
 const sections = [
   {
@@ -94,52 +93,50 @@ Başvurunuzda kimliğinizi tespit edici bilgiler ve talebiniz açıkça belirtil
 
 export default function KVKKPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-gray-100">
-      <AnimatedBackground />
-
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-700/50 bg-gray-900/80 backdrop-blur-sm sticky top-0">
+      <header className="border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="brightness-0 invert object-contain" priority /></Link>
+          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="object-contain" priority /></Link>
           <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">Gizlilik</Link>
-            <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">Şartlar</Link>
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">Giriş Yap</Link>
+            <Link href="/privacy" className="text-slate-500 hover:text-slate-900 transition-colors">Gizlilik</Link>
+            <Link href="/terms" className="text-slate-500 hover:text-slate-900 transition-colors">Şartlar</Link>
+            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium transition-colors">Giriş Yap</Link>
           </nav>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-6 py-12">
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">KVKK Aydınlatma Metni</h1>
-          <p className="text-gray-400">Kişisel Verilerin Korunması Kanunu Kapsamında Aydınlatma</p>
-          <p className="text-gray-500 text-sm mt-2">Son güncelleme: 11 Aralık 2024</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">KVKK Aydınlatma Metni</h1>
+          <p className="text-slate-500">Kişisel Verilerin Korunması Kanunu Kapsamında Aydınlatma</p>
+          <p className="text-slate-400 text-sm mt-2">Son güncelleme: 11 Aralık 2024</p>
         </motion.div>
 
         {/* Sections */}
         <div className="space-y-6">
           {sections.map((section, index) => (
-            <motion.section key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }} className="p-6 bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                <span className="w-8 h-8 bg-gradient-to-br from-red-500 to-rose-500 rounded-lg flex items-center justify-center mr-3 text-white text-sm font-bold">{index + 1}</span>
+            <motion.section key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }} className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                <span className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center mr-3 text-slate-700 text-sm font-bold">{index + 1}</span>
                 {section.title}
               </h2>
-              <div className="text-gray-300 leading-relaxed whitespace-pre-line">{section.content}</div>
+              <div className="text-slate-600 leading-relaxed whitespace-pre-line">{section.content}</div>
             </motion.section>
           ))}
         </div>
 
         {/* Download */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-12 p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50 text-center">
-          <h3 className="font-bold text-white mb-4">Aydınlatma Metnini İndirin</h3>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-12 p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+          <h3 className="font-bold text-slate-900 mb-4">Aydınlatma Metnini İndirin</h3>
           <div className="flex justify-center gap-4">
-            <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors flex items-center gap-2">
+            <button className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-colors flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -150,7 +147,7 @@ export default function KVKKPage() {
 
         {/* Back Link */}
         <div className="text-center mt-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group">
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors group">
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -160,14 +157,14 @@ export default function KVKKPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50 mt-12">
+      <footer className="border-t border-slate-200 mt-12">
         <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
             <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:text-white transition-colors">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Şartlar</Link>
-              <Link href="/kvkk" className="text-red-400">KVKK</Link>
+              <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
+              <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>
+              <Link href="/kvkk" className="text-slate-900">KVKK</Link>
             </div>
           </div>
         </div>

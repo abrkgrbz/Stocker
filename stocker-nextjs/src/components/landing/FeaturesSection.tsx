@@ -4,180 +4,112 @@ import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { useTranslations } from '@/lib/i18n';
-import {
-  RocketOutlined,
-  ThunderboltOutlined,
-  SafetyOutlined,
-  LineChartOutlined,
-  CloudOutlined,
-  TeamOutlined,
-  BellOutlined,
-  MobileOutlined,
-  DatabaseOutlined,
-} from '@ant-design/icons';
 
-const features = [
-  {
-    icon: <RocketOutlined />,
-    title: 'Hızlı Başlangıç',
-    description: 'Dakikalar içinde kurulum yapın ve hemen kullanmaya başlayın. Karmaşık konfigürasyonlara son.',
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    icon: <ThunderboltOutlined />,
-    title: 'Yüksek Performans',
-    description: 'Optimize edilmiş altyapı ile binlerce işlemi saniyeler içinde gerçekleştirin.',
-    color: 'from-yellow-500 to-orange-500',
-  },
-  {
-    icon: <SafetyOutlined />,
-    title: 'Güvenli ve Şifreli',
-    description: 'Verileriniz en üst düzey güvenlik standartları ile korunur. SSL ve şifreli depolama.',
-    color: 'from-green-500 to-emerald-500',
-  },
-  {
-    icon: <LineChartOutlined />,
-    title: 'Anlık Raporlama',
-    description: 'Gerçek zamanlı raporlar ve analizlerle işinizi her an takip edin.',
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    icon: <CloudOutlined />,
-    title: 'Bulut Tabanlı',
-    description: 'Her yerden, her cihazdan erişim. Verileriniz güvende ve her zaman hazır.',
-    color: 'from-indigo-500 to-blue-500',
-  },
-  {
-    icon: <TeamOutlined />,
-    title: 'Ekip Yönetimi',
-    description: 'Çalışanlarınıza rol ve yetki verin. Tüm ekibinizle birlikte çalışın.',
-    color: 'from-red-500 to-pink-500',
-  },
-  {
-    icon: <BellOutlined />,
-    title: 'Akıllı Bildirimler',
-    description: 'Kritik durumlarda anında haberdar olun. Özelleştirilebilir bildirim sistemi.',
-    color: 'from-teal-500 to-cyan-500',
-  },
-  {
-    icon: <MobileOutlined />,
-    title: 'Mobil Uyumlu',
-    description: 'Responsive tasarım ile mobil cihazlardan sorunsuz kullanım.',
-    color: 'from-violet-500 to-purple-500',
-  },
-  {
-    icon: <DatabaseOutlined />,
-    title: 'Otomatik Yedekleme',
-    description: 'Verileriniz otomatik olarak yedeklenir. Veri kaybı riski sıfır.',
-    color: 'from-amber-500 to-orange-500',
-  },
-];
+const featureIcons = {
+  inventory: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  ),
+  invoice: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  reports: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  ),
+  crm: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  ),
+  multitenancy: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+  ),
+  security: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+};
+
+const featureKeys = ['inventory', 'invoice', 'reports', 'crm', 'multitenancy', 'security'] as const;
 
 export default function FeaturesSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const { t } = useTranslations();
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: 'easeOut' as any,
-      },
-    },
-  } as any;
-
   return (
-    <section id="features" className="py-24 bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="features" className="py-24 bg-white border-t border-slate-100">
+      <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
         >
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
-          >
+          <h2 className="text-[32px] md:text-[40px] font-semibold text-slate-900 tracking-tight mb-4">
             {t('landing.features.title')}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-xl text-gray-600 max-w-3xl mx-auto"
-          >
+          </h2>
+          <p className="text-[16px] text-slate-500 max-w-lg mx-auto">
             {t('landing.features.subtitle')}
-          </motion.p>
+          </p>
         </motion.div>
 
-        {/* Features Grid */}
-        <motion.div
+        {/* Bento Grid */}
+        <div
           ref={ref}
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {features.map((feature, index) => (
+          {featureKeys.map((key, index) => (
             <motion.div
-              key={index}
-              variants={itemVariants}
-              whileHover={{ y: -10, scale: 1.02 }}
-              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-pointer"
+              key={key}
+              initial={{ opacity: 0, y: 16 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4, delay: index * 0.08 }}
+              className="group p-6 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition-colors"
             >
-              {/* Gradient Background on Hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`}></div>
-
               {/* Icon */}
-              <motion.div
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.5 }}
-                className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white text-2xl mb-6 shadow-lg`}
-              >
-                {feature.icon}
-              </motion.div>
+              <div className="w-10 h-10 rounded-lg border border-slate-200 flex items-center justify-center text-slate-700 mb-4 group-hover:border-slate-300 transition-colors">
+                {featureIcons[key]}
+              </div>
 
               {/* Content */}
-              <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600 group-hover:bg-clip-text transition-all duration-300">
-                {feature.title}
+              <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
+                {t(`landing.features.${key}.title`)}
               </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {feature.description}
+              <p className="text-[14px] text-slate-500 leading-relaxed">
+                {t(`landing.features.${key}.description`)}
               </p>
-
-              {/* Hover Arrow */}
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                whileHover={{ opacity: 1, x: 0 }}
-                className="absolute bottom-8 right-8"
-              >
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </motion.div>
             </motion.div>
           ))}
+        </div>
+
+        {/* Bottom Link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center mt-12"
+        >
+          <a
+            href="/features"
+            className="inline-flex items-center gap-2 text-[14px] text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            {t('landing.features.viewAll')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
         </motion.div>
       </div>
     </section>

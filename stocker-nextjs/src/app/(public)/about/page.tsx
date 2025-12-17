@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import AnimatedBackground from '@/components/landing/AnimatedBackground'
 
 const stats = [
   { value: '10K+', label: 'Aktif Kullanıcı' },
@@ -60,34 +59,32 @@ const team = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-gray-100">
-      <AnimatedBackground />
-
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-700/50 bg-gray-900/80 backdrop-blur-sm sticky top-0">
+      <header className="border-b border-slate-200 bg-white backdrop-blur-sm sticky top-0">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
-            <Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="brightness-0 invert object-contain" priority />
+            <Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="object-contain" priority />
           </Link>
           <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/careers" className="text-gray-400 hover:text-white transition-colors">Kariyer</Link>
-            <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">İletişim</Link>
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">Giriş Yap</Link>
+            <Link href="/careers" className="text-slate-500 hover:text-slate-900 transition-colors">Kariyer</Link>
+            <Link href="/contact" className="text-slate-500 hover:text-slate-900 transition-colors">İletişim</Link>
+            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium transition-colors">Giriş Yap</Link>
           </nav>
         </div>
       </header>
 
-      <main className="relative z-10">
+      <main>
         {/* Hero */}
         <section className="py-20 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto px-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-violet-500/30">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Hakkımızda</h1>
-            <p className="text-xl text-gray-400 leading-relaxed">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Hakkımızda</h1>
+            <p className="text-xl text-slate-500 leading-relaxed">
               2020 yılında kurulan Stocker, işletmelerin stok ve envanter yönetimini dijitalleştirmek ve
               kolaylaştırmak amacıyla yola çıktı. Bugün binlerce işletmenin güvendiği bir platform haline geldik.
             </p>
@@ -95,13 +92,13 @@ export default function AboutPage() {
         </section>
 
         {/* Stats */}
-        <section className="py-12 border-y border-gray-700/50 bg-gray-800/30">
+        <section className="py-12 border-y border-slate-200 bg-slate-50">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="text-center">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{stat.value}</div>
-                  <div className="text-gray-400 mt-1">{stat.label}</div>
+                  <div className="text-4xl font-bold text-slate-900">{stat.value}</div>
+                  <div className="text-slate-500 mt-1">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -113,19 +110,19 @@ export default function AboutPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                <h2 className="text-3xl font-bold text-white mb-6">Misyonumuz</h2>
-                <p className="text-gray-400 leading-relaxed mb-4">
+                <h2 className="text-3xl font-bold text-slate-900 mb-6">Misyonumuz</h2>
+                <p className="text-slate-500 leading-relaxed mb-4">
                   Her ölçekteki işletmenin stok yönetimini basitleştirmek ve verimliliğini artırmak için
                   modern, kullanıcı dostu ve güçlü araçlar sunmak.
                 </p>
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-slate-500 leading-relaxed">
                   Teknolojinin gücünü kullanarak, işletmelerin operasyonel süreçlerini optimize etmelerine
                   ve büyümelerine yardımcı oluyoruz.
                 </p>
               </motion.div>
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="p-8 bg-gray-800/50 rounded-2xl border border-gray-700/50">
-                <h2 className="text-3xl font-bold text-white mb-6">Vizyonumuz</h2>
-                <p className="text-gray-400 leading-relaxed">
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="p-8 bg-white rounded-2xl border border-slate-200">
+                <h2 className="text-3xl font-bold text-slate-900 mb-6">Vizyonumuz</h2>
+                <p className="text-slate-500 leading-relaxed">
                   Türkiye&apos;nin ve bölgenin lider stok yönetim platformu olmak. Yapay zeka destekli
                   çözümlerimizle işletmelerin geleceğe hazırlanmasına öncülük etmek.
                 </p>
@@ -135,20 +132,20 @@ export default function AboutPage() {
         </section>
 
         {/* Values */}
-        <section className="py-20 bg-gray-800/30">
+        <section className="py-20 bg-slate-50">
           <div className="max-w-6xl mx-auto px-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-white mb-4">Değerlerimiz</h2>
-              <p className="text-gray-400">Bizi biz yapan temel değerler</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Değerlerimiz</h2>
+              <p className="text-slate-500">Bizi biz yapan temel değerler</p>
             </motion.div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {values.map((value, index) => (
-                <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.1 }} className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50 hover:border-purple-500/30 transition-colors">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white mb-4">
+                <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.1 }} className="p-6 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
+                  <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-700 mb-4">
                     {value.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{value.title}</h3>
-                  <p className="text-gray-400 text-sm">{value.description}</p>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">{value.title}</h3>
+                  <p className="text-slate-500 text-sm">{value.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -159,15 +156,15 @@ export default function AboutPage() {
         <section className="py-20">
           <div className="max-w-6xl mx-auto px-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-white mb-4">Ekibimiz</h2>
-              <p className="text-gray-400">Stocker&apos;ı mümkün kılan harika insanlar</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Ekibimiz</h2>
+              <p className="text-slate-500">Stocker&apos;ı mümkün kılan harika insanlar</p>
             </motion.div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {team.map((member, index) => (
-                <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.1 }} className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700/50 text-center hover:border-purple-500/30 transition-colors">
+                <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.1 }} className="p-6 bg-white rounded-2xl border border-slate-200 text-center hover:border-slate-300 transition-colors">
                   <div className="text-6xl mb-4">{member.image}</div>
-                  <h3 className="text-lg font-bold text-white">{member.name}</h3>
-                  <p className="text-purple-400 text-sm">{member.role}</p>
+                  <h3 className="text-lg font-bold text-slate-900">{member.name}</h3>
+                  <p className="text-slate-500 text-sm">{member.role}</p>
                 </motion.div>
               ))}
             </div>
@@ -177,10 +174,10 @@ export default function AboutPage() {
         {/* CTA */}
         <section className="py-20">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-8 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-2xl border border-purple-500/20">
-              <h2 className="text-2xl font-bold text-white mb-4">Ekibimize Katılın</h2>
-              <p className="text-gray-400 mb-6">Yetenekli insanları arıyoruz. Açık pozisyonlarımıza göz atın.</p>
-              <Link href="/careers" className="inline-block px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-8 bg-slate-50 rounded-2xl border border-slate-200">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Ekibimize Katılın</h2>
+              <p className="text-slate-500 mb-6">Yetenekli insanları arıyoruz. Açık pozisyonlarımıza göz atın.</p>
+              <Link href="/careers" className="inline-block px-8 py-3 bg-slate-900 hover:bg-slate-700 text-white font-medium rounded-xl transition-colors">
                 Kariyer Fırsatları
               </Link>
             </motion.div>
@@ -189,7 +186,7 @@ export default function AboutPage() {
 
         {/* Back Link */}
         <div className="text-center pb-12">
-          <Link href="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group">
+          <Link href="/" className="inline-flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors group">
             <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -199,14 +196,14 @@ export default function AboutPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50">
+      <footer className="border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
             <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:text-white transition-colors">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Şartlar</Link>
-              <Link href="/about" className="text-purple-400">Hakkımızda</Link>
+              <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
+              <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>
+              <Link href="/about" className="text-slate-900">Hakkımızda</Link>
             </div>
           </div>
         </div>

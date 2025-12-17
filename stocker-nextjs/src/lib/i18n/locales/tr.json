@@ -18,8 +18,33 @@
       "watchDemo": "Demo İzle"
     },
     "features": {
-      "title": "Güçlü Özellikler",
-      "subtitle": "İşinizi kolaylaştıracak ve verimliliğinizi artıracak özelliklerin tamamı tek bir platformda"
+      "title": "İhtiyacınız olan her şey",
+      "subtitle": "Stok, fatura, müşteri ve raporlama — hepsi kusursuz bir şekilde birlikte çalışıyor.",
+      "inventory": {
+        "title": "Stok Takibi",
+        "description": "Çoklu depo yönetimi, gerçek zamanlı stok uyarıları ve parti takibi."
+      },
+      "invoice": {
+        "title": "E-Fatura",
+        "description": "GİB entegreli e-fatura ve e-arşiv. Tek tıkla fatura oluşturma."
+      },
+      "reports": {
+        "title": "Analitik",
+        "description": "Satış, stok ve finansal raporlar. Tüm veriler tek panoda."
+      },
+      "crm": {
+        "title": "CRM",
+        "description": "Müşteri ilişkileri yönetimi, satış hattı ve fırsat takibi."
+      },
+      "multitenancy": {
+        "title": "Çoklu Şirket",
+        "description": "Tek hesaptan birden fazla şirketi yönetin."
+      },
+      "security": {
+        "title": "Kurumsal Güvenlik",
+        "description": "Rol tabanlı erişim kontrolü, 2FA ve detaylı denetim kayıtları."
+      },
+      "viewAll": "Tüm özellikleri görüntüle"
     },
     "industries": {
       "badge": "Sektörel Çözümler",
@@ -102,6 +127,109 @@
         "title": "API & Webhook",
         "description": "RESTful API ile kendi sistemlerinizi entegre edin"
       }
+    },
+    "socialProof": {
+      "trustedBy": "Sektör liderleri tarafından tercih ediliyor",
+      "stats": {
+        "businesses": "Aktif işletme",
+        "volume": "Aylık işlem hacmi",
+        "uptime": "Çalışma süresi",
+        "rating": "Müşteri puanı"
+      }
+    },
+    "pricing": {
+      "title": "Basit fiyatlandırma",
+      "subtitle": "Gizli ücret yok. İstediğiniz zaman iptal edin.",
+      "monthly": "Aylık",
+      "yearly": "Yıllık",
+      "discount": "-17%",
+      "perMonth": "/ay",
+      "custom": "Özel",
+      "mostPopular": "En popüler",
+      "trialNote": "Tüm planlar 14 günlük ücretsiz deneme içerir. Kredi kartı gerekmez.",
+      "starter": {
+        "name": "Başlangıç",
+        "description": "Küçük işletmeler için",
+        "cta": "Başla",
+        "features": ["100 ürün limiti", "1 kullanıcı", "Temel raporlar", "E-posta desteği", "1 GB depolama"]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Büyüyen işletmeler için",
+        "cta": "Ücretsiz deneyin",
+        "features": ["Sınırsız ürün", "10 kullanıcı", "Gelişmiş analitik", "Öncelikli destek", "50 GB depolama", "API erişimi", "Çoklu depo", "E-fatura entegrasyonu"]
+      },
+      "enterprise": {
+        "name": "Kurumsal",
+        "description": "Büyük organizasyonlar için",
+        "cta": "İletişime geçin",
+        "features": ["Her şey sınırsız", "Sınırsız kullanıcı", "Özel raporlar", "7/24 destek", "Özel entegrasyonlar", "Özel hesap yöneticisi", "SLA garantisi", "Yerinde kurulum seçeneği"]
+      }
+    },
+    "faq": {
+      "title": "SSS",
+      "subtitle": "Stoocker hakkında sık sorulan sorular",
+      "stillQuestions": "Hala sorularınız mı var?",
+      "contactUs": "Bize ulaşın",
+      "questions": {
+        "howWorks": {
+          "question": "Stoocker nasıl çalışır?",
+          "answer": "Stoocker bulut tabanlı bir stok yönetim sistemidir. Ürünlerinizi ekleyin, stok hareketlerini takip edin, anında raporlar oluşturun ve tüm operasyonları tek bir platformdan yönetin. Kurulum sadece birkaç dakika sürer."
+        },
+        "devices": {
+          "question": "Hangi cihazları kullanabilirim?",
+          "answer": "Stoocker'a herhangi bir bilgisayar, tablet veya mobil cihazdan erişebilirsiniz. Duyarlı tasarımımız tüm platformlarda sorunsuz çalışır. iOS ve Android için mobil uygulamalar mevcuttur."
+        },
+        "security": {
+          "question": "Verilerim güvende mi?",
+          "answer": "Evet, verileriniz kurumsal düzeyde güvenlikle korunmaktadır. SSL şifreleme, düzenli yedekleme, iki faktörlü kimlik doğrulama kullanıyoruz ve sektör güvenlik standartlarına uyuyoruz. Veriler günlük olarak yedeklenir ve şifreli olarak saklanır."
+        },
+        "trial": {
+          "question": "Ücretsiz deneme var mı?",
+          "answer": "Evet, tüm özelliklere tam erişimli 14 günlük ücretsiz deneme hakkınız var. Kredi kartı gerekmez ve deneme süresi bitiminde otomatik ücretlendirme yapılmaz."
+        },
+        "integrations": {
+          "question": "Diğer sistemlerle entegre olabilir mi?",
+          "answer": "Evet, Stoocker popüler e-ticaret platformları, muhasebe yazılımları ve ERP sistemleriyle entegre olur. REST API'miz mevcut sistemlerinizle özel entegrasyonlara olanak tanır."
+        },
+        "support": {
+          "question": "Destek nasıl çalışır?",
+          "answer": "Pro ve Kurumsal planlar e-posta, telefon ve canlı sohbet üzerinden 7/24 öncelikli destek içerir. Başlangıç planı e-posta desteği içerir. Ayrıca detaylı dokümantasyon ve video eğitimler de sunuyoruz."
+        }
+      }
+    },
+    "footer": {
+      "cta": {
+        "title": "Başlamaya hazır mısınız?",
+        "subtitle": "14 günlük ücretsiz denemenizi başlatın. Kredi kartı gerekmez.",
+        "startFree": "Ücretsiz başla",
+        "contactSales": "Satış ile iletişime geç"
+      },
+      "description": "Modern işletmeler için bulut tabanlı stok yönetimi.",
+      "sections": {
+        "product": "Ürün",
+        "company": "Şirket",
+        "resources": "Kaynaklar",
+        "legal": "Yasal"
+      },
+      "links": {
+        "features": "Özellikler",
+        "pricing": "Fiyatlandırma",
+        "integrations": "Entegrasyonlar",
+        "changelog": "Değişiklik Günlüğü",
+        "about": "Hakkımızda",
+        "blog": "Blog",
+        "careers": "Kariyer",
+        "contact": "İletişim",
+        "documentation": "Dokümantasyon",
+        "apiReference": "API Referansı",
+        "support": "Destek",
+        "status": "Durum",
+        "privacy": "Gizlilik",
+        "terms": "Şartlar",
+        "security": "Güvenlik"
+      },
+      "copyright": "Tüm hakları saklıdır."
     }
   },
   "auth": {

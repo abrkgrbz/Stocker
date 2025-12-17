@@ -4,7 +4,6 @@ import { useState, ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import AnimatedBackground from '@/components/landing/AnimatedBackground'
 
 interface DocItem {
   title: string;
@@ -243,11 +242,9 @@ export default function DocsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-gray-100">
-      <AnimatedBackground />
-
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="relative z-10 border-b border-gray-700/50 bg-gray-900/80 backdrop-blur-sm sticky top-0">
+      <header className="relative z-10 border-b border-slate-200 bg-white backdrop-blur-sm sticky top-0">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
             <Image
@@ -255,40 +252,40 @@ export default function DocsPage() {
               alt="Stocker Logo"
               width={120}
               height={40}
-              className="brightness-0 invert object-contain"
+              className="object-contain"
               priority
             />
           </Link>
           <nav className="flex items-center space-x-6 text-sm">
-            <Link href="/updates" className="text-gray-400 hover:text-white transition-colors">Güncellemeler</Link>
-            <Link href="/support" className="text-gray-400 hover:text-white transition-colors">Destek</Link>
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">Giriş Yap</Link>
+            <Link href="/updates" className="text-slate-500 hover:text-slate-900 transition-colors">Güncellemeler</Link>
+            <Link href="/support" className="text-slate-500 hover:text-slate-900 transition-colors">Destek</Link>
+            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium transition-colors">Giriş Yap</Link>
           </nav>
         </div>
       </header>
 
       {/* Hero & Search */}
-      <section className="relative z-10 py-16 border-b border-gray-700/50">
+      <section className="relative z-10 py-16 border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-violet-500/30">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4">Dokümantasyon</h1>
-            <p className="text-gray-400 text-lg mb-8">
+            <h1 className="text-4xl font-bold text-slate-900 mb-4">Dokümantasyon</h1>
+            <p className="text-slate-500 text-lg mb-8">
               Stocker&apos;ı en verimli şekilde kullanmak için ihtiyacınız olan tüm bilgiler
             </p>
 
             {/* Search */}
             <div className="relative max-w-xl mx-auto">
               <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -300,7 +297,7 @@ export default function DocsPage() {
                 placeholder="Dokümanlarda ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
               />
             </div>
           </motion.div>
@@ -317,7 +314,7 @@ export default function DocsPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mb-12"
           >
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <span className="text-2xl">🔥</span> Popüler Makaleler
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -325,10 +322,10 @@ export default function DocsPage() {
                 <Link
                   key={index}
                   href={article.href}
-                  className="p-4 bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700/50 hover:border-purple-500/30 rounded-xl transition-all group"
+                  className="p-4 bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-900 rounded-xl transition-all group"
                 >
-                  <span className="text-xs text-purple-400 mb-1 block">{article.category}</span>
-                  <span className="text-white group-hover:text-purple-300 transition-colors">{article.title}</span>
+                  <span className="text-xs text-slate-900 mb-1 block font-medium">{article.category}</span>
+                  <span className="text-slate-900 group-hover:text-slate-700 transition-colors">{article.title}</span>
                 </Link>
               ))}
             </div>
@@ -337,17 +334,17 @@ export default function DocsPage() {
 
         {/* Categories Grid */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-6">
+          <h2 className="text-xl font-bold text-slate-900 mb-6">
             {searchQuery ? `"${searchQuery}" için sonuçlar` : 'Kategoriler'}
           </h2>
 
           {filteredCategories.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-400">Aramanızla eşleşen sonuç bulunamadı.</p>
+              <p className="text-slate-500">Aramanızla eşleşen sonuç bulunamadı.</p>
               <button
                 onClick={() => setSearchQuery('')}
-                className="mt-4 text-purple-400 hover:text-purple-300"
+                className="mt-4 text-slate-900 hover:text-slate-700"
               >
                 Aramayı temizle
               </button>
@@ -363,24 +360,24 @@ export default function DocsPage() {
                   className="group"
                 >
                   <div
-                    className={`p-6 bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 hover:border-purple-500/30 transition-all cursor-pointer ${
-                      activeCategory === category.id ? 'ring-2 ring-purple-500' : ''
+                    className={`p-6 bg-white border border-slate-200 hover:border-slate-900 rounded-2xl transition-all cursor-pointer ${
+                      activeCategory === category.id ? 'ring-2 ring-slate-900' : ''
                     }`}
                     onClick={() => setActiveCategory(activeCategory === category.id ? null : category.id)}
                   >
                     {/* Category Header */}
                     <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center text-white shadow-lg`}>
+                      <div className={`w-12 h-12 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center text-white`}>
                         {category.icon}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
                           {category.title}
                         </h3>
-                        <p className="text-sm text-gray-400">{category.description}</p>
+                        <p className="text-sm text-slate-500">{category.description}</p>
                       </div>
                       <svg
-                        className={`w-5 h-5 text-gray-500 transition-transform ${
+                        className={`w-5 h-5 text-slate-400 transition-transform ${
                           activeCategory === category.id ? 'rotate-180' : ''
                         }`}
                         fill="none"
@@ -399,15 +396,15 @@ export default function DocsPage() {
                         <Link
                           key={itemIndex}
                           href={item.href}
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/50 transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="text-gray-400">{item.icon}</span>
+                          <span className="text-slate-500">{item.icon}</span>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-white truncate">{item.title}</div>
-                            <div className="text-xs text-gray-500 truncate">{item.description}</div>
+                            <div className="text-sm font-medium text-slate-900 truncate">{item.title}</div>
+                            <div className="text-xs text-slate-500 truncate">{item.description}</div>
                           </div>
-                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </Link>
@@ -416,7 +413,7 @@ export default function DocsPage() {
 
                     {/* Show count when collapsed */}
                     {activeCategory !== category.id && (
-                      <div className="text-xs text-gray-500 mt-2">
+                      <div className="text-xs text-slate-500 mt-2">
                         {category.items.length} makale
                       </div>
                     )}
@@ -432,21 +429,21 @@ export default function DocsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-16 p-8 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-500/20"
+          className="mt-16 p-8 bg-slate-50 rounded-2xl border border-slate-200"
         >
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-16 h-16 bg-purple-500/20 rounded-2xl flex items-center justify-center text-purple-400">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-700">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h3 className="text-xl font-bold text-white mb-2">Aradığınızı bulamadınız mı?</h3>
-              <p className="text-gray-400">Destek ekibimiz size yardımcı olmaktan mutluluk duyar.</p>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Aradığınızı bulamadınız mı?</h3>
+              <p className="text-slate-500">Destek ekibimiz size yardımcı olmaktan mutluluk duyar.</p>
             </div>
             <Link
               href="/support"
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-colors"
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition-colors"
             >
               Destek Al
             </Link>
@@ -462,7 +459,7 @@ export default function DocsPage() {
         >
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group"
+            className="inline-flex items-center gap-2 text-slate-900 hover:text-slate-700 transition-colors group"
           >
             <svg
               className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
@@ -478,15 +475,15 @@ export default function DocsPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-700/50 mt-12">
+      <footer className="relative z-10 border-t border-slate-200 mt-12">
         <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <div className="flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
             <div>&copy; 2024 Stocker. Tüm hakları saklıdır.</div>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:text-white transition-colors">Gizlilik</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Şartlar</Link>
-              <Link href="/cookies" className="hover:text-white transition-colors">Çerezler</Link>
-              <Link href="/docs" className="text-purple-400">Dokümantasyon</Link>
+              <Link href="/privacy" className="hover:text-slate-900 transition-colors">Gizlilik</Link>
+              <Link href="/terms" className="hover:text-slate-900 transition-colors">Şartlar</Link>
+              <Link href="/cookies" className="hover:text-slate-900 transition-colors">Çerezler</Link>
+              <Link href="/docs" className="text-slate-900">Dokümantasyon</Link>
             </div>
           </div>
         </div>

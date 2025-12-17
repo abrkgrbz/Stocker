@@ -2,91 +2,61 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { useTranslations } from '@/lib/i18n';
 
-const faqs = [
-  {
-    question: 'Stocker nasıl çalışır?',
-    answer: 'Stocker, bulut tabanlı bir stok yönetim sistemidir. Ürünlerinizi ekleyip, stok hareketlerinizi kaydedebilir, anlık raporlar alabilir ve tüm işlemlerinizi tek bir yerden yönetebilirsiniz. Kurulum son derece basittir ve birkaç dakika içinde kullanmaya başlayabilirsiniz.',
-  },
-  {
-    question: 'Hangi cihazlardan erişebilirim?',
-    answer: 'Stocker\'a bilgisayar, tablet ve mobil cihazlardan erişebilirsiniz. Responsive tasarımımız sayesinde tüm cihazlarda sorunsuz çalışır. Ayrıca mobil uygulamamız ile iOS ve Android cihazlarınızdan da kolayca erişim sağlayabilirsiniz.',
-  },
-  {
-    question: 'Verilerim güvende mi?',
-    answer: 'Evet, verileriniz en üst düzey güvenlik standartları ile korunmaktadır. SSL şifreleme, düzenli yedekleme, iki faktörlü kimlik doğrulama ve enterprise seviye güvenlik önlemleri kullanıyoruz. Verileriniz günlük olarak yedeklenir ve şifreli olarak saklanır.',
-  },
-  {
-    question: 'Ücretsiz deneme süresi var mı?',
-    answer: '14 gün ücretsiz deneme hakkınız bulunmaktadır. Deneme süresi boyunca tüm özelliklere tam erişim sağlayabilirsiniz. Kredi kartı bilgisi gerekmez ve deneme süresi sonunda otomatik ücretlendirme yapılmaz.',
-  },
-  {
-    question: 'Başka sistemlerle entegrasyon mümkün mü?',
-    answer: 'Evet, Stocker popüler e-ticaret platformları, muhasebe yazılımları ve ERP sistemleri ile entegre çalışabilir. REST API\'miz sayesinde kendi sistemlerinizle de kolayca entegrasyon yapabilirsiniz. Teknik ekibimiz entegrasyon sürecinde size destek sağlar.',
-  },
-  {
-    question: 'Müşteri desteği nasıl çalışıyor?',
-    answer: 'Profesyonel ve Kurumsal planlarda 7/24 canlı destek sunuyoruz. Email, telefon ve canlı sohbet üzerinden Türkçe destek alabilirsiniz. Ayrıca detaylı dökümantasyon ve video eğitimlerimiz de mevcuttur. Başlangıç paketinde ise email desteği bulunmaktadır.',
-  },
-  {
-    question: 'İptal ve iade politikası nedir?',
-    answer: 'Dilediğiniz zaman planınızı iptal edebilirsiniz. İptal işleminiz sonraki fatura döneminizde geçerli olur ve kalan süre boyunca sistemi kullanmaya devam edebilirsiniz. İlk 30 gün içinde memnun kalmazsanız, koşulsuz para iade garantisi sunuyoruz.',
-  },
-  {
-    question: 'Kullanıcı limiti var mı?',
-    answer: 'Her plan için farklı kullanıcı limitleri bulunmaktadır. Başlangıç planında 1, Profesyonel planda 10, Kurumsal planda ise sınırsız kullanıcı hakkı vardır. İhtiyacınız olduğunda ek kullanıcı paketi satın alabilir veya planınızı yükseltebilirsiniz.',
-  },
-];
+const faqKeys = ['howWorks', 'devices', 'security', 'trial', 'integrations', 'support'] as const;
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { t } = useTranslations();
 
   return (
-    <section id="faq" className="py-24 bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+    <section id="faq" className="py-24 bg-slate-50 border-t border-slate-100">
+      <div className="max-w-2xl mx-auto px-6">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Sıkça Sorulan Sorular
+          <h2 className="text-[32px] md:text-[40px] font-semibold text-slate-900 tracking-tight mb-4">
+            {t('landing.faq.title')}
           </h2>
-          <p className="text-xl text-gray-600">
-            Aklınıza takılan soruların cevaplarını burada bulabilirsiniz
+          <p className="text-[16px] text-slate-500">
+            {t('landing.faq.subtitle')}
           </p>
         </motion.div>
 
-        {/* FAQ List */}
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
+        {/* Questions */}
+        <div className="space-y-2">
+          {faqKeys.map((key, index) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
+              key={key}
+              initial={{ opacity: 0, y: 8 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
             >
-              <motion.button
+              <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full text-left bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-purple-500 transition-all duration-300 group"
-                whileHover={{ scale: 1.01 }}
+                className="w-full text-left bg-white border border-slate-200 rounded-lg px-5 py-4 hover:border-slate-300 transition-colors"
               >
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors pr-8">
-                    {faq.question}
-                  </h3>
-                  <motion.div
-                    animate={{ rotate: openIndex === index ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors"
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-[14px] font-medium text-slate-900">
+                    {t(`landing.faq.questions.${key}.question`)}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                      openIndex === index ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {openIndex === index ? <MinusOutlined /> : <PlusOutlined />}
-                  </motion.div>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
 
                 <AnimatePresence>
@@ -95,42 +65,40 @@ export default function FAQSection() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <p className="mt-4 text-gray-600 leading-relaxed">
-                        {faq.answer}
+                      <p className="pt-3 text-[13px] text-slate-500 leading-relaxed">
+                        {t(`landing.faq.questions.${key}.answer`)}
                       </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </button>
             </motion.div>
           ))}
         </div>
 
-        {/* Contact CTA */}
+        {/* Contact Link */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-16 text-center p-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center mt-10"
         >
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Başka sorularınız mı var?
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Ekibimiz size yardımcı olmaktan mutluluk duyar
+          <p className="text-[13px] text-slate-500 mb-2">
+            {t('landing.faq.stillQuestions')}
           </p>
-          <motion.a
-            href="mailto:info@stocker.com"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-block px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
+          <a
+            href="/contact"
+            className="inline-flex items-center gap-2 text-[14px] text-slate-900 font-medium hover:text-slate-600 transition-colors"
           >
-            Bize Ulaşın
-          </motion.a>
+            {t('landing.faq.contactUs')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
         </motion.div>
       </div>
     </section>

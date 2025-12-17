@@ -114,10 +114,10 @@ function LoginForm() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Track login attempt
     trackAuth({ event: 'login_attempt', metadata: { step: 'email' } })
-    
+
     setLoading(true)
     setError('')
 
@@ -219,7 +219,7 @@ function LoginForm() {
     e.preventDefault()
 
     const startTime = Date.now()
-    
+
     // Track password step attempt
     trackAuth({ event: 'login_attempt', metadata: { step: 'password' } })
 
@@ -267,13 +267,13 @@ function LoginForm() {
         const newAttempts = failedAttempts + 1
         setFailedAttempts(newAttempts)
 
-        trackAuth({ 
-          event: 'login_failure', 
-          metadata: { 
-            step: 'password', 
+        trackAuth({
+          event: 'login_failure',
+          metadata: {
+            step: 'password',
             errorType: 'invalid_credentials',
-            attempt: newAttempts 
-          } 
+            attempt: newAttempts
+          }
         })
 
         if (newAttempts >= 3) {
@@ -349,201 +349,113 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left - Premium Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative bg-black overflow-hidden">
-        {/* Gradient Mesh Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-fuchsia-600/20 to-cyan-600/20" />
+      {/* Left Panel - Corporate Branding with Testimonial */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
 
-        {/* Animated Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-
-        {/* Glowing Orbs */}
-        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-
-        {/* Floating Elements */}
-        <div className="absolute top-32 right-32 w-3 h-3 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute top-48 right-48 w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-48 left-32 w-2 h-2 bg-fuchsia-400 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
+        {/* Subtle dot pattern - enhanced visibility */}
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          {/* Top Badge Row */}
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-sm text-white/90 font-medium">10,000+ aktif kullanıcı</span>
-            </div>
-            <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-lg border border-white/10">
-              <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
+          {/* Testimonial - Vertically Centered */}
+          <div className="flex-1 flex items-center">
+            <div className="max-w-md">
+              {/* Quote Icon */}
+              <svg
+                className="w-12 h-12 text-slate-700 mb-6"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
               </svg>
-              <span className="text-xs text-white/80">ISO 27001</span>
-            </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-5xl font-bold text-white leading-tight">
-                Verileriniz
-                <br />
-                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
-                  güvende
-                </span>
-              </h1>
+              <blockquote className="text-2xl font-light text-white leading-relaxed mb-8">
+                "Stoocker ile stok yönetimimiz tamamen değişti. Artık her şey tek bir yerden, gerçek zamanlı olarak takip ediliyor."
+              </blockquote>
 
-              <p className="text-xl text-white/70 leading-relaxed max-w-md">
-                Kurumsal düzeyde güvenlik altyapısı ile verilerinizi koruyoruz. Her giriş, her işlem tamamen şifreli.
-              </p>
-            </div>
-
-            {/* Security Feature Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-lg">
+                  AY
                 </div>
-                <h3 className="text-white font-semibold mb-1">256-bit SSL</h3>
-                <p className="text-white/50 text-sm">Uçtan uca şifreli bağlantı</p>
-              </div>
-
-              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+                <div>
+                  <div className="text-white font-medium">Ahmet Yılmaz</div>
+                  <div className="text-slate-400 text-sm">Operasyon Müdürü, TechCorp</div>
                 </div>
-                <h3 className="text-white font-semibold mb-1">KVKK Uyumlu</h3>
-                <p className="text-white/50 text-sm">Yasal veri koruma standardı</p>
-              </div>
-
-              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                </div>
-                <h3 className="text-white font-semibold mb-1">2FA Desteği</h3>
-                <p className="text-white/50 text-sm">İki faktörlü kimlik doğrulama</p>
-              </div>
-
-              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-                <h3 className="text-white font-semibold mb-1">Otomatik Yedekleme</h3>
-                <p className="text-white/50 text-sm">Günlük veri yedekleme</p>
-              </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
-              <div className="text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">99.9%</div>
-                <div className="text-sm text-white/60 mt-1">Uptime</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">2M+</div>
-                <div className="text-sm text-white/60 mt-1">İşlem/gün</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">256-bit</div>
-                <div className="text-sm text-white/60 mt-1">Şifreleme</div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Trust Indicators */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">KVKK Uyumlu</div>
-                  <div className="text-white/50 text-xs">Veri güvenliği garantisi</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">Bulut Tabanlı</div>
-                  <div className="text-white/50 text-xs">Her yerden erişim</div>
-                </div>
-              </div>
+          {/* Stats - Bottom */}
+          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-slate-800 mt-8">
+            <div>
+              <div className="text-3xl font-semibold text-white">2,500+</div>
+              <div className="text-sm text-slate-500 mt-1">Aktif İşletme</div>
             </div>
-            <div className="flex items-center justify-center space-x-6 text-white/40 text-xs">
-              <span>AWS Altyapısı</span>
-              <span>•</span>
-              <span>7/24 Destek</span>
-              <span>•</span>
-              <span>Otomatik Yedekleme</span>
+            <div>
+              <div className="text-3xl font-semibold text-white">99.9%</div>
+              <div className="text-sm text-slate-500 mt-1">Uptime</div>
+            </div>
+            <div>
+              <div className="text-3xl font-semibold text-white">4.9/5</div>
+              <div className="text-sm text-slate-500 mt-1">Müşteri Puanı</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-b from-gray-50 to-white relative">
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
         {/* Back to Home Link */}
         <Link
           href="/"
-          className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-violet-600 transition-colors group z-20"
+          className="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors group"
         >
           <svg
-            className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
+            className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span className="font-medium">Ana Sayfa</span>
+          <span className="text-sm">Ana Sayfa</span>
         </Link>
 
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-100 to-transparent rounded-full blur-3xl opacity-30" />
-
-        <div className="w-full max-w-md relative z-10">
+        <div className="w-full max-w-[400px]">
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              {step === 'email' && 'Hoş geldiniz'}
-              {step === 'tenant-selection' && 'Çalışma Alanı Seçin'}
-              {step === 'password' && 'Devam edin'}
-            </h2>
-            <p className="text-gray-600">
-              {step === 'email' && 'E-posta adresinizle başlayın'}
-              {step === 'tenant-selection' && `${email} için erişilebilir çalışma alanları`}
-              {step === 'password' && `${tenant?.name || 'Hesabınız'} için şifrenizi girin`}
+            <h1 className="text-2xl font-semibold text-slate-900 mb-2">
+              {step === 'email' && 'Hesabınıza giriş yapın'}
+              {step === 'tenant-selection' && 'Çalışma alanı seçin'}
+              {step === 'password' && 'Şifrenizi girin'}
+            </h1>
+            <p className="text-slate-500">
+              {step === 'email' && 'E-posta adresinizi girerek başlayın'}
+              {step === 'tenant-selection' && `${email} için erişilebilir alanlar`}
+              {step === 'password' && `${tenant?.name || tenant?.code} hesabına giriş`}
             </p>
           </div>
 
-          {/* Tenant Card */}
+          {/* Tenant Card - Password Step */}
           {tenant && step === 'password' && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-fuchsia-50 border border-violet-200 rounded-2xl">
+            <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white font-semibold">
                     {tenant.name?.[0]?.toUpperCase() || tenant.code?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{tenant.name || tenant.code || 'Hesabınız'}</div>
-                    <div className="text-sm text-gray-600">
-                      {tenant.code}.{process.env.NODE_ENV === 'development' ? 'localhost:3001' : 'stoocker.app'}
+                    <div className="font-medium text-slate-900">{tenant.name || tenant.code}</div>
+                    <div className="text-sm text-slate-500">
+                      {tenant.code}.stoocker.app
                     </div>
                   </div>
                 </div>
@@ -556,7 +468,7 @@ function LoginForm() {
                     setBackoffUntil(null)
                     sessionStorage.removeItem('login-tenant')
                   }}
-                  className="text-sm font-medium text-violet-600 hover:text-violet-700"
+                  className="text-sm text-slate-500 hover:text-slate-900 transition-colors"
                 >
                   Değiştir
                 </button>
@@ -564,40 +476,39 @@ function LoginForm() {
             </div>
           )}
 
-          {/* Error - Accessible error message with aria-live */}
+          {/* Error Message */}
           {error && (
-            <div 
-              id="email-error"
+            <div
+              id="error-message"
               role="alert"
               aria-live="polite"
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3"
+              className="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3"
             >
-              <svg className="w-5 h-5 text-red-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p className="text-sm text-red-600 flex-1">{error}</p>
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
           {/* Forms */}
           {step === 'email' ? (
-            <form onSubmit={handleEmailSubmit} className="space-y-5">
+            <form onSubmit={handleEmailSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 mb-2">
-                  E-posta
+                <label htmlFor="email-input" className="block text-sm font-medium text-slate-700 mb-2">
+                  E-posta adresi
                 </label>
                 <input
                   id="email-input"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-gray-900 placeholder-gray-400"
-                  placeholder="ahmet@firma.com"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                  placeholder="ornek@sirket.com"
                   required
                   autoFocus
                   autoComplete="email"
-                  aria-label="E-posta adresi"
-                  aria-describedby={error ? "email-error" : undefined}
+                  aria-describedby={error ? "error-message" : undefined}
                   aria-invalid={!!error}
                   suppressHydrationWarning
                 />
@@ -606,39 +517,29 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-violet-700 hover:to-fuchsia-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 flex items-center justify-center space-x-2 group"
-                aria-label={loading ? 'E-posta kontrol ediliyor' : 'E-posta ile devam et'}
+                className="w-full bg-black hover:bg-slate-800 text-white py-3.5 px-4 rounded-lg font-semibold text-base transition-all disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                 aria-busy={loading}
               >
-                {loading && (
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-                <span>{loading ? 'Kontrol ediliyor...' : 'Devam Et'}</span>
-                {!loading && (
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Kontrol ediliyor...</span>
+                  </>
+                ) : (
+                  <span>Devam et</span>
                 )}
               </button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">veya</span>
-                </div>
-              </div>
-
-              <Link
-                href="/register"
-                className="block w-full text-center py-3.5 px-6 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all"
-              >
-                Yeni Hesap Oluştur
-              </Link>
+              {/* Register Link */}
+              <p className="text-center text-sm text-slate-500">
+                Hesabınız yok mu?{' '}
+                <Link href="/register" className="text-slate-900 font-medium hover:underline">
+                  Ücretsiz başlayın
+                </Link>
+              </p>
             </form>
           ) : step === 'tenant-selection' ? (
             <div className="space-y-4">
@@ -648,27 +549,27 @@ function LoginForm() {
                   <button
                     key={t.code}
                     onClick={() => handleTenantSelect(t)}
-                    className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-violet-500 hover:bg-violet-50 transition-all group text-left"
+                    className="w-full p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-900 hover:bg-slate-50 transition-all group text-left"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white font-semibold flex-shrink-0">
                         {t.name?.[0]?.toUpperCase() || t.code?.[0]?.toUpperCase() || '?'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 group-hover:text-violet-700 transition-colors">
+                        <div className="font-medium text-slate-900 group-hover:text-slate-900">
                           {t.name || t.code}
                         </div>
-                        <div className="text-sm text-gray-600 truncate">
+                        <div className="text-sm text-slate-500 truncate">
                           {t.domain || `${t.code}.stoocker.app`}
                         </div>
                       </div>
                       <svg
-                        className="w-5 h-5 text-gray-400 group-hover:text-violet-600 group-hover:translate-x-1 transition-all flex-shrink-0"
+                        className="w-5 h-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
                   </button>
@@ -682,24 +583,23 @@ function LoginForm() {
                   setStep('email')
                   setTenants([])
                 }}
-                className="w-full text-gray-600 hover:text-gray-900 py-3 text-sm font-medium"
+                className="w-full text-slate-500 hover:text-slate-900 py-3 text-sm font-medium transition-colors"
               >
                 ← Farklı e-posta kullan
               </button>
             </div>
           ) : (
-            <form onSubmit={handlePasswordSubmit} className="space-y-5" aria-label="Şifre girişi formu">
+            <form onSubmit={handlePasswordSubmit} className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="password-input" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="password-input" className="block text-sm font-medium text-slate-700">
                     Şifre
                   </label>
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-sm font-medium text-violet-600 hover:text-violet-700"
-                    aria-label="Şifremi unuttum"
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-slate-500 hover:text-slate-900 transition-colors"
                   >
-                    Unuttum
+                    Şifremi unuttum
                   </Link>
                 </div>
                 <div className="relative">
@@ -708,30 +608,29 @@ function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3.5 pr-12 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-gray-900"
+                    className="w-full px-4 py-3 pr-12 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                     placeholder="••••••••"
                     required
                     autoFocus
                     autoComplete="current-password"
-                    aria-label="Şifre"
-                    aria-describedby={error ? "email-error" : undefined}
+                    aria-describedby={error ? "error-message" : undefined}
                     aria-invalid={!!error}
                     suppressHydrationWarning
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                   >
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                       </svg>
                     ) : (
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     )}
                   </button>
@@ -741,21 +640,19 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading || !password}
-                className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-violet-700 hover:to-fuchsia-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 flex items-center justify-center space-x-2 group"
-                aria-label={loading ? 'Giriş yapılıyor' : 'Hesaba giriş yap'}
+                className="w-full bg-black hover:bg-slate-800 text-white py-3.5 px-4 rounded-lg font-semibold text-base transition-all disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                 aria-busy={loading}
               >
-                {loading && (
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-                <span>{loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}</span>
-                {!loading && (
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Giriş yapılıyor...</span>
+                  </>
+                ) : (
+                  <span>Giriş yap</span>
                 )}
               </button>
 
@@ -769,7 +666,7 @@ function LoginForm() {
                   setBackoffUntil(null)
                   sessionStorage.removeItem('login-tenant')
                 }}
-                className="w-full text-gray-600 hover:text-gray-900 py-2 text-sm font-medium"
+                className="w-full text-slate-500 hover:text-slate-900 py-2 text-sm font-medium transition-colors"
               >
                 ← Farklı hesap kullan
               </button>
@@ -777,10 +674,12 @@ function LoginForm() {
           )}
 
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-200 text-center space-x-6 text-sm text-gray-500">
-            <Link href="/privacy" className="hover:text-gray-900">Gizlilik</Link>
-            <Link href="/terms" className="hover:text-gray-900">Şartlar</Link>
-            <Link href="/help" className="hover:text-gray-900">Yardım</Link>
+          <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+            <div className="flex items-center justify-center gap-6 text-sm text-slate-400">
+              <Link href="/privacy" className="hover:text-slate-600 transition-colors">Gizlilik</Link>
+              <Link href="/terms" className="hover:text-slate-600 transition-colors">Şartlar</Link>
+              <Link href="/help" className="hover:text-slate-600 transition-colors">Yardım</Link>
+            </div>
           </div>
         </div>
       </div>
@@ -788,9 +687,13 @@ function LoginForm() {
   )
 }
 
-export default function PremiumLoginPage() {
+export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin h-8 w-8 border-2 border-slate-900 border-t-transparent rounded-full" />
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   )

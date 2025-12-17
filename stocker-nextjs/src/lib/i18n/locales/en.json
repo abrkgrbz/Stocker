@@ -18,8 +18,33 @@
       "watchDemo": "Watch Demo"
     },
     "features": {
-      "title": "Powerful Features",
-      "subtitle": "All the features you need to simplify your business and boost efficiency in one platform"
+      "title": "Everything you need",
+      "subtitle": "Inventory, invoicing, customers, and reporting — all working seamlessly together.",
+      "inventory": {
+        "title": "Inventory Tracking",
+        "description": "Multi-warehouse management, real-time stock alerts, and batch tracking."
+      },
+      "invoice": {
+        "title": "E-Invoice",
+        "description": "GIB-integrated e-invoice and e-archive. One-click invoice creation."
+      },
+      "reports": {
+        "title": "Analytics",
+        "description": "Sales, inventory, and financial reports. All data in one dashboard."
+      },
+      "crm": {
+        "title": "CRM",
+        "description": "Customer relationship management, sales pipeline, and opportunity tracking."
+      },
+      "multitenancy": {
+        "title": "Multi-Company",
+        "description": "Manage multiple companies from a single account."
+      },
+      "security": {
+        "title": "Enterprise Security",
+        "description": "Role-based access control, 2FA, and detailed audit logs."
+      },
+      "viewAll": "View all features"
     },
     "industries": {
       "badge": "Industry Solutions",
@@ -102,6 +127,109 @@
         "title": "API & Webhook",
         "description": "Integrate your own systems with RESTful API"
       }
+    },
+    "socialProof": {
+      "trustedBy": "Trusted by industry leaders",
+      "stats": {
+        "businesses": "Active businesses",
+        "volume": "Monthly transaction volume",
+        "uptime": "Uptime",
+        "rating": "Customer rating"
+      }
+    },
+    "pricing": {
+      "title": "Simple pricing",
+      "subtitle": "No hidden fees. Cancel anytime.",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "discount": "-17%",
+      "perMonth": "/month",
+      "custom": "Custom",
+      "mostPopular": "Most popular",
+      "trialNote": "All plans include a 14-day free trial. No credit card required.",
+      "starter": {
+        "name": "Starter",
+        "description": "For small businesses",
+        "cta": "Get started",
+        "features": ["100 product limit", "1 user", "Basic reports", "Email support", "1 GB storage"]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For growing businesses",
+        "cta": "Try for free",
+        "features": ["Unlimited products", "10 users", "Advanced analytics", "Priority support", "50 GB storage", "API access", "Multi-warehouse", "E-invoice integration"]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "For large organizations",
+        "cta": "Contact us",
+        "features": ["Everything unlimited", "Unlimited users", "Custom reports", "24/7 support", "Custom integrations", "Dedicated account manager", "SLA guarantee", "On-premise option"]
+      }
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Frequently asked questions about Stoocker",
+      "stillQuestions": "Still have questions?",
+      "contactUs": "Contact us",
+      "questions": {
+        "howWorks": {
+          "question": "How does Stoocker work?",
+          "answer": "Stoocker is a cloud-based inventory management system. Add your products, track stock movements, generate instant reports, and manage all operations from a single platform. Setup takes just a few minutes."
+        },
+        "devices": {
+          "question": "What devices can I use?",
+          "answer": "You can access Stoocker from any computer, tablet, or mobile device. Our responsive design works seamlessly on all platforms. Mobile apps are available for iOS and Android."
+        },
+        "security": {
+          "question": "Is my data secure?",
+          "answer": "Yes, your data is protected with enterprise-level security. We use SSL encryption, regular backups, two-factor authentication, and comply with industry security standards. Data is backed up daily and stored encrypted."
+        },
+        "trial": {
+          "question": "Is there a free trial?",
+          "answer": "Yes, you have a 14-day free trial with full access to all features. No credit card required, and there's no automatic charge when the trial ends."
+        },
+        "integrations": {
+          "question": "Can it integrate with other systems?",
+          "answer": "Yes, Stoocker integrates with popular e-commerce platforms, accounting software, and ERP systems. Our REST API allows for custom integrations with your existing systems."
+        },
+        "support": {
+          "question": "How does support work?",
+          "answer": "Pro and Enterprise plans include 24/7 priority support via email, phone, and live chat. Starter plan includes email support. We also provide detailed documentation and video tutorials."
+        }
+      }
+    },
+    "footer": {
+      "cta": {
+        "title": "Ready to get started?",
+        "subtitle": "Start your 14-day free trial. No credit card required.",
+        "startFree": "Start for free",
+        "contactSales": "Contact sales"
+      },
+      "description": "Cloud-based inventory management for modern businesses.",
+      "sections": {
+        "product": "Product",
+        "company": "Company",
+        "resources": "Resources",
+        "legal": "Legal"
+      },
+      "links": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "integrations": "Integrations",
+        "changelog": "Changelog",
+        "about": "About",
+        "blog": "Blog",
+        "careers": "Careers",
+        "contact": "Contact",
+        "documentation": "Documentation",
+        "apiReference": "API Reference",
+        "support": "Support",
+        "status": "Status",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "security": "Security"
+      },
+      "copyright": "All rights reserved."
     }
   },
   "auth": {

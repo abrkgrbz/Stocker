@@ -1,182 +1,176 @@
 'use client';
 
-import React from 'react';
-import { Button } from 'antd';
-import { CheckOutlined, RocketOutlined, CrownOutlined, StarOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-
-const plans = [
-  {
-    name: 'Başlangıç',
-    icon: <RocketOutlined />,
-    price: '0',
-    period: 'Ücretsiz',
-    description: 'Küçük işletmeler için ideal',
-    features: [
-      '100 ürün limiti',
-      '1 kullanıcı',
-      'Temel raporlar',
-      'Email desteği',
-      'Mobil uygulama',
-      '1 GB depolama',
-    ],
-    color: 'from-blue-500 to-cyan-500',
-    popular: false,
-    cta: 'Ücretsiz Başla',
-  },
-  {
-    name: 'Profesyonel',
-    icon: <StarOutlined />,
-    price: '299',
-    period: '/ay',
-    description: 'Büyüyen işletmeler için',
-    features: [
-      'Sınırsız ürün',
-      '10 kullanıcı',
-      'Gelişmiş raporlar',
-      'Öncelikli destek',
-      'Mobil uygulama',
-      '50 GB depolama',
-      'API erişimi',
-      'Çoklu depo',
-      'Otomatik bildirimler',
-    ],
-    color: 'from-purple-500 to-pink-500',
-    popular: true,
-    cta: 'Şimdi Başla',
-  },
-  {
-    name: 'Kurumsal',
-    icon: <CrownOutlined />,
-    price: 'Özel',
-    period: 'Fiyat',
-    description: 'Büyük ölçekli şirketler için',
-    features: [
-      'Sınırsız her şey',
-      'Sınırsız kullanıcı',
-      'Özel raporlar',
-      '7/24 premium destek',
-      'Mobil uygulama',
-      'Sınırsız depolama',
-      'API erişimi',
-      'Özel entegrasyonlar',
-      'Eğitim ve danışmanlık',
-      'Özel sunucu seçeneği',
-    ],
-    color: 'from-amber-500 to-orange-500',
-    popular: false,
-    cta: 'Bize Ulaşın',
-  },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function PricingSection() {
-  return (
-    <section id="pricing" className="py-24 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Basit ve Şeffaf Fiyatlandırma
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            İşletmenizin büyüklüğüne uygun plan seçin. Tüm planlar 14 gün ücretsiz deneme ile gelir.
-          </p>
-        </div>
+  const [isYearly, setIsYearly] = useState(false);
+  const { t } = useTranslations();
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-6">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`relative bg-white rounded-3xl shadow-xl transition-all duration-300 hover:scale-105 ${
-                plan.popular ? 'lg:scale-110 lg:z-10 border-2 border-purple-500' : 'border border-gray-200'
+  const plans = [
+    {
+      key: 'starter',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      highlighted: false,
+    },
+    {
+      key: 'pro',
+      monthlyPrice: 299,
+      yearlyPrice: 249,
+      highlighted: true,
+    },
+    {
+      key: 'enterprise',
+      monthlyPrice: null,
+      yearlyPrice: null,
+      highlighted: false,
+    },
+  ];
+
+  return (
+    <section id="pricing" className="py-24 bg-white border-t border-slate-100">
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-[32px] md:text-[40px] font-semibold text-slate-900 tracking-tight mb-4">
+            {t('landing.pricing.title')}
+          </h2>
+          <p className="text-[16px] text-slate-500 mb-8">
+            {t('landing.pricing.subtitle')}
+          </p>
+
+          {/* Toggle */}
+          <div className="inline-flex items-center gap-3 p-1 bg-slate-100 rounded-lg">
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+                !isYearly
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              {/* Popular Badge */}
-              {plan.popular && (
-                <div className="absolute -top-5 left-0 right-0 mx-auto w-fit">
-                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    ⭐ En Popüler
+              {t('landing.pricing.monthly')}
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+                isYearly
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {t('landing.pricing.yearly')}
+              <span className="ml-1.5 text-[11px] text-emerald-600 font-semibold">{t('landing.pricing.discount')}</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan, index) => {
+            const features = t(`landing.pricing.${plan.key}.features`);
+            const featureList = typeof features === 'string' ? features.split(',') : (features as unknown as string[]);
+
+            return (
+              <motion.div
+                key={plan.key}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`relative rounded-xl p-6 ${
+                  plan.highlighted
+                    ? 'border-2 border-slate-900'
+                    : 'border border-slate-200'
+                }`}
+              >
+                {/* Popular Badge */}
+                {plan.highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-slate-900 text-white text-[11px] font-medium px-3 py-1 rounded-full">
+                      {t('landing.pricing.mostPopular')}
+                    </span>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="p-8 lg:p-10">
-                {/* Icon */}
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center text-white text-3xl mb-6 shadow-lg`}>
-                  {plan.icon}
+                {/* Plan Info */}
+                <div className="mb-6">
+                  <h3 className="text-[16px] font-semibold text-slate-900 mb-1">
+                    {t(`landing.pricing.${plan.key}.name`)}
+                  </h3>
+                  <p className="text-[13px] text-slate-500">
+                    {t(`landing.pricing.${plan.key}.description`)}
+                  </p>
                 </div>
-
-                {/* Plan Name */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <p className="text-gray-600 mb-6">{plan.description}</p>
 
                 {/* Price */}
-                <div className="mb-8">
-                  {plan.price === 'Özel' ? (
-                    <div>
-                      <div className="text-4xl font-bold text-gray-900">{plan.price}</div>
-                      <div className="text-gray-600 mt-1">{plan.period}</div>
+                <div className="mb-6">
+                  {plan.monthlyPrice !== null ? (
+                    <div className="flex items-baseline">
+                      <span className="text-[36px] font-semibold text-slate-900 tracking-tight">
+                        ₺{isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                      </span>
+                      <span className="ml-1.5 text-[14px] text-slate-500">{t('landing.pricing.perMonth')}</span>
                     </div>
                   ) : (
-                    <div className="flex items-baseline">
-                      <span className="text-5xl font-bold text-gray-900">₺{plan.price}</span>
-                      <span className="text-gray-600 ml-2">{plan.period}</span>
+                    <div className="text-[36px] font-semibold text-slate-900 tracking-tight">
+                      {t('landing.pricing.custom')}
                     </div>
                   )}
                 </div>
 
                 {/* Features */}
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, idx) => (
+                <ul className="space-y-3 mb-8">
+                  {featureList.map((feature: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <div className={`mt-1 w-5 h-5 rounded-full bg-gradient-to-br ${plan.color} flex items-center justify-center flex-shrink-0`}>
-                        <CheckOutlined className="text-white text-xs" />
-                      </div>
-                      <span className="text-gray-700">{feature}</span>
+                      <svg
+                        className="w-4 h-4 text-slate-400 mt-0.5 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="text-[13px] text-slate-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
 
-                {/* CTA Button */}
-                <Link href="/register">
-                  <Button
-                    size="large"
-                    block
-                    className={`h-12 font-semibold text-base ${
-                      plan.popular
-                        ? 'btn-neon-green shadow-xl'
-                        : 'btn-pricing-ghost'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Button>
+                {/* CTA */}
+                <Link
+                  href={plan.monthlyPrice === null ? '/contact' : '/register'}
+                  className={`block w-full py-2.5 px-4 rounded-lg text-center text-[14px] font-medium transition-colors ${
+                    plan.highlighted
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {t(`landing.pricing.${plan.key}.cta`)}
                 </Link>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-6">
-            Tüm planlar <span className="font-semibold text-purple-600">14 gün ücretsiz deneme</span> ile gelir. Kredi kartı gerekmez.
-          </p>
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <CheckOutlined className="text-green-500" />
-              <span>İstediğiniz zaman iptal edin</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckOutlined className="text-green-500" />
-              <span>Gizli ücret yok</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckOutlined className="text-green-500" />
-              <span>Ücretsiz güncellemeler</span>
-            </div>
-          </div>
-        </div>
+        {/* Note */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center text-[13px] text-slate-400 mt-8"
+        >
+          {t('landing.pricing.trialNote')}
+        </motion.p>
       </div>
     </section>
   );
