@@ -85,20 +85,20 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
         {/* ═══════════════════════════════════════════════════════════════
             HEADER: Logo + Name + Type Selector (Inline)
         ═══════════════════════════════════════════════════════════════ */}
-        <div className="px-8 py-6 border-b border-slate-100">
+        <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
             {/* Logo Upload */}
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-slate-300 hover:bg-slate-100 transition-all">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-200 transition-all">
                 {customerType === 'Corporate' ? (
-                  <BankOutlined className="text-xl text-slate-400" />
+                  <BankOutlined className="text-xl text-slate-500" />
                 ) : (
-                  <UserOutlined className="text-xl text-slate-400" />
+                  <UserOutlined className="text-xl text-slate-500" />
                 )}
               </div>
             </div>
 
-            {/* Company/Customer Name */}
+            {/* Company/Customer Name - Title Style */}
             <div className="flex-1">
               <Form.Item
                 name="companyName"
@@ -106,9 +106,9 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 className="mb-0"
               >
                 <Input
-                  placeholder={customerType === 'Corporate' ? 'Firma Adı' : 'Ad Soyad'}
+                  placeholder={customerType === 'Corporate' ? 'Firma Adı Girin...' : 'Ad Soyad Girin...'}
                   variant="borderless"
-                  className="!text-xl !font-semibold !text-slate-900 !p-0 placeholder:!text-slate-300"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
                 />
               </Form.Item>
             </div>
@@ -158,21 +158,21 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               İletişim Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">İrtibat Kişisi</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İrtibat Kişisi</label>
                 <Form.Item name="contactPerson" className="mb-0">
                   <Input
                     placeholder="—"
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">E-posta <span className="text-slate-400">*</span></label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="email"
                   rules={[
@@ -183,25 +183,25 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 >
                   <Input
                     placeholder="ornek@firma.com"
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">Telefon</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
                   <Input
                     placeholder="+90 (___) ___ ____"
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">Web Sitesi</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
                 <Form.Item name="website" className="mb-0">
                   <Input
                     placeholder="https://"
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -210,30 +210,30 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Adres Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-12">
-                <label className="block text-sm text-slate-600 mb-1.5">Adres</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
                 <Form.Item name="address" className="mb-0">
                   <TextArea
                     placeholder="Sokak, mahalle, bina no..."
                     rows={2}
                     maxLength={200}
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 !resize-none"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">Şehir</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
                 <Form.Item name="city" className="mb-0">
                   <Select
                     placeholder="Seçin"
                     showSearch
                     optionFilterProp="children"
                     onChange={handleCityChange}
-                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!shadow-none"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white [&_.ant-select-focused_.ant-select-selector]:!shadow-none"
                   >
                     {cityNames.map((city) => (
                       <Select.Option key={city} value={city}>{city}</Select.Option>
@@ -242,14 +242,14 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">İlçe</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe</label>
                 <Form.Item name="state" className="mb-0">
                   <Select
                     placeholder={selectedCity ? 'Seçin' : '—'}
                     showSearch
                     optionFilterProp="children"
                     disabled={!selectedCity}
-                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   >
                     {districts.map((district) => (
                       <Select.Option key={district} value={district}>{district}</Select.Option>
@@ -258,12 +258,12 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">Posta Kodu</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
                 <Form.Item name="postalCode" className="mb-0">
                   <Input
                     placeholder="34000"
                     maxLength={10}
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -275,12 +275,12 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── MALİ BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Mali Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">Vergi Numarası</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Numarası</label>
                 <Form.Item
                   name="taxId"
                   rules={[{ pattern: /^[0-9]{10,11}$/, message: '' }]}
@@ -289,24 +289,24 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                   <Input
                     placeholder="10-11 haneli"
                     maxLength={11}
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-6">
-                <label className="block text-sm text-slate-600 mb-1.5">Vergi Dairesi</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Dairesi</label>
                 <Form.Item name="taxOffice" className="mb-0">
                   <Input
                     placeholder="—"
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">Kredi Limiti</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kredi Limiti</label>
                 <Form.Item name="creditLimit" className="mb-0" initialValue={0}>
                   <InputNumber
-                    className="!w-full [&_.ant-input-number-input]:!border-slate-200"
+                    className="!w-full [&_.ant-input-number]:!bg-slate-50 [&_.ant-input-number]:!border-slate-300 [&_.ant-input-number:hover]:!border-slate-400 [&_.ant-input-number-focused]:!border-slate-900 [&_.ant-input-number-focused]:!bg-white"
                     formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
                     min={0}
@@ -314,22 +314,22 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">Ödeme Vadesi</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Vadesi</label>
                 <Form.Item name="paymentTerms" className="mb-0">
                   <Select
                     placeholder="Seçin"
                     options={paymentTermsOptions}
                     allowClear
-                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
               <div className="col-span-4">
-                <label className="block text-sm text-slate-600 mb-1.5">Durum</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
                 <Form.Item name="status" className="mb-0" initialValue="Active">
                   <Select
                     options={statusOptions}
-                    className="w-full [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
               </div>
@@ -338,7 +338,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Notlar
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -347,7 +347,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                   <TextArea
                     placeholder="Müşteri hakkında ek notlar..."
                     rows={3}
-                    className="!border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 !resize-none"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
                   />
                 </Form.Item>
               </div>
