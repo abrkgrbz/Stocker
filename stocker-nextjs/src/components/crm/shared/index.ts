@@ -8,3 +8,4 @@ export { CRMCardSkeleton } from './CRMCardSkeleton';
 export { CRMTableSkeleton } from './CRMTableSkeleton';
 export { DocumentUpload } from './DocumentUpload';
 export { ProductSelector } from './ProductSelector';
+export { CrmFormPageLayout } from './CrmFormPageLayout';

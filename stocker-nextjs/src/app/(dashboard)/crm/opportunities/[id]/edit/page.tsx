@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Form, Tag } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { CrmFormPageLayout } from '@/components/crm/shared';
 import { OpportunityForm } from '@/components/crm/opportunities';
 import { useOpportunity, useUpdateOpportunity } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
@@ -42,102 +43,33 @@ export default function EditOpportunityPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex justify-center items-center">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error || !opportunity) {
-    return (
-      <div className="p-8">
-        <Alert
-          message="Fırsat Bulunamadı"
-          description="İstenen satış fırsatı bulunamadı veya bir hata oluştu."
-          type="error"
-          showIcon
-          action={
-            <Button onClick={() => router.push('/crm/opportunities')}>
-              Fırsatlara Dön
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
-
-  const statusInfo = statusConfig[opportunity.status] || statusConfig.Prospecting;
+  const statusInfo = statusConfig[opportunity?.status || ''] || statusConfig.Prospecting;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
-            <div className="flex items-center gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">
-                    {opportunity.name}
-                  </h1>
-                  <Tag
-                    icon={statusInfo.icon}
-                    color={statusInfo.color}
-                    className="ml-2"
-                  >
-                    {statusInfo.label}
-                  </Tag>
-                </div>
-                <p className="text-sm text-gray-400 m-0">
-                  ₺{(opportunity.amount || 0).toLocaleString('tr-TR')} • %{opportunity.probability || 0} olasılık
-                </p>
-              </div>
-            </div>
-          </div>
-          <Space>
-            <Button onClick={() => router.push('/crm/opportunities')}>
-              Vazgeç
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={updateOpportunity.isPending}
-              onClick={() => form.submit()}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-              }}
-            >
-              Kaydet
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <OpportunityForm
-          form={form}
-          initialValues={opportunity}
-          onFinish={handleSubmit}
-          loading={updateOpportunity.isPending}
-        />
-      </div>
-    </div>
+    <CrmFormPageLayout
+      title={opportunity?.name || 'Fırsat Düzenle'}
+      subtitle={opportunity ? `₺${(opportunity.amount || 0).toLocaleString('tr-TR')} • %${opportunity.probability || 0} olasılık` : 'Fırsat bilgilerini güncelleyin'}
+      cancelPath="/crm/opportunities"
+      loading={updateOpportunity.isPending}
+      onSave={() => form.submit()}
+      isDataLoading={isLoading}
+      dataError={!!error || (!isLoading && !opportunity)}
+      errorMessage="Fırsat Bulunamadı"
+      errorDescription="İstenen satış fırsatı bulunamadı veya bir hata oluştu."
+      titleExtra={
+        opportunity && (
+          <Tag icon={statusInfo.icon} color={statusInfo.color}>
+            {statusInfo.label}
+          </Tag>
+        )
+      }
+    >
+      <OpportunityForm
+        form={form}
+        initialValues={opportunity}
+        onFinish={handleSubmit}
+        loading={updateOpportunity.isPending}
+      />
+    </CrmFormPageLayout>
   );
 }
