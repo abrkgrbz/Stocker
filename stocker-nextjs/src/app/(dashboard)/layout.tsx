@@ -1103,9 +1103,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <span className="flex-1 text-left text-sm text-slate-400 group-hover:text-slate-500">
                   Ara...
                 </span>
-                <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded">
-                  Ctrl+K
-                </kbd>
               </button>
             </div>
 
