@@ -67,13 +67,12 @@ import {
   CrownOutlined,
   ScheduleOutlined,
 } from '@ant-design/icons';
+import { Search, HelpCircle, Plus, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import { SignalRProvider } from '@/lib/signalr/signalr-context';
 import { NotificationCenter } from '@/features/notifications/components';
 import { useNotificationHub } from '@/lib/signalr/notification-hub';
-import { ConnectionStatus } from '@/components/status';
-import { useSignalRStatus } from '@/lib/signalr/use-signalr-status';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/use-onboarding';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
@@ -528,9 +527,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   // Initialize SignalR notification hub
   useNotificationHub();
 
-  // Get SignalR connection status
-  const connectionState = useSignalRStatus('notifications');
-
   // Check onboarding status
   const {
     wizardData,
@@ -903,19 +899,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <Layout style={{ marginLeft: 240 }}>
           <Header
             style={{
-              padding: '0 24px',
+              padding: '0 20px',
               background: '#fff',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid #e2e8f0',
+              height: 56,
             }}
           >
             {/* Left: Tenant Name + Module Switcher */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 15, color: '#666' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }}>
                 {tenant?.name || 'Stocker'}
               </div>
+
+              {/* Divider */}
+              <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
 
               {/* Module Switcher Button */}
               <Popover
@@ -1070,20 +1070,98 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               </Popover>
             </div>
 
-            {/* Right: Status, Notifications, User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <ConnectionStatus state={connectionState} size="small" />
+            {/* Center: Global Search Bar */}
+            <div className="flex-1 flex justify-center px-8">
+              <button
+                type="button"
+                className="
+                  w-96 h-9 px-3 flex items-center gap-2
+                  bg-slate-100 hover:bg-slate-200/80
+                  border border-transparent hover:border-slate-300
+                  rounded-lg transition-all duration-150
+                  focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1
+                  group
+                "
+                onClick={() => {
+                  // TODO: Open command palette / global search
+                  message.info('Global arama yakında aktif olacak (⌘K)');
+                }}
+              >
+                <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-500" strokeWidth={2} />
+                <span className="flex-1 text-left text-sm text-slate-400 group-hover:text-slate-500">
+                  Ara...
+                </span>
+                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1">
+              {/* Help Button */}
+              <Tooltip title="Yardım & Destek">
+                <button
+                  type="button"
+                  className="
+                    w-8 h-8 flex items-center justify-center
+                    text-slate-400 hover:text-slate-600
+                    border border-slate-200 hover:border-slate-300 hover:bg-slate-50
+                    rounded-full transition-all duration-150
+                  "
+                  onClick={() => router.push('/help')}
+                >
+                  <HelpCircle className="w-4 h-4" strokeWidth={1.75} />
+                </button>
+              </Tooltip>
+
+              {/* Notifications */}
               <NotificationCenter />
+
+              {/* Divider */}
+              <div className="w-px h-5 bg-slate-200 mx-2" />
+
+              {/* Quick Create Button */}
+              <Tooltip title="Hızlı Oluştur">
+                <button
+                  type="button"
+                  className="
+                    w-8 h-8 flex items-center justify-center
+                    bg-slate-900 hover:bg-slate-800
+                    text-white rounded-lg transition-all duration-150
+                  "
+                  onClick={() => {
+                    // TODO: Open quick create modal
+                    message.info('Hızlı oluştur menüsü yakında aktif olacak');
+                  }}
+                >
+                  <Plus className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+              </Tooltip>
+
+              {/* Divider */}
+              <div className="w-px h-5 bg-slate-200 mx-2" />
+
+              {/* User Menu */}
               <Dropdown
                 menu={{ items: userMenuItems, onClick: ({ key }) => handleUserMenuClick(key) }}
                 placement="bottomRight"
               >
-                <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 8 }}>
-                  <Avatar size="small" icon={<UserOutlined />} />
-                  <span style={{ fontSize: 14 }}>
-                    {user?.firstName} {user?.lastName}
+                <button
+                  type="button"
+                  className="
+                    flex items-center gap-2 px-2 py-1.5
+                    hover:bg-slate-100 rounded-lg transition-colors
+                  "
+                >
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-semibold">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 hidden lg:block">
+                    {user?.firstName}
                   </span>
-                </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                </button>
               </Dropdown>
             </div>
           </Header>
