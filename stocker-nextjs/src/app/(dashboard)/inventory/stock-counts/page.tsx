@@ -1,22 +1,22 @@
 'use client';
 
+/**
+ * Stock Counts List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Dropdown,
   Select,
   DatePicker,
   Progress,
+  message,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -27,9 +27,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   PlayCircleOutlined,
-  PauseCircleOutlined,
   EditOutlined,
-  ClockCircleOutlined,
   ExclamationCircleOutlined,
   DownloadOutlined,
   FilePdfOutlined,
@@ -57,9 +55,13 @@ import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
 import BulkActionsBar, { createCountBulkActions } from '@/components/inventory/BulkActionsBar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
-import { message } from 'antd';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 // Stock count status configuration
@@ -131,7 +133,6 @@ export default function StockCountsPage() {
 
   // Apply saved filter
   const handleApplyFilter = (filters: Record<string, unknown>) => {
-    // Handle date preset
     if (filters.datePreset) {
       const resolved = resolveDatePreset(filters.datePreset as string);
       if (resolved) {
@@ -145,18 +146,13 @@ export default function StockCountsPage() {
       ]);
     }
 
-    // Handle status
     if (filters.status) {
       setSelectedStatus(filters.status as StockCountStatus);
     }
 
-    // Handle warehouse
     if (filters.warehouseId) {
       setSelectedWarehouse(filters.warehouseId as number);
     }
-
-    // Handle hasDifferences (filter by items with differences)
-    // This would require backend support or client-side filtering
   };
 
   // Clear filters
@@ -333,7 +329,6 @@ export default function StockCountsPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: Get actual user ID
           await startStockCount.mutateAsync({ id: stockCount.id, countedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
@@ -366,7 +361,6 @@ export default function StockCountsPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: Get actual user ID
           await approveStockCount.mutateAsync({ id: stockCount.id, approvedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
@@ -394,7 +388,7 @@ export default function StockCountsPage() {
 
   // Get action items based on status
   const getActionItems = (stockCount: StockCountListDto) => {
-    const items = [
+    const items: any[] = [
       {
         key: 'view',
         icon: <EyeOutlined />,
@@ -417,7 +411,7 @@ export default function StockCountsPage() {
             icon: <CloseCircleOutlined />,
             label: 'İptal Et',
             onClick: () => handleCancel(stockCount),
-          } as any
+          }
         );
         break;
       case 'InProgress':
@@ -433,7 +427,7 @@ export default function StockCountsPage() {
             icon: <CloseCircleOutlined />,
             label: 'İptal Et',
             onClick: () => handleCancel(stockCount),
-          } as any
+          }
         );
         break;
       case 'Completed':
@@ -458,7 +452,7 @@ export default function StockCountsPage() {
       width: 150,
       render: (text, record) => (
         <span
-          className="font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+          className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
           onClick={() => handleView(record.id)}
         >
           {text}
@@ -470,20 +464,27 @@ export default function StockCountsPage() {
       dataIndex: 'countDate',
       key: 'countDate',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      render: (date) => (
+        <span className="text-sm text-slate-600">
+          {dayjs(date).format('DD/MM/YYYY')}
+        </span>
+      ),
     },
     {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 150,
+      render: (name) => <span className="text-sm text-slate-900">{name}</span>,
     },
     {
       title: 'Konum',
       dataIndex: 'locationName',
       key: 'locationName',
       width: 120,
-      render: (location) => location || '-',
+      render: (location) => (
+        <span className="text-sm text-slate-600">{location || '-'}</span>
+      ),
     },
     {
       title: 'Tür',
@@ -504,11 +505,11 @@ export default function StockCountsPage() {
           ? Math.round((record.countedItems / record.totalItems) * 100)
           : 0;
         return (
-          <div>
+          <div style={{ width: 120 }}>
             <Progress percent={percent} size="small" />
-            <Text type="secondary" className="text-xs">
+            <span className="text-xs text-slate-500">
               {record.countedItems} / {record.totalItems}
-            </Text>
+            </span>
           </div>
         );
       },
@@ -520,11 +521,11 @@ export default function StockCountsPage() {
       width: 80,
       align: 'center',
       render: (diff) => (
-        diff > 0 ? (
-          <Tag color="orange">{diff}</Tag>
-        ) : (
-          <Tag color="green">0</Tag>
-        )
+        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${
+          diff > 0 ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
+        }`}>
+          {diff || 0}
+        </span>
       ),
     },
     {
@@ -542,159 +543,164 @@ export default function StockCountsPage() {
       },
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
-      align: 'center',
+      width: 60,
+      fixed: 'right',
       render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionItems(record) }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
+        <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <MoreOutlined className="text-sm" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Stok Sayımları</Title>
-          <Text type="secondary">Envanter sayım işlemlerini yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Sayım</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalCounts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <FileSearchOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <SavedFiltersDropdown
-            entityType="stock-counts"
-            currentFilters={currentFilters}
-            onApplyFilter={handleApplyFilter}
-            onClearFilter={handleClearFilter}
-          />
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'pdf',
-                  icon: <FilePdfOutlined />,
-                  label: 'PDF İndir',
-                  onClick: handleExportPDF,
-                },
-                {
-                  key: 'excel',
-                  icon: <FileExcelOutlined />,
-                  label: 'Excel İndir',
-                  onClick: handleExportExcel,
-                },
-              ],
-            }}
-          >
-            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
-          </Dropdown>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/inventory/stock-counts/new')}>
-            Yeni Sayım
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Devam Eden</span>
+              <div className={`text-2xl font-semibold ${inProgressCounts > 0 ? 'text-blue-600' : 'text-slate-900'}`}>
+                {inProgressCounts}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inProgressCounts > 0 ? '#3b82f615' : '#64748b15' }}>
+              <PlayCircleOutlined style={{ color: inProgressCounts > 0 ? '#3b82f6' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Tamamlanan</span>
+              <div className="text-2xl font-semibold text-slate-900">{completedCounts}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Fark</span>
+              <div className={`text-2xl font-semibold ${totalDifferences > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
+                {totalDifferences}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: totalDifferences > 0 ? '#f9731615' : '#64748b15' }}>
+              <ExclamationCircleOutlined style={{ color: totalDifferences > 0 ? '#f97316' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Sayım"
-              value={totalCounts}
-              prefix={<FileSearchOutlined className="text-blue-500" />}
-              loading={isLoading}
+      {/* Header */}
+      <ListPageHeader
+        icon={<FileSearchOutlined />}
+        iconColor="#3b82f6"
+        title="Stok Sayımları"
+        description="Envanter sayım işlemlerini yönetin"
+        itemCount={stockCounts.length}
+        primaryAction={{
+          label: 'Yeni Sayım',
+          onClick: () => router.push('/inventory/stock-counts/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <SavedFiltersDropdown
+              entityType="stock-counts"
+              currentFilters={currentFilters}
+              onApplyFilter={handleApplyFilter}
+              onClearFilter={handleClearFilter}
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className={inProgressCounts > 0 ? 'border-blue-200' : ''}>
-            <Statistic
-              title="Devam Eden"
-              value={inProgressCounts}
-              prefix={<PlayCircleOutlined className={inProgressCounts > 0 ? 'text-blue-500' : 'text-gray-400'} />}
-              valueStyle={inProgressCounts > 0 ? { color: '#1890ff' } : undefined}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Tamamlanan"
-              value={completedCounts}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className={totalDifferences > 0 ? 'border-orange-200' : ''}>
-            <Statistic
-              title="Toplam Fark"
-              value={totalDifferences}
-              prefix={<ExclamationCircleOutlined className={totalDifferences > 0 ? 'text-orange-500' : 'text-gray-400'} />}
-              suffix="kalem"
-              valueStyle={totalDifferences > 0 ? { color: '#fa8c16' } : undefined}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={6}>
-            <Select
-              placeholder="Depo"
-              value={selectedWarehouse}
-              onChange={setSelectedWarehouse}
-              allowClear
-              style={{ width: '100%' }}
-              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Select
-              placeholder="Durum"
-              value={selectedStatus}
-              onChange={setSelectedStatus}
-              allowClear
-              style={{ width: '100%' }}
-              options={Object.entries(statusConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={8}>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              style={{ width: '100%' }}
-              placeholder={['Başlangıç', 'Bitiş']}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Button
-              onClick={() => {
-                setSelectedWarehouse(undefined);
-                setSelectedStatus(undefined);
-                setDateRange(null);
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'pdf',
+                    icon: <FilePdfOutlined />,
+                    label: 'PDF İndir',
+                    onClick: handleExportPDF,
+                  },
+                  {
+                    key: 'excel',
+                    icon: <FileExcelOutlined />,
+                    label: 'Excel İndir',
+                    onClick: handleExportExcel,
+                  },
+                ],
               }}
             >
-              Temizle
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                <DownloadOutlined />
+                Dışa Aktar
+              </button>
+            </Dropdown>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
+
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Select
+            placeholder="Depo"
+            value={selectedWarehouse}
+            onChange={setSelectedWarehouse}
+            allowClear
+            style={{ width: 180 }}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
+          <Select
+            placeholder="Durum"
+            value={selectedStatus}
+            onChange={setSelectedStatus}
+            allowClear
+            style={{ width: 150 }}
+            options={Object.entries(statusConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
+          />
+          <RangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            style={{ width: 280 }}
+            placeholder={['Başlangıç', 'Bitiş']}
+          />
+          <button
+            onClick={handleClearFilter}
+            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Bulk Actions Bar */}
       <BulkActionsBar
@@ -705,30 +711,38 @@ export default function StockCountsPage() {
         onExportSelected={handleExportSelected}
       />
 
-      {/* Stock Counts Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={stockCounts}
-          rowKey="id"
-          loading={isLoading}
-          rowSelection={{
-            selectedRowKeys: Array.from(bulkSelection.selectedIds),
-            onChange: (selectedRowKeys) => {
-              bulkSelection.clear();
-              selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
-            },
-            getCheckboxProps: (record) => ({
-              disabled: record.status === 'Approved' || record.status === 'Cancelled' || record.status === 'Adjusted',
-            }),
-          }}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sayım`,
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
-    </div>
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={stockCounts}
+            rowKey="id"
+            loading={isLoading}
+            rowSelection={{
+              selectedRowKeys: Array.from(bulkSelection.selectedIds),
+              onChange: (selectedRowKeys) => {
+                bulkSelection.clear();
+                selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
+              },
+              getCheckboxProps: (record) => ({
+                disabled: record.status === 'Approved' || record.status === 'Cancelled' || record.status === 'Adjusted',
+              }),
+            }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} sayım`,
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

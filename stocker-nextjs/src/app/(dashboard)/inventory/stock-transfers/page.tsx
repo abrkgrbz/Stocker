@@ -1,28 +1,25 @@
 'use client';
 
+/**
+ * Stock Transfers List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Dropdown,
   Select,
   DatePicker,
   message,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
   ReloadOutlined,
-  EditOutlined,
-  DeleteOutlined,
   EyeOutlined,
   MoreOutlined,
   SwapOutlined,
@@ -59,13 +56,18 @@ import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
 import BulkActionsBar, { createTransferBulkActions } from '@/components/inventory/BulkActionsBar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 // Transfer status configuration
 const statusConfig: Record<TransferStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <EditOutlined /> },
+  Draft: { color: 'default', label: 'Taslak', icon: null },
   Pending: { color: 'processing', label: 'Beklemede', icon: <ClockCircleOutlined /> },
   Approved: { color: 'blue', label: 'Onaylı', icon: <CheckCircleOutlined /> },
   Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
@@ -126,7 +128,6 @@ export default function StockTransfersPage() {
 
   // Apply saved filter
   const handleApplyFilter = (filters: Record<string, unknown>) => {
-    // Handle date preset
     if (filters.datePreset) {
       const resolved = resolveDatePreset(filters.datePreset as string);
       if (resolved) {
@@ -140,17 +141,14 @@ export default function StockTransfersPage() {
       ]);
     }
 
-    // Handle status
     if (filters.status) {
       setSelectedStatus(filters.status as TransferStatus);
     }
 
-    // Handle source warehouse
     if (filters.sourceWarehouseId) {
       setSelectedSourceWarehouse(filters.sourceWarehouseId as number);
     }
 
-    // Handle destination warehouse
     if (filters.destinationWarehouseId) {
       setSelectedDestWarehouse(filters.destinationWarehouseId as number);
     }
@@ -347,7 +345,6 @@ export default function StockTransfersPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: Get actual user ID
           await approveTransfer.mutateAsync({ id: transfer.id, approvedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
@@ -364,7 +361,6 @@ export default function StockTransfersPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: Get actual user ID
           await shipTransfer.mutateAsync({ id: transfer.id, shippedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
@@ -381,7 +377,6 @@ export default function StockTransfersPage() {
       cancelText: 'İptal',
       onOk: async () => {
         try {
-          // TODO: Get actual user ID
           await receiveTransfer.mutateAsync({ id: transfer.id, receivedByUserId: 1 });
         } catch (error) {
           // Error handled by hook
@@ -409,7 +404,7 @@ export default function StockTransfersPage() {
 
   // Get action items based on status
   const getActionItems = (transfer: StockTransferListDto) => {
-    const items = [
+    const items: any[] = [
       {
         key: 'view',
         icon: <EyeOutlined />,
@@ -432,7 +427,7 @@ export default function StockTransfersPage() {
             icon: <CloseCircleOutlined />,
             label: 'İptal Et',
             onClick: () => handleCancel(transfer),
-          } as any
+          }
         );
         break;
       case 'Pending':
@@ -448,7 +443,7 @@ export default function StockTransfersPage() {
             icon: <CloseCircleOutlined />,
             label: 'Reddet',
             onClick: () => handleCancel(transfer),
-          } as any
+          }
         );
         break;
       case 'Approved':
@@ -481,7 +476,7 @@ export default function StockTransfersPage() {
       width: 150,
       render: (text, record) => (
         <span
-          className="font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+          className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
           onClick={() => handleView(record.id)}
         >
           {text}
@@ -493,19 +488,25 @@ export default function StockTransfersPage() {
       dataIndex: 'transferDate',
       key: 'transferDate',
       width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY'),
+      render: (date) => (
+        <span className="text-sm text-slate-600">
+          {dayjs(date).format('DD/MM/YYYY')}
+        </span>
+      ),
     },
     {
       title: 'Kaynak Depo',
       dataIndex: 'sourceWarehouseName',
       key: 'sourceWarehouseName',
       width: 150,
+      render: (name) => <span className="text-sm text-slate-900">{name}</span>,
     },
     {
       title: 'Hedef Depo',
       dataIndex: 'destinationWarehouseName',
       key: 'destinationWarehouseName',
       width: 150,
+      render: (name) => <span className="text-sm text-slate-900">{name}</span>,
     },
     {
       title: 'Tür',
@@ -522,7 +523,7 @@ export default function StockTransfersPage() {
           CrossDock: 'Cross-Dock',
           Consolidation: 'Konsolidasyon',
         };
-        return typeLabels[type] || type;
+        return <span className="text-sm text-slate-600">{typeLabels[type] || type}</span>;
       },
     },
     {
@@ -531,7 +532,11 @@ export default function StockTransfersPage() {
       key: 'itemCount',
       width: 80,
       align: 'center',
-      render: (count) => <Tag color="blue">{count}</Tag>,
+      render: (count) => (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded">
+          {count}
+        </span>
+      ),
     },
     {
       title: 'Miktar',
@@ -539,6 +544,7 @@ export default function StockTransfersPage() {
       key: 'totalQuantity',
       width: 100,
       align: 'right',
+      render: (qty) => <span className="text-sm font-medium text-slate-900">{qty}</span>,
     },
     {
       title: 'Durum',
@@ -555,169 +561,172 @@ export default function StockTransfersPage() {
       },
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
-      align: 'center',
+      width: 60,
+      fixed: 'right',
       render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionItems(record) }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
+        <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
+          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+            <MoreOutlined className="text-sm" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Stok Transferleri</Title>
-          <Text type="secondary">Depolar arası stok transferlerini yönetin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Transfer</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalTransfers}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <SwapOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <SavedFiltersDropdown
-            entityType="stock-transfers"
-            currentFilters={currentFilters}
-            onApplyFilter={handleApplyFilter}
-            onClearFilter={handleClearFilter}
-          />
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'pdf',
-                  icon: <FilePdfOutlined />,
-                  label: 'PDF İndir',
-                  onClick: handleExportPDF,
-                },
-                {
-                  key: 'excel',
-                  icon: <FileExcelOutlined />,
-                  label: 'Excel İndir',
-                  onClick: handleExportExcel,
-                },
-              ],
-            }}
-          >
-            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
-          </Dropdown>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/inventory/stock-transfers/new')}>
-            Yeni Transfer
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
+              <div className={`text-2xl font-semibold ${pendingTransfers > 0 ? 'text-yellow-600' : 'text-slate-900'}`}>
+                {pendingTransfers}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: pendingTransfers > 0 ? '#f59e0b15' : '#64748b15' }}>
+              <ClockCircleOutlined style={{ color: pendingTransfers > 0 ? '#f59e0b' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Yolda</span>
+              <div className={`text-2xl font-semibold ${inTransitTransfers > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
+                {inTransitTransfers}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inTransitTransfers > 0 ? '#f9731615' : '#64748b15' }}>
+              <RocketOutlined style={{ color: inTransitTransfers > 0 ? '#f97316' : '#64748b' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Tamamlanan</span>
+              <div className="text-2xl font-semibold text-slate-900">{completedTransfers}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <CheckCircleOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Transfer"
-              value={totalTransfers}
-              prefix={<SwapOutlined className="text-blue-500" />}
-              loading={isLoading}
+      {/* Header */}
+      <ListPageHeader
+        icon={<SwapOutlined />}
+        iconColor="#3b82f6"
+        title="Stok Transferleri"
+        description="Depolar arası stok transferlerini yönetin"
+        itemCount={transfers.length}
+        primaryAction={{
+          label: 'Yeni Transfer',
+          onClick: () => router.push('/inventory/stock-transfers/new'),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <SavedFiltersDropdown
+              entityType="stock-transfers"
+              currentFilters={currentFilters}
+              onApplyFilter={handleApplyFilter}
+              onClearFilter={handleClearFilter}
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className={pendingTransfers > 0 ? 'border-yellow-200' : ''}>
-            <Statistic
-              title="Bekleyen"
-              value={pendingTransfers}
-              prefix={<ClockCircleOutlined className={pendingTransfers > 0 ? 'text-yellow-500' : 'text-gray-400'} />}
-              valueStyle={pendingTransfers > 0 ? { color: '#faad14' } : undefined}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable className={inTransitTransfers > 0 ? 'border-orange-200' : ''}>
-            <Statistic
-              title="Yolda"
-              value={inTransitTransfers}
-              prefix={<RocketOutlined className={inTransitTransfers > 0 ? 'text-orange-500' : 'text-gray-400'} />}
-              valueStyle={inTransitTransfers > 0 ? { color: '#fa8c16' } : undefined}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Tamamlanan"
-              value={completedTransfers}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={5}>
-            <Select
-              placeholder="Kaynak Depo"
-              value={selectedSourceWarehouse}
-              onChange={setSelectedSourceWarehouse}
-              allowClear
-              style={{ width: '100%' }}
-              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={5}>
-            <Select
-              placeholder="Hedef Depo"
-              value={selectedDestWarehouse}
-              onChange={setSelectedDestWarehouse}
-              allowClear
-              style={{ width: '100%' }}
-              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={5}>
-            <Select
-              placeholder="Durum"
-              value={selectedStatus}
-              onChange={setSelectedStatus}
-              allowClear
-              style={{ width: '100%' }}
-              options={Object.entries(statusConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              style={{ width: '100%' }}
-              placeholder={['Başlangıç', 'Bitiş']}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={3}>
-            <Button
-              onClick={() => {
-                setSelectedSourceWarehouse(undefined);
-                setSelectedDestWarehouse(undefined);
-                setSelectedStatus(undefined);
-                setDateRange(null);
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'pdf',
+                    icon: <FilePdfOutlined />,
+                    label: 'PDF İndir',
+                    onClick: handleExportPDF,
+                  },
+                  {
+                    key: 'excel',
+                    icon: <FileExcelOutlined />,
+                    label: 'Excel İndir',
+                    onClick: handleExportExcel,
+                  },
+                ],
               }}
             >
-              Temizle
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                <DownloadOutlined />
+                Dışa Aktar
+              </button>
+            </Dropdown>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
+
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Select
+            placeholder="Kaynak Depo"
+            value={selectedSourceWarehouse}
+            onChange={setSelectedSourceWarehouse}
+            allowClear
+            style={{ width: 180 }}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
+          <Select
+            placeholder="Hedef Depo"
+            value={selectedDestWarehouse}
+            onChange={setSelectedDestWarehouse}
+            allowClear
+            style={{ width: 180 }}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
+          <Select
+            placeholder="Durum"
+            value={selectedStatus}
+            onChange={setSelectedStatus}
+            allowClear
+            style={{ width: 150 }}
+            options={Object.entries(statusConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
+          />
+          <RangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            style={{ width: 280 }}
+            placeholder={['Başlangıç', 'Bitiş']}
+          />
+          <button
+            onClick={handleClearFilter}
+            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
 
       {/* Bulk Actions Bar */}
       <BulkActionsBar
@@ -728,30 +737,38 @@ export default function StockTransfersPage() {
         onExportSelected={handleExportSelected}
       />
 
-      {/* Transfers Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={transfers}
-          rowKey="id"
-          loading={isLoading}
-          rowSelection={{
-            selectedRowKeys: Array.from(bulkSelection.selectedIds),
-            onChange: (selectedRowKeys) => {
-              bulkSelection.clear();
-              selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
-            },
-            getCheckboxProps: (record) => ({
-              disabled: record.status === 'Completed' || record.status === 'Cancelled',
-            }),
-          }}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} transfer`,
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
-    </div>
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={transfers}
+            rowKey="id"
+            loading={isLoading}
+            rowSelection={{
+              selectedRowKeys: Array.from(bulkSelection.selectedIds),
+              onChange: (selectedRowKeys) => {
+                bulkSelection.clear();
+                selectedRowKeys.forEach((key) => bulkSelection.select(key as string | number));
+              },
+              getCheckboxProps: (record) => ({
+                disabled: record.status === 'Completed' || record.status === 'Cancelled',
+              }),
+            }}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} transfer`,
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

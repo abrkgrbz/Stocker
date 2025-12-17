@@ -1,21 +1,20 @@
 'use client';
 
+/**
+ * Stock Movements List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Select,
   DatePicker,
   Modal,
   Dropdown,
+  Spin,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -45,12 +44,16 @@ import {
   exportToExcel,
   stockMovementColumns,
   movementTypeLabels,
-  formatters,
 } from '@/lib/utils/export-utils';
 import SavedFiltersDropdown from '@/components/inventory/SavedFiltersDropdown';
 import { resolveDatePreset } from '@/hooks/useSavedFilters';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 // Movement type configuration
@@ -114,7 +117,6 @@ export default function StockMovementsPage() {
 
   // Apply saved filter
   const handleApplyFilter = (filters: Record<string, unknown>) => {
-    // Handle date preset
     if (filters.datePreset) {
       const resolved = resolveDatePreset(filters.datePreset as string);
       if (resolved) {
@@ -128,20 +130,16 @@ export default function StockMovementsPage() {
       ]);
     }
 
-    // Handle movement type
     if (filters.movementType) {
       setSelectedType(filters.movementType as StockMovementType);
     } else if (filters.movementTypes && Array.isArray(filters.movementTypes)) {
-      // For multiple types, just use the first one (could enhance to support multi-select)
       setSelectedType(filters.movementTypes[0] as StockMovementType);
     }
 
-    // Handle warehouse
     if (filters.warehouseId) {
       setSelectedWarehouse(filters.warehouseId as number);
     }
 
-    // Handle product
     if (filters.productId) {
       setSelectedProduct(filters.productId as number);
     }
@@ -162,7 +160,6 @@ export default function StockMovementsPage() {
       return;
     }
 
-    // Transform data with Turkish labels
     const exportData = movements.map((m) => ({
       ...m,
       movementType: movementTypeLabels[m.movementType] || m.movementType,
@@ -193,7 +190,6 @@ export default function StockMovementsPage() {
       return;
     }
 
-    // Transform data with Turkish labels
     const exportData = movements.map((m) => ({
       ...m,
       movementType: movementTypeLabels[m.movementType] || m.movementType,
@@ -254,15 +250,15 @@ export default function StockMovementsPage() {
       key: 'documentNumber',
       width: 150,
       render: (text, record) => (
-        <div>
+        <div className="flex items-center gap-2">
           <span
-            className="font-medium text-blue-600 cursor-pointer hover:text-blue-800"
+            className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800"
             onClick={() => handleView(record.id)}
           >
             {text}
           </span>
           {record.isReversed && (
-            <Tag color="red" className="ml-2">Tersine Çevrildi</Tag>
+            <Tag color="red" className="text-xs">Tersine Çevrildi</Tag>
           )}
         </div>
       ),
@@ -271,14 +267,18 @@ export default function StockMovementsPage() {
       title: 'Tarih',
       dataIndex: 'movementDate',
       key: 'movementDate',
-      width: 120,
-      render: (date) => dayjs(date).format('DD/MM/YYYY HH:mm'),
+      width: 140,
+      render: (date) => (
+        <span className="text-sm text-slate-600">
+          {dayjs(date).format('DD/MM/YYYY HH:mm')}
+        </span>
+      ),
     },
     {
       title: 'Tür',
       dataIndex: 'movementType',
       key: 'movementType',
-      width: 130,
+      width: 140,
       render: (type: StockMovementType) => {
         const config = movementTypeConfig[type];
         const icon = config.direction === 'in' ? <ArrowUpOutlined /> :
@@ -297,8 +297,8 @@ export default function StockMovementsPage() {
       width: 200,
       render: (_, record) => (
         <div>
-          <div className="font-medium">{record.productName}</div>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
+          <div className="text-sm font-medium text-slate-900">{record.productName}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
         </div>
       ),
     },
@@ -307,6 +307,7 @@ export default function StockMovementsPage() {
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 120,
+      render: (name) => <span className="text-sm text-slate-600">{name}</span>,
     },
     {
       title: 'Konum',
@@ -315,12 +316,16 @@ export default function StockMovementsPage() {
       render: (_, record) => {
         if (record.fromLocationName && record.toLocationName) {
           return (
-            <Text type="secondary" className="text-xs">
+            <span className="text-xs text-slate-500">
               {record.fromLocationName} → {record.toLocationName}
-            </Text>
+            </span>
           );
         }
-        return record.toLocationName || record.fromLocationName || '-';
+        return (
+          <span className="text-sm text-slate-600">
+            {record.toLocationName || record.fromLocationName || '-'}
+          </span>
+        );
       },
     },
     {
@@ -331,13 +336,13 @@ export default function StockMovementsPage() {
       align: 'right',
       render: (qty, record) => {
         const config = movementTypeConfig[record.movementType];
-        const color = config.direction === 'in' ? 'text-green-600' :
+        const colorClass = config.direction === 'in' ? 'text-green-600' :
                      config.direction === 'out' ? 'text-red-600' :
                      'text-blue-600';
         const prefix = config.direction === 'in' ? '+' :
                       config.direction === 'out' ? '-' : '';
         return (
-          <span className={`font-semibold ${color}`}>
+          <span className={`text-sm font-semibold ${colorClass}`}>
             {prefix}{qty}
           </span>
         );
@@ -349,7 +354,11 @@ export default function StockMovementsPage() {
       key: 'unitCost',
       width: 120,
       align: 'right',
-      render: (cost) => cost ? `₺${cost.toLocaleString('tr-TR')}` : '-',
+      render: (cost) => (
+        <span className="text-sm text-slate-600">
+          {cost ? `₺${cost.toLocaleString('tr-TR')}` : '-'}
+        </span>
+      ),
     },
     {
       title: 'Toplam',
@@ -357,7 +366,11 @@ export default function StockMovementsPage() {
       key: 'totalCost',
       width: 120,
       align: 'right',
-      render: (cost) => cost ? `₺${cost.toLocaleString('tr-TR')}` : '-',
+      render: (cost) => (
+        <span className="text-sm font-medium text-slate-900">
+          {cost ? `₺${cost.toLocaleString('tr-TR')}` : '-'}
+        </span>
+      ),
     },
     {
       title: 'Referans',
@@ -366,213 +379,225 @@ export default function StockMovementsPage() {
       render: (_, record) => (
         record.referenceDocumentNumber ? (
           <div>
-            <Text type="secondary" className="text-xs">{record.referenceDocumentType}</Text>
-            <div className="font-medium">{record.referenceDocumentNumber}</div>
+            <div className="text-xs text-slate-500">{record.referenceDocumentType}</div>
+            <div className="text-sm font-medium text-slate-700">{record.referenceDocumentNumber}</div>
           </div>
-        ) : '-'
+        ) : <span className="text-slate-400">-</span>
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
-      align: 'center',
-      render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: 'Görüntüle',
-                onClick: () => handleView(record.id),
-              },
-              {
-                key: 'reverse',
-                icon: <UndoOutlined />,
-                label: 'Tersine Çevir',
-                disabled: record.isReversed,
-                danger: true,
-                onClick: () => handleReverse(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      width: 60,
+      fixed: 'right',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'Görüntüle',
+            onClick: () => handleView(record.id),
+          },
+          {
+            key: 'reverse',
+            icon: <UndoOutlined />,
+            label: 'Tersine Çevir',
+            disabled: record.isReversed,
+            danger: true,
+            onClick: () => handleReverse(record),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
+          </Dropdown>
+        );
+      },
     },
   ];
 
+  // Stats
+  const totalMovements = summary?.totalMovements || movements.length;
+  const totalInbound = summary?.totalInbound || 0;
+  const totalOutbound = summary?.totalOutbound || 0;
+  const netChange = summary?.netChange || 0;
+
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Stok Hareketleri</Title>
-          <Text type="secondary">Tüm stok giriş, çıkış ve transferlerini görüntüleyin</Text>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Hareket</span>
+              <div className="text-2xl font-semibold text-slate-900">{totalMovements}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+              <SwapOutlined style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
         </div>
-        <Space>
-          <SavedFiltersDropdown
-            entityType="stock-movements"
-            currentFilters={currentFilters}
-            onApplyFilter={handleApplyFilter}
-            onClearFilter={handleClearFilter}
-          />
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'pdf',
-                  icon: <FilePdfOutlined />,
-                  label: 'PDF İndir',
-                  onClick: handleExportPDF,
-                },
-                {
-                  key: 'excel',
-                  icon: <FileExcelOutlined />,
-                  label: 'Excel İndir',
-                  onClick: handleExportExcel,
-                },
-              ],
-            }}
-          >
-            <Button icon={<DownloadOutlined />}>Dışa Aktar</Button>
-          </Dropdown>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-        </Space>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Giriş</span>
+              <div className="text-2xl font-semibold text-green-600">{totalInbound}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+              <ArrowUpOutlined style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Çıkış</span>
+              <div className="text-2xl font-semibold text-red-600">{totalOutbound}</div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+              <ArrowDownOutlined style={{ color: '#ef4444' }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Net Değişim</span>
+              <div className={`text-2xl font-semibold ${netChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {netChange >= 0 ? '+' : ''}{netChange}
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+              <SyncOutlined style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Hareket"
-              value={summary?.totalMovements || movements.length}
-              prefix={<SwapOutlined className="text-blue-500" />}
-              loading={isLoading}
+      {/* Header */}
+      <ListPageHeader
+        icon={<SwapOutlined />}
+        iconColor="#3b82f6"
+        title="Stok Hareketleri"
+        description="Tüm stok giriş, çıkış ve transferlerini görüntüleyin"
+        itemCount={movements.length}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <SavedFiltersDropdown
+              entityType="stock-movements"
+              currentFilters={currentFilters}
+              onApplyFilter={handleApplyFilter}
+              onClearFilter={handleClearFilter}
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Giriş"
-              value={summary?.totalInbound || 0}
-              prefix={<ArrowUpOutlined className="text-green-500" />}
-              valueStyle={{ color: '#52c41a' }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Çıkış"
-              value={summary?.totalOutbound || 0}
-              prefix={<ArrowDownOutlined className="text-red-500" />}
-              valueStyle={{ color: '#ff4d4f' }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Net Değişim"
-              value={summary?.netChange || 0}
-              prefix={<SyncOutlined className="text-purple-500" />}
-              valueStyle={{
-                color: (summary?.netChange || 0) >= 0 ? '#52c41a' : '#ff4d4f'
-              }}
-              loading={isLoading}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={5}>
-            <Select
-              placeholder="Ürün"
-              value={selectedProduct}
-              onChange={setSelectedProduct}
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              style={{ width: '100%' }}
-              options={products.map((p) => ({
-                value: p.id,
-                label: `${p.code} - ${p.name}`,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Select
-              placeholder="Depo"
-              value={selectedWarehouse}
-              onChange={setSelectedWarehouse}
-              allowClear
-              style={{ width: '100%' }}
-              options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Select
-              placeholder="Hareket Türü"
-              value={selectedType}
-              onChange={setSelectedType}
-              allowClear
-              style={{ width: '100%' }}
-              options={Object.entries(movementTypeConfig).map(([key, value]) => ({
-                value: key,
-                label: value.label,
-              }))}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              style={{ width: '100%' }}
-              placeholder={['Başlangıç', 'Bitiş']}
-            />
-          </Col>
-          <Col xs={24} sm={12} lg={3}>
-            <Button
-              onClick={() => {
-                setSelectedProduct(undefined);
-                setSelectedWarehouse(undefined);
-                setSelectedType(undefined);
-                setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'pdf',
+                    icon: <FilePdfOutlined />,
+                    label: 'PDF İndir',
+                    onClick: handleExportPDF,
+                  },
+                  {
+                    key: 'excel',
+                    icon: <FileExcelOutlined />,
+                    label: 'Excel İndir',
+                    onClick: handleExportExcel,
+                  },
+                ],
               }}
             >
-              Temizle
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                <DownloadOutlined />
+                Dışa Aktar
+              </button>
+            </Dropdown>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
 
-      {/* Movements Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={movements}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} hareket`,
-          }}
-          scroll={{ x: 1500 }}
-        />
-      </Card>
-    </div>
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Select
+            placeholder="Ürün"
+            value={selectedProduct}
+            onChange={setSelectedProduct}
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            style={{ width: 200 }}
+            options={products.map((p) => ({
+              value: p.id,
+              label: `${p.code} - ${p.name}`,
+            }))}
+          />
+          <Select
+            placeholder="Depo"
+            value={selectedWarehouse}
+            onChange={setSelectedWarehouse}
+            allowClear
+            style={{ width: 180 }}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
+          <Select
+            placeholder="Hareket Türü"
+            value={selectedType}
+            onChange={setSelectedType}
+            allowClear
+            style={{ width: 180 }}
+            options={Object.entries(movementTypeConfig).map(([key, value]) => ({
+              value: key,
+              label: value.label,
+            }))}
+          />
+          <RangePicker
+            value={dateRange}
+            onChange={setDateRange}
+            style={{ width: 280 }}
+            placeholder={['Başlangıç', 'Bitiş']}
+          />
+          <button
+            onClick={handleClearFilter}
+            className="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Temizle
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={movements}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} hareket`,
+            }}
+            scroll={{ x: 1500 }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
