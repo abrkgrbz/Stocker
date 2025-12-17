@@ -1,9 +1,14 @@
 'use client';
 
+/**
+ * Leads List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Spin } from 'antd';
+import { PlusOutlined, ReloadOutlined, UserAddOutlined } from '@ant-design/icons';
 import {
   showUpdateSuccess,
   showDeleteSuccess,
@@ -23,10 +28,13 @@ import {
 } from '@/lib/api/hooks/useCRM';
 import { LeadsStats, LeadsTable, LeadsFilters } from '@/components/crm/leads';
 import BulkActionsToolbar from '@/components/crm/leads/BulkActionsToolbar';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 import { ConvertLeadModal } from '@/features/leads/components';
-
-const { Title } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 export default function LeadsPage() {
   const router = useRouter();
@@ -149,7 +157,6 @@ export default function LeadsPage() {
       showUpdateSuccess('potansiyel müşteri', 'müşteriye dönüştürüldü');
       setConvertModalOpen(false);
     } catch (error: any) {
-      // Extract API error details
       const apiError = error.response?.data;
       let errorMessage = 'Dönüştürme işlemi başarısız';
 
@@ -178,7 +185,6 @@ export default function LeadsPage() {
 
     if (confirmed) {
       try {
-        // Delete each selected lead
         await Promise.all(
           selectedRowKeys.map((key) => deleteLead.mutateAsync(String(key)))
         );
@@ -199,7 +205,6 @@ export default function LeadsPage() {
 
     if (confirmed) {
       try {
-        // Update each selected lead's status
         await Promise.all(
           selectedRowKeys.map((key) => {
             const lead = leads.find((l) => l.id === String(key));
@@ -229,60 +234,71 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          Potansiyel Müşteriler
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-            data-action="create-lead"
-          >
-            Yeni Potansiyel Müşteri
-          </Button>
-        </Space>
-      </div>
-
+    <PageContainer maxWidth="7xl">
       {/* Stats Cards */}
-      <div className="mb-6">
+      <div className="mb-8">
         <LeadsStats leads={leads} loading={isLoading} />
       </div>
 
-      {/* Search and Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          {selectedRowKeys.length > 0 ? (
-            <BulkActionsToolbar
-              selectedCount={selectedRowKeys.length}
-              onClearSelection={handleClearSelection}
-              onBulkDelete={handleBulkDelete}
-              onBulkStatusChange={handleBulkStatusChange}
-              onBulkScoreAssign={handleBulkScoreAssign}
-              onBulkTagAssign={handleBulkTagAssign}
-            />
-          ) : (
-            <LeadsFilters
-              searchText={searchText}
-              onSearchChange={setSearchText}
-              activeStatusFilter={statusFilter || undefined}
-              onStatusFilterChange={(status) => {
-                setStatusFilter(status);
-                setCurrentPage(1); // Reset to first page when filter changes
-              }}
-            />
-          )}
+      {/* Header */}
+      <ListPageHeader
+        icon={<UserAddOutlined />}
+        iconColor="#8b5cf6"
+        title="Potansiyel Müşteriler"
+        description="Lead'leri yönetin ve müşteriye dönüştürün"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Lead',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Filters / Bulk Actions */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        {selectedRowKeys.length > 0 ? (
+          <BulkActionsToolbar
+            selectedCount={selectedRowKeys.length}
+            onClearSelection={handleClearSelection}
+            onBulkDelete={handleBulkDelete}
+            onBulkStatusChange={handleBulkStatusChange}
+            onBulkScoreAssign={handleBulkScoreAssign}
+            onBulkTagAssign={handleBulkTagAssign}
+          />
+        ) : (
+          <LeadsFilters
+            searchText={searchText}
+            onSearchChange={setSearchText}
+            activeStatusFilter={statusFilter || undefined}
+            onStatusFilterChange={(status) => {
+              setStatusFilter(status);
+              setCurrentPage(1);
+            }}
+          />
+        )}
+      </div>
+
+      {/* Leads Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <LeadsTable
             leads={filteredLeads}
-            loading={
-              isLoading || updateLead.isPending || deleteLead.isPending
-            }
+            loading={isLoading || updateLead.isPending || deleteLead.isPending}
             currentPage={currentPage}
             pageSize={pageSize}
             totalCount={totalCount}
@@ -298,8 +314,8 @@ export default function LeadsPage() {
             selectedRowKeys={selectedRowKeys}
             onSelectionChange={setSelectedRowKeys}
           />
-        </Space>
-      </AnimatedCard>
+        </DataTableWrapper>
+      )}
 
       {/* Convert to Customer Modal */}
       <ConvertLeadModal
@@ -318,6 +334,6 @@ export default function LeadsPage() {
         onCancel={() => setConvertModalOpen(false)}
         onSubmit={handleConvertSubmit}
       />
-    </div>
+    </PageContainer>
   );
 }

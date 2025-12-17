@@ -1,18 +1,14 @@
 'use client';
 
+/**
+ * Deals List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Supports both Kanban and List views
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Tooltip,
-} from 'antd';
+import { Input, Tag, Tooltip, Spin } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -43,8 +39,11 @@ import {
 } from '@/lib/api/hooks/useCRM';
 import { DealsStats } from '@/components/crm/deals/DealsStats';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+} from '@/components/ui/enterprise-page';
 
 // Status colors
 const statusColors: Record<Deal['status'], string> = {
@@ -82,23 +81,6 @@ export default function DealsPage() {
 
   const handleCreate = () => {
     router.push('/crm/deals/new');
-  };
-
-  const handleEdit = (deal: Deal) => {
-    router.push(`/crm/deals/${deal.id}/edit`);
-  };
-
-  const handleDelete = async (id: string, deal: Deal) => {
-    const confirmed = await confirmDelete('Fırsat', deal.title);
-
-    if (confirmed) {
-      try {
-        await deleteDeal.mutateAsync(id);
-        showDeleteSuccess('fırsat');
-      } catch (error) {
-        showError('Silme işlemi başarısız');
-      }
-    }
   };
 
   const handleCloseWon = async (deal: Deal) => {
@@ -156,9 +138,7 @@ export default function DealsPage() {
   // Group deals by stage for Kanban view
   const dealsByStage = stages.reduce(
     (acc, stage) => {
-      // For "Kazanıldı" stage, show both Open deals in this stage AND all Won deals
       const isWonStage = stage.name.toLowerCase().includes('kazanıldı') || stage.name.toLowerCase().includes('kazanildi');
-
       if (isWonStage) {
         acc[stage.id] = filteredDeals.filter((d) =>
           (d.stageId === stage.id && d.status === 'Open') || d.status === 'Won'
@@ -171,109 +151,106 @@ export default function DealsPage() {
     {} as Record<string, Deal[]>
   );
 
-  // Get deals without a stage (for "Aşamasız" column)
+  // Get deals without a stage
   const dealsWithoutStage = filteredDeals.filter((d) => !d.stageId && d.status === 'Open');
+
+  // Get lost deals
+  const lostDeals = filteredDeals.filter((d) => d.status === 'Lost');
+  const lostAmount = lostDeals.reduce((sum, d) => sum + d.amount, 0);
 
   // Deal Card Component
   const DealCard = ({ deal }: { deal: Deal }) => {
-    // Determine card styling based on status
-    const cardClassName = deal.status === 'Won'
-      ? "mb-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-green-400 bg-green-50"
-      : deal.status === 'Lost'
-      ? "mb-3 hover:shadow-md transition-shadow cursor-pointer border-2 border-red-400 bg-red-50 opacity-75"
-      : "mb-3 hover:shadow-md transition-shadow cursor-pointer border border-gray-200";
+    const isWon = deal.status === 'Won';
+    const isLost = deal.status === 'Lost';
 
     return (
-      <Card
-        className={cardClassName}
-        bodyStyle={{ padding: '12px' }}
+      <div
+        className={`mb-3 bg-white border rounded-lg p-3 hover:shadow-md transition-all cursor-pointer ${
+          isWon
+            ? 'border-emerald-400 bg-emerald-50'
+            : isLost
+            ? 'border-red-400 bg-red-50 opacity-75'
+            : 'border-slate-200 hover:border-slate-300'
+        }`}
         onClick={() => router.push(`/crm/deals/${deal.id}`)}
       >
-        {/* Header: Title + Status */}
+        {/* Header */}
         <div className="flex justify-between items-start mb-2">
-          <Text strong className="text-base flex-1">
-            {deal.status === 'Lost' && <StopOutlined className="text-red-500 mr-1" />}
-            {deal.status === 'Won' && <TrophyOutlined className="text-green-500 mr-1" />}
-            {deal.title}
-          </Text>
-          <Tag color={statusColors[deal.status]} className="ml-2">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {isLost && <StopOutlined className="text-red-500 text-xs" />}
+            {isWon && <TrophyOutlined className="text-emerald-500 text-xs" />}
+            <span className="text-sm font-medium text-slate-900 truncate">{deal.title}</span>
+          </div>
+          <Tag color={statusColors[deal.status]} className="ml-2 text-xs">
             {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
           </Tag>
         </div>
 
-      {/* Customer Name */}
-      {deal.customerName && (
-        <div className="text-sm text-gray-600 mb-3 flex items-center gap-1">
-          <UserOutlined className="text-gray-400" />
-          <span>{deal.customerName}</span>
+        {/* Customer */}
+        {deal.customerName && (
+          <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+            <UserOutlined className="text-slate-400" />
+            <span>{deal.customerName}</span>
+          </div>
+        )}
+
+        {/* Amount */}
+        <div className="text-xl font-bold text-slate-900 mb-2">
+          ₺{deal.amount.toLocaleString('tr-TR')}
         </div>
-      )}
 
-      {/* Deal Amount - Prominent */}
-      <div className="text-2xl font-bold text-gray-900 mb-3">
-        ₺{deal.amount.toLocaleString('tr-TR')}
-      </div>
-
-      {/* Metadata: Probability + Date */}
-      <div className="flex items-center gap-3 text-xs text-gray-500 mb-3 pb-3 border-b border-gray-100">
-        <Tooltip title="Kazanma Olasılığı">
-          <span className="font-medium">{deal.probability}% olasılık</span>
-        </Tooltip>
-        {deal.expectedCloseDate && (
-          <Tooltip title="Tahmini Kapanış Tarihi">
-            <span>{dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}</span>
+        {/* Metadata */}
+        <div className="flex items-center gap-3 text-xs text-slate-500 mb-3 pb-3 border-b border-slate-100">
+          <Tooltip title="Kazanma Olasılığı">
+            <span className="font-medium">{deal.probability}%</span>
           </Tooltip>
+          {deal.expectedCloseDate && (
+            <Tooltip title="Tahmini Kapanış">
+              <span>{dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}</span>
+            </Tooltip>
+          )}
+        </div>
+
+        {/* Actions - Only for Open deals */}
+        {deal.status === 'Open' && (
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseWon(deal);
+              }}
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1"
+            >
+              <CheckCircleOutlined />
+              Kazanıldı
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseLost(deal);
+              }}
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
+            >
+              <StopOutlined />
+              Kaybedildi
+            </button>
+          </div>
+        )}
+
+        {/* Status Message for Closed Deals */}
+        {isWon && (
+          <div className="text-center text-emerald-600 font-medium text-xs pt-2">
+            <TrophyOutlined /> Başarıyla tamamlandı!
+          </div>
+        )}
+        {isLost && (
+          <div className="text-center text-red-600 font-medium text-xs pt-2">
+            <CloseCircleOutlined /> Kaybedildi
+          </div>
         )}
       </div>
-
-      {/* Action Buttons - Only show for Open deals */}
-      {deal.status === 'Open' && (
-        <div className="flex gap-2">
-          <Button
-            type="primary"
-            size="small"
-            icon={<CheckCircleOutlined />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCloseWon(deal);
-            }}
-            className="flex-1"
-          >
-            Kazanıldı
-          </Button>
-          <Button
-            danger
-            size="small"
-            icon={<StopOutlined />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCloseLost(deal);
-            }}
-            className="flex-1"
-          >
-            Kaybedildi
-          </Button>
-        </div>
-      )}
-
-      {/* Status Message for Closed Deals */}
-      {deal.status === 'Won' && (
-        <div className="text-center text-green-600 font-medium text-sm pt-2">
-          <TrophyOutlined /> Başarıyla tamamlandı!
-        </div>
-      )}
-      {deal.status === 'Lost' && (
-        <div className="text-center text-red-600 font-medium text-sm pt-2">
-          <CloseCircleOutlined /> Kaybedildi
-        </div>
-      )}
-    </Card>
     );
   };
-
-  // Get lost deals only (Won deals are shown in pipeline stages)
-  const lostDeals = filteredDeals.filter((d) => d.status === 'Lost');
-  const lostAmount = lostDeals.reduce((sum, d) => sum + d.amount, 0);
 
   // Kanban View
   const KanbanView = () => (
@@ -284,197 +261,169 @@ export default function DealsPage() {
 
         return (
           <div key={stage.id} className="flex-shrink-0" style={{ width: 300 }}>
-            <Card
-              title={
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: stage.color }}
-                    />
-                    <span>{stage.name}</span>
-                    <Tag>{stageDeals.length}</Tag>
-                  </div>
-                  <div className="text-sm font-normal text-gray-500 mt-1">
-                    ₺{stageAmount.toLocaleString('tr-TR')}
-                  </div>
+            <div className="bg-white border border-slate-200 rounded-lg h-full">
+              {/* Column Header */}
+              <div className="p-3 border-b border-slate-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: stage.color }}
+                  />
+                  <span className="text-sm font-medium text-slate-900">{stage.name}</span>
+                  <span className="px-1.5 py-0.5 text-xs bg-slate-100 text-slate-600 rounded">
+                    {stageDeals.length}
+                  </span>
                 </div>
-              }
-              className="h-full"
-              bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto' }}
-            >
-              {stageDeals.map((deal) => (
-                <DealCard key={deal.id} deal={deal} />
-              ))}
-              {stageDeals.length === 0 && (
-                <div className="text-center text-gray-400 py-4">Fırsat yok</div>
-              )}
-            </Card>
+                <div className="text-xs text-slate-500">
+                  ₺{stageAmount.toLocaleString('tr-TR')}
+                </div>
+              </div>
+              {/* Column Body */}
+              <div className="p-3 max-h-[600px] overflow-y-auto">
+                {stageDeals.map((deal) => (
+                  <DealCard key={deal.id} deal={deal} />
+                ))}
+                {stageDeals.length === 0 && (
+                  <div className="text-center text-slate-400 py-8 text-sm">Fırsat yok</div>
+                )}
+              </div>
+            </div>
           </div>
         );
       })}
 
-      {/* Aşamasız (No Stage) Column */}
+      {/* No Stage Column */}
       {dealsWithoutStage.length > 0 && (
         <div className="flex-shrink-0" style={{ width: 300 }}>
-          <Card
-            title={
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-400" />
-                  <span>Aşamasız</span>
-                  <Tag>{dealsWithoutStage.length}</Tag>
-                </div>
-                <div className="text-sm font-normal text-gray-500 mt-1">
-                  ₺{dealsWithoutStage.reduce((sum, d) => sum + d.amount, 0).toLocaleString('tr-TR')}
-                </div>
+          <div className="bg-white border border-slate-200 rounded-lg h-full">
+            <div className="p-3 border-b border-slate-200">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                <span className="text-sm font-medium text-slate-900">Aşamasız</span>
+                <span className="px-1.5 py-0.5 text-xs bg-slate-100 text-slate-600 rounded">
+                  {dealsWithoutStage.length}
+                </span>
               </div>
-            }
-            className="h-full"
-            bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto' }}
-          >
-            {dealsWithoutStage.map((deal) => (
-              <DealCard key={deal.id} deal={deal} />
-            ))}
-          </Card>
+              <div className="text-xs text-slate-500">
+                ₺{dealsWithoutStage.reduce((sum, d) => sum + d.amount, 0).toLocaleString('tr-TR')}
+              </div>
+            </div>
+            <div className="p-3 max-h-[600px] overflow-y-auto">
+              {dealsWithoutStage.map((deal) => (
+                <DealCard key={deal.id} deal={deal} />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Kaybedildi (Lost) Column */}
+      {/* Lost Column */}
       <div className="flex-shrink-0" style={{ width: 300 }}>
-        <Card
-          title={
-            <div>
-              <div className="flex items-center gap-2">
-                <StopOutlined className="text-red-500" />
-                <span>❌ Kaybedildi</span>
-                <Tag color="red">{lostDeals.length}</Tag>
-              </div>
-              <div className="text-sm font-normal text-red-600 mt-1">
-                ₺{lostAmount.toLocaleString('tr-TR')}
-              </div>
+        <div className="bg-white border-2 border-red-300 rounded-lg h-full">
+          <div className="p-3 border-b border-red-200 bg-red-50">
+            <div className="flex items-center gap-2 mb-1">
+              <StopOutlined className="text-red-500" />
+              <span className="text-sm font-medium text-slate-900">❌ Kaybedildi</span>
+              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
+                {lostDeals.length}
+              </span>
             </div>
-          }
-          className="h-full border-2 border-red-400"
-          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#fff1f0' }}
-        >
-          {lostDeals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} />
-          ))}
-          {lostDeals.length === 0 && (
-            <div className="text-center text-gray-400 py-4">Kaybedilen fırsat yok</div>
-          )}
-        </Card>
+            <div className="text-xs text-red-600">
+              ₺{lostAmount.toLocaleString('tr-TR')}
+            </div>
+          </div>
+          <div className="p-3 max-h-[600px] overflow-y-auto bg-red-50/50">
+            {lostDeals.map((deal) => (
+              <DealCard key={deal.id} deal={deal} />
+            ))}
+            {lostDeals.length === 0 && (
+              <div className="text-center text-slate-400 py-8 text-sm">Kaybedilen fırsat yok</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 
   // List View
   const ListView = () => (
-    <Card>
-      <div className="space-y-3">
-        {filteredDeals.map((deal) => {
-          // Determine card styling based on status
-          const listCardClassName = deal.status === 'Won'
-            ? "cursor-pointer hover:shadow-md border-2 border-green-400 bg-green-50"
-            : deal.status === 'Lost'
-            ? "cursor-pointer hover:shadow-md border-2 border-red-400 bg-red-50 opacity-75"
-            : "cursor-pointer hover:shadow-md";
+    <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+      {filteredDeals.map((deal) => {
+        const isWon = deal.status === 'Won';
+        const isLost = deal.status === 'Lost';
+        const stage = stages.find((s) => s.id === deal.stageId);
 
-          return (
-            <Card key={deal.id} className={listCardClassName} onClick={() => router.push(`/crm/deals/${deal.id}`)}>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {deal.status === 'Lost' && <StopOutlined className="text-red-500" />}
-                    {deal.status === 'Won' && <TrophyOutlined className="text-green-500" />}
-                    <Text strong className="text-lg">
-                      {deal.title}
-                    </Text>
-                    <Tag color={stages.find((s) => s.id === deal.stageId)?.color}>
-                      {stages.find((s) => s.id === deal.stageId)?.name}
+        return (
+          <div
+            key={deal.id}
+            onClick={() => router.push(`/crm/deals/${deal.id}`)}
+            className={`flex items-center justify-between p-4 hover:bg-slate-50 cursor-pointer transition-colors ${
+              isWon ? 'bg-emerald-50' : isLost ? 'bg-red-50 opacity-75' : ''
+            }`}
+          >
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {/* Icon */}
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  isWon ? 'bg-emerald-100' : isLost ? 'bg-red-100' : 'bg-amber-100'
+                }`}
+              >
+                {isLost ? (
+                  <StopOutlined className="text-red-500" />
+                ) : isWon ? (
+                  <TrophyOutlined className="text-emerald-500" />
+                ) : (
+                  <TrophyOutlined className="text-amber-500" />
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-slate-900">{deal.title}</span>
+                  {stage && (
+                    <Tag color={stage.color} className="text-xs">
+                      {stage.name}
                     </Tag>
-                    <Tag color={statusColors[deal.status as Deal['status']]}>
-                      {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
-                    </Tag>
-                  </div>
-                {deal.description && <Text type="secondary">{deal.description}</Text>}
+                  )}
+                  <Tag color={statusColors[deal.status as Deal['status']]} className="text-xs">
+                    {deal.status === 'Open' ? 'Açık' : deal.status === 'Won' ? '🎉 Kazanıldı' : '❌ Kaybedildi'}
+                  </Tag>
+                </div>
                 {deal.customerName && (
-                  <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                    <UserOutlined className="text-gray-400" />
+                  <div className="text-xs text-slate-500 flex items-center gap-1">
+                    <UserOutlined className="text-slate-400" />
                     <span>{deal.customerName}</span>
                   </div>
                 )}
               </div>
-              <div className="text-right">
-                <div className="text-xl font-semibold text-green-600">
-                  ₺{deal.amount.toLocaleString('tr-TR')}
-                </div>
-                <div className="text-sm text-gray-500">Olasılık: {deal.probability}%</div>
-                {deal.expectedCloseDate && (
-                  <div className="text-sm text-gray-500">
-                    {dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}
-                  </div>
-                )}
-              </div>
             </div>
-          </Card>
-          );
-        })}
-        {filteredDeals.length === 0 && (
-          <div className="text-center text-gray-400 py-8">Fırsat bulunamadı</div>
-        )}
-      </div>
-    </Card>
+
+            {/* Amount & Meta */}
+            <div className="text-right">
+              <div className="text-lg font-semibold text-slate-900">
+                ₺{deal.amount.toLocaleString('tr-TR')}
+              </div>
+              <div className="text-xs text-slate-500">{deal.probability}% olasılık</div>
+              {deal.expectedCloseDate && (
+                <div className="text-xs text-slate-500">
+                  {dayjs(deal.expectedCloseDate).format('DD/MM/YYYY')}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      {filteredDeals.length === 0 && (
+        <div className="text-center text-slate-400 py-12 text-sm">Fırsat bulunamadı</div>
+      )}
+    </div>
   );
 
   return (
-    <div className="p-6">
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col span={24}>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Title level={2} className="!mb-0">
-                Fırsatlar
-              </Title>
-              <Button.Group>
-                <Button
-                  type={viewMode === 'kanban' ? 'primary' : 'default'}
-                  icon={<AppstoreOutlined />}
-                  onClick={() => setViewMode('kanban')}
-                >
-                  Kanban
-                </Button>
-                <Button
-                  type={viewMode === 'list' ? 'primary' : 'default'}
-                  icon={<UnorderedListOutlined />}
-                  onClick={() => setViewMode('list')}
-                >
-                  Liste
-                </Button>
-              </Button.Group>
-            </div>
-            <Space>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => refetch()}
-                loading={isLoading}
-                size="large"
-              />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreate}
-                size="large"
-              >
-                Yeni Fırsat
-              </Button>
-            </Space>
-          </div>
-        </Col>
-      </Row>
-
-      <div className="mb-6">
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
         <DealsStats
           totalDeals={stats.total}
           totalAmount={stats.totalAmount}
@@ -484,29 +433,81 @@ export default function DealsPage() {
         />
       </div>
 
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col flex="auto">
-          <Input
-            placeholder="Fırsat ara..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            size="large"
-            allowClear
-          />
-        </Col>
-      </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<TrophyOutlined />}
+        iconColor="#f59e0b"
+        title="Fırsatlar"
+        description="Satış fırsatlarınızı yönetin ve takip edin"
+        itemCount={deals.length}
+        primaryAction={{
+          label: 'Yeni Fırsat',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex bg-slate-100 rounded-md p-0.5">
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <AppstoreOutlined className="mr-1" />
+                Kanban
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <UnorderedListOutlined className="mr-1" />
+                Liste
+              </button>
+            </div>
+            {/* Refresh */}
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
 
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Fırsat ara..."
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="h-10"
+        />
+      </div>
+
+      {/* Content */}
       {isLoading ? (
-        <Card className="text-center py-16">
-          <div className="text-4xl mb-4">⏳</div>
-          <div className="text-gray-500">Fırsatlar yükleniyor...</div>
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
         </Card>
       ) : viewMode === 'kanban' ? (
         <KanbanView />
       ) : (
         <ListView />
       )}
-    </div>
+    </PageContainer>
   );
 }

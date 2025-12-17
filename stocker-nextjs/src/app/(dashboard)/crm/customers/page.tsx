@@ -1,15 +1,28 @@
 'use client';
 
+/**
+ * Customers List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Alert } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Input, Alert, Spin } from 'antd';
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  TeamOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
-import { CustomersStats, CustomersTable, CustomersFilters } from '@/components/crm/customers';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
-
-const { Title } = Typography;
+import { CustomersStats, CustomersTable } from '@/components/crm/customers';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -22,7 +35,7 @@ export default function CustomersPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchText);
-      setCurrentPage(1); // Reset to first page on search
+      setCurrentPage(1);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchText]);
@@ -50,29 +63,34 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          Müşteriler
-        </Title>
-        <Space>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => refetch()}
-            loading={isLoading}
-            size="large"
-          />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={handleCreate}
-          >
-            Müşteri Ekle
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <CustomersStats customers={customers} totalCount={totalCount} loading={isLoading} />
       </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<TeamOutlined />}
+        iconColor="#3b82f6"
+        title="Müşteriler"
+        description="Müşteri portföyünüzü yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Müşteri Ekle',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
       {/* Error Alert */}
       {error && (
@@ -87,41 +105,53 @@ export default function CustomersPage() {
           showIcon
           closable
           action={
-            <Button size="small" danger onClick={() => refetch()}>
+            <button
+              onClick={() => refetch()}
+              className="px-3 py-1 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+            >
               Tekrar Dene
-            </Button>
+            </button>
           }
           className="mb-6"
         />
       )}
 
-      {/* Stats Cards */}
-      <div className="mb-6">
-        <CustomersStats customers={customers} totalCount={totalCount} loading={isLoading} />
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Müşteri ara... (şirket adı, yetkili kişi, e-posta)"
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="h-10"
+        />
       </div>
 
-      {/* Search and Filters */}
-      <AnimatedCard className="mb-4">
-        <CustomersFilters searchText={searchText} onSearchChange={setSearchText} />
-      </AnimatedCard>
-
       {/* Customers Table */}
-      <AnimatedCard>
-        <CustomersTable
-          customers={customers}
-          loading={isLoading}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalCount={totalCount}
-          onPageChange={(page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          }}
-          onEdit={handleEdit}
-          onView={handleView}
-        />
-      </AnimatedCard>
-
-    </div>
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <CustomersTable
+            customers={customers}
+            loading={isLoading}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onEdit={handleEdit}
+            onView={handleView}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

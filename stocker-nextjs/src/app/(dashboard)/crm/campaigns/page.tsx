@@ -1,8 +1,13 @@
 'use client';
 
+/**
+ * Campaigns List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Progress, Avatar, Dropdown, Empty } from 'antd';
+import { Table, Tag, Progress, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
 import {
   showCreateSuccess,
   showDeleteSuccess,
@@ -26,6 +31,7 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   CopyOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -38,8 +44,12 @@ import {
   useCreateCampaign,
 } from '@/lib/api/hooks/useCRM';
 import { CampaignsStats } from '@/components/crm/campaigns/CampaignsStats';
-
-const { Title } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 const campaignTypeLabels: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   Email: { label: 'E-posta', icon: <MailOutlined />, color: 'blue' },
@@ -64,6 +74,7 @@ const campaignStatusLabels: Record<string, { label: string; color: string }> = {
 export default function CampaignsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [searchText, setSearchText] = useState('');
 
   // API Hooks
   const { data: campaigns = [], isLoading, refetch } = useCampaigns();
@@ -73,6 +84,15 @@ export default function CampaignsPage() {
   const abortCampaign = useAbortCampaign();
   const createCampaign = useCreateCampaign();
 
+  // Filter campaigns
+  const filteredCampaigns = campaigns.filter((campaign) => {
+    const searchLower = searchText.toLowerCase();
+    return (
+      campaign.name.toLowerCase().includes(searchLower) ||
+      campaign.description?.toLowerCase().includes(searchLower)
+    );
+  });
+
   // Handle query parameters for segment integration
   useEffect(() => {
     const createNew = searchParams.get('createNew');
@@ -80,7 +100,6 @@ export default function CampaignsPage() {
     const targetSegmentName = searchParams.get('targetSegmentName');
 
     if (createNew === 'true' && targetSegmentId) {
-      // Redirect to new campaign page with segment params
       router.push(`/crm/campaigns/new?targetSegmentId=${targetSegmentId}&targetSegmentName=${encodeURIComponent(targetSegmentName || '')}`);
     }
   }, [searchParams, router]);
@@ -147,7 +166,7 @@ export default function CampaignsPage() {
         name: `${campaign.name} (Kopya)`,
         description: campaign.description,
         type: campaign.type,
-        status: 'Planned' as const, // Cloned campaigns start as Planned
+        status: 'Planned' as const,
         startDate: campaign.startDate,
         endDate: campaign.endDate,
         budgetedCost: campaign.budgetedCost,
@@ -171,20 +190,16 @@ export default function CampaignsPage() {
         const typeConfig = campaignTypeLabels[record.type] || { icon: <TrophyOutlined />, color: 'blue' };
         return (
           <div className="flex items-center gap-3">
-            <Avatar
-              size={40}
-              className="bg-gradient-to-br flex-shrink-0"
-              style={{
-                background: `linear-gradient(135deg, var(--ant-${typeConfig.color}-6), var(--ant-${typeConfig.color}-5))`,
-              }}
-              icon={typeConfig.icon}
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `#3b82f615` }}
             >
-              {text.charAt(0)}
-            </Avatar>
+              <span style={{ color: '#3b82f6' }}>{typeConfig.icon}</span>
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-gray-900 truncate">{text}</div>
+              <div className="text-sm font-medium text-slate-900 truncate">{text}</div>
               {record.description && (
-                <div className="text-xs text-gray-500 truncate">{record.description}</div>
+                <div className="text-xs text-slate-500 truncate">{record.description}</div>
               )}
             </div>
           </div>
@@ -221,8 +236,8 @@ export default function CampaignsPage() {
       width: 180,
       render: (_, record) => (
         <div className="text-xs">
-          <div>{new Date(record.startDate).toLocaleDateString('tr-TR')}</div>
-          <div className="text-gray-500">{new Date(record.endDate).toLocaleDateString('tr-TR')}</div>
+          <div className="text-slate-900">{new Date(record.startDate).toLocaleDateString('tr-TR')}</div>
+          <div className="text-slate-500">{new Date(record.endDate).toLocaleDateString('tr-TR')}</div>
         </div>
       ),
     },
@@ -232,7 +247,7 @@ export default function CampaignsPage() {
       width: 200,
       render: (_, record) => (
         <div>
-          <div className="text-xs mb-1">
+          <div className="text-xs text-slate-600 mb-1">
             Leads: {record.actualLeads}/{record.targetLeads}
           </div>
           <Progress
@@ -240,7 +255,7 @@ export default function CampaignsPage() {
             size="small"
             status={record.conversionRate > 15 ? 'success' : record.conversionRate > 5 ? 'normal' : 'exception'}
           />
-          <div className="text-xs text-gray-500 mt-1">Dönüşüm: %{record.conversionRate.toFixed(1)}</div>
+          <div className="text-xs text-slate-500 mt-1">Dönüşüm: %{record.conversionRate.toFixed(1)}</div>
         </div>
       ),
     },
@@ -253,7 +268,7 @@ export default function CampaignsPage() {
       render: (roi) => (
         <div className="flex items-center justify-end gap-1">
           {roi > 0 ? (
-            <ArrowUpOutlined className="text-green-500 text-xs" />
+            <ArrowUpOutlined className="text-emerald-500 text-xs" />
           ) : roi < 0 ? (
             <ArrowDownOutlined className="text-red-500 text-xs" />
           ) : null}
@@ -277,8 +292,8 @@ export default function CampaignsPage() {
         return (
           <div>
             <div className="text-xs mb-1 flex justify-between">
-              <span>₺{record.actualCost.toLocaleString('tr-TR')}</span>
-              <span className="text-gray-500">/ ₺{record.budgetedCost.toLocaleString('tr-TR')}</span>
+              <span className="text-slate-900">₺{record.actualCost.toLocaleString('tr-TR')}</span>
+              <span className="text-slate-500">/ ₺{record.budgetedCost.toLocaleString('tr-TR')}</span>
             </div>
             <Progress
               percent={budgetPercent}
@@ -286,7 +301,7 @@ export default function CampaignsPage() {
               status={isOverBudget ? 'exception' : budgetPercent > 80 ? 'normal' : 'active'}
               strokeColor={isOverBudget ? '#ef4444' : budgetPercent > 80 ? '#f59e0b' : '#10b981'}
             />
-            <div className="text-xs mt-1" style={{ color: isOverBudget ? '#ef4444' : '#6b7280' }}>
+            <div className="text-xs mt-1" style={{ color: isOverBudget ? '#ef4444' : '#64748b' }}>
               {budgetPercent}% Kullanıldı
             </div>
           </div>
@@ -294,14 +309,13 @@ export default function CampaignsPage() {
       },
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 60,
       fixed: 'right' as const,
       render: (_, record) => {
         const menuItems = [];
 
-        // Start action
         if (record.status === 'Planned') {
           menuItems.push({
             key: 'start',
@@ -312,7 +326,6 @@ export default function CampaignsPage() {
           });
         }
 
-        // Complete action
         if (record.status === 'InProgress') {
           menuItems.push({
             key: 'complete',
@@ -323,7 +336,6 @@ export default function CampaignsPage() {
           });
         }
 
-        // Edit action
         menuItems.push({
           key: 'edit',
           label: 'Düzenle',
@@ -331,7 +343,6 @@ export default function CampaignsPage() {
           onClick: () => handleEdit(record),
         });
 
-        // Clone action
         menuItems.push({
           key: 'clone',
           label: 'Kopyala',
@@ -340,13 +351,8 @@ export default function CampaignsPage() {
           disabled: createCampaign.isPending,
         });
 
-        // Separator
         if (record.status === 'Planned' || record.status === 'InProgress') {
           menuItems.push({ type: 'divider' as const });
-        }
-
-        // Abort action
-        if (record.status === 'Planned' || record.status === 'InProgress') {
           menuItems.push({
             key: 'abort',
             label: 'İptal Et',
@@ -357,7 +363,6 @@ export default function CampaignsPage() {
           });
         }
 
-        // Delete action
         menuItems.push({ type: 'divider' as const });
         menuItems.push({
           key: 'delete',
@@ -369,89 +374,106 @@ export default function CampaignsPage() {
         });
 
         return (
-          <Dropdown
-            menu={{ items: menuItems }}
-            trigger={['click']}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+              <MoreOutlined className="text-sm" />
+            </button>
           </Dropdown>
         );
       },
     },
   ];
 
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col span={24}>
-          <div className="flex justify-between items-center">
-            <Title level={2} className="!mb-0">
-              <MailOutlined className="mr-2" />
-              Pazarlama Kampanyaları
-            </Title>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-                Yenile
-              </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                Yeni Kampanya
-              </Button>
-            </Space>
-          </div>
-        </Col>
-      </Row>
-
-      {/* Statistics */}
-      <div className="mb-6">
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
         <CampaignsStats campaigns={campaigns} loading={isLoading} />
       </div>
 
-      {/* Campaigns Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={campaigns}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kampanya`,
-          }}
-          scroll={{ x: 1400 }}
-          locale={{
-            emptyText: (
-              <Empty
-                image={<TrophyOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />}
-                imageStyle={{ height: 100 }}
-                description={
-                  <div className="py-8">
-                    <div className="text-2xl font-bold text-gray-800 mb-4">
-                      Pazarlama Kampanyalarınızı Yönetin
-                    </div>
-                    <div className="text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-                      Kampanyalar, hedef kitlenize ulaşmanın en etkili yoludur.
-                      E-posta, sosyal medya veya etkinlik kampanyaları oluşturun ve performanslarını takip edin.
-                    </div>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<PlusOutlined />}
-                      onClick={handleCreate}
-                      className="h-12 px-8 text-base font-semibold"
-                    >
-                      İlk Kampanyanızı Oluşturun
-                    </Button>
-                  </div>
-                }
-              />
-            ),
-          }}
-        />
-      </Card>
+      {/* Header */}
+      <ListPageHeader
+        icon={<MailOutlined />}
+        iconColor="#ec4899"
+        title="Pazarlama Kampanyaları"
+        description="Kampanyalarınızı yönetin ve performansını takip edin"
+        itemCount={campaigns.length}
+        primaryAction={{
+          label: 'Yeni Kampanya',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-    </div>
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Kampanya ara... (isim, açıklama)"
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="h-10"
+        />
+      </div>
+
+      {/* Campaigns Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredCampaigns}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kampanya`,
+            }}
+            scroll={{ x: 1400 }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={<TrophyOutlined style={{ fontSize: 48, color: '#94a3b8' }} />}
+                  imageStyle={{ height: 60 }}
+                  description={
+                    <div className="py-4">
+                      <div className="text-sm font-medium text-slate-900 mb-2">
+                        Henüz kampanya oluşturulmamış
+                      </div>
+                      <div className="text-xs text-slate-500 mb-4">
+                        Hedef kitlenize ulaşmak için ilk kampanyanızı oluşturun
+                      </div>
+                      <button
+                        onClick={handleCreate}
+                        className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                      >
+                        <PlusOutlined className="mr-2" />
+                        Kampanya Oluştur
+                      </button>
+                    </div>
+                  }
+                />
+              ),
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }
