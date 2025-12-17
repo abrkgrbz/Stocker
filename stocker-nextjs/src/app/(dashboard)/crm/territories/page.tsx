@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Table, Tag, Input, Select } from 'antd';
+import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
 import { PlusOutlined, ReloadOutlined, GlobalOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
@@ -12,10 +12,8 @@ import {
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 import { useTerritories, useDeleteTerritory } from '@/lib/api/hooks/useCRM';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Title } = Typography;
 
 const typeLabels: Record<TerritoryType, { label: string; color: string }> = {
   [TerritoryType.Country]: { label: 'Ülke', color: 'blue' },
@@ -27,6 +25,75 @@ const typeLabels: Record<TerritoryType, { label: string; color: string }> = {
   [TerritoryType.Industry]: { label: 'Sektör', color: 'gold' },
   [TerritoryType.CustomerSegment]: { label: 'Müşteri Segmenti', color: 'magenta' },
 };
+
+interface TerritoriesStatsProps {
+  territories: TerritoryDto[];
+  loading: boolean;
+}
+
+function TerritoriesStats({ territories, loading }: TerritoriesStatsProps) {
+  const totalTerritories = territories.length;
+  const activeTerritories = territories.filter(t => t.isActive).length;
+  const totalCustomers = territories.reduce((sum, t) => sum + (t.customerCount || 0), 0);
+  const territoriesWithReps = territories.filter(t => t.assignedToId).length;
+
+  const stats = [
+    {
+      title: 'Toplam Bölge',
+      value: totalTerritories,
+      color: 'from-slate-500 to-slate-600',
+    },
+    {
+      title: 'Aktif',
+      value: activeTerritories,
+      color: 'from-emerald-500 to-emerald-600',
+    },
+    {
+      title: 'Atanan Müşteri',
+      value: totalCustomers,
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      title: 'Atanan Temsilci',
+      value: territoriesWithReps,
+      color: 'from-purple-500 to-purple-600',
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-lg p-6 animate-pulse">
+            <div className="h-4 bg-slate-200 rounded w-24 mb-4"></div>
+            <div className="h-8 bg-slate-200 rounded w-16"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat, index) => (
+        <div
+          key={index}
+          className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
+              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+            </div>
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+              <GlobalOutlined className="text-white text-xl" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function TerritoriesPage() {
   const router = useRouter();
@@ -98,7 +165,7 @@ export default function TerritoriesPage() {
       key: 'code',
       width: 100,
       render: (text: string) => (
-        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{text}</span>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{text}</span>
       ),
     },
     {
@@ -106,7 +173,7 @@ export default function TerritoriesPage() {
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => (
-        <span className="font-medium">{text}</span>
+        <span className="font-medium text-slate-900">{text}</span>
       ),
     },
     {
@@ -124,7 +191,7 @@ export default function TerritoriesPage() {
       key: 'location',
       render: (_: unknown, record: TerritoryDto) => {
         const parts = [record.city, record.region, record.country].filter(Boolean);
-        return parts.join(', ') || '-';
+        return <span className="text-slate-600">{parts.join(', ') || '-'}</span>;
       },
     },
     {
@@ -132,7 +199,7 @@ export default function TerritoriesPage() {
       dataIndex: 'salesTarget',
       key: 'salesTarget',
       width: 140,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => <span className="text-slate-900">{formatCurrency(value)}</span>,
     },
     {
       title: 'Müşteri',
@@ -140,7 +207,7 @@ export default function TerritoriesPage() {
       key: 'customerCount',
       width: 90,
       align: 'center',
-      render: (count: number) => count || 0,
+      render: (count: number) => <span className="text-slate-900">{count || 0}</span>,
     },
     {
       title: 'Durum',
@@ -162,6 +229,7 @@ export default function TerritoriesPage() {
             size="small"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            className="text-slate-600 hover:text-slate-900"
           >
             Düzenle
           </Button>
@@ -179,68 +247,85 @@ export default function TerritoriesPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          <GlobalOutlined className="mr-2" />
-          Bölgeler
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            Yeni Bölge
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <TerritoriesStats territories={territories} loading={isLoading} />
       </div>
 
-      {/* Filters & Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Input
-              placeholder="Bölge ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 200 }}
-              allowClear
-            />
-            <Select
-              placeholder="Tip"
-              value={typeFilter}
-              onChange={setTypeFilter}
-              style={{ width: 150 }}
-              allowClear
-              options={Object.entries(typeLabels).map(([key, val]) => ({
-                value: key,
-                label: val.label,
-              }))}
-            />
-            <Select
-              placeholder="Durum"
-              value={activeFilter}
-              onChange={setActiveFilter}
-              style={{ width: 120 }}
-              allowClear
-              options={[
-                { value: true, label: 'Aktif' },
-                { value: false, label: 'Pasif' },
-              ]}
-            />
-          </Space>
+      {/* Header */}
+      <ListPageHeader
+        icon={<GlobalOutlined />}
+        iconColor="#0f172a"
+        title="Bölgeler"
+        description="Satış bölgelerini yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Bölge',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Bölge ara..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+            allowClear
+          />
+          <Select
+            placeholder="Tip"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            style={{ width: 150 }}
+            allowClear
+            options={Object.entries(typeLabels).map(([key, val]) => ({
+              value: key,
+              label: val.label,
+            }))}
+          />
+          <Select
+            placeholder="Durum"
+            value={activeFilter}
+            onChange={setActiveFilter}
+            style={{ width: 120 }}
+            allowClear
+            options={[
+              { value: true, label: 'Aktif' },
+              { value: false, label: 'Pasif' },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <Table
             columns={columns}
             dataSource={territories}
             rowKey="id"
-            loading={isLoading || deleteTerritory.isPending}
+            loading={deleteTerritory.isPending}
             pagination={{
               current: currentPage,
               pageSize,
@@ -253,8 +338,8 @@ export default function TerritoriesPage() {
               showTotal: (total) => `Toplam ${total} kayıt`,
             }}
           />
-        </Space>
-      </AnimatedCard>
-    </div>
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, Table, Button, Space, Tag, Typography, Row, Col, Empty, Tooltip, Modal, Input } from 'antd';
+import { Table, Button, Space, Tag, Empty, Tooltip, Modal, Input, Spin } from 'antd';
 import {
   FileOutlined,
   DownloadOutlined,
@@ -14,8 +14,10 @@ import {
   FileExcelOutlined,
   FileImageOutlined,
   FileTextOutlined,
+  FileMarkdownOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 import { DocumentUpload } from '@/components/crm/shared';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
@@ -27,7 +29,6 @@ import 'dayjs/locale/tr';
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text } = Typography;
 const { Search } = Input;
 
 // Document category labels
@@ -62,6 +63,72 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+// Stats component
+interface DocumentsStatsProps {
+  documents: DocumentDto[];
+  loading: boolean;
+}
+
+const DocumentsStats: React.FC<DocumentsStatsProps> = ({ documents, loading }) => {
+  const stats = {
+    total: documents.length,
+    contracts: documents.filter(d => d.category === 'Contract').length,
+    proposals: documents.filter(d => d.category === 'Proposal').length,
+    totalSize: documents.reduce((sum, d) => sum + d.size, 0),
+  };
+
+  const statCards = [
+    {
+      title: 'Toplam Belge',
+      value: stats.total,
+      icon: <FileOutlined className="text-2xl" />,
+      bgColor: 'bg-slate-50',
+      iconColor: 'text-slate-600',
+    },
+    {
+      title: 'Sözleşmeler',
+      value: stats.contracts,
+      icon: <FileTextOutlined className="text-2xl" />,
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+    },
+    {
+      title: 'Teklifler',
+      value: stats.proposals,
+      icon: <FileMarkdownOutlined className="text-2xl" />,
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+    },
+    {
+      title: 'Toplam Boyut',
+      value: formatFileSize(stats.totalSize),
+      icon: <FilePdfOutlined className="text-2xl" />,
+      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards.map((stat, index) => (
+        <Card key={index}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {loading ? <Spin size="small" /> : stat.value}
+              </p>
+            </div>
+            <div className={`w-12 h-12 rounded-lg ${stat.bgColor} flex items-center justify-center ${stat.iconColor}`}>
+              {stat.icon}
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 };
 
 export default function DocumentsPage() {
@@ -140,7 +207,7 @@ export default function DocumentsPage() {
               <div className="font-medium truncate">{text}</div>
             </Tooltip>
             <Tooltip title={record.originalFileName}>
-              <Text className="text-xs text-gray-500 truncate block">{record.originalFileName}</Text>
+              <div className="text-xs text-slate-500 truncate">{record.originalFileName}</div>
             </Tooltip>
           </div>
         </Space>
@@ -254,103 +321,39 @@ export default function DocumentsPage() {
   );
 
   return (
-    <div className="p-6">
-      {/* Header */}
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <Title level={2} className="!mb-2 !text-gray-800">
-              Dökümanlar
-            </Title>
-            <Text className="text-gray-500 text-base">
-              CRM dökümanlarını merkezi olarak yönetin
-            </Text>
-          </div>
-          <Space size="middle">
-            <Button
-              size="large"
-              icon={<ReloadOutlined />}
-              onClick={loadDocuments}
-              loading={loading}
-            >
-              Yenile
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={() => setUploadModalOpen(true)}
-            >
-              Döküman Yükle
-            </Button>
-          </Space>
-        </div>
+        <DocumentsStats documents={documents} loading={loading} />
+      </div>
 
-        {/* Stats Cards */}
-        <Row gutter={[16, 16]} className="mb-6">
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileOutlined className="text-2xl text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm text-gray-500">Toplam Döküman</div>
-                  <div className="text-2xl font-bold">{documents.length}</div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <FilePdfOutlined className="text-2xl text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm text-gray-500">PDF Dökümanlar</div>
-                  <div className="text-2xl font-bold">
-                    {documents.filter(d => d.contentType.includes('pdf')).length}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <FileImageOutlined className="text-2xl text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm text-gray-500">Görseller</div>
-                  <div className="text-2xl font-bold">
-                    {documents.filter(d => d.contentType.includes('image')).length}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <FileTextOutlined className="text-2xl text-orange-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm text-gray-500">Toplam Boyut</div>
-                  <div className="text-2xl font-bold">
-                    {formatFileSize(documents.reduce((sum, d) => sum + d.size, 0))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-        </Row>
+      {/* Header */}
+      <ListPageHeader
+        icon={<FileOutlined />}
+        iconColor="#0f172a"
+        title="Belgeler"
+        description="Belgeleri yükleyin ve yönetin"
+        itemCount={filteredDocuments.length}
+        primaryAction={{
+          label: 'Yeni Belge',
+          onClick: () => setUploadModalOpen(true),
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => loadDocuments()}
+            disabled={loading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={loading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-        {/* Search */}
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Search
-          placeholder="Döküman ara (ad, açıklama)..."
+          placeholder="Belge ara (ad, açıklama)..."
           allowClear
           size="large"
           onChange={(e) => setSearchText(e.target.value)}
@@ -359,61 +362,69 @@ export default function DocumentsPage() {
       </div>
 
       {/* Documents Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredDocuments}
-          rowKey="id"
-          loading={loading}
-          locale={{
-            emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={
-                  <div>
-                    <Text className="text-gray-500">Henüz döküman yok</Text>
-                    <div className="mt-4">
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => setUploadModalOpen(true)}
-                      >
-                        İlk Dökümanı Yükle
-                      </Button>
+      {loading && documents.length === 0 ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredDocuments}
+            rowKey="id"
+            loading={loading && documents.length > 0}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div>
+                      <div className="text-slate-500 mb-4">Henüz belge yok</div>
+                      <div>
+                        <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
+                          onClick={() => setUploadModalOpen(true)}
+                        >
+                          İlk Belgeyi Yükle
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                }
-              />
-            ),
-          }}
-          pagination={{
-            pageSize: 20,
-            showTotal: (total) => `Toplam ${total} döküman`,
-            showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '50', '100'],
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
+                  }
+                />
+              ),
+            }}
+            pagination={{
+              pageSize: 20,
+              showTotal: (total) => `Toplam ${total} belge`,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50', '100'],
+            }}
+            scroll={{ x: 1200 }}
+          />
+        </DataTableWrapper>
+      )}
 
-      {/* Upload Modal - Placeholder (needs entity selection) */}
+      {/* Upload Modal */}
       <Modal
-        title="Döküman Yükle"
+        title="Belge Yükle"
         open={uploadModalOpen}
         onCancel={() => setUploadModalOpen(false)}
         footer={null}
         width={600}
       >
         <div className="text-center py-8">
-          <FileOutlined className="text-6xl text-gray-300 mb-4" />
-          <Title level={4}>Döküman Yükleme</Title>
-          <Text className="text-gray-500">
-            Döküman yüklemek için ilgili varlık sayfasını (Müşteri, Lead, vb.) kullanın.
+          <FileOutlined className="text-6xl text-slate-300 mb-4" />
+          <h4 className="text-lg font-semibold text-slate-900 mb-2">Belge Yükleme</h4>
+          <p className="text-slate-500">
+            Belge yüklemek için ilgili varlık sayfasını (Müşteri, Lead, vb.) kullanın.
             <br />
-            Bu sayfa tüm dökümanları görüntülemek içindir.
-          </Text>
+            Bu sayfa tüm belgeleri görüntülemek içindir.
+          </p>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

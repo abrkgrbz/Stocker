@@ -1,9 +1,14 @@
 'use client';
 
+/**
+ * Competitors List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Table, Tag, Input, Select, Progress } from 'antd';
-import { PlusOutlined, ReloadOutlined, AimOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select, Progress, Spin } from 'antd';
+import { PlusOutlined, ReloadOutlined, AimOutlined, SearchOutlined, EditOutlined, TrophyOutlined, WarningOutlined, GlobalOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -12,10 +17,13 @@ import {
 import type { CompetitorDto } from '@/lib/api/services/crm.types';
 import { ThreatLevel } from '@/lib/api/services/crm.types';
 import { useCompetitors, useDeleteCompetitor } from '@/lib/api/hooks/useCRM';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Title } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
 const threatLevelLabels: Record<ThreatLevel, { label: string; color: string }> = {
   [ThreatLevel.VeryLow]: { label: 'Çok Düşük', color: 'green' },
@@ -24,6 +32,81 @@ const threatLevelLabels: Record<ThreatLevel, { label: string; color: string }> =
   [ThreatLevel.High]: { label: 'Yüksek', color: 'red' },
   [ThreatLevel.VeryHigh]: { label: 'Çok Yüksek', color: 'purple' },
 };
+
+// Stats component inline
+function CompetitorsStats({
+  competitors,
+  loading
+}: {
+  competitors: CompetitorDto[];
+  loading: boolean;
+}) {
+  const totalCompetitors = competitors.length;
+  const activeCompetitors = competitors.filter(c => c.isActive).length;
+  const highThreat = competitors.filter(
+    c => c.threatLevel === ThreatLevel.High || c.threatLevel === ThreatLevel.VeryHigh
+  ).length;
+
+  const totalEncounters = competitors.reduce((sum, c) => sum + (c.encounterCount || 0), 0);
+  const totalWins = competitors.reduce((sum, c) => sum + (c.winCount || 0), 0);
+  const overallWinRate = totalEncounters > 0 ? Math.round((totalWins / totalEncounters) * 100) : 0;
+
+  const stats = [
+    {
+      label: 'Toplam Rakip',
+      value: loading ? '-' : totalCompetitors,
+      subtext: `${activeCompetitors} aktif`,
+      icon: <AimOutlined className="text-xl" />,
+      color: 'text-slate-600',
+      bgColor: 'bg-slate-50',
+    },
+    {
+      label: 'Yüksek Tehdit',
+      value: loading ? '-' : highThreat,
+      subtext: 'rakip',
+      icon: <WarningOutlined className="text-xl" />,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+    },
+    {
+      label: 'Kazanma Oranı',
+      value: loading ? '-' : `%${overallWinRate}`,
+      subtext: `${totalWins}/${totalEncounters} karşılaşma`,
+      icon: <TrophyOutlined className="text-xl" />,
+      color: overallWinRate >= 50 ? 'text-green-600' : 'text-orange-600',
+      bgColor: overallWinRate >= 50 ? 'bg-green-50' : 'bg-orange-50',
+    },
+    {
+      label: 'Online Varlık',
+      value: loading ? '-' : competitors.filter(c => c.website).length,
+      subtext: 'website',
+      icon: <GlobalOutlined className="text-xl" />,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map((stat, index) => (
+        <Card key={index}>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
+              <p className="text-2xl font-semibold text-slate-900 mb-0.5">
+                {stat.value}
+              </p>
+              <p className="text-xs text-slate-400">{stat.subtext}</p>
+            </div>
+            <div className={`p-2.5 rounded-lg ${stat.bgColor}`}>
+              <span className={stat.color}>{stat.icon}</span>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function CompetitorsPage() {
   const router = useRouter();
@@ -177,57 +260,74 @@ export default function CompetitorsPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          <AimOutlined className="mr-2" />
-          Rakipler
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            Yeni Rakip
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <CompetitorsStats competitors={competitors} loading={isLoading} />
       </div>
 
-      {/* Filters & Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Input
-              placeholder="Rakip ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 200 }}
-              allowClear
-            />
-            <Select
-              placeholder="Tehdit Seviyesi"
-              value={threatFilter}
-              onChange={setThreatFilter}
-              style={{ width: 150 }}
-              allowClear
-              options={Object.entries(threatLevelLabels).map(([key, val]) => ({
-                value: key,
-                label: val.label,
-              }))}
-            />
-          </Space>
+      {/* Header */}
+      <ListPageHeader
+        icon={<AimOutlined />}
+        iconColor="#0f172a"
+        title="Rakipler"
+        description="Rakip analizlerinizi yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Rakip',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Rakip ara..."
+            prefix={<SearchOutlined className="text-slate-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+            className="flex-1 max-w-xs"
+          />
+          <Select
+            placeholder="Tehdit Seviyesi"
+            value={threatFilter}
+            onChange={setThreatFilter}
+            allowClear
+            className="w-40"
+            options={Object.entries(threatLevelLabels).map(([key, val]) => ({
+              value: key,
+              label: val.label,
+            }))}
+          />
+        </div>
+      </div>
+
+      {/* Competitors Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <Table
             columns={columns}
             dataSource={competitors}
             rowKey="id"
-            loading={isLoading || deleteCompetitor.isPending}
+            loading={deleteCompetitor.isPending}
             pagination={{
               current: currentPage,
               pageSize,
@@ -240,8 +340,8 @@ export default function CompetitorsPage() {
               showTotal: (total) => `Toplam ${total} kayıt`,
             }}
           />
-        </Space>
-      </AnimatedCard>
-    </div>
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

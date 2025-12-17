@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Table, Tag, Input } from 'antd';
-import { PlusOutlined, ReloadOutlined, TeamOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Spin } from 'antd';
+import { PlusOutlined, ReloadOutlined, TeamOutlined, SearchOutlined, UserOutlined, CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -11,10 +11,73 @@ import {
 } from '@/lib/utils/sweetalert';
 import type { SalesTeamDto } from '@/lib/api/services/crm.types';
 import { useSalesTeams, useDeleteSalesTeam } from '@/lib/api/hooks/useCRM';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
 import type { ColumnsType } from 'antd/es/table';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 
-const { Title } = Typography;
+interface SalesTeamsStatsProps {
+  salesTeams: SalesTeamDto[];
+  loading: boolean;
+}
+
+function SalesTeamsStats({ salesTeams, loading }: SalesTeamsStatsProps) {
+  const totalTeams = salesTeams.length;
+  const totalMembers = salesTeams.reduce((sum, team) => sum + (team.totalMemberCount || 0), 0);
+  const activeTeams = salesTeams.filter(team => team.isActive).length;
+  const avgPerformance = salesTeams.length > 0
+    ? Math.round(salesTeams.reduce((sum, team) => sum + (team.performanceScore || 0), 0) / salesTeams.length)
+    : 0;
+
+  const stats = [
+    {
+      title: 'Toplam Ekip',
+      value: totalTeams,
+      icon: <TeamOutlined className="text-2xl" />,
+      color: 'bg-blue-500',
+    },
+    {
+      title: 'Toplam Üye',
+      value: totalMembers,
+      icon: <UserOutlined className="text-2xl" />,
+      color: 'bg-purple-500',
+    },
+    {
+      title: 'Aktif',
+      value: activeTeams,
+      icon: <CheckCircleOutlined className="text-2xl" />,
+      color: 'bg-green-500',
+    },
+    {
+      title: 'Ortalama Performans',
+      value: `${avgPerformance}%`,
+      icon: <TrophyOutlined className="text-2xl" />,
+      color: 'bg-amber-500',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat, index) => (
+        <Card key={index} className="relative overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spin size="small" />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500 mb-1">{stat.title}</p>
+                <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+              </div>
+              <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center text-white`}>
+                {stat.icon}
+              </div>
+            </div>
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function SalesTeamsPage() {
   const router = useRouter();
@@ -78,7 +141,7 @@ export default function SalesTeamsPage() {
       key: 'code',
       width: 100,
       render: (text: string) => (
-        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{text}</span>
+        <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{text}</span>
       ),
     },
     {
@@ -86,27 +149,27 @@ export default function SalesTeamsPage() {
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => (
-        <span className="font-medium">{text}</span>
+        <span className="font-medium text-slate-900">{text}</span>
       ),
     },
     {
       title: 'Lider',
       dataIndex: 'teamLeaderName',
       key: 'teamLeaderName',
-      render: (text: string) => text || '-',
+      render: (text: string) => <span className="text-slate-600">{text || '-'}</span>,
     },
     {
       title: 'Bölge',
       dataIndex: 'territoryNames',
       key: 'territoryNames',
-      render: (text: string) => text || '-',
+      render: (text: string) => <span className="text-slate-600">{text || '-'}</span>,
     },
     {
       title: 'Satış Hedefi',
       dataIndex: 'salesTarget',
       key: 'salesTarget',
       width: 140,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => <span className="text-slate-900 font-medium">{formatCurrency(value)}</span>,
     },
     {
       title: 'Üyeler',
@@ -116,7 +179,7 @@ export default function SalesTeamsPage() {
       render: (_: unknown, record: SalesTeamDto) => (
         <span>
           <span className="font-medium text-green-600">{record.activeMemberCount || 0}</span>
-          <span className="text-gray-400"> / {record.totalMemberCount || 0}</span>
+          <span className="text-slate-400"> / {record.totalMemberCount || 0}</span>
         </span>
       ),
     },
@@ -149,46 +212,61 @@ export default function SalesTeamsPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          <TeamOutlined className="mr-2" />
-          Satış Ekipleri
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            Yeni Ekip
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <SalesTeamsStats salesTeams={salesTeams} loading={isLoading} />
       </div>
 
-      {/* Filters & Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Input
-              placeholder="Ekip ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 200 }}
-              allowClear
-            />
-          </Space>
+      {/* Header */}
+      <ListPageHeader
+        icon={<TeamOutlined />}
+        iconColor="#0f172a"
+        title="Satış Ekipleri"
+        description="Satış ekiplerinizi yönetin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Ekip',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Ekip ara..."
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="max-w-md"
+        />
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <Table
             columns={columns}
             dataSource={salesTeams}
             rowKey="id"
-            loading={isLoading || deleteSalesTeam.isPending}
+            loading={deleteSalesTeam.isPending}
             pagination={{
               current: currentPage,
               pageSize,
@@ -201,8 +279,8 @@ export default function SalesTeamsPage() {
               showTotal: (total) => `Toplam ${total} kayıt`,
             }}
           />
-        </Space>
-      </AnimatedCard>
-    </div>
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

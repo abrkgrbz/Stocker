@@ -2,14 +2,9 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
   Button,
   Space,
-  Typography,
-  Row,
-  Col,
   Modal,
-  Statistic,
   Badge,
   Drawer,
   Descriptions,
@@ -19,6 +14,7 @@ import {
   Input,
   DatePicker,
   Radio,
+  Spin,
 } from 'antd';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import {
@@ -55,9 +51,7 @@ import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { motion } from 'framer-motion';
-
-const { Title, Text } = Typography;
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 
 // Activity type configuration
 const activityConfig: Record<
@@ -103,6 +97,89 @@ const statusColors: Record<Activity['status'], string> = {
   Cancelled: 'red',
 };
 
+// Inline ActivitiesStats Component
+interface ActivitiesStatsProps {
+  activities: Activity[];
+  loading: boolean;
+}
+
+const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }) => {
+  const today = dayjs().format('YYYY-MM-DD');
+
+  const stats = {
+    total: activities.length,
+    today: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled').length,
+    completed: activities.filter((a) => a.status === 'Completed').length,
+    pending: activities.filter((a) => a.status === 'Scheduled').length,
+  };
+
+  const statCards = [
+    {
+      title: 'Toplam Aktivite',
+      value: stats.total,
+      icon: <ThunderboltOutlined className="text-2xl" />,
+      color: 'slate',
+    },
+    {
+      title: 'Bugünün Aktiviteleri',
+      value: stats.today,
+      icon: <CalendarOutlined className="text-2xl" />,
+      color: 'blue',
+    },
+    {
+      title: 'Tamamlanan',
+      value: stats.completed,
+      icon: <CheckCircleOutlined className="text-2xl" />,
+      color: 'green',
+    },
+    {
+      title: 'Bekleyen',
+      value: stats.pending,
+      icon: <ClockCircleOutlined className="text-2xl" />,
+      color: 'orange',
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <div className="flex items-center justify-center py-8">
+              <Spin />
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards.map((stat, index) => (
+        <Card key={index} className="hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
+              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+            </div>
+            <div
+              className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                stat.color === 'slate' ? 'bg-slate-100 text-slate-600' :
+                stat.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                stat.color === 'green' ? 'bg-green-100 text-green-600' :
+                'bg-orange-100 text-orange-600'
+              }`}
+            >
+              {stat.icon}
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 export default function ActivitiesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -127,21 +204,7 @@ export default function ActivitiesPage() {
   const rescheduleActivity = useRescheduleActivity();
 
   const activities = data?.items || [];
-
-  // Calculate statistics with new KPI metrics
-  const today = dayjs().format('YYYY-MM-DD');
-  const startOfWeek = dayjs().startOf('week');
-  const endOfWeek = dayjs().endOf('week');
-
-  const stats = {
-    today: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Scheduled').length,
-    overdue: activities.filter((a) => dayjs(a.startTime).isBefore(dayjs()) && a.status === 'Scheduled').length,
-    thisWeek: activities.filter((a) => {
-      const activityDate = dayjs(a.startTime);
-      return activityDate.isAfter(startOfWeek) && activityDate.isBefore(endOfWeek) && a.status === 'Scheduled';
-    }).length,
-    completedToday: activities.filter((a) => dayjs(a.startTime).format('YYYY-MM-DD') === today && a.status === 'Completed').length,
-  };
+  const totalCount = data?.totalCount || 0;
 
   const handleCreate = (date?: Dayjs) => {
     setSelectedActivity(null);
@@ -271,33 +334,57 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Modern Minimalist Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex justify-between items-center">
-          <div>
-            <Title level={2} className="!mb-2 !text-gray-800">
-              Aktiviteler
-            </Title>
-            <Text className="text-gray-500 text-base">
-              Tüm aktivitelerinizi takvimde yönetin ve takip edin
-            </Text>
-          </div>
-          <Space size="middle">
-            <Button
-              size="large"
-              icon={<ReloadOutlined />}
-              onClick={() => refetch()}
-              loading={isLoading}
-              className="border-gray-300 hover:border-blue-500 hover:text-blue-500"
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <ActivitiesStats activities={activities} loading={isLoading} />
+      </div>
+
+      {/* Header */}
+      <ListPageHeader
+        icon={<ThunderboltOutlined />}
+        iconColor="#0f172a"
+        title="Aktiviteler"
+        description="Tüm aktivitelerinizi takvimde yönetin ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Aktivite',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Filters and Quick Actions */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex flex-col gap-4">
+          {/* Owner Filter */}
+          <div className="flex items-center gap-3">
+            <UserOutlined className="text-lg text-slate-600" />
+            <span className="text-slate-600 font-medium">Aktivite Sahibi:</span>
+            <Radio.Group
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              buttonStyle="solid"
             >
-              Yenile
-            </Button>
-            <Space.Compact size="large">
+              <Radio.Button value="my">Benim Aktivitelerim</Radio.Button>
+              <Radio.Button value="team">Satış Ekibi</Radio.Button>
+              <Radio.Button value="all">Tüm Aktiviteler</Radio.Button>
+            </Radio.Group>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-3">
+            <span className="text-slate-600 font-medium">Hızlı Ekle:</span>
+            <Space>
               <Button
                 icon={<PhoneOutlined />}
                 onClick={() => handleQuickAction('Call')}
@@ -319,131 +406,20 @@ export default function ActivitiesPage() {
               >
                 Toplantı
               </Button>
-            </Space.Compact>
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={() => handleCreate()}
-              className="shadow-sm"
-            >
-              Yeni Aktivite
-            </Button>
-          </Space>
+            </Space>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Owner Filter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="mb-6"
-      >
-        <Card className="shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3">
-            <UserOutlined className="text-lg text-gray-600" />
-            <Text className="text-gray-600 font-medium">Aktivite Sahibi:</Text>
-            <Radio.Group
-              value={ownerFilter}
-              onChange={(e) => setOwnerFilter(e.target.value)}
-              buttonStyle="solid"
-            >
-              <Radio.Button value="my">Benim Aktivitelerim</Radio.Button>
-              <Radio.Button value="team">Satış Ekibi</Radio.Button>
-              <Radio.Button value="all">Tüm Aktiviteler</Radio.Button>
-            </Radio.Group>
+      {/* Calendar Content */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
           </div>
         </Card>
-      </motion.div>
-
-      {/* Professional Stats Cards - Updated KPIs */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Bugün</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.today}</div>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <CalendarOutlined className="text-2xl text-blue-600" />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Gecikmiş</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.overdue}</div>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
-                  <FireOutlined className="text-2xl text-red-600" />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Bu Hafta</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.thisWeek}</div>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
-                  <ThunderboltOutlined className="text-2xl text-orange-600" />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-gray-500 text-sm block mb-1">Bugün Tamamlanan</Text>
-                  <div className="text-3xl font-bold text-gray-800">{stats.completedToday}</div>
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-2xl text-green-600" />
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-      </Row>
-
-      {/* Calendar Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="shadow-sm border border-gray-200">
+      ) : (
+        <Card>
           <ActivityCalendar
             activities={activities}
             loading={isLoading}
@@ -451,7 +427,7 @@ export default function ActivitiesPage() {
             onDateSelect={handleDateSelect}
           />
         </Card>
-      </motion.div>
+      )}
 
       {/* Activity Details Drawer */}
       <Drawer
@@ -539,12 +515,12 @@ export default function ActivitiesPage() {
         {drawerActivity && (
           <div className="space-y-6">
             {/* Time Information */}
-            <Card size="small" className="shadow-sm">
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-slate-600 mb-2">
                 <ClockCircleOutlined />
                 <span className="font-semibold">Zaman</span>
               </div>
-              <div className="text-base">
+              <div className="text-base text-slate-900">
                 {dayjs(drawerActivity.startTime).format('DD MMMM YYYY, HH:mm')}
                 {drawerActivity.endTime && (
                   <span> - {dayjs(drawerActivity.endTime).format('HH:mm')}</span>
@@ -555,23 +531,23 @@ export default function ActivitiesPage() {
                   Gecikmiş
                 </Tag>
               )}
-            </Card>
+            </div>
 
             {/* Description */}
             {drawerActivity.description && (
-              <Card size="small" className="shadow-sm">
-                <div className="flex items-center gap-2 text-gray-600 mb-2">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-600 mb-2">
                   <FileTextOutlined />
                   <span className="font-semibold">Açıklama</span>
                 </div>
-                <Text>{drawerActivity.description}</Text>
-              </Card>
+                <p className="text-slate-900">{drawerActivity.description}</p>
+              </div>
             )}
 
             {/* Customer Information */}
             {drawerActivity.customerId && (
-              <Card size="small" className="shadow-sm">
-                <div className="flex items-center gap-2 text-gray-600 mb-2">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-600 mb-2">
                   <UserOutlined />
                   <span className="font-semibold">Müşteri</span>
                 </div>
@@ -580,7 +556,7 @@ export default function ActivitiesPage() {
                     {drawerActivity.customerId}
                   </Descriptions.Item>
                 </Descriptions>
-              </Card>
+              </div>
             )}
 
             <Divider />
@@ -766,6 +742,6 @@ export default function ActivitiesPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 }

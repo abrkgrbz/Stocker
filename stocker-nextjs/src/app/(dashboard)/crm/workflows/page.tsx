@@ -2,17 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Card,
   Table,
   Button,
   Space,
   Tag,
-  Typography,
-  Row,
-  Col,
   Empty,
   Tooltip,
   Modal,
+  Spin,
 } from 'antd';
 import {
   ThunderboltOutlined,
@@ -22,6 +19,9 @@ import {
   PauseCircleOutlined,
   ReloadOutlined,
   EyeOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  PercentageOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -35,11 +35,11 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { useRouter } from 'next/navigation';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text } = Typography;
 const { confirm } = Modal;
 
 // Trigger type labels
@@ -63,6 +63,84 @@ const actionTypeLabels: Record<WorkflowActionType, string> = {
   CreateActivity: 'Aktivite Oluştur',
   AssignToUser: 'Kullanıcıya Ata',
 };
+
+// Workflows stats component
+interface WorkflowsStatsProps {
+  workflows: WorkflowDto[];
+  loading: boolean;
+}
+
+function WorkflowsStats({ workflows, loading }: WorkflowsStatsProps) {
+  const stats = React.useMemo(() => {
+    const total = workflows.length;
+    const active = workflows.filter(w => w.isActive).length;
+    const totalExecutions = workflows.reduce((sum, w) => sum + (w.executionCount || 0), 0);
+    const successRate = totalExecutions > 0
+      ? Math.round((workflows.filter(w => w.executionCount > 0).length / workflows.length) * 100)
+      : 0;
+
+    return { total, active, totalExecutions, successRate };
+  }, [workflows]);
+
+  const statCards = [
+    {
+      title: 'Toplam İş Akışı',
+      value: stats.total,
+      icon: <ThunderboltOutlined className="text-xl" />,
+      color: 'bg-slate-50 text-slate-700',
+    },
+    {
+      title: 'Aktif',
+      value: stats.active,
+      icon: <CheckCircleOutlined className="text-xl" />,
+      color: 'bg-green-50 text-green-700',
+    },
+    {
+      title: 'Çalıştırma Sayısı',
+      value: stats.totalExecutions,
+      icon: <ClockCircleOutlined className="text-xl" />,
+      color: 'bg-blue-50 text-blue-700',
+    },
+    {
+      title: 'Başarı Oranı',
+      value: `${stats.successRate}%`,
+      icon: <PercentageOutlined className="text-xl" />,
+      color: 'bg-purple-50 text-purple-700',
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white border border-slate-200 rounded-lg p-6 animate-pulse">
+            <div className="h-4 bg-slate-200 rounded w-24 mb-3"></div>
+            <div className="h-8 bg-slate-200 rounded w-16"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards.map((stat, index) => (
+        <div
+          key={index}
+          className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-slate-600">{stat.title}</span>
+            <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
+              {stat.icon}
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function WorkflowsPage() {
   const router = useRouter();
@@ -146,14 +224,14 @@ export default function WorkflowsPage() {
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: WorkflowDto) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{name}</Text>
+        <div className="flex flex-col">
+          <span className="font-medium text-slate-900">{name}</span>
           {record.description && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
+            <span className="text-xs text-slate-500">
               {record.description}
-            </Text>
+            </span>
           )}
-        </Space>
+        </div>
       ),
     },
     {
@@ -190,7 +268,7 @@ export default function WorkflowsPage() {
       key: 'steps',
       width: 100,
       render: (steps: any[]) => (
-        <Text>{steps?.length || 0} adım</Text>
+        <span className="text-slate-600">{steps?.length || 0} adım</span>
       ),
     },
     {
@@ -199,14 +277,14 @@ export default function WorkflowsPage() {
       key: 'executionCount',
       width: 120,
       render: (count: number, record: WorkflowDto) => (
-        <Space direction="vertical" size={0}>
-          <Text>{count} kez</Text>
+        <div className="flex flex-col">
+          <span className="text-slate-900">{count} kez</span>
           {record.lastExecutedAt && (
-            <Text type="secondary" style={{ fontSize: 11 }}>
+            <span className="text-xs text-slate-500">
               {dayjs(record.lastExecutedAt).fromNow()}
-            </Text>
+            </span>
           )}
-        </Space>
+        </div>
       ),
     },
     {
@@ -247,54 +325,68 @@ export default function WorkflowsPage() {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Card>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-              <Col>
-                <Title level={4} style={{ margin: 0 }}>
-                  <ThunderboltOutlined /> Workflows
-                </Title>
-              </Col>
-              <Col>
-                <Space>
-                  <Button icon={<ReloadOutlined />} onClick={loadWorkflows}>
-                    Yenile
-                  </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                    Yeni Workflow
-                  </Button>
-                </Space>
-              </Col>
-            </Row>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <WorkflowsStats workflows={workflows} loading={loading} />
+      </div>
 
-            <Table
-              columns={columns}
-              dataSource={workflows}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} workflow`,
-              }}
-              locale={{
-                emptyText: (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Henüz workflow bulunmuyor"
-                  >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                      Ilk Workflow'u Olustur
-                    </Button>
-                  </Empty>
-                ),
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </div>
+      {/* Header */}
+      <ListPageHeader
+        icon={<ThunderboltOutlined />}
+        iconColor="#0f172a"
+        title="İş Akışları"
+        description="Otomasyon iş akışlarınızı yönetin"
+        itemCount={workflows.length}
+        primaryAction={{
+          label: 'Yeni İş Akışı',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => loadWorkflows()}
+            disabled={loading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={loading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
+
+      {/* Table */}
+      {loading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={workflows}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} iş akışı`,
+            }}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Henüz iş akışı bulunmuyor"
+                >
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                    İlk İş Akışını Oluştur
+                  </Button>
+                </Empty>
+              ),
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

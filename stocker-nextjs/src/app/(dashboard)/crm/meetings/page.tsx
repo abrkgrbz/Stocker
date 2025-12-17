@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Table, Tag, Input, Select } from 'antd';
-import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
+import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -12,11 +12,9 @@ import {
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingStatus, MeetingType, MeetingPriority } from '@/lib/api/services/crm.types';
 import { useMeetings, useDeleteMeeting } from '@/lib/api/hooks/useCRM';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-
-const { Title } = Typography;
 
 const statusLabels: Record<MeetingStatus, { label: string; color: string }> = {
   [MeetingStatus.Scheduled]: { label: 'Planlandı', color: 'blue' },
@@ -54,6 +52,93 @@ const priorityLabels: Record<MeetingPriority, { label: string; color: string }> 
   [MeetingPriority.High]: { label: 'Yüksek', color: 'orange' },
   [MeetingPriority.Urgent]: { label: 'Acil', color: 'red' },
 };
+
+interface MeetingsStatsProps {
+  meetings: MeetingDto[];
+  loading: boolean;
+}
+
+function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
+  const today = dayjs().startOf('day');
+
+  const stats = {
+    total: meetings.length,
+    scheduled: meetings.filter(m => m.status === MeetingStatus.Scheduled || m.status === MeetingStatus.Confirmed).length,
+    completed: meetings.filter(m => m.status === MeetingStatus.Completed).length,
+    today: meetings.filter(m => {
+      const meetingDate = dayjs(m.startTime).startOf('day');
+      return meetingDate.isSame(today);
+    }).length,
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-600 mb-1">Toplam Toplantı</p>
+            {loading ? (
+              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+            )}
+          </div>
+          <div className="p-2 bg-slate-50 rounded-lg">
+            <TeamOutlined className="text-xl text-slate-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-600 mb-1">Planlandı</p>
+            {loading ? (
+              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <p className="text-2xl font-bold text-blue-600">{stats.scheduled}</p>
+            )}
+          </div>
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <ClockCircleOutlined className="text-xl text-blue-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-600 mb-1">Tamamlandı</p>
+            {loading ? (
+              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            )}
+          </div>
+          <div className="p-2 bg-green-50 rounded-lg">
+            <CheckCircleOutlined className="text-xl text-green-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-600 mb-1">Bugün</p>
+            {loading ? (
+              <div className="h-8 w-20 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <p className="text-2xl font-bold text-purple-600">{stats.today}</p>
+            )}
+          </div>
+          <div className="p-2 bg-purple-50 rounded-lg">
+            <CalendarOutlined className="text-xl text-purple-600" />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 export default function MeetingsPage() {
   const router = useRouter();
@@ -111,7 +196,7 @@ export default function MeetingsPage() {
       dataIndex: 'title',
       key: 'title',
       render: (text: string) => (
-        <span className="font-medium">{text}</span>
+        <span className="font-medium text-slate-900">{text}</span>
       ),
     },
     {
@@ -119,7 +204,9 @@ export default function MeetingsPage() {
       dataIndex: 'meetingType',
       key: 'meetingType',
       width: 130,
-      render: (type: MeetingType) => typeLabels[type] || type,
+      render: (type: MeetingType) => (
+        <span className="text-slate-600">{typeLabels[type] || type}</span>
+      ),
     },
     {
       title: 'Durum',
@@ -146,20 +233,30 @@ export default function MeetingsPage() {
       dataIndex: 'startTime',
       key: 'startTime',
       width: 150,
-      render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-',
+      render: (date: string) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-'}
+        </span>
+      ),
     },
     {
       title: 'Bitiş',
       dataIndex: 'endTime',
       key: 'endTime',
       width: 150,
-      render: (date: string) => date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-',
+      render: (date: string) => (
+        <span className="text-slate-600">
+          {date ? dayjs(date).format('DD.MM.YYYY HH:mm') : '-'}
+        </span>
+      ),
     },
     {
       title: 'Müşteri',
       dataIndex: 'customerName',
       key: 'customerName',
-      render: (text: string) => text || '-',
+      render: (text: string) => (
+        <span className="text-slate-600">{text || '-'}</span>
+      ),
     },
     {
       title: 'İşlemler',
@@ -181,68 +278,85 @@ export default function MeetingsPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          <CalendarOutlined className="mr-2" />
-          Toplantılar
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            Yeni Toplantı
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <MeetingsStats meetings={meetings} loading={isLoading} />
       </div>
 
-      {/* Filters & Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Input
-              placeholder="Toplantı ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 200 }}
-              allowClear
-            />
-            <Select
-              placeholder="Durum"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              style={{ width: 150 }}
-              allowClear
-              options={Object.entries(statusLabels).map(([key, val]) => ({
-                value: key,
-                label: val.label,
-              }))}
-            />
-            <Select
-              placeholder="Tip"
-              value={typeFilter}
-              onChange={setTypeFilter}
-              style={{ width: 150 }}
-              allowClear
-              options={Object.entries(typeLabels).map(([key, val]) => ({
-                value: key,
-                label: val,
-              }))}
-            />
-          </Space>
+      {/* Header */}
+      <ListPageHeader
+        icon={<CalendarOutlined />}
+        iconColor="#0f172a"
+        title="Toplantılar"
+        description="Toplantıları planlayın ve takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Toplantı',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-4 flex-wrap">
+          <Input
+            placeholder="Toplantı ara..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-64"
+            allowClear
+          />
+          <Select
+            placeholder="Durum"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            className="w-40"
+            allowClear
+            options={Object.entries(statusLabels).map(([key, val]) => ({
+              value: key,
+              label: val.label,
+            }))}
+          />
+          <Select
+            placeholder="Tip"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            className="w-40"
+            allowClear
+            options={Object.entries(typeLabels).map(([key, val]) => ({
+              value: key,
+              label: val,
+            }))}
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <Table
             columns={columns}
             dataSource={meetings}
             rowKey="id"
-            loading={isLoading || deleteMeeting.isPending}
+            loading={deleteMeeting.isPending}
             pagination={{
               current: currentPage,
               pageSize,
@@ -255,8 +369,8 @@ export default function MeetingsPage() {
               showTotal: (total) => `Toplam ${total} kayıt`,
             }}
           />
-        </Space>
-      </AnimatedCard>
-    </div>
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

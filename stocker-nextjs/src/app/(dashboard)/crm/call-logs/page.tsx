@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Typography, Table, Tag, Input, Select, DatePicker } from 'antd';
-import { PlusOutlined, ReloadOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
+import { PlusOutlined, ReloadOutlined, PhoneOutlined, SearchOutlined, ArrowDownOutlined, ArrowUpOutlined, CheckCircleOutlined, PhoneFilled } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -12,12 +12,9 @@ import {
 import type { CallLogDto } from '@/lib/api/services/crm.types';
 import { CallDirection, CallOutcome } from '@/lib/api/services/crm.types';
 import { useCallLogs, useDeleteCallLog } from '@/lib/api/hooks/useCRM';
-import { AnimatedCard } from '@/components/crm/shared/AnimatedCard';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-
-const { Title } = Typography;
-const { RangePicker } = DatePicker;
 
 const directionLabels: Record<CallDirection, { label: string; color: string }> = {
   [CallDirection.Inbound]: { label: 'Gelen', color: 'blue' },
@@ -41,6 +38,85 @@ const outcomeLabels: Record<CallOutcome, { label: string; color: string }> = {
   [CallOutcome.Abandoned]: { label: 'İptal Edildi', color: 'default' },
   [CallOutcome.Transferred]: { label: 'Transfer Edildi', color: 'geekblue' },
 };
+
+interface CallLogsStatsProps {
+  callLogs: CallLogDto[];
+  loading: boolean;
+}
+
+function CallLogsStats({ callLogs, loading }: CallLogsStatsProps) {
+  const totalCalls = callLogs.length;
+  const inboundCalls = callLogs.filter(log => log.direction === CallDirection.Inbound).length;
+  const outboundCalls = callLogs.filter(log => log.direction === CallDirection.Outbound).length;
+  const successfulCalls = callLogs.filter(log => log.outcome === CallOutcome.Successful).length;
+
+  const stats = [
+    {
+      title: 'Toplam Arama',
+      value: totalCalls,
+      icon: <PhoneFilled className="text-2xl" />,
+      iconBg: 'bg-slate-100',
+      iconColor: 'text-slate-600',
+    },
+    {
+      title: 'Gelen',
+      value: inboundCalls,
+      icon: <ArrowDownOutlined className="text-2xl" />,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+    },
+    {
+      title: 'Giden',
+      value: outboundCalls,
+      icon: <ArrowUpOutlined className="text-2xl" />,
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600',
+    },
+    {
+      title: 'Başarılı',
+      value: successfulCalls,
+      icon: <CheckCircleOutlined className="text-2xl" />,
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="h-4 bg-slate-200 rounded animate-pulse mb-2 w-24"></div>
+                <div className="h-8 bg-slate-200 rounded animate-pulse w-16"></div>
+              </div>
+              <div className="w-12 h-12 bg-slate-200 rounded-lg animate-pulse"></div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat, index) => (
+        <Card key={index}>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-slate-600 mb-1">{stat.title}</p>
+              <p className="text-3xl font-semibold text-slate-900">{stat.value}</p>
+            </div>
+            <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center ${stat.iconColor}`}>
+              {stat.icon}
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export default function CallLogsPage() {
   const router = useRouter();
@@ -175,57 +251,74 @@ export default function CallLogsPage() {
   ];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} className="!mb-0">
-          <PhoneOutlined className="mr-2" />
-          Arama Kayıtları
-        </Title>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-            Yenile
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            Yeni Arama Kaydı
-          </Button>
-        </Space>
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
+        <CallLogsStats callLogs={callLogs} loading={isLoading} />
       </div>
 
-      {/* Filters & Table */}
-      <AnimatedCard>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space wrap>
-            <Input
-              placeholder="Numara ara..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 200 }}
-              allowClear
-            />
-            <Select
-              placeholder="Yön"
-              value={directionFilter}
-              onChange={setDirectionFilter}
-              style={{ width: 120 }}
-              allowClear
-              options={[
-                { value: CallDirection.Inbound, label: 'Gelen' },
-                { value: CallDirection.Outbound, label: 'Giden' },
-              ]}
-            />
-          </Space>
+      {/* Header */}
+      <ListPageHeader
+        icon={<PhoneOutlined />}
+        iconColor="#0f172a"
+        title="Arama Kayıtları"
+        description="Telefon görüşmelerini takip edin"
+        itemCount={totalCount}
+        primaryAction={{
+          label: 'Yeni Arama',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Numara ara..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+            allowClear
+          />
+          <Select
+            placeholder="Yön"
+            value={directionFilter}
+            onChange={setDirectionFilter}
+            style={{ width: 120 }}
+            allowClear
+            options={[
+              { value: CallDirection.Inbound, label: 'Gelen' },
+              { value: CallDirection.Outbound, label: 'Giden' },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
           <Table
             columns={columns}
             dataSource={callLogs}
             rowKey="id"
-            loading={isLoading || deleteCallLog.isPending}
+            loading={deleteCallLog.isPending}
             pagination={{
               current: currentPage,
               pageSize,
@@ -238,8 +331,8 @@ export default function CallLogsPage() {
               showTotal: (total) => `Toplam ${total} kayıt`,
             }}
           />
-        </Space>
-      </AnimatedCard>
-    </div>
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

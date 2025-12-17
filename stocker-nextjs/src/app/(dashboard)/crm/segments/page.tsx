@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Button, Table, Space, Tag, Typography, Row, Col, Modal, message, Avatar, Dropdown, Empty } from 'antd';
+import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
@@ -17,13 +17,13 @@ import {
   CopyOutlined,
   MailOutlined,
   DownloadOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment } from '@/lib/api/hooks/useCRM';
 import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
-
-const { Title } = Typography;
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
 
 const segmentTypeLabels: Record<string, string> = {
   Static: 'Statik',
@@ -45,11 +45,23 @@ const segmentColors: Record<string, string> = {
 
 export default function CustomerSegmentsPage() {
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
 
   // API Hooks
   const { data: segments = [], isLoading, refetch } = useCustomerSegments();
   const deleteSegment = useDeleteCustomerSegment();
   const createSegment = useCreateCustomerSegment();
+
+  // Filter segments based on search text
+  const filteredSegments = segments.filter((segment) => {
+    if (!searchText) return true;
+    const searchLower = searchText.toLowerCase();
+    return (
+      segment.name.toLowerCase().includes(searchLower) ||
+      segment.description?.toLowerCase().includes(searchLower) ||
+      segmentTypeLabels[segment.type]?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const handleDelete = (id: string) => {
     Modal.confirm({
@@ -157,9 +169,9 @@ export default function CustomerSegmentsPage() {
             {text.charAt(0)}
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">{text}</div>
+            <div className="font-semibold text-slate-900 truncate">{text}</div>
             {record.description && (
-              <div className="text-xs text-gray-500 truncate">{record.description}</div>
+              <div className="text-xs text-slate-500 truncate">{record.description}</div>
             )}
           </div>
         </div>
@@ -265,78 +277,112 @@ export default function CustomerSegmentsPage() {
     },
   ];
 
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col span={24}>
-          <div className="flex justify-between items-center">
-            <Title level={2} className="!mb-0">
-              <TeamOutlined className="mr-2" />
-              Müşteri Segmentleri
-            </Title>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
-                Yenile
-              </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-                Yeni Segment
-              </Button>
-            </Space>
-          </div>
-        </Col>
-      </Row>
-
-      {/* Statistics */}
-      <div className="mb-6">
+    <PageContainer maxWidth="7xl">
+      {/* Stats Cards */}
+      <div className="mb-8">
         <SegmentsStats segments={segments} loading={isLoading} />
       </div>
 
-      {/* Segments Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={segments}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} segment`,
-          }}
-          locale={{
-            emptyText: (
-              <Empty
-                image={<TeamOutlined style={{ fontSize: 80, color: '#d9d9d9' }} />}
-                imageStyle={{ height: 100 }}
-                description={
-                  <div className="py-8">
-                    <div className="text-2xl font-bold text-gray-800 mb-4">
-                      Müşterilerinizi Anlamlı Gruplara Ayırın
-                    </div>
-                    <div className="text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-                      Müşteri Segmentleri, doğru kişilere doğru mesajı göndermenizi sağlar.
-                      &apos;İstanbul&apos;daki VIP Müşteriler&apos; veya &apos;Son 6 ayda alışveriş yapmayanlar&apos;
-                      gibi dinamik segmentler oluşturun.
-                    </div>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<PlusOutlined />}
-                      onClick={handleCreate}
-                      className="h-12 px-8 text-base font-semibold"
-                    >
-                      İlk Segmentini Oluştur
-                    </Button>
-                  </div>
-                }
-              />
-            ),
-          }}
-        />
-      </Card>
+      {/* Header */}
+      <ListPageHeader
+        icon={<TeamOutlined />}
+        iconColor="#0f172a"
+        title="Müşteri Segmentleri"
+        description="Müşteri segmentlerinizi yönetin"
+        itemCount={filteredSegments.length}
+        primaryAction={{
+          label: 'Yeni Segment',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+          </button>
+        }
+      />
 
-    </div>
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Segment ara..."
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="max-w-md"
+        />
+      </div>
+
+      {/* Segments Table */}
+      {isLoading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : (
+        <DataTableWrapper>
+          <Table
+            columns={columns}
+            dataSource={filteredSegments}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} segment`,
+            }}
+            locale={{
+              emptyText: searchText ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <div className="py-8">
+                      <div className="text-lg font-semibold text-slate-800 mb-2">
+                        Sonuç bulunamadı
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        &quot;{searchText}&quot; ile eşleşen segment bulunamadı
+                      </div>
+                    </div>
+                  }
+                />
+              ) : (
+                <Empty
+                  image={<TeamOutlined style={{ fontSize: 80, color: '#cbd5e1' }} />}
+                  imageStyle={{ height: 100 }}
+                  description={
+                    <div className="py-8">
+                      <div className="text-2xl font-bold text-slate-800 mb-4">
+                        Müşterilerinizi Anlamlı Gruplara Ayırın
+                      </div>
+                      <div className="text-base text-slate-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+                        Müşteri Segmentleri, doğru kişilere doğru mesajı göndermenizi sağlar.
+                        &apos;İstanbul&apos;daki VIP Müşteriler&apos; veya &apos;Son 6 ayda alışveriş yapmayanlar&apos;
+                        gibi dinamik segmentler oluşturun.
+                      </div>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlusOutlined />}
+                        onClick={handleCreate}
+                        className="h-12 px-8 text-base font-semibold"
+                      >
+                        İlk Segmentini Oluştur
+                      </Button>
+                    </div>
+                  }
+                />
+              ),
+            }}
+          />
+        </DataTableWrapper>
+      )}
+    </PageContainer>
   );
 }

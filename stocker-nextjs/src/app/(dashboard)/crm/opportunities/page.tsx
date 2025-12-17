@@ -1,20 +1,13 @@
 'use client';
 
+/**
+ * Opportunities List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Modal,
-  message,
-  Statistic,
-  Progress,
-} from 'antd';
+import { Spin, Tag, Progress, Space, Button, Modal, message, Input } from 'antd';
 import {
   PlusOutlined,
   ReloadOutlined,
@@ -27,6 +20,7 @@ import {
   UserOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import {
   useOpportunities,
@@ -36,9 +30,11 @@ import {
 } from '@/lib/api/hooks/useCRM';
 import type { OpportunityDto, OpportunityStatus } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
-import { motion } from 'framer-motion';
-
-const { Title, Text } = Typography;
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+} from '@/components/ui/enterprise-page';
 
 // Opportunity status configuration
 const statusConfig: Record<OpportunityStatus, { color: string; label: string; icon: React.ReactNode }> = {
@@ -54,6 +50,7 @@ const statusConfig: Record<OpportunityStatus, { color: string; label: string; ic
 export default function OpportunitiesPage() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<'kanban' | 'grid'>('kanban');
+  const [searchText, setSearchText] = useState('');
 
   // API Hooks
   const { data, isLoading, refetch } = useOpportunities();
@@ -63,20 +60,29 @@ export default function OpportunitiesPage() {
 
   const opportunities = data?.items || [];
 
+  // Filter opportunities by search text
+  const filteredOpportunities = searchText
+    ? opportunities.filter((o: OpportunityDto) =>
+        o.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        o.description?.toLowerCase().includes(searchText.toLowerCase()) ||
+        o.customerName?.toLowerCase().includes(searchText.toLowerCase())
+      )
+    : opportunities;
+
   // Get default pipeline's stages for kanban view
   const defaultPipeline = pipelines.find((p: any) => p.isDefault) || pipelines[0];
   const stages = defaultPipeline?.stages || [];
 
   // Calculate statistics
   const stats = {
-    total: opportunities.length,
-    totalValue: opportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
-    avgProbability: opportunities.length > 0
-      ? opportunities.reduce((sum: number, o: OpportunityDto) => sum + o.probability, 0) / opportunities.length
+    total: filteredOpportunities.length,
+    totalValue: filteredOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
+    avgProbability: filteredOpportunities.length > 0
+      ? filteredOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.probability, 0) / filteredOpportunities.length
       : 0,
-    won: opportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').length,
-    wonValue: opportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
-    active: opportunities.filter((o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost').length,
+    won: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').length,
+    wonValue: filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon').reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0),
+    active: filteredOpportunities.filter((o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost').length,
   };
 
   const handleCreate = () => {
@@ -137,20 +143,19 @@ export default function OpportunitiesPage() {
     const isActive = opportunity.status !== 'ClosedWon' && opportunity.status !== 'ClosedLost';
 
     return (
-      <Card
-        className="hover:shadow-lg transition-all duration-300 cursor-pointer"
-        bodyStyle={{ padding: '20px' }}
+      <div
+        className="bg-white border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer"
         onClick={() => router.push(`/crm/opportunities/${opportunity.id}`)}
       >
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
-            <Text strong className="text-base block mb-1">
+            <div className="font-medium text-slate-900 text-base mb-1">
               {opportunity.name}
-            </Text>
+            </div>
             {opportunity.description && (
-              <Text className="text-xs text-gray-500 block mb-2">
+              <div className="text-xs text-slate-500 mb-2">
                 {opportunity.description}
-              </Text>
+              </div>
             )}
           </div>
           <Tag color={config.color} className="ml-2">
@@ -159,32 +164,32 @@ export default function OpportunitiesPage() {
         </div>
 
         <div className="mb-3">
-          <div className="text-2xl font-bold text-green-600 mb-1">
+          <div className="text-2xl font-bold text-emerald-600 mb-1">
             ₺{opportunity.amount.toLocaleString('tr-TR')}
           </div>
           <div className="flex items-center gap-2">
-            <Text className="text-xs text-gray-500">Olasılık:</Text>
+            <span className="text-xs text-slate-500">Olasılık:</span>
             <Progress
               percent={opportunity.probability}
               size="small"
               className="flex-1"
               strokeColor={{
-                '0%': '#108ee9',
-                '100%': '#87d068',
+                '0%': '#3b82f6',
+                '100%': '#10b981',
               }}
             />
           </div>
         </div>
 
         {opportunity.customerName && (
-          <div className="mb-2 text-xs text-gray-600 flex items-center gap-1">
-            <UserOutlined className="text-gray-400" />
+          <div className="mb-2 text-xs text-slate-600 flex items-center gap-1">
+            <UserOutlined className="text-slate-400" />
             <span>{opportunity.customerName}</span>
           </div>
         )}
 
         {opportunity.expectedCloseDate && (
-          <div className="mb-3 text-xs text-gray-500">
+          <div className="mb-3 text-xs text-slate-500">
             📅 Tahmini Kapanış: {dayjs(opportunity.expectedCloseDate).format('DD MMMM YYYY')}
           </div>
         )}
@@ -217,20 +222,20 @@ export default function OpportunitiesPage() {
             </Button>
           </Space>
         )}
-      </Card>
+      </div>
     );
   };
 
   // Group opportunities by status
   const opportunitiesByStatus = Object.keys(statusConfig).reduce((acc, status) => {
-    acc[status as OpportunityStatus] = opportunities.filter(
+    acc[status as OpportunityStatus] = filteredOpportunities.filter(
       (o: OpportunityDto) => o.status === status
     );
     return acc;
   }, {} as Record<OpportunityStatus, OpportunityDto[]>);
 
   // Group opportunities by stage for Kanban view (active opportunities only)
-  const activeOpportunities = opportunities.filter(
+  const activeOpportunities = filteredOpportunities.filter(
     (o: OpportunityDto) => o.status !== 'ClosedWon' && o.status !== 'ClosedLost'
   );
 
@@ -240,8 +245,62 @@ export default function OpportunitiesPage() {
   }, {} as Record<string, OpportunityDto[]>);
 
   // Get closed opportunities for special columns
-  const wonOpportunities = opportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon');
-  const lostOpportunities = opportunities.filter((o: OpportunityDto) => o.status === 'ClosedLost');
+  const wonOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedWon');
+  const lostOpportunities = filteredOpportunities.filter((o: OpportunityDto) => o.status === 'ClosedLost');
+
+  // Stats Component
+  const OpportunitiesStats = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-slate-500 text-sm font-medium mb-1">Toplam Fırsat</div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+          </div>
+          <div className="p-3 bg-slate-100 rounded-lg">
+            <BarChartOutlined className="text-2xl text-slate-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-slate-500 text-sm font-medium mb-1">Toplam Değer</div>
+            <div className="text-2xl font-bold text-emerald-600">₺{stats.totalValue.toLocaleString('tr-TR')}</div>
+          </div>
+          <div className="p-3 bg-emerald-100 rounded-lg">
+            <DollarOutlined className="text-2xl text-emerald-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-slate-500 text-sm font-medium mb-1">Kazanılan</div>
+            <div className="text-2xl font-bold text-green-600">{stats.won}</div>
+            <div className="text-xs text-slate-500 mt-1">₺{stats.wonValue.toLocaleString('tr-TR')}</div>
+          </div>
+          <div className="p-3 bg-green-100 rounded-lg">
+            <TrophyOutlined className="text-2xl text-green-600" />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-slate-500 text-sm font-medium mb-1">Ortalama Olasılık</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.avgProbability.toFixed(0)}%</div>
+          </div>
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <RiseOutlined className="text-2xl text-blue-600" />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 
   // Kanban View Component
   const KanbanView = () => (
@@ -252,88 +311,79 @@ export default function OpportunitiesPage() {
 
         return (
           <div key={stage.id} className="flex-shrink-0" style={{ width: 320 }}>
-            <Card
-              title={
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: stage.color }}
-                    />
-                    <span className="font-medium">{stage.name}</span>
-                    <Tag>{stageOpps.length}</Tag>
-                  </div>
-                  <div className="text-sm font-normal text-gray-500 mt-1">
-                    ₺{stageAmount.toLocaleString('tr-TR')}
-                  </div>
+            <div className="bg-white border border-slate-200 rounded-lg h-full">
+              <div className="p-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: stage.color }}
+                  />
+                  <span className="font-medium text-slate-900">{stage.name}</span>
+                  <Tag className="ml-auto">{stageOpps.length}</Tag>
                 </div>
-              }
-              className="h-full"
-              bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto' }}
-            >
-              {stageOpps.map((opportunity: OpportunityDto) => (
-                <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-              ))}
-              {stageOpps.length === 0 && (
-                <div className="text-center text-gray-400 py-8">Fırsat yok</div>
-              )}
-            </Card>
+                <div className="text-sm text-slate-500 mt-1">
+                  ₺{stageAmount.toLocaleString('tr-TR')}
+                </div>
+              </div>
+              <div className="p-3 space-y-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                {stageOpps.map((opportunity: OpportunityDto) => (
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                ))}
+                {stageOpps.length === 0 && (
+                  <div className="text-center text-slate-400 py-8">Fırsat yok</div>
+                )}
+              </div>
+            </div>
           </div>
         );
       })}
 
       {/* Won Column */}
       <div className="flex-shrink-0" style={{ width: 320 }}>
-        <Card
-          title={
-            <div>
-              <div className="flex items-center gap-2">
-                <TrophyOutlined className="text-green-500" />
-                <span className="font-medium">Kazanıldı</span>
-                <Tag color="green">{wonOpportunities.length}</Tag>
-              </div>
-              <div className="text-sm font-normal text-green-600 mt-1">
-                ₺{wonOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
-              </div>
+        <div className="bg-white border-2 border-green-400 rounded-lg h-full">
+          <div className="p-4 border-b border-green-200 bg-green-50">
+            <div className="flex items-center gap-2">
+              <TrophyOutlined className="text-green-500" />
+              <span className="font-medium text-slate-900">Kazanıldı</span>
+              <Tag color="green" className="ml-auto">{wonOpportunities.length}</Tag>
             </div>
-          }
-          className="h-full border-2 border-green-400"
-          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#f6ffed' }}
-        >
-          {wonOpportunities.map((opportunity: OpportunityDto) => (
-            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-          ))}
-          {wonOpportunities.length === 0 && (
-            <div className="text-center text-gray-400 py-8">Kazanılan fırsat yok</div>
-          )}
-        </Card>
+            <div className="text-sm text-green-600 font-medium mt-1">
+              ₺{wonOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
+            </div>
+          </div>
+          <div className="p-3 space-y-3 bg-green-50/50" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            {wonOpportunities.map((opportunity: OpportunityDto) => (
+              <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+            ))}
+            {wonOpportunities.length === 0 && (
+              <div className="text-center text-slate-400 py-8">Kazanılan fırsat yok</div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Lost Column */}
       <div className="flex-shrink-0" style={{ width: 320 }}>
-        <Card
-          title={
-            <div>
-              <div className="flex items-center gap-2">
-                <StopOutlined className="text-red-500" />
-                <span className="font-medium">Kaybedildi</span>
-                <Tag color="red">{lostOpportunities.length}</Tag>
-              </div>
-              <div className="text-sm font-normal text-red-600 mt-1">
-                ₺{lostOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
-              </div>
+        <div className="bg-white border-2 border-red-400 rounded-lg h-full">
+          <div className="p-4 border-b border-red-200 bg-red-50">
+            <div className="flex items-center gap-2">
+              <StopOutlined className="text-red-500" />
+              <span className="font-medium text-slate-900">Kaybedildi</span>
+              <Tag color="red" className="ml-auto">{lostOpportunities.length}</Tag>
             </div>
-          }
-          className="h-full border-2 border-red-400"
-          bodyStyle={{ padding: '12px', maxHeight: '600px', overflowY: 'auto', backgroundColor: '#fff1f0' }}
-        >
-          {lostOpportunities.map((opportunity: OpportunityDto) => (
-            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
-          ))}
-          {lostOpportunities.length === 0 && (
-            <div className="text-center text-gray-400 py-8">Kaybedilen fırsat yok</div>
-          )}
-        </Card>
+            <div className="text-sm text-red-600 font-medium mt-1">
+              ₺{lostOpportunities.reduce((sum: number, o: OpportunityDto) => sum + o.amount, 0).toLocaleString('tr-TR')}
+            </div>
+          </div>
+          <div className="p-3 space-y-3 bg-red-50/50" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            {lostOpportunities.map((opportunity: OpportunityDto) => (
+              <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+            ))}
+            {lostOpportunities.length === 0 && (
+              <div className="text-center text-slate-400 py-8">Kaybedilen fırsat yok</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -346,186 +396,126 @@ export default function OpportunitiesPage() {
         const config = statusConfig[status as OpportunityStatus];
 
         return (
-          <motion.div
-            key={status}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card
-              title={
+          <div key={status}>
+            <div className="bg-white border border-slate-200 rounded-lg">
+              <div className="p-4 border-b border-slate-200">
                 <div className="flex items-center gap-2">
                   {config.icon}
-                  <span>{config.label}</span>
+                  <span className="font-medium text-slate-900">{config.label}</span>
                   <Tag color={config.color}>{opps.length}</Tag>
                 </div>
-              }
-            >
-              <Row gutter={[16, 16]}>
-                {opps.map((opportunity: OpportunityDto) => (
-                  <Col key={opportunity.id} xs={24} sm={12} lg={8} xl={6}>
-                    <OpportunityCard opportunity={opportunity} />
-                  </Col>
-                ))}
-              </Row>
-            </Card>
-          </motion.div>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {opps.map((opportunity: OpportunityDto) => (
+                    <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         );
       })}
     </div>
   );
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div>
-              <Title level={2} className="!mb-2 !text-gray-800">
-                Fırsatlar
-              </Title>
-              <Text className="text-gray-500 text-base">
-                Satış fırsatlarınızı yönetin ve takip edin
-              </Text>
-            </div>
-            <Button.Group>
-              <Button
-                type={viewMode === 'kanban' ? 'primary' : 'default'}
-                icon={<AppstoreOutlined />}
-                onClick={() => setViewMode('kanban')}
-              >
-                Kanban
-              </Button>
-              <Button
-                type={viewMode === 'grid' ? 'primary' : 'default'}
-                icon={<UnorderedListOutlined />}
-                onClick={() => setViewMode('grid')}
-              >
-                Grid
-              </Button>
-            </Button.Group>
-          </div>
-          <Space size="middle">
-            <Button
-              size="large"
-              icon={<ReloadOutlined />}
-              onClick={() => refetch()}
-              loading={isLoading}
-            >
-              Yenile
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
-              Yeni Fırsat
-            </Button>
-          </Space>
-        </div>
-      </motion.div>
-
+    <PageContainer maxWidth="7xl">
       {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card>
-              <Statistic
-                title="Toplam Fırsat"
-                value={stats.total}
-                prefix={<BarChartOutlined />}
-              />
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card>
-              <Statistic
-                title="Toplam Değer"
-                value={stats.totalValue}
-                prefix="₺"
-                precision={0}
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <Statistic
-                title="Kazanılan"
-                value={stats.won}
-                suffix={`/ ₺${stats.wonValue.toLocaleString('tr-TR')}`}
-                prefix={<TrophyOutlined />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </motion.div>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card>
-              <Statistic
-                title="Ortalama Olasılık"
-                value={stats.avgProbability}
-                suffix="%"
-                precision={0}
-                prefix={<RiseOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </motion.div>
-        </Col>
-      </Row>
+      <div className="mb-8">
+        <OpportunitiesStats />
+      </div>
 
-      {/* Opportunities View */}
+      {/* Header */}
+      <ListPageHeader
+        icon={<DollarOutlined />}
+        iconColor="#0f172a"
+        title="Fırsatlar"
+        description="Satış fırsatlarınızı yönetin ve takip edin"
+        itemCount={filteredOpportunities.length}
+        primaryAction={{
+          label: 'Yeni Fırsat',
+          onClick: handleCreate,
+          icon: <PlusOutlined />,
+        }}
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex bg-slate-100 rounded-md p-0.5">
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <AppstoreOutlined className="mr-1" />
+                Kanban
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <UnorderedListOutlined className="mr-1" />
+                Grid
+              </button>
+            </div>
+            <button
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+            >
+              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+        }
+      />
+
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Fırsat ara..."
+          prefix={<SearchOutlined className="text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          className="max-w-md"
+        />
+      </div>
+
+      {/* Content */}
       {isLoading ? (
-        <Card className="text-center py-16">
-          <div className="text-4xl mb-4">⏳</div>
-          <div className="text-gray-500">Fırsatlar yükleniyor...</div>
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : filteredOpportunities.length === 0 ? (
+        <Card>
+          <div className="text-center py-12">
+            <div className="text-slate-400 text-5xl mb-4">
+              <BarChartOutlined />
+            </div>
+            <div className="text-slate-500 mb-4">
+              {searchText ? 'Aramanızla eşleşen fırsat bulunamadı' : 'Henüz fırsat yok'}
+            </div>
+            {!searchText && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                İlk Fırsatı Oluştur
+              </Button>
+            )}
+          </div>
         </Card>
       ) : viewMode === 'kanban' ? (
         <KanbanView />
       ) : (
         <GridView />
       )}
-
-      {opportunities.length === 0 && !isLoading && (
-        <Card className="text-center py-12">
-          <div className="text-gray-400 text-lg mb-4">
-            <BarChartOutlined style={{ fontSize: 48 }} />
-          </div>
-          <Text className="text-gray-500">Henüz fırsat yok</Text>
-          <div className="mt-4">
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              İlk Fırsatı Oluştur
-            </Button>
-          </div>
-        </Card>
-      )}
-    </div>
+    </PageContainer>
   );
 }
