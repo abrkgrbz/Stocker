@@ -16,12 +16,12 @@ import {
   ShareAltOutlined,
   UserOutlined,
   MailOutlined,
-  PhoneOutlined,
   GiftOutlined,
 } from '@ant-design/icons';
 import type { ReferralDto } from '@/lib/api/services/crm.types';
 import { ReferralType, ReferralStatus, ReferralRewardType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
+import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -218,11 +218,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
               </Col>
               <Col span={12}>
                 <Form.Item name="referrerPhone" className="mb-3">
-                  <Input
-                    placeholder="Telefon"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
-                  />
+                  <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
               </Col>
             </Row>
@@ -285,11 +281,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
               <Col span={12}>
                 <div className="text-xs text-gray-400 mb-1">Telefon</div>
                 <Form.Item name="referredPhone" className="mb-3">
-                  <Input
-                    placeholder="+90 (555) 123-4567"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
-                  />
+                  <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
               </Col>
             </Row>

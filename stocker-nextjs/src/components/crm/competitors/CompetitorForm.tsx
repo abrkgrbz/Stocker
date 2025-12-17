@@ -5,6 +5,7 @@ import { Form, Input, Select, InputNumber, Switch } from 'antd';
 import { AimOutlined } from '@ant-design/icons';
 import type { CompetitorDto } from '@/lib/api/services/crm.types';
 import { ThreatLevel, PriceComparison } from '@/lib/api/services/crm.types';
+import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
 const { TextArea } = Input;
 
@@ -252,10 +253,7 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
-                  <Input
-                    placeholder="+90 (555) 123-4567"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
+                  <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
               </div>
             </div>
