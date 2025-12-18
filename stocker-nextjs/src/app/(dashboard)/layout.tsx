@@ -776,7 +776,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     if (key === 'logout') {
       logout();
     } else if (key === 'profile') {
-      router.push('/profile');
+      router.push('/account/profile');
     }
   };
 

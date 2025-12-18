@@ -53,9 +53,9 @@ export default function SettingsLayout({
             Hesap Ayarları
           </h1>
           <Link
-            href="/dashboard"
+            href="/app"
             className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
-            title="Dashboard'a Dön"
+            title="Ana Sayfaya Dön"
           >
             <X className="w-5 h-5 text-slate-600" />
           </Link>
