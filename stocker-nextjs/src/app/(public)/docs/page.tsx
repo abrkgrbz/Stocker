@@ -248,8 +248,8 @@ export default function DocsPage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
             <Image
-              src="/logo.png"
-              alt="Stocker Logo"
+              src="/stoocker_black.png"
+              alt="Stoocker Logo"
               width={120}
               height={40}
               className="object-contain"

@@ -13,7 +13,6 @@ import {
   Form,
   Input,
   DatePicker,
-  Radio,
   Spin,
 } from 'antd';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
@@ -124,19 +123,19 @@ const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }
       title: 'Bugünün Aktiviteleri',
       value: stats.today,
       icon: <CalendarOutlined className="text-2xl" />,
-      color: 'blue',
+      color: 'slate',
     },
     {
       title: 'Tamamlanan',
       value: stats.completed,
       icon: <CheckCircleOutlined className="text-2xl" />,
-      color: 'green',
+      color: 'emerald',
     },
     {
       title: 'Bekleyen',
       value: stats.pending,
       icon: <ClockCircleOutlined className="text-2xl" />,
-      color: 'orange',
+      color: 'amber',
     },
   ];
 
@@ -166,9 +165,9 @@ const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }
             <div
               className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                 stat.color === 'slate' ? 'bg-slate-100 text-slate-600' :
-                stat.color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                stat.color === 'green' ? 'bg-green-100 text-green-600' :
-                'bg-orange-100 text-orange-600'
+                stat.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' :
+                stat.color === 'amber' ? 'bg-amber-100 text-amber-600' :
+                'bg-slate-100 text-slate-600'
               }`}
             >
               {stat.icon}
@@ -370,42 +369,65 @@ export default function ActivitiesPage() {
           <div className="flex items-center gap-3">
             <UserOutlined className="text-lg text-slate-600" />
             <span className="text-slate-600 font-medium">Aktivite Sahibi:</span>
-            <Radio.Group
-              value={ownerFilter}
-              onChange={(e) => setOwnerFilter(e.target.value)}
-              buttonStyle="solid"
-            >
-              <Radio.Button value="my">Benim Aktivitelerim</Radio.Button>
-              <Radio.Button value="team">Satış Ekibi</Radio.Button>
-              <Radio.Button value="all">Tüm Aktiviteler</Radio.Button>
-            </Radio.Group>
+            <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setOwnerFilter('my')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  ownerFilter === 'my'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Benim Aktivitelerim
+              </button>
+              <button
+                onClick={() => setOwnerFilter('team')}
+                className={`px-4 py-2 text-sm font-medium border-l border-slate-200 transition-colors ${
+                  ownerFilter === 'team'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Satış Ekibi
+              </button>
+              <button
+                onClick={() => setOwnerFilter('all')}
+                className={`px-4 py-2 text-sm font-medium border-l border-slate-200 transition-colors ${
+                  ownerFilter === 'all'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Tüm Aktiviteler
+              </button>
+            </div>
           </div>
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-3">
             <span className="text-slate-600 font-medium">Hızlı Ekle:</span>
             <Space>
-              <Button
-                icon={<PhoneOutlined />}
+              <button
                 onClick={() => handleQuickAction('Call')}
-                className="border-blue-300 hover:border-blue-500 hover:text-blue-500"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
+                <PhoneOutlined />
                 Görüşme
-              </Button>
-              <Button
-                icon={<MailOutlined />}
+              </button>
+              <button
                 onClick={() => handleQuickAction('Email')}
-                className="border-cyan-300 hover:border-cyan-500 hover:text-cyan-500"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
+                <MailOutlined />
                 E-posta
-              </Button>
-              <Button
-                icon={<TeamOutlined />}
+              </button>
+              <button
                 onClick={() => handleQuickAction('Meeting')}
-                className="border-green-300 hover:border-green-500 hover:text-green-500"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
+                <TeamOutlined />
                 Toplantı
-              </Button>
+              </button>
             </Space>
           </div>
         </div>

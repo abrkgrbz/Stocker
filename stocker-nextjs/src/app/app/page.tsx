@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -309,16 +310,15 @@ export default function AppHomePage() {
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo & Team Name */}
             <div className="flex items-center gap-3">
-              {/* Stoocker Logo - Black SVG */}
-              <svg viewBox="0 0 180 40" fill="none" className="h-7 w-auto" xmlns="http://www.w3.org/2000/svg">
-                {/* Icon - Stacked layers */}
-                <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
-                <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
-                <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
-                <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
-                {/* Text */}
-                <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
-              </svg>
+              {/* Stoocker Logo */}
+              <Image
+                src="/stoocker_black.png"
+                alt="Stoocker"
+                width={120}
+                height={40}
+                priority
+                className="object-contain"
+              />
               <span className="text-slate-300 hidden sm:block">/</span>
               <span className="text-sm text-slate-500 hidden sm:block font-light">
                 {tenant?.name || 'Workspace'}

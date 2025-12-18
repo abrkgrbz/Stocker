@@ -315,7 +315,7 @@ export default function CustomerSegmentsPage() {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
-          className="max-w-md"
+          className="max-w-md !bg-slate-50 hover:!bg-slate-50 focus-within:!bg-white focus-within:!ring-2 focus-within:!ring-slate-900 focus-within:!border-transparent transition-all"
         />
       </div>
 
@@ -354,7 +354,13 @@ export default function CustomerSegmentsPage() {
                 />
               ) : (
                 <Empty
-                  image={<TeamOutlined style={{ fontSize: 80, color: '#cbd5e1' }} />}
+                  image={
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+                      <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                      </svg>
+                    </div>
+                  }
                   imageStyle={{ height: 100 }}
                   description={
                     <div className="py-8">
@@ -366,15 +372,13 @@ export default function CustomerSegmentsPage() {
                         &apos;İstanbul&apos;daki VIP Müşteriler&apos; veya &apos;Son 6 ayda alışveriş yapmayanlar&apos;
                         gibi dinamik segmentler oluşturun.
                       </div>
-                      <Button
-                        type="primary"
-                        size="large"
-                        icon={<PlusOutlined />}
+                      <button
                         onClick={handleCreate}
-                        className="h-12 px-8 text-base font-semibold"
+                        className="h-12 px-8 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors inline-flex items-center gap-2"
                       >
+                        <PlusOutlined />
                         İlk Segmentini Oluştur
-                      </Button>
+                      </button>
                     </div>
                   }
                 />

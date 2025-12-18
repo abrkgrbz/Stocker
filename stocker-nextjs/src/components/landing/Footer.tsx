@@ -74,7 +74,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image
-                src="/logo.png"
+                src="/stoocker_black.png"
                 alt="Stoocker Logo"
                 width={100}
                 height={32}

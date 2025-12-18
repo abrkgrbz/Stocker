@@ -52,16 +52,16 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               className="relative"
             >
               <Image
-                src="/logo.png"
-                alt="Stocker Logo"
+                src={isScrolled ? '/stoocker_black.png' : '/stoocker_white.png'}
+                alt="Stoocker Logo"
                 width={120}
                 height={40}
-                className={`transition-all object-contain ${isScrolled ? 'brightness-100' : 'brightness-0 invert'}`}
+                className="transition-all object-contain"
                 priority
               />
             </motion.div>

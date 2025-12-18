@@ -184,11 +184,11 @@ export function ActivityCalendar({
         }
 
         .activity-calendar-card .fc-day-today {
-          background-color: #e6f4ff !important;
+          background-color: #f8fafc !important;
         }
 
         .activity-calendar-card .fc-day-today .fc-daygrid-day-number {
-          background: #1890ff;
+          background: #0f172a;
           color: white;
           border-radius: 50%;
           width: 28px;
@@ -256,14 +256,14 @@ export function ActivityCalendar({
 
         .activity-calendar-card .fc-button:hover {
           background: #fafafa;
-          border-color: #1890ff;
-          color: #1890ff;
+          border-color: #0f172a;
+          color: #0f172a;
         }
 
         .activity-calendar-card .fc-button-primary:not(:disabled):active,
         .activity-calendar-card .fc-button-primary:not(:disabled).fc-button-active {
-          background: #1890ff;
-          border-color: #1890ff;
+          background: #0f172a;
+          border-color: #0f172a;
           color: white;
         }
 

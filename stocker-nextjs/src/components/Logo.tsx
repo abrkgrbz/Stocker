@@ -3,55 +3,35 @@ import Image from 'next/image'
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
-  showText?: boolean
+  variant?: 'black' | 'white' | 'auto'
   className?: string
 }
 
-export default function Logo({ size = 'md', showText = false, className = '' }: LogoProps) {
+export default function Logo({ size = 'md', variant = 'black', className = '' }: LogoProps) {
   const sizes = {
-    sm: { width: 32, height: 32 },
-    md: { width: 48, height: 48 },
-    lg: { width: 64, height: 64 },
-    xl: { width: 120, height: 120 },
-    '2xl': { width: 160, height: 160 },
-    '3xl': { width: 360, height: 360 }
+    sm: { width: 100, height: 32 },
+    md: { width: 120, height: 40 },
+    lg: { width: 140, height: 46 },
+    xl: { width: 160, height: 52 },
+    '2xl': { width: 180, height: 58 },
+    '3xl': { width: 200, height: 65 }
   }
 
   const { width, height } = sizes[size]
 
-  // If showText is true, use the full logo with text
-  // Otherwise use just the icon portion
-  if (showText) {
-    return (
-      <div className={`inline-flex items-center ${className}`}>
-        <Image
-          src="/logo.png"
-          alt="Stocker"
-          width={width * 3}
-          height={height * 3}
-          priority
-          className="object-contain"
-        />
-      </div>
-    )
-  }
+  // Select logo based on variant
+  const logoSrc = variant === 'white' ? '/stoocker_white.png' : '/stoocker_black.png'
 
-  // For icon-only, we'll crop to just the cube portion (65% from top to exclude text)
   return (
     <div className={`inline-flex items-center ${className}`}>
-      <div style={{ width, height }} className="relative overflow-hidden">
-        <Image
-          src="/logo.png"
-          alt="Stocker"
-          width={width}
-          height={width}
-          priority
-          className="object-cover"
-          style={{
-            objectPosition: 'center 35%',
-          }}
-        />
-      </div>
+      <Image
+        src={logoSrc}
+        alt="Stoocker"
+        width={width}
+        height={height}
+        priority
+        className="object-contain"
+      />
     </div>
   )
 }

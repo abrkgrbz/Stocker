@@ -42,7 +42,7 @@ export default function HeroSection() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="/stoocker_black.png"
               alt="Stoocker Logo"
               width={120}
               height={40}

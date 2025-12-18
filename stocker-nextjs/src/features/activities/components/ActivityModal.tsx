@@ -294,13 +294,22 @@ export function ActivityModal({
           </div>
 
           {currentStep < steps.length - 1 ? (
-            <Button type="primary" onClick={handleNext} icon={<ArrowRightOutlined />} iconPosition="end" size="large">
+            <button
+              onClick={handleNext}
+              className="inline-flex items-center gap-2 h-10 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium"
+            >
               İleri
-            </Button>
+              <ArrowRightOutlined />
+            </button>
           ) : (
-            <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckCircleOutlined />} size="large">
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="inline-flex items-center gap-2 h-10 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              <CheckCircleOutlined />
               {isEditMode ? 'Güncelle' : 'Oluştur'}
-            </Button>
+            </button>
           )}
         </div>
       }
@@ -315,8 +324,8 @@ export function ActivityModal({
         {currentStep === 0 && (
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <FileTextOutlined className="text-blue-600 text-lg" />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <FileTextOutlined className="text-slate-600 text-lg" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Temel Bilgiler</h3>
             </div>
@@ -394,13 +403,12 @@ export function ActivityModal({
                 </Col>
               </Row>
 
-              <Alert
-                message="30 Farklı Aktivite Tipi"
-                description="Telefon görüşmesinden webinara, ziyaretten sözleşme imzalamaya kadar 30 farklı aktivite tipinden birini seçebilirsiniz."
-                type="info"
-                showIcon
-                className="mt-2"
-              />
+              <div className="mt-4 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-4">
+                <div className="text-sm font-medium text-slate-700">30 Farklı Aktivite Tipi</div>
+                <div className="text-sm text-slate-600 mt-1">
+                  Telefon görüşmesinden webinara, ziyaretten sözleşme imzalamaya kadar 30 farklı aktivite tipinden birini seçebilirsiniz.
+                </div>
+              </div>
             </Card>
           </div>
         )}
@@ -409,8 +417,8 @@ export function ActivityModal({
         {currentStep === 1 && (
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <CalendarOutlined className="text-green-600 text-lg" />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <CalendarOutlined className="text-slate-600 text-lg" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Tarih, Saat ve Öncelik</h3>
             </div>
@@ -488,13 +496,12 @@ export function ActivityModal({
                 </Col>
               </Row>
 
-              <Alert
-                message="Süre Otomatik Hesaplanır"
-                description="Bitiş zamanı belirtirseniz, aktivite süresi otomatik olarak dakika cinsinden hesaplanır ve kaydedilir."
-                type="info"
-                showIcon
-                className="mt-2"
-              />
+              <div className="mt-4 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-4">
+                <div className="text-sm font-medium text-slate-700">Süre Otomatik Hesaplanır</div>
+                <div className="text-sm text-slate-600 mt-1">
+                  Bitiş zamanı belirtirseniz, aktivite süresi otomatik olarak dakika cinsinden hesaplanır ve kaydedilir.
+                </div>
+              </div>
             </Card>
           </div>
         )}
@@ -503,8 +510,8 @@ export function ActivityModal({
         {currentStep === 2 && (
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <UserOutlined className="text-purple-600 text-lg" />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <UserOutlined className="text-slate-600 text-lg" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">İlgili Kayıtlar</h3>
             </div>
@@ -614,8 +621,8 @@ export function ActivityModal({
         {currentStep === 3 && (
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-orange-50 rounded-lg">
-                <CheckCircleOutlined className="text-orange-600 text-lg" />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <CheckCircleOutlined className="text-slate-600 text-lg" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Detaylar ve Notlar</h3>
             </div>
@@ -654,12 +661,12 @@ export function ActivityModal({
                 />
               </Form.Item>
 
-              <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <div className="bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-4 mt-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircleOutlined className="text-blue-600 text-xl mt-1" />
+                  <CheckCircleOutlined className="text-slate-600 text-xl mt-0.5" />
                   <div>
-                    <div className="font-semibold text-blue-900 mb-1">✨ Tamamlamaya Hazır</div>
-                    <div className="text-sm text-blue-700">
+                    <div className="font-semibold text-slate-800 mb-1">Tamamlamaya Hazır</div>
+                    <div className="text-sm text-slate-600">
                       Aktivite bilgilerini gözden geçirin ve kaydetmek için "<strong>{isEditMode ? 'Güncelle' : 'Oluştur'}</strong>" butonuna tıklayın.
                       Oluşturulduktan sonra aktivite takvim ve listede görünür olacaktır.
                     </div>

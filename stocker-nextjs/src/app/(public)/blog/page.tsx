@@ -95,7 +95,7 @@ export default function BlogPage() {
       {/* Header */}
       <header className="border-b border-slate-200 bg-white backdrop-blur-sm sticky top-0">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="object-contain" priority /></Link>
+          <Link href="/"><Image src="/stoocker_black.png" alt="Stoocker Logo" width={120} height={40} className="object-contain" priority /></Link>
           <nav className="flex items-center space-x-6 text-sm">
             <Link href="/docs" className="text-slate-500 hover:text-slate-900 transition-colors">Dokümantasyon</Link>
             <Link href="/updates" className="text-slate-500 hover:text-slate-900 transition-colors">Güncellemeler</Link>

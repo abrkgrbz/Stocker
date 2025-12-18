@@ -30,7 +30,7 @@ export default function DemoPage() {
       {/* Header */}
       <header className="border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/"><Image src="/logo.png" alt="Stocker Logo" width={120} height={40} className="object-contain" priority /></Link>
+          <Link href="/"><Image src="/stoocker_black.png" alt="Stoocker Logo" width={120} height={40} className="object-contain" priority /></Link>
           <nav className="flex items-center space-x-6 text-sm">
             <Link href="/#features" className="text-slate-500 hover:text-slate-900 transition-colors">Özellikler</Link>
             <Link href="/#pricing" className="text-slate-500 hover:text-slate-900 transition-colors">Fiyatlandırma</Link>
