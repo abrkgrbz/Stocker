@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Card,
   Form,
   Input,
   Select,
@@ -11,21 +10,18 @@ import {
   Space,
   InputNumber,
   Typography,
-  Row,
-  Col,
   message,
   AutoComplete,
-  Statistic,
-  Divider,
   Alert,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  EditOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   SwapOutlined,
+  ShoppingOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons';
 import {
   useWarehouses,
@@ -36,7 +32,7 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { StockAdjustmentDto } from '@/lib/api/services/inventory.types';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 const adjustmentReasons = [
@@ -67,7 +63,6 @@ export default function NewStockAdjustmentPage() {
     name: string;
     code: string;
   } | null>(null);
-  const [productSearch, setProductSearch] = useState('');
   const [newQuantity, setNewQuantity] = useState<number>(0);
 
   const { data: warehouses = [] } = useWarehouses();
@@ -140,51 +135,44 @@ export default function NewStockAdjustmentPage() {
 
       await adjustStock.mutateAsync(data);
       router.push('/inventory/stock-adjustments');
-    } catch (error) {
+    } catch {
       // Validation or API error handled
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-gray-200" />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
-              >
-                <EditOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">Stok Düzeltme</h1>
-                <p className="text-sm text-gray-500 m-0">Manuel stok düzeltmesi yapın</p>
-              </div>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 m-0">Stok Düzeltme</h1>
+              <p className="text-sm text-gray-400 m-0">Manuel stok düzeltmesi yapın</p>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.push('/inventory/stock-adjustments')}>Vazgeç</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={adjustStock.isPending}
-              style={{ background: '#ef4444', borderColor: '#ef4444' }}
+              onClick={handleSubmit}
+              disabled={!selectedProduct || difference === 0}
+              style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
             >
               Düzeltmeyi Kaydet
             </Button>
@@ -192,186 +180,238 @@ export default function NewStockAdjustmentPage() {
         </div>
       </div>
 
-      {/* Form */}
-      <Form form={form} layout="vertical">
-        <Row gutter={24}>
-          {/* Left Column */}
-          <Col xs={24} md={14}>
-            <Card title="Ürün ve Depo Seçimi" className="mb-6">
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçiniz' }]}
-              >
-                <AutoComplete
-                  placeholder="Ürün ara..."
-                  value={selectedProduct?.name || ''}
-                  options={products.map((p) => ({
-                    value: String(p.id),
-                    label: `${p.code} - ${p.name}`,
-                  }))}
-                  onSearch={setProductSearch}
-                  onSelect={handleProductSelect}
-                  filterOption={(inputValue, option) =>
-                    option?.label?.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-                  }
-                />
-              </Form.Item>
-
-              {selectedProduct && (
-                <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                  <Text type="secondary" className="text-xs">
-                    Seçilen Ürün
-                  </Text>
-                  <div className="font-medium">{selectedProduct.name}</div>
-                  <Text type="secondary" className="text-xs">
-                    {selectedProduct.code}
-                  </Text>
-                </div>
-              )}
-
-              <Form.Item
-                name="warehouseId"
-                label="Depo"
-                rules={[{ required: true, message: 'Depo seçiniz' }]}
-                initialValue={preselectedWarehouseId ? Number(preselectedWarehouseId) : undefined}
-              >
-                <Select
-                  placeholder="Depo seçin"
-                  options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-                  onChange={handleWarehouseChange}
-                />
-              </Form.Item>
-
-              <Form.Item name="locationId" label="Lokasyon">
-                <Select
-                  placeholder="Lokasyon seçin (opsiyonel)"
-                  allowClear
-                  options={locations.map((l) => ({ value: l.id, label: l.code }))}
-                  disabled={!selectedWarehouse}
-                />
-              </Form.Item>
-            </Card>
-
-            <Card title="Düzeltme Detayları">
-              <Form.Item
-                name="reason"
-                label="Düzeltme Nedeni"
-                rules={[{ required: true, message: 'Neden seçiniz' }]}
-              >
-                <Select placeholder="Neden seçin" options={adjustmentReasons} />
-              </Form.Item>
-
-              <Form.Item name="notes" label="Notlar">
-                <TextArea rows={3} placeholder="Düzeltme açıklaması..." />
-              </Form.Item>
-            </Card>
-          </Col>
-
-          {/* Right Column - Quantity */}
-          <Col xs={24} md={10}>
-            <Card title="Stok Miktarı" className="mb-6">
-              {selectedProduct && selectedWarehouse ? (
-                <>
-                  <div className="text-center mb-6">
-                    <Statistic
-                      title="Mevcut Stok"
-                      value={currentQuantity}
-                      valueStyle={{ fontSize: 32 }}
-                    />
-                  </div>
-
-                  <Divider />
-
-                  <div className="mb-4">
-                    <Text className="block mb-2">Yeni Miktar:</Text>
-                    <InputNumber
-                      value={newQuantity}
-                      onChange={(val) => setNewQuantity(val || 0)}
-                      min={0}
-                      style={{ width: '100%' }}
-                      size="large"
-                    />
-                  </div>
-
-                  <div className="flex justify-center gap-2 mb-4">
-                    <Button
-                      size="small"
-                      onClick={() => setNewQuantity(Math.max(0, newQuantity - 10))}
-                    >
-                      -10
-                    </Button>
-                    <Button size="small" onClick={() => setNewQuantity(Math.max(0, newQuantity - 1))}>
-                      -1
-                    </Button>
-                    <Button size="small" onClick={() => setNewQuantity(newQuantity + 1)}>
-                      +1
-                    </Button>
-                    <Button size="small" onClick={() => setNewQuantity(newQuantity + 10)}>
-                      +10
-                    </Button>
-                  </div>
-
-                  <Divider />
-
-                  <div className="text-center">
-                    <Text type="secondary" className="block mb-2">
-                      Fark
-                    </Text>
-                    <div
-                      className="text-2xl font-bold flex items-center justify-center gap-2"
-                      style={{
-                        color:
-                          difference > 0
-                            ? '#10b981'
-                            : difference < 0
-                            ? '#ef4444'
-                            : '#6b7280',
-                      }}
-                    >
-                      {difference > 0 ? (
-                        <ArrowUpOutlined />
-                      ) : difference < 0 ? (
-                        <ArrowDownOutlined />
-                      ) : (
-                        <SwapOutlined />
-                      )}
-                      {difference > 0 ? '+' : ''}
-                      {difference}
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        <Form form={form} layout="vertical">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Panel - Product & Location */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Product Selection */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  <ShoppingOutlined className="mr-2" /> Ürün Seçimi
+                </h3>
+                <Form.Item
+                  name="productId"
+                  rules={[{ required: true, message: 'Ürün seçiniz' }]}
+                  className="mb-2"
+                >
+                  <AutoComplete
+                    placeholder="Ürün kodu veya adı ile arayın..."
+                    size="large"
+                    value={selectedProduct?.name || ''}
+                    options={products.map((p) => ({
+                      value: String(p.id),
+                      label: (
+                        <div className="flex items-center justify-between py-1">
+                          <span className="font-medium">{p.name}</span>
+                          <span className="text-gray-400">({p.code})</span>
+                        </div>
+                      ),
+                    }))}
+                    onSelect={handleProductSelect}
+                    filterOption={(inputValue, option) =>
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.name?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      products
+                        .find((p) => String(p.id) === option?.value)
+                        ?.code?.toLowerCase()
+                        .includes(inputValue.toLowerCase()) ||
+                      false
+                    }
+                  />
+                </Form.Item>
+                {selectedProduct && (
+                  <div className="p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl mt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
+                        <ShoppingOutlined className="text-white text-xl" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
+                        <div className="text-sm text-gray-500">Kod: {selectedProduct.code}</div>
+                      </div>
                     </div>
                   </div>
+                )}
+              </div>
 
-                  {difference !== 0 && (
-                    <Alert
-                      className="mt-4"
-                      message={
-                        difference > 0
-                          ? `Stok ${difference} adet artırılacak`
-                          : `Stok ${Math.abs(difference)} adet azaltılacak`
-                      }
-                      type={difference > 0 ? 'success' : 'warning'}
-                      showIcon
-                    />
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <Text type="secondary">
-                    Stok bilgilerini görmek için ürün ve depo seçin
-                  </Text>
+              {/* Location */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  <EnvironmentOutlined className="mr-2" /> Depo & Lokasyon
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
+                    <Form.Item
+                      name="warehouseId"
+                      rules={[{ required: true, message: 'Depo seçiniz' }]}
+                      className="mb-0"
+                      initialValue={preselectedWarehouseId ? Number(preselectedWarehouseId) : undefined}
+                    >
+                      <Select
+                        placeholder="Depo seçin"
+                        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                        onChange={handleWarehouseChange}
+                        className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Lokasyon</label>
+                    <Form.Item name="locationId" className="mb-0">
+                      <Select
+                        placeholder="Lokasyon seçin (opsiyonel)"
+                        allowClear
+                        options={locations.map((l) => ({ value: l.id, label: l.code }))}
+                        disabled={!selectedWarehouse}
+                        className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
                 </div>
-              )}
-            </Card>
+              </div>
 
-            <Alert
-              message="Dikkat"
-              description="Stok düzeltmeleri geri alınamaz. Lütfen değişikliklerinizi kaydetmeden önce kontrol edin."
-              type="warning"
-              showIcon
-            />
-          </Col>
-        </Row>
-      </Form>
+              {/* Adjustment Details */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Düzeltme Detayları
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Düzeltme Nedeni <span className="text-red-500">*</span></label>
+                    <Form.Item
+                      name="reason"
+                      rules={[{ required: true, message: 'Neden seçiniz' }]}
+                      className="mb-0"
+                    >
+                      <Select
+                        placeholder="Neden seçin"
+                        options={adjustmentReasons}
+                        className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
+                    <Form.Item name="notes" className="mb-0">
+                      <TextArea
+                        rows={3}
+                        placeholder="Düzeltme açıklaması..."
+                        className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
+                      />
+                    </Form.Item>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel - Quantity */}
+            <div className="space-y-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Stok Miktarı
+                </h3>
+                {selectedProduct && selectedWarehouse ? (
+                  <>
+                    <div className="text-center mb-6">
+                      <Text type="secondary" className="text-xs block mb-1">Mevcut Stok</Text>
+                      <div className="text-4xl font-bold text-gray-900">{currentQuantity}</div>
+                    </div>
+
+                    <div className="h-px bg-slate-100 my-4" />
+
+                    <div className="mb-4">
+                      <Text className="block text-sm font-medium text-slate-600 mb-2">Yeni Miktar:</Text>
+                      <InputNumber
+                        value={newQuantity}
+                        onChange={(val) => setNewQuantity(val || 0)}
+                        min={0}
+                        style={{ width: '100%' }}
+                        size="large"
+                        className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                      />
+                    </div>
+
+                    <div className="flex justify-center gap-2 mb-4">
+                      <Button size="small" onClick={() => setNewQuantity(Math.max(0, newQuantity - 10))}>
+                        -10
+                      </Button>
+                      <Button size="small" onClick={() => setNewQuantity(Math.max(0, newQuantity - 1))}>
+                        -1
+                      </Button>
+                      <Button size="small" onClick={() => setNewQuantity(newQuantity + 1)}>
+                        +1
+                      </Button>
+                      <Button size="small" onClick={() => setNewQuantity(newQuantity + 10)}>
+                        +10
+                      </Button>
+                    </div>
+
+                    <div className="h-px bg-slate-100 my-4" />
+
+                    <div className="text-center">
+                      <Text type="secondary" className="block text-xs mb-2">
+                        Fark
+                      </Text>
+                      <div
+                        className="text-3xl font-bold flex items-center justify-center gap-2"
+                        style={{
+                          color:
+                            difference > 0
+                              ? '#10b981'
+                              : difference < 0
+                              ? '#ef4444'
+                              : '#6b7280',
+                        }}
+                      >
+                        {difference > 0 ? (
+                          <ArrowUpOutlined />
+                        ) : difference < 0 ? (
+                          <ArrowDownOutlined />
+                        ) : (
+                          <SwapOutlined />
+                        )}
+                        {difference > 0 ? '+' : ''}
+                        {difference}
+                      </div>
+                    </div>
+
+                    {difference !== 0 && (
+                      <Alert
+                        className="mt-4"
+                        message={
+                          difference > 0
+                            ? `Stok ${difference} adet artırılacak`
+                            : `Stok ${Math.abs(difference)} adet azaltılacak`
+                        }
+                        type={difference > 0 ? 'success' : 'warning'}
+                        showIcon
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <Text type="secondary">
+                      Stok bilgilerini görmek için ürün ve depo seçin
+                    </Text>
+                  </div>
+                )}
+              </div>
+
+              <Alert
+                message="Dikkat"
+                description="Stok düzeltmeleri geri alınamaz. Lütfen değişikliklerinizi kaydetmeden önce kontrol edin."
+                type="warning"
+                showIcon
+              />
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

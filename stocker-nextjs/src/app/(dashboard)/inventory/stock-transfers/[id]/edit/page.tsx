@@ -3,17 +3,14 @@
 import React, { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Card,
   Form,
   Input,
   DatePicker,
   Button,
   Space,
   Typography,
-  Row,
-  Col,
   Spin,
-  Empty,
+  Alert,
   Tag,
   Descriptions,
   Table,
@@ -21,7 +18,6 @@ import {
 import {
   ArrowLeftOutlined,
   SaveOutlined,
-  SwapOutlined,
   EnvironmentOutlined,
 } from '@ant-design/icons';
 import {
@@ -63,7 +59,7 @@ export default function EditStockTransferPage() {
   const transferId = Number(params.id);
   const [form] = Form.useForm();
 
-  const { data: transfer, isLoading } = useStockTransfer(transferId);
+  const { data: transfer, isLoading, error } = useStockTransfer(transferId);
   const updateTransfer = useUpdateStockTransfer();
 
   useEffect(() => {
@@ -95,16 +91,26 @@ export default function EditStockTransferPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-white flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
   }
 
-  if (!transfer) {
+  if (error || !transfer) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Empty description="Transfer bulunamadı" />
+      <div className="p-8">
+        <Alert
+          message="Transfer Bulunamadı"
+          description="İstenen stok transferi bulunamadı veya bir hata oluştu."
+          type="error"
+          showIcon
+          action={
+            <Button onClick={() => router.push('/inventory/stock-transfers')}>
+              Transferlere Dön
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -145,46 +151,53 @@ export default function EditStockTransferPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
-              >
-                <SwapOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">Transfer Düzenle</h1>
-                <p className="text-sm text-gray-500 m-0">{transfer.transferNumber}</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-gray-900 m-0">
+                    {transfer.transferNumber}
+                  </h1>
+                  <Tag color={statusInfo.color}>{statusInfo.label}</Tag>
+                </div>
+                <p className="text-sm text-gray-400 m-0">
+                  {transferTypeLabels[transfer.transferType]} • {transfer.sourceWarehouseName} → {transfer.destinationWarehouseName}
+                </p>
               </div>
             </div>
           </div>
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.push(`/inventory/stock-transfers/${transferId}`)}>
+              Vazgeç
+            </Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={handleSubmit}
               loading={updateTransfer.isPending}
+              onClick={handleSubmit}
               disabled={!canEdit}
-              style={{ background: '#3b82f6', borderColor: '#3b82f6' }}
+              style={{
+                background: '#1a1a1a',
+                borderColor: '#1a1a1a',
+                color: 'white',
+              }}
             >
               Kaydet
             </Button>
@@ -192,22 +205,25 @@ export default function EditStockTransferPage() {
         </div>
       </div>
 
-      {!canEdit && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <Text type="warning">
-            Bu transfer düzenlenemez durumda. Sadece Taslak veya Beklemede durumundaki transferler düzenlenebilir.
-          </Text>
-        </div>
-      )}
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        {!canEdit && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <Text type="warning">
+              Bu transfer düzenlenemez durumda. Sadece Taslak veya Beklemede durumundaki transferler düzenlenebilir.
+            </Text>
+          </div>
+        )}
 
-      {/* Form */}
-      <Form form={form} layout="vertical">
-        <Row gutter={24}>
-          <Col xs={24} md={16}>
-            {/* Warehouse Info - Read Only */}
-            <Card title="Depo Bilgileri" className="mb-6">
-              <Row gutter={24}>
-                <Col xs={24} md={12}>
+        <Form form={form} layout="vertical">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Warehouse Info - Read Only */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Depo Bilgileri
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                       <EnvironmentOutlined className="text-blue-500 text-lg" />
@@ -217,8 +233,6 @@ export default function EditStockTransferPage() {
                       <div className="font-medium">{transfer.sourceWarehouseName}</div>
                     </div>
                   </div>
-                </Col>
-                <Col xs={24} md={12}>
                   <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                       <EnvironmentOutlined className="text-green-500 text-lg" />
@@ -228,120 +242,135 @@ export default function EditStockTransferPage() {
                       <div className="font-medium">{transfer.destinationWarehouseName}</div>
                     </div>
                   </div>
-                </Col>
-              </Row>
-            </Card>
-
-            {/* Transfer Info - Read Only */}
-            <Card title="Transfer Bilgileri" className="mb-6">
-              <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-                <Descriptions.Item label="Transfer No">
-                  {transfer.transferNumber}
-                </Descriptions.Item>
-                <Descriptions.Item label="Durum">
-                  <Tag color={statusInfo.color}>{statusInfo.label}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Transfer Türü">
-                  {transferTypeLabels[transfer.transferType]}
-                </Descriptions.Item>
-                <Descriptions.Item label="Transfer Tarihi">
-                  {dayjs(transfer.transferDate).format('DD/MM/YYYY')}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-
-            {/* Editable Fields */}
-            <Card title="Düzenlenebilir Bilgiler" className="mb-6">
-              <Form.Item name="expectedArrivalDate" label="Tahmini Varış Tarihi">
-                <DatePicker
-                  style={{ width: '100%' }}
-                  format="DD/MM/YYYY"
-                  disabled={!canEdit}
-                />
-              </Form.Item>
-
-              <Form.Item name="description" label="Açıklama">
-                <TextArea
-                  rows={3}
-                  placeholder="Transfer açıklaması..."
-                  disabled={!canEdit}
-                />
-              </Form.Item>
-
-              <Form.Item name="notes" label="Notlar">
-                <TextArea
-                  rows={3}
-                  placeholder="Transfer ile ilgili notlar..."
-                  disabled={!canEdit}
-                />
-              </Form.Item>
-            </Card>
-
-            {/* Items - Read Only */}
-            <Card title={`Transfer Kalemleri (${transfer.items?.length || 0})`}>
-              <Table
-                columns={itemColumns}
-                dataSource={transfer.items || []}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                locale={{ emptyText: 'Kalem bulunamadı' }}
-              />
-              <Text type="secondary" className="block mt-3 text-xs">
-                Not: Transfer kalemleri oluşturulduktan sonra değiştirilemez.
-              </Text>
-            </Card>
-          </Col>
-
-          <Col xs={24} md={8}>
-            {/* Statistics - Read Only */}
-            <Card title="İstatistikler" className="mb-6">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <Text type="secondary">Talep Edilen</Text>
-                  <Text strong>{transfer.totalRequestedQuantity}</Text>
-                </div>
-                <div className="flex justify-between">
-                  <Text type="secondary">Sevk Edilen</Text>
-                  <Text strong className="text-blue-600">{transfer.totalShippedQuantity}</Text>
-                </div>
-                <div className="flex justify-between">
-                  <Text type="secondary">Teslim Alınan</Text>
-                  <Text strong className="text-green-600">{transfer.totalReceivedQuantity}</Text>
                 </div>
               </div>
-            </Card>
 
-            {/* Timestamps */}
-            <Card title="Kayıt Bilgileri">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <Text type="secondary">Oluşturulma</Text>
-                  <Text>{dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
-                </div>
-                {transfer.shippedDate && (
-                  <div className="flex justify-between">
-                    <Text type="secondary">Sevk Tarihi</Text>
-                    <Text>{dayjs(transfer.shippedDate).format('DD/MM/YYYY HH:mm')}</Text>
-                  </div>
-                )}
-                {transfer.receivedDate && (
-                  <div className="flex justify-between">
-                    <Text type="secondary">Teslim Tarihi</Text>
-                    <Text>{dayjs(transfer.receivedDate).format('DD/MM/YYYY HH:mm')}</Text>
-                  </div>
-                )}
-                {transfer.completedDate && (
-                  <div className="flex justify-between">
-                    <Text type="secondary">Tamamlanma</Text>
-                    <Text>{dayjs(transfer.completedDate).format('DD/MM/YYYY HH:mm')}</Text>
-                  </div>
-                )}
+              {/* Transfer Info - Read Only */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Transfer Bilgileri
+                </h3>
+                <Descriptions column={{ xs: 1, sm: 2 }} size="small">
+                  <Descriptions.Item label="Transfer No">
+                    {transfer.transferNumber}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Transfer Türü">
+                    {transferTypeLabels[transfer.transferType]}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Transfer Tarihi">
+                    {dayjs(transfer.transferDate).format('DD/MM/YYYY')}
+                  </Descriptions.Item>
+                </Descriptions>
               </div>
-            </Card>
-          </Col>
-        </Row>
-      </Form>
+
+              {/* Editable Fields */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Düzenlenebilir Bilgiler
+                </h3>
+                <Form.Item name="expectedArrivalDate" label="Tahmini Varış Tarihi">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD/MM/YYYY"
+                    disabled={!canEdit}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+
+                <Form.Item name="description" label="Açıklama">
+                  <TextArea
+                    rows={3}
+                    placeholder="Transfer açıklaması..."
+                    disabled={!canEdit}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+
+                <Form.Item name="notes" label="Notlar">
+                  <TextArea
+                    rows={3}
+                    placeholder="Transfer ile ilgili notlar..."
+                    disabled={!canEdit}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Items - Read Only */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Transfer Kalemleri ({transfer.items?.length || 0})
+                </h3>
+                <Table
+                  columns={itemColumns}
+                  dataSource={transfer.items || []}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                  locale={{ emptyText: 'Kalem bulunamadı' }}
+                />
+                <Text type="secondary" className="block mt-3 text-xs">
+                  Not: Transfer kalemleri oluşturulduktan sonra değiştirilemez.
+                </Text>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Statistics - Read Only */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  İstatistikler
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <Text type="secondary">Talep Edilen</Text>
+                    <Text strong>{transfer.totalRequestedQuantity}</Text>
+                  </div>
+                  <div className="flex justify-between">
+                    <Text type="secondary">Sevk Edilen</Text>
+                    <Text strong className="text-blue-600">{transfer.totalShippedQuantity}</Text>
+                  </div>
+                  <div className="flex justify-between">
+                    <Text type="secondary">Teslim Alınan</Text>
+                    <Text strong className="text-green-600">{transfer.totalReceivedQuantity}</Text>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timestamps */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                  Kayıt Bilgileri
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <Text type="secondary">Oluşturulma</Text>
+                    <Text>{dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
+                  </div>
+                  {transfer.shippedDate && (
+                    <div className="flex justify-between">
+                      <Text type="secondary">Sevk Tarihi</Text>
+                      <Text>{dayjs(transfer.shippedDate).format('DD/MM/YYYY HH:mm')}</Text>
+                    </div>
+                  )}
+                  {transfer.receivedDate && (
+                    <div className="flex justify-between">
+                      <Text type="secondary">Teslim Tarihi</Text>
+                      <Text>{dayjs(transfer.receivedDate).format('DD/MM/YYYY HH:mm')}</Text>
+                    </div>
+                  )}
+                  {transfer.completedDate && (
+                    <div className="flex justify-between">
+                      <Text type="secondary">Tamamlanma</Text>
+                      <Text>{dayjs(transfer.completedDate).format('DD/MM/YYYY HH:mm')}</Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

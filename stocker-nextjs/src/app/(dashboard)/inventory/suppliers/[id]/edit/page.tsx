@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Form, Button, message, Space, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ShopOutlined, StarFilled } from '@ant-design/icons';
-import { useSupplier, useUpdateSupplier } from '@/lib/api/hooks/useInventory';
+import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons';
 import { SupplierForm } from '@/components/inventory/suppliers';
+import { useSupplier, useUpdateSupplier } from '@/lib/api/hooks/useInventory';
 import type { UpdateSupplierDto } from '@/lib/api/services/inventory.types';
 
 export default function EditSupplierPage() {
@@ -20,16 +20,15 @@ export default function EditSupplierPage() {
   const handleSubmit = async (values: UpdateSupplierDto) => {
     try {
       await updateSupplier.mutateAsync({ id, data: values });
-      message.success('Tedarikçi başarıyla güncellendi');
       router.push('/inventory/suppliers');
-    } catch (error: any) {
-      message.error(error?.response?.data?.message || 'Tedarikçi güncellenemedi');
+    } catch (error) {
+      // Error handled by hook
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-white flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -37,51 +36,42 @@ export default function EditSupplierPage() {
 
   if (error || !supplier) {
     return (
-      <Alert
-        message="Hata"
-        description="Tedarikçi bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={
-          <Button onClick={() => router.back()}>Geri Dön</Button>
-        }
-      />
+      <div className="p-8">
+        <Alert
+          message="Tedarikçi Bulunamadı"
+          description="İstenen tedarikçi bulunamadı veya bir hata oluştu."
+          type="error"
+          showIcon
+          action={
+            <Button onClick={() => router.push('/inventory/suppliers')}>
+              Tedarikçilere Dön
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Sticky Header with Glass Effect */}
+    <div className="min-h-screen bg-white">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-8"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
           background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => router.back()}
-              className="flex items-center"
-            >
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-gray-200" />
+              type="text"
+              className="text-gray-500 hover:text-gray-800"
+            />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                }}
-              >
-                <ShopOutlined style={{ fontSize: 20, color: 'white' }} />
-              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -90,39 +80,47 @@ export default function EditSupplierPage() {
                   {supplier.isPreferred && (
                     <Tag color="gold" icon={<StarFilled />}>Tercih Edilen</Tag>
                   )}
-                  <Tag color={supplier.isActive ? 'success' : 'default'}>
+                  <Tag
+                    icon={supplier.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    color={supplier.isActive ? 'success' : 'default'}
+                  >
                     {supplier.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-500 m-0">
-                  Kod: {supplier.code}
-                </p>
+                <p className="text-sm text-gray-400 m-0">{supplier.code}</p>
               </div>
             </div>
           </div>
-
           <Space>
-            <Button onClick={() => router.back()}>İptal</Button>
+            <Button onClick={() => router.push('/inventory/suppliers')}>
+              Vazgeç
+            </Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
-              onClick={() => form.submit()}
               loading={updateSupplier.isPending}
-              style={{ background: '#10b981', borderColor: '#10b981' }}
+              onClick={() => form.submit()}
+              style={{
+                background: '#1a1a1a',
+                borderColor: '#1a1a1a',
+                color: 'white',
+              }}
             >
-              Güncelle
+              Kaydet
             </Button>
           </Space>
         </div>
       </div>
 
-      {/* Form */}
-      <SupplierForm
-        form={form}
-        initialValues={supplier}
-        onFinish={handleSubmit}
-        loading={updateSupplier.isPending}
-      />
+      {/* Page Content */}
+      <div className="px-8 py-8 max-w-7xl mx-auto">
+        <SupplierForm
+          form={form}
+          initialValues={supplier}
+          onFinish={handleSubmit}
+          loading={updateSupplier.isPending}
+        />
+      </div>
     </div>
   );
 }
