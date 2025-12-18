@@ -511,6 +511,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [moduleSwitcherOpen, setModuleSwitcherOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
 
   // Global keyboard shortcut for search (Ctrl+K)
   useEffect(() => {
@@ -1131,22 +1132,323 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <div className="w-px h-5 bg-slate-200 mx-2" />
 
               {/* Quick Create Button */}
-              <Tooltip title="Hızlı Oluştur">
-                <button
-                  type="button"
-                  className="
-                    w-8 h-8 flex items-center justify-center
-                    bg-slate-900 hover:bg-slate-800
-                    text-white rounded-lg transition-all duration-150
-                  "
-                  onClick={() => {
-                    // TODO: Open quick create modal
-                    message.info('Hızlı oluştur menüsü yakında aktif olacak');
-                  }}
-                >
-                  <Plus className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-              </Tooltip>
+              <Popover
+                open={quickCreateOpen}
+                onOpenChange={setQuickCreateOpen}
+                trigger="click"
+                placement="bottomRight"
+                arrow={false}
+                content={
+                  <div style={{ width: 280, padding: 8 }}>
+                    <div style={{
+                      fontSize: 12,
+                      color: '#999',
+                      marginBottom: 12,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      fontWeight: 600,
+                    }}>
+                      Hızlı Oluştur
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {/* CRM Items */}
+                      {activeModuleCodes.has('crm') && (
+                        <>
+                          <div
+                            onClick={() => { router.push('/crm/customers/new'); setQuickCreateOpen(false); }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: '#7c3aed15',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#7c3aed',
+                              fontSize: 14,
+                            }}>
+                              <ContactsOutlined />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Müşteri</div>
+                              <div style={{ fontSize: 12, color: '#999' }}>CRM</div>
+                            </div>
+                          </div>
+                          <div
+                            onClick={() => { router.push('/crm/leads/new'); setQuickCreateOpen(false); }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: '#7c3aed15',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#7c3aed',
+                              fontSize: 14,
+                            }}>
+                              <UserAddOutlined />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Potansiyel</div>
+                              <div style={{ fontSize: 12, color: '#999' }}>CRM</div>
+                            </div>
+                          </div>
+                          <div
+                            onClick={() => { router.push('/crm/opportunities/new'); setQuickCreateOpen(false); }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: '#7c3aed15',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#7c3aed',
+                              fontSize: 14,
+                            }}>
+                              <RiseOutlined />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Fırsat</div>
+                              <div style={{ fontSize: 12, color: '#999' }}>CRM</div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {/* Inventory Items */}
+                      {activeModuleCodes.has('inventory') && (
+                        <div
+                          onClick={() => { router.push('/inventory/products/new'); setQuickCreateOpen(false); }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            background: '#10b98115',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#10b981',
+                            fontSize: 14,
+                          }}>
+                            <AppstoreOutlined />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Ürün</div>
+                            <div style={{ fontSize: 12, color: '#999' }}>Envanter</div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Sales Items */}
+                      {activeModuleCodes.has('sales') && (
+                        <>
+                          <div
+                            onClick={() => { router.push('/sales/orders/new'); setQuickCreateOpen(false); }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: '#f59e0b15',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#f59e0b',
+                              fontSize: 14,
+                            }}>
+                              <ShoppingCartOutlined />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Sipariş</div>
+                              <div style={{ fontSize: 12, color: '#999' }}>Satış</div>
+                            </div>
+                          </div>
+                          <div
+                            onClick={() => { router.push('/sales/invoices/new'); setQuickCreateOpen(false); }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: '#f59e0b15',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#f59e0b',
+                              fontSize: 14,
+                            }}>
+                              <FileTextOutlined />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Fatura</div>
+                              <div style={{ fontSize: 12, color: '#999' }}>Satış</div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {/* HR Items */}
+                      {activeModuleCodes.has('hr') && (
+                        <div
+                          onClick={() => { router.push('/hr/employees/new'); setQuickCreateOpen(false); }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            background: '#0ea5e915',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#0ea5e9',
+                            fontSize: 14,
+                          }}>
+                            <IdcardOutlined />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Çalışan</div>
+                            <div style={{ fontSize: 12, color: '#999' }}>İK</div>
+                          </div>
+                        </div>
+                      )}
+                      {/* Purchase Items */}
+                      {activeModuleCodes.has('purchase') && (
+                        <div
+                          onClick={() => { router.push('/purchase/orders/new'); setQuickCreateOpen(false); }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: '10px 12px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            background: '#8b5cf615',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#8b5cf6',
+                            fontSize: 14,
+                          }}>
+                            <ReconciliationOutlined />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Satın Alma</div>
+                            <div style={{ fontSize: 12, color: '#999' }}>Satın Alma</div>
+                          </div>
+                        </div>
+                      )}
+                      {/* No modules active message */}
+                      {activeModuleCodes.size === 0 && (
+                        <div style={{ padding: '16px 12px', textAlign: 'center', color: '#999' }}>
+                          Aktif modül bulunmuyor
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                }
+              >
+                <Tooltip title="Hızlı Oluştur">
+                  <button
+                    type="button"
+                    className="
+                      w-8 h-8 flex items-center justify-center
+                      bg-slate-900 hover:bg-slate-800
+                      text-white rounded-lg transition-all duration-150
+                    "
+                  >
+                    <Plus className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
+                </Tooltip>
+              </Popover>
 
               {/* Divider */}
               <div className="w-px h-5 bg-slate-200 mx-2" />
