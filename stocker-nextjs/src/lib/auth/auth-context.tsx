@@ -138,22 +138,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Clear user state
       setUser(null);
 
-      // ✅ KEEP tenant-code cookie for easy re-login on same subdomain
-      // Only clear auth-related cookies (HttpOnly cookies cleared by backend)
-
-      // Clear any localStorage auth data
+      // Clear ALL cookies (including tenant-code for full logout)
       if (typeof window !== 'undefined') {
+        // Get all cookies and clear them
+        const cookies = document.cookie.split(';');
+        const domain = window.location.hostname;
+        const baseDomain = domain.includes('stoocker.app') ? '.stoocker.app' : domain;
+
+        cookies.forEach(cookie => {
+          const cookieName = cookie.split('=')[0].trim();
+          // Clear cookie for current domain
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          // Clear cookie for base domain (e.g., .stoocker.app)
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${baseDomain}`;
+        });
+        console.log('🍪 Cleared all cookies');
+
+        // Clear localStorage
         localStorage.removeItem('tenantId');
         localStorage.removeItem('tenantIdentifier');
+        localStorage.removeItem('requiresSetup');
         console.log('🧹 Cleared localStorage auth data');
+
+        // Clear sessionStorage
+        sessionStorage.clear();
+        console.log('🧹 Cleared sessionStorage');
       }
 
-      console.log('🍪 Tenant-code cookie preserved for re-login');
-
-      // Stay on same subdomain for re-login
-      router.push('/login');
-
-      console.log('✅ Logout complete - redirecting to /login');
+      // Redirect to auth subdomain login page in production
+      const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
+      if (isProduction) {
+        console.log('✅ Logout complete - redirecting to auth.stoocker.app/login');
+        window.location.href = 'https://auth.stoocker.app/login';
+      } else {
+        console.log('✅ Logout complete - redirecting to /login');
+        router.push('/login');
+      }
     }
   };
 
