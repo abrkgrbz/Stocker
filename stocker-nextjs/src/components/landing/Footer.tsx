@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useTranslations } from '@/lib/i18n';
 
 export default function Footer() {
@@ -38,7 +39,13 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-slate-200">
       {/* CTA Section */}
-      <div className="border-b border-slate-100">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="border-b border-slate-100"
+      >
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
@@ -49,23 +56,29 @@ export default function Footer() {
                 {t('landing.footer.cta.subtitle')}
               </p>
             </div>
-            <div className="flex gap-3">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex gap-3"
+            >
               <Link
                 href="/register"
-                className="bg-slate-900 hover:bg-slate-800 text-white text-[14px] font-medium px-5 py-2.5 rounded-lg transition-colors"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-[14px] font-medium px-5 py-2.5 rounded-lg transition-all hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5"
               >
                 {t('landing.footer.cta.startFree')}
               </Link>
               <Link
                 href="/contact"
-                className="bg-white hover:bg-slate-50 text-slate-700 text-[14px] font-medium px-5 py-2.5 rounded-lg border border-slate-200 transition-colors"
+                className="bg-white hover:bg-slate-50 text-slate-700 text-[14px] font-medium px-5 py-2.5 rounded-lg border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-0.5"
               >
                 {t('landing.footer.cta.contactSales')}
               </Link>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Links */}
       <div className="max-w-6xl mx-auto px-6 py-12">

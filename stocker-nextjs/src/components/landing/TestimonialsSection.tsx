@@ -1,143 +1,242 @@
 'use client';
 
 import React from 'react';
-import { Avatar } from 'antd';
-import { StarFilled } from '@ant-design/icons';
+import { motion, Variants } from 'framer-motion';
 
 const testimonials = [
   {
-    name: 'Ahmet Yılmaz',
-    role: 'CEO',
-    company: 'TechStore AŞ',
-    avatar: 'AY',
-    content: 'Stocker sayesinde stok yönetimimiz çok daha kolay hale geldi. Artık stok eksikliği yaşamıyoruz ve raporlama süreçlerimiz otomatikleşti. Kesinlikle tavsiye ediyorum!',
-    rating: 5,
-    color: 'bg-blue-500',
-  },
-  {
-    name: 'Ayşe Demir',
+    id: 1,
+    content: 'Stoocker ile envanter yönetimimiz tamamen değişti. Eskiden saatler süren stok sayımları artık dakikalar içinde tamamlanıyor. Müşteri memnuniyetimiz %40 arttı.',
+    author: 'Ahmet Yılmaz',
     role: 'Operasyon Müdürü',
-    company: 'ModaButik',
-    avatar: 'AD',
-    content: 'Kullanımı çok kolay ve sezgisel. Ekibimiz hızlıca adapte oldu. Özellikle mobil uygulaması çok işlevsel, her yerden kontrol edebiliyoruz.',
+    company: 'TechStore Türkiye',
+    avatar: 'AY',
     rating: 5,
-    color: 'bg-purple-500',
   },
   {
-    name: 'Mehmet Kaya',
-    role: 'İşletme Sahibi',
-    company: 'Kaya Gıda',
-    avatar: 'MK',
-    content: 'Fiyat/performans oranı mükemmel. Daha pahalı alternatifleri denedik ama Stocker hem daha uygun hem de daha kullanışlı. Müşteri desteği de çok başarılı.',
+    id: 2,
+    content: 'E-fatura entegrasyonu hayat kurtarıcı oldu. Tek tıkla fatura kesebilmek ve GİB ile sorunsuz çalışmak inanılmaz bir kolaylık. Muhasebe ekibimiz çok mutlu.',
+    author: 'Zeynep Kaya',
+    role: 'Finans Direktörü',
+    company: 'ModernMart',
+    avatar: 'ZK',
     rating: 5,
-    color: 'bg-green-500',
   },
   {
-    name: 'Zeynep Şahin',
-    role: 'CFO',
-    company: 'Global Ticaret',
-    avatar: 'ZŞ',
-    content: 'Raporlama ve analiz özellikleri gerçekten güçlü. Finans ekibimiz için vazgeçilmez oldu. Özellikle maliyet takibi ve kar/zarar analizleri çok detaylı.',
-    rating: 5,
-    color: 'bg-pink-500',
-  },
-  {
-    name: 'Can Özdemir',
-    role: 'Depo Müdürü',
-    company: 'Lojistik Pro',
-    avatar: 'CÖ',
-    content: 'Barkod sistemi ve otomatik sayım özellikleri işimizi hızlandırdı. Hata payını minimuma indirdik. Entegrasyon seçenekleri de çok geniş.',
-    rating: 5,
-    color: 'bg-orange-500',
-  },
-  {
-    name: 'Elif Arslan',
+    id: 3,
+    content: 'Çoklu şirket yönetimi özelliği bizi Stoocker\'a bağlayan en önemli faktör. 5 farklı şirketimizi tek panelden yönetiyoruz. Zaman tasarrufu müthiş.',
+    author: 'Mehmet Demir',
     role: 'Genel Müdür',
-    company: 'E-Ticaret Dünyası',
-    avatar: 'EA',
-    content: 'E-ticaret sitemizle entegrasyonu sorunsuz çalışıyor. Stok senkronizasyonu gerçek zamanlı. Müşteri memnuniyetimiz arttı çünkü stok bilgileri her zaman güncel.',
+    company: 'Demir Holding',
+    avatar: 'MD',
     rating: 5,
-    color: 'bg-indigo-500',
+  },
+  {
+    id: 4,
+    content: 'Raporlama özellikleri gerçekten profesyonel seviyede. Satış trendlerini, stok dönüş hızlarını anlık takip edebiliyorum. Karar alma süreçlerimiz hızlandı.',
+    author: 'Elif Şahin',
+    role: 'Satış Müdürü',
+    company: 'GrowthCo',
+    avatar: 'EŞ',
+    rating: 5,
   },
 ];
 
+// Animation variants for staggered entrance
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
 export default function TestimonialsSection() {
   return (
-    <section id="testimonials" className="py-24 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-white border-t border-slate-100 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Müşterilerimiz Ne Diyor?
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Binlerce mutlu müşterimizin deneyimlerini dinleyin
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
+        >
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="inline-block text-[12px] font-medium text-slate-500 uppercase tracking-wider mb-4"
+          >
+            Müşteri Yorumları
+          </motion.span>
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-[32px] md:text-[42px] font-semibold text-slate-900 tracking-tight mb-4"
+          >
+            Binlerce işletme güveniyor
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-[16px] text-slate-500 max-w-lg mx-auto"
+          >
+            Türkiye'nin önde gelen işletmeleri neden Stoocker'ı tercih ediyor?
+          </motion.p>
+        </motion.div>
 
-        {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Testimonials Grid - Masonry Style with Staggered Animation */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           {testimonials.map((testimonial, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 relative group"
+            <motion.div
+              key={testimonial.id}
+              variants={cardVariants}
+              whileHover={{
+                y: -4,
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+                transition: { duration: 0.3 }
+              }}
+              className={`
+                group relative bg-white border border-slate-200 rounded-2xl p-6
+                hover:border-slate-300
+                transition-colors duration-300
+                ${index === 0 || index === 3 ? 'md:row-span-1' : ''}
+              `}
             >
               {/* Quote Icon */}
-              <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="absolute top-6 left-6">
+                <svg
+                  className="w-8 h-8 text-slate-100 group-hover:text-slate-200 transition-colors"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                 </svg>
               </div>
 
-              {/* Rating */}
-              <div className="flex gap-1 mb-4">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <StarFilled key={i} className="text-yellow-400 text-lg" />
-                ))}
-              </div>
-
               {/* Content */}
-              <p className="text-gray-700 leading-relaxed mb-6 italic">
-                "{testimonial.content}"
-              </p>
+              <div className="relative pt-8">
+                {/* Rating */}
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <svg
+                      key={i}
+                      className="w-4 h-4 text-amber-400"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  ))}
+                </div>
 
-              {/* Author */}
-              <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
-                <Avatar size={56} className={`${testimonial.color} text-white font-semibold text-lg`}>
-                  {testimonial.avatar}
-                </Avatar>
-                <div>
-                  <div className="font-bold text-gray-900">{testimonial.name}</div>
-                  <div className="text-sm text-gray-600">{testimonial.role}</div>
-                  <div className="text-sm text-gray-500">{testimonial.company}</div>
+                {/* Quote */}
+                <p className="text-[15px] text-slate-600 leading-relaxed mb-6">
+                  "{testimonial.content}"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center">
+                    <span className="text-[12px] font-semibold text-white">
+                      {testimonial.avatar}
+                    </span>
+                  </div>
+
+                  {/* Info */}
+                  <div>
+                    <div className="text-[14px] font-semibold text-slate-900">
+                      {testimonial.author}
+                    </div>
+                    <div className="text-[12px] text-slate-500">
+                      {testimonial.role} · {testimonial.company}
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Decorative Gradient */}
-              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${testimonial.color.replace('bg-', 'from-')} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-2xl`}></div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Trust Badges */}
-        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="text-center p-6 bg-white rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-purple-600 mb-2">4.9/5</div>
-            <div className="text-gray-600 text-sm">Ortalama Puan</div>
-          </div>
-          <div className="text-center p-6 bg-white rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-purple-600 mb-2">2,500+</div>
-            <div className="text-gray-600 text-sm">Yorumlar</div>
-          </div>
-          <div className="text-center p-6 bg-white rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-purple-600 mb-2">98%</div>
-            <div className="text-gray-600 text-sm">Tavsiye Oranı</div>
-          </div>
-          <div className="text-center p-6 bg-white rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-purple-600 mb-2">10K+</div>
-            <div className="text-gray-600 text-sm">Aktif Kullanıcı</div>
-          </div>
-        </div>
+        {/* Stats Row - Staggered Animation */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+            }
+          }}
+          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6"
+        >
+          {[
+            { value: '2,500+', label: 'Aktif İşletme' },
+            { value: '₺50M+', label: 'Aylık İşlem Hacmi' },
+            { value: '99.9%', label: 'Uptime Garantisi' },
+            { value: '4.9/5', label: 'Ortalama Puan' },
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.95 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+                }
+              }}
+              whileHover={{
+                scale: 1.03,
+                transition: { duration: 0.2 }
+              }}
+              className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 hover:bg-slate-100/50 transition-colors duration-300"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+                className="text-[28px] font-semibold text-slate-900 tracking-tight mb-1"
+              >
+                {stat.value}
+              </motion.div>
+              <div className="text-[13px] text-slate-500">{stat.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

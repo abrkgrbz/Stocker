@@ -1,9 +1,33 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from '@/lib/i18n';
+
+// Animation variants for staggered entrance
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
 
 export default function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
@@ -15,44 +39,98 @@ export default function PricingSection() {
       monthlyPrice: 0,
       yearlyPrice: 0,
       highlighted: false,
+      features: [
+        '100 ürün limiti',
+        '1 kullanıcı',
+        'Temel raporlama',
+        'E-posta desteği',
+        '1 depo',
+      ],
     },
     {
       key: 'pro',
       monthlyPrice: 299,
       yearlyPrice: 249,
       highlighted: true,
+      features: [
+        'Sınırsız ürün',
+        '10 kullanıcı',
+        'Gelişmiş raporlama',
+        'Öncelikli destek',
+        'Sınırsız depo',
+        'E-fatura entegrasyonu',
+        'API erişimi',
+        'CRM modülü',
+      ],
     },
     {
       key: 'enterprise',
       monthlyPrice: null,
       yearlyPrice: null,
       highlighted: false,
+      features: [
+        'Sınırsız her şey',
+        'Sınırsız kullanıcı',
+        'Özel raporlama',
+        '7/24 destek',
+        'Çoklu şirket',
+        'Özel entegrasyonlar',
+        'SLA garantisi',
+        'Dedicated manager',
+      ],
     },
   ];
 
   return (
-    <section id="pricing" className="py-24 bg-white border-t border-slate-100">
+    <section id="pricing" className="py-24 bg-slate-50/50 border-t border-slate-100">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-12"
         >
-          <h2 className="text-[32px] md:text-[40px] font-semibold text-slate-900 tracking-tight mb-4">
+          <motion.span
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="inline-block text-[12px] font-medium text-slate-500 uppercase tracking-wider mb-4"
+          >
+            Fiyatlandırma
+          </motion.span>
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-[32px] md:text-[42px] font-semibold text-slate-900 tracking-tight mb-4"
+          >
             {t('landing.pricing.title')}
-          </h2>
-          <p className="text-[16px] text-slate-500 mb-8">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-[16px] text-slate-500 mb-8"
+          >
             {t('landing.pricing.subtitle')}
-          </p>
+          </motion.p>
 
-          {/* Toggle */}
-          <div className="inline-flex items-center gap-3 p-1 bg-slate-100 rounded-lg">
+          {/* Toggle - Animated */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl"
+          >
             <button
               onClick={() => setIsYearly(false)}
-              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+              className={`px-5 py-2.5 text-[13px] font-medium rounded-lg transition-all ${
                 !isYearly
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
@@ -62,41 +140,55 @@ export default function PricingSection() {
             </button>
             <button
               onClick={() => setIsYearly(true)}
-              className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+              className={`px-5 py-2.5 text-[13px] font-medium rounded-lg transition-all flex items-center gap-2 ${
                 isYearly
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               {t('landing.pricing.yearly')}
-              <span className="ml-1.5 text-[11px] text-emerald-600 font-semibold">{t('landing.pricing.discount')}</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
+                {t('landing.pricing.discount')}
+              </span>
             </button>
-          </div>
+          </motion.div>
         </motion.div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Cards - Featured in center with Staggered Animation */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+        >
           {plans.map((plan, index) => {
-            const features = t(`landing.pricing.${plan.key}.features`);
-            const featureList = typeof features === 'string' ? features.split(',') : (features as unknown as string[]);
+            const isHighlighted = plan.highlighted;
 
             return (
               <motion.div
                 key={plan.key}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative rounded-xl p-6 ${
-                  plan.highlighted
-                    ? 'border-2 border-slate-900'
-                    : 'border border-slate-200'
-                }`}
+                variants={cardVariants}
+                whileHover={!isHighlighted ? {
+                  y: -6,
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+                  transition: { duration: 0.3 }
+                } : undefined}
+                className={`
+                  relative rounded-2xl p-6 transition-colors duration-300
+                  ${isHighlighted
+                    ? 'bg-white border-2 border-slate-900 shadow-xl shadow-slate-900/10 lg:scale-105 lg:-my-4 lg:py-10 z-10'
+                    : 'bg-white border border-slate-200 hover:border-slate-300'
+                  }
+                `}
               >
                 {/* Popular Badge */}
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-slate-900 text-white text-[11px] font-medium px-3 py-1 rounded-full">
+                {isHighlighted && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-slate-900 text-white text-[11px] font-semibold px-4 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
                       {t('landing.pricing.mostPopular')}
                     </span>
                   </div>
@@ -104,7 +196,7 @@ export default function PricingSection() {
 
                 {/* Plan Info */}
                 <div className="mb-6">
-                  <h3 className="text-[16px] font-semibold text-slate-900 mb-1">
+                  <h3 className={`text-[18px] font-semibold mb-1 ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
                     {t(`landing.pricing.${plan.key}.name`)}
                   </h3>
                   <p className="text-[13px] text-slate-500">
@@ -115,62 +207,91 @@ export default function PricingSection() {
                 {/* Price */}
                 <div className="mb-6">
                   {plan.monthlyPrice !== null ? (
-                    <div className="flex items-baseline">
-                      <span className="text-[36px] font-semibold text-slate-900 tracking-tight">
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
                         ₺{isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                       </span>
-                      <span className="ml-1.5 text-[14px] text-slate-500">{t('landing.pricing.perMonth')}</span>
+                      <span className="text-[14px] text-slate-500">{t('landing.pricing.perMonth')}</span>
                     </div>
                   ) : (
-                    <div className="text-[36px] font-semibold text-slate-900 tracking-tight">
+                    <div className={`text-[42px] font-bold tracking-tight ${isHighlighted ? 'text-slate-900' : 'text-slate-700'}`}>
                       {t('landing.pricing.custom')}
+                    </div>
+                  )}
+                  {isYearly && plan.monthlyPrice !== null && plan.monthlyPrice > 0 && (
+                    <div className="text-[12px] text-slate-400 mt-1">
+                      Yıllık ödemeyle ₺{((plan.monthlyPrice - (plan.yearlyPrice || 0)) * 12).toLocaleString()} tasarruf
                     </div>
                   )}
                 </div>
 
+                {/* CTA */}
+                <Link
+                  href={plan.monthlyPrice === null ? '/contact' : '/register'}
+                  className={`
+                    block w-full py-3 px-4 rounded-xl text-center text-[14px] font-semibold transition-all
+                    ${isHighlighted
+                      ? 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }
+                  `}
+                >
+                  {t(`landing.pricing.${plan.key}.cta`)}
+                </Link>
+
+                {/* Divider */}
+                <div className="my-6 border-t border-slate-100" />
+
                 {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {featureList.map((feature: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-3">
+                <div className="space-y-3">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                    Dahil olanlar:
+                  </div>
+                  {plan.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
                       <svg
-                        className="w-4 h-4 text-slate-400 mt-0.5 shrink-0"
+                        className={`w-4 h-4 mt-0.5 shrink-0 ${isHighlighted ? 'text-slate-900' : 'text-slate-400'}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-[13px] text-slate-600">{feature}</span>
-                    </li>
+                      <span className={`text-[13px] ${isHighlighted ? 'text-slate-700' : 'text-slate-500'}`}>
+                        {feature}
+                      </span>
+                    </div>
                   ))}
-                </ul>
-
-                {/* CTA */}
-                <Link
-                  href={plan.monthlyPrice === null ? '/contact' : '/register'}
-                  className={`block w-full py-2.5 px-4 rounded-lg text-center text-[14px] font-medium transition-colors ${
-                    plan.highlighted
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  {t(`landing.pricing.${plan.key}.cta`)}
-                </Link>
+                </div>
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Note */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-center text-[13px] text-slate-400 mt-8"
+          className="text-center mt-12"
         >
-          {t('landing.pricing.trialNote')}
-        </motion.p>
+          <p className="text-[13px] text-slate-400">
+            {t('landing.pricing.trialNote')}
+          </p>
+          <div className="flex items-center justify-center gap-6 mt-6">
+            {[
+              { icon: '🔒', text: 'Güvenli ödeme' },
+              { icon: '↩️', text: 'İstediğin zaman iptal' },
+              { icon: '💳', text: 'Kredi kartı gerekmez' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-[12px] text-slate-500">
+                <span>{item.icon}</span>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );
