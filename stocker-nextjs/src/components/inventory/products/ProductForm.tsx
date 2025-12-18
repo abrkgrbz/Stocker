@@ -303,6 +303,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       onFinish={handleFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -402,8 +403,8 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Ürün adı zorunludur' },
+                  { max: 200, message: 'Ürün adı en fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -490,7 +491,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="categoryId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Kategori seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <TreeSelect
@@ -544,7 +545,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="unitId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Birim seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -573,7 +574,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürün Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Ürün kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input
