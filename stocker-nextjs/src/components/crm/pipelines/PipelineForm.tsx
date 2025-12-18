@@ -94,6 +94,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
       onFinish={handleFormFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -115,8 +116,8 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 100, message: '' },
+                  { required: true, message: 'Pipeline adı zorunludur' },
+                  { max: 100, message: 'En fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -256,7 +257,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                             <Form.Item
                               {...field}
                               name={[field.name, 'name']}
-                              rules={[{ required: true, message: '' }]}
+                              rules={[{ required: true, message: 'Aşama adı zorunludur' }]}
                               className="mb-0"
                             >
                               <Input
@@ -269,7 +270,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                             <Form.Item
                               {...field}
                               name={[field.name, 'probability']}
-                              rules={[{ required: true, message: '' }]}
+                              rules={[{ required: true, message: 'Olasılık zorunludur' }]}
                               className="mb-0"
                             >
                               <InputNumber

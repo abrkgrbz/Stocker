@@ -75,6 +75,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -95,7 +96,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
             <div className="flex-1">
               <Form.Item
                 name="referrerName"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Referans veren adı zorunludur' }]}
                 className="mb-0"
               >
                 <Input
@@ -210,7 +211,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Ad Soyad <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="referredName"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Referans edilen adı zorunludur' }]}
                   className="mb-0"
                 >
                   <Input

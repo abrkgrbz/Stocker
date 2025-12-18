@@ -178,6 +178,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
       onFinish={handleFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -198,7 +199,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
             <div className="flex-1">
               <Form.Item
                 name="countNumber"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Sayım numarası zorunludur' }]}
                 className="mb-0"
               >
                 <Input
@@ -285,7 +286,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="warehouseId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Depo seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -331,7 +332,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Sayım Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="countDate"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Sayım tarihi zorunludur' }]}
                   className="mb-0"
                 >
                   <DatePicker

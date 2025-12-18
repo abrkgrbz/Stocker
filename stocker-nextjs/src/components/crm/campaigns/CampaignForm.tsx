@@ -89,6 +89,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
       onFinish={handleFormFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -110,8 +111,8 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Kampanya adı zorunludur' },
+                  { max: 200, message: 'En fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -161,7 +162,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Planlanan Bütçe (₺) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="budgetedCost"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Bütçe zorunludur' }]}
                   className="mb-0"
                 >
                   <InputNumber
@@ -178,7 +179,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Gelir (₺) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="expectedRevenue"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Beklenen gelir zorunludur' }]}
                   className="mb-0"
                 >
                   <InputNumber
@@ -217,7 +218,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Lead Sayısı <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="targetLeads"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Hedef lead sayısı zorunludur' }]}
                   className="mb-0"
                 >
                   <InputNumber
@@ -256,7 +257,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kampanya Tarihleri <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="dateRange"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Tarih aralığı zorunludur' }]}
                   className="mb-0"
                 >
                   <RangePicker
@@ -270,7 +271,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="status"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Durum seçimi zorunludur' }]}
                   className="mb-0"
                   initialValue="Planned"
                 >

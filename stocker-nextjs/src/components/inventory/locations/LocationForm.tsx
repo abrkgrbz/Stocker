@@ -36,6 +36,7 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -57,8 +58,8 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Lokasyon adı zorunludur' },
+                  { max: 200, message: 'Lokasyon adı en fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -112,7 +113,7 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Lokasyon Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Lokasyon kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input
@@ -126,7 +127,7 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="warehouseId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Depo seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -189,7 +190,7 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Kapasite <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="capacity"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Kapasite zorunludur' }]}
                   className="mb-0"
                   initialValue={100}
                 >

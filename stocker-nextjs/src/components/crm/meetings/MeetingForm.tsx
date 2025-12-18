@@ -95,6 +95,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -116,8 +117,8 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
               <Form.Item
                 name="title"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Toplantı başlığı zorunludur' },
+                  { max: 200, message: 'En fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -244,7 +245,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="startTime"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Başlangıç tarihi zorunludur' }]}
                   className="mb-0"
                 >
                   <DatePicker
@@ -259,7 +260,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="endTime"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Bitiş tarihi zorunludur' }]}
                   className="mb-0"
                 >
                   <DatePicker

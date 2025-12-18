@@ -78,6 +78,7 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -99,9 +100,9 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { min: 3, message: '' },
-                  { max: 100, message: '' },
+                  { required: true, message: 'İş akışı adı zorunludur' },
+                  { min: 3, message: 'En az 3 karakter olmalıdır' },
+                  { max: 100, message: 'En fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -114,9 +115,9 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="description"
                 rules={[
-                  { required: true, message: '' },
-                  { min: 10, message: '' },
-                  { max: 500, message: '' },
+                  { required: true, message: 'Açıklama zorunludur' },
+                  { min: 10, message: 'En az 10 karakter olmalıdır' },
+                  { max: 500, message: 'En fazla 500 karakter olabilir' },
                 ]}
                 className="mb-0 mt-1"
               >
@@ -163,7 +164,7 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tetikleyici Tipi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="triggerType"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Tetikleyici tipi seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -179,7 +180,7 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
                   <label className="block text-sm font-medium text-slate-600 mb-1.5">Entity Tipi <span className="text-red-500">*</span></label>
                   <Form.Item
                     name="entityType"
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: 'Entity tipi seçimi zorunludur' }]}
                     className="mb-0"
                   >
                     <Select

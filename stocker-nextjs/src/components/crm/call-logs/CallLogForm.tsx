@@ -77,6 +77,7 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -97,7 +98,7 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
             <div className="flex-1">
               <Form.Item
                 name="callerNumber"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Arayan numara zorunludur' }]}
                 className="mb-0"
               >
                 <Input
@@ -161,7 +162,7 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Aranan Numara <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="calledNumber"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Aranan numara zorunludur' }]}
                   className="mb-0"
                 >
                   <Input

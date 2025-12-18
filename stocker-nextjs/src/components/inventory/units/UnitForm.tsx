@@ -47,6 +47,7 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -68,8 +69,8 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 100, message: '' },
+                  { required: true, message: 'Birim adı zorunludur' },
+                  { max: 100, message: 'Birim adı en fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -116,7 +117,7 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Birim kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input
@@ -164,7 +165,7 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
                   name="conversionFactor"
                   className="mb-0"
                   rules={[
-                    { required: hasBaseUnit, message: '' }
+                    { required: hasBaseUnit, message: 'Dönüşüm faktörü zorunludur' }
                   ]}
                 >
                   <InputNumber

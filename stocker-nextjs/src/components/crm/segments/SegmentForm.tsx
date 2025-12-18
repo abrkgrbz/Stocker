@@ -61,6 +61,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
       onFinish={handleFormFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -85,8 +86,8 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 100, message: '' },
+                  { required: true, message: 'Segment adı zorunludur' },
+                  { max: 100, message: 'En fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -197,7 +198,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
 
                 <Form.Item
                   name="criteria"
-                  rules={[{ required: segmentType === 'Dynamic', message: 'En az bir kriter eklemelisiniz' }]}
+                  rules={[{ required: segmentType === 'Dynamic', message: 'Dinamik segment için kriter zorunludur' }]}
                 >
                   <RuleBuilder />
                 </Form.Item>

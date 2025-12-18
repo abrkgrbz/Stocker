@@ -60,6 +60,7 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -82,8 +83,8 @@ export default function CompetitorForm({ form, initialValues, onFinish, loading 
                 <Form.Item
                   name="name"
                   rules={[
-                    { required: true, message: '' },
-                    { max: 200, message: '' },
+                    { required: true, message: 'Rakip adı zorunludur' },
+                    { max: 200, message: 'En fazla 200 karakter olabilir' },
                   ]}
                   className="mb-0 flex-1"
                 >

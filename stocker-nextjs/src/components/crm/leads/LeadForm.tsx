@@ -70,6 +70,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -90,7 +91,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
             <div className="flex-1 flex gap-4">
               <Form.Item
                 name="firstName"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Ad zorunludur' }]}
                 className="mb-0 flex-1"
               >
                 <Input
@@ -101,7 +102,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
               </Form.Item>
               <Form.Item
                 name="lastName"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Soyad zorunludur' }]}
                 className="mb-0 flex-1"
               >
                 <Input
@@ -166,8 +167,8 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                 <Form.Item
                   name="email"
                   rules={[
-                    { required: true, message: '' },
-                    { type: 'email', message: '' },
+                    { required: true, message: 'E-posta zorunludur' },
+                    { type: 'email', message: 'Geçerli bir e-posta adresi girin' },
                   ]}
                   className="mb-0"
                 >
@@ -223,7 +224,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kaynak <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="source"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Kaynak seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -237,7 +238,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="status"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Durum seçimi zorunludur' }]}
                   className="mb-0"
                   initialValue="New"
                 >

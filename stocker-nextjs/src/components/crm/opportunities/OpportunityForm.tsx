@@ -72,6 +72,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
@@ -93,8 +94,8 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Fırsat adı zorunludur' },
+                  { max: 200, message: 'En fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -140,7 +141,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tutar (₺) <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="amount"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Tutar zorunludur' }]}
                   className="mb-0"
                 >
                   <InputNumber
@@ -187,7 +188,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="customerId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -207,7 +208,7 @@ export default function OpportunityForm({ form, initialValues, onFinish, loading
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tahmini Kapanış Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="expectedCloseDate"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Tahmini kapanış tarihi zorunludur' }]}
                   className="mb-0"
                 >
                   <DatePicker

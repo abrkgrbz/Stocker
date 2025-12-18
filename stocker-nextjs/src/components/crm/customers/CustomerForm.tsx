@@ -79,6 +79,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -103,7 +104,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
             <div className="flex-1">
               <Form.Item
                 name="companyName"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
                 className="mb-0"
               >
                 <Input
@@ -177,8 +178,8 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 <Form.Item
                   name="email"
                   rules={[
-                    { required: true, message: '' },
-                    { type: 'email', message: '' },
+                    { required: true, message: 'E-posta zorunludur' },
+                    { type: 'email', message: 'Geçerli bir e-posta adresi girin' },
                   ]}
                   className="mb-0"
                 >
@@ -281,7 +282,7 @@ export default function CustomerForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Numarası</label>
                 <Form.Item
                   name="taxId"
-                  rules={[{ pattern: /^[0-9]{10,11}$/, message: '' }]}
+                  rules={[{ pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir vergi numarası girin (10-11 hane)' }]}
                   className="mb-0"
                 >
                   <Input

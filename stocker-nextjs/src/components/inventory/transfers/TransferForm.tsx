@@ -201,6 +201,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
       onFinish={handleFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -221,7 +222,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
             <div className="flex-1">
               <Form.Item
                 name="transferNumber"
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: 'Transfer numarası zorunludur' }]}
                 className="mb-0"
               >
                 <Input
@@ -308,7 +309,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kaynak Depo <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="sourceWarehouseId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Kaynak depo seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -328,7 +329,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Depo <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="destinationWarehouseId"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Hedef depo seçimi zorunludur' }]}
                   className="mb-0"
                 >
                   <Select
@@ -357,7 +358,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Transfer Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="transferDate"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Transfer tarihi zorunludur' }]}
                   className="mb-0"
                 >
                   <DatePicker

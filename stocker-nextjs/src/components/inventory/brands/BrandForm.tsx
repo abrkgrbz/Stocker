@@ -31,6 +31,7 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -52,8 +53,8 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Marka adı zorunludur' },
+                  { max: 200, message: 'Marka adı en fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -107,7 +108,7 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Marka Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Marka kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input

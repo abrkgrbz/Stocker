@@ -44,6 +44,7 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -65,8 +66,8 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Kategori adı zorunludur' },
+                  { max: 200, message: 'Kategori adı en fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -120,7 +121,7 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Kategori kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input

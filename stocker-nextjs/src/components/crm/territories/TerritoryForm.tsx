@@ -53,6 +53,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -74,8 +75,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 100, message: '' },
+                  { required: true, message: 'Bölge adı zorunludur' },
+                  { max: 100, message: 'En fazla 100 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -162,8 +163,8 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
                 <Form.Item
                   name="code"
                   rules={[
-                    { required: true, message: '' },
-                    { max: 20, message: '' },
+                    { required: true, message: 'Bölge kodu zorunludur' },
+                    { max: 20, message: 'En fazla 20 karakter olabilir' },
                   ]}
                   className="mb-0"
                 >

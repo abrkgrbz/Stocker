@@ -39,6 +39,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
       onFinish={onFinish}
       disabled={loading}
       className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
@@ -60,8 +61,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               <Form.Item
                 name="name"
                 rules={[
-                  { required: true, message: '' },
-                  { max: 200, message: '' },
+                  { required: true, message: 'Tedarikçi adı zorunludur' },
+                  { max: 200, message: 'Tedarikçi adı en fazla 200 karakter olabilir' },
                 ]}
                 className="mb-0"
               >
@@ -122,7 +123,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: '' }]}
+                  rules={[{ required: true, message: 'Tedarikçi kodu zorunludur' }]}
                   className="mb-0"
                 >
                   <Input
@@ -181,7 +182,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               </div>
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
-                <Form.Item name="email" className="mb-0" rules={[{ type: 'email', message: '' }]}>
+                <Form.Item name="email" className="mb-0" rules={[{ type: 'email', message: 'Geçerli bir e-posta adresi girin' }]}>
                   <Input
                     placeholder="info@supplier.com"
                     prefix={<MailOutlined className="text-slate-400" />}
@@ -230,7 +231,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               </div>
               <div className="col-span-4">
                 <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
-                <Form.Item name="contactEmail" className="mb-0" rules={[{ type: 'email', message: '' }]}>
+                <Form.Item name="contactEmail" className="mb-0" rules={[{ type: 'email', message: 'Geçerli bir e-posta adresi girin' }]}>
                   <Input
                     placeholder="contact@supplier.com"
                     prefix={<MailOutlined className="text-slate-400" />}
