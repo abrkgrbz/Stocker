@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Layout, Menu, Avatar, Dropdown, Spin, Button, Tooltip, Popover, Badge } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Spin, Button, Tooltip, Popover, Badge, Drawer } from 'antd';
 import {
   DashboardOutlined,
   AppstoreOutlined,
@@ -67,7 +67,7 @@ import {
   CrownOutlined,
   ScheduleOutlined,
 } from '@ant-design/icons';
-import { Search, HelpCircle, Plus, ChevronDown } from 'lucide-react';
+import { Search, HelpCircle, Plus, ChevronDown, Menu as MenuIcon, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
 import { SignalRProvider } from '@/lib/signalr/signalr-context';
@@ -512,6 +512,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const [moduleSwitcherOpen, setModuleSwitcherOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Global keyboard shortcut for search (Ctrl+K)
   useEffect(() => {
@@ -781,9 +782,133 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Sidebar content - shared between desktop and mobile
+  const sidebarContent = (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      {/* Module Header - Fixed */}
+      <div
+        style={{
+          height: 64,
+          minHeight: 64,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 16px',
+          borderBottom: '1px solid #f0f0f0',
+          gap: 12,
+          flexShrink: 0,
+        }}
+      >
+        <Tooltip title="Modüllere Dön">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => {
+              handleBackToApp();
+              setMobileMenuOpen(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
+        </Tooltip>
+        {moduleConfig && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: `${moduleConfig.color}15`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: moduleConfig.color,
+                fontSize: 16,
+              }}
+            >
+              {moduleConfig.icon}
+            </div>
+            <span style={{ fontWeight: 600, fontSize: 16, color: '#1a1a1a' }}>
+              {moduleConfig.title}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Module Menu - Scrollable */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          minHeight: 0,
+        }}
+      >
+        {moduleConfig && (
+          <Menu
+            mode="inline"
+            selectedKeys={getSelectedKeys}
+            items={moduleConfig.items}
+            onClick={({ key }) => {
+              handleMenuClick(key);
+              setMobileMenuOpen(false);
+            }}
+            style={{ borderRight: 0, paddingTop: 8, paddingBottom: 8 }}
+          />
+        )}
+      </div>
+
+      {/* Quick Module Switch - Fixed Bottom */}
+      <div
+        style={{
+          padding: 16,
+          borderTop: '1px solid #f0f0f0',
+          background: '#fafafa',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Hızlı Geçiş
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {Object.entries(MODULE_MENUS)
+            .filter(([key]) => key !== currentModule && key !== 'modules')
+            .slice(0, 4)
+            .map(([key, config]) => (
+              <Tooltip key={key} title={config.title}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={config.icon}
+                  onClick={() => {
+                    router.push(config.items[0]?.key || `/${key}`);
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{
+                    color: config.color,
+                    background: `${config.color}10`,
+                    border: 'none',
+                  }}
+                />
+              </Tooltip>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
     <Layout style={{ minHeight: '100dvh' }}>
+        {/* Desktop Sidebar - Hidden on mobile */}
         <Sider
           theme="light"
           width={240}
@@ -797,125 +922,30 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
             zIndex: 100,
             transition: 'transform 0.2s ease-in-out',
           }}
-          className="dashboard-sider"
+          className="dashboard-sider hidden lg:block"
         >
-          {/* Inner flex container to handle scroll properly */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            {/* Module Header - Fixed */}
-            <div
-              style={{
-                height: 64,
-                minHeight: 64,
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 16px',
-                borderBottom: '1px solid #f0f0f0',
-                gap: 12,
-                flexShrink: 0,
-              }}
-            >
-              <Tooltip title="Modüllere Dön">
-                <Button
-                  type="text"
-                  icon={<ArrowLeftOutlined />}
-                  onClick={handleBackToApp}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                />
-              </Tooltip>
-              {moduleConfig && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: `${moduleConfig.color}15`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: moduleConfig.color,
-                      fontSize: 16,
-                    }}
-                  >
-                    {moduleConfig.icon}
-                  </div>
-                  <span style={{ fontWeight: 600, fontSize: 16, color: '#1a1a1a' }}>
-                    {moduleConfig.title}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Module Menu - Scrollable */}
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                minHeight: 0,
-              }}
-            >
-              {moduleConfig && (
-                <Menu
-                  mode="inline"
-                  selectedKeys={getSelectedKeys}
-                  items={moduleConfig.items}
-                  onClick={({ key }) => handleMenuClick(key)}
-                  style={{ borderRight: 0, paddingTop: 8, paddingBottom: 8 }}
-                />
-              )}
-            </div>
-
-            {/* Quick Module Switch - Fixed Bottom */}
-            <div
-              style={{
-                padding: 16,
-                borderTop: '1px solid #f0f0f0',
-                background: '#fafafa',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ fontSize: 11, color: '#999', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Hızlı Geçiş
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {Object.entries(MODULE_MENUS)
-                  .filter(([key]) => key !== currentModule && key !== 'modules')
-                  .slice(0, 4)
-                  .map(([key, config]) => (
-                    <Tooltip key={key} title={config.title}>
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={config.icon}
-                        onClick={() => router.push(config.items[0]?.key || `/${key}`)}
-                        style={{
-                          color: config.color,
-                          background: `${config.color}10`,
-                          border: 'none',
-                        }}
-                      />
-                    </Tooltip>
-                  ))}
-              </div>
-            </div>
-          </div>
+          {sidebarContent}
         </Sider>
 
-        <Layout style={{ marginLeft: 240 }}>
+        {/* Mobile Sidebar Drawer */}
+        <Drawer
+          placement="left"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          width={280}
+          styles={{
+            body: { padding: 0 },
+            header: { display: 'none' },
+          }}
+          className="lg:hidden"
+        >
+          {sidebarContent}
+        </Drawer>
+
+        <Layout className="lg:ml-[240px] ml-0">
           <Header
             style={{
-              padding: '0 20px',
+              padding: '0 12px',
               background: '#fff',
               display: 'flex',
               justifyContent: 'space-between',
@@ -923,15 +953,25 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               borderBottom: '1px solid #e2e8f0',
               height: 56,
             }}
+            className="sm:px-5"
           >
-            {/* Left: Tenant Name + Module Switcher */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }}>
+            {/* Left: Mobile Menu + Tenant Name + Module Switcher */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="sm:gap-3">
+              {/* Mobile Menu Button - Only visible on mobile */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <MenuIcon className="w-5 h-5" strokeWidth={2} />
+              </button>
+
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }} className="hidden sm:block">
                 {tenant?.name || 'Stocker'}
               </div>
 
-              {/* Divider */}
-              <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />
+              {/* Divider - Hidden on mobile */}
+              <div style={{ width: 1, height: 20, background: '#e2e8f0' }} className="hidden sm:block" />
 
               {/* Module Switcher Button */}
               <Popover
@@ -1086,12 +1126,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               </Popover>
             </div>
 
-            {/* Center: Global Search Bar */}
-            <div className="flex-1 flex justify-center px-8">
+            {/* Center: Global Search Bar - Hidden on very small screens, icon on mobile */}
+            <div className="flex-1 flex justify-center px-2 sm:px-4 lg:px-8">
+              {/* Desktop Search Bar */}
               <button
                 type="button"
                 className="
-                  w-96 h-9 px-3 flex items-center gap-2
+                  hidden sm:flex
+                  w-full max-w-md h-9 px-3 items-center gap-2
                   bg-slate-100 hover:bg-slate-200/80
                   border border-transparent hover:border-slate-300
                   rounded-lg transition-all duration-150
@@ -1104,17 +1146,29 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <span className="flex-1 text-left text-sm text-slate-400 group-hover:text-slate-500">
                   Ara...
                 </span>
+                <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-medium text-slate-400">
+                  ⌘K
+                </kbd>
+              </button>
+              {/* Mobile Search Icon */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="sm:hidden w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <Search className="w-5 h-5" strokeWidth={2} />
               </button>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-1">
-              {/* Help Button */}
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              {/* Help Button - Hidden on mobile */}
               <Tooltip title="Yardım & Destek">
                 <button
                   type="button"
                   className="
-                    w-8 h-8 flex items-center justify-center
+                    hidden sm:flex
+                    w-8 h-8 items-center justify-center
                     text-slate-400 hover:text-slate-600
                     border border-slate-200 hover:border-slate-300 hover:bg-slate-50
                     rounded-full transition-all duration-150
@@ -1128,8 +1182,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               {/* Notifications */}
               <NotificationCenter />
 
-              {/* Divider */}
-              <div className="w-px h-5 bg-slate-200 mx-2" />
+              {/* Divider - Hidden on mobile */}
+              <div className="hidden sm:block w-px h-5 bg-slate-200 mx-1 sm:mx-2" />
 
               {/* Quick Create Button */}
               <Popover
@@ -1450,8 +1504,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 </Tooltip>
               </Popover>
 
-              {/* Divider */}
-              <div className="w-px h-5 bg-slate-200 mx-2" />
+              {/* Divider - Hidden on small mobile */}
+              <div className="hidden sm:block w-px h-5 bg-slate-200 mx-1 sm:mx-2" />
 
               {/* User Menu */}
               <Dropdown
@@ -1461,7 +1515,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   className="
-                    flex items-center gap-2 px-2 py-1.5
+                    flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-1.5
                     hover:bg-slate-100 rounded-lg transition-colors
                   "
                 >
@@ -1471,15 +1525,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                   <span className="text-sm font-medium text-slate-700 hidden lg:block">
                     {user?.firstName}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" strokeWidth={2} />
                 </button>
               </Dropdown>
             </div>
           </Header>
 
           <Content style={{ overflow: 'initial' }}>
-            <div style={{ margin: '24px 16px 0' }}>
-              <div style={{ padding: 24, background: '#fff', minHeight: 360, borderRadius: 8 }}>
+            {/* Responsive content padding */}
+            <div className="m-3 sm:m-4 lg:mx-6 lg:mt-6">
+              <div className="p-3 sm:p-4 lg:p-6 bg-white min-h-[360px] rounded-lg">
                 {children}
               </div>
             </div>

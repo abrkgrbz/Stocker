@@ -380,6 +380,65 @@ html {
   background: #f1f5f9 !important; /* bg-slate-100 */
 }
 
+/* ===== MOBILE RESPONSIVE LAYOUT ===== */
+/* Hide desktop sidebar on mobile */
+@media (max-width: 1023px) {
+  .dashboard-sider {
+    display: none !important;
+  }
+}
+
+/* Mobile-friendly Ant Design Drawer */
+.ant-drawer-content-wrapper {
+  max-width: 85vw !important;
+}
+
+/* Mobile menu improvements */
+@media (max-width: 640px) {
+  .ant-menu-inline .ant-menu-item {
+    padding-left: 16px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+
+  .ant-menu-inline .ant-menu-submenu-title {
+    padding-left: 16px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+  }
+
+  /* Larger touch targets for mobile */
+  .ant-btn {
+    min-height: 36px;
+  }
+
+  /* Better mobile table scrolling */
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ant-table {
+    min-width: 600px;
+  }
+}
+
+/* Responsive form layouts */
+@media (max-width: 768px) {
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+    margin: 16px auto !important;
+  }
+
+  .ant-modal-content {
+    padding: 16px !important;
+  }
+}
+
 /* ===== LANDING PAGE ANIMATIONS ===== */
 /* Infinite horizontal scroll animation */
 @keyframes scroll-x {
