@@ -357,7 +357,7 @@ export default function AppHomePage() {
                     <button
                       onClick={() => {
                         setIsProfileMenuOpen(false);
-                        router.push('/profile');
+                        router.push('/account/profile');
                       }}
                       className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                     >
