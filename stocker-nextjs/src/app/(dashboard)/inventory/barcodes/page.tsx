@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Typography,
@@ -27,6 +27,7 @@ import {
   message,
   Badge,
   Descriptions,
+  Progress,
 } from 'antd';
 import {
   BarcodeOutlined,
@@ -46,6 +47,10 @@ import {
   HistoryOutlined,
   TagsOutlined,
   CopyOutlined,
+  SoundOutlined,
+  ThunderboltOutlined,
+  DollarOutlined,
+  ShopOutlined,
 } from '@ant-design/icons';
 import {
   useProducts,
@@ -74,6 +79,77 @@ import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
+
+// ═══════════════════════════════════════════════════════════════
+// AUDIO FEEDBACK SYSTEM - Pro Scanner Feature
+// ═══════════════════════════════════════════════════════════════
+const useAudioFeedback = () => {
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  const playBeep = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine') => {
+    try {
+      const ctx = getAudioContext();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
+
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + duration);
+    } catch (e) {
+      // Audio not supported, fail silently
+    }
+  }, [getAudioContext]);
+
+  const playSuccess = useCallback(() => {
+    // High-pitched pleasant beep for success
+    playBeep(880, 0.15, 'sine');
+    setTimeout(() => playBeep(1174.66, 0.15, 'sine'), 100);
+  }, [playBeep]);
+
+  const playError = useCallback(() => {
+    // Low buzzing sound for error
+    playBeep(200, 0.3, 'square');
+  }, [playBeep]);
+
+  const playWarning = useCallback(() => {
+    // Medium tone for warning
+    playBeep(440, 0.2, 'triangle');
+  }, [playBeep]);
+
+  const playQuantityIncrement = useCallback(() => {
+    // Quick tick for quantity increment
+    playBeep(1000, 0.08, 'sine');
+  }, [playBeep]);
+
+  return { playSuccess, playError, playWarning, playQuantityIncrement };
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SCAN HISTORY ITEM TYPE - Enhanced with quantity tracking
+// ═══════════════════════════════════════════════════════════════
+interface ScanHistoryItem {
+  id: string;
+  barcode: string;
+  quantity: number;
+  lookupResult: BarcodeLookupResponse;
+  firstScannedAt: Date;
+  lastScannedAt: Date;
+}
 
 // Barcode format labels
 const formatLabels: Record<string, string> = {
@@ -105,12 +181,27 @@ export default function BarcodesPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState('scanner');
 
-  // Scanner state
+  // ═══════════════════════════════════════════════════════════════
+  // PRO SCANNER STATE
+  // ═══════════════════════════════════════════════════════════════
   const [scanInput, setScanInput] = useState('');
   const [lastScannedBarcode, setLastScannedBarcode] = useState('');
-  const [scanHistory, setScanHistory] = useState<BarcodeLookupResponse[]>([]);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
+  const [isScannerActive, setIsScannerActive] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [scanBuffer, setScanBuffer] = useState('');
+  const [lastKeyTime, setLastKeyTime] = useState(0);
+  const [totalScannedItems, setTotalScannedItems] = useState(0);
+
+  // Refs for pro scanner
   const scanInputRef = useRef<any>(null);
+  const scanBufferRef = useRef('');
+  const lastKeyTimeRef = useRef(0);
+  const SCANNER_SPEED_THRESHOLD = 50; // ms between keystrokes for hardware scanner detection
+
+  // Audio feedback hook
+  const { playSuccess, playError, playWarning, playQuantityIncrement } = useAudioFeedback();
 
   // Generator state
   const [generateForm] = Form.useForm();
@@ -156,43 +247,209 @@ export default function BarcodesPage() {
   const validateBarcode = useValidateBarcode();
   const checkBarcodeUnique = useCheckBarcodeUnique();
 
-  // Focus scanner input when switching to scanner tab
-  useEffect(() => {
-    if (activeTab === 'scanner' && scanInputRef.current) {
-      scanInputRef.current.focus();
-    }
-  }, [activeTab]);
-
-  // Add to history when lookup completes
-  useEffect(() => {
-    if (lookupResult && lastScannedBarcode) {
-      setScanHistory((prev) => {
-        // Don't add duplicates consecutively
-        if (prev.length > 0 && prev[0].searchedBarcode === lookupResult.searchedBarcode) {
-          return prev;
-        }
-        return [lookupResult, ...prev.slice(0, 9)]; // Keep last 10
+  // ═══════════════════════════════════════════════════════════════
+  // SMART AUTO-FOCUS SYSTEM - Pro Scanner Feature #1
+  // ═══════════════════════════════════════════════════════════════
+  const refocusScanner = useCallback(() => {
+    if (activeTab === 'scanner' && scanInputRef.current && isScannerActive) {
+      // Small delay to ensure DOM is ready
+      requestAnimationFrame(() => {
+        scanInputRef.current?.focus();
       });
     }
-  }, [lookupResult, lastScannedBarcode]);
+  }, [activeTab, isScannerActive]);
 
-  // Scanner handlers
-  const handleScan = useCallback(
+  // Focus on tab switch
+  useEffect(() => {
+    refocusScanner();
+  }, [activeTab, refocusScanner]);
+
+  // Aggressive auto-refocus system
+  useEffect(() => {
+    if (activeTab !== 'scanner' || !isScannerActive) return;
+
+    // Refocus on any click outside focused element
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't refocus if clicking on interactive elements
+      if (target.closest('button, select, .ant-select, .ant-modal, .ant-dropdown')) return;
+      setTimeout(refocusScanner, 100);
+    };
+
+    // Refocus on window focus
+    const handleWindowFocus = () => {
+      setTimeout(refocusScanner, 100);
+    };
+
+    // Refocus on visibility change
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setTimeout(refocusScanner, 100);
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('click', handleClick);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab, isScannerActive, refocusScanner]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // INTELLIGENT HISTORY MANAGEMENT - Pro Scanner Feature #3
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (lookupResult && lastScannedBarcode) {
+      const now = new Date();
+
+      setScanHistory((prev) => {
+        // Check if this barcode already exists in history
+        const existingIndex = prev.findIndex(item => item.barcode === lastScannedBarcode);
+
+        if (existingIndex >= 0) {
+          // Increment quantity instead of adding duplicate
+          const updated = [...prev];
+          const existing = updated[existingIndex];
+          updated[existingIndex] = {
+            ...existing,
+            quantity: existing.quantity + 1,
+            lastScannedAt: now,
+          };
+          // Move to top of list
+          const [item] = updated.splice(existingIndex, 1);
+          updated.unshift(item);
+
+          // Play quantity increment sound
+          if (soundEnabled) {
+            playQuantityIncrement();
+          }
+
+          return updated;
+        }
+
+        // Add new item
+        const newItem: ScanHistoryItem = {
+          id: `${lastScannedBarcode}-${now.getTime()}`,
+          barcode: lastScannedBarcode,
+          quantity: 1,
+          lookupResult,
+          firstScannedAt: now,
+          lastScannedAt: now,
+        };
+
+        // Play appropriate sound
+        if (soundEnabled) {
+          if (lookupResult.found) {
+            playSuccess();
+          } else {
+            playError();
+          }
+        }
+
+        return [newItem, ...prev.slice(0, 49)]; // Keep last 50
+      });
+
+      // Update total count
+      setTotalScannedItems(prev => prev + 1);
+
+      // Refocus after scan
+      setTimeout(refocusScanner, 50);
+    }
+  }, [lookupResult, lastScannedBarcode, soundEnabled, playSuccess, playError, playQuantityIncrement, refocusScanner]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // OPTIMIZED SCANNER HANDLER - Pro Scanner Feature #5
+  // Handles both hardware scanners and manual input
+  // ═══════════════════════════════════════════════════════════════
+  const handleScanKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && scanInput.trim()) {
-        setLastScannedBarcode(scanInput.trim());
-        setScanInput('');
+      const now = Date.now();
+      const timeDiff = now - lastKeyTimeRef.current;
+      lastKeyTimeRef.current = now;
+
+      // Hardware scanner detection: rapid keystrokes
+      const isHardwareScanner = timeDiff < SCANNER_SPEED_THRESHOLD;
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcodeValue = scanInput.trim();
+
+        if (barcodeValue) {
+          // Process the scan
+          setLastScannedBarcode(barcodeValue);
+          setScanInput('');
+          scanBufferRef.current = '';
+
+          // Haptic-like visual feedback
+          if (scanInputRef.current) {
+            scanInputRef.current.input?.classList.add('scan-flash');
+            setTimeout(() => {
+              scanInputRef.current?.input?.classList.remove('scan-flash');
+            }, 200);
+          }
+        }
+        return;
+      }
+
+      // For hardware scanner: collect in buffer for rapid processing
+      if (isHardwareScanner && e.key.length === 1) {
+        scanBufferRef.current += e.key;
       }
     },
-    [scanInput]
+    [scanInput, SCANNER_SPEED_THRESHOLD]
   );
 
-  const handleManualSearch = () => {
+  const handleScanInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setScanInput(e.target.value);
+  }, []);
+
+  const handleManualSearch = useCallback(() => {
     if (scanInput.trim()) {
       setLastScannedBarcode(scanInput.trim());
       setScanInput('');
+      setTimeout(refocusScanner, 50);
     }
-  };
+  }, [scanInput, refocusScanner]);
+
+  // Clear history
+  const handleClearHistory = useCallback(() => {
+    setScanHistory([]);
+    setTotalScannedItems(0);
+  }, []);
+
+  // Remove single item from history
+  const handleRemoveFromHistory = useCallback((id: string) => {
+    setScanHistory(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+  // Update quantity manually
+  const handleUpdateQuantity = useCallback((id: string, newQuantity: number) => {
+    setScanHistory(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, quantity: Math.max(1, newQuantity) } : item
+      )
+    );
+  }, []);
+
+  // Calculate totals
+  const historyStats = useMemo(() => {
+    const totalQuantity = scanHistory.reduce((sum, item) => sum + item.quantity, 0);
+    const uniqueItems = scanHistory.length;
+    const foundItems = scanHistory.filter(item => item.lookupResult.found).length;
+    const notFoundItems = scanHistory.filter(item => !item.lookupResult.found).length;
+    const totalValue = scanHistory.reduce((sum, item) => {
+      if (item.lookupResult.found && item.lookupResult.product?.unitPrice) {
+        return sum + (item.lookupResult.product.unitPrice * item.quantity);
+      }
+      return sum;
+    }, 0);
+
+    return { totalQuantity, uniqueItems, foundItems, notFoundItems, totalValue };
+  }, [scanHistory]);
 
   // Barcode Generator handlers
   const handleGenerateBarcode = async () => {
@@ -349,109 +606,201 @@ export default function BarcodesPage() {
     document.body.removeChild(link);
   };
 
-  // Render lookup result
+  // ═══════════════════════════════════════════════════════════════
+  // ENHANCED RESULT CARD - Pro Scanner Feature #4
+  // Large product visualization with image, name, price, stock
+  // ═══════════════════════════════════════════════════════════════
   const renderLookupResult = () => {
     if (isLookingUp) {
       return (
-        <div className="text-center py-8">
-          <Spin size="large" />
-          <div className="mt-2">Aranıyor...</div>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="relative">
+            <Spin size="large" />
+            <div className="absolute -inset-4 border-2 border-slate-200 rounded-full animate-ping opacity-30" />
+          </div>
+          <Text className="mt-4 text-lg text-slate-500">Aranıyor...</Text>
         </div>
       );
     }
 
     if (!lookupResult) {
       return (
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Barkod tarayın veya arama yapın"
-        />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <ScanOutlined className="text-4xl text-slate-400" />
+          </div>
+          <Text className="text-lg text-slate-500">Barkod Tarayın</Text>
+          <Text type="secondary" className="text-sm mt-1">Hardware scanner veya manuel giriş kullanın</Text>
+        </div>
       );
     }
 
     if (!lookupResult.found) {
       return (
-        <Alert
-          type="warning"
-          showIcon
-          icon={<ExclamationCircleOutlined />}
-          message="Barkod Bulunamadı"
-          description={`"${lookupResult.searchedBarcode}" barkodu sistemde bulunamadı.`}
-        />
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-8 text-center border border-amber-200">
+          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <ExclamationCircleOutlined className="text-4xl text-amber-500" />
+          </div>
+          <Title level={4} className="!mb-2 !text-amber-800">Barkod Bulunamadı</Title>
+          <Text className="text-amber-700 text-lg font-mono">{lookupResult.searchedBarcode}</Text>
+          <div className="mt-4">
+            <Button type="primary" ghost icon={<PlusOutlined />} onClick={() => router.push('/inventory/products/new')}>
+              Yeni Ürün Ekle
+            </Button>
+          </div>
+        </div>
       );
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // ENHANCED PRODUCT CARD - Large, visual, enterprise-grade
+    // ═══════════════════════════════════════════════════════════════
     if (lookupResult.matchType === 'Product' && lookupResult.product) {
       const p = lookupResult.product;
+      const stockPercentage = p.totalStockQuantity > 0
+        ? Math.min(100, (p.availableStockQuantity / p.totalStockQuantity) * 100)
+        : 0;
+      const stockStatus = p.totalStockQuantity <= 0 ? 'exception' :
+        stockPercentage < 25 ? 'exception' :
+        stockPercentage < 50 ? 'normal' : 'success';
+
       return (
-        <Card
-          size="small"
-          title={
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl overflow-hidden border border-emerald-200">
+          {/* Success Header */}
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 flex items-center justify-between">
             <Space>
-              <InboxOutlined />
-              <span>Ürün Bulundu</span>
-              <Tag color="blue">{lookupResult.matchType}</Tag>
+              <CheckCircleOutlined className="text-white text-xl" />
+              <Text className="text-white font-semibold text-lg">Ürün Bulundu</Text>
             </Space>
-          }
-          extra={
             <Button
-              type="link"
+              type="text"
+              className="!text-white hover:!bg-white/20"
               onClick={() => router.push(`/inventory/products/${p.id}`)}
             >
-              Detay
+              Detay →
             </Button>
-          }
-        >
-          <Row gutter={[16, 8]}>
-            <Col span={24}>
-              <Text strong className="text-lg">{p.name}</Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">Kod:</Text> <Text>{p.code}</Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">SKU:</Text> <Text>{p.sku || '-'}</Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">Kategori:</Text> <Text>{p.categoryName || '-'}</Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">Birim Fiyat:</Text>{' '}
-              <Text strong>
-                {p.unitPrice?.toLocaleString('tr-TR', { style: 'currency', currency: p.unitPriceCurrency || 'TRY' })}
-              </Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">Toplam Stok:</Text>{' '}
-              <Text strong className={p.totalStockQuantity <= 0 ? 'text-red-500' : ''}>
-                {p.totalStockQuantity}
-              </Text>
-            </Col>
-            <Col span={12}>
-              <Text type="secondary">Mevcut Stok:</Text>{' '}
-              <Text strong className="text-green-600">{p.availableStockQuantity}</Text>
-            </Col>
-          </Row>
+          </div>
 
+          {/* Product Main Info */}
+          <div className="p-6">
+            <div className="flex gap-6">
+              {/* Product Image Placeholder */}
+              <div className="flex-shrink-0">
+                <div className="w-32 h-32 rounded-xl bg-white border-2 border-slate-200 flex items-center justify-center shadow-sm">
+                  {p.primaryImageUrl ? (
+                    <Image
+                      src={p.primaryImageUrl}
+                      alt={p.name}
+                      width={120}
+                      height={120}
+                      className="object-cover rounded-lg"
+                      preview={false}
+                    />
+                  ) : (
+                    <ShoppingOutlined className="text-5xl text-slate-300" />
+                  )}
+                </div>
+              </div>
+
+              {/* Product Details */}
+              <div className="flex-1 min-w-0">
+                <Title level={3} className="!mb-1 !text-slate-900 truncate">{p.name}</Title>
+                <div className="flex items-center gap-3 mb-4">
+                  <Tag color="blue" className="!m-0">{p.code}</Tag>
+                  {p.sku && <Tag color="slate" className="!m-0">SKU: {p.sku}</Tag>}
+                  {p.categoryName && <Tag className="!m-0">{p.categoryName}</Tag>}
+                </div>
+
+                {/* Price & Stock Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Price Card */}
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <DollarOutlined className="text-emerald-500" />
+                      <Text type="secondary" className="text-xs uppercase tracking-wide">Birim Fiyat</Text>
+                    </div>
+                    <Text className="text-2xl font-bold text-slate-900">
+                      {p.unitPrice?.toLocaleString('tr-TR', {
+                        style: 'currency',
+                        currency: p.unitPriceCurrency || 'TRY',
+                        minimumFractionDigits: 2
+                      })}
+                    </Text>
+                  </div>
+
+                  {/* Stock Card */}
+                  <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <ShopOutlined className="text-blue-500" />
+                      <Text type="secondary" className="text-xs uppercase tracking-wide">Stok Durumu</Text>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Text className="text-2xl font-bold text-slate-900">{p.availableStockQuantity}</Text>
+                      <Progress
+                        percent={stockPercentage}
+                        status={stockStatus}
+                        size="small"
+                        showInfo={false}
+                        className="flex-1"
+                      />
+                    </div>
+                    <Text type="secondary" className="text-xs">
+                      / {p.totalStockQuantity} toplam ({p.totalStockQuantity - p.availableStockQuantity} rezerve)
+                    </Text>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Warehouse Stock Table */}
           {p.stockByWarehouse && p.stockByWarehouse.length > 0 && (
-            <>
-              <Divider className="my-3" />
-              <Text type="secondary" className="block mb-2">Depo Bazlı Stok:</Text>
+            <div className="border-t border-emerald-200 bg-white/50">
+              <div className="px-6 py-3 border-b border-slate-100">
+                <Text className="font-semibold text-slate-700">
+                  <ShopOutlined className="mr-2" />
+                  Depo Bazlı Stok
+                </Text>
+              </div>
               <Table
                 dataSource={p.stockByWarehouse}
                 rowKey="warehouseId"
                 size="small"
                 pagination={false}
+                className="[&_.ant-table]:!bg-transparent"
                 columns={[
-                  { title: 'Depo', dataIndex: 'warehouseName', key: 'warehouse' },
-                  { title: 'Miktar', dataIndex: 'quantity', key: 'quantity', align: 'right' as const },
-                  { title: 'Mevcut', dataIndex: 'availableQuantity', key: 'available', align: 'right' as const },
-                  { title: 'Rezerve', dataIndex: 'reservedQuantity', key: 'reserved', align: 'right' as const },
+                  {
+                    title: 'Depo',
+                    dataIndex: 'warehouseName',
+                    key: 'warehouse',
+                    render: (name) => <Text strong>{name}</Text>
+                  },
+                  {
+                    title: 'Miktar',
+                    dataIndex: 'quantity',
+                    key: 'quantity',
+                    align: 'right' as const,
+                    render: (qty) => <Text className="font-mono">{qty}</Text>
+                  },
+                  {
+                    title: 'Mevcut',
+                    dataIndex: 'availableQuantity',
+                    key: 'available',
+                    align: 'right' as const,
+                    render: (qty) => <Text className="font-mono text-emerald-600 font-semibold">{qty}</Text>
+                  },
+                  {
+                    title: 'Rezerve',
+                    dataIndex: 'reservedQuantity',
+                    key: 'reserved',
+                    align: 'right' as const,
+                    render: (qty) => <Text className="font-mono text-amber-600">{qty}</Text>
+                  },
                 ]}
               />
-            </>
+            </div>
           )}
-        </Card>
+        </div>
       );
     }
 
@@ -541,148 +890,357 @@ export default function BarcodesPage() {
     return null;
   };
 
-  // Tab items
+  // ═══════════════════════════════════════════════════════════════
+  // TAB ITEMS - Enhanced Scanner Tab with Pro Features
+  // ═══════════════════════════════════════════════════════════════
   const tabItems = [
     {
       key: 'scanner',
       label: (
         <Space>
-          <ScanOutlined />
-          Barkod Tarayıcı
+          <ThunderboltOutlined />
+          Pro Tarayıcı
         </Space>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          {/* Scanner Input */}
-          <Col xs={24} lg={12}>
-            <Card title="Barkod Tara / Ara" className="h-full">
-              <Space direction="vertical" className="w-full" size="middle">
+        <div className="space-y-4">
+          {/* ═══════════════════════════════════════════════════════════════
+              PRO SCANNER CONTROL BAR
+          ═══════════════════════════════════════════════════════════════ */}
+          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-4 shadow-lg">
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Scanner Input - Large & Prominent */}
+              <div className="flex-1 min-w-[300px]">
                 <Input
                   ref={scanInputRef}
                   size="large"
-                  placeholder="Barkodu tarayın veya manuel girin..."
-                  prefix={<ScanOutlined />}
+                  placeholder={isScannerActive ? "📡 Barkod tarayıcı hazır..." : "Tarayıcı devre dışı"}
+                  prefix={<ScanOutlined className="text-slate-400" />}
                   value={scanInput}
-                  onChange={(e) => setScanInput(e.target.value)}
-                  onKeyDown={handleScan}
+                  onChange={handleScanInputChange}
+                  onKeyDown={handleScanKeyDown}
+                  disabled={!isScannerActive}
+                  className="!bg-slate-800 !border-slate-600 !text-white placeholder:!text-slate-500 !text-lg !h-12 focus:!border-emerald-500 focus:!ring-2 focus:!ring-emerald-500/20 scanner-input"
                   suffix={
-                    <Button type="primary" icon={<SearchOutlined />} onClick={handleManualSearch}>
+                    <Button
+                      type="primary"
+                      icon={<SearchOutlined />}
+                      onClick={handleManualSearch}
+                      disabled={!isScannerActive || !scanInput.trim()}
+                      className="!bg-emerald-500 !border-emerald-500 hover:!bg-emerald-600"
+                    >
                       Ara
                     </Button>
                   }
                 />
+              </div>
 
-                <Select
-                  placeholder="Depo filtresi (opsiyonel)"
-                  allowClear
-                  style={{ width: '100%' }}
-                  value={selectedWarehouse}
-                  onChange={setSelectedWarehouse}
-                >
-                  {warehouses.map((w) => (
-                    <Select.Option key={w.id} value={w.id}>
-                      {w.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+              {/* Warehouse Filter */}
+              <Select
+                placeholder="Tüm Depolar"
+                allowClear
+                style={{ width: 180 }}
+                value={selectedWarehouse}
+                onChange={setSelectedWarehouse}
+                className="[&_.ant-select-selector]:!bg-slate-800 [&_.ant-select-selector]:!border-slate-600 [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-selection-item]:!text-white"
+              >
+                {warehouses.map((w) => (
+                  <Select.Option key={w.id} value={w.id}>
+                    {w.name}
+                  </Select.Option>
+                ))}
+              </Select>
 
-                <Alert
-                  type="info"
-                  showIcon
-                  message="Tarama İpucu"
-                  description="Barkod okuyucuyu bu alana odaklayın ve tarama yapın. Enter tuşu otomatik arama başlatır."
+              {/* Sound Toggle */}
+              <Tooltip title={soundEnabled ? "Ses Açık" : "Ses Kapalı"}>
+                <Button
+                  type={soundEnabled ? "primary" : "default"}
+                  icon={<SoundOutlined />}
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={soundEnabled ? "!bg-emerald-500 !border-emerald-500" : "!bg-slate-700 !border-slate-600 !text-slate-400"}
                 />
+              </Tooltip>
+
+              {/* Scanner Toggle */}
+              <Tooltip title={isScannerActive ? "Tarayıcıyı Durdur" : "Tarayıcıyı Başlat"}>
+                <Button
+                  type={isScannerActive ? "primary" : "default"}
+                  icon={<ThunderboltOutlined />}
+                  onClick={() => {
+                    setIsScannerActive(!isScannerActive);
+                    if (!isScannerActive) {
+                      setTimeout(refocusScanner, 100);
+                    }
+                  }}
+                  className={isScannerActive ? "!bg-emerald-500 !border-emerald-500" : "!bg-slate-700 !border-slate-600 !text-slate-400"}
+                >
+                  {isScannerActive ? "Aktif" : "Durduruldu"}
+                </Button>
+              </Tooltip>
+            </div>
+
+            {/* Status Indicators */}
+            <div className="flex items-center gap-6 mt-3 text-sm">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isScannerActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+                <Text className="text-slate-400">
+                  {isScannerActive ? 'Taramaya hazır' : 'Beklemede'}
+                </Text>
+              </div>
+              <div className="text-slate-500">|</div>
+              <Text className="text-slate-400">
+                <span className="text-white font-semibold">{totalScannedItems}</span> tarama yapıldı
+              </Text>
+              <div className="text-slate-500">|</div>
+              <Text className="text-slate-400">
+                <span className="text-white font-semibold">{historyStats.uniqueItems}</span> benzersiz ürün
+              </Text>
+              {historyStats.totalValue > 0 && (
+                <>
+                  <div className="text-slate-500">|</div>
+                  <Text className="text-emerald-400">
+                    Toplam: <span className="font-semibold">
+                      {historyStats.totalValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                    </span>
+                  </Text>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <Row gutter={[16, 16]}>
+            {/* Lookup Result - Full Width on Mobile, Side on Desktop */}
+            <Col xs={24} lg={14}>
+              <Card
+                className="h-full !border-slate-200"
+                title={
+                  <Space>
+                    <InboxOutlined />
+                    <span>Tarama Sonucu</span>
+                    {lastScannedBarcode && (
+                      <Tag color="blue" className="font-mono">{lastScannedBarcode}</Tag>
+                    )}
+                  </Space>
+                }
+              >
+                {renderLookupResult()}
+              </Card>
+            </Col>
+
+            {/* Quick Stats & Actions */}
+            <Col xs={24} lg={10}>
+              <div className="space-y-4">
+                {/* Quick Stats Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircleOutlined className="text-emerald-500" />
+                      <Text type="secondary" className="text-xs">Bulunan</Text>
+                    </div>
+                    <Text className="text-2xl font-bold text-emerald-600">{historyStats.foundItems}</Text>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CloseCircleOutlined className="text-red-500" />
+                      <Text type="secondary" className="text-xs">Bulunamayan</Text>
+                    </div>
+                    <Text className="text-2xl font-bold text-red-600">{historyStats.notFoundItems}</Text>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <BarcodeOutlined className="text-blue-500" />
+                      <Text type="secondary" className="text-xs">Toplam Adet</Text>
+                    </div>
+                    <Text className="text-2xl font-bold text-blue-600">{historyStats.totalQuantity}</Text>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <HistoryOutlined className="text-purple-500" />
+                      <Text type="secondary" className="text-xs">Tarama</Text>
+                    </div>
+                    <Text className="text-2xl font-bold text-purple-600">{totalScannedItems}</Text>
+                  </div>
+                </div>
+
+                {/* Help Card */}
+                <Card size="small" className="!bg-slate-50 !border-slate-200">
+                  <div className="space-y-2">
+                    <Text strong className="text-slate-700">💡 Pro Tarayıcı İpuçları</Text>
+                    <ul className="text-sm text-slate-600 space-y-1 ml-4 list-disc">
+                      <li>Hardware scanner otomatik algılanır</li>
+                      <li>Aynı barkod = miktar artışı</li>
+                      <li>Ses açık iken başarı/hata bildirimi</li>
+                      <li>Focus otomatik korunur</li>
+                    </ul>
+                  </div>
+                </Card>
+              </div>
+            </Col>
+          </Row>
+
+          {/* ═══════════════════════════════════════════════════════════════
+              INTELLIGENT SCAN HISTORY - With Quantity Aggregation
+          ═══════════════════════════════════════════════════════════════ */}
+          <Card
+            title={
+              <Space>
+                <HistoryOutlined />
+                Akıllı Tarama Geçmişi
+                <Badge count={historyStats.uniqueItems} style={{ backgroundColor: '#1890ff' }} />
+                {historyStats.totalQuantity !== historyStats.uniqueItems && (
+                  <Tag color="green">{historyStats.totalQuantity} adet toplam</Tag>
+                )}
               </Space>
-            </Card>
-          </Col>
-
-          {/* Lookup Result */}
-          <Col xs={24} lg={12}>
-            <Card title="Sonuç" className="h-full">
-              {renderLookupResult()}
-            </Card>
-          </Col>
-
-          {/* Scan History */}
-          <Col span={24}>
-            <Card
-              title={
-                <Space>
-                  <HistoryOutlined />
-                  Tarama Geçmişi
-                  <Badge count={scanHistory.length} style={{ backgroundColor: '#1890ff' }} />
-                </Space>
-              }
-              extra={
-                <Button size="small" onClick={() => setScanHistory([])}>
+            }
+            extra={
+              <Space>
+                <Button
+                  size="small"
+                  icon={<CopyOutlined />}
+                  onClick={() => {
+                    const data = scanHistory.map(item => `${item.barcode}\t${item.quantity}`).join('\n');
+                    navigator.clipboard.writeText(data);
+                    message.success('Geçmiş kopyalandı');
+                  }}
+                  disabled={scanHistory.length === 0}
+                >
+                  Kopyala
+                </Button>
+                <Button
+                  size="small"
+                  danger
+                  onClick={handleClearHistory}
+                  disabled={scanHistory.length === 0}
+                >
                   Temizle
                 </Button>
-              }
-            >
-              {scanHistory.length === 0 ? (
-                <Empty description="Henüz tarama yapılmadı" />
-              ) : (
-                <Table
-                  dataSource={scanHistory}
-                  rowKey={(r, i) => `${r.searchedBarcode}-${i}`}
-                  size="small"
-                  pagination={false}
-                  columns={[
-                    {
-                      title: 'Barkod',
-                      dataIndex: 'searchedBarcode',
-                      key: 'barcode',
-                      render: (text: string) => (
-                        <Space>
-                          <Text copyable>{text}</Text>
-                        </Space>
+              </Space>
+            }
+          >
+            {scanHistory.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span className="text-slate-500">
+                    Henüz tarama yapılmadı. Barkod okuyucunuzu hazırlayın ve taramaya başlayın.
+                  </span>
+                }
+              />
+            ) : (
+              <Table
+                dataSource={scanHistory}
+                rowKey="id"
+                size="small"
+                pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} kayıt` }}
+                columns={[
+                  {
+                    title: 'Barkod',
+                    dataIndex: 'barcode',
+                    key: 'barcode',
+                    render: (barcode: string) => (
+                      <Text copyable className="font-mono text-slate-700">{barcode}</Text>
+                    ),
+                  },
+                  {
+                    title: 'Adet',
+                    dataIndex: 'quantity',
+                    key: 'quantity',
+                    width: 120,
+                    render: (quantity: number, record: ScanHistoryItem) => (
+                      <InputNumber
+                        min={1}
+                        max={9999}
+                        value={quantity}
+                        size="small"
+                        onChange={(val) => handleUpdateQuantity(record.id, val || 1)}
+                        className="!w-20"
+                      />
+                    ),
+                  },
+                  {
+                    title: 'Durum',
+                    key: 'status',
+                    width: 120,
+                    render: (_, record: ScanHistoryItem) =>
+                      record.lookupResult.found ? (
+                        <Tag color="green" icon={<CheckCircleOutlined />}>
+                          {record.lookupResult.matchType}
+                        </Tag>
+                      ) : (
+                        <Tag color="red" icon={<CloseCircleOutlined />}>
+                          Bulunamadı
+                        </Tag>
                       ),
+                  },
+                  {
+                    title: 'Ürün / Kayıt',
+                    key: 'item',
+                    ellipsis: true,
+                    render: (_, record: ScanHistoryItem) => {
+                      const r = record.lookupResult;
+                      if (!r.found) return <Text type="secondary">-</Text>;
+                      if (r.product) return <Text strong>{r.product.name}</Text>;
+                      if (r.variant) return <Text>{r.variant.variantName}</Text>;
+                      if (r.serialNumber) return <Text className="font-mono">{r.serialNumber.serialNumber}</Text>;
+                      if (r.lotBatch) return <Text className="font-mono">{r.lotBatch.lotNumber}</Text>;
+                      return '-';
                     },
-                    {
-                      title: 'Sonuç',
-                      key: 'result',
-                      render: (_, record: BarcodeLookupResponse) =>
-                        record.found ? (
-                          <Tag color="green" icon={<CheckCircleOutlined />}>
-                            {record.matchType}
-                          </Tag>
-                        ) : (
-                          <Tag color="red" icon={<CloseCircleOutlined />}>
-                            Bulunamadı
-                          </Tag>
-                        ),
+                  },
+                  {
+                    title: 'Fiyat',
+                    key: 'price',
+                    width: 120,
+                    align: 'right' as const,
+                    render: (_, record: ScanHistoryItem) => {
+                      const product = record.lookupResult.product;
+                      if (!product?.unitPrice) return '-';
+                      const total = product.unitPrice * record.quantity;
+                      return (
+                        <div className="text-right">
+                          <Text className="text-slate-900 font-semibold">
+                            {total.toLocaleString('tr-TR', { style: 'currency', currency: product.unitPriceCurrency || 'TRY' })}
+                          </Text>
+                          {record.quantity > 1 && (
+                            <Text type="secondary" className="block text-xs">
+                              {record.quantity}x {product.unitPrice.toLocaleString('tr-TR')}
+                            </Text>
+                          )}
+                        </div>
+                      );
                     },
-                    {
-                      title: 'Ürün/Kayıt',
-                      key: 'item',
-                      render: (_, record: BarcodeLookupResponse) => {
-                        if (!record.found) return '-';
-                        if (record.product) return record.product.name;
-                        if (record.variant) return record.variant.variantName;
-                        if (record.serialNumber) return record.serialNumber.serialNumber;
-                        if (record.lotBatch) return record.lotBatch.lotNumber;
-                        return '-';
-                      },
-                    },
-                    {
-                      title: 'İşlem',
-                      key: 'action',
-                      render: (_, record: BarcodeLookupResponse) => (
-                        <Button
-                          type="link"
-                          size="small"
-                          onClick={() => setLastScannedBarcode(record.searchedBarcode)}
-                        >
-                          Tekrar Ara
-                        </Button>
-                      ),
-                    },
-                  ]}
-                />
-              )}
-            </Card>
-          </Col>
-        </Row>
+                  },
+                  {
+                    title: '',
+                    key: 'actions',
+                    width: 100,
+                    render: (_, record: ScanHistoryItem) => (
+                      <Space size="small">
+                        <Tooltip title="Tekrar Ara">
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<ReloadOutlined />}
+                            onClick={() => setLastScannedBarcode(record.barcode)}
+                          />
+                        </Tooltip>
+                        <Tooltip title="Sil">
+                          <Button
+                            type="text"
+                            size="small"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleRemoveFromHistory(record.id)}
+                          />
+                        </Tooltip>
+                      </Space>
+                    ),
+                  },
+                ]}
+              />
+            )}
+          </Card>
+        </div>
       ),
     },
     {

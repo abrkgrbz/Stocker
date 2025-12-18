@@ -211,6 +211,70 @@ html {
   }
 }
 
+/* ===== PRO BARCODE SCANNER STYLES ===== */
+/* Scanner input flash animation on successful scan */
+.scan-flash {
+  animation: scanFlash 0.2s ease-out;
+}
+
+@keyframes scanFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    background-color: rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(16, 185, 129, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    background-color: transparent;
+  }
+}
+
+/* Scanner input styles for dark mode control bar */
+.scanner-input.ant-input-affix-wrapper {
+  background-color: rgb(30 41 59) !important;
+  border-color: rgb(71 85 105) !important;
+}
+
+.scanner-input.ant-input-affix-wrapper:focus,
+.scanner-input.ant-input-affix-wrapper-focused {
+  border-color: rgb(16 185 129) !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+.scanner-input .ant-input {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+.scanner-input .ant-input::placeholder {
+  color: rgb(100 116 139) !important;
+}
+
+/* Scanner status indicator pulse animation */
+@keyframes scanner-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.scanner-active-indicator {
+  animation: scanner-pulse 2s ease-in-out infinite;
+}
+
+/* Pro scanner card hover effects */
+.pro-scanner-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
 /* Modern Dropzone Styles */
 .dropzone-modern {
   min-height: 200px;
