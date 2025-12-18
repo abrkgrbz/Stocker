@@ -251,8 +251,12 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   // Convert category tree to TreeSelect format
   const categoryTreeData = convertToTreeData(categoryTree);
 
+  // Track if initial values have been loaded to prevent re-running
+  const [initialValuesLoaded, setInitialValuesLoaded] = useState(false);
+
   useEffect(() => {
-    if (initialValues) {
+    // Only run once when initialValues first becomes available
+    if (initialValues && !initialValuesLoaded) {
       form.setFieldsValue({
         ...initialValues,
         unitPriceCurrency: initialValues.unitPriceCurrency || 'TRY',
@@ -262,7 +266,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       setProductType(initialValues.productType || ProductType.Finished);
       // Load existing images
       if (initialValues.images && initialValues.images.length > 0) {
-        const existingImages = initialValues.images.map((img, index) => ({
+        const existingImages = initialValues.images.map((img) => ({
           id: `existing-${img.id}`,
           preview: img.imageUrl,
           isPrimary: img.isPrimary,
@@ -273,7 +277,8 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
         const primaryIndex = existingImages.findIndex(img => img.isPrimary);
         setSelectedImageIndex(primaryIndex >= 0 ? primaryIndex : 0);
       }
-    } else {
+      setInitialValuesLoaded(true);
+    } else if (!initialValues && !initialValuesLoaded) {
       form.setFieldsValue({
         productType: ProductType.Finished,
         unitPriceCurrency: 'TRY',
@@ -287,8 +292,9 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
         trackLotNumbers: false,
         isActive: true,
       });
+      setInitialValuesLoaded(true);
     }
-  }, [form, initialValues]);
+  }, [form, initialValues, initialValuesLoaded]);
 
   return (
     <Form
