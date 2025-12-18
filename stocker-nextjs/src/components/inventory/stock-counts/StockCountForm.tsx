@@ -7,13 +7,8 @@ import {
   Select,
   DatePicker,
   Switch,
-  Row,
-  Col,
-  Typography,
-  Segmented,
   Button,
   Table,
-  Space,
   Empty,
   InputNumber,
 } from 'antd';
@@ -21,17 +16,12 @@ import {
   CalculatorOutlined,
   PlusOutlined,
   DeleteOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  InboxOutlined,
-  EnvironmentOutlined,
 } from '@ant-design/icons';
 import { useWarehouses, useProducts, useLocations } from '@/lib/api/hooks/useInventory';
 import { StockCountType, type StockCountDto, type CreateStockCountItemDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 interface StockCountFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -41,7 +31,7 @@ interface StockCountFormProps {
 }
 
 const countTypes = [
-  { value: StockCountType.Full, label: 'Tam Sayım' },
+  { value: StockCountType.Full, label: 'Tam' },
   { value: StockCountType.Cycle, label: 'Döngüsel' },
   { value: StockCountType.Spot, label: 'Spot' },
   { value: StockCountType.Annual, label: 'Yıllık' },
@@ -68,7 +58,6 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
       setCountType(initialValues.countType);
       setAutoAdjust(initialValues.autoAdjust ?? false);
       setWarehouseId(initialValues.warehouseId);
-      // Convert existing items
       if (initialValues.items) {
         setItems(initialValues.items.map(item => ({
           productId: item.productId,
@@ -123,7 +112,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
           showSearch
           optionFilterProp="label"
           style={{ width: '100%' }}
-          variant="filled"
+          className="[&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
           options={products.map(p => ({
             value: p.id,
             label: `${p.code} - ${p.name}`,
@@ -143,7 +132,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
           placeholder="Lokasyon"
           allowClear
           style={{ width: '100%' }}
-          variant="filled"
+          className="[&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
           options={locations.map(l => ({
             value: l.id,
             label: l.name,
@@ -163,7 +152,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
           onChange={(val) => handleItemChange(index, 'systemQuantity', val || 0)}
           min={0}
           style={{ width: '100%' }}
-          variant="filled"
+          className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -188,282 +177,292 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
       layout="vertical"
       onFinish={handleFinish}
       disabled={loading}
-      className="stock-count-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Stock Count Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <CalculatorOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Stok Sayımı
-              </p>
-              <p className="text-sm text-white/60">
-                Envanter sayımı yaparak stokları doğrulayın
-              </p>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Stock Count Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <CalculatorOutlined className="text-xl text-slate-500" />
+              </div>
+            </div>
+
+            {/* Count Number - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="countNumber"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Sayım Numarası Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                  disabled={!!initialValues}
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Sayım açıklaması..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="countType" className="mb-0" initialValue={StockCountType.Full}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  {countTypes.slice(0, 3).map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => {
+                        setCountType(type.value);
+                        form.setFieldValue('countType', type.value);
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        countType === type.value
+                          ? 'bg-white shadow-sm text-slate-900'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Count Type Segmented */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── SAYIM TÜRÜ (Full Selection) ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Sayım Türü
-            </Text>
-            <Form.Item name="countType" noStyle initialValue={StockCountType.Full}>
-              <Segmented
-                block
-                options={countTypes}
-                value={countType}
-                onChange={(val) => {
-                  setCountType(val as StockCountType);
-                  form.setFieldValue('countType', val);
-                }}
-                style={{ background: '#f5f5f5' }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Auto Adjust Toggle */}
-          <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl mb-6">
-            <div>
-              <Text strong className="text-gray-700">Otomatik Düzeltme</Text>
-              <div className="text-xs text-gray-400 mt-0.5">
-                {autoAdjust ? 'Farklar otomatik düzeltilecek' : 'Manuel onay gerekecek'}
-              </div>
+            </h3>
+            <div className="grid grid-cols-6 gap-2">
+              {countTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => {
+                    setCountType(type.value);
+                    form.setFieldValue('countType', type.value);
+                  }}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    countType === type.value
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
             </div>
-            <Form.Item name="autoAdjust" valuePropName="checked" noStyle>
-              <Switch
-                checked={autoAdjust}
-                onChange={(val) => {
-                  setAutoAdjust(val);
-                  form.setFieldValue('autoAdjust', val);
-                }}
-                checkedChildren="Evet"
-                unCheckedChildren="Hayır"
-                style={{
-                  backgroundColor: autoAdjust ? '#52c41a' : '#d9d9d9',
-                  minWidth: '80px'
-                }}
-              />
-            </Form.Item>
           </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.totalItems || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Toplam Kalem</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.countedItems || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Sayılan</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-orange-600">
-                  {initialValues.itemsWithDifferenceCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Fark Olan</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className={`text-2xl font-semibold ${(initialValues.totalDifference || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {(initialValues.totalDifference || 0) >= 0 ? '+' : ''}{initialValues.totalDifference || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Net Fark</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Count Number - Hero Input */}
+          {/* ─────────────── DEPO & LOKASYON ─────────────── */}
           <div className="mb-8">
-            <Form.Item
-              name="countNumber"
-              rules={[
-                { required: true, message: 'Sayım numarası zorunludur' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Sayım numarası"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-                disabled={!!initialValues}
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Sayım açıklaması ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Warehouse & Location Selection */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <EnvironmentOutlined className="mr-1" /> Depo & Lokasyon
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Depo *</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Depo & Lokasyon
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="warehouseId"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Select
                     placeholder="Depo seçin"
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     onChange={(val) => setWarehouseId(val)}
                     options={warehouses.map(w => ({
                       value: w.id,
                       label: w.name,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Lokasyon (Opsiyonel)</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lokasyon</label>
                 <Form.Item name="locationId" className="mb-0">
                   <Select
-                    placeholder="Tüm lokasyonlar"
+                    placeholder={warehouseId ? 'Tüm lokasyonlar' : '—'}
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     disabled={!warehouseId}
                     options={locations.map(l => ({
                       value: l.id,
                       label: l.name,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Date Section */}
+          {/* ─────────────── TARİH & AYARLAR ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CalendarOutlined className="mr-1" /> Sayım Tarihi
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sayım Tarihi *</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tarih & Ayarlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sayım Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="countDate"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <DatePicker
                     style={{ width: '100%' }}
                     format="DD.MM.YYYY"
-                    variant="filled"
                     placeholder="Tarih seçin"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Otomatik Düzeltme</label>
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm text-slate-700">
+                      {autoAdjust ? 'Farklar otomatik düzeltilecek' : 'Manuel onay gerekecek'}
+                    </div>
+                  </div>
+                  <Form.Item name="autoAdjust" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={autoAdjust}
+                      onChange={(val) => {
+                        setAutoAdjust(val);
+                        form.setFieldValue('autoAdjust', val);
+                      }}
+                      checkedChildren="Evet"
+                      unCheckedChildren="Hayır"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+          {/* ─────────────── İSTATİSTİKLER (Edit Mode) ─────────────── */}
+          {initialValues && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Sayım İstatistikleri
+              </h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div className="text-2xl font-semibold text-slate-800">
+                    {initialValues.totalItems || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Toplam Kalem</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div className="text-2xl font-semibold text-slate-800">
+                    {initialValues.countedItems || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Sayılan</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div className="text-2xl font-semibold text-orange-600">
+                    {initialValues.itemsWithDifferenceCount || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Fark Olan</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div className={`text-2xl font-semibold ${(initialValues.totalDifference || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(initialValues.totalDifference || 0) >= 0 ? '+' : ''}{initialValues.totalDifference || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Net Fark</div>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Notes Section */}
+          {/* ─────────────── NOTLAR ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <FileTextOutlined className="mr-1" /> Notlar
-            </Text>
-            <Form.Item name="notes" className="mb-0">
-              <TextArea
-                placeholder="Sayım ile ilgili ek notlar..."
-                variant="filled"
-                autoSize={{ minRows: 3, maxRows: 6 }}
-              />
-            </Form.Item>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Sayım ile ilgili ek notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
 
-      {/* Stock Count Items Section - Full Width */}
-      <div className="mt-8">
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-8" />
+          {/* ─────────────── SAYIM KALEMLERİ ─────────────── */}
+          <div>
+            <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Sayım Kalemleri
+              </h3>
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={handleAddItem}
+                size="small"
+                className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
+              >
+                Ürün Ekle
+              </Button>
+            </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-            <InboxOutlined className="mr-1" /> Sayım Kalemleri
-          </Text>
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={handleAddItem}
-            size="small"
-          >
-            Ürün Ekle
-          </Button>
+            {items.length > 0 ? (
+              <Table
+                dataSource={items.map((item, index) => ({ ...item, key: index }))}
+                columns={columns}
+                pagination={false}
+                size="small"
+                className="[&_.ant-table]:!border-slate-200 [&_.ant-table-thead_.ant-table-cell]:!bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:!text-slate-600 [&_.ant-table-thead_.ant-table-cell]:!font-medium [&_.ant-table-tbody_.ant-table-cell]:!border-slate-100"
+              />
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="Henüz ürün eklenmedi"
+                className="py-8 bg-slate-50 rounded-lg border border-slate-200"
+              >
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddItem}
+                  className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
+                >
+                  İlk Ürünü Ekle
+                </Button>
+              </Empty>
+            )}
+          </div>
+
         </div>
-
-        {items.length > 0 ? (
-          <Table
-            dataSource={items.map((item, index) => ({ ...item, key: index }))}
-            columns={columns}
-            pagination={false}
-            size="small"
-            className="stock-count-items-table"
-          />
-        ) : (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="Henüz ürün eklenmedi"
-            className="py-8 bg-gray-50/50 rounded-xl"
-          >
-            <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem}>
-              İlk Ürünü Ekle
-            </Button>
-          </Empty>
-        )}
       </div>
 
       {/* Hidden submit button */}

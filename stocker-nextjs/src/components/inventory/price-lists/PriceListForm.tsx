@@ -1,36 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  Select,
-  InputNumber,
-  DatePicker,
-  Divider,
-  Table,
-  Button,
-  Space,
-  Popconfirm,
-  message,
-} from 'antd';
-import {
-  DollarOutlined,
-  PercentageOutlined,
-  CalendarOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { Form, Input, Switch, Select, InputNumber, DatePicker, Table } from 'antd';
+import { DollarOutlined } from '@ant-design/icons';
 import type { PriceListDto, PriceListItemDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface PriceListFormProps {
@@ -41,10 +18,10 @@ interface PriceListFormProps {
 }
 
 const CURRENCIES = [
-  { value: 'TRY', label: 'TRY - Turk Lirasi' },
-  { value: 'USD', label: 'USD - Amerikan Dolari' },
+  { value: 'TRY', label: 'TRY - Türk Lirası' },
+  { value: 'USD', label: 'USD - Amerikan Doları' },
   { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - Ingiliz Sterlini' },
+  { value: 'GBP', label: 'GBP - İngiliz Sterlini' },
 ];
 
 export default function PriceListForm({ form, initialValues, onFinish, loading }: PriceListFormProps) {
@@ -80,12 +57,12 @@ export default function PriceListForm({ form, initialValues, onFinish, loading }
 
   const itemColumns: ColumnsType<PriceListItemDto> = [
     {
-      title: 'Urun',
+      title: 'Ürün',
       key: 'product',
       render: (_, record) => (
         <div>
-          <div className="font-medium">{record.productName}</div>
-          <div className="text-xs text-gray-400">{record.productCode}</div>
+          <div className="font-medium text-slate-800">{record.productName}</div>
+          <div className="text-xs text-slate-400">{record.productCode}</div>
         </div>
       ),
     },
@@ -95,31 +72,31 @@ export default function PriceListForm({ form, initialValues, onFinish, loading }
       key: 'price',
       align: 'right',
       render: (price: number, record) => (
-        <span className="font-medium">
+        <span className="font-medium text-slate-800">
           {price?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {record.currency}
         </span>
       ),
     },
     {
-      title: 'Indirim',
+      title: 'İndirim',
       dataIndex: 'discountPercentage',
       key: 'discountPercentage',
       align: 'center',
-      render: (discount: number) => discount ? `%${discount}` : '-',
+      render: (discount: number) => discount ? <span className="text-slate-600">%{discount}</span> : <span className="text-slate-400">-</span>,
     },
     {
       title: 'Min Miktar',
       dataIndex: 'minQuantity',
       key: 'minQuantity',
       align: 'center',
-      render: (val: number) => val || '-',
+      render: (val: number) => val ? <span className="text-slate-600">{val}</span> : <span className="text-slate-400">-</span>,
     },
     {
       title: 'Max Miktar',
       dataIndex: 'maxQuantity',
       key: 'maxQuantity',
       align: 'center',
-      render: (val: number) => val || '-',
+      render: (val: number) => val ? <span className="text-slate-600">{val}</span> : <span className="text-slate-400">-</span>,
     },
   ];
 
@@ -129,252 +106,219 @@ export default function PriceListForm({ form, initialValues, onFinish, loading }
       layout="vertical"
       onFinish={handleFinish}
       disabled={loading}
-      className="price-list-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Price List Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <DollarOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Fiyat Listesi
-              </p>
-              <p className="text-sm text-white/60">
-                Urun fiyatlarini grupla ve yonet
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggle */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Liste aktif ve kullanilabilir' : 'Liste pasif durumda'}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Status Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Price List Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <DollarOutlined className="text-xl text-slate-500" />
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
-                  onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
-                  }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+            </div>
+
+            {/* Price List Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Fiyat Listesi Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Açıklama ekleyin..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.itemCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Urun Sayisi</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.priority || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Oncelik</div>
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isActive ? 'Aktif' : 'Pasif'}
+                </span>
+                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                  <Switch
+                    checked={isActive}
+                    onChange={(val) => {
+                      setIsActive(val);
+                      form.setFieldValue('isActive', val);
+                    }}
+                  />
+                </Form.Item>
               </div>
             </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Price List Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Fiyat listesi adi zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Fiyat listesi adi"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Aciklama ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Basic Info */}
+          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Liste Kodu *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Liste Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <Input
                     placeholder="PL-001"
-                    variant="filled"
                     disabled={!!initialValues}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Para Birimi *</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="currency"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   initialValue="TRY"
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Select
                     options={CURRENCIES}
-                    variant="filled"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Oncelik</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
                 <Form.Item name="priority" className="mb-0" initialValue={0}>
                   <InputNumber
+                    placeholder="0"
                     min={0}
                     max={100}
-                    style={{ width: '100%' }}
-                    variant="filled"
-                    placeholder="0"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Pricing Options */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <PercentageOutlined className="mr-1" /> Fiyatlandirma
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Global Indirim (%)</div>
-                <Form.Item name="globalDiscountPercentage" className="mb-3">
-                  <InputNumber
-                    min={0}
-                    max={100}
-                    style={{ width: '100%' }}
-                    variant="filled"
-                    placeholder="0"
-                    addonAfter="%"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Global Markup (%)</div>
-                <Form.Item name="globalMarkupPercentage" className="mb-3">
-                  <InputNumber
-                    min={0}
-                    max={1000}
-                    style={{ width: '100%' }}
-                    variant="filled"
-                    placeholder="0"
-                    addonAfter="%"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Validity Period */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CalendarOutlined className="mr-1" /> Gecerlilik Suresi
-            </Text>
-            <Form.Item name="validityRange" className="mb-0">
-              <RangePicker
-                style={{ width: '100%' }}
-                variant="filled"
-                placeholder={['Baslangic', 'Bitis']}
-                format="DD.MM.YYYY"
-              />
-            </Form.Item>
-            <div className="text-xs text-gray-400 mt-2">
-              Bos birakilirsa surekli gecerli olur
+              </div>
             </div>
           </div>
 
-          {/* Items (Read-only in form, managed separately) */}
-          {initialValues && items.length > 0 && (
-            <>
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-              <div>
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <DollarOutlined className="mr-1" /> Urun Fiyatlari ({items.length})
-                </Text>
-                <Table
-                  columns={itemColumns}
-                  dataSource={items}
-                  rowKey="id"
-                  size="small"
-                  pagination={{ pageSize: 5 }}
-                />
+          {/* ─────────────── FİYATLANDIRMA ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Fiyatlandırma
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Global İndirim (%)</label>
+                <Form.Item name="globalDiscountPercentage" className="mb-0">
+                  <InputNumber
+                    placeholder="0"
+                    min={0}
+                    max={100}
+                    addonAfter="%"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
               </div>
-            </>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Global Markup (%)</label>
+                <Form.Item name="globalMarkupPercentage" className="mb-0">
+                  <InputNumber
+                    placeholder="0"
+                    min={0}
+                    max={1000}
+                    addonAfter="%"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── GEÇERLİLİK SÜRESİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Geçerlilik Süresi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="validityRange" className="mb-0">
+                  <RangePicker
+                    placeholder={['Başlangıç', 'Bitiş']}
+                    format="DD.MM.YYYY"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+                <p className="text-xs text-slate-400 mt-1">Boş bırakılırsa sürekli geçerli olur</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
+          {initialValues && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                İstatistikler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.itemCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Ürün Sayısı</div>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.priority || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Öncelik</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-        </Col>
-      </Row>
+
+          {/* ─────────────── ÜRÜN FİYATLARI (Düzenleme Modu) ─────────────── */}
+          {initialValues && items.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Ürün Fiyatları ({items.length})
+              </h3>
+              <Table
+                columns={itemColumns}
+                dataSource={items}
+                rowKey="id"
+                size="small"
+                pagination={{ pageSize: 5 }}
+                className="[&_.ant-table]:!bg-transparent [&_.ant-table-thead>tr>th]:!bg-slate-50 [&_.ant-table-thead>tr>th]:!text-slate-600 [&_.ant-table-tbody>tr>td]:!border-slate-100"
+              />
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

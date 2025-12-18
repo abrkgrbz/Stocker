@@ -7,13 +7,10 @@ import {
   InputNumber,
   Select,
   Switch,
-  Row,
-  Col,
   Collapse,
   Upload,
   Button,
   Divider,
-  Typography,
   TreeSelect,
 } from 'antd';
 import {
@@ -21,19 +18,15 @@ import {
   TagOutlined,
   ShopOutlined,
   SettingOutlined,
-  BoxPlotOutlined,
-  DollarOutlined,
-  BarcodeOutlined,
-  PictureOutlined,
   DeleteOutlined,
   InboxOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 import { useCategoryTree, useBrands, useUnits, useWarehouses, useLocations } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
 import type { ProductDto, CategoryTreeDto, InitialStockEntryDto } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 const { Dragger } = Upload;
 
 interface ProductFormProps {
@@ -44,15 +37,18 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
-// Main product types for segmented control
+// Main product types for header selector
 const mainProductTypes = [
   { value: ProductType.Finished, label: 'Mamul' },
   { value: ProductType.Raw, label: 'Hammadde' },
   { value: ProductType.Service, label: 'Hizmet' },
 ];
 
-// Additional product types
-const otherProductTypes = [
+// All product types for full selection
+const allProductTypes = [
+  { value: ProductType.Finished, label: 'Mamul Ürün' },
+  { value: ProductType.Raw, label: 'Hammadde' },
+  { value: ProductType.Service, label: 'Hizmet' },
   { value: ProductType.SemiFinished, label: 'Yarı Mamul' },
   { value: ProductType.Consumable, label: 'Sarf Malzeme' },
   { value: ProductType.FixedAsset, label: 'Duran Varlık' },
@@ -98,43 +94,40 @@ function StockEntryRow({
   const { data: locations = [] } = useLocations(entry.warehouseId || undefined);
 
   return (
-    <Row gutter={12} align="middle" className="mb-2">
-      <Col span={9}>
+    <div className="grid grid-cols-12 gap-3 items-center mb-2">
+      <div className="col-span-5">
         <Select
           placeholder="Depo seçin"
           value={entry.warehouseId || undefined}
           onChange={onWarehouseChange}
           options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-          variant="filled"
           size="small"
-          className="w-full"
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
         />
-      </Col>
-      <Col span={8}>
+      </div>
+      <div className="col-span-4">
         <Select
-          placeholder="Lokasyon (opsiyonel)"
+          placeholder="Lokasyon"
           value={entry.locationId || undefined}
           onChange={onLocationChange}
           options={locations.map((l) => ({ value: l.id, label: l.code }))}
-          variant="filled"
           size="small"
-          className="w-full"
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
           allowClear
           disabled={!entry.warehouseId}
         />
-      </Col>
-      <Col span={5}>
+      </div>
+      <div className="col-span-2">
         <InputNumber
           placeholder="Miktar"
           value={entry.quantity}
           onChange={(val) => onQuantityChange(val || 0)}
           min={0}
-          variant="filled"
           size="small"
-          className="w-full"
+          className="w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
-      </Col>
-      <Col span={2}>
+      </div>
+      <div className="col-span-1">
         {canRemove && (
           <Button
             type="text"
@@ -144,8 +137,8 @@ function StockEntryRow({
             danger
           />
         )}
-      </Col>
-    </Row>
+      </div>
+    </div>
   );
 }
 
@@ -155,6 +148,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   const { data: units = [], isLoading: unitsLoading } = useUnits();
   const { data: warehouses = [] } = useWarehouses();
   const [isActive, setIsActive] = useState(true);
+  const [productType, setProductType] = useState<ProductType>(ProductType.Finished);
   const [stockEntries, setStockEntries] = useState<(InitialStockEntryDto & { key: string })[]>([]);
 
   // Add new stock entry row
@@ -174,7 +168,6 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   const updateStockEntry = (index: number, field: keyof InitialStockEntryDto, value: any) => {
     const updated = [...stockEntries];
     updated[index] = { ...updated[index], [field]: value };
-    // Reset location if warehouse changes
     if (field === 'warehouseId') {
       updated[index].locationId = undefined;
     }
@@ -204,6 +197,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
         costPriceCurrency: initialValues.costPriceCurrency || 'TRY',
       });
       setIsActive(initialValues.isActive ?? true);
+      setProductType(initialValues.productType || ProductType.Finished);
     } else {
       form.setFieldsValue({
         productType: ProductType.Finished,
@@ -227,159 +221,123 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       layout="vertical"
       onFinish={handleFinish}
       disabled={loading}
-      className="product-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Media Focus (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Large Media Upload Area */}
-          <div className="mb-8">
-            <Dragger
-              multiple
-              listType="picture-card"
-              accept="image/*"
-              beforeUpload={() => false}
-              style={{
-                background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)',
-                border: '2px dashed #e0e0e0',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '320px',
-                transition: 'all 0.3s ease',
-              }}
-              className="hover:border-blue-400 hover:bg-blue-50/30"
-            >
-              <div className="py-8">
-                <PictureOutlined style={{ fontSize: '48px', color: '#bfbfbf' }} />
-                <p className="mt-4 text-base font-medium text-gray-600">
-                  Görselleri sürükleyin
-                </p>
-                <p className="text-sm text-gray-400">
-                  veya <span className="text-blue-500 cursor-pointer">dosya seçin</span>
-                </p>
-                <p className="mt-4 text-xs text-gray-400">
-                  PNG, JPG, WEBP • Maks. 5MB
-                </p>
-              </div>
-            </Dragger>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggle - Minimal */}
-          <div className="mb-8 flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-            <div>
-              <Text strong className="text-gray-700">Yayın Durumu</Text>
-              <div className="text-xs text-gray-400 mt-0.5">
-                {isActive ? 'Ürün aktif ve görünür' : 'Ürün taslak olarak kaydedilecek'}
-              </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Product Image Upload */}
+            <div className="flex-shrink-0">
+              <Upload
+                listType="picture-card"
+                showUploadList={false}
+                accept="image/*"
+                beforeUpload={() => false}
+                className="[&_.ant-upload]:!w-16 [&_.ant-upload]:!h-16 [&_.ant-upload]:!rounded-full [&_.ant-upload]:!bg-slate-100 [&_.ant-upload]:!border-2 [&_.ant-upload]:!border-dashed [&_.ant-upload]:!border-slate-300"
+              >
+                <PictureOutlined className="text-xl text-slate-500" />
+              </Upload>
             </div>
-            <Form.Item name="isActive" valuePropName="checked" noStyle>
-              <Switch
-                checked={isActive}
-                onChange={(val) => {
-                  setIsActive(val);
-                  form.setFieldValue('isActive', val);
-                }}
-                checkedChildren="Aktif"
-                unCheckedChildren="Taslak"
-                style={{
-                  backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                  minWidth: '80px'
-                }}
-              />
-            </Form.Item>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.totalStockQuantity || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Toplam Stok</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  ₺{(initialValues.unitPrice || 0).toLocaleString('tr-TR')}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Birim Fiyat</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Product Title - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Ürün adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Ürün adı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Ürün açıklaması ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Product Type - Combined Select */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Ürün Türü
-            </Text>
-            <Form.Item name="productType" rules={[{ required: true, message: 'Ürün türü seçiniz' }]} className="mb-0">
-              <Select
-                size="large"
-                variant="filled"
-                placeholder="Ürün türü seçin"
-                className="w-full"
-                options={[
-                  { label: 'Temel Türler', options: mainProductTypes },
-                  { label: 'Diğer Türler', options: otherProductTypes },
+            {/* Product Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
                 ]}
-              />
-            </Form.Item>
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Ürün Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Ürün açıklaması..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="productType" className="mb-0" initialValue={ProductType.Finished}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  {mainProductTypes.map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => {
+                        setProductType(type.value);
+                        form.setFieldValue('productType', type.value);
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        productType === type.value
+                          ? 'bg-white shadow-sm text-slate-900'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </Form.Item>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── ÜRÜN TÜRÜ (Full Selection) ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ürün Türü
+            </h3>
+            <div className="grid grid-cols-6 gap-2">
+              {allProductTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => {
+                    setProductType(type.value);
+                    form.setFieldValue('productType', type.value);
+                  }}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    productType === type.value
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Organization Row */}
+          {/* ─────────────── ORGANİZASYON ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Organizasyon
-            </Text>
-            <Row gutter={16}>
-              <Col span={8}>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="categoryId"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <TreeSelect
@@ -388,214 +346,275 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                     treeData={categoryTreeData}
                     showSearch
                     treeNodeFilterProp="title"
-                    variant="filled"
-                    suffixIcon={<TagOutlined className="text-gray-400" />}
+                    suffixIcon={<TagOutlined className="text-slate-400" />}
                     treeLine={{ showLeafIcon: false }}
                     treeDefaultExpandAll
                     dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                     dropdownRender={(menu) => (
                       <>
                         {menu}
                         <Divider className="my-1" />
-                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-blue-500">
+                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-slate-600">
                           Yeni Ekle
                         </Button>
                       </>
                     )}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Marka</label>
                 <Form.Item name="brandId" className="mb-0">
                   <Select
-                    placeholder="Marka"
+                    placeholder="Marka seçin"
                     loading={brandsLoading}
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
-                    suffixIcon={<ShopOutlined className="text-gray-400" />}
+                    suffixIcon={<ShopOutlined className="text-slate-400" />}
                     options={brands.map((b) => ({ value: b.id, label: b.name }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                     dropdownRender={(menu) => (
                       <>
                         {menu}
                         <Divider className="my-1" />
-                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-blue-500">
+                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-slate-600">
                           Yeni Ekle
                         </Button>
                       </>
                     )}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="unitId"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Select
-                    placeholder="Birim"
+                    placeholder="Birim seçin"
                     loading={unitsLoading}
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={units.map((u) => ({
                       value: u.id,
                       label: `${u.name} (${u.symbol || u.code})`,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Pricing Section */}
+          {/* ─────────────── ENVANTER KODLARI ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Fiyatlandırma
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="relative">
-                  <div className="text-xs text-gray-400 mb-1">Satış Fiyatı</div>
-                  <Form.Item name="unitPrice" className="mb-0">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                      placeholder="0.00"
-                      variant="filled"
-                      size="large"
-                      addonBefore={
-                        <Form.Item name="unitPriceCurrency" noStyle>
-                          <Select options={currencyOptions} variant="borderless" style={{ width: 50 }} />
-                        </Form.Item>
-                      }
-                    />
-                  </Form.Item>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div className="relative">
-                  <div className="text-xs text-gray-400 mb-1">Maliyet</div>
-                  <Form.Item name="costPrice" className="mb-0">
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                      placeholder="0.00"
-                      variant="filled"
-                      size="large"
-                      addonBefore={
-                        <Form.Item name="costPriceCurrency" noStyle>
-                          <Select options={currencyOptions} variant="borderless" style={{ width: 50 }} />
-                        </Form.Item>
-                      }
-                    />
-                  </Form.Item>
-                </div>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Inventory Codes */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <BarcodeOutlined className="mr-1" /> Envanter Kodları
-            </Text>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Ürün Kodu *</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Envanter Kodları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ürün Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Input
                     placeholder="PRD-001"
-                    variant="filled"
                     disabled={!!initialValues}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">SKU</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">SKU</label>
                 <Form.Item name="sku" className="mb-0">
-                  <Input placeholder="SKU-12345" variant="filled" />
+                  <Input
+                    placeholder="SKU-12345"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Barkod</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Barkod</label>
                 <Form.Item name="barcode" className="mb-0">
-                  <Input placeholder="8690000000000" variant="filled" />
+                  <Input
+                    placeholder="8690000000000"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Stock Levels - Compact */}
+          {/* ─────────────── FİYATLANDIRMA ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <BoxPlotOutlined className="mr-1" /> Stok Seviyeleri
-            </Text>
-            <Row gutter={12}>
-              <Col span={6}>
-                <div className="text-xs text-gray-400 mb-1">Min</div>
-                <Form.Item name="minStockLevel" rules={[{ required: true }]} className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} variant="filled" size="small" />
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Fiyatlandırma
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Fiyatı</label>
+                <Form.Item name="unitPrice" className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    precision={2}
+                    placeholder="0.00"
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    addonBefore={
+                      <Form.Item name="unitPriceCurrency" noStyle>
+                        <Select options={currencyOptions} variant="borderless" style={{ width: 50 }} />
+                      </Form.Item>
+                    }
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={6}>
-                <div className="text-xs text-gray-400 mb-1">Maks</div>
-                <Form.Item name="maxStockLevel" rules={[{ required: true }]} className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} variant="filled" size="small" />
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maliyet Fiyatı</label>
+                <Form.Item name="costPrice" className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    precision={2}
+                    placeholder="0.00"
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    addonBefore={
+                      <Form.Item name="costPriceCurrency" noStyle>
+                        <Select options={currencyOptions} variant="borderless" style={{ width: 50 }} />
+                      </Form.Item>
+                    }
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={6}>
-                <div className="text-xs text-gray-400 mb-1">Yeniden Sip.</div>
-                <Form.Item name="reorderLevel" rules={[{ required: true }]} className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} variant="filled" size="small" />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <div className="text-xs text-gray-400 mb-1">Sip. Miktarı</div>
-                <Form.Item name="reorderQuantity" rules={[{ required: true }]} className="mb-0">
-                  <InputNumber style={{ width: '100%' }} min={0} variant="filled" size="small" />
-                </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Initial Stock - Only show for new products */}
+          {/* ─────────────── STOK SEVİYELERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Stok Seviyeleri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Minimum</label>
+                <Form.Item name="minStockLevel" rules={[{ required: true }]} className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maksimum</label>
+                <Form.Item name="maxStockLevel" rules={[{ required: true }]} className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yeniden Sipariş</label>
+                <Form.Item name="reorderLevel" rules={[{ required: true }]} className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş Miktarı</label>
+                <Form.Item name="reorderQuantity" rules={[{ required: true }]} className="mb-0">
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    min={0}
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── DURUM ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Durum
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm font-medium text-slate-700">Yayın Durumu</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {isActive ? 'Ürün aktif ve görünür' : 'Ürün taslak olarak kaydedilecek'}
+                    </div>
+                  </div>
+                  <Form.Item name="isActive" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={isActive}
+                      onChange={(val) => {
+                        setIsActive(val);
+                        form.setFieldValue('isActive', val);
+                      }}
+                      checkedChildren="Aktif"
+                      unCheckedChildren="Taslak"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              {initialValues && (
+                <div className="col-span-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                      <div className="text-xl font-semibold text-slate-800">
+                        {initialValues.totalStockQuantity || 0}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">Toplam Stok</div>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                      <div className="text-xl font-semibold text-slate-800">
+                        ₺{(initialValues.unitPrice || 0).toLocaleString('tr-TR')}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">Birim Fiyat</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ─────────────── BAŞLANGIÇ STOKU (Only for new products) ─────────────── */}
           {!initialValues && (
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-3">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  <InboxOutlined className="mr-1" /> Başlangıç Stoku (Opsiyonel)
-                </Text>
+              <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Başlangıç Stoku (Opsiyonel)
+                </h3>
                 <Button
-                  type="link"
+                  type="dashed"
                   size="small"
                   icon={<PlusOutlined />}
                   onClick={addStockEntry}
-                  className="text-xs"
+                  className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
                 >
                   Depo Ekle
                 </Button>
               </div>
               {stockEntries.length > 0 ? (
-                <div className="bg-gray-50/50 rounded-xl p-4">
-                  <div className="mb-2">
-                    <Row gutter={12}>
-                      <Col span={9}><Text className="text-xs text-gray-400">Depo</Text></Col>
-                      <Col span={8}><Text className="text-xs text-gray-400">Lokasyon</Text></Col>
-                      <Col span={5}><Text className="text-xs text-gray-400">Miktar</Text></Col>
-                      <Col span={2}></Col>
-                    </Row>
+                <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
+                  <div className="grid grid-cols-12 gap-3 mb-2 text-xs text-slate-500">
+                    <div className="col-span-5">Depo</div>
+                    <div className="col-span-4">Lokasyon</div>
+                    <div className="col-span-2">Miktar</div>
+                    <div className="col-span-1"></div>
                   </div>
                   {stockEntries.map((entry, index) => (
                     <StockEntryRow
@@ -613,14 +632,14 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                 </div>
               ) : (
                 <div
-                  className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-all"
+                  className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all"
                   onClick={addStockEntry}
                 >
-                  <InboxOutlined className="text-2xl text-gray-300 mb-2" />
-                  <div className="text-sm text-gray-400">
+                  <InboxOutlined className="text-2xl text-slate-400 mb-2" />
+                  <div className="text-sm text-slate-500">
                     Başlangıç stoku eklemek için tıklayın
                   </div>
-                  <div className="text-xs text-gray-300 mt-1">
+                  <div className="text-xs text-slate-400 mt-1">
                     Ürün oluşturulduktan sonra da eklenebilir
                   </div>
                 </div>
@@ -628,129 +647,133 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
             </div>
           )}
 
-          {/* Advanced Settings - Collapsible */}
-          <Collapse
-            ghost
-            expandIconPosition="end"
-            className="bg-transparent"
-            items={[
-              {
-                key: 'tracking',
-                label: (
-                  <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <SettingOutlined className="mr-1" /> Gelişmiş Ayarlar
-                  </Text>
-                ),
-                children: (
-                  <div className="pt-2">
-                    <Row gutter={[16, 16]}>
-                      <Col span={12}>
-                        <div className="flex items-center justify-between p-3 bg-gray-50/70 rounded-lg">
-                          <div>
-                            <div className="text-sm font-medium text-gray-700">Seri No Takibi</div>
-                            <div className="text-xs text-gray-400">Benzersiz seri numaraları</div>
+          {/* ─────────────── GELİŞMİŞ AYARLAR (Collapsible) ─────────────── */}
+          <div>
+            <Collapse
+              ghost
+              expandIconPosition="end"
+              className="!bg-transparent [&_.ant-collapse-header]:!px-0 [&_.ant-collapse-content-box]:!px-0"
+              items={[
+                {
+                  key: 'advanced',
+                  label: (
+                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                      <SettingOutlined /> Gelişmiş Ayarlar
+                    </h3>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      {/* Tracking Options */}
+                      <div className="grid grid-cols-12 gap-4 mb-6">
+                        <div className="col-span-4">
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div>
+                              <div className="text-sm font-medium text-slate-700">Seri No Takibi</div>
+                              <div className="text-xs text-slate-500">Benzersiz seri numaraları</div>
+                            </div>
+                            <Form.Item name="trackSerialNumbers" valuePropName="checked" noStyle>
+                              <Switch size="small" />
+                            </Form.Item>
                           </div>
-                          <Form.Item name="trackSerialNumbers" valuePropName="checked" noStyle>
-                            <Switch size="small" />
+                        </div>
+                        <div className="col-span-4">
+                          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div>
+                              <div className="text-sm font-medium text-slate-700">Lot Takibi</div>
+                              <div className="text-xs text-slate-500">Parti bazlı yönetim</div>
+                            </div>
+                            <Form.Item name="trackLotNumbers" valuePropName="checked" noStyle>
+                              <Switch size="small" />
+                            </Form.Item>
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarik Süresi (gün)</label>
+                          <Form.Item name="leadTimeDays" rules={[{ required: true }]} className="mb-0">
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              min={0}
+                              className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                            />
                           </Form.Item>
                         </div>
-                      </Col>
-                      <Col span={12}>
-                        <div className="flex items-center justify-between p-3 bg-gray-50/70 rounded-lg">
-                          <div>
-                            <div className="text-sm font-medium text-gray-700">Lot Takibi</div>
-                            <div className="text-xs text-gray-400">Parti bazlı yönetim</div>
-                          </div>
-                          <Form.Item name="trackLotNumbers" valuePropName="checked" noStyle>
-                            <Switch size="small" />
-                          </Form.Item>
-                        </div>
-                      </Col>
-                      <Col span={8}>
-                        <div className="text-xs text-gray-400 mb-1">Tedarik Süresi (gün)</div>
-                        <Form.Item name="leadTimeDays" rules={[{ required: true }]} className="mb-0">
-                          <InputNumber style={{ width: '100%' }} min={0} variant="filled" size="small" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                      </div>
 
-                    {/* Physical Properties */}
-                    <div className="mt-6">
-                      <Text className="text-xs text-gray-400 mb-3 block">Fiziksel Özellikler</Text>
-                      <Row gutter={12}>
-                        <Col span={6}>
-                          <Form.Item name="weight" className="mb-0">
-                            <InputNumber
-                              style={{ width: '100%' }}
-                              min={0}
-                              precision={2}
-                              placeholder="Ağırlık"
-                              variant="filled"
-                              size="small"
-                              addonAfter={
-                                <Form.Item name="weightUnit" noStyle initialValue="kg">
-                                  <Select variant="borderless" size="small" style={{ width: 50 }}>
-                                    <Select.Option value="kg">kg</Select.Option>
-                                    <Select.Option value="g">g</Select.Option>
-                                  </Select>
-                                </Form.Item>
-                              }
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={6}>
-                          <Form.Item name="length" className="mb-0">
-                            <InputNumber
-                              style={{ width: '100%' }}
-                              min={0}
-                              precision={2}
-                              placeholder="U"
-                              variant="filled"
-                              size="small"
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={6}>
-                          <Form.Item name="width" className="mb-0">
-                            <InputNumber
-                              style={{ width: '100%' }}
-                              min={0}
-                              precision={2}
-                              placeholder="G"
-                              variant="filled"
-                              size="small"
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={6}>
-                          <Form.Item name="height" className="mb-0">
-                            <InputNumber
-                              style={{ width: '100%' }}
-                              min={0}
-                              precision={2}
-                              placeholder="Y"
-                              variant="filled"
-                              size="small"
-                              addonAfter={
-                                <Form.Item name="dimensionUnit" noStyle initialValue="cm">
-                                  <Select variant="borderless" size="small" style={{ width: 45 }}>
-                                    <Select.Option value="cm">cm</Select.Option>
-                                    <Select.Option value="m">m</Select.Option>
-                                  </Select>
-                                </Form.Item>
-                              }
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
+                      {/* Physical Properties */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-slate-600 mb-3">Fiziksel Özellikler</label>
+                        <div className="grid grid-cols-12 gap-4">
+                          <div className="col-span-3">
+                            <Form.Item name="weight" className="mb-0">
+                              <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                precision={2}
+                                placeholder="Ağırlık"
+                                className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                                addonAfter={
+                                  <Form.Item name="weightUnit" noStyle initialValue="kg">
+                                    <Select variant="borderless" size="small" style={{ width: 50 }}>
+                                      <Select.Option value="kg">kg</Select.Option>
+                                      <Select.Option value="g">g</Select.Option>
+                                    </Select>
+                                  </Form.Item>
+                                }
+                              />
+                            </Form.Item>
+                          </div>
+                          <div className="col-span-3">
+                            <Form.Item name="length" className="mb-0">
+                              <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                precision={2}
+                                placeholder="Uzunluk"
+                                className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                              />
+                            </Form.Item>
+                          </div>
+                          <div className="col-span-3">
+                            <Form.Item name="width" className="mb-0">
+                              <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                precision={2}
+                                placeholder="Genişlik"
+                                className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                              />
+                            </Form.Item>
+                          </div>
+                          <div className="col-span-3">
+                            <Form.Item name="height" className="mb-0">
+                              <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                precision={2}
+                                placeholder="Yükseklik"
+                                className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                                addonAfter={
+                                  <Form.Item name="dimensionUnit" noStyle initialValue="cm">
+                                    <Select variant="borderless" size="small" style={{ width: 45 }}>
+                                      <Select.Option value="cm">cm</Select.Option>
+                                      <Select.Option value="m">m</Select.Option>
+                                    </Select>
+                                  </Form.Item>
+                                }
+                              />
+                            </Form.Item>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Col>
-      </Row>
+                  ),
+                },
+              ]}
+            />
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

@@ -1,28 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  Row,
-  Col,
-  Collapse,
-  Typography,
-  Segmented,
-} from 'antd';
-import {
-  EnvironmentOutlined,
-  PhoneOutlined,
-  UserOutlined,
-  SettingOutlined,
-  HomeOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Switch } from 'antd';
+import { HomeOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import type { WarehouseDto } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 interface WarehouseFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -30,12 +13,6 @@ interface WarehouseFormProps {
   onFinish: (values: any) => void;
   loading?: boolean;
 }
-
-const warehouseTypes = [
-  { value: 'main', label: 'Ana Depo' },
-  { value: 'branch', label: 'Şube Deposu' },
-  { value: 'transit', label: 'Transit Depo' },
-];
 
 export default function WarehouseForm({ form, initialValues, onFinish, loading }: WarehouseFormProps) {
   const [isActive, setIsActive] = useState(true);
@@ -60,259 +37,238 @@ export default function WarehouseForm({ form, initialValues, onFinish, loading }
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="warehouse-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Warehouse Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <HomeOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Depo Bilgileri
-              </p>
-              <p className="text-sm text-white/60">
-                Envanter yönetimi için depo tanımlayın
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggles */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Depo aktif ve kullanılabilir' : 'Depo pasif durumda'}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Status Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Warehouse Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <HomeOutlined className="text-xl text-slate-500" />
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
-                  onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
-                  }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+            </div>
+
+            {/* Warehouse Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Depo Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Depo hakkında kısa açıklama..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Varsayılan Depo</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isDefault ? 'Bu depo varsayılan olarak seçilecek' : 'Varsayılan depo değil'}
-                </div>
-              </div>
-              <Form.Item name="isDefault" valuePropName="checked" noStyle>
-                <Switch
-                  checked={isDefault}
-                  onChange={(val) => {
-                    setIsDefault(val);
-                    form.setFieldValue('isDefault', val);
-                  }}
-                  checkedChildren="Evet"
-                  unCheckedChildren="Hayır"
-                  style={{
-                    backgroundColor: isDefault ? '#1890ff' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
-                />
-              </Form.Item>
-            </div>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.locationCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Lokasyon</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.productCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Ürün</div>
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isActive ? 'Aktif' : 'Pasif'}
+                </span>
+                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                  <Switch
+                    checked={isActive}
+                    onChange={(val) => {
+                      setIsActive(val);
+                      form.setFieldValue('isActive', val);
+                    }}
+                  />
+                </Form.Item>
               </div>
             </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Warehouse Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Depo adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Depo adı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Depo açıklaması ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Basic Info */}
+          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Depo Kodu *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Input
                     placeholder="WH-001"
-                    variant="filled"
                     disabled={!!initialValues}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Toplam Alan (m²)</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Alan (m²)</label>
                 <Form.Item name="totalArea" className="mb-0">
                   <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
                     placeholder="0"
-                    variant="filled"
+                    min={0}
                     addonAfter="m²"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Varsayılan Depo</label>
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="text-sm text-slate-700">
+                    {isDefault ? 'Bu depo varsayılan olarak seçilecek' : 'Varsayılan depo değil'}
+                  </div>
+                  <Form.Item name="isDefault" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={isDefault}
+                      onChange={(val) => {
+                        setIsDefault(val);
+                        form.setFieldValue('isDefault', val);
+                      }}
+                      checkedChildren="Evet"
+                      unCheckedChildren="Hayır"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Address Section */}
+          {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <EnvironmentOutlined className="mr-1" /> Adres Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Sokak / Cadde</div>
-                <Form.Item name="street" className="mb-3">
-                  <Input placeholder="Adres detayı" variant="filled" />
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Adres Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sokak / Cadde</label>
+                <Form.Item name="street" className="mb-0">
+                  <Input
+                    placeholder="Adres detayı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Şehir</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
                 <Form.Item name="city" className="mb-0">
-                  <Input placeholder="İstanbul" variant="filled" />
+                  <Input
+                    placeholder="İstanbul"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">İlçe / Eyalet</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe / Eyalet</label>
                 <Form.Item name="state" className="mb-0">
-                  <Input placeholder="Kadıköy" variant="filled" />
+                  <Input
+                    placeholder="Kadıköy"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Posta Kodu</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
                 <Form.Item name="postalCode" className="mb-0">
-                  <Input placeholder="34000" variant="filled" />
+                  <Input
+                    placeholder="34000"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16} className="mt-3">
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Ülke</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke</label>
                 <Form.Item name="country" className="mb-0">
-                  <Input placeholder="Türkiye" variant="filled" />
+                  <Input
+                    placeholder="Türkiye"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Contact Section */}
+          {/* ─────────────── İLETİŞİM ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <PhoneOutlined className="mr-1" /> İletişim
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Telefon</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              İletişim
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
                   <Input
                     placeholder="+90 212 000 00 00"
-                    variant="filled"
-                    prefix={<PhoneOutlined className="text-gray-400" />}
+                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Depo Sorumlusu</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo Sorumlusu</label>
                 <Form.Item name="manager" className="mb-0">
                   <Input
                     placeholder="Ad Soyad"
-                    variant="filled"
-                    prefix={<UserOutlined className="text-gray-400" />}
+                    prefix={<UserOutlined className="text-slate-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
+          {initialValues && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                İstatistikler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.locationCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Lokasyon Sayısı</div>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.productCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Ürün Sayısı</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

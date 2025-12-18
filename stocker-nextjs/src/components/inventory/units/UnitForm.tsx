@@ -1,24 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-} from 'antd';
-import {
-  NumberOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select, Switch, Alert } from 'antd';
+import { NumberOutlined } from '@ant-design/icons';
 import { useUnits } from '@/lib/api/hooks/useInventory';
 import type { UnitDto } from '@/lib/api/services/inventory.types';
-
-const { Text } = Typography;
 
 interface UnitFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -60,190 +46,167 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="unit-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Unit Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <NumberOutlined style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
-              <p className="mt-4 text-lg font-medium text-gray-700">
-                Birim Bilgileri
-              </p>
-              <p className="text-sm text-gray-500">
-                Ürün ölçü birimlerini tanımlayın
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggle */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Birim aktif ve kullanılabilir' : 'Birim pasif durumda'}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Status Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Unit Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <NumberOutlined className="text-xl text-slate-500" />
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
-                  onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
-                  }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+            </div>
+
+            {/* Unit Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 100, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Birim Adı Girin... (örn: Kilogram)"
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
                 />
               </Form.Item>
             </div>
-          </div>
 
-          {/* Derived Units for Edit Mode */}
-          {initialValues && initialValues.derivedUnits && initialValues.derivedUnits.length > 0 && (
-            <div className="mt-6">
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                Türetilmiş Birimler
-              </Text>
-              <div className="space-y-2">
-                {initialValues.derivedUnits.map(du => (
-                  <div key={du.id} className="p-3 bg-gray-50/50 rounded-lg flex justify-between items-center">
-                    <span className="text-sm text-gray-700">{du.name}</span>
-                    <span className="text-xs text-gray-400">x{du.conversionFactor}</span>
-                  </div>
-                ))}
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isActive ? 'Aktif' : 'Pasif'}
+                </span>
+                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                  <Switch
+                    checked={isActive}
+                    onChange={(val) => {
+                      setIsActive(val);
+                      form.setFieldValue('isActive', val);
+                    }}
+                  />
+                </Form.Item>
               </div>
             </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Unit Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Birim adı zorunludur' },
-                { max: 100, message: 'En fazla 100 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Birim adı (örn: Kilogram)"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Basic Info */}
+          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Birim Kodu *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Birim Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
                 >
                   <Input
                     placeholder="KG"
-                    variant="filled"
                     disabled={!!initialValues}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sembol</div>
-                <Form.Item name="symbol" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sembol</label>
+                <Form.Item name="symbol" className="mb-0">
                   <Input
                     placeholder="kg"
-                    variant="filled"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Conversion */}
+          {/* ─────────────── DÖNÜŞÜM ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <SwapOutlined className="mr-1" /> Dönüşüm
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Temel Birim</div>
-                <Form.Item name="baseUnitId" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Dönüşüm Ayarları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Temel Birim</label>
+                <Form.Item name="baseUnitId" className="mb-0">
                   <Select
                     placeholder="Temel birim seçin (opsiyonel)"
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={baseUnitOptions}
                     onChange={(val) => setHasBaseUnit(!!val)}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Dönüşüm Faktörü</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Dönüşüm Faktörü</label>
                 <Form.Item
                   name="conversionFactor"
-                  className="mb-3"
+                  className="mb-0"
                   rules={[
-                    { required: hasBaseUnit, message: 'Temel birim seçiliyse gerekli' }
+                    { required: hasBaseUnit, message: '' }
                   ]}
                 >
                   <InputNumber
-                    style={{ width: '100%' }}
+                    placeholder="1"
                     min={0.0001}
                     step={0.01}
-                    placeholder="1"
-                    variant="filled"
                     disabled={!hasBaseUnit}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <div className="text-xs text-gray-400 mt-2 p-3 bg-blue-50 rounded-lg">
-              <strong>Örnek:</strong> Eğer temel birim "Kilogram" ve bu birim "Gram" ise, dönüşüm faktörü 0.001 olmalıdır (1 gram = 0.001 kilogram)
+              </div>
             </div>
+            <Alert
+              type="info"
+              message="Örnek"
+              description="Eğer temel birim 'Kilogram' ve bu birim 'Gram' ise, dönüşüm faktörü 0.001 olmalıdır (1 gram = 0.001 kilogram)"
+              showIcon
+              className="!mt-4 !bg-slate-50 !border-slate-200"
+            />
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── TÜRETİLMİŞ BİRİMLER (Düzenleme Modu) ─────────────── */}
+          {initialValues && initialValues.derivedUnits && initialValues.derivedUnits.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Türetilmiş Birimler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                {initialValues.derivedUnits.map(du => (
+                  <div key={du.id} className="col-span-6">
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+                      <span className="text-sm text-slate-700">{du.name}</span>
+                      <span className="text-xs text-slate-500 bg-slate-200 px-2 py-1 rounded">x{du.conversionFactor}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

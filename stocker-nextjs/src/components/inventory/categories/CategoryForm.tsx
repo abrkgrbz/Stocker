@@ -1,25 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-} from 'antd';
-import {
-  TagsOutlined,
-  SortAscendingOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select, Switch } from 'antd';
+import { TagsOutlined } from '@ant-design/icons';
 import { useCategories } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto } from '@/lib/api/services/inventory.types';
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 interface CategoryFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -58,187 +43,158 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="category-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Category Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TagsOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Kategori Bilgileri
-              </p>
-              <p className="text-sm text-white/60">
-                Ürünlerinizi organize etmek için kategori tanımlayın
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggle */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">Durum</Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isActive ? 'Kategori aktif ve görünür' : 'Kategori pasif durumda'}
-                </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Status Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Category Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <TagsOutlined className="text-xl text-slate-500" />
               </div>
-              <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
-                <Switch
-                  checked={isActive}
-                  onChange={(val) => {
-                    setIsActive(val);
-                    form.setFieldValue('isActive', val);
-                  }}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                  style={{
-                    backgroundColor: isActive ? '#52c41a' : '#d9d9d9',
-                    minWidth: '80px'
-                  }}
+            </div>
+
+            {/* Category Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Kategori Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Kategori hakkında kısa açıklama..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.productCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Ürün</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.subCategories?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Alt Kategori</div>
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isActive ? 'Aktif' : 'Pasif'}
+                </span>
+                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                  <Switch
+                    checked={isActive}
+                    onChange={(val) => {
+                      setIsActive(val);
+                      form.setFieldValue('isActive', val);
+                    }}
+                  />
+                </Form.Item>
               </div>
             </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Category Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="name"
-              rules={[
-                { required: true, message: 'Kategori adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Kategori adı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Kategori açıklaması ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Basic Info */}
+          {/* ─────────────── TEMEL BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kategori Kodu *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kategori Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
-                  rules={[{ required: true, message: 'Gerekli' }]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Input
                     placeholder="CAT-001"
-                    variant="filled"
                     disabled={!!initialValues}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Üst Kategori</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Üst Kategori</label>
                 <Form.Item name="parentCategoryId" className="mb-0">
                   <Select
-                    placeholder="Ana kategori (opsiyonel)"
+                    placeholder="Ana kategori seçin (opsiyonel)"
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={parentOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Display Order */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <SortAscendingOutlined className="mr-1" /> Sıralama
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Görüntüleme Sırası</div>
-                <Form.Item name="displayOrder" className="mb-0">
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    placeholder="0"
-                    variant="filled"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <div className="text-xs text-gray-400 mt-2">
-              Düşük değerler önce gösterilir
+              </div>
             </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── SIRALAMA ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sıralama
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Görüntüleme Sırası</label>
+                <Form.Item name="displayOrder" className="mb-0">
+                  <InputNumber
+                    placeholder="0"
+                    min={0}
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+                <p className="text-xs text-slate-400 mt-1">Düşük değerler önce gösterilir</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── İSTATİSTİKLER (Düzenleme Modu) ─────────────── */}
+          {initialValues && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                İstatistikler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.productCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Ürün Sayısı</div>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.subCategories?.length || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Alt Kategori</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>
