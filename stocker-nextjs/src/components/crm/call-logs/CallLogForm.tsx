@@ -1,33 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Segmented,
-  DatePicker,
-} from 'antd';
-import {
-  PhoneOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+import { Form, Input, Select, DatePicker } from 'antd';
+import { PhoneOutlined } from '@ant-design/icons';
 import type { CallLogDto } from '@/lib/api/services/crm.types';
 import { CallDirection, CallType, CallOutcome } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Call direction options
 const directionOptions = [
-  { value: CallDirection.Inbound, label: '📥 Gelen' },
-  { value: CallDirection.Outbound, label: '📤 Giden' },
+  { value: CallDirection.Inbound, label: 'Gelen' },
+  { value: CallDirection.Outbound, label: 'Giden' },
 ];
 
 // Call type options
@@ -91,243 +76,203 @@ export default function CallLogForm({ form, initialValues, onFinish, loading }: 
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="call-log-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Call Log Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <PhoneOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Arama Kaydı
-              </p>
-              <p className="text-sm text-white/60">
-                Müşteri aramalarını kaydedin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Direction Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <PhoneOutlined className="mr-1" /> Arama Yönü
-            </Text>
-            <Form.Item name="direction" className="mb-0" initialValue={CallDirection.Outbound}>
-              <Segmented
-                block
-                options={directionOptions}
-                value={direction}
-                onChange={(val) => {
-                  setDirection(val as CallDirection);
-                  form.setFieldValue('direction', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Call Type */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Arama Tipi
-            </Text>
-            <Form.Item name="callType" className="mb-0" initialValue={CallType.Standard}>
-              <Select
-                options={callTypeOptions}
-                variant="filled"
-                size="large"
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.durationSeconds ? Math.floor(initialValues.durationSeconds / 60) : 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Dakika</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {outcomeOptions.find(o => o.value === initialValues.outcome)?.label || '-'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Sonuç</div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Numbers + Direction
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Call Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <PhoneOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Phone Numbers - Hero Inputs */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="callerNumber"
-                  rules={[
-                    { required: true, message: 'Arayan numara zorunludur' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Arayan Numara"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
+            {/* Caller Number - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="callerNumber"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Arayan Numara Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Direction Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="direction" className="mb-0" initialValue={CallDirection.Outbound}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDirection(CallDirection.Inbound);
+                      form.setFieldValue('direction', CallDirection.Inbound);
                     }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      direction === CallDirection.Inbound
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Gelen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDirection(CallDirection.Outbound);
+                      form.setFieldValue('direction', CallDirection.Outbound);
+                    }}
+                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      direction === CallDirection.Outbound
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Giden
+                  </button>
+                </div>
+              </Form.Item>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── ARAMA BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Arama Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Aranan Numara <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="calledNumber"
-                  rules={[
-                    { required: true, message: 'Aranan numara zorunludur' },
-                  ]}
+                  rules={[{ required: true, message: '' }]}
                   className="mb-0"
                 >
                   <Input
-                    placeholder="Aranan Numara"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    placeholder="05XX XXX XX XX"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="notes" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Arama hakkında notlar ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Customer Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Müşteri Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Müşteri</div>
-                <Form.Item name="customerId" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Arama Tipi</label>
+                <Form.Item name="callType" className="mb-0" initialValue={CallType.Standard}>
+                  <Select
+                    options={callTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri</label>
+                <Form.Item name="customerId" className="mb-0">
                   <Select
                     placeholder="Müşteri seçin (opsiyonel)"
-                    variant="filled"
                     allowClear
                     showSearch
                     optionFilterProp="label"
                     options={customers.map(c => ({ value: c.id, label: c.companyName }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Outcome Info */}
+          {/* ─────────────── SONUÇ BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <FileTextOutlined className="mr-1" /> Sonuç Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sonuç</div>
-                <Form.Item name="outcome" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sonuç Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sonuç</label>
+                <Form.Item name="outcome" className="mb-0">
                   <Select
                     placeholder="Sonuç seçin"
                     options={outcomeOptions}
-                    variant="filled"
                     allowClear
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sonuç Açıklaması</div>
-                <Form.Item name="outcomeDescription" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sonuç Açıklaması</label>
+                <Form.Item name="outcomeDescription" className="mb-0">
                   <Input
-                    placeholder="Sonuç detayları"
-                    variant="filled"
+                    placeholder="—"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Follow-up Info */}
+          {/* ─────────────── TAKİP BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <ClockCircleOutlined className="mr-1" /> Takip Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Takip Tarihi</div>
-                <Form.Item name="followUpDate" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Takip Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Takip Tarihi</label>
+                <Form.Item name="followUpDate" className="mb-0">
                   <DatePicker
-                    placeholder="Takip tarihi seçin"
-                    variant="filled"
-                    className="w-full"
+                    placeholder="Tarih seçin"
                     showTime
-                    format="DD.MM.YYYY HH:mm"
+                    format="DD/MM/YYYY HH:mm"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Takip Notu</div>
-                <Form.Item name="followUpNote" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Takip Notu</label>
+                <Form.Item name="followUpNote" className="mb-0">
                   <Input
-                    placeholder="Takip notu"
-                    variant="filled"
+                    placeholder="—"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Arama hakkında notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

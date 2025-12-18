@@ -1,28 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  InputNumber,
-  Switch,
-} from 'antd';
-import {
-  TeamOutlined,
-  UserOutlined,
-  MailOutlined,
-  DollarOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Select, InputNumber, Switch } from 'antd';
+import { TeamOutlined, UserOutlined, MailOutlined } from '@ant-design/icons';
 import type { SalesTeamDto } from '@/lib/api/services/crm.types';
 import { useTerritories } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Target period options
 const targetPeriodOptions = [
@@ -48,6 +32,7 @@ interface SalesTeamFormProps {
 }
 
 export default function SalesTeamForm({ form, initialValues, onFinish, loading }: SalesTeamFormProps) {
+  const [isActive, setIsActive] = useState(true);
   const { data: territories = [] } = useTerritories({ pageSize: 100, isActive: true });
 
   useEffect(() => {
@@ -55,6 +40,7 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
       form.setFieldsValue({
         ...initialValues,
       });
+      setIsActive(initialValues.isActive ?? true);
     } else {
       form.setFieldsValue({
         isActive: true,
@@ -70,238 +56,193 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="sales-team-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Sales Team Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <TeamOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Satış Ekibi
-              </p>
-              <p className="text-sm text-white/60">
-                Ekiplerinizi organize edin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Active Status */}
-          <div className="mb-6">
-            <div className="p-4 bg-gray-50/50 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-sm font-medium text-gray-700 block">Aktif</Text>
-                  <Text className="text-xs text-gray-400">Ekip aktif mi?</Text>
-                </div>
-                <Form.Item name="isActive" valuePropName="checked" className="mb-0" initialValue={true}>
-                  <Switch />
-                </Form.Item>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Status
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Team Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <TeamOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.activeMemberCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Aktif Üye</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.totalMemberCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Toplam Üye</div>
-              </div>
+            {/* Team Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 100, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Ekip Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Ekip hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Team Name - Hero Input */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={16}>
-                <Form.Item
-                  name="name"
-                  rules={[
-                    { required: true, message: 'Ekip adı zorunludur' },
-                    { max: 100, message: 'En fazla 100 karakter' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Ekip Adı"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
+            {/* Status Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isActive ? 'Aktif' : 'Pasif'}
+                </span>
+                <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                  <Switch
+                    checked={isActive}
+                    onChange={(val) => {
+                      setIsActive(val);
+                      form.setFieldValue('isActive', val);
                     }}
-                    className="placeholder:text-gray-300"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── EKİP BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ekip Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ekip Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
                   rules={[
-                    { required: true, message: 'Kod zorunludur' },
-                    { max: 20, message: 'En fazla 20 karakter' },
+                    { required: true, message: '' },
+                    { max: 20, message: '' },
                   ]}
                   className="mb-0"
                 >
                   <Input
-                    placeholder="Kod"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    placeholder="SALES-01"
+                    maxLength={20}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Ekip hakkında açıklama ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Team Leader Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Ekip Lideri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Lider Adı</div>
-                <Form.Item name="teamLeaderName" className="mb-3">
-                  <Input
-                    placeholder="Ekip lideri adı"
-                    variant="filled"
-                    prefix={<UserOutlined className="text-gray-400" />}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Ekip E-postası</div>
-                <Form.Item name="teamEmail" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ekip E-postası</label>
+                <Form.Item name="teamEmail" className="mb-0">
                   <Input
                     placeholder="satis@firma.com"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
+                    prefix={<MailOutlined className="text-slate-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Sales Targets */}
+          {/* ─────────────── EKİP LİDERİ ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Satış Hedefleri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Satış Hedefi (₺)</div>
-                <Form.Item name="salesTarget" className="mb-3">
-                  <InputNumber
-                    placeholder="500.000"
-                    variant="filled"
-                    className="w-full"
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                    parser={(value) => value?.replace(/\./g, '') as unknown as number}
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ekip Lideri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Lider Adı</label>
+                <Form.Item name="teamLeaderName" className="mb-0">
+                  <Input
+                    placeholder="—"
+                    prefix={<UserOutlined className="text-slate-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Hedef Periyodu</div>
-                <Form.Item name="targetPeriod" className="mb-3" initialValue="Monthly">
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── SATIŞ HEDEFLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Satış Hedefleri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Hedefi (₺)</label>
+                <Form.Item name="salesTarget" className="mb-0">
+                  <InputNumber
+                    placeholder="500.000"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/,/g, '') as any}
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Hedef Periyodu</label>
+                <Form.Item name="targetPeriod" className="mb-0" initialValue="Monthly">
                   <Select
                     placeholder="Periyot seçin"
                     options={targetPeriodOptions}
-                    variant="filled"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Territory & Communication */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <GlobalOutlined className="mr-1" /> Bölge ve İletişim
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Bölge</div>
-                <Form.Item name="territoryId" className="mb-3">
+          {/* ─────────────── BÖLGE VE İLETİŞİM ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Bölge ve İletişim
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bölge</label>
+                <Form.Item name="territoryId" className="mb-0">
                   <Select
                     placeholder="Bölge seçin"
-                    variant="filled"
                     allowClear
                     showSearch
                     optionFilterProp="label"
                     options={(territories || []).map(t => ({ value: t.id, label: t.name }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">İletişim Kanalı</div>
-                <Form.Item name="communicationChannel" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İletişim Kanalı</label>
+                <Form.Item name="communicationChannel" className="mb-0">
                   <Select
                     placeholder="Kanal seçin"
                     options={communicationChannelOptions}
-                    variant="filled"
                     allowClear
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

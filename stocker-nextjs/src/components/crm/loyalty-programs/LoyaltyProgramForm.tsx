@@ -1,38 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Segmented,
-  InputNumber,
-  Switch,
-} from 'antd';
-import {
-  GiftOutlined,
-  StarOutlined,
-  DollarOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select, Switch } from 'antd';
+import { GiftOutlined } from '@ant-design/icons';
 import type { LoyaltyProgramDto } from '@/lib/api/services/crm.types';
 import { LoyaltyProgramType } from '@/lib/api/services/crm.types';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Program type options
 const programTypeOptions = [
-  { value: LoyaltyProgramType.PointsBased, label: '⭐ Puan' },
-  { value: LoyaltyProgramType.TierBased, label: '🏆 Kademe' },
-  { value: LoyaltyProgramType.SpendBased, label: '💰 Harcama' },
-  { value: LoyaltyProgramType.Subscription, label: '📦 Abonelik' },
-];
-
-const allProgramTypeOptions = [
   { value: LoyaltyProgramType.PointsBased, label: 'Puan Tabanlı' },
   { value: LoyaltyProgramType.TierBased, label: 'Kademe Tabanlı' },
   { value: LoyaltyProgramType.SpendBased, label: 'Harcama Tabanlı' },
@@ -49,6 +26,7 @@ interface LoyaltyProgramFormProps {
 
 export default function LoyaltyProgramForm({ form, initialValues, onFinish, loading }: LoyaltyProgramFormProps) {
   const [programType, setProgramType] = useState<LoyaltyProgramType>(LoyaltyProgramType.PointsBased);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (initialValues) {
@@ -56,6 +34,7 @@ export default function LoyaltyProgramForm({ form, initialValues, onFinish, load
         ...initialValues,
       });
       setProgramType(initialValues.programType || LoyaltyProgramType.PointsBased);
+      setIsActive(initialValues.isActive ?? true);
     } else {
       form.setFieldsValue({
         programType: LoyaltyProgramType.PointsBased,
@@ -74,313 +53,287 @@ export default function LoyaltyProgramForm({ form, initialValues, onFinish, load
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="loyalty-program-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Loyalty Program Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <GiftOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Sadakat Programı
-              </p>
-              <p className="text-sm text-white/60">
-                Müşteri sadakatini ödüllendirin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Program Type Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <StarOutlined className="mr-1" /> Program Tipi
-            </Text>
-            <Form.Item name="programType" className="mb-0" initialValue={LoyaltyProgramType.PointsBased}>
-              <Segmented
-                block
-                options={programTypeOptions}
-                value={programType}
-                onChange={(val) => {
-                  setProgramType(val as LoyaltyProgramType);
-                  form.setFieldValue('programType', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Active Status */}
-          <div className="mb-6">
-            <div className="p-4 bg-gray-50/50 rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Text className="text-sm font-medium text-gray-700 block">Aktif</Text>
-                  <Text className="text-xs text-gray-400">Program aktif mi?</Text>
-                </div>
-                <Form.Item name="isActive" valuePropName="checked" className="mb-0" initialValue={true}>
-                  <Switch />
-                </Form.Item>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Loyalty Program Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <GiftOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          </div>
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && initialValues.tiers && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.tiers.length}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kademe</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.rewards?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Ödül</div>
-              </div>
+            {/* Program Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="name"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 100, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Program Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Program hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Program Name - Hero Input */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={16}>
-                <Form.Item
-                  name="name"
-                  rules={[
-                    { required: true, message: 'Program adı zorunludur' },
-                    { max: 100, message: 'En fazla 100 karakter' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="Program Adı"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="programType" className="mb-0" initialValue={LoyaltyProgramType.PointsBased}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProgramType(LoyaltyProgramType.PointsBased);
+                      form.setFieldValue('programType', LoyaltyProgramType.PointsBased);
                     }}
-                    className="placeholder:text-gray-300"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      programType === LoyaltyProgramType.PointsBased
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Puan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProgramType(LoyaltyProgramType.TierBased);
+                      form.setFieldValue('programType', LoyaltyProgramType.TierBased);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      programType === LoyaltyProgramType.TierBased
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Kademe
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProgramType(LoyaltyProgramType.SpendBased);
+                      form.setFieldValue('programType', LoyaltyProgramType.SpendBased);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      programType === LoyaltyProgramType.SpendBased
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Harcama
+                  </button>
+                </div>
+              </Form.Item>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── PROGRAM BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Program Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Program Kodu <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="code"
                   rules={[
-                    { required: true, message: 'Kod zorunludur' },
-                    { max: 20, message: 'En fazla 20 karakter' },
+                    { required: true, message: '' },
+                    { max: 20, message: '' },
                   ]}
                   className="mb-0"
                 >
                   <Input
-                    placeholder="Kod"
-                    variant="borderless"
-                    style={{
-                      fontSize: '28px',
-                      fontWeight: 600,
-                      padding: '0',
-                      color: '#1a1a1a',
-                    }}
-                    className="placeholder:text-gray-300"
+                    placeholder="LP001"
+                    maxLength={20}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Program hakkında açıklama ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <div className="text-sm text-slate-700">
+                      {isActive ? 'Program aktif' : 'Program pasif'}
+                    </div>
+                  </div>
+                  <Form.Item name="isActive" valuePropName="checked" noStyle initialValue={true}>
+                    <Switch
+                      checked={isActive}
+                      onChange={(val) => {
+                        setIsActive(val);
+                        form.setFieldValue('isActive', val);
+                      }}
+                      checkedChildren="Aktif"
+                      unCheckedChildren="Pasif"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Points Rules */}
+          {/* ─────────────── PUAN KAZANMA KURALLARI ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Puan Kazanma Kuralları
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Harcama Başına Puan</div>
-                <Form.Item name="pointsPerSpend" className="mb-3" initialValue={1}>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Puan Kazanma Kuralları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Harcama Başına Puan</label>
+                <Form.Item name="pointsPerSpend" className="mb-0" initialValue={1}>
                   <InputNumber
                     placeholder="1"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Harcama Birimi (₺)</div>
-                <Form.Item name="spendUnit" className="mb-3" initialValue={1}>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Harcama Birimi (₺)</label>
+                <Form.Item name="spendUnit" className="mb-0" initialValue={1}>
                   <InputNumber
                     placeholder="1"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0.01}
                     step={0.01}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Min. Harcama (Puan için)</div>
-                <Form.Item name="minimumSpendForPoints" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Harcama (Puan için)</label>
+                <Form.Item name="minimumSpendForPoints" className="mb-0">
                   <InputNumber
                     placeholder="0"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                    parser={(value) => (value?.replace(/\./g, '') || '0') as unknown as 0}
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value?.replace(/,/g, '') as any}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">İşlem Başına Maks. Puan</div>
-                <Form.Item name="maxPointsPerTransaction" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İşlem Başına Maks. Puan</label>
+                <Form.Item name="maxPointsPerTransaction" className="mb-0">
                   <InputNumber
                     placeholder="1000"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Redemption Rules */}
+          {/* ─────────────── PUAN KULLANMA KURALLARI ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <GiftOutlined className="mr-1" /> Puan Kullanma Kuralları
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Puan Değeri (₺)</div>
-                <Form.Item name="pointValue" className="mb-3" initialValue={0.01}>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Puan Kullanma Kuralları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Puan Değeri (₺)</label>
+                <Form.Item name="pointValue" className="mb-0" initialValue={0.01}>
                   <InputNumber
                     placeholder="0.01"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0.001}
                     step={0.001}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Min. Kullanım Puanı</div>
-                <Form.Item name="minimumRedemptionPoints" className="mb-3" initialValue={100}>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Min. Kullanım Puanı</label>
+                <Form.Item name="minimumRedemptionPoints" className="mb-0" initialValue={100}>
                   <InputNumber
                     placeholder="100"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Maks. İndirim Oranı (%)</div>
-                <Form.Item name="maxRedemptionPercentage" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Maks. İndirim Oranı (%)</label>
+                <Form.Item name="maxRedemptionPercentage" className="mb-0">
                   <InputNumber
                     placeholder="50"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                     max={100}
                     addonAfter="%"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Bonus Points */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <SettingOutlined className="mr-1" /> Bonus Puanlar
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kayıt Bonusu</div>
-                <Form.Item name="signUpBonusPoints" className="mb-3">
+          {/* ─────────────── BONUS PUANLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Bonus Puanlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kayıt Bonusu</label>
+                <Form.Item name="signUpBonusPoints" className="mb-0">
                   <InputNumber
                     placeholder="100"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Doğum Günü Bonusu</div>
-                <Form.Item name="birthdayBonusPoints" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Doğum Günü Bonusu</label>
+                <Form.Item name="birthdayBonusPoints" className="mb-0">
                   <InputNumber
                     placeholder="50"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Referans Bonusu</div>
-                <Form.Item name="referralBonusPoints" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Referans Bonusu</label>
+                <Form.Item name="referralBonusPoints" className="mb-0">
                   <InputNumber
                     placeholder="200"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

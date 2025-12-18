@@ -1,40 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Segmented,
-  InputNumber,
-  DatePicker,
-} from 'antd';
-import {
-  ShareAltOutlined,
-  UserOutlined,
-  MailOutlined,
-  GiftOutlined,
-} from '@ant-design/icons';
+import { Form, Input, InputNumber, Select } from 'antd';
+import { ShareAltOutlined, UserOutlined } from '@ant-design/icons';
 import type { ReferralDto } from '@/lib/api/services/crm.types';
 import { ReferralType, ReferralStatus, ReferralRewardType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Referral type options
 const referralTypeOptions = [
-  { value: ReferralType.Customer, label: '👤 Müşteri' },
-  { value: ReferralType.Partner, label: '🤝 Partner' },
-  { value: ReferralType.Employee, label: '👨‍💼 Çalışan' },
-  { value: ReferralType.Affiliate, label: '🔗 Affiliate' },
-];
-
-const allReferralTypeOptions = [
   { value: ReferralType.Customer, label: 'Müşteri' },
   { value: ReferralType.Partner, label: 'Partner' },
   { value: ReferralType.Employee, label: 'Çalışan' },
@@ -87,7 +64,6 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
         referralType: ReferralType.Customer,
         status: ReferralStatus.New,
         rewardType: ReferralRewardType.Points,
-        currency: 'TRY',
       });
     }
   }, [form, initialValues]);
@@ -98,257 +74,256 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="referral-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Referral Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShareAltOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Referans
-              </p>
-              <p className="text-sm text-white/60">
-                Referans programınızı büyütün
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Referral Type Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <ShareAltOutlined className="mr-1" /> Referans Tipi
-            </Text>
-            <Form.Item name="referralType" className="mb-0" initialValue={ReferralType.Customer}>
-              <Segmented
-                block
-                options={referralTypeOptions}
-                value={referralType}
-                onChange={(val) => {
-                  setReferralType(val as ReferralType);
-                  form.setFieldValue('referralType', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Status */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Durum
-            </Text>
-            <Form.Item name="status" className="mb-0" initialValue={ReferralStatus.New}>
-              <Select
-                options={statusOptions}
-                variant="filled"
-                size="large"
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.referrerReward || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Referrer Ödülü</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.referredReward || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Referred Ödülü</div>
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Name + Type Selector
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Referral Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <ShareAltOutlined className="text-xl text-slate-500" />
               </div>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Referrer Info - Hero Section */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Referans Veren
-            </Text>
-            <Form.Item
-              name="referrerName"
-              rules={[
-                { required: true, message: 'Ad zorunludur' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Referans Veren Adı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Row gutter={16} className="mt-4">
-              <Col span={12}>
-                <Form.Item name="referrerEmail" className="mb-3">
-                  <Input
-                    placeholder="E-posta"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="referrerPhone" className="mb-3">
-                  <FormPhoneInput defaultCountry="TR" />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Form.Item name="referrerCustomerId" className="mb-0">
-              <Select
-                placeholder="Mevcut müşteri seçin (opsiyonel)"
-                variant="filled"
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                options={customers.map(c => ({ value: c.id, label: c.companyName }))}
-              />
-            </Form.Item>
+            {/* Referrer Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="referrerName"
+                rules={[{ required: true, message: '' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Referans Veren Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Type Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="referralType" className="mb-0" initialValue={ReferralType.Customer}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReferralType(ReferralType.Customer);
+                      form.setFieldValue('referralType', ReferralType.Customer);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      referralType === ReferralType.Customer
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Müşteri
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReferralType(ReferralType.Partner);
+                      form.setFieldValue('referralType', ReferralType.Partner);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      referralType === ReferralType.Partner
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Partner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReferralType(ReferralType.Employee);
+                      form.setFieldValue('referralType', ReferralType.Employee);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      referralType === ReferralType.Employee
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Çalışan
+                  </button>
+                </div>
+              </Form.Item>
+            </div>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Referred Info */}
+          {/* ─────────────── REFERANS VEREN ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Referans Edilen
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Ad *</div>
-                <Form.Item
-                  name="referredName"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
-                >
-                  <Input
-                    placeholder="Ad Soyad"
-                    variant="filled"
-                    prefix={<UserOutlined className="text-gray-400" />}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Firma</div>
-                <Form.Item name="referredCompany" className="mb-3">
-                  <Input
-                    placeholder="Firma adı"
-                    variant="filled"
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">E-posta</div>
-                <Form.Item name="referredEmail" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Referans Veren Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="referrerEmail" className="mb-0">
                   <Input
                     placeholder="ornek@firma.com"
-                    variant="filled"
-                    prefix={<MailOutlined className="text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Telefon</div>
-                <Form.Item name="referredPhone" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="referrerPhone" className="mb-0">
                   <FormPhoneInput defaultCountry="TR" />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Reward Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <GiftOutlined className="mr-1" /> Ödül Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Ödül Tipi</div>
-                <Form.Item name="rewardType" className="mb-3" initialValue={ReferralRewardType.Points}>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Mevcut Müşteri</label>
+                <Form.Item name="referrerCustomerId" className="mb-0">
                   <Select
-                    placeholder="Tip seçin"
-                    options={rewardTypeOptions}
-                    variant="filled"
+                    placeholder="Müşteri seçin (opsiyonel)"
+                    allowClear
+                    showSearch
+                    optionFilterProp="label"
+                    options={customers.map(c => ({ value: c.id, label: c.companyName }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Referrer Ödülü</div>
-                <Form.Item name="referrerReward" className="mb-3">
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── REFERANS EDİLEN ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Referans Edilen Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ad Soyad <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="referredName"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="—"
+                    prefix={<UserOutlined className="text-slate-400" />}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Firma</label>
+                <Form.Item name="referredCompany" className="mb-0">
+                  <Input
+                    placeholder="—"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="referredEmail" className="mb-0">
+                  <Input
+                    placeholder="ornek@firma.com"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="referredPhone" className="mb-0">
+                  <FormPhoneInput defaultCountry="TR" />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ÖDÜL BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ödül Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödül Tipi</label>
+                <Form.Item name="rewardType" className="mb-0" initialValue={ReferralRewardType.Points}>
+                  <Select
+                    placeholder="Seçin"
+                    options={rewardTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Referrer Ödülü</label>
+                <Form.Item name="referrerReward" className="mb-0">
                   <InputNumber
                     placeholder="100"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Referred Ödülü</div>
-                <Form.Item name="referredReward" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Referred Ödülü</label>
+                <Form.Item name="referredReward" className="mb-0">
                   <InputNumber
                     placeholder="50"
-                    variant="filled"
-                    className="w-full"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                     min={0}
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Message */}
+          {/* ─────────────── DURUM ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Referans Mesajı
-            </Text>
-            <Form.Item name="referralMessage" className="mb-3">
-              <TextArea
-                placeholder="Referans ile ilgili mesaj veya not..."
-                variant="filled"
-                autoSize={{ minRows: 3, maxRows: 5 }}
-              />
-            </Form.Item>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Durum
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Referans Durumu</label>
+                <Form.Item name="status" className="mb-0" initialValue={ReferralStatus.New}>
+                  <Select
+                    options={statusOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="referralMessage" className="mb-0">
+                  <TextArea
+                    placeholder="Referans ile ilgili mesaj veya not..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

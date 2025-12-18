@@ -1,29 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Segmented,
-  DatePicker,
-} from 'antd';
-import {
-  CalendarOutlined,
-  UserOutlined,
-  EnvironmentOutlined,
-  VideoCameraOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+import { Form, Input, Select, DatePicker } from 'antd';
+import { CalendarOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingType, MeetingPriority, MeetingLocationType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Meeting type options
 const meetingTypeOptions = [
@@ -48,10 +32,10 @@ const meetingTypeOptions = [
 
 // Priority options
 const priorityOptions = [
-  { value: MeetingPriority.Low, label: '🟢 Düşük' },
-  { value: MeetingPriority.Normal, label: '🟡 Normal' },
-  { value: MeetingPriority.High, label: '🟠 Yüksek' },
-  { value: MeetingPriority.Urgent, label: '🔴 Acil' },
+  { value: MeetingPriority.Low, label: 'Düşük' },
+  { value: MeetingPriority.Normal, label: 'Normal' },
+  { value: MeetingPriority.High, label: 'Yüksek' },
+  { value: MeetingPriority.Urgent, label: 'Acil' },
 ];
 
 // Location type options
@@ -110,281 +94,266 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="meeting-form-modern"
+      className="w-full"
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Meeting Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <CalendarOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Toplantı
-              </p>
-              <p className="text-sm text-white/60">
-                Toplantılarınızı planlayın
-              </p>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Title + Priority
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Meeting Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <CalendarOutlined className="text-xl text-slate-500" />
+              </div>
+            </div>
+
+            {/* Meeting Title - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="title"
+                rules={[
+                  { required: true, message: '' },
+                  { max: 200, message: '' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Toplantı Başlığı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Toplantı hakkında kısa not..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Priority Selector */}
+            <div className="flex-shrink-0">
+              <Form.Item name="priority" className="mb-0" initialValue={MeetingPriority.Normal}>
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriority(MeetingPriority.Low);
+                      form.setFieldValue('priority', MeetingPriority.Low);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      priority === MeetingPriority.Low
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Düşük
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriority(MeetingPriority.Normal);
+                      form.setFieldValue('priority', MeetingPriority.Normal);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      priority === MeetingPriority.Normal
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPriority(MeetingPriority.High);
+                      form.setFieldValue('priority', MeetingPriority.High);
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      priority === MeetingPriority.High
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    Yüksek
+                  </button>
+                </div>
+              </Form.Item>
             </div>
           </div>
+        </div>
 
-          {/* Priority Selection */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Öncelik
-            </Text>
-            <Form.Item name="priority" className="mb-0" initialValue={MeetingPriority.Normal}>
-              <Segmented
-                block
-                options={priorityOptions}
-                value={priority}
-                onChange={(val) => {
-                  setPriority(val as MeetingPriority);
-                  form.setFieldValue('priority', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Meeting Type */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Toplantı Tipi
-            </Text>
-            <Form.Item name="meetingType" className="mb-0" initialValue={MeetingType.General}>
-              <Select
-                options={meetingTypeOptions}
-                variant="filled"
-                size="large"
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Location Type */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Konum Tipi
-            </Text>
-            <Form.Item name="locationType" className="mb-0" initialValue={MeetingLocationType.InPerson}>
-              <Segmented
-                block
-                options={locationTypeOptions}
-                value={locationType}
-                onChange={(val) => {
-                  setLocationType(val as MeetingLocationType);
-                  form.setFieldValue('locationType', val);
-                }}
-                className="w-full"
-              />
-            </Form.Item>
-          </div>
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Meeting Title - Hero Input */}
+          {/* ─────────────── TOPLANTI BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <Form.Item
-              name="title"
-              rules={[
-                { required: true, message: 'Başlık zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Toplantı Başlığı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Toplantı hakkında açıklama ekleyin..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none'
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Date & Time */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CalendarOutlined className="mr-1" /> Tarih ve Saat
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Başlangıç *</div>
-                <Form.Item
-                  name="startTime"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
-                >
-                  <DatePicker
-                    showTime
-                    format="DD.MM.YYYY HH:mm"
-                    placeholder="Başlangıç tarihi"
-                    variant="filled"
-                    className="w-full"
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Toplantı Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplantı Tipi</label>
+                <Form.Item name="meetingType" className="mb-0" initialValue={MeetingType.General}>
+                  <Select
+                    options={meetingTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Bitiş *</div>
-                <Form.Item
-                  name="endTime"
-                  rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
-                >
-                  <DatePicker
-                    showTime
-                    format="DD.MM.YYYY HH:mm"
-                    placeholder="Bitiş tarihi"
-                    variant="filled"
-                    className="w-full"
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Konum Tipi</label>
+                <Form.Item name="locationType" className="mb-0" initialValue={MeetingLocationType.InPerson}>
+                  <Select
+                    options={locationTypeOptions}
+                    onChange={(val) => setLocationType(val as MeetingLocationType)}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Location Info */}
-          {showPhysicalFields && (
-            <div className="mb-8">
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                <EnvironmentOutlined className="mr-1" /> Konum Bilgileri
-              </Text>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <div className="text-xs text-gray-400 mb-1">Adres</div>
-                  <Form.Item name="location" className="mb-3">
-                    <Input
-                      placeholder="Toplantı adresi"
-                      variant="filled"
-                      prefix={<EnvironmentOutlined className="text-gray-400" />}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <div className="text-xs text-gray-400 mb-1">Toplantı Odası</div>
-                  <Form.Item name="meetingRoom" className="mb-3">
-                    <Input
-                      placeholder="Oda adı veya numarası"
-                      variant="filled"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-          )}
-
-          {/* Online Meeting Info */}
-          {showOnlineFields && (
-            <div className="mb-8">
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                <VideoCameraOutlined className="mr-1" /> Online Toplantı Bilgileri
-              </Text>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <div className="text-xs text-gray-400 mb-1">Platform</div>
-                  <Form.Item name="onlinePlatform" className="mb-3">
-                    <Select
-                      placeholder="Platform seçin"
-                      options={onlinePlatformOptions}
-                      variant="filled"
-                      allowClear
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <div className="text-xs text-gray-400 mb-1">Toplantı Linki</div>
-                  <Form.Item name="onlineMeetingLink" className="mb-3">
-                    <Input
-                      placeholder="https://..."
-                      variant="filled"
-                      prefix={<VideoCameraOutlined className="text-gray-400" />}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Customer Info */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> İlişkili Kayıtlar
-            </Text>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Müşteri</div>
-                <Form.Item name="customerId" className="mb-3">
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri</label>
+                <Form.Item name="customerId" className="mb-0">
                   <Select
                     placeholder="Müşteri seçin (opsiyonel)"
-                    variant="filled"
                     allowClear
                     showSearch
                     optionFilterProp="label"
                     options={customers.map(c => ({ value: c.id, label: c.companyName }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Agenda */}
+          {/* ─────────────── TARİH VE SAAT ─────────────── */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <FileTextOutlined className="mr-1" /> Gündem
-            </Text>
-            <Form.Item name="agenda" className="mb-3">
-              <TextArea
-                placeholder="Toplantı gündemi..."
-                variant="filled"
-                autoSize={{ minRows: 3, maxRows: 6 }}
-              />
-            </Form.Item>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tarih ve Saat
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Başlangıç <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="startTime"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
+                >
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Tarih ve saat seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitiş <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="endTime"
+                  rules={[{ required: true, message: '' }]}
+                  className="mb-0"
+                >
+                  <DatePicker
+                    showTime
+                    format="DD/MM/YYYY HH:mm"
+                    placeholder="Tarih ve saat seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── KONUM BİLGİLERİ ─────────────── */}
+          {showPhysicalFields && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Konum Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
+                  <Form.Item name="location" className="mb-0">
+                    <Input
+                      placeholder="Toplantı adresi"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplantı Odası</label>
+                  <Form.Item name="meetingRoom" className="mb-0">
+                    <Input
+                      placeholder="Oda adı veya numarası"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────── ONLİNE TOPLANTI ─────────────── */}
+          {showOnlineFields && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Online Toplantı Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Platform</label>
+                  <Form.Item name="onlinePlatform" className="mb-0">
+                    <Select
+                      placeholder="Platform seçin"
+                      options={onlinePlatformOptions}
+                      allowClear
+                      className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplantı Linki</label>
+                  <Form.Item name="onlineMeetingLink" className="mb-0">
+                    <Input
+                      placeholder="https://..."
+                      prefix={<VideoCameraOutlined className="text-slate-400" />}
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────── GÜNDEM ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Gündem
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="agenda" className="mb-0">
+                  <TextArea
+                    placeholder="Toplantı gündemi..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>
