@@ -35,7 +35,7 @@ function TerritoriesStats({ territories, loading }: TerritoriesStatsProps) {
   const totalTerritories = territories.length;
   const activeTerritories = territories.filter(t => t.isActive).length;
   const totalCustomers = territories.reduce((sum, t) => sum + (t.customerCount || 0), 0);
-  const territoriesWithReps = territories.filter(t => t.assignedToId).length;
+  const territoriesWithReps = territories.filter(t => (t as any).assignedToId).length;
 
   const stats = [
     {

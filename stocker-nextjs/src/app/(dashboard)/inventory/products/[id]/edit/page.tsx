@@ -8,6 +8,11 @@ import { ProductForm } from '@/components/inventory/products';
 import { useProduct, useUpdateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
 import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
 
+interface ImageFileItem {
+  file: File;
+  isPrimary: boolean;
+}
+
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
@@ -18,24 +23,33 @@ export default function EditProductPage() {
   const updateProduct = useUpdateProduct();
   const uploadImage = useUploadProductImage();
 
-  const handleSubmit = async (values: UpdateProductDto & { imageFile?: File }) => {
-    // Extract image file from values
-    const { imageFile, ...productData } = values;
+  const handleSubmit = async (values: UpdateProductDto & { imageFiles?: ImageFileItem[] }) => {
+    // Extract image files from values
+    const { imageFiles, ...productData } = values;
 
     try {
       // Update product data
       await updateProduct.mutateAsync({ id: productId, data: productData });
 
-      // If a new image was selected, upload it
-      if (imageFile) {
-        try {
-          await uploadImage.mutateAsync({
-            productId: productId,
-            file: imageFile,
-            options: { setAsPrimary: true },
-          });
-        } catch (imageError) {
-          message.warning('Ürün güncellendi ancak resim yüklenemedi. Lütfen tekrar deneyin.');
+      // If new images were selected, upload them
+      if (imageFiles && imageFiles.length > 0) {
+        let uploadErrors = 0;
+
+        // Upload images sequentially
+        for (const imageItem of imageFiles) {
+          try {
+            await uploadImage.mutateAsync({
+              productId: productId,
+              file: imageItem.file,
+              options: { setAsPrimary: imageItem.isPrimary },
+            });
+          } catch (imageError) {
+            uploadErrors++;
+          }
+        }
+
+        if (uploadErrors > 0) {
+          message.warning(`Ürün güncellendi ancak ${uploadErrors} resim yüklenemedi. Lütfen tekrar deneyin.`);
         }
       }
 

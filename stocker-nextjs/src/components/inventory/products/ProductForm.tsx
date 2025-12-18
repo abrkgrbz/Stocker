@@ -151,25 +151,57 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   const [productType, setProductType] = useState<ProductType>(ProductType.Finished);
   const [stockEntries, setStockEntries] = useState<(InitialStockEntryDto & { key: string })[]>([]);
 
-  // Image upload state
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Multi-image upload state
+  interface ImageItem {
+    id: string;
+    file?: File;
+    preview: string;
+    isPrimary: boolean;
+    isExisting?: boolean; // For images already saved on server
+  }
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
 
-  // Handle image selection
-  const handleImageChange = (file: File) => {
-    setImageFile(file);
+  // Handle adding new image
+  const handleAddImage = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
+      const newImage: ImageItem = {
+        id: `new-${Date.now()}`,
+        file,
+        preview: e.target?.result as string,
+        isPrimary: images.length === 0, // First image is primary by default
+      };
+      setImages(prev => [...prev, newImage]);
+      setSelectedImageIndex(images.length); // Select the newly added image
     };
     reader.readAsDataURL(file);
     return false; // Prevent auto upload
   };
 
-  // Remove selected image
-  const handleImageRemove = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  // Remove image
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      // If removed image was primary, make first one primary
+      if (prev[index].isPrimary && updated.length > 0) {
+        updated[0].isPrimary = true;
+      }
+      return updated;
+    });
+    // Adjust selected index
+    if (selectedImageIndex >= index && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  };
+
+  // Set image as primary
+  const handleSetPrimary = (index: number) => {
+    setImages(prev => prev.map((img, i) => ({
+      ...img,
+      isPrimary: i === index,
+    })));
+    setSelectedImageIndex(index);
   };
 
   // Add new stock entry row
@@ -195,16 +227,24 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
     setStockEntries(updated);
   };
 
-  // Wrap onFinish to include stock entries and image
+  // Wrap onFinish to include stock entries and images
   const handleFinish = (values: any) => {
     const validStockEntries = stockEntries
       .filter(e => e.warehouseId > 0 && e.quantity > 0)
       .map(({ key, ...entry }) => entry);
 
+    // Get new image files (not existing ones from server)
+    const newImageFiles = images
+      .filter(img => img.file && !img.isExisting)
+      .map(img => ({
+        file: img.file!,
+        isPrimary: img.isPrimary,
+      }));
+
     onFinish({
       ...values,
       initialStock: validStockEntries.length > 0 ? validStockEntries : undefined,
-      imageFile: imageFile || undefined, // Pass image file to parent
+      imageFiles: newImageFiles.length > 0 ? newImageFiles : undefined,
     });
   };
 
@@ -220,10 +260,18 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       });
       setIsActive(initialValues.isActive ?? true);
       setProductType(initialValues.productType || ProductType.Finished);
-      // Set existing primary image if available
-      const primaryImage = initialValues.images?.find(img => img.isPrimary);
-      if (primaryImage?.imageUrl) {
-        setImagePreview(primaryImage.imageUrl);
+      // Load existing images
+      if (initialValues.images && initialValues.images.length > 0) {
+        const existingImages = initialValues.images.map((img, index) => ({
+          id: `existing-${img.id}`,
+          preview: img.imageUrl,
+          isPrimary: img.isPrimary,
+          isExisting: true,
+        }));
+        setImages(existingImages);
+        // Select primary image or first one
+        const primaryIndex = existingImages.findIndex(img => img.isPrimary);
+        setSelectedImageIndex(primaryIndex >= 0 ? primaryIndex : 0);
       }
     } else {
       form.setFieldsValue({
@@ -257,38 +305,90 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
             HEADER: Icon + Name + Type Selector
         ═══════════════════════════════════════════════════════════════ */}
         <div className="px-8 py-6 border-b border-slate-200">
-          <div className="flex items-center gap-6">
-            {/* Product Image Upload */}
-            <div className="flex-shrink-0 relative group">
-              <Upload
-                listType="picture-card"
-                showUploadList={false}
-                accept="image/*"
-                beforeUpload={handleImageChange}
-                className="[&_.ant-upload]:!w-16 [&_.ant-upload]:!h-16 [&_.ant-upload]:!rounded-full [&_.ant-upload]:!bg-slate-100 [&_.ant-upload]:!border-2 [&_.ant-upload]:!border-dashed [&_.ant-upload]:!border-slate-300 [&_.ant-upload]:!overflow-hidden"
+          <div className="flex items-start gap-6">
+            {/* Product Image Gallery */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-2">
+              {/* Main Preview Image */}
+              <div
+                className="w-24 h-24 rounded-lg bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative group cursor-pointer"
+                onClick={() => {
+                  if (images.length > 0 && images[selectedImageIndex]) {
+                    handleSetPrimary(selectedImageIndex);
+                  }
+                }}
               >
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Ürün"
-                    className="w-full h-full object-cover"
-                  />
+                {images.length > 0 && images[selectedImageIndex] ? (
+                  <>
+                    <img
+                      src={images[selectedImageIndex].preview}
+                      alt="Ana Görsel"
+                      className="w-full h-full object-cover"
+                    />
+                    {images[selectedImageIndex].isPrimary && (
+                      <div className="absolute top-1 left-1 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded">
+                        Ana
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage(selectedImageIndex);
+                      }}
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </>
                 ) : (
-                  <PictureOutlined className="text-xl text-slate-500" />
+                  <PictureOutlined className="text-2xl text-slate-400" />
                 )}
-              </Upload>
-              {imagePreview && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleImageRemove();
-                  }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+              </div>
+
+              {/* Thumbnail Row */}
+              <div className="flex items-center gap-1.5">
+                {/* Existing Thumbnails */}
+                {images.slice(0, 4).map((img, index) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`w-7 h-7 rounded border-2 overflow-hidden flex-shrink-0 transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-slate-900 ring-1 ring-slate-900'
+                        : 'border-slate-200 hover:border-slate-400'
+                    }`}
+                  >
+                    <img
+                      src={img.preview}
+                      alt={`Görsel ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+
+                {/* More indicator if > 4 images */}
+                {images.length > 4 && (
+                  <div className="w-7 h-7 rounded border-2 border-slate-200 bg-slate-50 flex items-center justify-center text-[10px] text-slate-500 font-medium">
+                    +{images.length - 4}
+                  </div>
+                )}
+
+                {/* Add Button */}
+                <Upload
+                  showUploadList={false}
+                  accept="image/*"
+                  beforeUpload={handleAddImage}
+                  multiple
                 >
-                  ×
-                </button>
-              )}
+                  <button
+                    type="button"
+                    className="w-7 h-7 rounded border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 hover:border-slate-400 hover:text-slate-500 transition-colors"
+                  >
+                    <PlusOutlined className="text-xs" />
+                  </button>
+                </Upload>
+              </div>
             </div>
 
             {/* Product Name - Title Style */}

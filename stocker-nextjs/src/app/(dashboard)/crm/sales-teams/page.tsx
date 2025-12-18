@@ -24,7 +24,7 @@ function SalesTeamsStats({ salesTeams, loading }: SalesTeamsStatsProps) {
   const totalMembers = salesTeams.reduce((sum, team) => sum + (team.totalMemberCount || 0), 0);
   const activeTeams = salesTeams.filter(team => team.isActive).length;
   const avgPerformance = salesTeams.length > 0
-    ? Math.round(salesTeams.reduce((sum, team) => sum + (team.performanceScore || 0), 0) / salesTeams.length)
+    ? Math.round(salesTeams.reduce((sum, team) => sum + ((team as any).performanceScore || 0), 0) / salesTeams.length)
     : 0;
 
   const stats = [

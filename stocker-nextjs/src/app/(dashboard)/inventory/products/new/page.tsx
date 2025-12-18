@@ -8,31 +8,44 @@ import { ProductForm } from '@/components/inventory/products';
 import { useCreateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
 import type { CreateProductDto } from '@/lib/api/services/inventory.types';
 
+interface ImageFileItem {
+  file: File;
+  isPrimary: boolean;
+}
+
 export default function NewProductPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createProduct = useCreateProduct();
   const uploadImage = useUploadProductImage();
 
-  const handleSubmit = async (values: CreateProductDto & { imageFile?: File }) => {
-    // Extract image file from values
-    const { imageFile, ...productData } = values;
+  const handleSubmit = async (values: CreateProductDto & { imageFiles?: ImageFileItem[] }) => {
+    // Extract image files from values
+    const { imageFiles, ...productData } = values;
 
     try {
       // First create the product
       const createdProduct = await createProduct.mutateAsync(productData);
 
-      // If image was selected, upload it
-      if (imageFile && createdProduct?.id) {
-        try {
-          await uploadImage.mutateAsync({
-            productId: createdProduct.id,
-            file: imageFile,
-            options: { setAsPrimary: true },
-          });
-        } catch (imageError) {
-          // Product created but image upload failed - show warning
-          message.warning('Ürün oluşturuldu ancak resim yüklenemedi. Düzenleme sayfasından tekrar deneyebilirsiniz.');
+      // If images were selected, upload them
+      if (imageFiles && imageFiles.length > 0 && createdProduct?.id) {
+        let uploadErrors = 0;
+
+        // Upload images sequentially to maintain order
+        for (const imageItem of imageFiles) {
+          try {
+            await uploadImage.mutateAsync({
+              productId: createdProduct.id,
+              file: imageItem.file,
+              options: { setAsPrimary: imageItem.isPrimary },
+            });
+          } catch (imageError) {
+            uploadErrors++;
+          }
+        }
+
+        if (uploadErrors > 0) {
+          message.warning(`Ürün oluşturuldu ancak ${uploadErrors} resim yüklenemedi. Düzenleme sayfasından tekrar deneyebilirsiniz.`);
         }
       }
 

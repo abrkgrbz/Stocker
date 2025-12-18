@@ -31,8 +31,8 @@ interface LoyaltyProgramsStatsProps {
 function LoyaltyProgramsStats({ programs, loading }: LoyaltyProgramsStatsProps) {
   const totalPrograms = programs.length;
   const activePrograms = programs.filter((p) => p.isActive).length;
-  const totalMembers = programs.reduce((sum, p) => sum + (p.memberCount || 0), 0);
-  const totalPoints = programs.reduce((sum, p) => sum + (p.totalPointsDistributed || 0), 0);
+  const totalMembers = programs.reduce((sum, p) => sum + ((p as any).memberCount || 0), 0);
+  const totalPoints = programs.reduce((sum, p) => sum + ((p as any).totalPointsDistributed || 0), 0);
 
   const stats = [
     {

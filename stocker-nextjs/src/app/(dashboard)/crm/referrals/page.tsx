@@ -54,7 +54,7 @@ function ReferralsStats({ referrals, loading }: ReferralsStatsProps) {
       total: referrals.length,
       new: referrals.filter(r => r.status === ReferralStatus.New).length,
       converted: referrals.filter(r => r.status === ReferralStatus.Converted).length,
-      totalRevenue: referrals.reduce((sum, r) => sum + (r.rewardPaid ? (r.rewardAmount || 0) : 0), 0),
+      totalRevenue: referrals.reduce((sum, r) => sum + (r.rewardPaid ? ((r as any).rewardAmount || 0) : 0), 0),
     };
   }, [referrals, loading]);
 
