@@ -3,7 +3,7 @@
 /**
  * Profile Settings Page
  * Single-Column Professional Settings Layout
- * Clean Corporate Design - Linear/Stripe Style
+ * Clean Corporate Design - Light Mode Only
  */
 
 import React, { useState } from 'react';
@@ -189,15 +189,15 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+          className="mb-6 flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg"
         >
-          <span className="text-sm text-blue-700 dark:text-blue-300">
+          <span className="text-sm text-slate-700">
             Kaydedilmemiş değişiklikleriniz var
           </span>
           <button
             onClick={handleSaveProfile}
             disabled={isUpdating}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isUpdating ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
@@ -229,14 +229,14 @@ export default function ProfilePage() {
       )}
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 divide-y divide-slate-100 dark:divide-gray-700">
+      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
 
         {/* Profile Header Section */}
         <div className="p-6">
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-gray-700 ring-2 ring-slate-100 dark:ring-gray-600 overflow-hidden flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-slate-100 ring-2 ring-slate-100 overflow-hidden flex items-center justify-center">
                 {profileInfo.profileImage ? (
                   <img
                     src={profileInfo.profileImage}
@@ -244,11 +244,11 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-8 h-8 text-slate-400 dark:text-gray-500" />
+                  <User className="w-8 h-8 text-slate-400" />
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors shadow-sm">
-                <Camera className="w-4 h-4 text-slate-500 dark:text-gray-400" />
+              <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
+                <Camera className="w-4 h-4 text-slate-500" />
                 <input
                   type="file"
                   accept="image/*"
@@ -261,16 +261,16 @@ export default function ProfilePage() {
 
             {/* User Info */}
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-slate-900">
                 {profileInfo.firstName} {profileInfo.lastName}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">{profileInfo.email}</p>
+              <p className="text-sm text-slate-500 mt-0.5">{profileInfo.email}</p>
               <div className="flex items-center gap-3 mt-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-300 rounded-md">
+                <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-md">
                   {profileInfo.role || 'Kullanıcı'}
                 </span>
                 {profileInfo.emailConfirmed && (
-                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
                     <Check className="w-3 h-3" />
                     Doğrulanmış
                   </span>
@@ -282,31 +282,31 @@ export default function ProfilePage() {
 
         {/* Personal Information Section */}
         <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-4">Kişisel Bilgiler</h3>
+          <h3 className="text-sm font-medium text-slate-900 mb-4">Kişisel Bilgiler</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Ad</label>
+                <label className="block text-sm text-slate-600 mb-1.5">Ad</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                     placeholder="Adınız"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Soyad</label>
+                <label className="block text-sm text-slate-600 mb-1.5">Soyad</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                     placeholder="Soyadınız"
                   />
                 </div>
@@ -314,14 +314,14 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">E-posta</label>
+              <label className="block text-sm text-slate-600 mb-1.5">E-posta</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
                   value={profileInfo.email}
                   disabled
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-500 dark:text-gray-400 text-sm cursor-not-allowed"
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 text-sm cursor-not-allowed"
                 />
                 {profileInfo.emailConfirmed && (
                   <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
@@ -330,14 +330,14 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Telefon</label>
+              <label className="block text-sm text-slate-600 mb-1.5">Telefon</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="tel"
                   value={profileData.phone}
                   onChange={(e) => handleProfileChange('phone', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                   placeholder="+90 5XX XXX XX XX"
                 />
               </div>
@@ -347,19 +347,19 @@ export default function ProfilePage() {
 
         {/* Security Section */}
         <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-4">Güvenlik</h3>
+          <h3 className="text-sm font-medium text-slate-900 mb-4">Güvenlik</h3>
           <div className="space-y-3">
             {/* Password Change */}
             <div>
               <button
                 onClick={() => setShowPasswordSection(!showPasswordSection)}
-                className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-700 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Lock className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                  <Lock className="w-5 h-5 text-slate-500" />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">Şifre Değiştir</p>
-                    <p className="text-xs text-slate-500 dark:text-gray-400">Hesap şifrenizi güncelleyin</p>
+                    <p className="text-sm font-medium text-slate-900">Şifre Değiştir</p>
+                    <p className="text-xs text-slate-500">Hesap şifrenizi güncelleyin</p>
                   </div>
                 </div>
                 <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${showPasswordSection ? 'rotate-90' : ''}`} />
@@ -370,36 +370,36 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 p-4 border border-slate-200 dark:border-gray-600 rounded-lg space-y-3"
+                  className="mt-3 p-4 border border-slate-200 rounded-lg space-y-3 bg-white"
                 >
                   <div>
-                    <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Mevcut Şifre</label>
+                    <label className="block text-sm text-slate-600 mb-1.5">Mevcut Şifre</label>
                     <input
                       type="password"
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                       placeholder="••••••••"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Yeni Şifre</label>
+                      <label className="block text-sm text-slate-600 mb-1.5">Yeni Şifre</label>
                       <input
                         type="password"
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                         placeholder="••••••••"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-600 dark:text-gray-400 mb-1.5">Şifre Tekrar</label>
+                      <label className="block text-sm text-slate-600 mb-1.5">Şifre Tekrar</label>
                       <input
                         type="password"
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-600 rounded-lg text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                         placeholder="••••••••"
                       />
                     </div>
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handlePasswordChange}
                     disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword}
-                    className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isChangingPassword ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
                   </button>
@@ -416,17 +416,17 @@ export default function ProfilePage() {
             </div>
 
             {/* 2FA Toggle */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                <Shield className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">İki Faktörlü Doğrulama</p>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">Ekstra güvenlik katmanı</p>
+                  <p className="text-sm font-medium text-slate-900">İki Faktörlü Doğrulama</p>
+                  <p className="text-xs text-slate-500">Ekstra güvenlik katmanı</p>
                 </div>
               </div>
               <button
                 className={`relative w-11 h-6 rounded-full transition-colors ${
-                  profileInfo.twoFactorEnabled ? 'bg-blue-600' : 'bg-slate-200 dark:bg-gray-600'
+                  profileInfo.twoFactorEnabled ? 'bg-slate-900' : 'bg-slate-200'
                 }`}
               >
                 <span
@@ -441,22 +441,22 @@ export default function ProfilePage() {
 
         {/* Preferences Section */}
         <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-4">Tercihler</h3>
+          <h3 className="text-sm font-medium text-slate-900 mb-4">Tercihler</h3>
           <div className="space-y-3">
             {/* Language */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                <Globe className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">Dil</p>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">Arayüz dili</p>
+                  <p className="text-sm font-medium text-slate-900">Dil</p>
+                  <p className="text-xs text-slate-500">Arayüz dili</p>
                 </div>
               </div>
               <select
                 value={profileInfo.preferences?.language || 'tr'}
                 onChange={(e) => handlePreferenceChange('language', e.target.value)}
                 disabled={isUpdatingPrefs}
-                className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-lg text-sm text-slate-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
               >
                 <option value="tr">Türkçe</option>
                 <option value="en">English</option>
@@ -464,19 +464,19 @@ export default function ProfilePage() {
             </div>
 
             {/* Theme */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <Monitor className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                <Monitor className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">Tema</p>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">Görünüm tercihi</p>
+                  <p className="text-sm font-medium text-slate-900">Tema</p>
+                  <p className="text-xs text-slate-500">Görünüm tercihi</p>
                 </div>
               </div>
               <select
                 value={profileInfo.preferences?.theme || 'light'}
                 onChange={(e) => handlePreferenceChange('theme', e.target.value)}
                 disabled={isUpdatingPrefs}
-                className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-lg text-sm text-slate-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
               >
                 <option value="light">Açık</option>
                 <option value="dark">Koyu</option>
@@ -485,19 +485,19 @@ export default function ProfilePage() {
             </div>
 
             {/* Notifications */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                <Bell className="w-5 h-5 text-slate-500" />
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">Bildirimler</p>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">E-posta ve anlık bildirimler</p>
+                  <p className="text-sm font-medium text-slate-900">Bildirimler</p>
+                  <p className="text-xs text-slate-500">E-posta ve anlık bildirimler</p>
                 </div>
               </div>
               <button
                 onClick={() => handlePreferenceChange('notifications', !profileInfo.preferences?.notifications)}
                 disabled={isUpdatingPrefs}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
-                  profileInfo.preferences?.notifications ? 'bg-blue-600' : 'bg-slate-200 dark:bg-gray-600'
+                  profileInfo.preferences?.notifications ? 'bg-slate-900' : 'bg-slate-200'
                 }`}
               >
                 <span
@@ -512,7 +512,7 @@ export default function ProfilePage() {
 
         {/* Activity Log Section */}
         <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-4">Son Aktiviteler</h3>
+          <h3 className="text-sm font-medium text-slate-900 mb-4">Son Aktiviteler</h3>
           {activityLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
@@ -528,14 +528,14 @@ export default function ProfilePage() {
               }) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                     item.status === 'Success' ? 'bg-emerald-500' : 'bg-red-500'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-900 dark:text-white">{item.description}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 dark:text-gray-500">
+                    <p className="text-sm text-slate-900">{item.description}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {item.timestamp
@@ -554,20 +554,20 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-gray-400 text-center py-8">
+            <p className="text-sm text-slate-500 text-center py-8">
               Henüz aktivite kaydı yok
             </p>
           )}
         </div>
 
         {/* Account Info Footer */}
-        <div className="p-6 bg-slate-50/50 dark:bg-gray-700/50">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400 dark:text-gray-500">
+        <div className="p-6 bg-slate-50">
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-4">
               <span>Kayıt: {profileInfo.createdDate ? new Date(profileInfo.createdDate).toLocaleDateString('tr-TR') : '-'}</span>
               <span>Son Giriş: {profileInfo.lastLoginDate ? new Date(profileInfo.lastLoginDate).toLocaleDateString('tr-TR') : '-'}</span>
             </div>
-            <button className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors">
+            <button className="text-red-500 hover:text-red-600 font-medium transition-colors">
               Hesabı Sil
             </button>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, Mail, MessageSquare, Smartphone, Volume2 } from 'lucide-react';
+import { Bell, Mail, Smartphone, Volume2 } from 'lucide-react';
 
 interface NotificationSetting {
   id: string;
@@ -72,22 +72,22 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bildirim Ayarları</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <h2 className="text-lg font-semibold text-slate-900">Bildirim Ayarları</h2>
+        <p className="text-sm text-slate-500 mt-1">
           Bildirim tercihlerinizi özelleştirin
         </p>
       </div>
 
       {/* Master Toggle */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <Volume2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-slate-100 rounded-lg">
+              <Volume2 className="w-5 h-5 text-slate-600" />
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Tüm Bildirimler</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <h3 className="text-sm font-medium text-slate-900">Tüm Bildirimler</h3>
+              <p className="text-sm text-slate-500">
                 Tüm bildirimleri açın veya kapatın
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function NotificationsPage() {
           <button
             onClick={() => setMasterEnabled(!masterEnabled)}
             className={`relative w-11 h-6 rounded-full transition-colors ${
-              masterEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
+              masterEnabled ? 'bg-slate-900' : 'bg-slate-200'
             }`}
           >
             <span
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Channel Legend */}
-      <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-6 text-sm text-slate-500">
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4" />
           <span>E-posta</span>
@@ -124,13 +124,13 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notification Settings */}
-      <div className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 ${!masterEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm ${!masterEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
         {settings.map((setting) => (
           <div key={setting.id} className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">{setting.label}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{setting.description}</p>
+                <h3 className="text-sm font-medium text-slate-900">{setting.label}</h3>
+                <p className="text-sm text-slate-500 mt-0.5">{setting.description}</p>
               </div>
               <div className="flex items-center gap-4">
                 {/* Email Toggle */}
@@ -138,8 +138,8 @@ export default function NotificationsPage() {
                   onClick={() => toggleSetting(setting.id, 'email')}
                   className={`p-2 rounded-lg transition-colors ${
                     setting.email
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-400'
                   }`}
                   title="E-posta"
                 >
@@ -151,8 +151,8 @@ export default function NotificationsPage() {
                   onClick={() => toggleSetting(setting.id, 'push')}
                   className={`p-2 rounded-lg transition-colors ${
                     setting.push
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-400'
                   }`}
                   title="Push Bildirimi"
                 >
@@ -164,8 +164,8 @@ export default function NotificationsPage() {
                   onClick={() => toggleSetting(setting.id, 'sms')}
                   className={`p-2 rounded-lg transition-colors ${
                     setting.sms
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-400'
                   }`}
                   title="SMS"
                 >
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        <button className="px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
           Değişiklikleri Kaydet
         </button>
       </div>
