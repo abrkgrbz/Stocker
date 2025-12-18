@@ -85,7 +85,9 @@
       "Bash(move \"(auth)\\help\" \"(public)\\help\")",
       "Bash(move \"(auth)\\kvkk\" \"(public)\\kvkk\")",
       "Bash(move \"(auth)\\updates\" \"(public)\\updates\")",
-      "Bash(move \"(auth)\\demo\" \"(public)\\demo\")"
+      "Bash(move \"(auth)\\demo\" \"(public)\\demo\")",
+      "Bash(Select-String -Pattern \"InternationalPhoneInput|LeadForm|CompetitorForm|CustomerForm|ReferralForm\")",
+      "Bash(Select-Object -First 20)"
     ],
     "deny": [],
     "ask": []

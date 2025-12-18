@@ -10,20 +10,38 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#0f172a', // Slate 900
+    background: '#ffffff',
+    tint: '#00ff88', // Neon Green
+    icon: '#64748b', // Slate 500
+    tabIconDefault: '#94a3b8', // Slate 400
+    tabIconSelected: '#0f172a', // Slate 900
+
+    // Custom Palette
+    primary: '#0f172a', // Slate 900
+    secondary: '#f1f5f9', // Slate 100
+    accent: '#00ff88', // Neon Green
+    muted: '#64748b', // Slate 500
+    border: '#e2e8f0', // Slate 200
+    card: '#ffffff',
+    error: '#ef4444',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#f8fafc', // Slate 50
+    background: '#0a0a0a', // Darker background
+    tint: '#00ff88',
+    icon: '#94a3b8',
+    tabIconDefault: '#64748b',
+    tabIconSelected: '#f8fafc',
+
+    // Custom Palette
+    primary: '#f8fafc',
+    secondary: '#1e293b', // Slate 800
+    accent: '#00ff88',
+    muted: '#94a3b8', // Slate 400
+    border: '#334155', // Slate 700
+    card: '#171717', // Neutral 900
+    error: '#f87171',
   },
 };
 
