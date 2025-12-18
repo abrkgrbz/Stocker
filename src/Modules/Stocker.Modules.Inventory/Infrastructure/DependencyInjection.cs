@@ -29,7 +29,8 @@ public static class DependencyInjection
     {
         // InventoryDbContext is registered dynamically per request based on tenant
         // using ITenantService to get the current tenant's connection string
-        services.AddScoped<InventoryDbContext>(serviceProvider =>
+        // IMPORTANT: Using AddDbContext ensures single instance per scope
+        services.AddDbContext<InventoryDbContext>((serviceProvider, optionsBuilder) =>
         {
             var tenantService = serviceProvider.GetRequiredService<ITenantService>();
             var connectionString = tenantService.GetConnectionString();
@@ -40,7 +41,6 @@ public static class DependencyInjection
                     "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<InventoryDbContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(InventoryDbContext).Assembly.FullName);
@@ -50,11 +50,9 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
             });
+        }, ServiceLifetime.Scoped);
 
-            return new InventoryDbContext(optionsBuilder.Options, tenantService);
-        });
-
-        // Register IUnitOfWork for Inventory module (resolves to InventoryDbContext)
+        // Register IUnitOfWork for Inventory module (resolves to the SAME InventoryDbContext instance)
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
 
         // Register specific repositories
