@@ -1,14 +1,15 @@
 'use client';
 
+/**
+ * Barcode Management Page - Pro Scanner
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * Monochrome slate theme with professional scanner features
+ */
+
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Row,
-  Col,
+  Table,
   Input,
   Select,
   Form,
@@ -16,18 +17,13 @@ import {
   Tag,
   Empty,
   Spin,
-  Divider,
-  Image,
-  Alert,
   InputNumber,
   Checkbox,
-  Table,
-  Modal,
   Tooltip,
   message,
   Badge,
   Descriptions,
-  Progress,
+  Popconfirm,
 } from 'antd';
 import {
   BarcodeOutlined,
@@ -49,8 +45,7 @@ import {
   CopyOutlined,
   SoundOutlined,
   ThunderboltOutlined,
-  DollarOutlined,
-  ShopOutlined,
+  ColumnWidthOutlined,
 } from '@ant-design/icons';
 import {
   useProducts,
@@ -72,12 +67,15 @@ import type {
   GenerateBarcodeRequest,
   GenerateProductLabelRequest,
   BulkLabelProductItem,
-  ProductDto,
 } from '@/lib/api/services/inventory.types';
-import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  DataTableWrapper,
+} from '@/components/ui/enterprise-page';
 
-const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 // ═══════════════════════════════════════════════════════════════
@@ -116,31 +114,23 @@ const useAudioFeedback = () => {
   }, [getAudioContext]);
 
   const playSuccess = useCallback(() => {
-    // High-pitched pleasant beep for success
     playBeep(880, 0.15, 'sine');
     setTimeout(() => playBeep(1174.66, 0.15, 'sine'), 100);
   }, [playBeep]);
 
   const playError = useCallback(() => {
-    // Low buzzing sound for error
     playBeep(200, 0.3, 'square');
   }, [playBeep]);
 
-  const playWarning = useCallback(() => {
-    // Medium tone for warning
-    playBeep(440, 0.2, 'triangle');
-  }, [playBeep]);
-
   const playQuantityIncrement = useCallback(() => {
-    // Quick tick for quantity increment
     playBeep(1000, 0.08, 'sine');
   }, [playBeep]);
 
-  return { playSuccess, playError, playWarning, playQuantityIncrement };
+  return { playSuccess, playError, playQuantityIncrement };
 };
 
 // ═══════════════════════════════════════════════════════════════
-// SCAN HISTORY ITEM TYPE - Enhanced with quantity tracking
+// SCAN HISTORY ITEM TYPE
 // ═══════════════════════════════════════════════════════════════
 interface ScanHistoryItem {
   id: string;
@@ -190,18 +180,16 @@ export default function BarcodesPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<number | undefined>();
   const [isScannerActive, setIsScannerActive] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [scanBuffer, setScanBuffer] = useState('');
-  const [lastKeyTime, setLastKeyTime] = useState(0);
   const [totalScannedItems, setTotalScannedItems] = useState(0);
 
   // Refs for pro scanner
   const scanInputRef = useRef<any>(null);
   const scanBufferRef = useRef('');
   const lastKeyTimeRef = useRef(0);
-  const SCANNER_SPEED_THRESHOLD = 50; // ms between keystrokes for hardware scanner detection
+  const SCANNER_SPEED_THRESHOLD = 50;
 
   // Audio feedback hook
-  const { playSuccess, playError, playWarning, playQuantityIncrement } = useAudioFeedback();
+  const { playSuccess, playError, playQuantityIncrement } = useAudioFeedback();
 
   // Generator state
   const [generateForm] = Form.useForm();
@@ -228,11 +216,9 @@ export default function BarcodesPage() {
   // API Hooks
   const { data: products = [] } = useProducts();
   const { data: warehouses = [] } = useWarehouses();
-  const { data: barcodeFormats = [] } = useBarcodeFormats();
-  const { data: labelSizes = [] } = useLabelSizes();
 
-  // Barcode lookup (only when lastScannedBarcode is set)
-  const { data: lookupResult, isLoading: isLookingUp, refetch: refetchLookup } = useBarcodeLookup(
+  // Barcode lookup
+  const { data: lookupResult, isLoading: isLookingUp } = useBarcodeLookup(
     lastScannedBarcode,
     true,
     selectedWarehouse,
@@ -248,44 +234,32 @@ export default function BarcodesPage() {
   const checkBarcodeUnique = useCheckBarcodeUnique();
 
   // ═══════════════════════════════════════════════════════════════
-  // SMART AUTO-FOCUS SYSTEM - Pro Scanner Feature #1
+  // SMART AUTO-FOCUS SYSTEM
   // ═══════════════════════════════════════════════════════════════
   const refocusScanner = useCallback(() => {
     if (activeTab === 'scanner' && scanInputRef.current && isScannerActive) {
-      // Small delay to ensure DOM is ready
       requestAnimationFrame(() => {
         scanInputRef.current?.focus();
       });
     }
   }, [activeTab, isScannerActive]);
 
-  // Focus on tab switch
   useEffect(() => {
     refocusScanner();
   }, [activeTab, refocusScanner]);
 
-  // Aggressive auto-refocus system
   useEffect(() => {
     if (activeTab !== 'scanner' || !isScannerActive) return;
 
-    // Refocus on any click outside focused element
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Don't refocus if clicking on interactive elements
-      if (target.closest('button, select, .ant-select, .ant-modal, .ant-dropdown')) return;
+      if (target.closest('button, select, .ant-select, .ant-modal, .ant-dropdown, .ant-tabs-tab')) return;
       setTimeout(refocusScanner, 100);
     };
 
-    // Refocus on window focus
-    const handleWindowFocus = () => {
-      setTimeout(refocusScanner, 100);
-    };
-
-    // Refocus on visibility change
+    const handleWindowFocus = () => setTimeout(refocusScanner, 100);
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        setTimeout(refocusScanner, 100);
-      }
+      if (!document.hidden) setTimeout(refocusScanner, 100);
     };
 
     document.addEventListener('click', handleClick);
@@ -300,18 +274,16 @@ export default function BarcodesPage() {
   }, [activeTab, isScannerActive, refocusScanner]);
 
   // ═══════════════════════════════════════════════════════════════
-  // INTELLIGENT HISTORY MANAGEMENT - Pro Scanner Feature #3
+  // INTELLIGENT HISTORY MANAGEMENT
   // ═══════════════════════════════════════════════════════════════
   useEffect(() => {
     if (lookupResult && lastScannedBarcode) {
       const now = new Date();
 
       setScanHistory((prev) => {
-        // Check if this barcode already exists in history
         const existingIndex = prev.findIndex(item => item.barcode === lastScannedBarcode);
 
         if (existingIndex >= 0) {
-          // Increment quantity instead of adding duplicate
           const updated = [...prev];
           const existing = updated[existingIndex];
           updated[existingIndex] = {
@@ -319,19 +291,13 @@ export default function BarcodesPage() {
             quantity: existing.quantity + 1,
             lastScannedAt: now,
           };
-          // Move to top of list
           const [item] = updated.splice(existingIndex, 1);
           updated.unshift(item);
 
-          // Play quantity increment sound
-          if (soundEnabled) {
-            playQuantityIncrement();
-          }
-
+          if (soundEnabled) playQuantityIncrement();
           return updated;
         }
 
-        // Add new item
         const newItem: ScanHistoryItem = {
           id: `${lastScannedBarcode}-${now.getTime()}`,
           barcode: lastScannedBarcode,
@@ -341,29 +307,20 @@ export default function BarcodesPage() {
           lastScannedAt: now,
         };
 
-        // Play appropriate sound
         if (soundEnabled) {
-          if (lookupResult.found) {
-            playSuccess();
-          } else {
-            playError();
-          }
+          lookupResult.found ? playSuccess() : playError();
         }
 
-        return [newItem, ...prev.slice(0, 49)]; // Keep last 50
+        return [newItem, ...prev.slice(0, 49)];
       });
 
-      // Update total count
       setTotalScannedItems(prev => prev + 1);
-
-      // Refocus after scan
       setTimeout(refocusScanner, 50);
     }
   }, [lookupResult, lastScannedBarcode, soundEnabled, playSuccess, playError, playQuantityIncrement, refocusScanner]);
 
   // ═══════════════════════════════════════════════════════════════
-  // OPTIMIZED SCANNER HANDLER - Pro Scanner Feature #5
-  // Handles both hardware scanners and manual input
+  // SCANNER HANDLERS
   // ═══════════════════════════════════════════════════════════════
   const handleScanKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -371,7 +328,6 @@ export default function BarcodesPage() {
       const timeDiff = now - lastKeyTimeRef.current;
       lastKeyTimeRef.current = now;
 
-      // Hardware scanner detection: rapid keystrokes
       const isHardwareScanner = timeDiff < SCANNER_SPEED_THRESHOLD;
 
       if (e.key === 'Enter') {
@@ -379,23 +335,13 @@ export default function BarcodesPage() {
         const barcodeValue = scanInput.trim();
 
         if (barcodeValue) {
-          // Process the scan
           setLastScannedBarcode(barcodeValue);
           setScanInput('');
           scanBufferRef.current = '';
-
-          // Haptic-like visual feedback
-          if (scanInputRef.current) {
-            scanInputRef.current.input?.classList.add('scan-flash');
-            setTimeout(() => {
-              scanInputRef.current?.input?.classList.remove('scan-flash');
-            }, 200);
-          }
         }
         return;
       }
 
-      // For hardware scanner: collect in buffer for rapid processing
       if (isHardwareScanner && e.key.length === 1) {
         scanBufferRef.current += e.key;
       }
@@ -415,18 +361,15 @@ export default function BarcodesPage() {
     }
   }, [scanInput, refocusScanner]);
 
-  // Clear history
   const handleClearHistory = useCallback(() => {
     setScanHistory([]);
     setTotalScannedItems(0);
   }, []);
 
-  // Remove single item from history
   const handleRemoveFromHistory = useCallback((id: string) => {
     setScanHistory(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  // Update quantity manually
   const handleUpdateQuantity = useCallback((id: string, newQuantity: number) => {
     setScanHistory(prev =>
       prev.map(item =>
@@ -522,7 +465,6 @@ export default function BarcodesPage() {
         includePrice: true,
       });
 
-      // Download ZIP file
       const link = document.createElement('a');
       link.href = `data:${result.contentType};base64,${result.fileBase64}`;
       link.download = result.fileName;
@@ -590,13 +532,11 @@ export default function BarcodesPage() {
     }
   };
 
-  // Copy barcode to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     message.success('Kopyalandı');
   };
 
-  // Download generated image
   const downloadImage = (base64: string, filename: string) => {
     const link = document.createElement('a');
     link.href = `data:image/png;base64,${base64}`;
@@ -607,217 +547,159 @@ export default function BarcodesPage() {
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // ENHANCED RESULT CARD - Pro Scanner Feature #4
-  // Large product visualization with image, name, price, stock
+  // RENDER LOOKUP RESULT - Enterprise Design
   // ═══════════════════════════════════════════════════════════════
   const renderLookupResult = () => {
     if (isLookingUp) {
       return (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="relative">
-            <Spin size="large" />
-            <div className="absolute -inset-4 border-2 border-slate-200 rounded-full animate-ping opacity-30" />
-          </div>
-          <Text className="mt-4 text-lg text-slate-500">Aranıyor...</Text>
+        <div className="flex flex-col items-center justify-center py-12">
+          <Spin size="large" />
+          <span className="mt-3 text-sm text-slate-500">Aranıyor...</span>
         </div>
       );
     }
 
     if (!lookupResult) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-            <ScanOutlined className="text-4xl text-slate-400" />
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+            <ScanOutlined className="text-xl text-slate-400" />
           </div>
-          <Text className="text-lg text-slate-500">Barkod Tarayın</Text>
-          <Text type="secondary" className="text-sm mt-1">Hardware scanner veya manuel giriş kullanın</Text>
+          <span className="text-sm font-medium text-slate-900">Barkod Tarayın</span>
+          <span className="text-xs text-slate-500 mt-1">Hardware scanner veya manuel giriş</span>
         </div>
       );
     }
 
     if (!lookupResult.found) {
       return (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-8 text-center border border-amber-200">
-          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-            <ExclamationCircleOutlined className="text-4xl text-amber-500" />
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+            <ExclamationCircleOutlined className="text-amber-600" />
           </div>
-          <Title level={4} className="!mb-2 !text-amber-800">Barkod Bulunamadı</Title>
-          <Text className="text-amber-700 text-lg font-mono">{lookupResult.searchedBarcode}</Text>
-          <div className="mt-4">
-            <Button type="primary" ghost icon={<PlusOutlined />} onClick={() => router.push('/inventory/products/new')}>
-              Yeni Ürün Ekle
-            </Button>
-          </div>
+          <div className="text-sm font-medium text-slate-900 mb-1">Barkod Bulunamadı</div>
+          <div className="text-xs text-slate-500 font-mono mb-3">{lookupResult.searchedBarcode}</div>
+          <button
+            onClick={() => router.push('/inventory/products/new')}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            <PlusOutlined />
+            Yeni Ürün Ekle
+          </button>
         </div>
       );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // ENHANCED PRODUCT CARD - Large, visual, enterprise-grade
-    // ═══════════════════════════════════════════════════════════════
+    // Product found - Enterprise card design
     if (lookupResult.matchType === 'Product' && lookupResult.product) {
       const p = lookupResult.product;
       const stockPercentage = p.totalStockQuantity > 0
         ? Math.min(100, (p.availableStockQuantity / p.totalStockQuantity) * 100)
         : 0;
-      const stockStatus = p.totalStockQuantity <= 0 ? 'exception' :
-        stockPercentage < 25 ? 'exception' :
-        stockPercentage < 50 ? 'normal' : 'success';
 
       return (
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl overflow-hidden border border-emerald-200">
-          {/* Success Header */}
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 flex items-center justify-between">
-            <Space>
-              <CheckCircleOutlined className="text-white text-xl" />
-              <Text className="text-white font-semibold text-lg">Ürün Bulundu</Text>
-            </Space>
-            <Button
-              type="text"
-              className="!text-white hover:!bg-white/20"
-              onClick={() => router.push(`/inventory/products/${p.id}`)}
-            >
-              Detay →
-            </Button>
+        <div className="space-y-4">
+          {/* Success indicator */}
+          <div className="flex items-center gap-2 text-emerald-600">
+            <CheckCircleOutlined />
+            <span className="text-sm font-medium">Ürün Bulundu</span>
+            <Tag color="blue">{lookupResult.matchType}</Tag>
           </div>
 
-          {/* Product Main Info */}
-          <div className="p-6">
-            <div className="flex gap-6">
-              {/* Product Image Placeholder */}
-              <div className="flex-shrink-0">
-                <div className="w-32 h-32 rounded-xl bg-white border-2 border-slate-200 flex items-center justify-center shadow-sm">
-                  {p.primaryImageUrl ? (
-                    <Image
-                      src={p.primaryImageUrl}
-                      alt={p.name}
-                      width={120}
-                      height={120}
-                      className="object-cover rounded-lg"
-                      preview={false}
-                    />
-                  ) : (
-                    <ShoppingOutlined className="text-5xl text-slate-300" />
-                  )}
-                </div>
+          {/* Product info */}
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+              {p.primaryImageUrl ? (
+                <img src={p.primaryImageUrl} alt={p.name} className="w-14 h-14 object-cover rounded" />
+              ) : (
+                <ShoppingOutlined className="text-2xl text-slate-400" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-slate-900 truncate">{p.name}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-slate-500">Kod: {p.code}</span>
+                {p.sku && <span className="text-xs text-slate-500">• SKU: {p.sku}</span>}
               </div>
+              {p.categoryName && (
+                <Tag className="mt-2">{p.categoryName}</Tag>
+              )}
+            </div>
+          </div>
 
-              {/* Product Details */}
-              <div className="flex-1 min-w-0">
-                <Title level={3} className="!mb-1 !text-slate-900 truncate">{p.name}</Title>
-                <div className="flex items-center gap-3 mb-4">
-                  <Tag color="blue" className="!m-0">{p.code}</Tag>
-                  {p.sku && <Tag color="slate" className="!m-0">SKU: {p.sku}</Tag>}
-                  {p.categoryName && <Tag className="!m-0">{p.categoryName}</Tag>}
-                </div>
-
-                {/* Price & Stock Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Price Card */}
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarOutlined className="text-emerald-500" />
-                      <Text type="secondary" className="text-xs uppercase tracking-wide">Birim Fiyat</Text>
-                    </div>
-                    <Text className="text-2xl font-bold text-slate-900">
-                      {p.unitPrice?.toLocaleString('tr-TR', {
-                        style: 'currency',
-                        currency: p.unitPriceCurrency || 'TRY',
-                        minimumFractionDigits: 2
-                      })}
-                    </Text>
-                  </div>
-
-                  {/* Stock Card */}
-                  <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <ShopOutlined className="text-blue-500" />
-                      <Text type="secondary" className="text-xs uppercase tracking-wide">Stok Durumu</Text>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Text className="text-2xl font-bold text-slate-900">{p.availableStockQuantity}</Text>
-                      <Progress
-                        percent={stockPercentage}
-                        status={stockStatus}
-                        size="small"
-                        showInfo={false}
-                        className="flex-1"
-                      />
-                    </div>
-                    <Text type="secondary" className="text-xs">
-                      / {p.totalStockQuantity} toplam ({p.totalStockQuantity - p.availableStockQuantity} rezerve)
-                    </Text>
-                  </div>
-                </div>
+          {/* Price and Stock */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 rounded-lg p-3">
+              <div className="text-xs text-slate-500 uppercase tracking-wide">Birim Fiyat</div>
+              <div className="text-lg font-semibold text-slate-900 mt-1">
+                {p.unitPrice?.toLocaleString('tr-TR', {
+                  style: 'currency',
+                  currency: p.unitPriceCurrency || 'TRY',
+                })}
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-3">
+              <div className="text-xs text-slate-500 uppercase tracking-wide">Mevcut Stok</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-lg font-semibold ${p.availableStockQuantity <= 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                  {p.availableStockQuantity}
+                </span>
+                <span className="text-xs text-slate-500">/ {p.totalStockQuantity}</span>
+              </div>
+              {/* Stock bar */}
+              <div className="w-full h-1.5 bg-slate-200 rounded-full mt-2">
+                <div
+                  className={`h-full rounded-full ${stockPercentage > 50 ? 'bg-emerald-500' : stockPercentage > 25 ? 'bg-amber-500' : 'bg-red-500'}`}
+                  style={{ width: `${stockPercentage}%` }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Warehouse Stock Table */}
+          {/* Warehouse stock */}
           {p.stockByWarehouse && p.stockByWarehouse.length > 0 && (
-            <div className="border-t border-emerald-200 bg-white/50">
-              <div className="px-6 py-3 border-b border-slate-100">
-                <Text className="font-semibold text-slate-700">
-                  <ShopOutlined className="mr-2" />
-                  Depo Bazlı Stok
-                </Text>
+            <div className="border-t border-slate-200 pt-4">
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Depo Bazlı Stok</div>
+              <div className="space-y-2">
+                {p.stockByWarehouse.map((w) => (
+                  <div key={w.warehouseId} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600">{w.warehouseName}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-slate-900">{w.availableQuantity}</span>
+                      {w.reservedQuantity > 0 && (
+                        <span className="text-xs text-amber-600">({w.reservedQuantity} rezerve)</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <Table
-                dataSource={p.stockByWarehouse}
-                rowKey="warehouseId"
-                size="small"
-                pagination={false}
-                className="[&_.ant-table]:!bg-transparent"
-                columns={[
-                  {
-                    title: 'Depo',
-                    dataIndex: 'warehouseName',
-                    key: 'warehouse',
-                    render: (name) => <Text strong>{name}</Text>
-                  },
-                  {
-                    title: 'Miktar',
-                    dataIndex: 'quantity',
-                    key: 'quantity',
-                    align: 'right' as const,
-                    render: (qty) => <Text className="font-mono">{qty}</Text>
-                  },
-                  {
-                    title: 'Mevcut',
-                    dataIndex: 'availableQuantity',
-                    key: 'available',
-                    align: 'right' as const,
-                    render: (qty) => <Text className="font-mono text-emerald-600 font-semibold">{qty}</Text>
-                  },
-                  {
-                    title: 'Rezerve',
-                    dataIndex: 'reservedQuantity',
-                    key: 'reserved',
-                    align: 'right' as const,
-                    render: (qty) => <Text className="font-mono text-amber-600">{qty}</Text>
-                  },
-                ]}
-              />
             </div>
           )}
+
+          {/* Actions */}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => router.push(`/inventory/products/${p.id}`)}
+              className="text-xs text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Detaya Git →
+            </button>
+          </div>
         </div>
       );
     }
 
+    // Variant found
     if (lookupResult.matchType === 'ProductVariant' && lookupResult.variant) {
       const v = lookupResult.variant;
       return (
-        <Card
-          size="small"
-          title={
-            <Space>
-              <TagsOutlined />
-              <span>Varyant Bulundu</span>
-              <Tag color="purple">{lookupResult.matchType}</Tag>
-            </Space>
-          }
-        >
-          <Descriptions column={2} size="small">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-emerald-600">
+            <CheckCircleOutlined />
+            <span className="text-sm font-medium">Varyant Bulundu</span>
+            <Tag color="purple">{lookupResult.matchType}</Tag>
+          </div>
+          <Descriptions column={1} size="small">
             <Descriptions.Item label="Ürün">{v.productName}</Descriptions.Item>
             <Descriptions.Item label="Varyant">{v.variantName}</Descriptions.Item>
             <Descriptions.Item label="SKU">{v.sku}</Descriptions.Item>
@@ -826,54 +708,44 @@ export default function BarcodesPage() {
             </Descriptions.Item>
             <Descriptions.Item label="Stok">{v.totalStockQuantity}</Descriptions.Item>
           </Descriptions>
-        </Card>
+        </div>
       );
     }
 
+    // Serial Number found
     if (lookupResult.matchType === 'SerialNumber' && lookupResult.serialNumber) {
       const s = lookupResult.serialNumber;
       return (
-        <Card
-          size="small"
-          title={
-            <Space>
-              <BarcodeOutlined />
-              <span>Seri Numarası Bulundu</span>
-              <Tag color="orange">{lookupResult.matchType}</Tag>
-            </Space>
-          }
-        >
-          <Descriptions column={2} size="small">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-emerald-600">
+            <CheckCircleOutlined />
+            <span className="text-sm font-medium">Seri Numarası Bulundu</span>
+            <Tag color="orange">{lookupResult.matchType}</Tag>
+          </div>
+          <Descriptions column={1} size="small">
             <Descriptions.Item label="Seri No">{s.serialNumber}</Descriptions.Item>
             <Descriptions.Item label="Ürün">{s.productName}</Descriptions.Item>
-            <Descriptions.Item label="Durum">
-              <Tag>{s.status}</Tag>
-            </Descriptions.Item>
+            <Descriptions.Item label="Durum"><Tag>{s.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="Depo">{s.warehouseName || '-'}</Descriptions.Item>
           </Descriptions>
-        </Card>
+        </div>
       );
     }
 
+    // Lot/Batch found
     if (lookupResult.matchType === 'LotBatch' && lookupResult.lotBatch) {
       const l = lookupResult.lotBatch;
       return (
-        <Card
-          size="small"
-          title={
-            <Space>
-              <InboxOutlined />
-              <span>Parti/Lot Bulundu</span>
-              <Tag color="cyan">{lookupResult.matchType}</Tag>
-            </Space>
-          }
-        >
-          <Descriptions column={2} size="small">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-emerald-600">
+            <CheckCircleOutlined />
+            <span className="text-sm font-medium">Parti/Lot Bulundu</span>
+            <Tag color="cyan">{lookupResult.matchType}</Tag>
+          </div>
+          <Descriptions column={1} size="small">
             <Descriptions.Item label="Lot No">{l.lotNumber}</Descriptions.Item>
             <Descriptions.Item label="Ürün">{l.productName}</Descriptions.Item>
-            <Descriptions.Item label="Durum">
-              <Tag>{l.status}</Tag>
-            </Descriptions.Item>
+            <Descriptions.Item label="Durum"><Tag>{l.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="Miktar">{l.quantity}</Descriptions.Item>
             <Descriptions.Item label="Mevcut">{l.availableQuantity}</Descriptions.Item>
             <Descriptions.Item label="SKT">
@@ -883,7 +755,7 @@ export default function BarcodesPage() {
               )}
             </Descriptions.Item>
           </Descriptions>
-        </Card>
+        </div>
       );
     }
 
@@ -891,46 +763,91 @@ export default function BarcodesPage() {
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // TAB ITEMS - Enhanced Scanner Tab with Pro Features
+  // TAB ITEMS
   // ═══════════════════════════════════════════════════════════════
   const tabItems = [
     {
       key: 'scanner',
       label: (
-        <Space>
-          <ThunderboltOutlined />
+        <span className="flex items-center gap-2">
+          <ScanOutlined />
           Pro Tarayıcı
-        </Space>
+        </span>
       ),
       children: (
-        <div className="space-y-4">
-          {/* ═══════════════════════════════════════════════════════════════
-              PRO SCANNER CONTROL BAR
-          ═══════════════════════════════════════════════════════════════ */}
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl p-4 shadow-lg">
+        <div className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Tarama</span>
+                  <div className="text-2xl font-semibold text-slate-900">{totalScannedItems}</div>
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
+                  <ScanOutlined style={{ color: '#8b5cf6' }} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Benzersiz</span>
+                  <div className="text-2xl font-semibold text-slate-900">{historyStats.uniqueItems}</div>
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
+                  <BarcodeOutlined style={{ color: '#3b82f6' }} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Bulunan</span>
+                  <div className="text-2xl font-semibold text-emerald-600">{historyStats.foundItems}</div>
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
+                  <CheckCircleOutlined style={{ color: '#10b981' }} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">Bulunamayan</span>
+                  <div className="text-2xl font-semibold text-red-600">{historyStats.notFoundItems}</div>
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
+                  <CloseCircleOutlined style={{ color: '#ef4444' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Scanner Control Bar */}
+          <div className="bg-white border border-slate-200 rounded-lg p-4">
             <div className="flex flex-wrap items-center gap-4">
-              {/* Scanner Input - Large & Prominent */}
-              <div className="flex-1 min-w-[300px]">
+              {/* Scanner Input */}
+              <div className="flex-1 min-w-[280px]">
                 <Input
                   ref={scanInputRef}
                   size="large"
-                  placeholder={isScannerActive ? "📡 Barkod tarayıcı hazır..." : "Tarayıcı devre dışı"}
+                  placeholder={isScannerActive ? "Barkod tarayın veya girin..." : "Tarayıcı devre dışı"}
                   prefix={<ScanOutlined className="text-slate-400" />}
                   value={scanInput}
                   onChange={handleScanInputChange}
                   onKeyDown={handleScanKeyDown}
                   disabled={!isScannerActive}
-                  className="!bg-slate-800 !border-slate-600 !text-white placeholder:!text-slate-500 !text-lg !h-12 focus:!border-emerald-500 focus:!ring-2 focus:!ring-emerald-500/20 scanner-input"
+                  className="h-11"
                   suffix={
-                    <Button
-                      type="primary"
-                      icon={<SearchOutlined />}
+                    <button
                       onClick={handleManualSearch}
                       disabled={!isScannerActive || !scanInput.trim()}
-                      className="!bg-emerald-500 !border-emerald-500 hover:!bg-emerald-600"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
                     >
+                      <SearchOutlined />
                       Ara
-                    </Button>
+                    </button>
                   }
                 />
               </div>
@@ -939,10 +856,9 @@ export default function BarcodesPage() {
               <Select
                 placeholder="Tüm Depolar"
                 allowClear
-                style={{ width: 180 }}
+                style={{ width: 160 }}
                 value={selectedWarehouse}
                 onChange={setSelectedWarehouse}
-                className="[&_.ant-select-selector]:!bg-slate-800 [&_.ant-select-selector]:!border-slate-600 [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-selection-item]:!text-white"
               >
                 {warehouses.map((w) => (
                   <Select.Option key={w.id} value={w.id}>
@@ -953,597 +869,548 @@ export default function BarcodesPage() {
 
               {/* Sound Toggle */}
               <Tooltip title={soundEnabled ? "Ses Açık" : "Ses Kapalı"}>
-                <Button
-                  type={soundEnabled ? "primary" : "default"}
-                  icon={<SoundOutlined />}
+                <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={soundEnabled ? "!bg-emerald-500 !border-emerald-500" : "!bg-slate-700 !border-slate-600 !text-slate-400"}
-                />
+                  className={`p-2 rounded-md transition-colors ${soundEnabled ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                >
+                  <SoundOutlined />
+                </button>
               </Tooltip>
 
               {/* Scanner Toggle */}
-              <Tooltip title={isScannerActive ? "Tarayıcıyı Durdur" : "Tarayıcıyı Başlat"}>
-                <Button
-                  type={isScannerActive ? "primary" : "default"}
-                  icon={<ThunderboltOutlined />}
-                  onClick={() => {
-                    setIsScannerActive(!isScannerActive);
-                    if (!isScannerActive) {
-                      setTimeout(refocusScanner, 100);
-                    }
-                  }}
-                  className={isScannerActive ? "!bg-emerald-500 !border-emerald-500" : "!bg-slate-700 !border-slate-600 !text-slate-400"}
-                >
-                  {isScannerActive ? "Aktif" : "Durduruldu"}
-                </Button>
-              </Tooltip>
+              <button
+                onClick={() => {
+                  setIsScannerActive(!isScannerActive);
+                  if (!isScannerActive) setTimeout(refocusScanner, 100);
+                }}
+                className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isScannerActive
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <ThunderboltOutlined />
+                {isScannerActive ? "Aktif" : "Durduruldu"}
+              </button>
             </div>
 
-            {/* Status Indicators */}
-            <div className="flex items-center gap-6 mt-3 text-sm">
+            {/* Status */}
+            <div className="flex items-center gap-4 mt-3 text-sm">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isScannerActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-                <Text className="text-slate-400">
-                  {isScannerActive ? 'Taramaya hazır' : 'Beklemede'}
-                </Text>
+                <div className={`w-2 h-2 rounded-full ${isScannerActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                <span className="text-slate-500">{isScannerActive ? 'Taramaya hazır' : 'Beklemede'}</span>
               </div>
-              <div className="text-slate-500">|</div>
-              <Text className="text-slate-400">
-                <span className="text-white font-semibold">{totalScannedItems}</span> tarama yapıldı
-              </Text>
-              <div className="text-slate-500">|</div>
-              <Text className="text-slate-400">
-                <span className="text-white font-semibold">{historyStats.uniqueItems}</span> benzersiz ürün
-              </Text>
               {historyStats.totalValue > 0 && (
                 <>
-                  <div className="text-slate-500">|</div>
-                  <Text className="text-emerald-400">
-                    Toplam: <span className="font-semibold">
+                  <span className="text-slate-300">|</span>
+                  <span className="text-slate-500">
+                    Toplam: <span className="font-medium text-slate-900">
                       {historyStats.totalValue.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
                     </span>
-                  </Text>
+                  </span>
                 </>
               )}
             </div>
           </div>
 
-          {/* Main Content Grid */}
-          <Row gutter={[16, 16]}>
-            {/* Lookup Result - Full Width on Mobile, Side on Desktop */}
-            <Col xs={24} lg={14}>
-              <Card
-                className="h-full !border-slate-200"
-                title={
-                  <Space>
-                    <InboxOutlined />
-                    <span>Tarama Sonucu</span>
-                    {lastScannedBarcode && (
-                      <Tag color="blue" className="font-mono">{lastScannedBarcode}</Tag>
-                    )}
-                  </Space>
-                }
-              >
-                {renderLookupResult()}
-              </Card>
-            </Col>
-
-            {/* Quick Stats & Actions */}
-            <Col xs={24} lg={10}>
-              <div className="space-y-4">
-                {/* Quick Stats Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircleOutlined className="text-emerald-500" />
-                      <Text type="secondary" className="text-xs">Bulunan</Text>
-                    </div>
-                    <Text className="text-2xl font-bold text-emerald-600">{historyStats.foundItems}</Text>
-                  </div>
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CloseCircleOutlined className="text-red-500" />
-                      <Text type="secondary" className="text-xs">Bulunamayan</Text>
-                    </div>
-                    <Text className="text-2xl font-bold text-red-600">{historyStats.notFoundItems}</Text>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <BarcodeOutlined className="text-blue-500" />
-                      <Text type="secondary" className="text-xs">Toplam Adet</Text>
-                    </div>
-                    <Text className="text-2xl font-bold text-blue-600">{historyStats.totalQuantity}</Text>
-                  </div>
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <HistoryOutlined className="text-purple-500" />
-                      <Text type="secondary" className="text-xs">Tarama</Text>
-                    </div>
-                    <Text className="text-2xl font-bold text-purple-600">{totalScannedItems}</Text>
-                  </div>
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Result Card */}
+            <div className="bg-white border border-slate-200 rounded-lg">
+              <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <InboxOutlined className="text-slate-400" />
+                  <span className="text-sm font-medium text-slate-900">Tarama Sonucu</span>
                 </div>
-
-                {/* Help Card */}
-                <Card size="small" className="!bg-slate-50 !border-slate-200">
-                  <div className="space-y-2">
-                    <Text strong className="text-slate-700">💡 Pro Tarayıcı İpuçları</Text>
-                    <ul className="text-sm text-slate-600 space-y-1 ml-4 list-disc">
-                      <li>Hardware scanner otomatik algılanır</li>
-                      <li>Aynı barkod = miktar artışı</li>
-                      <li>Ses açık iken başarı/hata bildirimi</li>
-                      <li>Focus otomatik korunur</li>
-                    </ul>
-                  </div>
-                </Card>
-              </div>
-            </Col>
-          </Row>
-
-          {/* ═══════════════════════════════════════════════════════════════
-              INTELLIGENT SCAN HISTORY - With Quantity Aggregation
-          ═══════════════════════════════════════════════════════════════ */}
-          <Card
-            title={
-              <Space>
-                <HistoryOutlined />
-                Akıllı Tarama Geçmişi
-                <Badge count={historyStats.uniqueItems} style={{ backgroundColor: '#1890ff' }} />
-                {historyStats.totalQuantity !== historyStats.uniqueItems && (
-                  <Tag color="green">{historyStats.totalQuantity} adet toplam</Tag>
+                {lastScannedBarcode && (
+                  <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    {lastScannedBarcode}
+                  </span>
                 )}
-              </Space>
-            }
-            extra={
-              <Space>
-                <Button
-                  size="small"
-                  icon={<CopyOutlined />}
+              </div>
+              <div className="p-4">
+                {renderLookupResult()}
+              </div>
+            </div>
+
+            {/* Tips Card */}
+            <div className="bg-white border border-slate-200 rounded-lg">
+              <div className="px-4 py-3 border-b border-slate-200">
+                <span className="text-sm font-medium text-slate-900">💡 Pro Tarayıcı İpuçları</span>
+              </div>
+              <div className="p-4">
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <span>Hardware scanner otomatik algılanır</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <span>Aynı barkod tarandığında miktar artar</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <span>Ses açıkken başarı/hata bildirimi alırsınız</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <span>Focus otomatik olarak korunur</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <span>Enter tuşu ile hızlı arama yapabilirsiniz</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* History Table */}
+          <div className="bg-white border border-slate-200 rounded-lg">
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HistoryOutlined className="text-slate-400" />
+                <span className="text-sm font-medium text-slate-900">Tarama Geçmişi</span>
+                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {historyStats.uniqueItems}
+                </span>
+                {historyStats.totalQuantity !== historyStats.uniqueItems && (
+                  <Tag color="blue">{historyStats.totalQuantity} adet</Tag>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
                   onClick={() => {
                     const data = scanHistory.map(item => `${item.barcode}\t${item.quantity}`).join('\n');
                     navigator.clipboard.writeText(data);
                     message.success('Geçmiş kopyalandı');
                   }}
                   disabled={scanHistory.length === 0}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
                 >
-                  Kopyala
-                </Button>
-                <Button
-                  size="small"
-                  danger
+                  <CopyOutlined />
+                </button>
+                <button
                   onClick={handleClearHistory}
                   disabled={scanHistory.length === 0}
+                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                 >
-                  Temizle
-                </Button>
-              </Space>
-            }
-          >
-            {scanHistory.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={
-                  <span className="text-slate-500">
-                    Henüz tarama yapılmadı. Barkod okuyucunuzu hazırlayın ve taramaya başlayın.
-                  </span>
-                }
-              />
-            ) : (
-              <Table
-                dataSource={scanHistory}
-                rowKey="id"
-                size="small"
-                pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} kayıt` }}
-                columns={[
-                  {
-                    title: 'Barkod',
-                    dataIndex: 'barcode',
-                    key: 'barcode',
-                    render: (barcode: string) => (
-                      <Text copyable className="font-mono text-slate-700">{barcode}</Text>
-                    ),
-                  },
-                  {
-                    title: 'Adet',
-                    dataIndex: 'quantity',
-                    key: 'quantity',
-                    width: 120,
-                    render: (quantity: number, record: ScanHistoryItem) => (
-                      <InputNumber
-                        min={1}
-                        max={9999}
-                        value={quantity}
-                        size="small"
-                        onChange={(val) => handleUpdateQuantity(record.id, val || 1)}
-                        className="!w-20"
-                      />
-                    ),
-                  },
-                  {
-                    title: 'Durum',
-                    key: 'status',
-                    width: 120,
-                    render: (_, record: ScanHistoryItem) =>
-                      record.lookupResult.found ? (
-                        <Tag color="green" icon={<CheckCircleOutlined />}>
-                          {record.lookupResult.matchType}
-                        </Tag>
-                      ) : (
-                        <Tag color="red" icon={<CloseCircleOutlined />}>
-                          Bulunamadı
-                        </Tag>
+                  <DeleteOutlined />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-hidden">
+              {scanHistory.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <HistoryOutlined className="text-xl text-slate-400" />
+                  </div>
+                  <span className="text-sm text-slate-500">Henüz tarama yapılmadı</span>
+                </div>
+              ) : (
+                <Table
+                  dataSource={scanHistory}
+                  rowKey="id"
+                  size="small"
+                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} kayıt` }}
+                  columns={[
+                    {
+                      title: 'Barkod',
+                      dataIndex: 'barcode',
+                      key: 'barcode',
+                      render: (barcode: string) => (
+                        <span className="font-mono text-sm text-slate-700">{barcode}</span>
                       ),
-                  },
-                  {
-                    title: 'Ürün / Kayıt',
-                    key: 'item',
-                    ellipsis: true,
-                    render: (_, record: ScanHistoryItem) => {
-                      const r = record.lookupResult;
-                      if (!r.found) return <Text type="secondary">-</Text>;
-                      if (r.product) return <Text strong>{r.product.name}</Text>;
-                      if (r.variant) return <Text>{r.variant.variantName}</Text>;
-                      if (r.serialNumber) return <Text className="font-mono">{r.serialNumber.serialNumber}</Text>;
-                      if (r.lotBatch) return <Text className="font-mono">{r.lotBatch.lotNumber}</Text>;
-                      return '-';
                     },
-                  },
-                  {
-                    title: 'Fiyat',
-                    key: 'price',
-                    width: 120,
-                    align: 'right' as const,
-                    render: (_, record: ScanHistoryItem) => {
-                      const product = record.lookupResult.product;
-                      if (!product?.unitPrice) return '-';
-                      const total = product.unitPrice * record.quantity;
-                      return (
-                        <div className="text-right">
-                          <Text className="text-slate-900 font-semibold">
-                            {total.toLocaleString('tr-TR', { style: 'currency', currency: product.unitPriceCurrency || 'TRY' })}
-                          </Text>
-                          {record.quantity > 1 && (
-                            <Text type="secondary" className="block text-xs">
-                              {record.quantity}x {product.unitPrice.toLocaleString('tr-TR')}
-                            </Text>
-                          )}
+                    {
+                      title: 'Adet',
+                      dataIndex: 'quantity',
+                      key: 'quantity',
+                      width: 100,
+                      render: (quantity: number, record: ScanHistoryItem) => (
+                        <InputNumber
+                          min={1}
+                          max={9999}
+                          value={quantity}
+                          size="small"
+                          onChange={(val) => handleUpdateQuantity(record.id, val || 1)}
+                          style={{ width: 70 }}
+                        />
+                      ),
+                    },
+                    {
+                      title: 'Durum',
+                      key: 'status',
+                      width: 120,
+                      render: (_, record: ScanHistoryItem) =>
+                        record.lookupResult.found ? (
+                          <Tag color="green" icon={<CheckCircleOutlined />}>
+                            {record.lookupResult.matchType}
+                          </Tag>
+                        ) : (
+                          <Tag color="red" icon={<CloseCircleOutlined />}>
+                            Bulunamadı
+                          </Tag>
+                        ),
+                    },
+                    {
+                      title: 'Ürün',
+                      key: 'item',
+                      ellipsis: true,
+                      render: (_, record: ScanHistoryItem) => {
+                        const r = record.lookupResult;
+                        if (!r.found) return <span className="text-slate-400">-</span>;
+                        if (r.product) return <span className="text-sm text-slate-900">{r.product.name}</span>;
+                        if (r.variant) return <span className="text-sm text-slate-900">{r.variant.variantName}</span>;
+                        if (r.serialNumber) return <span className="text-sm font-mono">{r.serialNumber.serialNumber}</span>;
+                        if (r.lotBatch) return <span className="text-sm font-mono">{r.lotBatch.lotNumber}</span>;
+                        return '-';
+                      },
+                    },
+                    {
+                      title: 'Fiyat',
+                      key: 'price',
+                      width: 120,
+                      align: 'right' as const,
+                      render: (_, record: ScanHistoryItem) => {
+                        const product = record.lookupResult.product;
+                        if (!product?.unitPrice) return '-';
+                        const total = product.unitPrice * record.quantity;
+                        return (
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-slate-900">
+                              {total.toLocaleString('tr-TR', { style: 'currency', currency: product.unitPriceCurrency || 'TRY' })}
+                            </div>
+                            {record.quantity > 1 && (
+                              <div className="text-xs text-slate-500">
+                                {record.quantity}× {product.unitPrice.toLocaleString('tr-TR')}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      title: '',
+                      key: 'actions',
+                      width: 80,
+                      render: (_, record: ScanHistoryItem) => (
+                        <div className="flex items-center gap-1">
+                          <Tooltip title="Tekrar Ara">
+                            <button
+                              onClick={() => setLastScannedBarcode(record.barcode)}
+                              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                            >
+                              <ReloadOutlined />
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="Sil">
+                            <button
+                              onClick={() => handleRemoveFromHistory(record.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            >
+                              <DeleteOutlined />
+                            </button>
+                          </Tooltip>
                         </div>
-                      );
+                      ),
                     },
-                  },
-                  {
-                    title: '',
-                    key: 'actions',
-                    width: 100,
-                    render: (_, record: ScanHistoryItem) => (
-                      <Space size="small">
-                        <Tooltip title="Tekrar Ara">
-                          <Button
-                            type="text"
-                            size="small"
-                            icon={<ReloadOutlined />}
-                            onClick={() => setLastScannedBarcode(record.barcode)}
-                          />
-                        </Tooltip>
-                        <Tooltip title="Sil">
-                          <Button
-                            type="text"
-                            size="small"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleRemoveFromHistory(record.id)}
-                          />
-                        </Tooltip>
-                      </Space>
-                    ),
-                  },
-                ]}
-              />
-            )}
-          </Card>
+                  ]}
+                />
+              )}
+            </div>
+          </div>
         </div>
       ),
     },
     {
       key: 'generator',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <BarcodeOutlined />
           Barkod Oluşturucu
-        </Space>
+        </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card title="Barkod Oluştur">
-              <Form form={generateForm} layout="vertical">
-                <Form.Item
-                  name="content"
-                  label="Barkod İçeriği"
-                  rules={[{ required: true, message: 'Barkod içeriği gerekli' }]}
-                >
-                  <Input placeholder="Barkod numarası veya metin" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Barkod Oluştur</h3>
+            </div>
+            <Form form={generateForm} layout="vertical">
+              <Form.Item
+                name="content"
+                label="Barkod İçeriği"
+                rules={[{ required: true, message: 'Barkod içeriği gerekli' }]}
+              >
+                <Input placeholder="Barkod numarası veya metin" />
+              </Form.Item>
+
+              <Form.Item name="format" label="Barkod Formatı" initialValue="Code128">
+                <Select>
+                  {Object.entries(formatLabels).map(([value, label]) => (
+                    <Select.Option key={value} value={value}>{label}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="width" label="Genişlik (px)" initialValue={300}>
+                  <InputNumber min={100} max={1000} style={{ width: '100%' }} />
                 </Form.Item>
-
-                <Form.Item name="format" label="Barkod Formatı" initialValue="Code128">
-                  <Select>
-                    {Object.entries(formatLabels).map(([value, label]) => (
-                      <Select.Option key={value} value={value}>
-                        {label}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                <Form.Item name="height" label="Yükseklik (px)" initialValue={100}>
+                  <InputNumber min={50} max={500} style={{ width: '100%' }} />
                 </Form.Item>
+              </div>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="width" label="Genişlik (px)" initialValue={300}>
-                      <InputNumber min={100} max={1000} style={{ width: '100%' }} />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="height" label="Yükseklik (px)" initialValue={100}>
-                      <InputNumber min={50} max={500} style={{ width: '100%' }} />
-                    </Form.Item>
-                  </Col>
-                </Row>
+              <Form.Item name="includeText" valuePropName="checked" initialValue={true}>
+                <Checkbox>Barkod metnini göster</Checkbox>
+              </Form.Item>
 
-                <Form.Item name="includeText" valuePropName="checked" initialValue={true}>
-                  <Checkbox>Barkod metnini göster</Checkbox>
-                </Form.Item>
+              <button
+                type="button"
+                onClick={handleGenerateBarcode}
+                disabled={generateBarcode.isPending}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
+              >
+                <BarcodeOutlined />
+                {generateBarcode.isPending ? 'Oluşturuluyor...' : 'Barkod Oluştur'}
+              </button>
+            </Form>
+          </Card>
 
-                <Button
-                  type="primary"
-                  icon={<BarcodeOutlined />}
-                  onClick={handleGenerateBarcode}
-                  loading={generateBarcode.isPending}
-                  block
-                >
-                  Barkod Oluştur
-                </Button>
-              </Form>
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card title="Önizleme">
-              {generatedBarcodeImage ? (
-                <div className="text-center">
-                  <Image
-                    src={`data:image/png;base64,${generatedBarcodeImage}`}
-                    alt="Generated Barcode"
-                    style={{ maxWidth: '100%', maxHeight: 300 }}
-                  />
-                  <Divider />
-                  <Space>
-                    <Button
-                      icon={<DownloadOutlined />}
-                      onClick={() => downloadImage(generatedBarcodeImage, 'barcode.png')}
-                    >
-                      İndir
-                    </Button>
-                    <Button
-                      icon={<CopyOutlined />}
-                      onClick={() => copyToClipboard(generateForm.getFieldValue('content'))}
-                    >
-                      Kopyala
-                    </Button>
-                  </Space>
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Önizleme</h3>
+            </div>
+            {generatedBarcodeImage ? (
+              <div className="text-center">
+                <img
+                  src={`data:image/png;base64,${generatedBarcodeImage}`}
+                  alt="Generated Barcode"
+                  className="max-w-full max-h-64 mx-auto border border-slate-200 rounded"
+                />
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => downloadImage(generatedBarcodeImage, 'barcode.png')}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                  >
+                    <DownloadOutlined />
+                    İndir
+                  </button>
+                  <button
+                    onClick={() => copyToClipboard(generateForm.getFieldValue('content'))}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                  >
+                    <CopyOutlined />
+                    Kopyala
+                  </button>
                 </div>
-              ) : (
-                <Empty description="Barkod oluşturun" />
-              )}
-            </Card>
-          </Col>
-        </Row>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <BarcodeOutlined className="text-xl text-slate-400" />
+                </div>
+                <span className="text-sm text-slate-500">Barkod oluşturun</span>
+              </div>
+            )}
+          </Card>
+        </div>
       ),
     },
     {
       key: 'labels',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <TagsOutlined />
           Ürün Etiketi
-        </Space>
+        </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card title="Ürün Etiketi Oluştur">
-              <Form form={labelForm} layout="vertical">
-                <Form.Item
-                  name="productId"
-                  label="Ürün"
-                  rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-                >
-                  <Select
-                    placeholder="Ürün seçin"
-                    showSearch
-                    optionFilterProp="children"
-                    onChange={setSelectedProductForLabel}
-                  >
-                    {products.map((p) => (
-                      <Select.Option key={p.id} value={p.id}>
-                        {p.code} - {p.name}
-                      </Select.Option>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Ürün Etiketi Oluştur</h3>
+            </div>
+            <Form form={labelForm} layout="vertical">
+              <Form.Item
+                name="productId"
+                label="Ürün"
+                rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+              >
+                <Select placeholder="Ürün seçin" showSearch optionFilterProp="children" onChange={setSelectedProductForLabel}>
+                  {products.map((p) => (
+                    <Select.Option key={p.id} value={p.id}>{p.code} - {p.name}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="labelSize" label="Etiket Boyutu" initialValue="Medium">
+                  <Select>
+                    {Object.entries(sizeLabels).map(([value, label]) => (
+                      <Select.Option key={value} value={value}>{label}</Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
+                <Form.Item name="barcodeFormat" label="Barkod Formatı" initialValue="Code128">
+                  <Select>
+                    {Object.entries(formatLabels).map(([value, label]) => (
+                      <Select.Option key={value} value={value}>{label}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="labelSize" label="Etiket Boyutu" initialValue="Medium">
-                      <Select>
-                        {Object.entries(sizeLabels).map(([value, label]) => (
-                          <Select.Option key={value} value={value}>
-                            {label}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="barcodeFormat" label="Barkod Formatı" initialValue="Code128">
-                      <Select>
-                        {Object.entries(formatLabels).map(([value, label]) => (
-                          <Select.Option key={value} value={value}>
-                            {label}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                </Row>
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="includeProductName" valuePropName="checked" initialValue={true}>
+                  <Checkbox>Ürün adını göster</Checkbox>
+                </Form.Item>
+                <Form.Item name="includePrice" valuePropName="checked" initialValue={true}>
+                  <Checkbox>Fiyatı göster</Checkbox>
+                </Form.Item>
+              </div>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="includeProductName" valuePropName="checked" initialValue={true}>
-                      <Checkbox>Ürün adını göster</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="includePrice" valuePropName="checked" initialValue={true}>
-                      <Checkbox>Fiyatı göster</Checkbox>
-                    </Form.Item>
-                  </Col>
-                </Row>
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="includeSKU" valuePropName="checked" initialValue={false}>
+                  <Checkbox>SKU göster</Checkbox>
+                </Form.Item>
+                <Form.Item name="includeQRCode" valuePropName="checked" initialValue={false}>
+                  <Checkbox>QR Kod ekle</Checkbox>
+                </Form.Item>
+              </div>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="includeSKU" valuePropName="checked" initialValue={false}>
-                      <Checkbox>SKU göster</Checkbox>
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="includeQRCode" valuePropName="checked" initialValue={false}>
-                      <Checkbox>QR Kod ekle</Checkbox>
-                    </Form.Item>
-                  </Col>
-                </Row>
+              <button
+                type="button"
+                onClick={handleGenerateProductLabel}
+                disabled={generateProductLabel.isPending}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
+              >
+                <TagsOutlined />
+                {generateProductLabel.isPending ? 'Oluşturuluyor...' : 'Etiket Oluştur'}
+              </button>
+            </Form>
+          </Card>
 
-                <Button
-                  type="primary"
-                  icon={<TagsOutlined />}
-                  onClick={handleGenerateProductLabel}
-                  loading={generateProductLabel.isPending}
-                  block
-                >
-                  Etiket Oluştur
-                </Button>
-              </Form>
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card title="Önizleme">
-              {generatedLabelImage ? (
-                <div className="text-center">
-                  <Image
-                    src={`data:image/png;base64,${generatedLabelImage}`}
-                    alt="Generated Label"
-                    style={{ maxWidth: '100%', maxHeight: 300, border: '1px solid #f0f0f0' }}
-                  />
-                  <Divider />
-                  <Space>
-                    <Button
-                      icon={<DownloadOutlined />}
-                      onClick={() => downloadImage(generatedLabelImage, 'product-label.png')}
-                    >
-                      İndir
-                    </Button>
-                    <Button icon={<PrinterOutlined />}>Yazdır</Button>
-                  </Space>
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Önizleme</h3>
+            </div>
+            {generatedLabelImage ? (
+              <div className="text-center">
+                <img
+                  src={`data:image/png;base64,${generatedLabelImage}`}
+                  alt="Generated Label"
+                  className="max-w-full max-h-64 mx-auto border border-slate-200 rounded"
+                />
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => downloadImage(generatedLabelImage, 'product-label.png')}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                  >
+                    <DownloadOutlined />
+                    İndir
+                  </button>
+                  <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
+                    <PrinterOutlined />
+                    Yazdır
+                  </button>
                 </div>
-              ) : (
-                <Empty description="Etiket oluşturun" />
-              )}
-            </Card>
-          </Col>
-        </Row>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <TagsOutlined className="text-xl text-slate-400" />
+                </div>
+                <span className="text-sm text-slate-500">Etiket oluşturun</span>
+              </div>
+            )}
+          </Card>
+        </div>
       ),
     },
     {
       key: 'bulk',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <PrinterOutlined />
           Toplu Etiket
-        </Space>
+        </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={16}>
-            <Card
-              title="Ürün Listesi"
-              extra={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-slate-900">Ürün Listesi</h3>
                 <Select
                   placeholder="Ürün ekle"
                   showSearch
                   optionFilterProp="children"
-                  style={{ width: 250 }}
+                  style={{ width: 220 }}
                   value={undefined}
                   onChange={handleAddProductToBulk}
                 >
                   {products
                     .filter((p) => !bulkProducts.some((bp) => bp.productId === p.id))
                     .map((p) => (
-                      <Select.Option key={p.id} value={p.id}>
-                        {p.code} - {p.name}
-                      </Select.Option>
+                      <Select.Option key={p.id} value={p.id}>{p.code} - {p.name}</Select.Option>
                     ))}
                 </Select>
-              }
-            >
+              </div>
+
               {bulkProducts.length === 0 ? (
-                <Empty description="Etiket yazdırmak için ürün ekleyin" />
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <PrinterOutlined className="text-xl text-slate-400" />
+                  </div>
+                  <span className="text-sm text-slate-500">Etiket yazdırmak için ürün ekleyin</span>
+                </div>
               ) : (
                 <Table
                   dataSource={bulkProducts}
                   rowKey="productId"
                   pagination={false}
+                  size="small"
                   columns={[
-                    {
-                      title: 'Ürün',
-                      dataIndex: 'productName',
-                      key: 'name',
-                    },
+                    { title: 'Ürün', dataIndex: 'productName', key: 'name' },
                     {
                       title: 'Etiket Adedi',
                       key: 'quantity',
-                      width: 150,
+                      width: 130,
                       render: (_, record) => (
                         <InputNumber
                           min={1}
                           max={100}
                           value={record.quantity}
-                          onChange={(val) =>
-                            handleBulkQuantityChange(record.productId, val || 1)
-                          }
+                          onChange={(val) => handleBulkQuantityChange(record.productId, val || 1)}
+                          size="small"
+                          style={{ width: 80 }}
                         />
                       ),
                     },
                     {
                       title: '',
                       key: 'action',
-                      width: 80,
+                      width: 50,
                       render: (_, record) => (
-                        <Button
-                          type="text"
-                          danger
-                          icon={<DeleteOutlined />}
+                        <button
                           onClick={() => handleRemoveProductFromBulk(record.productId)}
-                        />
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <DeleteOutlined />
+                        </button>
                       ),
                     },
                   ]}
                   summary={() => (
                     <Table.Summary.Row>
                       <Table.Summary.Cell index={0}>
-                        <Text strong>Toplam</Text>
+                        <span className="font-medium">Toplam</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1}>
-                        <Text strong>
-                          {bulkProducts.reduce((sum, p) => sum + p.quantity, 0)} etiket
-                        </Text>
+                        <span className="font-medium">{bulkProducts.reduce((sum, p) => sum + p.quantity, 0)} etiket</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={2} />
                     </Table.Summary.Row>
@@ -1551,283 +1418,268 @@ export default function BarcodesPage() {
                 />
               )}
             </Card>
-          </Col>
+          </div>
 
-          <Col xs={24} lg={8}>
-            <Card title="Etiket Ayarları">
-              <Space direction="vertical" className="w-full" size="middle">
-                <div>
-                  <Text type="secondary">Etiket Boyutu</Text>
-                  <Select
-                    value={bulkLabelSize}
-                    onChange={setBulkLabelSize}
-                    style={{ width: '100%', marginTop: 4 }}
-                  >
-                    {Object.entries(sizeLabels).map(([value, label]) => (
-                      <Select.Option key={value} value={value}>
-                        {label}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </div>
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Etiket Ayarları</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase tracking-wide">Etiket Boyutu</label>
+                <Select value={bulkLabelSize} onChange={setBulkLabelSize} style={{ width: '100%', marginTop: 4 }}>
+                  {Object.entries(sizeLabels).map(([value, label]) => (
+                    <Select.Option key={value} value={value}>{label}</Select.Option>
+                  ))}
+                </Select>
+              </div>
 
-                <div>
-                  <Text type="secondary">Barkod Formatı</Text>
-                  <Select
-                    value={bulkBarcodeFormat}
-                    onChange={setBulkBarcodeFormat}
-                    style={{ width: '100%', marginTop: 4 }}
-                  >
-                    {Object.entries(formatLabels).map(([value, label]) => (
-                      <Select.Option key={value} value={value}>
-                        {label}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </div>
+              <div>
+                <label className="text-xs text-slate-500 uppercase tracking-wide">Barkod Formatı</label>
+                <Select value={bulkBarcodeFormat} onChange={setBulkBarcodeFormat} style={{ width: '100%', marginTop: 4 }}>
+                  {Object.entries(formatLabels).map(([value, label]) => (
+                    <Select.Option key={value} value={value}>{label}</Select.Option>
+                  ))}
+                </Select>
+              </div>
 
-                <Divider />
-
-                <Button
-                  type="primary"
-                  icon={<DownloadOutlined />}
+              <div className="pt-4 border-t border-slate-200">
+                <button
                   onClick={handleGenerateBulkLabels}
-                  loading={generateBulkLabels.isPending}
-                  block
-                  disabled={bulkProducts.length === 0}
+                  disabled={generateBulkLabels.isPending || bulkProducts.length === 0}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
                 >
-                  Etiketleri İndir (ZIP)
-                </Button>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
+                  <DownloadOutlined />
+                  {generateBulkLabels.isPending ? 'Hazırlanıyor...' : 'Etiketleri İndir (ZIP)'}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
       ),
     },
     {
       key: 'autogen',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <QrcodeOutlined />
           Otomatik Barkod
-        </Space>
+        </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card title="Otomatik Barkod Oluştur">
-              <Alert
-                type="info"
-                showIcon
-                className="mb-4"
-                message="Otomatik Barkod"
-                description="Seçilen formata uygun, benzersiz bir barkod numarası oluşturur. EAN-13 formatı için geçerli checksum hesaplanır."
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Otomatik Barkod Oluştur</h3>
+              <p className="text-xs text-slate-500 mt-1">Seçilen formata uygun, benzersiz barkod üretir</p>
+            </div>
 
-              <Form form={autoGenForm} layout="vertical">
-                <Form.Item
-                  name="productId"
-                  label="Ürün"
-                  rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-                >
-                  <Select placeholder="Ürün seçin" showSearch optionFilterProp="children">
-                    {products.map((p) => (
-                      <Select.Option key={p.id} value={p.id}>
-                        {p.code} - {p.name} {p.barcode && <Tag>Barkod var</Tag>}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+            <Form form={autoGenForm} layout="vertical">
+              <Form.Item
+                name="productId"
+                label="Ürün"
+                rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+              >
+                <Select placeholder="Ürün seçin" showSearch optionFilterProp="children">
+                  {products.map((p) => (
+                    <Select.Option key={p.id} value={p.id}>
+                      {p.code} - {p.name} {p.barcode && <Tag>Barkod var</Tag>}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-                <Form.Item name="format" label="Barkod Formatı" initialValue="EAN13">
-                  <Select>
-                    <Select.Option value="EAN13">EAN-13 (13 hane)</Select.Option>
-                    <Select.Option value="EAN8">EAN-8 (8 hane)</Select.Option>
-                    <Select.Option value="Code128">Code 128 (Alfanümerik)</Select.Option>
-                    <Select.Option value="Code39">Code 39 (Alfanümerik)</Select.Option>
-                  </Select>
-                </Form.Item>
+              <Form.Item name="format" label="Barkod Formatı" initialValue="EAN13">
+                <Select>
+                  <Select.Option value="EAN13">EAN-13 (13 hane)</Select.Option>
+                  <Select.Option value="EAN8">EAN-8 (8 hane)</Select.Option>
+                  <Select.Option value="Code128">Code 128 (Alfanümerik)</Select.Option>
+                  <Select.Option value="Code39">Code 39 (Alfanümerik)</Select.Option>
+                </Select>
+              </Form.Item>
 
-                <Form.Item name="updateProduct" valuePropName="checked" initialValue={true}>
-                  <Checkbox>Ürüne barkodu kaydet</Checkbox>
-                </Form.Item>
+              <Form.Item name="updateProduct" valuePropName="checked" initialValue={true}>
+                <Checkbox>Ürüne barkodu kaydet</Checkbox>
+              </Form.Item>
 
-                <Button
-                  type="primary"
-                  icon={<QrcodeOutlined />}
-                  onClick={handleAutoGenerate}
-                  loading={autoGenerateBarcode.isPending}
-                  block
-                >
-                  Barkod Oluştur
-                </Button>
-              </Form>
-            </Card>
-          </Col>
+              <button
+                type="button"
+                onClick={handleAutoGenerate}
+                disabled={autoGenerateBarcode.isPending}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
+              >
+                <QrcodeOutlined />
+                {autoGenerateBarcode.isPending ? 'Oluşturuluyor...' : 'Barkod Oluştur'}
+              </button>
+            </Form>
+          </Card>
 
-          <Col xs={24} lg={12}>
-            <Card title="Sonuç">
-              {autoGenResult ? (
-                <div className="text-center">
-                  <Alert
-                    type="success"
-                    showIcon
-                    message="Barkod Oluşturuldu"
-                    description={
-                      <div className="mt-2">
-                        <Text strong className="text-2xl block mb-2">{autoGenResult.barcode}</Text>
-                        {autoGenResult.saved ? (
-                          <Tag color="green">Ürüne kaydedildi</Tag>
-                        ) : (
-                          <Tag color="blue">Sadece oluşturuldu</Tag>
-                        )}
-                      </div>
-                    }
-                  />
-                  <Divider />
-                  <Button
-                    icon={<CopyOutlined />}
-                    onClick={() => copyToClipboard(autoGenResult.barcode)}
-                  >
-                    Kopyala
-                  </Button>
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Sonuç</h3>
+            </div>
+            {autoGenResult ? (
+              <div className="text-center">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-4">
+                  <CheckCircleOutlined className="text-3xl text-emerald-600 mb-2" />
+                  <div className="text-sm text-slate-600 mb-2">Barkod Oluşturuldu</div>
+                  <div className="text-2xl font-mono font-bold text-slate-900">{autoGenResult.barcode}</div>
+                  {autoGenResult.saved ? (
+                    <Tag color="green" className="mt-2">Ürüne kaydedildi</Tag>
+                  ) : (
+                    <Tag className="mt-2">Sadece oluşturuldu</Tag>
+                  )}
                 </div>
-              ) : (
-                <Empty description="Barkod oluşturun" />
-              )}
-            </Card>
-          </Col>
-        </Row>
+                <button
+                  onClick={() => copyToClipboard(autoGenResult.barcode)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                >
+                  <CopyOutlined />
+                  Kopyala
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <QrcodeOutlined className="text-xl text-slate-400" />
+                </div>
+                <span className="text-sm text-slate-500">Barkod oluşturun</span>
+              </div>
+            )}
+          </Card>
+        </div>
       ),
     },
     {
       key: 'validate',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <CheckCircleOutlined />
           Doğrulama
-        </Space>
+        </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card title="Barkod Doğrulama">
-              <Space direction="vertical" className="w-full" size="middle">
-                <div>
-                  <Text type="secondary">Barkod</Text>
-                  <Input
-                    placeholder="Doğrulanacak barkod"
-                    value={validationBarcode}
-                    onChange={(e) => setValidationBarcode(e.target.value)}
-                    style={{ marginTop: 4 }}
-                  />
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Barkod Doğrulama</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase tracking-wide">Barkod</label>
+                <Input
+                  placeholder="Doğrulanacak barkod"
+                  value={validationBarcode}
+                  onChange={(e) => setValidationBarcode(e.target.value)}
+                  style={{ marginTop: 4 }}
+                />
+              </div>
 
-                <div>
-                  <Text type="secondary">Format</Text>
-                  <Select
-                    value={validationFormat}
-                    onChange={setValidationFormat}
-                    style={{ width: '100%', marginTop: 4 }}
-                  >
-                    {Object.entries(formatLabels).map(([value, label]) => (
-                      <Select.Option key={value} value={value}>
-                        {label}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </div>
+              <div>
+                <label className="text-xs text-slate-500 uppercase tracking-wide">Format</label>
+                <Select value={validationFormat} onChange={setValidationFormat} style={{ width: '100%', marginTop: 4 }}>
+                  {Object.entries(formatLabels).map(([value, label]) => (
+                    <Select.Option key={value} value={value}>{label}</Select.Option>
+                  ))}
+                </Select>
+              </div>
 
-                <Divider />
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleValidateBarcode}
+                  disabled={validateBarcode.isPending || !validationBarcode}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
+                >
+                  <CheckCircleOutlined />
+                  Format Doğrula
+                </button>
+                <button
+                  onClick={handleCheckUnique}
+                  disabled={checkBarcodeUnique.isPending || !validationBarcode}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:bg-slate-100 transition-colors"
+                >
+                  <SearchOutlined />
+                  Benzersizlik
+                </button>
+              </div>
+            </div>
+          </Card>
 
-                <Space wrap>
-                  <Button
-                    icon={<CheckCircleOutlined />}
-                    onClick={handleValidateBarcode}
-                    loading={validateBarcode.isPending}
-                  >
-                    Format Doğrula
-                  </Button>
-                  <Button
-                    icon={<SearchOutlined />}
-                    onClick={handleCheckUnique}
-                    loading={checkBarcodeUnique.isPending}
-                  >
-                    Benzersizlik Kontrol
-                  </Button>
-                </Space>
-              </Space>
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card title="Barkod Formatları">
-              <Table
-                dataSource={Object.entries(formatLabels).map(([value, label]) => ({ value, label }))}
-                rowKey="value"
-                size="small"
-                pagination={false}
-                columns={[
-                  { title: 'Format', dataIndex: 'label', key: 'label' },
-                  {
-                    title: 'Tip',
-                    key: 'type',
-                    render: (_, record) =>
-                      ['QRCode', 'DataMatrix', 'PDF417'].includes(record.value) ? (
-                        <Tag color="purple">2D</Tag>
-                      ) : (
-                        <Tag color="blue">1D (Linear)</Tag>
-                      ),
+          <Card>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-900">Barkod Formatları</h3>
+            </div>
+            <Table
+              dataSource={Object.entries(formatLabels).map(([value, label]) => ({ value, label }))}
+              rowKey="value"
+              size="small"
+              pagination={false}
+              columns={[
+                { title: 'Format', dataIndex: 'label', key: 'label' },
+                {
+                  title: 'Tip',
+                  key: 'type',
+                  render: (_, record) =>
+                    ['QRCode', 'DataMatrix', 'PDF417'].includes(record.value) ? (
+                      <Tag color="purple">2D</Tag>
+                    ) : (
+                      <Tag>1D</Tag>
+                    ),
+                },
+                {
+                  title: 'Açıklama',
+                  key: 'desc',
+                  render: (_, record) => {
+                    const descriptions: Record<string, string> = {
+                      EAN13: 'Uluslararası ürün barkodu',
+                      EAN8: 'Küçük ürünler için',
+                      UPC_A: 'ABD ürün barkodu',
+                      UPC_E: 'Kompakt ABD barkodu',
+                      Code128: 'Yüksek yoğunluklu alfanümerik',
+                      Code39: 'Endüstriyel barkod',
+                      QRCode: '2D matris',
+                      DataMatrix: 'Küçük 2D matris',
+                      PDF417: 'Yüksek kapasiteli 2D',
+                      ITF14: 'Lojistik barkodu',
+                    };
+                    return <span className="text-xs text-slate-500">{descriptions[record.value] || ''}</span>;
                   },
-                  {
-                    title: 'Açıklama',
-                    key: 'desc',
-                    render: (_, record) => {
-                      const descriptions: Record<string, string> = {
-                        EAN13: 'Uluslararası ürün barkodu (13 hane)',
-                        EAN8: 'Küçük ürünler için (8 hane)',
-                        UPC_A: 'ABD ürün barkodu (12 hane)',
-                        UPC_E: 'Kompakt ABD barkodu (6 hane)',
-                        Code128: 'Yüksek yoğunluklu alfanümerik',
-                        Code39: 'Yaygın endüstriyel barkod',
-                        QRCode: '2D matris, URL ve metin için',
-                        DataMatrix: 'Küçük 2D matris',
-                        PDF417: 'Yüksek kapasiteli 2D',
-                        ITF14: 'Lojistik ve paletler için',
-                      };
-                      return descriptions[record.value] || '';
-                    },
-                  },
-                ]}
-              />
-            </Card>
-          </Col>
-        </Row>
+                },
+              ]}
+            />
+          </Card>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <PageContainer maxWidth="7xl">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <Title level={4} className="!mb-1">Barkod Yönetimi</Title>
-          <Text type="secondary">
-            Barkod tarama, oluşturma, etiket yazdırma ve doğrulama işlemleri
-          </Text>
-        </div>
-      </div>
+      <ListPageHeader
+        icon={<ScanOutlined />}
+        iconColor="#8b5cf6"
+        title="Barkod Yönetimi"
+        description="Barkod tarama, oluşturma ve etiket işlemleri"
+        secondaryActions={
+          <button
+            onClick={refocusScanner}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+          >
+            <ReloadOutlined />
+          </button>
+        }
+      />
 
       {/* Tabs */}
-      <Card>
+      <DataTableWrapper>
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          type="card"
+          className="[&_.ant-tabs-nav]:px-4 [&_.ant-tabs-content]:p-4"
         />
-      </Card>
-    </div>
+      </DataTableWrapper>
+    </PageContainer>
   );
 }
