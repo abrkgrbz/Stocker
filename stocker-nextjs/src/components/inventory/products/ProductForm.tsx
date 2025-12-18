@@ -151,6 +151,27 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
   const [productType, setProductType] = useState<ProductType>(ProductType.Finished);
   const [stockEntries, setStockEntries] = useState<(InitialStockEntryDto & { key: string })[]>([]);
 
+  // Image upload state
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Handle image selection
+  const handleImageChange = (file: File) => {
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    return false; // Prevent auto upload
+  };
+
+  // Remove selected image
+  const handleImageRemove = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   // Add new stock entry row
   const addStockEntry = () => {
     setStockEntries([
@@ -174,7 +195,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
     setStockEntries(updated);
   };
 
-  // Wrap onFinish to include stock entries
+  // Wrap onFinish to include stock entries and image
   const handleFinish = (values: any) => {
     const validStockEntries = stockEntries
       .filter(e => e.warehouseId > 0 && e.quantity > 0)
@@ -182,7 +203,8 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
 
     onFinish({
       ...values,
-      initialStock: validStockEntries.length > 0 ? validStockEntries : undefined
+      initialStock: validStockEntries.length > 0 ? validStockEntries : undefined,
+      imageFile: imageFile || undefined, // Pass image file to parent
     });
   };
 
@@ -198,6 +220,11 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
       });
       setIsActive(initialValues.isActive ?? true);
       setProductType(initialValues.productType || ProductType.Finished);
+      // Set existing primary image if available
+      const primaryImage = initialValues.images?.find(img => img.isPrimary);
+      if (primaryImage?.imageUrl) {
+        setImagePreview(primaryImage.imageUrl);
+      }
     } else {
       form.setFieldsValue({
         productType: ProductType.Finished,
@@ -232,16 +259,36 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
             {/* Product Image Upload */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 relative group">
               <Upload
                 listType="picture-card"
                 showUploadList={false}
                 accept="image/*"
-                beforeUpload={() => false}
-                className="[&_.ant-upload]:!w-16 [&_.ant-upload]:!h-16 [&_.ant-upload]:!rounded-full [&_.ant-upload]:!bg-slate-100 [&_.ant-upload]:!border-2 [&_.ant-upload]:!border-dashed [&_.ant-upload]:!border-slate-300"
+                beforeUpload={handleImageChange}
+                className="[&_.ant-upload]:!w-16 [&_.ant-upload]:!h-16 [&_.ant-upload]:!rounded-full [&_.ant-upload]:!bg-slate-100 [&_.ant-upload]:!border-2 [&_.ant-upload]:!border-dashed [&_.ant-upload]:!border-slate-300 [&_.ant-upload]:!overflow-hidden"
               >
-                <PictureOutlined className="text-xl text-slate-500" />
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Ürün"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <PictureOutlined className="text-xl text-slate-500" />
+                )}
               </Upload>
+              {imagePreview && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageRemove();
+                  }}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             {/* Product Name - Title Style */}

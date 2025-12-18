@@ -2,23 +2,40 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Form } from 'antd';
+import { Button, Space, Form, message } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { ProductForm } from '@/components/inventory/products';
-import { useCreateProduct } from '@/lib/api/hooks/useInventory';
+import { useCreateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
 import type { CreateProductDto } from '@/lib/api/services/inventory.types';
 
 export default function NewProductPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const createProduct = useCreateProduct();
+  const uploadImage = useUploadProductImage();
 
-  const handleSubmit = async (values: CreateProductDto) => {
-    // Debug: Log form values before submission
-    console.log('Form values being submitted:', JSON.stringify(values, null, 2));
+  const handleSubmit = async (values: CreateProductDto & { imageFile?: File }) => {
+    // Extract image file from values
+    const { imageFile, ...productData } = values;
 
     try {
-      await createProduct.mutateAsync(values);
+      // First create the product
+      const createdProduct = await createProduct.mutateAsync(productData);
+
+      // If image was selected, upload it
+      if (imageFile && createdProduct?.id) {
+        try {
+          await uploadImage.mutateAsync({
+            productId: createdProduct.id,
+            file: imageFile,
+            options: { setAsPrimary: true },
+          });
+        } catch (imageError) {
+          // Product created but image upload failed - show warning
+          message.warning('Ürün oluşturuldu ancak resim yüklenemedi. Düzenleme sayfasından tekrar deneyebilirsiniz.');
+        }
+      }
+
       router.push('/inventory/products');
     } catch (error) {
       // Error handled by hook

@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
+import { Button, Space, Form, Spin, Alert, Tag, message } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { ProductForm } from '@/components/inventory/products';
-import { useProduct, useUpdateProduct } from '@/lib/api/hooks/useInventory';
+import { useProduct, useUpdateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
 import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
 
 export default function EditProductPage() {
@@ -16,10 +16,29 @@ export default function EditProductPage() {
 
   const { data: product, isLoading, error } = useProduct(productId);
   const updateProduct = useUpdateProduct();
+  const uploadImage = useUploadProductImage();
 
-  const handleSubmit = async (values: UpdateProductDto) => {
+  const handleSubmit = async (values: UpdateProductDto & { imageFile?: File }) => {
+    // Extract image file from values
+    const { imageFile, ...productData } = values;
+
     try {
-      await updateProduct.mutateAsync({ id: productId, data: values });
+      // Update product data
+      await updateProduct.mutateAsync({ id: productId, data: productData });
+
+      // If a new image was selected, upload it
+      if (imageFile) {
+        try {
+          await uploadImage.mutateAsync({
+            productId: productId,
+            file: imageFile,
+            options: { setAsPrimary: true },
+          });
+        } catch (imageError) {
+          message.warning('Ürün güncellendi ancak resim yüklenemedi. Lütfen tekrar deneyin.');
+        }
+      }
+
       router.push(`/inventory/products/${productId}`);
     } catch (error) {
       // Error handled by hook
