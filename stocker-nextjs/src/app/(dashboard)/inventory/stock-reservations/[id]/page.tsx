@@ -3,23 +3,16 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Card,
   Button,
   Space,
   Tag,
-  Typography,
-  Descriptions,
   Spin,
   Alert,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Progress,
   InputNumber,
   Input,
   DatePicker,
-  Divider,
   Timeline,
 } from 'antd';
 import {
@@ -31,6 +24,9 @@ import {
   PrinterOutlined,
   EnvironmentOutlined,
   AppstoreOutlined,
+  CalendarOutlined,
+  FileTextOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import {
   useStockReservation,
@@ -41,24 +37,22 @@ import {
 import type { ReservationStatus, ReservationType } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const statusConfig: Record<ReservationStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Active: { color: 'processing', label: 'Aktif', icon: <LockOutlined /> },
-  PartiallyFulfilled: { color: 'warning', label: 'Kısmen Karşılandı', icon: <ClockCircleOutlined /> },
-  Fulfilled: { color: 'success', label: 'Karşılandı', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'default', label: 'İptal Edildi', icon: <CloseCircleOutlined /> },
-  Expired: { color: 'error', label: 'Süresi Doldu', icon: <ClockCircleOutlined /> },
+const statusConfig: Record<ReservationStatus, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
+  Active: { label: 'Aktif', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <LockOutlined /> },
+  PartiallyFulfilled: { label: 'Kısmen Karşılandı', bgColor: 'bg-amber-50', textColor: 'text-amber-700', icon: <ClockCircleOutlined /> },
+  Fulfilled: { label: 'Karşılandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleOutlined /> },
+  Cancelled: { label: 'İptal Edildi', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <CloseCircleOutlined /> },
+  Expired: { label: 'Süresi Doldu', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <ClockCircleOutlined /> },
 };
 
-const reservationTypeLabels: Record<ReservationType, string> = {
-  SalesOrder: 'Satış Siparişi',
-  Production: 'Üretim',
-  Transfer: 'Transfer',
-  Manual: 'Manuel',
-  Project: 'Proje',
-  Assembly: 'Montaj',
-  Service: 'Servis',
+const reservationTypeConfig: Record<ReservationType, { label: string; bgColor: string; textColor: string }> = {
+  SalesOrder: { label: 'Satış Siparişi', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  Production: { label: 'Üretim', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+  Transfer: { label: 'Transfer', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
+  Manual: { label: 'Manuel', bgColor: 'bg-slate-100', textColor: 'text-slate-700' },
+  Project: { label: 'Proje', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  Assembly: { label: 'Montaj', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
+  Service: { label: 'Servis', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700' },
 };
 
 export default function StockReservationDetailPage() {
@@ -86,7 +80,7 @@ export default function StockReservationDetailPage() {
       });
       setFulfillModalVisible(false);
       setFulfillQuantity(0);
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -99,7 +93,7 @@ export default function StockReservationDetailPage() {
       });
       setCancelModalVisible(false);
       setCancelReason('');
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -113,14 +107,14 @@ export default function StockReservationDetailPage() {
       });
       setExtendModalVisible(false);
       setExtendDate(null);
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -128,17 +122,20 @@ export default function StockReservationDetailPage() {
 
   if (error || !reservation) {
     return (
-      <Alert
-        message="Hata"
-        description="Rezervasyon bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={<Button onClick={() => router.back()}>Geri Dön</Button>}
-      />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Alert
+          message="Hata"
+          description="Rezervasyon bilgileri yüklenemedi"
+          type="error"
+          showIcon
+          action={<Button onClick={() => router.back()}>Geri Dön</Button>}
+        />
+      </div>
     );
   }
 
   const config = statusConfig[reservation.status];
+  const typeConfig = reservationTypeConfig[reservation.reservationType];
   const fulfillmentPercent = reservation.quantity > 0
     ? Math.round((reservation.fulfilledQuantity / reservation.quantity) * 100)
     : 0;
@@ -160,6 +157,7 @@ export default function StockReservationDetailPage() {
             setFulfillQuantity(reservation.remainingQuantity);
             setFulfillModalVisible(true);
           }}
+          style={{ background: '#1e293b', borderColor: '#1e293b' }}
         >
           Karşıla
         </Button>,
@@ -174,6 +172,7 @@ export default function StockReservationDetailPage() {
             );
             setExtendModalVisible(true);
           }}
+          className="border-slate-200 text-slate-700 hover:border-slate-300"
         >
           Süre Uzat
         </Button>,
@@ -192,281 +191,355 @@ export default function StockReservationDetailPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
-              >
-                <LockOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-orange-600 flex items-center justify-center">
+                <LockOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">
                     {reservation.reservationNumber}
                   </h1>
-                  <Tag color={config.color} icon={config.icon}>
+                  <Tag
+                    icon={config.icon}
+                    className={`border-0 ${config.bgColor} ${config.textColor}`}
+                  >
                     {config.label}
                   </Tag>
                   {isExpiringSoon && (
-                    <Tag color="warning">Süresi Yakında Doluyor</Tag>
+                    <Tag className="border-0 bg-amber-50 text-amber-700">Süresi Yakında Doluyor</Tag>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 m-0">
-                  {reservationTypeLabels[reservation.reservationType]}
+                <p className="text-sm text-slate-500 m-0">
+                  {typeConfig.label}
                 </p>
               </div>
             </div>
           </div>
           <Space>
-            <Button icon={<PrinterOutlined />}>Yazdır</Button>
+            <Button
+              icon={<PrinterOutlined />}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
+            >
+              Yazdır
+            </Button>
             {getActionButtons()}
           </Space>
         </div>
       </div>
 
-      <Row gutter={24}>
-        {/* Left Column */}
-        <Col xs={24} lg={16}>
-          {/* Product Info */}
-          <Card className="mb-6">
-            <div className="flex items-start gap-4">
-              <div
-                className="w-16 h-16 rounded-xl flex items-center justify-center"
-                style={{ background: '#f9731615' }}
-              >
-                <AppstoreOutlined style={{ fontSize: 28, color: '#f97316' }} />
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <LockOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Toplam
+                </p>
               </div>
-              <div className="flex-1">
-                <Text type="secondary" className="text-xs">Rezerve Edilen Ürün</Text>
-                <div className="text-lg font-semibold">{reservation.productName}</div>
-                <Text type="secondary">{reservation.productCode}</Text>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{reservation.quantity}</span>
+                <span className="text-sm text-slate-400">adet</span>
               </div>
             </div>
+          </div>
 
-            <Divider />
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Karşılanan
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-emerald-600">{reservation.fulfilledQuantity}</span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
 
-            <Row gutter={24}>
-              <Col span={12}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <EnvironmentOutlined className="text-blue-500" />
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <ClockCircleOutlined className="text-orange-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Kalan
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span
+                  className={`text-3xl font-bold ${
+                    reservation.remainingQuantity > 0 ? 'text-orange-600' : 'text-emerald-600'
+                  }`}
+                >
+                  {reservation.remainingQuantity}
+                </span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Karşılanma Durumu
+              </p>
+              <div className="flex items-center justify-center">
+                <Progress
+                  type="circle"
+                  percent={fulfillmentPercent}
+                  size={120}
+                  strokeColor={{
+                    '0%': '#f97316',
+                    '100%': '#10b981',
+                  }}
+                  format={() => (
+                    <div className="text-center">
+                      <span className="text-2xl font-bold text-slate-900">
+                        {reservation.fulfilledQuantity}
+                      </span>
+                      <span className="text-slate-400 text-lg">/{reservation.quantity}</span>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Product Info Section */}
+          <div className="col-span-12 md:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Rezerve Edilen Ürün
+              </p>
+              <div
+                className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors mb-4"
+                onClick={() => router.push(`/inventory/products/${reservation.productId}`)}
+              >
+                <div className="w-12 h-12 rounded-lg bg-orange-600 flex items-center justify-center">
+                  <AppstoreOutlined className="text-white text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900 m-0">{reservation.productName}</p>
+                  <p className="text-xs text-slate-500 m-0">{reservation.productCode}</p>
+                </div>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <span className="text-sm">Ürüne Git</span>
+                  <RightOutlined className="text-xs" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div
+                  className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                  onClick={() => router.push(`/inventory/warehouses/${reservation.warehouseId}`)}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <EnvironmentOutlined className="text-blue-600" />
                   </div>
                   <div>
-                    <Text type="secondary" className="text-xs">Depo</Text>
-                    <div className="font-medium">{reservation.warehouseName}</div>
+                    <p className="text-xs text-slate-400 m-0">Depo</p>
+                    <p className="text-sm font-medium text-slate-900 m-0">{reservation.warehouseName}</p>
                   </div>
                 </div>
-              </Col>
-              {reservation.locationName && (
-                <Col span={12}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                      <EnvironmentOutlined className="text-green-500" />
+                {reservation.locationName && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <EnvironmentOutlined className="text-emerald-600" />
                     </div>
                     <div>
-                      <Text type="secondary" className="text-xs">Lokasyon</Text>
-                      <div className="font-medium">{reservation.locationName}</div>
+                      <p className="text-xs text-slate-400 m-0">Lokasyon</p>
+                      <p className="text-sm font-medium text-slate-900 m-0">{reservation.locationName}</p>
                     </div>
                   </div>
-                </Col>
-              )}
-            </Row>
-          </Card>
-
-          {/* Details */}
-          <Card title="Rezervasyon Detayları">
-            <Descriptions column={{ xs: 1, sm: 2 }} size="small">
-              <Descriptions.Item label="Rezervasyon Tarihi">
-                {dayjs(reservation.reservationDate).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Son Geçerlilik">
-                {reservation.expirationDate ? (
-                  <span className={isExpiringSoon ? 'text-orange-500 font-medium' : ''}>
-                    {dayjs(reservation.expirationDate).format('DD/MM/YYYY')}
-                  </span>
-                ) : (
-                  '-'
                 )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Rezervasyon Türü">
-                {reservationTypeLabels[reservation.reservationType]}
-              </Descriptions.Item>
-              <Descriptions.Item label="Oluşturulma">
-                {dayjs(reservation.createdAt).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              {reservation.referenceDocumentType && (
-                <>
-                  <Descriptions.Item label="Referans Döküman Türü">
-                    {reservation.referenceDocumentType}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Referans Döküman No">
-                    {reservation.referenceDocumentNumber || '-'}
-                  </Descriptions.Item>
-                </>
-              )}
-              {reservation.notes && (
-                <Descriptions.Item label="Notlar" span={2}>
-                  {reservation.notes}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Right Column */}
-        <Col xs={24} lg={8}>
-          {/* Progress */}
-          <Card className="mb-6">
-            <div className="text-center mb-4">
-              <Progress
-                type="circle"
-                percent={fulfillmentPercent}
-                size={120}
-                strokeColor={{
-                  '0%': '#f97316',
-                  '100%': '#10b981',
-                }}
-                format={() => (
-                  <div>
-                    <div className="text-2xl font-bold">{reservation.fulfilledQuantity}</div>
-                    <div className="text-xs text-gray-400">/ {reservation.quantity}</div>
-                  </div>
-                )}
-              />
-              <div className="mt-2">
-                <Text type="secondary">Karşılanma Durumu</Text>
               </div>
             </div>
+          </div>
 
-            <Divider />
+          {/* Reservation Details Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Rezervasyon Detayları
+              </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Rezervasyon Tarihi</p>
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(reservation.reservationDate).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Son Geçerlilik</p>
+                  {reservation.expirationDate ? (
+                    <span
+                      className={`text-sm font-medium ${
+                        isExpiringSoon ? 'text-orange-600' : 'text-slate-900'
+                      }`}
+                    >
+                      {dayjs(reservation.expirationDate).format('DD/MM/YYYY')}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-slate-400">-</span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Rezervasyon Türü</p>
+                  <Tag className={`border-0 ${typeConfig.bgColor} ${typeConfig.textColor}`}>
+                    {typeConfig.label}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Oluşturulma</p>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(reservation.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
+                </div>
+                {reservation.referenceDocumentType && (
+                  <>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Referans Belge Türü</p>
+                      <span className="text-sm font-medium text-slate-900">
+                        {reservation.referenceDocumentType}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Referans Belge No</p>
+                      <span className="text-sm font-medium text-slate-900">
+                        {reservation.referenceDocumentNumber || '-'}
+                      </span>
+                    </div>
+                  </>
+                )}
+                {reservation.notes && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Notlar</p>
+                    <p className="text-sm text-slate-600">{reservation.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Statistic
-                  title="Toplam"
-                  value={reservation.quantity}
-                  valueStyle={{ fontSize: 18 }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Karşılanan"
-                  value={reservation.fulfilledQuantity}
-                  valueStyle={{ fontSize: 18, color: '#10b981' }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Kalan"
-                  value={reservation.remainingQuantity}
-                  valueStyle={{
-                    fontSize: 18,
-                    color: reservation.remainingQuantity > 0 ? '#f97316' : '#10b981',
-                  }}
-                />
-              </Col>
-            </Row>
-          </Card>
-
-          {/* Timeline */}
-          <Card title="Geçmiş">
-            <Timeline
-              items={[
-                {
-                  color: 'green',
-                  children: (
-                    <>
-                      <Text strong>Oluşturuldu</Text>
-                      <br />
-                      <Text type="secondary" className="text-xs">
-                        {dayjs(reservation.createdAt).format('DD/MM/YYYY HH:mm')}
-                      </Text>
-                    </>
-                  ),
-                },
-                ...(reservation.fulfilledQuantity > 0
-                  ? [
-                      {
-                        color: 'blue',
-                        children: (
-                          <>
-                            <Text strong>Kısmen Karşılandı</Text>
-                            <br />
-                            <Text type="secondary" className="text-xs">
-                              {reservation.fulfilledQuantity} adet karşılandı
-                            </Text>
-                          </>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(reservation.status === 'Fulfilled'
-                  ? [
-                      {
-                        color: 'green',
-                        children: (
-                          <>
-                            <Text strong>Tamamen Karşılandı</Text>
-                          </>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(reservation.status === 'Cancelled'
-                  ? [
-                      {
-                        color: 'red',
-                        children: (
-                          <>
-                            <Text strong>İptal Edildi</Text>
-                          </>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(reservation.status === 'Expired'
-                  ? [
-                      {
-                        color: 'red',
-                        children: (
-                          <>
-                            <Text strong>Süresi Doldu</Text>
-                            <br />
-                            <Text type="secondary" className="text-xs">
-                              {dayjs(reservation.expirationDate).format('DD/MM/YYYY')}
-                            </Text>
-                          </>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          </Card>
-        </Col>
-      </Row>
+          {/* Timeline Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Geçmiş
+              </p>
+              <Timeline
+                items={[
+                  {
+                    color: 'green',
+                    children: (
+                      <div>
+                        <p className="text-sm font-medium text-slate-900 m-0">Oluşturuldu</p>
+                        <p className="text-xs text-slate-500 m-0">
+                          {dayjs(reservation.createdAt).format('DD/MM/YYYY HH:mm')}
+                        </p>
+                      </div>
+                    ),
+                  },
+                  ...(reservation.fulfilledQuantity > 0
+                    ? [
+                        {
+                          color: 'blue' as const,
+                          children: (
+                            <div>
+                              <p className="text-sm font-medium text-slate-900 m-0">Kısmen Karşılandı</p>
+                              <p className="text-xs text-slate-500 m-0">
+                                {reservation.fulfilledQuantity} adet karşılandı
+                              </p>
+                            </div>
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(reservation.status === 'Fulfilled'
+                    ? [
+                        {
+                          color: 'green' as const,
+                          children: (
+                            <div>
+                              <p className="text-sm font-medium text-slate-900 m-0">Tamamen Karşılandı</p>
+                            </div>
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(reservation.status === 'Cancelled'
+                    ? [
+                        {
+                          color: 'red' as const,
+                          children: (
+                            <div>
+                              <p className="text-sm font-medium text-slate-900 m-0">İptal Edildi</p>
+                            </div>
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(reservation.status === 'Expired'
+                    ? [
+                        {
+                          color: 'red' as const,
+                          children: (
+                            <div>
+                              <p className="text-sm font-medium text-slate-900 m-0">Süresi Doldu</p>
+                              <p className="text-xs text-slate-500 m-0">
+                                {dayjs(reservation.expirationDate).format('DD/MM/YYYY')}
+                              </p>
+                            </div>
+                          ),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Fulfill Modal */}
       <Modal
-        title="Rezervasyonu Karşıla"
+        title={<span className="text-slate-900 font-semibold">Rezervasyonu Karşıla</span>}
         open={fulfillModalVisible}
         onOk={handleFulfill}
         onCancel={() => {
@@ -476,24 +549,25 @@ export default function StockReservationDetailPage() {
         confirmLoading={fulfillReservation.isPending}
         okText="Karşıla"
         cancelText="İptal"
+        okButtonProps={{ style: { background: '#1e293b', borderColor: '#1e293b' } }}
       >
         <div className="py-4">
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <div className="bg-slate-50 p-4 rounded-lg mb-4">
             <div className="flex justify-between mb-2">
-              <Text type="secondary">Toplam Miktar:</Text>
-              <Text strong>{reservation.quantity}</Text>
+              <span className="text-slate-500">Toplam Miktar:</span>
+              <span className="font-medium text-slate-900">{reservation.quantity}</span>
             </div>
             <div className="flex justify-between mb-2">
-              <Text type="secondary">Karşılanan:</Text>
-              <Text strong>{reservation.fulfilledQuantity}</Text>
+              <span className="text-slate-500">Karşılanan:</span>
+              <span className="font-medium text-slate-900">{reservation.fulfilledQuantity}</span>
             </div>
             <div className="flex justify-between">
-              <Text type="secondary">Kalan:</Text>
-              <Text strong className="text-orange-500">{reservation.remainingQuantity}</Text>
+              <span className="text-slate-500">Kalan:</span>
+              <span className="font-medium text-orange-600">{reservation.remainingQuantity}</span>
             </div>
           </div>
 
-          <Text className="block mb-2">Karşılanacak Miktar:</Text>
+          <p className="text-sm text-slate-600 mb-2">Karşılanacak Miktar:</p>
           <InputNumber
             value={fulfillQuantity}
             onChange={(val) => setFulfillQuantity(val || 0)}
@@ -507,7 +581,7 @@ export default function StockReservationDetailPage() {
 
       {/* Cancel Modal */}
       <Modal
-        title="Rezervasyonu İptal Et"
+        title={<span className="text-slate-900 font-semibold">Rezervasyonu İptal Et</span>}
         open={cancelModalVisible}
         onOk={handleCancel}
         onCancel={() => {
@@ -520,7 +594,7 @@ export default function StockReservationDetailPage() {
         cancelText="Vazgeç"
       >
         <div className="py-4">
-          <Text className="block mb-2">İptal Nedeni (opsiyonel):</Text>
+          <p className="text-sm text-slate-600 mb-2">İptal Nedeni (opsiyonel):</p>
           <Input.TextArea
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
@@ -532,7 +606,7 @@ export default function StockReservationDetailPage() {
 
       {/* Extend Modal */}
       <Modal
-        title="Rezervasyon Süresini Uzat"
+        title={<span className="text-slate-900 font-semibold">Rezervasyon Süresini Uzat</span>}
         open={extendModalVisible}
         onOk={handleExtend}
         onCancel={() => {
@@ -542,9 +616,10 @@ export default function StockReservationDetailPage() {
         confirmLoading={extendReservation.isPending}
         okText="Uzat"
         cancelText="İptal"
+        okButtonProps={{ style: { background: '#1e293b', borderColor: '#1e293b' } }}
       >
         <div className="py-4">
-          <Text className="block mb-2">Yeni Son Geçerlilik Tarihi:</Text>
+          <p className="text-sm text-slate-600 mb-2">Yeni Son Geçerlilik Tarihi:</p>
           <DatePicker
             value={extendDate}
             onChange={setExtendDate}

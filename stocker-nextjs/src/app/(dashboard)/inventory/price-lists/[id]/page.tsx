@@ -3,25 +3,18 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Card,
-  Descriptions,
   Button,
   Space,
   Tag,
-  Typography,
   Spin,
   Modal,
   Empty,
   Table,
-  Row,
-  Col,
-  Statistic,
-  Switch,
-  Divider,
   InputNumber,
   AutoComplete,
-  message,
   Form,
+  Switch,
+  Progress,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +26,9 @@ import {
   PercentageOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  UnorderedListOutlined,
+  TagOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import {
   usePriceList,
@@ -47,12 +43,42 @@ import type { PriceListItemDto, CreatePriceListItemDto } from '@/lib/api/service
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Text } = Typography;
-
 const currencySymbols: Record<string, string> = {
   TRY: '₺',
   USD: '$',
   EUR: '€',
+};
+
+type ValidityStatus = 'pending' | 'valid' | 'expired' | 'unknown';
+
+const validityConfig: Record<
+  ValidityStatus,
+  { label: string; bgColor: string; textColor: string; icon: React.ReactNode }
+> = {
+  pending: {
+    label: 'Beklemede',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    icon: <CalendarOutlined />,
+  },
+  valid: {
+    label: 'Geçerli',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    icon: <CheckCircleOutlined />,
+  },
+  expired: {
+    label: 'Süresi Doldu',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    icon: <CloseCircleOutlined />,
+  },
+  unknown: {
+    label: 'Bilinmiyor',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
+    icon: <CalendarOutlined />,
+  },
 };
 
 export default function PriceListDetailPage() {
@@ -151,20 +177,20 @@ export default function PriceListDetailPage() {
     });
   };
 
-  const getValidityStatus = () => {
-    if (!priceList) return { status: 'unknown', label: 'Bilinmiyor', color: 'default' };
+  const getValidityStatus = (): ValidityStatus => {
+    if (!priceList) return 'unknown';
 
     const now = dayjs();
     const validFrom = priceList.validFrom ? dayjs(priceList.validFrom) : null;
     const validTo = priceList.validTo ? dayjs(priceList.validTo) : null;
 
     if (validFrom && now.isBefore(validFrom)) {
-      return { status: 'pending', label: 'Beklemede', color: 'orange' };
+      return 'pending';
     }
     if (validTo && now.isAfter(validTo)) {
-      return { status: 'expired', label: 'Süresi Doldu', color: 'red' };
+      return 'expired';
     }
-    return { status: 'valid', label: 'Geçerli', color: 'green' };
+    return 'valid';
   };
 
   const itemColumns: ColumnsType<PriceListItemDto> = [
@@ -173,10 +199,8 @@ export default function PriceListDetailPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <div className="font-medium">{record.productName}</div>
-          <Text type="secondary" className="text-xs">
-            {record.productCode}
-          </Text>
+          <div className="font-medium text-slate-900">{record.productName}</div>
+          <span className="text-xs text-slate-500">{record.productCode}</span>
         </div>
       ),
     },
@@ -186,12 +210,12 @@ export default function PriceListDetailPage() {
       key: 'price',
       width: 150,
       render: (price, record) => (
-        <Text strong>
+        <span className="font-semibold text-slate-900">
           {price.toLocaleString('tr-TR', {
             style: 'currency',
             currency: record.currency || priceList?.currency || 'TRY',
           })}
-        </Text>
+        </span>
       ),
     },
     {
@@ -200,12 +224,12 @@ export default function PriceListDetailPage() {
       width: 150,
       render: (_, record) => {
         if (!record.minQuantity && !record.maxQuantity) {
-          return <Text type="secondary">-</Text>;
+          return <span className="text-slate-400">-</span>;
         }
         return (
-          <Text>
+          <span className="text-slate-700">
             {record.minQuantity || 1} - {record.maxQuantity || '∞'}
-          </Text>
+          </span>
         );
       },
     },
@@ -216,9 +240,9 @@ export default function PriceListDetailPage() {
       width: 100,
       render: (discount) =>
         discount ? (
-          <Tag color="green">%{discount}</Tag>
+          <Tag className="border-0 bg-emerald-50 text-emerald-700">%{discount}</Tag>
         ) : (
-          <Text type="secondary">-</Text>
+          <span className="text-slate-400">-</span>
         ),
     },
     {
@@ -227,7 +251,9 @@ export default function PriceListDetailPage() {
       key: 'isActive',
       width: 100,
       render: (isActive) => (
-        <Tag color={isActive ? 'success' : 'default'}>
+        <Tag
+          className={`border-0 ${isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+        >
           {isActive ? 'Aktif' : 'Pasif'}
         </Tag>
       ),
@@ -235,24 +261,23 @@ export default function PriceListDetailPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 80,
       align: 'center',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => openEditModal(record)}
-          />
-        </Space>
+        <Button
+          type="text"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => openEditModal(record)}
+          className="text-slate-500 hover:text-slate-700"
+        />
       ),
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -260,20 +285,20 @@ export default function PriceListDetailPage() {
 
   if (!priceList) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Empty description="Fiyat listesi bulunamadı" />
       </div>
     );
   }
 
   const validityStatus = getValidityStatus();
+  const validity = validityConfig[validityStatus];
   const currencySymbol = currencySymbols[priceList.currency] || priceList.currency;
   const totalItems = priceList.items?.length || 0;
   const activeItems = priceList.items?.filter((i) => i.isActive).length || 0;
   const avgPrice =
-    totalItems > 0
-      ? priceList.items.reduce((sum, i) => sum + i.price, 0) / totalItems
-      : 0;
+    totalItems > 0 ? priceList.items.reduce((sum, i) => sum + i.price, 0) / totalItems : 0;
+  const activePercent = totalItems > 0 ? Math.round((activeItems / totalItems) * 100) : 0;
 
   // Get products not already in the price list
   const availableProducts = products.filter(
@@ -281,41 +306,54 @@ export default function PriceListDetailPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
-              >
-                <DollarOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center">
+                <DollarOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{priceList.name}</h1>
-                  <Tag color={priceList.isActive ? 'success' : 'default'}>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{priceList.name}</h1>
+                  <Tag
+                    icon={priceList.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      priceList.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
                     {priceList.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
-                  <Tag color={validityStatus.color}>{validityStatus.label}</Tag>
-                  {priceList.isDefault && <Tag color="blue">Varsayılan</Tag>}
+                  <Tag icon={validity.icon} className={`border-0 ${validity.bgColor} ${validity.textColor}`}>
+                    {validity.label}
+                  </Tag>
+                  {priceList.isDefault && (
+                    <Tag className="border-0 bg-blue-50 text-blue-700">Varsayılan</Tag>
+                  )}
                 </div>
-                <p className="text-sm text-gray-500 m-0">Kod: {priceList.code}</p>
+                <p className="text-sm text-slate-500 m-0">
+                  Kod: {priceList.code} | Para Birimi: {currencySymbol} {priceList.currency}
+                </p>
               </div>
             </div>
           </div>
@@ -324,195 +362,322 @@ export default function PriceListDetailPage() {
               icon={priceList.isActive ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
               onClick={handleToggleActive}
               loading={activatePriceList.isPending || deactivatePriceList.isPending}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               {priceList.isActive ? 'Devre Dışı Bırak' : 'Aktifleştir'}
             </Button>
             <Button
               icon={<EditOutlined />}
               onClick={() => router.push(`/inventory/price-lists/${priceListId}/edit`)}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Düzenle
             </Button>
-            <Button danger icon={<DeleteOutlined />} onClick={() => setDeleteModalOpen(true)}>
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => setDeleteModalOpen(true)}
+            >
               Sil
             </Button>
           </Space>
         </div>
       </div>
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Para Birimi"
-              value={priceList.currency}
-              prefix={currencySymbol}
-              valueStyle={{ color: '#f59e0b' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Kalem"
-              value={totalItems}
-              suffix={`/ ${activeItems} aktif`}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Ortalama Fiyat"
-              value={avgPrice}
-              precision={2}
-              prefix={currencySymbol}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Öncelik"
-              value={priceList.priority}
-              valueStyle={{ color: '#6366f1' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
-        <div className="lg:col-span-2">
-          <Card title="Liste Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Kod">{priceList.code}</Descriptions.Item>
-              <Descriptions.Item label="Ad">{priceList.name}</Descriptions.Item>
-              <Descriptions.Item label="Para Birimi">
-                {currencySymbol} {priceList.currency}
-              </Descriptions.Item>
-              <Descriptions.Item label="Öncelik">{priceList.priority}</Descriptions.Item>
-              <Descriptions.Item label="Açıklama" span={2}>
-                {priceList.description || <Text type="secondary">Açıklama yok</Text>}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <DollarOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Para Birimi
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{currencySymbol}</span>
+                <span className="text-sm text-slate-400">{priceList.currency}</span>
+              </div>
+            </div>
+          </div>
 
-          {/* Items */}
-          <Card
-            title={`Fiyat Kalemleri (${totalItems})`}
-            extra={
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setAddItemModalOpen(true)}
-                size="small"
-                style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
-                disabled={availableProducts.length === 0}
-              >
-                Kalem Ekle
-              </Button>
-            }
-          >
-            <Table
-              columns={itemColumns}
-              dataSource={priceList.items || []}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} kalem`,
-              }}
-              size="small"
-              locale={{ emptyText: 'Henüz fiyat kalemi eklenmedi' }}
-            />
-          </Card>
-        </div>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <UnorderedListOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Toplam Kalem
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{totalItems}</span>
+                <span className="text-sm text-emerald-600">{activeItems} aktif</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Sidebar */}
-        <div>
-          {/* Validity */}
-          <Card title="Geçerlilik" className="mb-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <CalendarOutlined style={{ color: '#6b7280' }} />
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <TagOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Ort. Fiyat
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-emerald-600">
+                  {avgPrice.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="text-sm text-slate-400">{currencySymbol}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <SettingOutlined className="text-indigo-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Öncelik
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-indigo-600">{priceList.priority}</span>
+                <span className="text-sm text-slate-400">seviye</span>
+              </div>
+            </div>
+          </div>
+
+          {/* List Info Section */}
+          <div className="col-span-12 md:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Liste Bilgileri
+              </p>
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <Text type="secondary" className="block text-xs">
-                    Başlangıç Tarihi
-                  </Text>
-                  <Text>
+                  <p className="text-xs text-slate-400 mb-1">Kod</p>
+                  <p className="text-sm font-medium text-slate-900">{priceList.code}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Ad</p>
+                  <p className="text-sm font-medium text-slate-900">{priceList.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Para Birimi</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {currencySymbol} {priceList.currency}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Öncelik Seviyesi</p>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-sm font-medium">
+                    {priceList.priority}
+                  </span>
+                </div>
+                {priceList.description && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{priceList.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Active Items Ratio Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Aktif Kalem Oranı
+              </p>
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0">
+                  <Progress
+                    type="circle"
+                    percent={activePercent}
+                    status={activePercent === 100 ? 'success' : 'normal'}
+                    size={100}
+                    format={(percent) => (
+                      <span className="text-lg font-bold text-slate-900">{percent}%</span>
+                    )}
+                  />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Toplam</span>
+                    <span className="text-sm font-medium text-slate-900">{totalItems}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Aktif</span>
+                    <span className="text-sm font-medium text-emerald-600">{activeItems}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Pasif</span>
+                    <span className="text-sm font-medium text-slate-400">
+                      {totalItems - activeItems}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Validity Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Geçerlilik
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-xs text-slate-400">Başlangıç Tarihi</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
                     {priceList.validFrom
                       ? dayjs(priceList.validFrom).format('DD/MM/YYYY')
                       : 'Belirtilmedi'}
-                  </Text>
+                  </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <CalendarOutlined style={{ color: '#6b7280' }} />
-                <div>
-                  <Text type="secondary" className="block text-xs">
-                    Bitiş Tarihi
-                  </Text>
-                  <Text>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-xs text-slate-400">Bitiş Tarihi</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
                     {priceList.validTo
                       ? dayjs(priceList.validTo).format('DD/MM/YYYY')
                       : 'Belirtilmedi'}
-                  </Text>
+                  </p>
                 </div>
               </div>
-              <Divider className="my-2" />
-              <div className="text-center">
-                <Tag color={validityStatus.color} className="text-base px-4 py-1">
-                  {validityStatus.label}
+              <div className="text-center pt-2 border-t border-slate-100">
+                <Tag
+                  icon={validity.icon}
+                  className={`border-0 ${validity.bgColor} ${validity.textColor} text-base px-4 py-1`}
+                >
+                  {validity.label}
                 </Tag>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Discounts */}
-          <Card title="İndirimler" className="mb-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <PercentageOutlined style={{ color: '#10b981' }} />
-                  <Text>Genel İndirim</Text>
+          {/* Discounts & Settings Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                İndirimler & Ayarlar
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PercentageOutlined className="text-emerald-500" />
+                    <span className="text-xs text-slate-400">Genel İndirim</span>
+                  </div>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {priceList.globalDiscountPercentage
+                      ? `%${priceList.globalDiscountPercentage}`
+                      : '-'}
+                  </p>
                 </div>
-                <Text strong>
-                  {priceList.globalDiscountPercentage
-                    ? `%${priceList.globalDiscountPercentage}`
-                    : '-'}
-                </Text>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PercentageOutlined className="text-red-500" />
+                    <span className="text-xs text-slate-400">Kar Marjı</span>
+                  </div>
+                  <p className="text-xl font-bold text-red-600">
+                    {priceList.globalMarkupPercentage
+                      ? `%${priceList.globalMarkupPercentage}`
+                      : '-'}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <PercentageOutlined style={{ color: '#ef4444' }} />
-                  <Text>Genel Kar Marjı</Text>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-600">Varsayılan Liste</span>
+                  <Switch checked={priceList.isDefault} disabled size="small" />
                 </div>
-                <Text strong>
-                  {priceList.globalMarkupPercentage
-                    ? `%${priceList.globalMarkupPercentage}`
-                    : '-'}
-                </Text>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-600">Aktif</span>
+                  <Switch checked={priceList.isActive} disabled size="small" />
+                </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Settings */}
-          <Card title="Ayarlar">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Text>Aktif</Text>
-                <Switch checked={priceList.isActive} disabled />
+          {/* Price Items Table */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Fiyat Kalemleri ({totalItems})
+                </p>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setAddItemModalOpen(true)}
+                  size="small"
+                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                  disabled={availableProducts.length === 0}
+                >
+                  Kalem Ekle
+                </Button>
               </div>
-              <Divider className="my-2" />
-              <div className="flex justify-between items-center">
-                <Text>Varsayılan Liste</Text>
-                <Switch checked={priceList.isDefault} disabled />
+              <Table
+                columns={itemColumns}
+                dataSource={priceList.items || []}
+                rowKey="id"
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Toplam ${total} kalem`,
+                }}
+                size="small"
+                locale={{ emptyText: 'Henüz fiyat kalemi eklenmedi' }}
+                className="border border-slate-200 rounded-lg overflow-hidden"
+              />
+            </div>
+          </div>
+
+          {/* Timestamps Section */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="flex gap-8">
+                <div className="flex items-center gap-2">
+                  <CalendarOutlined className="text-slate-400" />
+                  <span className="text-sm text-slate-500">Oluşturulma:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(priceList.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
+                </div>
+                {priceList.updatedAt && (
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Güncelleme:</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(priceList.updatedAt).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
 
@@ -529,7 +694,7 @@ export default function PriceListDetailPage() {
         <p>
           <strong>{priceList.name}</strong> fiyat listesini silmek istediğinize emin misiniz?
         </p>
-        <p className="text-gray-500 text-sm">Bu işlem geri alınamaz.</p>
+        <p className="text-slate-500 text-sm">Bu işlem geri alınamaz.</p>
       </Modal>
 
       {/* Add/Edit Item Modal */}
@@ -546,6 +711,7 @@ export default function PriceListDetailPage() {
         cancelText="İptal"
         okButtonProps={{
           loading: addPriceListItem.isPending || updatePriceListItem.isPending,
+          style: { background: '#1e293b', borderColor: '#1e293b' },
         }}
       >
         <Form form={newItemForm} layout="vertical">
@@ -569,14 +735,10 @@ export default function PriceListDetailPage() {
           )}
 
           {editingItem && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <Text type="secondary" className="text-xs">
-                Seçilen Ürün
-              </Text>
-              <div className="font-medium">{editingItem.productName}</div>
-              <Text type="secondary" className="text-xs">
-                {editingItem.productCode}
-              </Text>
+            <div className="mb-4 p-3 bg-slate-50 rounded-lg">
+              <span className="text-xs text-slate-400">Seçilen Ürün</span>
+              <div className="font-medium text-slate-900">{editingItem.productName}</div>
+              <span className="text-xs text-slate-500">{editingItem.productCode}</span>
             </div>
           )}
 
@@ -593,18 +755,14 @@ export default function PriceListDetailPage() {
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="minQuantity" label="Min. Miktar">
-                <InputNumber style={{ width: '100%' }} min={1} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="maxQuantity" label="Max. Miktar">
-                <InputNumber style={{ width: '100%' }} min={1} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="minQuantity" label="Min. Miktar">
+              <InputNumber style={{ width: '100%' }} min={1} />
+            </Form.Item>
+            <Form.Item name="maxQuantity" label="Max. Miktar">
+              <InputNumber style={{ width: '100%' }} min={1} />
+            </Form.Item>
+          </div>
 
           <Form.Item name="discountPercentage" label="İndirim Oranı (%)">
             <InputNumber style={{ width: '100%' }} min={0} max={100} />

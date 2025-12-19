@@ -2,24 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Space,
-  Table,
-  Tag,
-  Typography,
-  Descriptions,
-  Spin,
-  Alert,
-  Timeline,
-  Row,
-  Col,
-  Statistic,
-  Modal,
-  Divider,
-  Progress,
-} from 'antd';
+import { Button, Space, Table, Tag, Spin, Empty, Timeline, Progress, Modal } from 'antd';
 import {
   ArrowLeftOutlined,
   SwapOutlined,
@@ -32,6 +15,9 @@ import {
   EditOutlined,
   PrinterOutlined,
   EnvironmentOutlined,
+  CalendarOutlined,
+  FileTextOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import {
   useStockTransfer,
@@ -45,18 +31,64 @@ import type { TransferStatus, StockTransferItemDto } from '@/lib/api/services/in
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const statusConfig: Record<TransferStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <EditOutlined /> },
-  Pending: { color: 'processing', label: 'Beklemede', icon: <ClockCircleOutlined /> },
-  Approved: { color: 'blue', label: 'Onaylı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  InTransit: { color: 'orange', label: 'Yolda', icon: <RocketOutlined /> },
-  Received: { color: 'cyan', label: 'Teslim Alındı', icon: <InboxOutlined /> },
-  PartiallyReceived: { color: 'gold', label: 'Kısmi Teslim', icon: <InboxOutlined /> },
-  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <CloseCircleOutlined /> },
+const statusConfig: Record<
+  TransferStatus,
+  { label: string; bgColor: string; textColor: string; icon: React.ReactNode }
+> = {
+  Draft: {
+    label: 'Taslak',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
+    icon: <EditOutlined />,
+  },
+  Pending: {
+    label: 'Beklemede',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
+    icon: <ClockCircleOutlined />,
+  },
+  Approved: {
+    label: 'Onaylı',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    icon: <CheckCircleOutlined />,
+  },
+  Rejected: {
+    label: 'Reddedildi',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    icon: <CloseCircleOutlined />,
+  },
+  InTransit: {
+    label: 'Yolda',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    icon: <RocketOutlined />,
+  },
+  Received: {
+    label: 'Teslim Alındı',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-700',
+    icon: <InboxOutlined />,
+  },
+  PartiallyReceived: {
+    label: 'Kısmi Teslim',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-700',
+    icon: <InboxOutlined />,
+  },
+  Completed: {
+    label: 'Tamamlandı',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    icon: <CheckCircleOutlined />,
+  },
+  Cancelled: {
+    label: 'İptal',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    icon: <CloseCircleOutlined />,
+  },
 };
 
 const transferTypeLabels: Record<string, string> = {
@@ -144,7 +176,7 @@ export default function StockTransferDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -152,13 +184,9 @@ export default function StockTransferDetailPage() {
 
   if (error || !transfer) {
     return (
-      <Alert
-        message="Hata"
-        description="Transfer bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={<Button onClick={() => router.back()}>Geri Dön</Button>}
-      />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Empty description="Transfer bilgileri yüklenemedi" />
+      </div>
     );
   }
 
@@ -170,7 +198,13 @@ export default function StockTransferDetailPage() {
     switch (transfer.status) {
       case 'Draft':
         buttons.push(
-          <Button key="submit" type="primary" icon={<SendOutlined />} onClick={handleSubmit}>
+          <Button
+            key="submit"
+            type="primary"
+            icon={<SendOutlined />}
+            onClick={handleSubmit}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Onaya Gönder
           </Button>,
           <Button key="cancel" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
@@ -180,7 +214,13 @@ export default function StockTransferDetailPage() {
         break;
       case 'Pending':
         buttons.push(
-          <Button key="approve" type="primary" icon={<CheckCircleOutlined />} onClick={handleApprove}>
+          <Button
+            key="approve"
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={handleApprove}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Onayla
           </Button>,
           <Button key="reject" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
@@ -190,14 +230,26 @@ export default function StockTransferDetailPage() {
         break;
       case 'Approved':
         buttons.push(
-          <Button key="ship" type="primary" icon={<RocketOutlined />} onClick={handleShip}>
+          <Button
+            key="ship"
+            type="primary"
+            icon={<RocketOutlined />}
+            onClick={handleShip}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Sevk Et
           </Button>
         );
         break;
       case 'InTransit':
         buttons.push(
-          <Button key="receive" type="primary" icon={<InboxOutlined />} onClick={handleReceive}>
+          <Button
+            key="receive"
+            type="primary"
+            icon={<InboxOutlined />}
+            onClick={handleReceive}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Teslim Al
           </Button>
         );
@@ -213,25 +265,27 @@ export default function StockTransferDetailPage() {
       dataIndex: 'productCode',
       key: 'productCode',
       width: 120,
+      render: (code) => <span className="font-medium text-slate-900">{code}</span>,
     },
     {
       title: 'Ürün Adı',
       dataIndex: 'productName',
       key: 'productName',
+      render: (name) => <span className="text-slate-700">{name}</span>,
     },
     {
       title: 'Kaynak Lokasyon',
       dataIndex: 'sourceLocationName',
       key: 'sourceLocationName',
       width: 140,
-      render: (name) => name || '-',
+      render: (name) => name || <span className="text-slate-400">-</span>,
     },
     {
       title: 'Hedef Lokasyon',
       dataIndex: 'destinationLocationName',
       key: 'destinationLocationName',
       width: 140,
-      render: (name) => name || '-',
+      render: (name) => name || <span className="text-slate-400">-</span>,
     },
     {
       title: 'Talep',
@@ -239,6 +293,7 @@ export default function StockTransferDetailPage() {
       key: 'requestedQuantity',
       width: 80,
       align: 'right',
+      render: (qty) => <span className="font-medium text-slate-900">{qty}</span>,
     },
     {
       title: 'Sevk',
@@ -247,7 +302,7 @@ export default function StockTransferDetailPage() {
       width: 80,
       align: 'right',
       render: (qty, record) => (
-        <span className={qty < record.requestedQuantity ? 'text-orange-500' : 'text-green-600'}>
+        <span className={qty < record.requestedQuantity ? 'text-amber-600' : 'text-emerald-600'}>
           {qty}
         </span>
       ),
@@ -259,7 +314,7 @@ export default function StockTransferDetailPage() {
       width: 80,
       align: 'right',
       render: (qty, record) => (
-        <span className={qty < record.shippedQuantity ? 'text-orange-500' : 'text-green-600'}>
+        <span className={qty < record.shippedQuantity ? 'text-amber-600' : 'text-emerald-600'}>
           {qty}
         </span>
       ),
@@ -270,38 +325,50 @@ export default function StockTransferDetailPage() {
       key: 'damagedQuantity',
       width: 80,
       align: 'right',
-      render: (qty) => (qty > 0 ? <span className="text-red-500">{qty}</span> : '-'),
+      render: (qty) =>
+        qty > 0 ? (
+          <span className="text-red-600 font-medium">{qty}</span>
+        ) : (
+          <span className="text-slate-400">-</span>
+        ),
     },
     {
       title: 'Lot No',
       dataIndex: 'lotNumber',
       key: 'lotNumber',
       width: 100,
-      render: (lot) => lot || '-',
+      render: (lot) => lot || <span className="text-slate-400">-</span>,
     },
     {
       title: 'Seri No',
       dataIndex: 'serialNumber',
       key: 'serialNumber',
       width: 100,
-      render: (serial) => serial || '-',
+      render: (serial) => serial || <span className="text-slate-400">-</span>,
     },
   ];
 
-  const completionPercent = transfer.totalRequestedQuantity > 0
-    ? Math.round((transfer.totalReceivedQuantity / transfer.totalRequestedQuantity) * 100)
-    : 0;
+  const completionPercent =
+    transfer.totalRequestedQuantity > 0
+      ? Math.round((transfer.totalReceivedQuantity / transfer.totalRequestedQuantity) * 100)
+      : 0;
+
+  const shippedPercent =
+    transfer.totalRequestedQuantity > 0
+      ? Math.round((transfer.totalShippedQuantity / transfer.totalRequestedQuantity) * 100)
+      : 0;
 
   const getTimelineItems = () => {
-    const items = [
+    const items: { children: React.ReactNode; color: string }[] = [
       {
         color: 'green',
         children: (
-          <>
-            <Text strong>Oluşturuldu</Text>
-            <br />
-            <Text type="secondary">{dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
-          </>
+          <div>
+            <p className="text-sm font-medium text-slate-900">Oluşturuldu</p>
+            <p className="text-xs text-slate-500">
+              {dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}
+            </p>
+          </div>
         ),
       },
     ];
@@ -310,11 +377,12 @@ export default function StockTransferDetailPage() {
       items.push({
         color: 'blue',
         children: (
-          <>
-            <Text strong>Sevk Edildi</Text>
-            <br />
-            <Text type="secondary">{dayjs(transfer.shippedDate).format('DD/MM/YYYY HH:mm')}</Text>
-          </>
+          <div>
+            <p className="text-sm font-medium text-slate-900">Sevk Edildi</p>
+            <p className="text-xs text-slate-500">
+              {dayjs(transfer.shippedDate).format('DD/MM/YYYY HH:mm')}
+            </p>
+          </div>
         ),
       });
     }
@@ -323,11 +391,12 @@ export default function StockTransferDetailPage() {
       items.push({
         color: 'cyan',
         children: (
-          <>
-            <Text strong>Teslim Alındı</Text>
-            <br />
-            <Text type="secondary">{dayjs(transfer.receivedDate).format('DD/MM/YYYY HH:mm')}</Text>
-          </>
+          <div>
+            <p className="text-sm font-medium text-slate-900">Teslim Alındı</p>
+            <p className="text-xs text-slate-500">
+              {dayjs(transfer.receivedDate).format('DD/MM/YYYY HH:mm')}
+            </p>
+          </div>
         ),
       });
     }
@@ -336,11 +405,12 @@ export default function StockTransferDetailPage() {
       items.push({
         color: 'green',
         children: (
-          <>
-            <Text strong>Tamamlandı</Text>
-            <br />
-            <Text type="secondary">{dayjs(transfer.completedDate).format('DD/MM/YYYY HH:mm')}</Text>
-          </>
+          <div>
+            <p className="text-sm font-medium text-slate-900">Tamamlandı</p>
+            <p className="text-xs text-slate-500">
+              {dayjs(transfer.completedDate).format('DD/MM/YYYY HH:mm')}
+            </p>
+          </div>
         ),
       });
     }
@@ -349,17 +419,15 @@ export default function StockTransferDetailPage() {
       items.push({
         color: 'red',
         children: (
-          <>
-            <Text strong>İptal Edildi</Text>
-            <br />
-            <Text type="secondary">{dayjs(transfer.cancelledDate).format('DD/MM/YYYY HH:mm')}</Text>
+          <div>
+            <p className="text-sm font-medium text-slate-900">İptal Edildi</p>
+            <p className="text-xs text-slate-500">
+              {dayjs(transfer.cancelledDate).format('DD/MM/YYYY HH:mm')}
+            </p>
             {transfer.cancellationReason && (
-              <>
-                <br />
-                <Text type="secondary">Neden: {transfer.cancellationReason}</Text>
-              </>
+              <p className="text-xs text-red-600 mt-1">Neden: {transfer.cancellationReason}</p>
             )}
-          </>
+          </div>
         ),
       });
     }
@@ -367,187 +435,396 @@ export default function StockTransferDetailPage() {
     return items;
   };
 
+  const getProgressColor = (percent: number) => {
+    if (percent >= 100) return 'text-emerald-600';
+    if (percent >= 50) return 'text-blue-600';
+    return 'text-slate-600';
+  };
+
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
-              >
-                <SwapOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+                <SwapOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{transfer.transferNumber}</h1>
-                  <Tag color={config.color} icon={config.icon}>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">
+                    {transfer.transferNumber}
+                  </h1>
+                  <Tag
+                    icon={config.icon}
+                    className={`border-0 ${config.bgColor} ${config.textColor}`}
+                  >
                     {config.label}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-500 m-0">
+                <p className="text-sm text-slate-500 m-0">
                   {transferTypeLabels[transfer.transferType] || transfer.transferType}
                 </p>
               </div>
             </div>
           </div>
           <Space>
-            <Button icon={<PrinterOutlined />}>Yazdır</Button>
+            <Button
+              icon={<PrinterOutlined />}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
+            >
+              Yazdır
+            </Button>
             {getActionButtons()}
           </Space>
         </div>
       </div>
 
-      <Row gutter={24}>
-        {/* Left Column */}
-        <Col xs={24} lg={16}>
-          {/* Transfer Info */}
-          <Card className="mb-6">
-            <Row gutter={24}>
-              <Col xs={24} md={12}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <EnvironmentOutlined className="text-blue-500 text-lg" />
-                  </div>
-                  <div>
-                    <Text type="secondary" className="text-xs">Kaynak Depo</Text>
-                    <div className="font-medium">{transfer.sourceWarehouseName}</div>
-                  </div>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <InboxOutlined className="text-white text-lg" />
                 </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                    <EnvironmentOutlined className="text-green-500 text-lg" />
-                  </div>
-                  <div>
-                    <Text type="secondary" className="text-xs">Hedef Depo</Text>
-                    <div className="font-medium">{transfer.destinationWarehouseName}</div>
-                  </div>
-                </div>
-              </Col>
-            </Row>
-
-            <Divider />
-
-            <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size="small">
-              <Descriptions.Item label="Transfer Tarihi">
-                {dayjs(transfer.transferDate).format('DD/MM/YYYY')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Transfer Türü">
-                {transferTypeLabels[transfer.transferType] || transfer.transferType}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tahmini Varış">
-                {transfer.expectedArrivalDate
-                  ? dayjs(transfer.expectedArrivalDate).format('DD/MM/YYYY')
-                  : '-'}
-              </Descriptions.Item>
-              {transfer.description && (
-                <Descriptions.Item label="Açıklama" span={3}>
-                  {transfer.description}
-                </Descriptions.Item>
-              )}
-              {transfer.notes && (
-                <Descriptions.Item label="Notlar" span={3}>
-                  {transfer.notes}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Items */}
-          <Card title={`Transfer Kalemleri (${transfer.items?.length || 0})`}>
-            <Table
-              columns={itemColumns}
-              dataSource={transfer.items || []}
-              rowKey="id"
-              pagination={false}
-              scroll={{ x: 1000 }}
-              summary={() => (
-                <Table.Summary fixed>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} colSpan={4}>
-                      <Text strong>Toplam</Text>
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} align="right">
-                      <Text strong>{transfer.totalRequestedQuantity}</Text>
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={2} align="right">
-                      <Text strong>{transfer.totalShippedQuantity}</Text>
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={3} align="right">
-                      <Text strong>{transfer.totalReceivedQuantity}</Text>
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={4} colSpan={3} />
-                  </Table.Summary.Row>
-                </Table.Summary>
-              )}
-            />
-          </Card>
-        </Col>
-
-        {/* Right Column */}
-        <Col xs={24} lg={8}>
-          {/* Stats */}
-          <Card className="mb-6">
-            <div className="text-center mb-4">
-              <Progress
-                type="circle"
-                percent={completionPercent}
-                size={120}
-                strokeColor={{ '0%': '#3b82f6', '100%': '#10b981' }}
-              />
-              <div className="mt-2">
-                <Text type="secondary">Tamamlanma Oranı</Text>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Talep Edilen
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">
+                  {transfer.totalRequestedQuantity}
+                </span>
+                <span className="text-sm text-slate-400">adet</span>
               </div>
             </div>
+          </div>
 
-            <Row gutter={16}>
-              <Col span={8}>
-                <Statistic
-                  title="Talep"
-                  value={transfer.totalRequestedQuantity}
-                  valueStyle={{ fontSize: 18 }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Sevk"
-                  value={transfer.totalShippedQuantity}
-                  valueStyle={{ fontSize: 18, color: '#3b82f6' }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Teslim"
-                  value={transfer.totalReceivedQuantity}
-                  valueStyle={{ fontSize: 18, color: '#10b981' }}
-                />
-              </Col>
-            </Row>
-          </Card>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <RocketOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Sevk Edilen
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-blue-600">
+                  {transfer.totalShippedQuantity}
+                </span>
+                <span className="text-sm text-slate-400">%{shippedPercent}</span>
+              </div>
+            </div>
+          </div>
 
-          {/* Timeline */}
-          <Card title="Transfer Geçmişi">
-            <Timeline items={getTimelineItems()} />
-          </Card>
-        </Col>
-      </Row>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Teslim Alınan
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-emerald-600">
+                  {transfer.totalReceivedQuantity}
+                </span>
+                <span className="text-sm text-slate-400">%{completionPercent}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                  <ExclamationCircleOutlined className="text-red-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fark</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-red-600">
+                  {transfer.totalRequestedQuantity - transfer.totalReceivedQuantity}
+                </span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Warehouse Info Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kaynak Depo
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-blue-600 text-xl" />
+                </div>
+                <div>
+                  <button
+                    onClick={() =>
+                      router.push(`/inventory/warehouses/${transfer.sourceWarehouseId}`)
+                    }
+                    className="text-lg font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    {transfer.sourceWarehouseName}
+                  </button>
+                  <p className="text-sm text-slate-500">Çıkış deposu</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Hedef Depo
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-emerald-600 text-xl" />
+                </div>
+                <div>
+                  <button
+                    onClick={() =>
+                      router.push(`/inventory/warehouses/${transfer.destinationWarehouseId}`)
+                    }
+                    className="text-lg font-semibold text-emerald-600 hover:text-emerald-700"
+                  >
+                    {transfer.destinationWarehouseName}
+                  </button>
+                  <p className="text-sm text-slate-500">Varış deposu</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transfer Details Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Transfer Bilgileri
+              </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Transfer Numarası</p>
+                  <p className="text-sm font-medium text-slate-900">{transfer.transferNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Transfer Türü</p>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-sm">
+                    {transferTypeLabels[transfer.transferType] || transfer.transferType}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Transfer Tarihi</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {dayjs(transfer.transferDate).format('DD/MM/YYYY')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Tahmini Varış</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {transfer.expectedArrivalDate
+                      ? dayjs(transfer.expectedArrivalDate).format('DD/MM/YYYY')
+                      : '-'}
+                  </p>
+                </div>
+                {transfer.description && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{transfer.description}</p>
+                  </div>
+                )}
+                {transfer.notes && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Notlar</p>
+                    <p className="text-sm text-slate-600">{transfer.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress & Timeline Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                İlerleme Durumu
+              </p>
+              <div className="flex items-center gap-6 mb-6">
+                <Progress
+                  type="circle"
+                  percent={completionPercent}
+                  size={100}
+                  strokeColor="#10b981"
+                  format={(percent) => (
+                    <span className={`text-lg font-bold ${getProgressColor(percent || 0)}`}>
+                      %{percent}
+                    </span>
+                  )}
+                />
+                <div className="flex-1 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Talep</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {transfer.totalRequestedQuantity} adet
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Sevk</span>
+                    <span className="text-sm font-medium text-blue-600">
+                      {transfer.totalShippedQuantity} adet
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Teslim</span>
+                    <span className="text-sm font-medium text-emerald-600">
+                      {transfer.totalReceivedQuantity} adet
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Transfer Geçmişi
+              </p>
+              <Timeline items={getTimelineItems()} />
+            </div>
+          </div>
+
+          {/* Timestamps Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(transfer.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
+                </div>
+                {transfer.updatedAt && (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Güncelleme</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(transfer.updatedAt).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Reference Document Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Referans Belge
+              </p>
+              {transfer.referenceNumber ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                    <FileTextOutlined className="text-purple-600 text-lg" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{transfer.referenceNumber}</p>
+                    <p className="text-xs text-slate-500">Referans No</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">Referans belge yok</p>
+              )}
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Transfer Kalemleri
+                </p>
+                <span className="text-sm text-slate-500">
+                  {transfer.items?.length || 0} kalem
+                </span>
+              </div>
+              <Table
+                columns={itemColumns}
+                dataSource={transfer.items || []}
+                rowKey="id"
+                pagination={false}
+                scroll={{ x: 1000 }}
+                className="stock-transfer-items-table"
+                summary={() => (
+                  <Table.Summary fixed>
+                    <Table.Summary.Row className="bg-slate-50">
+                      <Table.Summary.Cell index={0} colSpan={4}>
+                        <span className="font-semibold text-slate-900">Toplam</span>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="right">
+                        <span className="font-semibold text-slate-900">
+                          {transfer.totalRequestedQuantity}
+                        </span>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={2} align="right">
+                        <span className="font-semibold text-blue-600">
+                          {transfer.totalShippedQuantity}
+                        </span>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={3} align="right">
+                        <span className="font-semibold text-emerald-600">
+                          {transfer.totalReceivedQuantity}
+                        </span>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={4} colSpan={3} />
+                    </Table.Summary.Row>
+                  </Table.Summary>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

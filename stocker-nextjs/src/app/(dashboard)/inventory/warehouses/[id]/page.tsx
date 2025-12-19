@@ -1,24 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Descriptions,
-  Spin,
-  Alert,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Progress,
-  Tabs,
-  Empty,
-} from 'antd';
+import { Button, Space, Tag, Spin, Empty, Progress, Table } from 'antd';
 import {
   ArrowLeftOutlined,
   HomeOutlined,
@@ -30,17 +14,15 @@ import {
   AppstoreOutlined,
   DollarOutlined,
   StarFilled,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CalendarOutlined,
+  ExpandOutlined,
 } from '@ant-design/icons';
-import {
-  useWarehouse,
-  useLocations,
-} from '@/lib/api/hooks/useInventory';
+import { useWarehouse, useLocations } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 export default function WarehouseDetailPage() {
   const router = useRouter();
@@ -52,7 +34,7 @@ export default function WarehouseDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -60,13 +42,9 @@ export default function WarehouseDetailPage() {
 
   if (error || !warehouse) {
     return (
-      <Alert
-        message="Hata"
-        description="Depo bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={<Button onClick={() => router.back()}>Geri Dön</Button>}
-      />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Empty description="Depo bilgileri yüklenemedi" />
+      </div>
     );
   }
 
@@ -76,21 +54,22 @@ export default function WarehouseDetailPage() {
       dataIndex: 'code',
       key: 'code',
       width: 120,
-      render: (code) => <Text strong>{code}</Text>,
+      render: (code) => <span className="font-medium text-slate-900">{code}</span>,
     },
     {
       title: 'Ad',
       dataIndex: 'name',
       key: 'name',
+      render: (name) => <span className="text-slate-700">{name}</span>,
     },
     {
       title: 'Konum',
       key: 'position',
       width: 200,
       render: (_, record) => (
-        <Text type="secondary">
+        <span className="text-slate-500">
           {[record.aisle, record.shelf, record.bin].filter(Boolean).join(' / ') || '-'}
-        </Text>
+        </span>
       ),
     },
     {
@@ -98,7 +77,7 @@ export default function WarehouseDetailPage() {
       key: 'capacity',
       width: 180,
       render: (_, record) => {
-        if (!record.capacity) return <Text type="secondary">-</Text>;
+        if (!record.capacity) return <span className="text-slate-400">-</span>;
         const usedPercent = Math.round((record.usedCapacity / record.capacity) * 100);
         return (
           <div style={{ width: 120 }}>
@@ -116,10 +95,15 @@ export default function WarehouseDetailPage() {
       title: 'Durum',
       dataIndex: 'isActive',
       key: 'isActive',
-      width: 80,
+      width: 100,
       align: 'center',
       render: (active) => (
-        <Tag color={active ? 'success' : 'default'}>
+        <Tag
+          icon={active ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+          className={`border-0 ${
+            active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+          }`}
+        >
           {active ? 'Aktif' : 'Pasif'}
         </Tag>
       ),
@@ -134,6 +118,7 @@ export default function WarehouseDetailPage() {
           size="small"
           icon={<EditOutlined />}
           onClick={() => router.push(`/inventory/locations/${record.id}/edit`)}
+          className="text-slate-400 hover:text-slate-600"
         />
       ),
     },
@@ -154,43 +139,64 @@ export default function WarehouseDetailPage() {
   const usedCapacitySum = locations.reduce((sum, l) => sum + (l.usedCapacity || 0), 0);
   const capacityPercent = totalCapacity > 0 ? Math.round((usedCapacitySum / totalCapacity) * 100) : 0;
 
+  const getCapacityColor = (percent: number) => {
+    if (percent > 90) return 'text-red-600';
+    if (percent > 70) return 'text-amber-600';
+    return 'text-emerald-600';
+  };
+
+  const getProgressStatus = (percent: number) => {
+    if (percent > 90) return 'exception';
+    if (percent > 70) return 'normal';
+    return 'success';
+  };
+
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
-              >
-                <HomeOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+                <HomeOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{warehouse.name}</h1>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{warehouse.name}</h1>
                   {warehouse.isDefault && (
-                    <Tag color="gold" icon={<StarFilled />}>Varsayılan</Tag>
+                    <Tag icon={<StarFilled />} className="border-0 bg-amber-50 text-amber-700">
+                      Varsayılan
+                    </Tag>
                   )}
-                  <Tag color={warehouse.isActive ? 'success' : 'default'}>
+                  <Tag
+                    icon={warehouse.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      warehouse.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
                     {warehouse.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-500 m-0">Kod: {warehouse.code}</p>
+                <p className="text-sm text-slate-500 m-0">Kod: {warehouse.code}</p>
               </div>
             </div>
           </div>
@@ -198,6 +204,7 @@ export default function WarehouseDetailPage() {
             <Button
               icon={<EditOutlined />}
               onClick={() => router.push(`/inventory/warehouses/${id}/edit`)}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Düzenle
             </Button>
@@ -205,7 +212,7 @@ export default function WarehouseDetailPage() {
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
-              style={{ background: '#10b981', borderColor: '#10b981' }}
+              style={{ background: '#1e293b', borderColor: '#1e293b' }}
             >
               Lokasyon Ekle
             </Button>
@@ -213,156 +220,262 @@ export default function WarehouseDetailPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Toplam Lokasyon"
-              value={warehouse.locationCount}
-              prefix={<EnvironmentOutlined className="text-blue-500" />}
-              suffix={
-                <Text type="secondary" className="text-sm ml-2">
-                  ({activeLocations} aktif)
-                </Text>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Ürün Çeşidi"
-              value={warehouse.productCount}
-              prefix={<AppstoreOutlined className="text-purple-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Stok Değeri"
-              value={warehouse.totalStockValue}
-              prefix={<DollarOutlined className="text-green-500" />}
-              precision={2}
-              suffix="₺"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <div className="flex justify-between items-center">
-              <Statistic title="Kapasite Kullanımı" value={capacityPercent} suffix="%" />
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Lokasyonlar
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{warehouse.locationCount}</span>
+                <span className="text-sm text-slate-400">{activeLocations} aktif</span>
+              </div>
             </div>
-            <Progress
-              percent={capacityPercent}
-              showInfo={false}
-              size="small"
-              status={capacityPercent > 90 ? 'exception' : capacityPercent > 70 ? 'normal' : 'success'}
-            />
-          </Card>
-        </Col>
-      </Row>
+          </div>
 
-      <Row gutter={24}>
-        {/* Left Column - Info */}
-        <Col xs={24} lg={8}>
-          <Card title="Depo Bilgileri" className="mb-6">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Kod">{warehouse.code}</Descriptions.Item>
-              <Descriptions.Item label="Ad">{warehouse.name}</Descriptions.Item>
-              {warehouse.description && (
-                <Descriptions.Item label="Açıklama">{warehouse.description}</Descriptions.Item>
-              )}
-              {warehouse.manager && (
-                <Descriptions.Item label="Yönetici">
-                  <div className="flex items-center gap-2">
-                    <UserOutlined className="text-gray-400" />
-                    {warehouse.manager}
-                  </div>
-                </Descriptions.Item>
-              )}
-              {warehouse.phone && (
-                <Descriptions.Item label="Telefon">
-                  <div className="flex items-center gap-2">
-                    <PhoneOutlined className="text-gray-400" />
-                    {warehouse.phone}
-                  </div>
-                </Descriptions.Item>
-              )}
-              {warehouse.totalArea > 0 && (
-                <Descriptions.Item label="Alan">
-                  {warehouse.totalArea.toLocaleString()} m²
-                </Descriptions.Item>
-              )}
-              <Descriptions.Item label="Oluşturulma">
-                {dayjs(warehouse.createdAt).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <AppstoreOutlined className="text-purple-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Ürün Çeşidi
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{warehouse.productCount}</span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
 
-          {address && (
-            <Card title="Adres Bilgileri">
-              <div className="flex items-start gap-3">
-                <EnvironmentOutlined className="text-gray-400 mt-1" />
-                <div>
-                  {warehouse.street && <div>{warehouse.street}</div>}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <DollarOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Stok Değeri
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-slate-900">
+                  {(warehouse.totalStockValue || 0).toLocaleString('tr-TR', {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+                <span className="text-sm text-slate-400">₺</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <ExpandOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Kapasite
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-3xl font-bold ${getCapacityColor(capacityPercent)}`}>
+                  %{capacityPercent}
+                </span>
+                <Progress
+                  percent={capacityPercent}
+                  showInfo={false}
+                  size="small"
+                  status={getProgressStatus(capacityPercent)}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Warehouse Info Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Depo Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    {[warehouse.city, warehouse.state].filter(Boolean).join(', ')}
+                    <p className="text-xs text-slate-400 mb-1">Depo Kodu</p>
+                    <p className="text-sm font-medium text-slate-900">{warehouse.code}</p>
                   </div>
                   <div>
-                    {[warehouse.postalCode, warehouse.country].filter(Boolean).join(' ')}
+                    <p className="text-xs text-slate-400 mb-1">Depo Adı</p>
+                    <p className="text-sm font-medium text-slate-900">{warehouse.name}</p>
                   </div>
                 </div>
+                {warehouse.description && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{warehouse.description}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  {warehouse.manager && (
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Yönetici</p>
+                      <div className="flex items-center gap-1.5">
+                        <UserOutlined className="text-slate-400 text-xs" />
+                        <span className="text-sm font-medium text-slate-900">{warehouse.manager}</span>
+                      </div>
+                    </div>
+                  )}
+                  {warehouse.phone && (
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Telefon</p>
+                      <div className="flex items-center gap-1.5">
+                        <PhoneOutlined className="text-slate-400 text-xs" />
+                        <span className="text-sm font-medium text-slate-900">{warehouse.phone}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {warehouse.totalArea > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Toplam Alan</p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 text-sm font-medium">
+                      {warehouse.totalArea.toLocaleString()} m²
+                    </span>
+                  </div>
+                )}
               </div>
-            </Card>
-          )}
-        </Col>
+            </div>
+          </div>
 
-        {/* Right Column - Locations */}
-        <Col xs={24} lg={16}>
-          <Card
-            title={`Lokasyonlar (${locations.length})`}
-            extra={
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
-              >
-                Yeni Lokasyon
-              </Button>
-            }
-          >
-            {locations.length > 0 ? (
-              <Table
-                columns={locationColumns}
-                dataSource={locations}
-                rowKey="id"
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Toplam ${total} lokasyon`,
-                }}
-                size="small"
-              />
-            ) : (
-              <Empty
-                description="Bu depoda henüz lokasyon tanımlanmamış"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              >
+          {/* Address Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Adres Bilgileri
+              </p>
+              {address ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <EnvironmentOutlined className="text-slate-600 text-lg" />
+                  </div>
+                  <div className="space-y-1">
+                    {warehouse.street && (
+                      <p className="text-sm font-medium text-slate-900">{warehouse.street}</p>
+                    )}
+                    <p className="text-sm text-slate-600">
+                      {[warehouse.city, warehouse.state].filter(Boolean).join(', ')}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {[warehouse.postalCode, warehouse.country].filter(Boolean).join(' ')}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-24 text-slate-400">
+                  <span className="text-sm">Adres bilgisi girilmemiş</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Timestamps Section */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(warehouse.createdAt).format('DD/MM/YYYY')}
+                  </span>
+                </div>
+                {warehouse.updatedAt && (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Güncelleme</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(warehouse.updatedAt).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Locations Table Section */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Lokasyonlar ({locations.length})
+                </p>
                 <Button
                   type="primary"
+                  size="small"
                   icon={<PlusOutlined />}
                   onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
+                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
                 >
-                  Lokasyon Ekle
+                  Yeni Lokasyon
                 </Button>
-              </Empty>
-            )}
-          </Card>
-        </Col>
-      </Row>
+              </div>
+              {locations.length > 0 ? (
+                <Table
+                  columns={locationColumns}
+                  dataSource={locations}
+                  rowKey="id"
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Toplam ${total} lokasyon`,
+                  }}
+                  size="small"
+                  className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
+                  onRow={(record) => ({
+                    onClick: () => router.push(`/inventory/locations/${record.id}`),
+                    className: 'cursor-pointer hover:bg-slate-50',
+                  })}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                    <EnvironmentOutlined className="text-slate-400 text-2xl" />
+                  </div>
+                  <p className="text-slate-500 mb-4">Bu depoda henüz lokasyon tanımlanmamış</p>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
+                    style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                  >
+                    Lokasyon Ekle
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

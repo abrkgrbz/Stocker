@@ -3,24 +3,16 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Card,
-  Descriptions,
   Button,
   Space,
   Tag,
-  Typography,
   Spin,
   Modal,
   Empty,
-  Row,
-  Col,
-  Statistic,
   Alert,
   Input,
   Form,
   InputNumber,
-  Divider,
-  Timeline,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -31,6 +23,8 @@ import {
   WarningOutlined,
   CalendarOutlined,
   EnvironmentOutlined,
+  UserOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import {
   useSerialNumber,
@@ -43,21 +37,78 @@ import {
 import { SerialNumberStatus } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-const { Text } = Typography;
 const { TextArea } = Input;
 
-const statusConfig: Record<SerialNumberStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  [SerialNumberStatus.Available]: { color: 'blue', label: 'Kullanılabilir', icon: <CheckCircleOutlined /> },
-  [SerialNumberStatus.InStock]: { color: 'green', label: 'Stokta', icon: <CheckCircleOutlined /> },
-  [SerialNumberStatus.Reserved]: { color: 'orange', label: 'Rezerve', icon: <ShoppingCartOutlined /> },
-  [SerialNumberStatus.Sold]: { color: 'purple', label: 'Satıldı', icon: <ShoppingCartOutlined /> },
-  [SerialNumberStatus.Returned]: { color: 'cyan', label: 'İade Edildi', icon: <CheckCircleOutlined /> },
-  [SerialNumberStatus.Defective]: { color: 'red', label: 'Arızalı', icon: <WarningOutlined /> },
-  [SerialNumberStatus.InRepair]: { color: 'gold', label: 'Tamirde', icon: <WarningOutlined /> },
-  [SerialNumberStatus.Scrapped]: { color: 'default', label: 'Hurda', icon: <WarningOutlined /> },
-  [SerialNumberStatus.Lost]: { color: 'default', label: 'Kayıp', icon: <WarningOutlined /> },
-  [SerialNumberStatus.OnLoan]: { color: 'lime', label: 'Ödünç Verildi', icon: <CheckCircleOutlined /> },
-  [SerialNumberStatus.InTransit]: { color: 'geekblue', label: 'Transfer Halinde', icon: <WarningOutlined /> },
+const statusConfig: Record<
+  SerialNumberStatus,
+  { label: string; bgColor: string; textColor: string; icon: React.ReactNode }
+> = {
+  [SerialNumberStatus.Available]: {
+    label: 'Kullanılabilir',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
+    icon: <CheckCircleOutlined />,
+  },
+  [SerialNumberStatus.InStock]: {
+    label: 'Stokta',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    icon: <CheckCircleOutlined />,
+  },
+  [SerialNumberStatus.Reserved]: {
+    label: 'Rezerve',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    icon: <ShoppingCartOutlined />,
+  },
+  [SerialNumberStatus.Sold]: {
+    label: 'Satıldı',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-700',
+    icon: <ShoppingCartOutlined />,
+  },
+  [SerialNumberStatus.Returned]: {
+    label: 'İade Edildi',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-700',
+    icon: <CheckCircleOutlined />,
+  },
+  [SerialNumberStatus.Defective]: {
+    label: 'Arızalı',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    icon: <WarningOutlined />,
+  },
+  [SerialNumberStatus.InRepair]: {
+    label: 'Tamirde',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-700',
+    icon: <WarningOutlined />,
+  },
+  [SerialNumberStatus.Scrapped]: {
+    label: 'Hurda',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
+    icon: <WarningOutlined />,
+  },
+  [SerialNumberStatus.Lost]: {
+    label: 'Kayıp',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
+    icon: <WarningOutlined />,
+  },
+  [SerialNumberStatus.OnLoan]: {
+    label: 'Ödünç Verildi',
+    bgColor: 'bg-lime-50',
+    textColor: 'text-lime-700',
+    icon: <CheckCircleOutlined />,
+  },
+  [SerialNumberStatus.InTransit]: {
+    label: 'Transfer Halinde',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    icon: <WarningOutlined />,
+  },
 };
 
 export default function SerialNumberDetailPage() {
@@ -135,7 +186,10 @@ export default function SerialNumberDetailPage() {
 
   const handleScrap = async () => {
     try {
-      await scrapSerialNumber.mutateAsync({ id: serialId, request: { reason: 'Kullanılamaz durumda' } });
+      await scrapSerialNumber.mutateAsync({
+        id: serialId,
+        request: { reason: 'Kullanılamaz durumda' },
+      });
     } catch {
       // Error handled
     }
@@ -143,7 +197,7 @@ export default function SerialNumberDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -151,7 +205,7 @@ export default function SerialNumberDetailPage() {
 
   if (!serialNumber) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Empty description="Seri numarası bulunamadı" />
       </div>
     );
@@ -160,49 +214,61 @@ export default function SerialNumberDetailPage() {
   const statusInfo = statusConfig[serialNumber.status];
   const canReceive = serialNumber.status === SerialNumberStatus.Available;
   const canReserve = serialNumber.status === SerialNumberStatus.InStock;
-  const canSell = serialNumber.status === SerialNumberStatus.InStock || serialNumber.status === SerialNumberStatus.Reserved;
-  const canMarkDefective = [SerialNumberStatus.InStock, SerialNumberStatus.Reserved, SerialNumberStatus.Returned].includes(serialNumber.status as SerialNumberStatus);
+  const canSell =
+    serialNumber.status === SerialNumberStatus.InStock ||
+    serialNumber.status === SerialNumberStatus.Reserved;
+  const canMarkDefective = [
+    SerialNumberStatus.InStock,
+    SerialNumberStatus.Reserved,
+    SerialNumberStatus.Returned,
+  ].includes(serialNumber.status as SerialNumberStatus);
   const canScrap = serialNumber.status === SerialNumberStatus.Defective;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-              >
-                <BarcodeOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+                <BarcodeOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{serialNumber.serial}</h1>
-                  <Tag color={statusInfo.color} icon={statusInfo.icon}>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{serialNumber.serial}</h1>
+                  <Tag
+                    icon={statusInfo.icon}
+                    className={`border-0 ${statusInfo.bgColor} ${statusInfo.textColor}`}
+                  >
                     {statusInfo.label}
                   </Tag>
                   {serialNumber.isUnderWarranty && (
-                    <Tag color="green" icon={<SafetyCertificateOutlined />}>
+                    <Tag
+                      icon={<SafetyCertificateOutlined />}
+                      className="border-0 bg-emerald-50 text-emerald-700"
+                    >
                       Garantili
                     </Tag>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 m-0">
+                <p className="text-sm text-slate-500 m-0">
                   {serialNumber.productName} ({serialNumber.productCode})
                 </p>
               </div>
@@ -215,19 +281,25 @@ export default function SerialNumberDetailPage() {
                 icon={<CheckCircleOutlined />}
                 onClick={handleReceive}
                 loading={receiveSerialNumber.isPending}
+                style={{ background: '#1e293b', borderColor: '#1e293b' }}
               >
                 Teslim Al
               </Button>
             )}
             {canReserve && (
-              <Button onClick={() => setReserveModalOpen(true)}>Rezerve Et</Button>
+              <Button
+                onClick={() => setReserveModalOpen(true)}
+                className="border-slate-200 text-slate-700 hover:border-slate-300"
+              >
+                Rezerve Et
+              </Button>
             )}
             {canSell && (
               <Button
                 type="primary"
                 icon={<ShoppingCartOutlined />}
                 onClick={() => setSellModalOpen(true)}
-                style={{ background: '#10b981', borderColor: '#10b981' }}
+                style={{ background: '#1e293b', borderColor: '#1e293b' }}
               >
                 Sat
               </Button>
@@ -246,213 +318,319 @@ export default function SerialNumberDetailPage() {
         </div>
       </div>
 
-      {/* Warranty Alert */}
-      {serialNumber.isUnderWarranty && serialNumber.remainingWarrantyDays !== undefined && (
-        <Alert
-          message={`Garanti Süresi: ${serialNumber.remainingWarrantyDays} gün kaldı`}
-          description={
-            serialNumber.warrantyEndDate
-              ? `Garanti bitiş tarihi: ${dayjs(serialNumber.warrantyEndDate).format('DD/MM/YYYY')}`
-              : undefined
-          }
-          type={serialNumber.remainingWarrantyDays <= 30 ? 'warning' : 'info'}
-          showIcon
-          icon={<SafetyCertificateOutlined />}
-          className="mb-6"
-        />
-      )}
-
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Durum"
-              value={statusInfo.label}
-              valueStyle={{ color: statusInfo.color === 'green' ? '#10b981' : undefined }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Garanti"
-              value={serialNumber.isUnderWarranty ? 'Aktif' : 'Yok'}
-              valueStyle={{ color: serialNumber.isUnderWarranty ? '#10b981' : '#6b7280' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Kalan Garanti"
-              value={serialNumber.remainingWarrantyDays ?? '-'}
-              suffix={serialNumber.remainingWarrantyDays ? 'gün' : ''}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Depo"
-              value={serialNumber.warehouseName || '-'}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
-        <div className="lg:col-span-2">
-          <Card title="Seri Numarası Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Seri No">{serialNumber.serial}</Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={statusInfo.color} icon={statusInfo.icon}>
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Warranty Alert */}
+        {serialNumber.isUnderWarranty && serialNumber.remainingWarrantyDays !== undefined && (
+          <Alert
+            message={`Garanti Süresi: ${serialNumber.remainingWarrantyDays} gün kaldı`}
+            description={
+              serialNumber.warrantyEndDate
+                ? `Garanti bitiş tarihi: ${dayjs(serialNumber.warrantyEndDate).format('DD/MM/YYYY')}`
+                : undefined
+            }
+            type={serialNumber.remainingWarrantyDays <= 30 ? 'warning' : 'info'}
+            showIcon
+            icon={<SafetyCertificateOutlined />}
+            className="mb-6"
+          />
+        )}
+
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <BarcodeOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Durum</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <Tag
+                  icon={statusInfo.icon}
+                  className={`border-0 ${statusInfo.bgColor} ${statusInfo.textColor} text-base px-3 py-1`}
+                >
                   {statusInfo.label}
                 </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Ürün">{serialNumber.productName}</Descriptions.Item>
-              <Descriptions.Item label="Ürün Kodu">{serialNumber.productCode}</Descriptions.Item>
-              <Descriptions.Item label="Tedarikçi Seri No">
-                {serialNumber.supplierSerial || <Text type="secondary">-</Text>}
-              </Descriptions.Item>
-              <Descriptions.Item label="Parti/Lot No">
-                {serialNumber.batchNumber || <Text type="secondary">-</Text>}
-              </Descriptions.Item>
-              <Descriptions.Item label="Notlar" span={2}>
-                {serialNumber.notes || <Text type="secondary">-</Text>}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+              </div>
+            </div>
+          </div>
 
-          {/* Location */}
-          <Card title="Konum Bilgileri" className="mb-6">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <EnvironmentOutlined style={{ fontSize: 32, color: '#3b82f6' }} />
-              <div>
-                <Text type="secondary" className="block text-xs">
-                  Depo / Lokasyon
-                </Text>
-                <div className="font-medium">
-                  {serialNumber.warehouseName || 'Belirtilmedi'}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <SafetyCertificateOutlined className="text-emerald-600 text-lg" />
                 </div>
-                {serialNumber.locationName && (
-                  <Text type="secondary">{serialNumber.locationName}</Text>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Garanti</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span
+                  className={`text-2xl font-bold ${serialNumber.isUnderWarranty ? 'text-emerald-600' : 'text-slate-400'}`}
+                >
+                  {serialNumber.isUnderWarranty ? 'Aktif' : 'Yok'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <CalendarOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Kalan Garanti
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-blue-600">
+                  {serialNumber.remainingWarrantyDays ?? '-'}
+                </span>
+                {serialNumber.remainingWarrantyDays && (
+                  <span className="text-sm text-slate-400">gün</span>
                 )}
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Sales Info */}
-          {(serialNumber.customerId || serialNumber.salesOrderId) && (
-            <Card title="Satış Bilgileri">
-              <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-                <Descriptions.Item label="Müşteri ID">
-                  {serialNumber.customerId || <Text type="secondary">-</Text>}
-                </Descriptions.Item>
-                <Descriptions.Item label="Sipariş No">
-                  {serialNumber.salesOrderId || <Text type="secondary">-</Text>}
-                </Descriptions.Item>
-                <Descriptions.Item label="Satış Tarihi">
-                  {serialNumber.soldDate
-                    ? dayjs(serialNumber.soldDate).format('DD/MM/YYYY')
-                    : <Text type="secondary">-</Text>}
-                </Descriptions.Item>
-                <Descriptions.Item label="Satın Alma Siparişi">
-                  {serialNumber.purchaseOrderId || <Text type="secondary">-</Text>}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          )}
-        </div>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-purple-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Depo</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-lg font-bold text-slate-900 truncate">
+                  {serialNumber.warehouseName || '-'}
+                </span>
+              </div>
+            </div>
+          </div>
 
-        {/* Sidebar */}
-        <div>
-          {/* Dates */}
-          <Card title="Tarihler" className="mb-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <CalendarOutlined style={{ color: '#6b7280', fontSize: 18 }} />
+          {/* Serial Info Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Seri Numarası Bilgileri
+              </p>
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <Text type="secondary" className="block text-xs">
-                    Üretim Tarihi
-                  </Text>
-                  <Text>
+                  <p className="text-xs text-slate-400 mb-1">Seri No</p>
+                  <p className="text-sm font-medium text-slate-900">{serialNumber.serial}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Durum</p>
+                  <Tag
+                    icon={statusInfo.icon}
+                    className={`border-0 ${statusInfo.bgColor} ${statusInfo.textColor}`}
+                  >
+                    {statusInfo.label}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Ürün</p>
+                  <button
+                    onClick={() => router.push(`/inventory/products/${serialNumber.productId}`)}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    {serialNumber.productName}
+                  </button>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Ürün Kodu</p>
+                  <p className="text-sm font-medium text-slate-900">{serialNumber.productCode}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Tedarikçi Seri No</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {serialNumber.supplierSerial || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Parti/Lot No</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {serialNumber.batchNumber || '-'}
+                  </p>
+                </div>
+                {serialNumber.notes && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Notlar</p>
+                    <p className="text-sm text-slate-600">{serialNumber.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Location Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Konum Bilgileri
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-purple-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-slate-400 mb-1">Depo / Lokasyon</p>
+                  <p className="text-lg font-medium text-slate-900">
+                    {serialNumber.warehouseName || 'Belirtilmedi'}
+                  </p>
+                  {serialNumber.locationName && (
+                    <p className="text-sm text-slate-500">{serialNumber.locationName}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Warranty Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Garanti Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Garanti Durumu</span>
+                  <Tag
+                    className={`border-0 ${serialNumber.isUnderWarranty ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    {serialNumber.isUnderWarranty ? 'Aktif' : 'Yok'}
+                  </Tag>
+                </div>
+
+                {serialNumber.warrantyStartDate && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Başlangıç</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(serialNumber.warrantyStartDate).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                )}
+
+                {serialNumber.warrantyEndDate && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Bitiş</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(serialNumber.warrantyEndDate).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                )}
+
+                {serialNumber.remainingWarrantyDays !== undefined &&
+                  serialNumber.remainingWarrantyDays > 0 && (
+                    <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">Kalan Süre</p>
+                      <p className="text-3xl font-bold text-emerald-600">
+                        {serialNumber.remainingWarrantyDays} gün
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>
+
+          {/* Dates Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Tarihler
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Üretim Tarihi</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
                     {serialNumber.manufacturedDate
                       ? dayjs(serialNumber.manufacturedDate).format('DD/MM/YYYY')
                       : '-'}
-                  </Text>
+                  </span>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <CalendarOutlined style={{ color: '#6b7280', fontSize: 18 }} />
-                <div>
-                  <Text type="secondary" className="block text-xs">
-                    Teslim Tarihi
-                  </Text>
-                  <Text>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Teslim Tarihi</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
                     {serialNumber.receivedDate
                       ? dayjs(serialNumber.receivedDate).format('DD/MM/YYYY')
                       : '-'}
-                  </Text>
+                  </span>
                 </div>
-              </div>
-
-              <Divider className="my-2" />
-
-              <div className="flex items-center gap-3">
-                <CalendarOutlined style={{ color: '#6b7280', fontSize: 18 }} />
-                <div>
-                  <Text type="secondary" className="block text-xs">
-                    Oluşturulma Tarihi
-                  </Text>
-                  <Text>
+                <div className="h-px bg-slate-100 my-2" />
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
                     {dayjs(serialNumber.createdAt).format('DD/MM/YYYY HH:mm')}
-                  </Text>
+                  </span>
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Warranty */}
-          <Card title="Garanti Bilgileri" className="mb-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Text>Garanti Durumu</Text>
-                <Tag color={serialNumber.isUnderWarranty ? 'green' : 'default'}>
-                  {serialNumber.isUnderWarranty ? 'Aktif' : 'Yok'}
-                </Tag>
-              </div>
-
-              {serialNumber.warrantyStartDate && (
-                <div className="flex justify-between items-center">
-                  <Text type="secondary">Başlangıç</Text>
-                  <Text>{dayjs(serialNumber.warrantyStartDate).format('DD/MM/YYYY')}</Text>
-                </div>
-              )}
-
-              {serialNumber.warrantyEndDate && (
-                <div className="flex justify-between items-center">
-                  <Text type="secondary">Bitiş</Text>
-                  <Text>{dayjs(serialNumber.warrantyEndDate).format('DD/MM/YYYY')}</Text>
-                </div>
-              )}
-
-              {serialNumber.remainingWarrantyDays !== undefined && serialNumber.remainingWarrantyDays > 0 && (
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <Text type="secondary" className="block text-xs">
-                    Kalan Süre
-                  </Text>
-                  <div className="text-2xl font-bold text-green-600">
-                    {serialNumber.remainingWarrantyDays} gün
+          {/* Sales Info Section */}
+          {(serialNumber.customerId || serialNumber.salesOrderId) && (
+            <div className="col-span-12 md:col-span-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                  Satış Bilgileri
+                </p>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <UserOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Müşteri ID</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {serialNumber.customerId || '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <FileTextOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Sipariş No</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {serialNumber.salesOrderId || '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Satış Tarihi</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {serialNumber.soldDate
+                        ? dayjs(serialNumber.soldDate).format('DD/MM/YYYY')
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCartOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Satın Alma Siparişi</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {serialNumber.purchaseOrderId || '-'}
+                    </span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </Card>
+          )}
         </div>
       </div>
 

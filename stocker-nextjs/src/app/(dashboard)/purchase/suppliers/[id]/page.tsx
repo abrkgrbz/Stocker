@@ -3,20 +3,13 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Card,
   Button,
-  Typography,
-  Spin,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Tabs,
-  Table,
-  Empty,
-  Dropdown,
   Space,
+  Tag,
+  Spin,
+  Empty,
+  Table,
+  Dropdown,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -29,9 +22,15 @@ import {
   BankOutlined,
   MoreOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   StopOutlined,
   FileTextOutlined,
   ShoppingCartOutlined,
+  CalendarOutlined,
+  DollarOutlined,
+  PercentageOutlined,
+  StarOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import {
   useSupplier,
@@ -42,23 +41,42 @@ import {
 } from '@/lib/api/hooks/usePurchase';
 import type { SupplierStatus, SupplierType } from '@/lib/api/services/purchase.types';
 import type { MenuProps } from 'antd';
+import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
-const statusColors: Record<SupplierStatus, string> = {
-  Active: 'green',
-  Inactive: 'default',
-  Pending: 'orange',
-  Blacklisted: 'red',
-  OnHold: 'yellow',
-};
-
-const statusLabels: Record<SupplierStatus, string> = {
-  Active: 'Aktif',
-  Inactive: 'Pasif',
-  Pending: 'Onay Bekliyor',
-  Blacklisted: 'Bloklu',
-  OnHold: 'Beklemede',
+const statusConfig: Record<
+  SupplierStatus,
+  { label: string; bgColor: string; textColor: string; icon: React.ReactNode }
+> = {
+  Active: {
+    label: 'Aktif',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    icon: <CheckCircleOutlined />,
+  },
+  Inactive: {
+    label: 'Pasif',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-500',
+    icon: <CloseCircleOutlined />,
+  },
+  Pending: {
+    label: 'Onay Bekliyor',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    icon: <CalendarOutlined />,
+  },
+  Blacklisted: {
+    label: 'Bloklu',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
+    icon: <StopOutlined />,
+  },
+  OnHold: {
+    label: 'Beklemede',
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-700',
+    icon: <CalendarOutlined />,
+  },
 };
 
 const typeLabels: Record<SupplierType, string> = {
@@ -84,7 +102,7 @@ export default function SupplierDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -92,16 +110,17 @@ export default function SupplierDetailPage() {
 
   if (!supplier) {
     return (
-      <div className="p-8">
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
         <Empty description="Tedarikçi bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/suppliers')}>
-            Tedarikçilere Dön
-          </Button>
-        </div>
+        <Button onClick={() => router.push('/purchase/suppliers')} className="mt-4">
+          Tedarikçilere Dön
+        </Button>
       </div>
     );
   }
+
+  const status = statusConfig[supplier.status as SupplierStatus] || statusConfig.Inactive;
+  const primaryContact = supplier.contacts?.find((c) => c.isPrimary) || supplier.contacts?.[0];
 
   const actionMenuItems = [
     supplier.status !== 'Active' && {
@@ -131,54 +150,72 @@ export default function SupplierDetailPage() {
     },
   ].filter(Boolean) as MenuProps['items'];
 
+  const fullAddress = [
+    supplier.address,
+    supplier.district,
+    supplier.city,
+    supplier.postalCode,
+    supplier.country,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
-    <div className="min-h-screen bg-gray-50/30">
-      {/* Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
         className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+          background: 'rgba(248, 250, 252, 0.85)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => router.push('/purchase/suppliers')}
-              className="text-gray-500 hover:text-gray-700"
-            />
+              className="text-slate-600 hover:text-slate-900"
+            >
+              Geri
+            </Button>
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg"
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-              >
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
                 {supplier.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                  {supplier.name}
-                  <Tag color={statusColors[supplier.status as SupplierStatus]}>
-                    {statusLabels[supplier.status as SupplierStatus]}
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{supplier.name}</h1>
+                  <Tag
+                    icon={status.icon}
+                    className={`border-0 ${status.bgColor} ${status.textColor}`}
+                  >
+                    {status.label}
                   </Tag>
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
+                </div>
+                <p className="text-sm text-slate-500 m-0">
                   {supplier.code} • {typeLabels[supplier.type as SupplierType]}
                 </p>
               </div>
             </div>
           </div>
-
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button
+                icon={<MoreOutlined />}
+                className="border-slate-200 text-slate-700 hover:border-slate-300"
+              >
+                İşlemler
+              </Button>
             </Dropdown>
             <Button
               type="primary"
               icon={<EditOutlined />}
               onClick={() => router.push(`/purchase/suppliers/${supplierId}/edit`)}
+              style={{ background: '#1e293b', borderColor: '#1e293b' }}
             >
               Düzenle
             </Button>
@@ -187,266 +224,410 @@ export default function SupplierDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
-        {/* Statistics */}
-        <Row gutter={16} className="mb-6">
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Kredi Limiti"
-                value={supplier.creditLimit || 0}
-                precision={2}
-                suffix={supplier.currency}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Güncel Bakiye"
-                value={supplier.currentBalance || 0}
-                precision={2}
-                suffix={supplier.currency}
-                valueStyle={{ color: supplier.currentBalance > 0 ? '#faad14' : '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="İndirim Oranı"
-                value={supplier.discountRate || 0}
-                precision={1}
-                suffix="%"
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Puan"
-                value={supplier.rating || 0}
-                precision={1}
-                suffix="/5"
-                valueStyle={{ color: '#faad14' }}
-              />
-            </Card>
-          </Col>
-        </Row>
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <DollarOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Kredi Limiti
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-slate-900">
+                  {(supplier.creditLimit || 0).toLocaleString('tr-TR')}
+                </span>
+                <span className="text-sm text-slate-400">{supplier.currency || 'TRY'}</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Tabs */}
-        <Card>
-          <Tabs
-            defaultActiveKey="info"
-            items={[
-              {
-                key: 'info',
-                label: (
-                  <span>
-                    <ShopOutlined className="mr-1" />
-                    Genel Bilgiler
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    (supplier.currentBalance || 0) > 0 ? 'bg-amber-100' : 'bg-emerald-100'
+                  }`}
+                >
+                  <BankOutlined
+                    className={`text-lg ${
+                      (supplier.currentBalance || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
+                    }`}
+                  />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Güncel Bakiye
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span
+                  className={`text-2xl font-bold ${
+                    (supplier.currentBalance || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
+                  }`}
+                >
+                  {(supplier.currentBalance || 0).toLocaleString('tr-TR')}
+                </span>
+                <span className="text-sm text-slate-400">{supplier.currency || 'TRY'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <PercentageOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  İndirim Oranı
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-emerald-600">
+                  %{supplier.discountRate || 0}
+                </span>
+                <span className="text-sm text-slate-400">indirim</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <StarOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Puan</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-amber-600">
+                  {supplier.rating?.toFixed(1) || '-'}
+                </span>
+                <span className="text-sm text-slate-400">/5</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Company Info Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <div className="flex items-center gap-2 mb-4">
+                <ShopOutlined className="text-slate-400" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Firma Bilgileri
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Tedarikçi Adı</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Kod</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.code}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Tip</p>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-sm font-medium">
+                    {typeLabels[supplier.type as SupplierType]}
                   </span>
-                ),
-                children: (
-                  <Row gutter={24}>
-                    <Col xs={24} md={12}>
-                      <Descriptions
-                        title="Firma Bilgileri"
-                        column={1}
-                        size="small"
-                        bordered
-                      >
-                        <Descriptions.Item label="Tedarikçi Adı">
-                          {supplier.name}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Kod">
-                          {supplier.code}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Tip">
-                          {typeLabels[supplier.type as SupplierType]}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Vergi No">
-                          {supplier.taxNumber || '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Vergi Dairesi">
-                          {supplier.taxOffice || '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Puan">
-                          <span className="text-yellow-600 font-medium">
-                            {supplier.rating?.toFixed(1) || '-'}
-                          </span>
-                        </Descriptions.Item>
-                      </Descriptions>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Descriptions
-                        title="İletişim Bilgileri"
-                        column={1}
-                        size="small"
-                        bordered
-                      >
-                        <Descriptions.Item label={<><PhoneOutlined className="mr-1" /> Telefon</>}>
-                          {supplier.phone || '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<><MailOutlined className="mr-1" /> E-posta</>}>
-                          {supplier.email || '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Faks">
-                          {supplier.fax || '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={<><GlobalOutlined className="mr-1" /> Web Sitesi</>}>
-                          {supplier.website ? (
-                            <a href={supplier.website} target="_blank" rel="noopener noreferrer">
-                              {supplier.website}
-                            </a>
-                          ) : '-'}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="İlgili Kişi">
-                          {supplier.contacts?.find(c => c.isPrimary)?.name || supplier.contacts?.[0]?.name || '-'}
-                        </Descriptions.Item>
-                      </Descriptions>
-                    </Col>
-                  </Row>
-                ),
-              },
-              {
-                key: 'address',
-                label: (
-                  <span>
-                    <EnvironmentOutlined className="mr-1" />
-                    Adres
-                  </span>
-                ),
-                children: (
-                  <Descriptions column={2} size="small" bordered>
-                    <Descriptions.Item label="Adres" span={2}>
-                      {supplier.address || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="İlçe">
-                      {supplier.district || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Şehir">
-                      {supplier.city || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Posta Kodu">
-                      {supplier.postalCode || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Ülke">
-                      {supplier.country || '-'}
-                    </Descriptions.Item>
-                  </Descriptions>
-                ),
-              },
-              {
-                key: 'financial',
-                label: (
-                  <span>
-                    <BankOutlined className="mr-1" />
-                    Finansal Bilgiler
-                  </span>
-                ),
-                children: (
-                  <Descriptions column={2} size="small" bordered>
-                    <Descriptions.Item label="Ödeme Vadesi">
-                      {supplier.paymentTerms || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Para Birimi">
-                      {supplier.currency || 'TRY'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Kredi Limiti">
-                      {(supplier.creditLimit || 0).toLocaleString('tr-TR')} {supplier.currency}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="İndirim Oranı">
-                      %{supplier.discountRate || 0}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Banka" span={2}>
-                      {supplier.bankName || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Hesap No">
-                      {supplier.bankAccountNumber || '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="IBAN">
-                      {supplier.iban || '-'}
-                    </Descriptions.Item>
-                  </Descriptions>
-                ),
-              },
-              {
-                key: 'notes',
-                label: (
-                  <span>
-                    <FileTextOutlined className="mr-1" />
-                    Notlar
-                  </span>
-                ),
-                children: (
-                  <div className="space-y-6">
-                    <div>
-                      <Text strong className="block mb-2">Genel Notlar</Text>
-                      <Paragraph className="text-gray-600 whitespace-pre-wrap">
-                        {supplier.notes || 'Not bulunmuyor.'}
-                      </Paragraph>
-                    </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Durum</p>
+                  <Tag
+                    icon={status.icon}
+                    className={`border-0 ${status.bgColor} ${status.textColor}`}
+                  >
+                    {status.label}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Vergi No</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.taxNumber || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Vergi Dairesi</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.taxOffice || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Info Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <div className="flex items-center gap-2 mb-4">
+                <PhoneOutlined className="text-slate-400" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  İletişim Bilgileri
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <PhoneOutlined className="text-slate-500 text-sm" />
                   </div>
-                ),
-              },
-              {
-                key: 'orders',
-                label: (
-                  <span>
-                    <ShoppingCartOutlined className="mr-1" />
-                    Siparişler
-                  </span>
-                ),
-                children: (
                   <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <Text type="secondary">Son siparişler</Text>
-                      <Button
-                        type="link"
-                        onClick={() => router.push(`/purchase/orders?supplierId=${supplierId}`)}
-                      >
-                        Tüm Siparişleri Gör
-                      </Button>
-                    </div>
-                    <Empty description="Sipariş bulunamadı" />
+                    <p className="text-xs text-slate-400">Telefon</p>
+                    <p className="text-sm font-medium text-slate-900">{supplier.phone || '-'}</p>
                   </div>
-                ),
-              },
-              {
-                key: 'contacts',
-                label: 'İletişim Kişileri',
-                children: (
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <MailOutlined className="text-slate-500 text-sm" />
+                  </div>
                   <div>
-                    {supplier.contacts && supplier.contacts.length > 0 ? (
-                      <Table
-                        dataSource={supplier.contacts}
-                        rowKey="id"
-                        pagination={false}
-                        columns={[
-                          { title: 'Ad Soyad', dataIndex: 'name', key: 'name' },
-                          { title: 'Ünvan', dataIndex: 'title', key: 'title' },
-                          { title: 'E-posta', dataIndex: 'email', key: 'email' },
-                          { title: 'Telefon', dataIndex: 'phone', key: 'phone' },
-                          {
-                            title: 'Birincil',
-                            dataIndex: 'isPrimary',
-                            key: 'isPrimary',
-                            render: (isPrimary) => isPrimary ? <Tag color="blue">Birincil</Tag> : null,
-                          },
-                        ]}
-                      />
+                    <p className="text-xs text-slate-400">E-posta</p>
+                    <p className="text-sm font-medium text-slate-900">{supplier.email || '-'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <GlobalOutlined className="text-slate-500 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Web Sitesi</p>
+                    {supplier.website ? (
+                      <a
+                        href={supplier.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        {supplier.website}
+                      </a>
                     ) : (
-                      <Empty description="İletişim kişisi bulunmuyor" />
+                      <p className="text-sm text-slate-400">-</p>
                     )}
                   </div>
-                ),
-              },
-            ]}
-          />
-        </Card>
+                </div>
+                {supplier.fax && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <FileTextOutlined className="text-slate-500 text-sm" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Faks</p>
+                      <p className="text-sm font-medium text-slate-900">{supplier.fax}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Address Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <EnvironmentOutlined className="text-slate-400" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Adres</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <p className="text-xs text-slate-400 mb-1">Tam Adres</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.address || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">İlçe</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.district || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Şehir</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.city || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Posta Kodu</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.postalCode || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Ülke</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.country || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Info Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BankOutlined className="text-slate-400" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Finansal Bilgiler
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Ödeme Vadesi</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {supplier.paymentTerms || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Para Birimi</p>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-sm font-medium">
+                    {supplier.currency || 'TRY'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-slate-400 mb-1">Banka</p>
+                  <p className="text-sm font-medium text-slate-900">{supplier.bankName || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Hesap No</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {supplier.bankAccountNumber || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">IBAN</p>
+                  <p className="text-sm font-medium text-slate-900 text-xs">{supplier.iban || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes Section */}
+          {supplier.notes && (
+            <div className="col-span-12">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileTextOutlined className="text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Notlar
+                  </p>
+                </div>
+                <p className="text-sm text-slate-600 whitespace-pre-wrap">{supplier.notes}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Contacts Table */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <UserOutlined className="text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    İletişim Kişileri ({supplier.contacts?.length || 0})
+                  </p>
+                </div>
+              </div>
+              {supplier.contacts && supplier.contacts.length > 0 ? (
+                <Table
+                  dataSource={supplier.contacts}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                  className="border border-slate-200 rounded-lg overflow-hidden"
+                  columns={[
+                    {
+                      title: 'Ad Soyad',
+                      dataIndex: 'name',
+                      key: 'name',
+                      render: (name, record: { isPrimary?: boolean }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-900">{name}</span>
+                          {record.isPrimary && (
+                            <Tag className="border-0 bg-blue-50 text-blue-700">Birincil</Tag>
+                          )}
+                        </div>
+                      ),
+                    },
+                    {
+                      title: 'Ünvan',
+                      dataIndex: 'title',
+                      key: 'title',
+                      render: (title) => (
+                        <span className="text-slate-600">{title || '-'}</span>
+                      ),
+                    },
+                    {
+                      title: 'E-posta',
+                      dataIndex: 'email',
+                      key: 'email',
+                      render: (email) => (
+                        <span className="text-slate-600">{email || '-'}</span>
+                      ),
+                    },
+                    {
+                      title: 'Telefon',
+                      dataIndex: 'phone',
+                      key: 'phone',
+                      render: (phone) => (
+                        <span className="text-slate-600">{phone || '-'}</span>
+                      ),
+                    },
+                  ]}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <Empty description="İletişim kişisi bulunmuyor" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Orders Quick Action */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                    <ShoppingCartOutlined className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Siparişler</p>
+                    <p className="text-xs text-slate-500">Bu tedarikçiye ait tüm siparişleri görüntüle</p>
+                  </div>
+                </div>
+                <Button
+                  type="primary"
+                  onClick={() => router.push(`/purchase/orders?supplierId=${supplierId}`)}
+                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                >
+                  Siparişleri Gör
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Timestamps Section */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="flex gap-8">
+                {supplier.createdAt && (
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma:</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(supplier.createdAt).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                )}
+                {supplier.updatedAt && (
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Güncelleme:</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(supplier.updatedAt).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

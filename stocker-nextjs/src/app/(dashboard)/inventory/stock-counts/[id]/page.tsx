@@ -3,23 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Card,
   Button,
   Space,
   Table,
   Tag,
-  Typography,
-  Descriptions,
   Spin,
   Alert,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Progress,
   InputNumber,
   Input,
-  Divider,
+  Empty,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +27,9 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   MinusOutlined,
+  CalendarOutlined,
+  EnvironmentOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import {
   useStockCount,
@@ -46,27 +43,25 @@ import type { StockCountStatus, StockCountType, StockCountItemDto } from '@/lib/
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const statusConfig: Record<StockCountStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <EditOutlined /> },
-  InProgress: { color: 'processing', label: 'Devam Ediyor', icon: <PlayCircleOutlined /> },
-  Completed: { color: 'cyan', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Adjusted: { color: 'blue', label: 'Düzeltildi', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <CloseCircleOutlined /> },
+const statusConfig: Record<StockCountStatus, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
+  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <EditOutlined /> },
+  InProgress: { label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <PlayCircleOutlined /> },
+  Completed: { label: 'Tamamlandı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', icon: <CheckCircleOutlined /> },
+  Approved: { label: 'Onaylandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleOutlined /> },
+  Rejected: { label: 'Reddedildi', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <CloseCircleOutlined /> },
+  Adjusted: { label: 'Düzeltildi', bgColor: 'bg-purple-50', textColor: 'text-purple-700', icon: <CheckCircleOutlined /> },
+  Cancelled: { label: 'İptal', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <CloseCircleOutlined /> },
 };
 
-const countTypeLabels: Record<StockCountType, string> = {
-  Full: 'Tam Sayım',
-  Cycle: 'Periyodik Sayım',
-  Spot: 'Anlık Sayım',
-  Annual: 'Yıllık Sayım',
-  Category: 'Kategori Sayımı',
-  Location: 'Lokasyon Sayımı',
-  ABC: 'ABC Sayımı',
-  Perpetual: 'Sürekli Sayım',
+const countTypeConfig: Record<StockCountType, { label: string; bgColor: string; textColor: string }> = {
+  Full: { label: 'Tam Sayım', bgColor: 'bg-slate-100', textColor: 'text-slate-700' },
+  Cycle: { label: 'Periyodik Sayım', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  Spot: { label: 'Anlık Sayım', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
+  Annual: { label: 'Yıllık Sayım', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+  Category: { label: 'Kategori Sayımı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
+  Location: { label: 'Lokasyon Sayımı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700' },
+  ABC: { label: 'ABC Sayımı', bgColor: 'bg-indigo-50', textColor: 'text-indigo-700' },
+  Perpetual: { label: 'Sürekli Sayım', bgColor: 'bg-rose-50', textColor: 'text-rose-700' },
 };
 
 export default function StockCountDetailPage() {
@@ -151,7 +146,7 @@ export default function StockCountDetailPage() {
       setCountedQuantity(0);
       setCountNotes('');
       refetch();
-    } catch (error) {
+    } catch {
       // Error handled by hook
     }
   };
@@ -165,7 +160,7 @@ export default function StockCountDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -173,20 +168,29 @@ export default function StockCountDetailPage() {
 
   if (error || !stockCount) {
     return (
-      <Alert
-        message="Hata"
-        description="Sayım bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={<Button onClick={() => router.back()}>Geri Dön</Button>}
-      />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Alert
+          message="Hata"
+          description="Sayım bilgileri yüklenemedi"
+          type="error"
+          showIcon
+          action={<Button onClick={() => router.back()}>Geri Dön</Button>}
+        />
+      </div>
     );
   }
 
   const config = statusConfig[stockCount.status];
+  const typeConfig = countTypeConfig[stockCount.countType];
   const progressPercent = stockCount.totalItems > 0
     ? Math.round((stockCount.countedItems / stockCount.totalItems) * 100)
     : 0;
+
+  const getProgressColor = (percent: number) => {
+    if (percent === 100) return 'text-emerald-600';
+    if (percent > 50) return 'text-blue-600';
+    return 'text-amber-600';
+  };
 
   const getActionButtons = () => {
     const buttons: React.ReactNode[] = [];
@@ -194,7 +198,13 @@ export default function StockCountDetailPage() {
     switch (stockCount.status) {
       case 'Draft':
         buttons.push(
-          <Button key="start" type="primary" icon={<PlayCircleOutlined />} onClick={handleStart}>
+          <Button
+            key="start"
+            type="primary"
+            icon={<PlayCircleOutlined />}
+            onClick={handleStart}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Başlat
           </Button>,
           <Button key="cancel" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
@@ -210,6 +220,7 @@ export default function StockCountDetailPage() {
             icon={<CheckCircleOutlined />}
             onClick={handleComplete}
             disabled={stockCount.countedItems < stockCount.totalItems}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
             Tamamla
           </Button>,
@@ -220,7 +231,13 @@ export default function StockCountDetailPage() {
         break;
       case 'Completed':
         buttons.push(
-          <Button key="approve" type="primary" icon={<CheckCircleOutlined />} onClick={handleApprove}>
+          <Button
+            key="approve"
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={handleApprove}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
+          >
             Onayla
           </Button>
         );
@@ -264,9 +281,9 @@ export default function StockCountDetailPage() {
       align: 'right',
       render: (qty, record) =>
         record.isCounted ? (
-          <span className="font-medium">{qty}</span>
+          <span className="font-medium text-slate-900">{qty}</span>
         ) : (
-          <Text type="secondary">-</Text>
+          <span className="text-slate-400">-</span>
         ),
     },
     {
@@ -277,10 +294,10 @@ export default function StockCountDetailPage() {
       align: 'right',
       render: (diff, record) => {
         if (!record.isCounted) return '-';
-        if (diff === 0) return <span className="text-gray-400">0</span>;
+        if (diff === 0) return <span className="text-slate-400">0</span>;
         if (diff > 0)
           return (
-            <span className="text-green-600 flex items-center justify-end gap-1">
+            <span className="text-emerald-600 flex items-center justify-end gap-1">
               <ArrowUpOutlined /> +{diff}
             </span>
           );
@@ -298,12 +315,20 @@ export default function StockCountDetailPage() {
       align: 'center',
       render: (_, record) => {
         if (!record.isCounted) {
-          return <Tag>Sayılmadı</Tag>;
+          return <Tag className="border-0 bg-slate-100 text-slate-500">Sayılmadı</Tag>;
         }
         if (record.hasDifference) {
-          return <Tag color="warning" icon={<ExclamationCircleOutlined />}>Farklı</Tag>;
+          return (
+            <Tag icon={<ExclamationCircleOutlined />} className="border-0 bg-amber-50 text-amber-700">
+              Farklı
+            </Tag>
+          );
         }
-        return <Tag color="success" icon={<CheckCircleOutlined />}>Eşleşti</Tag>;
+        return (
+          <Tag icon={<CheckCircleOutlined />} className="border-0 bg-emerald-50 text-emerald-700">
+            Eşleşti
+          </Tag>
+        );
       },
     },
     {
@@ -311,7 +336,7 @@ export default function StockCountDetailPage() {
       key: 'tracking',
       width: 120,
       render: (_, record) => (
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-slate-500">
           {record.lotNumber && <div>Lot: {record.lotNumber}</div>}
           {record.serialNumber && <div>Seri: {record.serialNumber}</div>}
           {!record.lotNumber && !record.serialNumber && '-'}
@@ -328,6 +353,7 @@ export default function StockCountDetailPage() {
             type="primary"
             size="small"
             onClick={() => openCountModal(record)}
+            style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
             {record.isCounted ? 'Düzenle' : 'Say'}
           </Button>
@@ -336,209 +362,312 @@ export default function StockCountDetailPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' }}
-              >
-                <FileSearchOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-purple-600 flex items-center justify-center">
+                <FileSearchOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{stockCount.countNumber}</h1>
-                  <Tag color={config.color} icon={config.icon}>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{stockCount.countNumber}</h1>
+                  <Tag
+                    icon={config.icon}
+                    className={`border-0 ${config.bgColor} ${config.textColor}`}
+                  >
                     {config.label}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-500 m-0">{countTypeLabels[stockCount.countType]}</p>
+                <p className="text-sm text-slate-500 m-0">
+                  {typeConfig.label} | {stockCount.warehouseName}
+                </p>
               </div>
             </div>
           </div>
           <Space>
-            <Button icon={<PrinterOutlined />}>Yazdır</Button>
+            <Button
+              icon={<PrinterOutlined />}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
+            >
+              Yazdır
+            </Button>
             {getActionButtons()}
           </Space>
         </div>
       </div>
 
-      <Row gutter={24}>
-        {/* Left Column */}
-        <Col xs={24} lg={16}>
-          {/* Count Info */}
-          <Card className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2, md: 3 }} size="small">
-              <Descriptions.Item label="Sayım Tarihi">
-                {dayjs(stockCount.countDate).format('DD/MM/YYYY')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Depo">{stockCount.warehouseName}</Descriptions.Item>
-              <Descriptions.Item label="Lokasyon">
-                {stockCount.locationName || 'Tüm Depo'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Sayım Türü">
-                {countTypeLabels[stockCount.countType]}
-              </Descriptions.Item>
-              <Descriptions.Item label="Otomatik Düzeltme">
-                <Tag color={stockCount.autoAdjust ? 'green' : 'default'}>
-                  {stockCount.autoAdjust ? 'Evet' : 'Hayır'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Oluşturulma">
-                {dayjs(stockCount.createdAt).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              {stockCount.description && (
-                <Descriptions.Item label="Açıklama" span={3}>
-                  {stockCount.description}
-                </Descriptions.Item>
-              )}
-              {stockCount.notes && (
-                <Descriptions.Item label="Notlar" span={3}>
-                  {stockCount.notes}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Items */}
-          <Card title={`Sayım Kalemleri (${stockCount.items?.length || 0})`}>
-            <Table
-              columns={itemColumns}
-              dataSource={stockCount.items || []}
-              rowKey="id"
-              pagination={{ pageSize: 20 }}
-              scroll={{ x: 1000 }}
-              rowClassName={(record) =>
-                record.hasDifference ? 'bg-yellow-50' : record.isCounted ? 'bg-green-50' : ''
-              }
-            />
-          </Card>
-        </Col>
-
-        {/* Right Column */}
-        <Col xs={24} lg={8}>
-          {/* Progress */}
-          <Card className="mb-6">
-            <div className="text-center mb-4">
-              <Progress
-                type="circle"
-                percent={progressPercent}
-                size={120}
-                strokeColor={{ '0%': '#8b5cf6', '100%': '#6d28d9' }}
-                format={() => `${stockCount.countedItems}/${stockCount.totalItems}`}
-              />
-              <div className="mt-2">
-                <Text type="secondary">Sayım İlerlemesi</Text>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <FileSearchOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Toplam Kalem
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{stockCount.totalItems}</span>
+                <span className="text-sm text-slate-400">adet</span>
               </div>
             </div>
+          </div>
 
-            <Divider />
-
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Statistic
-                  title="Toplam Kalem"
-                  value={stockCount.totalItems}
-                  valueStyle={{ fontSize: 20 }}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Sayılan"
-                  value={stockCount.countedItems}
-                  valueStyle={{ fontSize: 20, color: '#8b5cf6' }}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Farklı"
-                  value={stockCount.itemsWithDifferenceCount}
-                  valueStyle={{
-                    fontSize: 20,
-                    color: stockCount.itemsWithDifferenceCount > 0 ? '#f59e0b' : '#10b981',
-                  }}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Net Fark"
-                  value={stockCount.totalDifference}
-                  valueStyle={{
-                    fontSize: 20,
-                    color:
-                      stockCount.totalDifference > 0
-                        ? '#10b981'
-                        : stockCount.totalDifference < 0
-                        ? '#ef4444'
-                        : '#6b7280',
-                  }}
-                  prefix={
-                    stockCount.totalDifference > 0 ? (
-                      <ArrowUpOutlined />
-                    ) : stockCount.totalDifference < 0 ? (
-                      <ArrowDownOutlined />
-                    ) : (
-                      <MinusOutlined />
-                    )
-                  }
-                />
-              </Col>
-            </Row>
-          </Card>
-
-          {/* Summary Card */}
-          <Card title="Özet">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <Text type="secondary">Sistem Toplam:</Text>
-                <Text strong>{stockCount.totalSystemQuantity}</Text>
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-purple-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Sayılan
+                </p>
               </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Sayılan Toplam:</Text>
-                <Text strong>{stockCount.totalCountedQuantity}</Text>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-purple-600">{stockCount.countedItems}</span>
+                <span className="text-sm text-slate-400">adet</span>
               </div>
-              <Divider className="my-2" />
-              <div className="flex justify-between">
-                <Text type="secondary">Net Fark:</Text>
-                <Text
-                  strong
-                  style={{
-                    color:
-                      stockCount.totalDifference > 0
-                        ? '#10b981'
-                        : stockCount.totalDifference < 0
-                        ? '#ef4444'
-                        : undefined,
-                  }}
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <ExclamationCircleOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Farklı
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span
+                  className={`text-3xl font-bold ${
+                    stockCount.itemsWithDifferenceCount > 0 ? 'text-amber-600' : 'text-emerald-600'
+                  }`}
+                >
+                  {stockCount.itemsWithDifferenceCount}
+                </span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  {stockCount.totalDifference > 0 ? (
+                    <ArrowUpOutlined className="text-emerald-600 text-lg" />
+                  ) : stockCount.totalDifference < 0 ? (
+                    <ArrowDownOutlined className="text-red-600 text-lg" />
+                  ) : (
+                    <MinusOutlined className="text-slate-600 text-lg" />
+                  )}
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Net Fark
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span
+                  className={`text-3xl font-bold ${
+                    stockCount.totalDifference > 0
+                      ? 'text-emerald-600'
+                      : stockCount.totalDifference < 0
+                      ? 'text-red-600'
+                      : 'text-slate-600'
+                  }`}
                 >
                   {stockCount.totalDifference > 0 ? '+' : ''}
                   {stockCount.totalDifference}
-                </Text>
+                </span>
               </div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+
+          {/* Progress Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Sayım İlerlemesi
+              </p>
+              <div className="flex items-center justify-center">
+                <Progress
+                  type="circle"
+                  percent={progressPercent}
+                  size={120}
+                  strokeColor="#8b5cf6"
+                  format={() => (
+                    <div className="text-center">
+                      <span className={`text-2xl font-bold ${getProgressColor(progressPercent)}`}>
+                        {stockCount.countedItems}
+                      </span>
+                      <span className="text-slate-400 text-lg">/{stockCount.totalItems}</span>
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="mt-4 text-center">
+                <span className="text-sm text-slate-500">
+                  {stockCount.totalItems - stockCount.countedItems} kalem sayılmayı bekliyor
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Count Info Section */}
+          <div className="col-span-12 md:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Sayım Bilgileri
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Sayım Tarihi</p>
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(stockCount.countDate).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Depo</p>
+                  <div className="flex items-center gap-2">
+                    <EnvironmentOutlined className="text-slate-400 text-xs" />
+                    <span className="text-sm font-medium text-slate-900">{stockCount.warehouseName}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Lokasyon</p>
+                  <span className="text-sm font-medium text-slate-900">
+                    {stockCount.locationName || 'Tüm Depo'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Sayım Türü</p>
+                  <Tag className={`border-0 ${typeConfig.bgColor} ${typeConfig.textColor}`}>
+                    {typeConfig.label}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Otomatik Düzeltme</p>
+                  <Tag
+                    className={`border-0 ${
+                      stockCount.autoAdjust
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {stockCount.autoAdjust ? 'Evet' : 'Hayır'}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Oluşturulma</p>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(stockCount.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
+                </div>
+                {stockCount.description && (
+                  <div className="col-span-2 md:col-span-3">
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{stockCount.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Özet
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-sm text-slate-500">Sistem Toplam</span>
+                  <span className="text-sm font-semibold text-slate-900">{stockCount.totalSystemQuantity}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-sm text-slate-500">Sayılan Toplam</span>
+                  <span className="text-sm font-semibold text-slate-900">{stockCount.totalCountedQuantity}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-slate-500">Net Fark</span>
+                  <span
+                    className={`text-sm font-semibold ${
+                      stockCount.totalDifference > 0
+                        ? 'text-emerald-600'
+                        : stockCount.totalDifference < 0
+                        ? 'text-red-600'
+                        : 'text-slate-900'
+                    }`}
+                  >
+                    {stockCount.totalDifference > 0 ? '+' : ''}
+                    {stockCount.totalDifference}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table Section */}
+          <div className="col-span-12 md:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Sayım Kalemleri ({stockCount.items?.length || 0})
+              </p>
+              <Table
+                columns={itemColumns}
+                dataSource={stockCount.items || []}
+                rowKey="id"
+                pagination={{ pageSize: 10 }}
+                scroll={{ x: 1000 }}
+                className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
+                rowClassName={(record) =>
+                  record.hasDifference
+                    ? 'bg-amber-50/50'
+                    : record.isCounted
+                    ? 'bg-emerald-50/30'
+                    : ''
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Count Modal */}
       <Modal
-        title={`Sayım: ${selectedItem?.productName}`}
+        title={
+          <span className="text-slate-900 font-semibold">Sayım: {selectedItem?.productName}</span>
+        }
         open={countModalVisible}
         onOk={handleRecordCount}
         onCancel={() => {
@@ -548,22 +677,23 @@ export default function StockCountDetailPage() {
         confirmLoading={recordCount.isPending}
         okText="Kaydet"
         cancelText="İptal"
+        okButtonProps={{ style: { background: '#1e293b', borderColor: '#1e293b' } }}
       >
         {selectedItem && (
           <div className="py-4 space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg">
               <div className="flex justify-between mb-2">
-                <Text type="secondary">Ürün Kodu:</Text>
-                <Text strong>{selectedItem.productCode}</Text>
+                <span className="text-slate-500">Ürün Kodu:</span>
+                <span className="font-medium text-slate-900">{selectedItem.productCode}</span>
               </div>
               <div className="flex justify-between">
-                <Text type="secondary">Sistem Stok:</Text>
-                <Text strong>{selectedItem.systemQuantity}</Text>
+                <span className="text-slate-500">Sistem Stok:</span>
+                <span className="font-medium text-slate-900">{selectedItem.systemQuantity}</span>
               </div>
             </div>
 
             <div>
-              <Text className="block mb-2">Sayılan Miktar:</Text>
+              <p className="text-sm text-slate-600 mb-2">Sayılan Miktar:</p>
               <InputNumber
                 value={countedQuantity}
                 onChange={(val) => setCountedQuantity(val || 0)}
@@ -574,7 +704,7 @@ export default function StockCountDetailPage() {
             </div>
 
             <div>
-              <Text className="block mb-2">Not (opsiyonel):</Text>
+              <p className="text-sm text-slate-600 mb-2">Not (opsiyonel):</p>
               <Input.TextArea
                 value={countNotes}
                 onChange={(e) => setCountNotes(e.target.value)}
@@ -584,13 +714,18 @@ export default function StockCountDetailPage() {
             </div>
 
             {countedQuantity !== selectedItem.systemQuantity && (
-              <Alert
-                message={`Fark: ${countedQuantity - selectedItem.systemQuantity > 0 ? '+' : ''}${
-                  countedQuantity - selectedItem.systemQuantity
+              <div
+                className={`p-3 rounded-lg ${
+                  countedQuantity > selectedItem.systemQuantity
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-amber-50 text-amber-700'
                 }`}
-                type={countedQuantity > selectedItem.systemQuantity ? 'success' : 'warning'}
-                showIcon
-              />
+              >
+                <span className="font-medium">
+                  Fark: {countedQuantity - selectedItem.systemQuantity > 0 ? '+' : ''}
+                  {countedQuantity - selectedItem.systemQuantity}
+                </span>
+              </div>
             )}
           </div>
         )}

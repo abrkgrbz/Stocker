@@ -1,26 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Card,
   Button,
   Space,
   Tag,
-  Typography,
-  Descriptions,
   Spin,
-  Alert,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Progress,
-  Modal,
-  InputNumber,
-  message,
-  Divider,
   Empty,
+  Table,
+  Modal,
+  message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -38,11 +28,9 @@ import {
 import {
   useProductBundle,
   useDeleteProductBundle,
-  useAddProductBundleItem,
   useRemoveProductBundleItem,
 } from '@/lib/api/hooks/useInventory';
 import type {
-  ProductBundleDto,
   ProductBundleItemDto,
   BundleType,
   BundlePricingType,
@@ -50,14 +38,12 @@ import type {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const bundleTypeConfig: Record<BundleType, { color: string; label: string }> = {
-  Fixed: { color: 'blue', label: 'Sabit' },
-  Configurable: { color: 'purple', label: 'Yapılandırılabilir' },
-  Kit: { color: 'cyan', label: 'Kit' },
-  Package: { color: 'green', label: 'Paket' },
-  Combo: { color: 'orange', label: 'Kombo' },
+const bundleTypeConfig: Record<BundleType, { label: string; bgColor: string; textColor: string }> = {
+  Fixed: { label: 'Sabit', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+  Configurable: { label: 'Yapılandırılabilir', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+  Kit: { label: 'Kit', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700' },
+  Package: { label: 'Paket', bgColor: 'bg-green-50', textColor: 'text-green-700' },
+  Combo: { label: 'Kombo', bgColor: 'bg-orange-50', textColor: 'text-orange-700' },
 };
 
 const pricingTypeConfig: Record<BundlePricingType, { label: string }> = {
@@ -107,7 +93,7 @@ export default function ProductBundleDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -115,13 +101,9 @@ export default function ProductBundleDetailPage() {
 
   if (error || !bundle) {
     return (
-      <Alert
-        message="Hata"
-        description="Paket bilgileri yüklenemedi"
-        type="error"
-        showIcon
-        action={<Button onClick={() => router.back()}>Geri Dön</Button>}
-      />
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+        <Empty description="Paket bilgileri yüklenemedi" />
+      </div>
     );
   }
 
@@ -131,8 +113,8 @@ export default function ProductBundleDetailPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <div className="font-medium">{record.productName}</div>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
+          <div className="font-medium text-slate-900">{record.productName}</div>
+          <span className="text-xs text-slate-500">{record.productCode}</span>
         </div>
       ),
     },
@@ -144,11 +126,11 @@ export default function ProductBundleDetailPage() {
       align: 'center',
       render: (quantity, record) => (
         <div>
-          <div className="font-medium">{quantity}</div>
+          <div className="font-medium text-slate-900">{quantity}</div>
           {(record.minQuantity || record.maxQuantity) && (
-            <Text type="secondary" className="text-xs">
+            <span className="text-xs text-slate-500">
               ({record.minQuantity || 1}-{record.maxQuantity || '∞'})
-            </Text>
+            </span>
           )}
         </div>
       ),
@@ -160,13 +142,13 @@ export default function ProductBundleDetailPage() {
       align: 'right',
       render: (_, record) => (
         <div>
-          <div className="font-medium">
+          <div className="font-medium text-slate-900">
             {(record.overridePrice || record.productPrice || 0).toLocaleString('tr-TR', {
               minimumFractionDigits: 2,
             })} ₺
           </div>
           {record.discountPercentage && record.discountPercentage > 0 && (
-            <Tag color="red" className="text-xs">%{record.discountPercentage}</Tag>
+            <Tag className="border-0 bg-red-50 text-red-700 text-xs">%{record.discountPercentage}</Tag>
           )}
         </div>
       ),
@@ -181,7 +163,7 @@ export default function ProductBundleDetailPage() {
         const discount = record.discountPercentage || 0;
         const total = price * record.quantity * (1 - discount / 100);
         return (
-          <div className="font-medium text-orange-600">
+          <div className="font-medium text-amber-600">
             {total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
           </div>
         );
@@ -195,9 +177,9 @@ export default function ProductBundleDetailPage() {
       align: 'center',
       render: (isRequired) =>
         isRequired ? (
-          <CheckCircleOutlined style={{ color: '#10b981' }} />
+          <CheckCircleOutlined className="text-emerald-500" />
         ) : (
-          <CloseCircleOutlined style={{ color: '#9ca3af' }} />
+          <CloseCircleOutlined className="text-slate-300" />
         ),
     },
     {
@@ -208,9 +190,9 @@ export default function ProductBundleDetailPage() {
       align: 'center',
       render: (isDefault) =>
         isDefault ? (
-          <CheckCircleOutlined style={{ color: '#10b981' }} />
+          <CheckCircleOutlined className="text-emerald-500" />
         ) : (
-          <CloseCircleOutlined style={{ color: '#9ca3af' }} />
+          <CloseCircleOutlined className="text-slate-300" />
         ),
     },
     {
@@ -247,48 +229,52 @@ export default function ProductBundleDetailPage() {
   const savings = itemsTotal - (bundle.calculatedPrice || 0);
   const savingsPercent = itemsTotal > 0 ? (savings / itemsTotal) * 100 : 0;
 
+  const bundleTypeStyle = bundleTypeConfig[bundle.bundleType] || bundleTypeConfig.Fixed;
+
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
-              >
-                <GiftOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+                <GiftOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{bundle.name}</h1>
-                  <Tag color={bundleTypeConfig[bundle.bundleType]?.color}>
-                    {bundleTypeConfig[bundle.bundleType]?.label}
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{bundle.name}</h1>
+                  <Tag className={`border-0 ${bundleTypeStyle.bgColor} ${bundleTypeStyle.textColor}`}>
+                    {bundleTypeStyle.label}
                   </Tag>
-                  <Tag color={bundle.isActive ? 'success' : 'default'}>
+                  <Tag
+                    icon={bundle.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      bundle.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
                     {bundle.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
-                  {bundle.isValid ? (
-                    <Tag color="green" icon={<CheckCircleOutlined />}>Geçerli</Tag>
-                  ) : (
-                    <Tag color="red" icon={<CloseCircleOutlined />}>Geçersiz</Tag>
-                  )}
                 </div>
-                <p className="text-sm text-gray-500 m-0">Kod: {bundle.code}</p>
+                <p className="text-sm text-slate-500 m-0">Kod: {bundle.code}</p>
               </div>
             </div>
           </div>
@@ -296,6 +282,7 @@ export default function ProductBundleDetailPage() {
             <Button
               icon={<EditOutlined />}
               onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Düzenle
             </Button>
@@ -306,204 +293,291 @@ export default function ProductBundleDetailPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Paket Fiyatı"
-              value={bundle.calculatedPrice || 0}
-              precision={2}
-              suffix="₺"
-              prefix={<DollarOutlined className="text-orange-500" />}
-              valueStyle={{ color: '#f59e0b' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Ürün Sayısı"
-              value={bundle.items?.length || 0}
-              prefix={<AppstoreOutlined className="text-purple-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title="Tasarruf"
-              value={savings}
-              precision={2}
-              suffix="₺"
-              prefix={<ShoppingCartOutlined className="text-green-500" />}
-              valueStyle={{ color: '#10b981' }}
-            />
-            {savingsPercent > 0 && (
-              <Tag color="green" className="mt-2">%{savingsPercent.toFixed(1)} indirim</Tag>
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <div className="flex items-center justify-between">
-              <Statistic
-                title="Geçerlilik"
-                value={validityStatus === 'active' ? 'Aktif' : validityStatus === 'pending' ? 'Bekliyor' : 'Süresi Doldu'}
-                prefix={<CalendarOutlined className="text-blue-500" />}
-              />
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <DollarOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Paket Fiyatı
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-amber-600">
+                  {(bundle.calculatedPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-sm text-slate-400">₺</span>
+              </div>
             </div>
-            <Tag
-              color={validityStatus === 'active' ? 'green' : validityStatus === 'pending' ? 'orange' : 'red'}
-              className="mt-2"
-            >
-              {validityStatus === 'active' ? 'Kullanılabilir' : validityStatus === 'pending' ? 'Henüz Başlamadı' : 'Süresi Dolmuş'}
-            </Tag>
-          </Card>
-        </Col>
-      </Row>
+          </div>
 
-      <Row gutter={24}>
-        {/* Left Column - Info */}
-        <Col xs={24} lg={8}>
-          <Card title="Paket Bilgileri" className="mb-6">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Kod">{bundle.code}</Descriptions.Item>
-              <Descriptions.Item label="Ad">{bundle.name}</Descriptions.Item>
-              {bundle.description && (
-                <Descriptions.Item label="Açıklama">{bundle.description}</Descriptions.Item>
-              )}
-              <Descriptions.Item label="Tip">
-                <Tag color={bundleTypeConfig[bundle.bundleType]?.color}>
-                  {bundleTypeConfig[bundle.bundleType]?.label}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <AppstoreOutlined className="text-purple-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Ürün Sayısı
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{bundle.items?.length || 0}</span>
+                <span className="text-sm text-slate-400">adet</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <ShoppingCartOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Tasarruf
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-emerald-600">
+                  {savings.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-sm text-slate-400">₺</span>
+              </div>
+              {savingsPercent > 0 && (
+                <Tag className="border-0 bg-emerald-50 text-emerald-700 mt-2">
+                  %{savingsPercent.toFixed(1)} indirim
                 </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Fiyatlandırma">
-                {pricingTypeConfig[bundle.pricingType]?.label}
-              </Descriptions.Item>
-              {bundle.fixedPrice && (
-                <Descriptions.Item label="Sabit Fiyat">
-                  {bundle.fixedPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                </Descriptions.Item>
               )}
-              {bundle.discountPercentage && bundle.discountPercentage > 0 && (
-                <Descriptions.Item label="İndirim Oranı">
-                  %{bundle.discountPercentage}
-                </Descriptions.Item>
-              )}
-              {bundle.discountAmount && bundle.discountAmount > 0 && (
-                <Descriptions.Item label="İndirim Tutarı">
-                  {bundle.discountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
+            </div>
+          </div>
 
-          <Card title="Seçenekler" className="mb-6">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Tüm Ürünler Zorunlu">
-                {bundle.requireAllItems ? (
-                  <Tag color="green">Evet</Tag>
-                ) : (
-                  <Tag color="default">Hayır</Tag>
-                )}
-              </Descriptions.Item>
-              {bundle.minSelectableItems && (
-                <Descriptions.Item label="Min Seçilebilir">
-                  {bundle.minSelectableItems}
-                </Descriptions.Item>
-              )}
-              {bundle.maxSelectableItems && (
-                <Descriptions.Item label="Max Seçilebilir">
-                  {bundle.maxSelectableItems}
-                </Descriptions.Item>
-              )}
-              <Descriptions.Item label="Görüntüleme Sırası">
-                {bundle.displayOrder}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-
-          <Card title="Geçerlilik Tarihleri">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Başlangıç">
-                {bundle.validFrom ? dayjs(bundle.validFrom).format('DD/MM/YYYY') : 'Belirsiz'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Bitiş">
-                {bundle.validTo ? dayjs(bundle.validTo).format('DD/MM/YYYY') : 'Belirsiz'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Oluşturulma">
-                {dayjs(bundle.createdAt).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              {bundle.updatedAt && (
-                <Descriptions.Item label="Güncellenme">
-                  {dayjs(bundle.updatedAt).format('DD/MM/YYYY HH:mm')}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
-
-        {/* Right Column - Items */}
-        <Col xs={24} lg={16}>
-          <Card
-            title={`Paket Ürünleri (${bundle.items?.length || 0})`}
-            extra={
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <CalendarOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Geçerlilik
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-lg font-bold text-slate-900">
+                  {validityStatus === 'active' ? 'Aktif' : validityStatus === 'pending' ? 'Bekliyor' : 'Süresi Doldu'}
+                </span>
+              </div>
+              <Tag
+                className={`border-0 mt-2 ${
+                  validityStatus === 'active'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : validityStatus === 'pending'
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'bg-red-50 text-red-700'
+                }`}
               >
-                Ürün Ekle
-              </Button>
-            }
-          >
-            {bundle.items && bundle.items.length > 0 ? (
-              <>
-                <Table
-                  columns={itemColumns}
-                  dataSource={bundle.items}
-                  rowKey="id"
-                  pagination={false}
-                  size="small"
-                />
-                <Divider />
-                <div className="flex justify-between items-center">
+                {validityStatus === 'active' ? 'Kullanılabilir' : validityStatus === 'pending' ? 'Henüz Başlamadı' : 'Süresi Dolmuş'}
+              </Tag>
+            </div>
+          </div>
+
+          {/* Bundle Info Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Paket Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Text type="secondary">Ürün Toplamı:</Text>
-                    <div className="text-lg">
-                      {itemsTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </div>
+                    <p className="text-xs text-slate-400 mb-1">Paket Kodu</p>
+                    <p className="text-sm font-medium text-slate-900">{bundle.code}</p>
                   </div>
-                  <div className="text-right">
-                    <Text type="secondary">Paket Fiyatı:</Text>
-                    <div className="text-2xl font-bold text-orange-500">
-                      {(bundle.calculatedPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </div>
-                    {savings > 0 && (
-                      <Tag color="green">%{savingsPercent.toFixed(1)} tasarruf</Tag>
-                    )}
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Paket Adı</p>
+                    <p className="text-sm font-medium text-slate-900">{bundle.name}</p>
                   </div>
                 </div>
-              </>
-            ) : (
-              <Empty
-                description="Bu pakette henüz ürün yok"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              >
+                {bundle.description && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{bundle.description}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Tip</p>
+                    <Tag className={`border-0 ${bundleTypeStyle.bgColor} ${bundleTypeStyle.textColor}`}>
+                      {bundleTypeStyle.label}
+                    </Tag>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Fiyatlandırma</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {pricingTypeConfig[bundle.pricingType]?.label}
+                    </p>
+                  </div>
+                </div>
+                {bundle.fixedPrice && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Sabit Fiyat</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {bundle.fixedPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    </p>
+                  </div>
+                )}
+                {bundle.discountPercentage && bundle.discountPercentage > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">İndirim Oranı</p>
+                    <Tag className="border-0 bg-red-50 text-red-700">%{bundle.discountPercentage}</Tag>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Section */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Seçenekler
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-sm text-slate-600">Tüm Ürünler Zorunlu</span>
+                  <Tag
+                    icon={bundle.requireAllItems ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      bundle.requireAllItems
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {bundle.requireAllItems ? 'Evet' : 'Hayır'}
+                  </Tag>
+                </div>
+                {bundle.minSelectableItems && (
+                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                    <span className="text-sm text-slate-600">Min Seçilebilir</span>
+                    <span className="text-sm font-medium text-slate-900">{bundle.minSelectableItems}</span>
+                  </div>
+                )}
+                {bundle.maxSelectableItems && (
+                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                    <span className="text-sm text-slate-600">Max Seçilebilir</span>
+                    <span className="text-sm font-medium text-slate-900">{bundle.maxSelectableItems}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-slate-600">Görüntüleme Sırası</span>
+                  <span className="text-sm font-medium text-slate-900">{bundle.displayOrder}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Validity Dates Section */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Tarihler
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Başlangıç</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {bundle.validFrom ? dayjs(bundle.validFrom).format('DD/MM/YYYY') : '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Bitiş</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {bundle.validTo ? dayjs(bundle.validTo).format('DD/MM/YYYY') : '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Oluşturulma</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(bundle.createdAt).format('DD/MM/YYYY')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table Section */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Paket Ürünleri ({bundle.items?.length || 0})
+                </p>
                 <Button
                   type="primary"
+                  size="small"
                   icon={<PlusOutlined />}
                   onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
+                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
                 >
                   Ürün Ekle
                 </Button>
-              </Empty>
-            )}
-          </Card>
-        </Col>
-      </Row>
+              </div>
+              {bundle.items && bundle.items.length > 0 ? (
+                <>
+                  <Table
+                    columns={itemColumns}
+                    dataSource={bundle.items}
+                    rowKey="id"
+                    pagination={false}
+                    size="small"
+                    className="[&_.ant-table]:border-slate-200 [&_.ant-table-thead_.ant-table-cell]:bg-slate-50 [&_.ant-table-thead_.ant-table-cell]:text-slate-600 [&_.ant-table-thead_.ant-table-cell]:font-medium"
+                  />
+                  <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-200">
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Ürün Toplamı</p>
+                      <p className="text-lg font-medium text-slate-900">
+                        {itemsTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400 mb-1">Paket Fiyatı</p>
+                      <p className="text-2xl font-bold text-amber-600">
+                        {(bundle.calculatedPrice || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                      </p>
+                      {savings > 0 && (
+                        <Tag className="border-0 bg-emerald-50 text-emerald-700 mt-1">
+                          %{savingsPercent.toFixed(1)} tasarruf
+                        </Tag>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                    <GiftOutlined className="text-slate-400 text-2xl" />
+                  </div>
+                  <p className="text-slate-500 mb-4">Bu pakette henüz ürün yok</p>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
+                    style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                  >
+                    Ürün Ekle
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,32 +2,20 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Descriptions,
-  Spin,
-  Empty,
-  Row,
-  Col,
-  Statistic,
-  Progress,
-} from 'antd';
+import { Button, Space, Tag, Spin, Empty, Progress } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
   EnvironmentOutlined,
   HomeOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
+  CloseCircleOutlined,
+  CalendarOutlined,
+  AppstoreOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { useLocation, useWarehouse } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
-
-const { Text } = Typography;
 
 export default function LocationDetailPage() {
   const router = useRouter();
@@ -39,7 +27,7 @@ export default function LocationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -47,7 +35,7 @@ export default function LocationDetailPage() {
 
   if (!location) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Empty description="Lokasyon bulunamadı" />
       </div>
     );
@@ -57,45 +45,65 @@ export default function LocationDetailPage() {
     ? Math.round((location.usedCapacity / location.capacity) * 100)
     : 0;
 
+  const availableCapacity = (location.capacity || 0) - (location.usedCapacity || 0);
   const positionPath = [location.aisle, location.shelf, location.bin].filter(Boolean).join(' / ');
 
+  const getCapacityColor = (percent: number) => {
+    if (percent > 90) return 'text-red-600';
+    if (percent > 70) return 'text-amber-600';
+    return 'text-emerald-600';
+  };
+
+  const getProgressStatus = (percent: number) => {
+    if (percent > 90) return 'exception';
+    if (percent > 70) return 'normal';
+    return 'success';
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
-              >
-                <EnvironmentOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
+                <EnvironmentOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{location.name}</h1>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{location.name}</h1>
                   <Tag
-                    icon={location.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-                    color={location.isActive ? 'success' : 'default'}
+                    icon={location.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      location.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
                   >
                     {location.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-500 m-0">Kod: {location.code}</p>
+                <p className="text-sm text-slate-500 m-0">
+                  Kod: {location.code}
+                  {warehouse && ` | Depo: ${warehouse.name}`}
+                </p>
               </div>
             </div>
           </div>
@@ -103,6 +111,7 @@ export default function LocationDetailPage() {
             <Button
               icon={<EditOutlined />}
               onClick={() => router.push(`/inventory/locations/${locationId}/edit`)}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Düzenle
             </Button>
@@ -110,171 +119,223 @@ export default function LocationDetailPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} md={8}>
-          <Card size="small">
-            <Statistic
-              title="Kapasite"
-              value={location.capacity || 0}
-              suffix="birim"
-              valueStyle={{ color: '#6366f1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card size="small">
-            <Statistic
-              title="Kullanılan"
-              value={location.usedCapacity || 0}
-              suffix="birim"
-              valueStyle={{ color: '#f59e0b' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card size="small">
-            <Statistic
-              title="Kullanım Oranı"
-              value={capacityPercent}
-              suffix="%"
-              valueStyle={{
-                color: capacityPercent > 90 ? '#ef4444' : capacityPercent > 70 ? '#f59e0b' : '#10b981',
-              }}
-            />
-            <Progress
-              percent={capacityPercent}
-              showInfo={false}
-              size="small"
-              status={capacityPercent > 90 ? 'exception' : capacityPercent > 70 ? 'normal' : 'success'}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* Content */}
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
-          <Card title="Lokasyon Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Lokasyon Kodu">{location.code}</Descriptions.Item>
-              <Descriptions.Item label="Lokasyon Adı">{location.name}</Descriptions.Item>
-              <Descriptions.Item label="Depo">
-                {warehouse ? (
-                  <Button
-                    type="link"
-                    size="small"
-                    className="p-0"
-                    onClick={() => router.push(`/inventory/warehouses/${warehouse.id}`)}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <AppstoreOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Toplam Kapasite
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">{location.capacity || 0}</span>
+                <span className="text-sm text-slate-400">birim</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <InboxOutlined className="text-amber-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Kullanılan
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">
+                  {location.usedCapacity || 0}
+                </span>
+                <span className="text-sm text-slate-400">birim</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Boş Kapasite
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-emerald-600">{availableCapacity}</span>
+                <span className="text-sm text-slate-400">birim</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Info Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Lokasyon Bilgileri
+              </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Lokasyon Kodu</p>
+                  <p className="text-sm font-medium text-slate-900">{location.code}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Lokasyon Adı</p>
+                  <p className="text-sm font-medium text-slate-900">{location.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Depo</p>
+                  {warehouse ? (
+                    <button
+                      onClick={() => router.push(`/inventory/warehouses/${warehouse.id}`)}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      <HomeOutlined className="text-xs" />
+                      {warehouse.name}
+                    </button>
+                  ) : (
+                    <p className="text-sm text-slate-400">-</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Durum</p>
+                  <Tag
+                    icon={location.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    className={`border-0 ${
+                      location.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
                   >
-                    <HomeOutlined className="mr-1" />
-                    {warehouse.name}
-                  </Button>
-                ) : (
-                  <Text type="secondary">-</Text>
+                    {location.isActive ? 'Aktif' : 'Pasif'}
+                  </Tag>
+                </div>
+                {positionPath && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Konum Yolu</p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-sm font-medium">
+                      {positionPath}
+                    </span>
+                  </div>
                 )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                <Tag color={location.isActive ? 'success' : 'default'}>
-                  {location.isActive ? 'Aktif' : 'Pasif'}
-                </Tag>
-              </Descriptions.Item>
-              {positionPath && (
-                <Descriptions.Item label="Konum" span={2}>
-                  <Tag color="blue">{positionPath}</Tag>
-                </Descriptions.Item>
-              )}
-              {location.description && (
-                <Descriptions.Item label="Açıklama" span={2}>
-                  {location.description}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Position Details */}
-          <Card title="Konum Detayları">
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <Text type="secondary" className="block text-xs mb-1">
-                    Koridor
-                  </Text>
-                  <Text strong className="text-lg">
-                    {location.aisle || '-'}
-                  </Text>
-                </div>
-              </Col>
-              <Col span={8}>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <Text type="secondary" className="block text-xs mb-1">
-                    Raf
-                  </Text>
-                  <Text strong className="text-lg">
-                    {location.shelf || '-'}
-                  </Text>
-                </div>
-              </Col>
-              <Col span={8}>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <Text type="secondary" className="block text-xs mb-1">
-                    Bölme
-                  </Text>
-                  <Text strong className="text-lg">
-                    {location.bin || '-'}
-                  </Text>
-                </div>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
-          {/* Capacity */}
-          <Card title="Kapasite Durumu" className="mb-6">
-            <div className="text-center mb-4">
-              <Progress
-                type="circle"
-                percent={capacityPercent}
-                status={capacityPercent > 90 ? 'exception' : capacityPercent > 70 ? 'normal' : 'success'}
-                format={(percent) => `${percent}%`}
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <Text type="secondary">Toplam Kapasite</Text>
-                <Text strong>{location.capacity || 0} birim</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Kullanılan</Text>
-                <Text strong>{location.usedCapacity || 0} birim</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Boş</Text>
-                <Text strong className="text-green-600">
-                  {(location.capacity || 0) - (location.usedCapacity || 0)} birim
-                </Text>
+                {location.description && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-600">{location.description}</p>
+                  </div>
+                )}
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Timestamps */}
-          <Card title="Kayıt Bilgileri">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <Text type="secondary">Oluşturulma</Text>
-                <Text>{dayjs(location.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
-              </div>
-              {location.updatedAt && (
-                <div className="flex justify-between">
-                  <Text type="secondary">Güncelleme</Text>
-                  <Text>{dayjs(location.updatedAt).format('DD/MM/YYYY HH:mm')}</Text>
+          {/* Timestamps Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(location.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
                 </div>
-              )}
+                {location.updatedAt && (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-slate-400" />
+                      <span className="text-sm text-slate-500">Güncelleme</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(location.updatedAt).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+
+          {/* Position Details Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Konum Detayları
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-slate-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Koridor</p>
+                  <p className="text-2xl font-bold text-slate-900">{location.aisle || '-'}</p>
+                </div>
+                <div className="text-center p-4 bg-slate-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Raf</p>
+                  <p className="text-2xl font-bold text-slate-900">{location.shelf || '-'}</p>
+                </div>
+                <div className="text-center p-4 bg-slate-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Bölme</p>
+                  <p className="text-2xl font-bold text-slate-900">{location.bin || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Capacity Status Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kapasite Durumu
+              </p>
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0">
+                  <Progress
+                    type="circle"
+                    percent={capacityPercent}
+                    status={getProgressStatus(capacityPercent)}
+                    size={100}
+                    format={(percent) => (
+                      <span className={`text-lg font-bold ${getCapacityColor(percent || 0)}`}>
+                        {percent}%
+                      </span>
+                    )}
+                  />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Toplam Kapasite</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {location.capacity || 0} birim
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Kullanılan</span>
+                    <span className="text-sm font-medium text-amber-600">
+                      {location.usedCapacity || 0} birim
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Boş</span>
+                    <span className="text-sm font-medium text-emerald-600">
+                      {availableCapacity} birim
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

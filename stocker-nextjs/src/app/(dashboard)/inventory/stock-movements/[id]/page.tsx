@@ -2,21 +2,7 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Descriptions,
-  Spin,
-  Empty,
-  Row,
-  Col,
-  Statistic,
-  Divider,
-  Tooltip,
-} from 'antd';
+import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
   ArrowLeftOutlined,
   SwapOutlined,
@@ -24,7 +10,6 @@ import {
   ShoppingOutlined,
   RetweetOutlined,
   RollbackOutlined,
-  ArrowRightOutlined,
   ToolOutlined,
   MinusCircleOutlined,
   PlusCircleOutlined,
@@ -36,100 +21,116 @@ import {
   SearchOutlined,
   PrinterOutlined,
   EnvironmentOutlined,
-  ClockCircleOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import { useStockMovement } from '@/lib/api/hooks/useInventory';
 import { StockMovementType } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
 
-const { Text } = Typography;
-
 // Movement type labels and colors
 const movementTypeConfig: Record<
   StockMovementType,
-  { label: string; color: string; icon: React.ReactNode; direction: 'in' | 'out' | 'neutral' }
+  { label: string; bgColor: string; textColor: string; icon: React.ReactNode; direction: 'in' | 'out' | 'neutral' }
 > = {
   [StockMovementType.Purchase]: {
     label: 'Satın Alma',
-    color: 'green',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
     icon: <ShoppingCartOutlined />,
     direction: 'in',
   },
   [StockMovementType.Sales]: {
     label: 'Satış',
-    color: 'blue',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
     icon: <ShoppingOutlined />,
     direction: 'out',
   },
   [StockMovementType.PurchaseReturn]: {
     label: 'Satın Alma İade',
-    color: 'orange',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
     icon: <RollbackOutlined />,
     direction: 'out',
   },
   [StockMovementType.SalesReturn]: {
     label: 'Satış İade',
-    color: 'cyan',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-700',
     icon: <RetweetOutlined />,
     direction: 'in',
   },
   [StockMovementType.Transfer]: {
     label: 'Transfer',
-    color: 'purple',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-700',
     icon: <SwapOutlined />,
     direction: 'neutral',
   },
   [StockMovementType.Production]: {
     label: 'Üretim',
-    color: 'geekblue',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
     icon: <ToolOutlined />,
     direction: 'in',
   },
   [StockMovementType.Consumption]: {
     label: 'Tüketim',
-    color: 'volcano',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-700',
     icon: <MinusCircleOutlined />,
     direction: 'out',
   },
   [StockMovementType.AdjustmentIncrease]: {
     label: 'Düzeltme (+)',
-    color: 'lime',
+    bgColor: 'bg-lime-50',
+    textColor: 'text-lime-700',
     icon: <PlusCircleOutlined />,
     direction: 'in',
   },
   [StockMovementType.AdjustmentDecrease]: {
     label: 'Düzeltme (-)',
-    color: 'red',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
     icon: <MinusCircleOutlined />,
     direction: 'out',
   },
   [StockMovementType.Opening]: {
     label: 'Açılış',
-    color: 'gold',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
     icon: <InboxOutlined />,
     direction: 'in',
   },
   [StockMovementType.Counting]: {
     label: 'Sayım',
-    color: 'magenta',
+    bgColor: 'bg-pink-50',
+    textColor: 'text-pink-700',
     icon: <SyncOutlined />,
     direction: 'neutral',
   },
   [StockMovementType.Damage]: {
     label: 'Hasar',
-    color: 'red',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
     icon: <WarningOutlined />,
     direction: 'out',
   },
   [StockMovementType.Loss]: {
     label: 'Kayıp',
-    color: 'red',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-700',
     icon: <CloseCircleOutlined />,
     direction: 'out',
   },
   [StockMovementType.Found]: {
     label: 'Bulunan',
-    color: 'green',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
     icon: <SearchOutlined />,
     direction: 'in',
   },
@@ -144,7 +145,7 @@ export default function StockMovementDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -152,7 +153,7 @@ export default function StockMovementDetailPage() {
 
   if (!movement) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Empty description="Stok hareketi bulunamadı" />
       </div>
     );
@@ -160,265 +161,426 @@ export default function StockMovementDetailPage() {
 
   const config = movementTypeConfig[movement.movementType] || {
     label: movement.movementType,
-    color: 'default',
+    bgColor: 'bg-slate-100',
+    textColor: 'text-slate-600',
     icon: <QuestionCircleOutlined />,
-    direction: 'neutral',
+    direction: 'neutral' as const,
   };
 
   const getDirectionIcon = () => {
     switch (config.direction) {
       case 'in':
-        return <PlusCircleOutlined style={{ color: '#52c41a' }} />;
+        return <PlusCircleOutlined className="text-emerald-600" />;
       case 'out':
-        return <MinusCircleOutlined style={{ color: '#ff4d4f' }} />;
+        return <MinusCircleOutlined className="text-red-600" />;
       default:
-        return <SwapOutlined style={{ color: '#722ed1' }} />;
+        return <SwapOutlined className="text-purple-600" />;
     }
   };
 
+  const getDirectionColor = () => {
+    switch (config.direction) {
+      case 'in':
+        return 'text-emerald-600';
+      case 'out':
+        return 'text-red-600';
+      default:
+        return 'text-purple-600';
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+  };
+
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Sticky Header */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
       <div
-        className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6"
+        className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
-          marginTop: '-24px',
-          paddingTop: '24px',
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              className="text-slate-600 hover:text-slate-900"
+            >
               Geri
             </Button>
-            <div className="h-6 w-px bg-gray-200" />
+            <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
-              >
-                <SwapOutlined style={{ fontSize: 20, color: 'white' }} />
+              <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center">
+                <SwapOutlined className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">{movement.documentNumber}</h1>
-                  <Tag color={config.color} icon={config.icon}>
+                  <h1 className="text-xl font-semibold text-slate-900 m-0">{movement.documentNumber}</h1>
+                  <Tag
+                    icon={config.icon}
+                    className={`border-0 ${config.bgColor} ${config.textColor}`}
+                  >
                     {config.label}
                   </Tag>
                   {movement.isReversed && (
-                    <Tag color="error" icon={<RollbackOutlined />}>
+                    <Tag icon={<RollbackOutlined />} className="border-0 bg-red-50 text-red-700">
                       İptal Edildi
                     </Tag>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 m-0">
+                <p className="text-sm text-slate-500 m-0">
                   {dayjs(movement.movementDate).format('DD/MM/YYYY HH:mm')}
                 </p>
               </div>
             </div>
           </div>
           <Space>
-            <Button icon={<PrinterOutlined />}>Yazdır</Button>
+            <Button
+              icon={<PrinterOutlined />}
+              className="border-slate-200 text-slate-700 hover:border-slate-300"
+            >
+              Yazdır
+            </Button>
           </Space>
         </div>
       </div>
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Miktar"
-              value={movement.quantity}
-              prefix={getDirectionIcon()}
-              valueStyle={{
-                color: config.direction === 'in' ? '#52c41a' : config.direction === 'out' ? '#ff4d4f' : '#722ed1',
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Birim Maliyet"
-              value={movement.unitCost}
-              precision={2}
-              prefix="₺"
-              valueStyle={{ color: '#6366f1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Maliyet"
-              value={movement.totalCost}
-              precision={2}
-              prefix="₺"
-              valueStyle={{ color: '#10b981' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card size="small">
-            <Statistic
-              title="İşlem Tarihi"
-              value={dayjs(movement.movementDate).format('DD/MM/YYYY')}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ fontSize: 18 }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* Content */}
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
-          {/* Movement Details */}
-          <Card title="Hareket Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Belge Numarası">{movement.documentNumber}</Descriptions.Item>
-              <Descriptions.Item label="Hareket Türü">
-                <Tag color={config.color} icon={config.icon}>
-                  {config.label}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Hareket Tarihi">
-                {dayjs(movement.movementDate).format('DD/MM/YYYY HH:mm')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Durum">
-                {movement.isReversed ? (
-                  <Tag color="error" icon={<RollbackOutlined />}>
-                    İptal Edildi
-                  </Tag>
-                ) : (
-                  <Tag color="success">Aktif</Tag>
-                )}
-              </Descriptions.Item>
-              {movement.reversedMovementId && (
-                <Descriptions.Item label="İptal Referansı" span={2}>
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => router.push(`/inventory/stock-movements/${movement.reversedMovementId}`)}
-                  >
-                    #{movement.reversedMovementId}
-                  </Button>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Product Info */}
-          <Card title="Ürün Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Ürün Kodu">{movement.productCode}</Descriptions.Item>
-              <Descriptions.Item label="Ürün Adı">
-                <Button
-                  type="link"
-                  size="small"
-                  className="p-0"
-                  onClick={() => router.push(`/inventory/products/${movement.productId}`)}
+      <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* KPI Cards Row */}
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    config.direction === 'in'
+                      ? 'bg-emerald-100'
+                      : config.direction === 'out'
+                      ? 'bg-red-100'
+                      : 'bg-purple-100'
+                  }`}
                 >
-                  {movement.productName}
-                </Button>
-              </Descriptions.Item>
-              <Descriptions.Item label="Miktar">
-                <span
-                  style={{
-                    color:
-                      config.direction === 'in' ? '#52c41a' : config.direction === 'out' ? '#ff4d4f' : '#722ed1',
-                    fontWeight: 600,
-                  }}
-                >
+                  {getDirectionIcon()}
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Miktar
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className={`text-3xl font-bold ${getDirectionColor()}`}>
                   {config.direction === 'in' ? '+' : config.direction === 'out' ? '-' : ''}
                   {movement.quantity}
                 </span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Birim Maliyet">
-                {movement.unitCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
-              </Descriptions.Item>
-              <Descriptions.Item label="Toplam Maliyet" span={2}>
-                <Text strong>
-                  {movement.totalCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
-                </Text>
-              </Descriptions.Item>
-              {movement.serialNumber && (
-                <Descriptions.Item label="Seri Numarası">{movement.serialNumber}</Descriptions.Item>
-              )}
-              {movement.lotNumber && (
-                <Descriptions.Item label="Lot Numarası">{movement.lotNumber}</Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Location Info */}
-          <Card title="Lokasyon Bilgileri" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-              <Descriptions.Item label="Depo" span={2}>
-                <div className="flex items-center gap-2">
-                  <EnvironmentOutlined className="text-blue-500" />
-                  <Button
-                    type="link"
-                    size="small"
-                    className="p-0"
-                    onClick={() => router.push(`/inventory/warehouses/${movement.warehouseId}`)}
-                  >
-                    {movement.warehouseName}
-                  </Button>
-                </div>
-              </Descriptions.Item>
-              {movement.fromLocationName && (
-                <Descriptions.Item label="Kaynak Lokasyon">{movement.fromLocationName}</Descriptions.Item>
-              )}
-              {movement.toLocationName && (
-                <Descriptions.Item label="Hedef Lokasyon">{movement.toLocationName}</Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Reference Document */}
-          {(movement.referenceDocumentType || movement.referenceDocumentNumber) && (
-            <Card title="Referans Belge">
-              <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-                {movement.referenceDocumentType && (
-                  <Descriptions.Item label="Belge Türü">{movement.referenceDocumentType}</Descriptions.Item>
-                )}
-                {movement.referenceDocumentNumber && (
-                  <Descriptions.Item label="Belge Numarası">{movement.referenceDocumentNumber}</Descriptions.Item>
-                )}
-              </Descriptions>
-            </Card>
-          )}
-        </Col>
-
-        <Col xs={24} lg={8}>
-          {/* Description */}
-          {movement.description && (
-            <Card title="Açıklama" className="mb-6">
-              <Text>{movement.description}</Text>
-            </Card>
-          )}
-
-          {/* Timeline Info */}
-          <Card title="Kayıt Bilgileri">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <Text type="secondary">Oluşturulma</Text>
-                <Text>{dayjs(movement.createdAt).format('DD/MM/YYYY HH:mm')}</Text>
-              </div>
-              <Divider className="my-2" />
-              <div className="flex justify-between">
-                <Text type="secondary">Kullanıcı ID</Text>
-                <Text>{movement.userId}</Text>
+                <span className="text-sm text-slate-400">adet</span>
               </div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <DollarOutlined className="text-blue-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Birim Maliyet
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-blue-600">
+                  {formatCurrency(movement.unitCost)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <DollarOutlined className="text-emerald-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Toplam Maliyet
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-emerald-600">
+                  {formatCurrency(movement.totalCost)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CalendarOutlined className="text-slate-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  İşlem Tarihi
+                </p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-xl font-bold text-slate-900">
+                  {dayjs(movement.movementDate).format('DD/MM/YYYY')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Movement Info Section */}
+          <div className="col-span-12 md:col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Hareket Bilgileri
+              </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Belge Numarası</p>
+                  <p className="text-sm font-medium text-slate-900">{movement.documentNumber}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Hareket Türü</p>
+                  <Tag
+                    icon={config.icon}
+                    className={`border-0 ${config.bgColor} ${config.textColor}`}
+                  >
+                    {config.label}
+                  </Tag>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Hareket Tarihi</p>
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(movement.movementDate).format('DD/MM/YYYY HH:mm')}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Durum</p>
+                  {movement.isReversed ? (
+                    <Tag icon={<RollbackOutlined />} className="border-0 bg-red-50 text-red-700">
+                      İptal Edildi
+                    </Tag>
+                  ) : (
+                    <Tag icon={<CheckCircleOutlined />} className="border-0 bg-emerald-50 text-emerald-700">
+                      Aktif
+                    </Tag>
+                  )}
+                </div>
+                {movement.reversedMovementId && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">İptal Referansı</p>
+                    <button
+                      onClick={() => router.push(`/inventory/stock-movements/${movement.reversedMovementId}`)}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      #{movement.reversedMovementId}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Timestamps Section */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Kayıt Bilgileri
+              </p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Oluşturulma</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(movement.createdAt).format('DD/MM/YYYY HH:mm')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CalendarOutlined className="text-slate-400" />
+                    <span className="text-sm text-slate-500">Kullanıcı ID</span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {movement.userId}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Info Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Ürün Bilgileri
+              </p>
+              <div
+                className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors mb-4"
+                onClick={() => router.push(`/inventory/products/${movement.productId}`)}
+              >
+                <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <ShoppingOutlined className="text-white text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900 m-0">{movement.productName}</p>
+                  <p className="text-xs text-slate-500 m-0">{movement.productCode}</p>
+                </div>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <span className="text-sm">Ürüne Git</span>
+                  <RightOutlined className="text-xs" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Miktar</p>
+                  <span
+                    className={`text-lg font-bold ${getDirectionColor()}`}
+                  >
+                    {config.direction === 'in' ? '+' : config.direction === 'out' ? '-' : ''}
+                    {movement.quantity}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Birim Maliyet</p>
+                  <span className="text-lg font-bold text-slate-900">{formatCurrency(movement.unitCost)}</span>
+                </div>
+                {movement.serialNumber && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Seri Numarası</p>
+                    <code className="text-sm font-medium text-slate-900 bg-slate-50 px-2 py-0.5 rounded">
+                      {movement.serialNumber}
+                    </code>
+                  </div>
+                )}
+                {movement.lotNumber && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Lot Numarası</p>
+                    <code className="text-sm font-medium text-slate-900 bg-slate-50 px-2 py-0.5 rounded">
+                      {movement.lotNumber}
+                    </code>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Location Info Section */}
+          <div className="col-span-12 md:col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Lokasyon Bilgileri
+              </p>
+              <div
+                className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors mb-4"
+                onClick={() => router.push(`/inventory/warehouses/${movement.warehouseId}`)}
+              >
+                <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <EnvironmentOutlined className="text-white text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900 m-0">{movement.warehouseName}</p>
+                  <p className="text-xs text-slate-500 m-0">Depo</p>
+                </div>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <span className="text-sm">Depoya Git</span>
+                  <RightOutlined className="text-xs" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {movement.fromLocationName && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Kaynak Lokasyon</p>
+                    <span className="text-sm font-medium text-slate-900">{movement.fromLocationName}</span>
+                  </div>
+                )}
+                {movement.toLocationName && (
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Hedef Lokasyon</p>
+                    <span className="text-sm font-medium text-slate-900">{movement.toLocationName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Reference Document Section */}
+          {(movement.referenceDocumentType || movement.referenceDocumentNumber) && (
+            <div className="col-span-12 md:col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                  Referans Belge
+                </p>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                  <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <FileTextOutlined className="text-amber-600 text-xl" />
+                  </div>
+                  <div className="flex-1">
+                    {movement.referenceDocumentType && (
+                      <p className="text-sm font-medium text-slate-900 m-0">{movement.referenceDocumentType}</p>
+                    )}
+                    {movement.referenceDocumentNumber && (
+                      <p className="text-xs text-slate-500 m-0">{movement.referenceDocumentNumber}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Description Section */}
+          {movement.description && (
+            <div className={`col-span-12 ${movement.referenceDocumentType || movement.referenceDocumentNumber ? 'md:col-span-6' : 'md:col-span-12'}`}>
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                  Açıklama
+                </p>
+                <p className="text-sm text-slate-600">{movement.description}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Cost Summary Section */}
+          <div className="col-span-12">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+                Maliyet Özeti
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-slate-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Miktar</p>
+                  <p className={`text-2xl font-bold m-0 ${getDirectionColor()}`}>
+                    {config.direction === 'in' ? '+' : config.direction === 'out' ? '-' : ''}
+                    {movement.quantity}
+                  </p>
+                </div>
+                <div className="text-center p-4 bg-slate-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Birim Maliyet</p>
+                  <p className="text-2xl font-bold text-slate-900 m-0">{formatCurrency(movement.unitCost)}</p>
+                </div>
+                <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                  <p className="text-xs text-slate-400 mb-2">Toplam Maliyet</p>
+                  <p className="text-2xl font-bold text-emerald-600 m-0">{formatCurrency(movement.totalCost)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
