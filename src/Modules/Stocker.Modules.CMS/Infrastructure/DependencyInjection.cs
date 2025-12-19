@@ -29,33 +29,42 @@ public static class DependencyInjection
         services.AddScoped<ICMSUnitOfWork>(sp => sp.GetRequiredService<CMSUnitOfWork>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CMSUnitOfWork>());
 
+        // IMPORTANT: Repository registrations now delegate to ICMSUnitOfWork
+        // to ensure the same DbContext instance is used for both repository operations
+        // and SaveChanges(). This fixes the bug where entities were added to one DbContext
+        // but SaveChanges() was called on a different DbContext instance.
+        //
+        // Handlers can use either:
+        //   - ICMSUnitOfWork.Pages (recommended for new code)
+        //   - ICMSPageRepository (legacy, still supported - now correctly shares DbContext)
+
         // Core Repositories
-        services.AddScoped<ICMSPageRepository, CMSPageRepository>();
-        services.AddScoped<IBlogRepository, BlogRepository>();
-        services.AddScoped<IFAQRepository, FAQRepository>();
-        services.AddScoped<ICMSSettingRepository, CMSSettingRepository>();
+        services.AddScoped<ICMSPageRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Pages);
+        services.AddScoped<IBlogRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Blog);
+        services.AddScoped<IFAQRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().FAQ);
+        services.AddScoped<ICMSSettingRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Settings);
 
         // Landing Page Repositories
-        services.AddScoped<ITestimonialRepository, TestimonialRepository>();
-        services.AddScoped<IPricingPlanRepository, PricingPlanRepository>();
-        services.AddScoped<IPricingFeatureRepository, PricingFeatureRepository>();
-        services.AddScoped<IFeatureRepository, FeatureRepository>();
-        services.AddScoped<IIndustryRepository, IndustryRepository>();
-        services.AddScoped<IIntegrationRepository, IntegrationRepository>();
-        services.AddScoped<IIntegrationItemRepository, IntegrationItemRepository>();
-        services.AddScoped<IStatRepository, StatRepository>();
-        services.AddScoped<IPartnerRepository, PartnerRepository>();
-        services.AddScoped<IAchievementRepository, AchievementRepository>();
+        services.AddScoped<ITestimonialRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Testimonials);
+        services.AddScoped<IPricingPlanRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().PricingPlans);
+        services.AddScoped<IPricingFeatureRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().PricingFeatures);
+        services.AddScoped<IFeatureRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Features);
+        services.AddScoped<IIndustryRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Industries);
+        services.AddScoped<IIntegrationRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Integrations);
+        services.AddScoped<IIntegrationItemRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().IntegrationItems);
+        services.AddScoped<IStatRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Stats);
+        services.AddScoped<IPartnerRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Partners);
+        services.AddScoped<IAchievementRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().Achievements);
 
         // Company Page Repositories
-        services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
-        services.AddScoped<ICompanyValueRepository, CompanyValueRepository>();
-        services.AddScoped<IContactInfoRepository, ContactInfoRepository>();
-        services.AddScoped<ISocialLinkRepository, SocialLinkRepository>();
+        services.AddScoped<ITeamMemberRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().TeamMembers);
+        services.AddScoped<ICompanyValueRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().CompanyValues);
+        services.AddScoped<IContactInfoRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().ContactInfo);
+        services.AddScoped<ISocialLinkRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().SocialLinks);
 
         // Documentation Repositories
-        services.AddScoped<IDocCategoryRepository, DocCategoryRepository>();
-        services.AddScoped<IDocArticleRepository, DocArticleRepository>();
+        services.AddScoped<IDocCategoryRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().DocCategories);
+        services.AddScoped<IDocArticleRepository>(sp => sp.GetRequiredService<ICMSUnitOfWork>().DocArticles);
 
         return services;
     }

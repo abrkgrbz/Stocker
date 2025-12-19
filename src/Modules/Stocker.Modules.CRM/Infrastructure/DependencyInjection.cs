@@ -75,33 +75,36 @@ public static class DependencyInjection
         services.AddScoped(typeof(IReadRepository<>), typeof(CRMGenericRepository<>));
         services.AddScoped(typeof(IWriteRepository<>), typeof(CRMGenericRepository<>));
 
-        // NOTE: Individual repository registrations are kept for backward compatibility.
+        // IMPORTANT: Repository registrations now delegate to ICRMUnitOfWork
+        // to ensure the same DbContext instance is used for both repository operations
+        // and SaveChanges(). This fixes the bug where entities were added to one DbContext
+        // but SaveChanges() was called on a different DbContext instance.
+        //
         // Handlers can use either:
         //   - ICRMUnitOfWork.Customers (recommended for new code)
-        //   - ICustomerRepository (legacy, still supported)
-        // Both resolve to the same cached instance within the UoW scope.
-        services.AddScoped<ICustomerRepository, CustomerRepository>();
-        services.AddScoped<IContactRepository, ContactRepository>();
-        services.AddScoped<ILeadRepository, LeadRepository>();
-        services.AddScoped<IDealRepository, DealRepository>();
-        services.AddScoped<ICustomerSegmentRepository, CustomerSegmentRepository>();
-        services.AddScoped<ICustomerTagRepository, CustomerTagRepository>();
-        services.AddScoped<IDocumentRepository, DocumentRepository>();
-        services.AddScoped<IWorkflowRepository, WorkflowRepository>();
-        services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
-        services.AddScoped<INotificationRepository, NotificationRepository>();
-        services.AddScoped<IReminderRepository, ReminderRepository>();
-        services.AddScoped<ICallLogRepository, CallLogRepository>();
-        services.AddScoped<ICompetitorRepository, CompetitorRepository>();
-        services.AddScoped<IMeetingRepository, MeetingRepository>();
-        services.AddScoped<IProductInterestRepository, ProductInterestRepository>();
-        services.AddScoped<IReferralRepository, ReferralRepository>();
-        services.AddScoped<ISalesTeamRepository, SalesTeamRepository>();
-        services.AddScoped<ISocialMediaProfileRepository, SocialMediaProfileRepository>();
-        services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
-        services.AddScoped<ITerritoryRepository, TerritoryRepository>();
-        services.AddScoped<ILoyaltyProgramRepository, LoyaltyProgramRepository>();
-        services.AddScoped<ILoyaltyMembershipRepository, LoyaltyMembershipRepository>();
+        //   - ICustomerRepository (legacy, still supported - now correctly shares DbContext)
+        services.AddScoped<ICustomerRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Customers);
+        services.AddScoped<IContactRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Contacts);
+        services.AddScoped<ILeadRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Leads);
+        services.AddScoped<IDealRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Deals);
+        services.AddScoped<ICustomerSegmentRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().CustomerSegments);
+        services.AddScoped<ICustomerTagRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().CustomerTags);
+        services.AddScoped<IDocumentRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Documents);
+        services.AddScoped<IWorkflowRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Workflows);
+        services.AddScoped<IWorkflowExecutionRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().WorkflowExecutions);
+        services.AddScoped<INotificationRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Notifications);
+        services.AddScoped<IReminderRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Reminders);
+        services.AddScoped<ICallLogRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().CallLogs);
+        services.AddScoped<ICompetitorRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Competitors);
+        services.AddScoped<IMeetingRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Meetings);
+        services.AddScoped<IProductInterestRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().ProductInterests);
+        services.AddScoped<IReferralRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Referrals);
+        services.AddScoped<ISalesTeamRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().SalesTeams);
+        services.AddScoped<ISocialMediaProfileRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().SocialMediaProfiles);
+        services.AddScoped<ISurveyResponseRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().SurveyResponses);
+        services.AddScoped<ITerritoryRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().Territories);
+        services.AddScoped<ILoyaltyProgramRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().LoyaltyPrograms);
+        services.AddScoped<ILoyaltyMembershipRepository>(sp => sp.GetRequiredService<ICRMUnitOfWork>().LoyaltyMemberships);
 
         // Register Tenant CRM Database Service
         services.AddScoped<ITenantCRMDatabaseService, TenantCRMDatabaseService>();

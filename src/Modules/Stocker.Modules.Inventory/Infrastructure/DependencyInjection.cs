@@ -60,37 +60,40 @@ public static class DependencyInjection
         services.AddScoped<IInventoryUnitOfWork>(sp => sp.GetRequiredService<InventoryUnitOfWork>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryUnitOfWork>());
 
-        // NOTE: Individual repository registrations are kept for backward compatibility.
+        // IMPORTANT: Repository registrations now delegate to IInventoryUnitOfWork
+        // to ensure the same DbContext instance is used for both repository operations
+        // and SaveChanges(). This fixes the bug where entities were added to one DbContext
+        // but SaveChanges() was called on a different DbContext instance.
+        //
         // Handlers can use either:
         //   - IInventoryUnitOfWork.Products (recommended for new code)
-        //   - IProductRepository (legacy, still supported)
-        // Both resolve to the same cached instance within the UoW scope.
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<IBrandRepository, BrandRepository>();
-        services.AddScoped<IUnitRepository, UnitRepository>();
-        services.AddScoped<IWarehouseRepository, WarehouseRepository>();
-        services.AddScoped<ILocationRepository, LocationRepository>();
-        services.AddScoped<IStockRepository, StockRepository>();
-        services.AddScoped<IStockMovementRepository, StockMovementRepository>();
-        services.AddScoped<IStockReservationRepository, StockReservationRepository>();
-        services.AddScoped<IStockTransferRepository, StockTransferRepository>();
-        services.AddScoped<IStockCountRepository, StockCountRepository>();
-        services.AddScoped<ISupplierRepository, SupplierRepository>();
-        services.AddScoped<IPriceListRepository, PriceListRepository>();
-        services.AddScoped<ILotBatchRepository, LotBatchRepository>();
-        services.AddScoped<ISerialNumberRepository, SerialNumberRepository>();
-        services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
-        services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
-        services.AddScoped<IProductBundleRepository, ProductBundleRepository>();
-        services.AddScoped<IBarcodeDefinitionRepository, BarcodeDefinitionRepository>();
-        services.AddScoped<IPackagingTypeRepository, PackagingTypeRepository>();
-        services.AddScoped<IWarehouseZoneRepository, WarehouseZoneRepository>();
-        services.AddScoped<IShelfLifeRepository, ShelfLifeRepository>();
-        services.AddScoped<IQualityControlRepository, QualityControlRepository>();
-        services.AddScoped<IConsignmentStockRepository, ConsignmentStockRepository>();
-        services.AddScoped<ICycleCountRepository, CycleCountRepository>();
-        services.AddScoped<IInventoryAdjustmentRepository, InventoryAdjustmentRepository>();
+        //   - IProductRepository (legacy, still supported - now correctly shares DbContext)
+        services.AddScoped<IProductRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Products);
+        services.AddScoped<ICategoryRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Categories);
+        services.AddScoped<IBrandRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Brands);
+        services.AddScoped<IUnitRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Units);
+        services.AddScoped<IWarehouseRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Warehouses);
+        services.AddScoped<ILocationRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Locations);
+        services.AddScoped<IStockRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Stocks);
+        services.AddScoped<IStockMovementRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().StockMovements);
+        services.AddScoped<IStockReservationRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().StockReservations);
+        services.AddScoped<IStockTransferRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().StockTransfers);
+        services.AddScoped<IStockCountRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().StockCounts);
+        services.AddScoped<ISupplierRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().Suppliers);
+        services.AddScoped<IPriceListRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().PriceLists);
+        services.AddScoped<ILotBatchRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().LotBatches);
+        services.AddScoped<ISerialNumberRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().SerialNumbers);
+        services.AddScoped<IProductAttributeRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ProductAttributes);
+        services.AddScoped<IProductVariantRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ProductVariants);
+        services.AddScoped<IProductBundleRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ProductBundles);
+        services.AddScoped<IBarcodeDefinitionRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().BarcodeDefinitions);
+        services.AddScoped<IPackagingTypeRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().PackagingTypes);
+        services.AddScoped<IWarehouseZoneRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().WarehouseZones);
+        services.AddScoped<IShelfLifeRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ShelfLives);
+        services.AddScoped<IQualityControlRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().QualityControls);
+        services.AddScoped<IConsignmentStockRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().ConsignmentStocks);
+        services.AddScoped<ICycleCountRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().CycleCounts);
+        services.AddScoped<IInventoryAdjustmentRepository>(sp => sp.GetRequiredService<IInventoryUnitOfWork>().InventoryAdjustments);
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.Inventory.IInventoryService, Application.Services.InventoryService>();

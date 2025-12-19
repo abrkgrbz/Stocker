@@ -57,14 +57,17 @@ public static class DependencyInjection
         services.AddScoped<ISalesUnitOfWork>(sp => sp.GetRequiredService<SalesUnitOfWork>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SalesUnitOfWork>());
 
-        // NOTE: Individual repository registrations are kept for backward compatibility.
+        // IMPORTANT: Repository registrations now delegate to ISalesUnitOfWork
+        // to ensure the same DbContext instance is used for both repository operations
+        // and SaveChanges(). This fixes the bug where entities were added to one DbContext
+        // but SaveChanges() was called on a different DbContext instance.
+        //
         // Handlers can use either:
         //   - ISalesUnitOfWork.SalesOrders (recommended for new code)
-        //   - ISalesOrderRepository (legacy, still supported)
-        // Both resolve to the same cached instance within the UoW scope.
-        services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
-        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
-        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        //   - ISalesOrderRepository (legacy, still supported - now correctly shares DbContext)
+        services.AddScoped<ISalesOrderRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesOrders);
+        services.AddScoped<IInvoiceRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Invoices);
+        services.AddScoped<IPaymentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Payments);
 
         return services;
     }

@@ -53,68 +53,77 @@ public static class DependencyInjection
         services.AddScoped<IHRUnitOfWork>(sp => sp.GetRequiredService<HRUnitOfWork>());
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<HRUnitOfWork>());
 
-        // Register Core Repositories
-        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-        services.AddScoped<IPositionRepository, PositionRepository>();
+        // IMPORTANT: Repository registrations now delegate to IHRUnitOfWork
+        // to ensure the same DbContext instance is used for both repository operations
+        // and SaveChanges(). This fixes the bug where entities were added to one DbContext
+        // but SaveChanges() was called on a different DbContext instance.
+        //
+        // Handlers can use either:
+        //   - IHRUnitOfWork.Employees (recommended for new code)
+        //   - IEmployeeRepository (legacy, still supported - now correctly shares DbContext)
 
-        // Register Work Location and Shift Repositories
-        services.AddScoped<IWorkLocationRepository, WorkLocationRepository>();
-        services.AddScoped<IShiftRepository, ShiftRepository>();
-        services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
+        // Core Repositories
+        services.AddScoped<IEmployeeRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Employees);
+        services.AddScoped<IDepartmentRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Departments);
+        services.AddScoped<IPositionRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Positions);
 
-        // Register Time and Attendance Repositories
-        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
-        services.AddScoped<ILeaveRepository, LeaveRepository>();
-        services.AddScoped<ILeaveBalanceRepository, LeaveBalanceRepository>();
-        services.AddScoped<IHolidayRepository, HolidayRepository>();
+        // Work Location and Shift Repositories
+        services.AddScoped<IWorkLocationRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().WorkLocations);
+        services.AddScoped<IShiftRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Shifts);
+        services.AddScoped<IWorkScheduleRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().WorkSchedules);
 
-        // Register Performance Management Repositories
-        services.AddScoped<IPerformanceReviewRepository, PerformanceReviewRepository>();
-        services.AddScoped<IPerformanceGoalRepository, PerformanceGoalRepository>();
+        // Time and Attendance Repositories
+        services.AddScoped<IAttendanceRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Attendances);
+        services.AddScoped<ILeaveRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Leaves);
+        services.AddScoped<ILeaveBalanceRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().LeaveBalances);
+        services.AddScoped<IHolidayRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Holidays);
 
-        // Register Training and Documents Repositories
-        services.AddScoped<ITrainingRepository, TrainingRepository>();
-        services.AddScoped<IEmployeeTrainingRepository, EmployeeTrainingRepository>();
-        services.AddScoped<IEmployeeDocumentRepository, EmployeeDocumentRepository>();
+        // Performance Management Repositories
+        services.AddScoped<IPerformanceReviewRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().PerformanceReviews);
+        services.AddScoped<IPerformanceGoalRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().PerformanceGoals);
 
-        // Register Payroll and Expense Repositories
-        services.AddScoped<IPayrollRepository, PayrollRepository>();
-        services.AddScoped<IExpenseRepository, ExpenseRepository>();
+        // Training and Documents Repositories
+        services.AddScoped<ITrainingRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Trainings);
+        services.AddScoped<IEmployeeTrainingRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().EmployeeTrainings);
+        services.AddScoped<IEmployeeDocumentRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().EmployeeDocuments);
 
-        // Register Leave Type Repository
-        services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
+        // Payroll and Expense Repositories
+        services.AddScoped<IPayrollRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Payrolls);
+        services.AddScoped<IExpenseRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Expenses);
 
-        // Register Announcement Repositories
-        services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
-        services.AddScoped<IAnnouncementAcknowledgmentRepository, AnnouncementAcknowledgmentRepository>();
+        // Leave Type Repository
+        services.AddScoped<ILeaveTypeRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().LeaveTypes);
 
-        // Register Career and Development Repositories
-        services.AddScoped<ICareerPathRepository, CareerPathRepository>();
-        services.AddScoped<ICertificationRepository, CertificationRepository>();
-        services.AddScoped<IEmployeeSkillRepository, EmployeeSkillRepository>();
-        services.AddScoped<ISuccessionPlanRepository, SuccessionPlanRepository>();
+        // Announcement Repositories
+        services.AddScoped<IAnnouncementRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Announcements);
+        services.AddScoped<IAnnouncementAcknowledgmentRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().AnnouncementAcknowledgments);
 
-        // Register Disciplinary and Grievance Repositories
-        services.AddScoped<IDisciplinaryActionRepository, DisciplinaryActionRepository>();
-        services.AddScoped<IGrievanceRepository, GrievanceRepository>();
+        // Career and Development Repositories
+        services.AddScoped<ICareerPathRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().CareerPaths);
+        services.AddScoped<ICertificationRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Certifications);
+        services.AddScoped<IEmployeeSkillRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().EmployeeSkills);
+        services.AddScoped<ISuccessionPlanRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().SuccessionPlans);
 
-        // Register Asset and Benefit Repositories
-        services.AddScoped<IEmployeeAssetRepository, EmployeeAssetRepository>();
-        services.AddScoped<IEmployeeBenefitRepository, EmployeeBenefitRepository>();
+        // Disciplinary and Grievance Repositories
+        services.AddScoped<IDisciplinaryActionRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().DisciplinaryActions);
+        services.AddScoped<IGrievanceRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Grievances);
 
-        // Register Recruitment Repositories
-        services.AddScoped<IJobPostingRepository, JobPostingRepository>();
-        services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
-        services.AddScoped<IInterviewRepository, InterviewRepository>();
-        services.AddScoped<IOnboardingRepository, OnboardingRepository>();
+        // Asset and Benefit Repositories
+        services.AddScoped<IEmployeeAssetRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().EmployeeAssets);
+        services.AddScoped<IEmployeeBenefitRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().EmployeeBenefits);
 
-        // Register Time Management Repositories
-        services.AddScoped<IOvertimeRepository, OvertimeRepository>();
-        services.AddScoped<ITimeSheetRepository, TimeSheetRepository>();
+        // Recruitment Repositories
+        services.AddScoped<IJobPostingRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().JobPostings);
+        services.AddScoped<IJobApplicationRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().JobApplications);
+        services.AddScoped<IInterviewRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Interviews);
+        services.AddScoped<IOnboardingRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Onboardings);
 
-        // Register Payroll Repositories
-        services.AddScoped<IPayslipRepository, PayslipRepository>();
+        // Time Management Repositories
+        services.AddScoped<IOvertimeRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Overtimes);
+        services.AddScoped<ITimeSheetRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().TimeSheets);
+
+        // Payroll Repositories
+        services.AddScoped<IPayslipRepository>(sp => sp.GetRequiredService<IHRUnitOfWork>().Payslips);
 
         return services;
     }
