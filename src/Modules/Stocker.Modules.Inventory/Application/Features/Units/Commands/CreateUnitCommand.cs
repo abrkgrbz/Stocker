@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using InventoryUnit = Stocker.Modules.Inventory.Domain.Entities.Unit;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Units.Commands;
@@ -35,15 +34,14 @@ public class CreateUnitCommandValidator : AbstractValidator<CreateUnitCommand>
 
 /// <summary>
 /// Handler for CreateUnitCommand
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Result<UnitDto>>
 {
-    private readonly IUnitRepository _unitRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateUnitCommandHandler(IUnitRepository unitRepository, IUnitOfWork unitOfWork)
+    public CreateUnitCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _unitRepository = unitRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -52,7 +50,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
         var data = request.UnitData;
 
         // Check if unit with same code exists
-        var existingUnit = await _unitRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingUnit = await _unitOfWork.Units.GetByCodeAsync(data.Code, cancellationToken);
         if (existingUnit != null)
         {
             return Result<UnitDto>.Failure(new Error("Unit.DuplicateCode", $"Unit with code '{data.Code}' already exists", ErrorType.Conflict));
@@ -63,7 +61,7 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
         if (data.BaseUnitId.HasValue)
         {
             // Validate base unit exists
-            var baseUnit = await _unitRepository.GetByIdAsync(data.BaseUnitId.Value, cancellationToken);
+            var baseUnit = await _unitOfWork.Units.GetByIdAsync(data.BaseUnitId.Value, cancellationToken);
             if (baseUnit == null)
             {
                 return Result<UnitDto>.Failure(new Error("Unit.BaseUnitNotFound", $"Base unit with ID {data.BaseUnitId} not found", ErrorType.NotFound));
@@ -76,7 +74,10 @@ public class CreateUnitCommandHandler : IRequestHandler<CreateUnitCommand, Resul
             unit = new InventoryUnit(data.Code, data.Name, data.Symbol);
         }
 
-        await _unitRepository.AddAsync(unit, cancellationToken);
+        // Set tenant ID for multi-tenancy
+        unit.SetTenantId(request.TenantId);
+
+        await _unitOfWork.Units.AddAsync(unit, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new UnitDto
