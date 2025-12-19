@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Interfaces.Notifications;
+using Stocker.SignalR.Constants;
 using Stocker.SignalR.Hubs;
 
 namespace Stocker.SignalR.Services;
@@ -27,14 +28,14 @@ public sealed class SignalRTenantNotificationService : ITenantNotificationServic
     {
         try
         {
-            var groupName = $"registration-{contactEmail}";
-            
+            var groupName = SignalRGroups.ForRegistrationEmail(contactEmail);
+
             _logger.LogInformation(
-                "🔵 Sending SignalR notification to group: {GroupName} for tenant: {TenantId}",
+                "Sending SignalR notification to group: GroupName={GroupName}, TenantId={TenantId}",
                 groupName, tenantId);
 
             await _hubContext.Clients.Group(groupName)
-                .SendAsync("TenantReady", new
+                .SendAsync(SignalREvents.TenantReady, new
                 {
                     tenantId,
                     companyCode,
@@ -44,13 +45,13 @@ public sealed class SignalRTenantNotificationService : ITenantNotificationServic
                 }, cancellationToken);
 
             _logger.LogInformation(
-                "✅ SignalR notification sent successfully for tenant: {TenantId}, Email: {Email}",
+                "SignalR notification sent successfully: TenantId={TenantId}, Email={Email}",
                 tenantId, contactEmail);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "❌ Failed to send SignalR notification for tenant: {TenantId}, Email: {Email}",
+                "Failed to send SignalR notification: TenantId={TenantId}, Email={Email}",
                 tenantId, contactEmail);
             
             // Don't throw - notification failure shouldn't break tenant provisioning

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Stocker.SignalR.Constants;
+using Stocker.SignalR.Models.Monitoring;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -39,20 +41,20 @@ public class MonitoringHub : Hub
             _connections.TryAdd(Context.ConnectionId, connection);
 
             // Add to admin monitoring group (only system admins)
-            await Groups.AddToGroupAsync(Context.ConnectionId, "admin-monitoring");
+            await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.AdminMonitoring);
 
             // Add to tenant-specific monitoring if applicable
             if (!string.IsNullOrEmpty(tenantId))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"monitoring-tenant-{tenantId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.ForMonitoringTenant(tenantId));
             }
 
             _logger.LogInformation(
-                "Monitoring client connected: {ConnectionId} for User: {UserId} (Role: {Role})",
+                "Monitoring client connected: ConnectionId={ConnectionId}, UserId={UserId}, Role={Role}",
                 Context.ConnectionId, userId, userRole);
 
             // Send connection confirmation with initial settings
-            await Clients.Caller.SendAsync("MonitoringConnected", new
+            await Clients.Caller.SendAsync(SignalREvents.MonitoringConnected, new
             {
                 connectionId = Context.ConnectionId,
                 message = "Connected to monitoring hub",
@@ -69,15 +71,15 @@ public class MonitoringHub : Hub
         if (_connections.TryRemove(Context.ConnectionId, out var connection))
         {
             // Remove from groups
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "admin-monitoring");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, SignalRGroups.AdminMonitoring);
 
             if (!string.IsNullOrEmpty(connection.TenantId))
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"monitoring-tenant-{connection.TenantId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, SignalRGroups.ForMonitoringTenant(connection.TenantId));
             }
 
             _logger.LogInformation(
-                "Monitoring client disconnected: {ConnectionId} for User: {UserId}. Reason: {Reason}",
+                "Monitoring client disconnected: ConnectionId={ConnectionId}, UserId={UserId}, Reason={Reason}",
                 Context.ConnectionId, connection.UserId, exception?.Message ?? "Client disconnected");
         }
 
@@ -91,11 +93,11 @@ public class MonitoringHub : Hub
     {
         try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "system-metrics");
+            await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.SystemMetrics);
 
             _logger.LogInformation("Client {ConnectionId} subscribed to system metrics", Context.ConnectionId);
 
-            await Clients.Caller.SendAsync("SubscriptionConfirmed", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionConfirmed, new
             {
                 subscription = "system-metrics",
                 message = "Successfully subscribed to system metrics",
@@ -105,7 +107,7 @@ public class MonitoringHub : Hub
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error subscribing to system metrics");
-            await Clients.Caller.SendAsync("SubscriptionError", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionError, new
             {
                 error = "Failed to subscribe to system metrics",
                 details = ex.Message
@@ -120,7 +122,7 @@ public class MonitoringHub : Hub
     {
         try
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "system-metrics");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, SignalRGroups.SystemMetrics);
 
             _logger.LogInformation("Client {ConnectionId} unsubscribed from system metrics", Context.ConnectionId);
         }
@@ -137,11 +139,11 @@ public class MonitoringHub : Hub
     {
         try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "service-health");
+            await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.ServiceHealth);
 
             _logger.LogInformation("Client {ConnectionId} subscribed to service health", Context.ConnectionId);
 
-            await Clients.Caller.SendAsync("SubscriptionConfirmed", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionConfirmed, new
             {
                 subscription = "service-health",
                 message = "Successfully subscribed to service health",
@@ -151,7 +153,7 @@ public class MonitoringHub : Hub
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error subscribing to service health");
-            await Clients.Caller.SendAsync("SubscriptionError", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionError, new
             {
                 error = "Failed to subscribe to service health",
                 details = ex.Message
@@ -166,11 +168,11 @@ public class MonitoringHub : Hub
     {
         try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "monitoring-alerts");
+            await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.MonitoringAlerts);
 
             _logger.LogInformation("Client {ConnectionId} subscribed to alerts", Context.ConnectionId);
 
-            await Clients.Caller.SendAsync("SubscriptionConfirmed", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionConfirmed, new
             {
                 subscription = "monitoring-alerts",
                 message = "Successfully subscribed to alerts",
@@ -180,7 +182,7 @@ public class MonitoringHub : Hub
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error subscribing to alerts");
-            await Clients.Caller.SendAsync("SubscriptionError", new
+            await Clients.Caller.SendAsync(SignalREvents.SubscriptionError, new
             {
                 error = "Failed to subscribe to alerts",
                 details = ex.Message
@@ -199,7 +201,7 @@ public class MonitoringHub : Hub
 
             // This will trigger the background job to send an immediate update
             // In production, this could call ISystemMonitoringService directly
-            await Clients.Caller.SendAsync("MetricsUpdateRequested", new
+            await Clients.Caller.SendAsync(SignalREvents.MetricsUpdateRequested, new
             {
                 message = "Metrics update requested",
                 timestamp = DateTime.UtcNow
@@ -217,22 +219,10 @@ public class MonitoringHub : Hub
     public async Task GetConnectionsCount()
     {
         var count = _connections.Count;
-        await Clients.Caller.SendAsync("ConnectionsCount", new
+        await Clients.Caller.SendAsync(SignalREvents.ConnectionsCount, new
         {
             count = count,
             timestamp = DateTime.UtcNow
         });
     }
-}
-
-/// <summary>
-/// Monitoring connection information
-/// </summary>
-public class MonitoringConnection
-{
-    public string ConnectionId { get; set; } = string.Empty;
-    public string UserId { get; set; } = string.Empty;
-    public string? TenantId { get; set; }
-    public string? UserRole { get; set; }
-    public DateTime ConnectedAt { get; set; }
 }

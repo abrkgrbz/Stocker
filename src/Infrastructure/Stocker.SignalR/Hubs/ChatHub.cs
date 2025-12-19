@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Stocker.SignalR.Constants;
+using Stocker.SignalR.Models.Chat;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -40,12 +42,12 @@ public class ChatHub : Hub
             // Join tenant's default chat room
             if (!string.IsNullOrEmpty(tenantId))
             {
-                var roomName = $"tenant-{tenantId}";
+                var roomName = SignalRGroups.ForTenant(tenantId);
                 await JoinRoom(roomName);
             }
 
             // Notify others that user is online
-            await Clients.Others.SendAsync("UserOnline", new
+            await Clients.Others.SendAsync(SignalREvents.UserOnline, new
             {
                 userId,
                 userName,
@@ -70,7 +72,7 @@ public class ChatHub : Hub
             }
 
             // Notify others that user is offline
-            await Clients.Others.SendAsync("UserOffline", new
+            await Clients.Others.SendAsync(SignalREvents.UserOffline, new
             {
                 user.UserId,
                 user.UserName,
@@ -87,7 +89,7 @@ public class ChatHub : Hub
     {
         if (!_users.TryGetValue(Context.ConnectionId, out var sender))
         {
-            await Clients.Caller.SendAsync("Error", "User not found");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "User not found");
             return;
         }
 
@@ -101,28 +103,29 @@ public class ChatHub : Hub
             Timestamp = DateTime.UtcNow
         };
 
-        // Store message in history
+        // Store message in history using thread-safe pattern
         var historyKey = roomName ?? "global";
-        if (!_messageHistory.ContainsKey(historyKey))
-        {
-            _messageHistory[historyKey] = new List<ChatMessage>();
-        }
-        _messageHistory[historyKey].Add(chatMessage);
+        var messages = _messageHistory.GetOrAdd(historyKey, _ => new List<ChatMessage>());
 
-        // Keep only last 100 messages per room
-        if (_messageHistory[historyKey].Count > 100)
+        lock (messages)
         {
-            _messageHistory[historyKey].RemoveAt(0);
+            messages.Add(chatMessage);
+
+            // Keep only last 100 messages per room
+            while (messages.Count > 100)
+            {
+                messages.RemoveAt(0);
+            }
         }
 
         // Send message to appropriate recipients
         if (!string.IsNullOrEmpty(roomName))
         {
-            await Clients.Group(roomName).SendAsync("ReceiveMessage", chatMessage);
+            await Clients.Group(roomName).SendAsync(SignalREvents.ReceiveMessage, chatMessage);
         }
         else
         {
-            await Clients.All.SendAsync("ReceiveMessage", chatMessage);
+            await Clients.All.SendAsync(SignalREvents.ReceiveMessage, chatMessage);
         }
 
         _logger.LogInformation("Message sent by {UserName} to {Room}", sender.UserName, roomName ?? "all");
@@ -132,14 +135,14 @@ public class ChatHub : Hub
     {
         if (!_users.TryGetValue(Context.ConnectionId, out var sender))
         {
-            await Clients.Caller.SendAsync("Error", "User not found");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "User not found");
             return;
         }
 
         var targetConnection = _users.Values.FirstOrDefault(u => u.UserId == targetUserId);
         if (targetConnection == null)
         {
-            await Clients.Caller.SendAsync("Error", "Target user not online");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "Target user not online");
             return;
         }
 
@@ -155,10 +158,10 @@ public class ChatHub : Hub
         };
 
         // Send to target user
-        await Clients.Client(targetConnection.ConnectionId).SendAsync("ReceivePrivateMessage", privateMessage);
-        
+        await Clients.Client(targetConnection.ConnectionId).SendAsync(SignalREvents.ReceivePrivateMessage, privateMessage);
+
         // Send confirmation to sender
-        await Clients.Caller.SendAsync("PrivateMessageSent", privateMessage);
+        await Clients.Caller.SendAsync(SignalREvents.PrivateMessageSent, privateMessage);
 
         _logger.LogInformation("Private message sent from {SenderName} to {TargetUserId}", sender.UserName, targetUserId);
     }
@@ -167,35 +170,39 @@ public class ChatHub : Hub
     {
         if (!_users.TryGetValue(Context.ConnectionId, out var user))
         {
-            await Clients.Caller.SendAsync("Error", "User not found");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "User not found");
             return;
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
 
-        if (!_rooms.ContainsKey(roomName))
+        var room = _rooms.GetOrAdd(roomName, _ => new ChatRoom
         {
-            _rooms[roomName] = new ChatRoom
-            {
-                Name = roomName,
-                CreatedAt = DateTime.UtcNow,
-                Users = new List<string>()
-            };
-        }
+            Name = roomName,
+            CreatedAt = DateTime.UtcNow,
+            Users = new List<string>()
+        });
 
-        if (!_rooms[roomName].Users.Contains(user.UserId))
+        lock (room.Users)
         {
-            _rooms[roomName].Users.Add(user.UserId);
+            if (!room.Users.Contains(user.UserId))
+            {
+                room.Users.Add(user.UserId);
+            }
         }
 
         // Send recent message history to the user
-        if (_messageHistory.ContainsKey(roomName))
+        if (_messageHistory.TryGetValue(roomName, out var history))
         {
-            var recentMessages = _messageHistory[roomName].TakeLast(20).ToList();
-            await Clients.Caller.SendAsync("MessageHistory", recentMessages);
+            List<ChatMessage> recentMessages;
+            lock (history)
+            {
+                recentMessages = history.TakeLast(20).ToList();
+            }
+            await Clients.Caller.SendAsync(SignalREvents.MessageHistory, recentMessages);
         }
 
-        await Clients.Group(roomName).SendAsync("UserJoinedRoom", new
+        await Clients.Group(roomName).SendAsync(SignalREvents.UserJoinedRoom, new
         {
             user.UserId,
             user.UserName,
@@ -210,24 +217,31 @@ public class ChatHub : Hub
     {
         if (!_users.TryGetValue(Context.ConnectionId, out var user))
         {
-            await Clients.Caller.SendAsync("Error", "User not found");
+            await Clients.Caller.SendAsync(SignalREvents.Error, "User not found");
             return;
         }
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
 
-        if (_rooms.ContainsKey(roomName))
+        if (_rooms.TryGetValue(roomName, out var room))
         {
-            _rooms[roomName].Users.Remove(user.UserId);
-            
-            // Remove room if empty
-            if (_rooms[roomName].Users.Count == 0)
+            bool shouldRemoveRoom = false;
+
+            lock (room.Users)
+            {
+                room.Users.Remove(user.UserId);
+                shouldRemoveRoom = room.Users.Count == 0;
+            }
+
+            // Remove room if empty and also clean up message history
+            if (shouldRemoveRoom)
             {
                 _rooms.TryRemove(roomName, out _);
+                _messageHistory.TryRemove(roomName, out _);
             }
         }
 
-        await Clients.Group(roomName).SendAsync("UserLeftRoom", new
+        await Clients.Group(roomName).SendAsync(SignalREvents.UserLeftRoom, new
         {
             user.UserId,
             user.UserName,
@@ -247,7 +261,7 @@ public class ChatHub : Hub
             u.ConnectedAt
         }).ToList();
 
-        await Clients.Caller.SendAsync("OnlineUsersList", onlineUsers);
+        await Clients.Caller.SendAsync(SignalREvents.OnlineUsersList, onlineUsers);
     }
 
     public async Task GetRooms()
@@ -259,7 +273,7 @@ public class ChatHub : Hub
             r.Value.CreatedAt
         }).ToList();
 
-        await Clients.Caller.SendAsync("RoomsList", rooms);
+        await Clients.Caller.SendAsync(SignalREvents.RoomsList, rooms);
     }
 
     public async Task StartTyping(string? roomName = null)
@@ -276,11 +290,11 @@ public class ChatHub : Hub
 
         if (!string.IsNullOrEmpty(roomName))
         {
-            await Clients.OthersInGroup(roomName).SendAsync("UserTyping", typingInfo);
+            await Clients.OthersInGroup(roomName).SendAsync(SignalREvents.UserTyping, typingInfo);
         }
         else
         {
-            await Clients.Others.SendAsync("UserTyping", typingInfo);
+            await Clients.Others.SendAsync(SignalREvents.UserTyping, typingInfo);
         }
     }
 
@@ -298,43 +312,11 @@ public class ChatHub : Hub
 
         if (!string.IsNullOrEmpty(roomName))
         {
-            await Clients.OthersInGroup(roomName).SendAsync("UserStoppedTyping", typingInfo);
+            await Clients.OthersInGroup(roomName).SendAsync(SignalREvents.UserStoppedTyping, typingInfo);
         }
         else
         {
-            await Clients.Others.SendAsync("UserStoppedTyping", typingInfo);
+            await Clients.Others.SendAsync(SignalREvents.UserStoppedTyping, typingInfo);
         }
     }
 }
-
-#region DTOs
-
-public class ChatUser
-{
-    public string ConnectionId { get; set; } = string.Empty;
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public string? TenantId { get; set; }
-    public DateTime ConnectedAt { get; set; }
-}
-
-public class ChatRoom
-{
-    public string Name { get; set; } = string.Empty;
-    public List<string> Users { get; set; } = new();
-    public DateTime CreatedAt { get; set; }
-}
-
-public class ChatMessage
-{
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string? Room { get; set; }
-    public bool IsPrivate { get; set; }
-    public string? TargetUserId { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-
-#endregion

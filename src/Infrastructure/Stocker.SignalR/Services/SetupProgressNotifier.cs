@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
+using Stocker.SignalR.Constants;
 using Stocker.SignalR.Hubs;
+using Stocker.SignalR.Models.Setup;
 
 namespace Stocker.SignalR.Services;
 
@@ -25,7 +27,7 @@ public class SetupProgressNotifier : ISetupProgressNotifier
     {
         try
         {
-            var groupName = SetupProgressHub.GetGroupName(progress.TenantId);
+            var groupName = SignalRGroups.ForSetup(progress.TenantId);
 
             var message = new SetupProgressMessage
             {
@@ -42,7 +44,7 @@ public class SetupProgressNotifier : ISetupProgressNotifier
             };
 
             await _hubContext.Clients.Group(groupName)
-                .SendAsync("SetupProgress", message, cancellationToken);
+                .SendAsync(SignalREvents.SetupProgress, message, cancellationToken);
 
             _logger.LogInformation(
                 "Setup progress sent for tenant {TenantId}: Step={Step}, Progress={Progress}%, Message={Message}",

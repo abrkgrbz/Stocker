@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using MediatR;
 using Stocker.Application.Features.Modules.Queries.CalculateCustomPackagePrice;
+using Stocker.SignalR.Constants;
+using Stocker.SignalR.Models.Pricing;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -24,9 +26,9 @@ public class PricingHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Pricing client connected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("PricingHub client connected: ConnectionId={ConnectionId}", Context.ConnectionId);
 
-        await Clients.Caller.SendAsync("Connected", new
+        await Clients.Caller.SendAsync(SignalREvents.Connected, new
         {
             connectionId = Context.ConnectionId,
             message = "Connected to pricing hub"
@@ -37,7 +39,7 @@ public class PricingHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation("Pricing client disconnected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("PricingHub client disconnected: ConnectionId={ConnectionId}", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -48,13 +50,13 @@ public class PricingHub : Hub
     {
         try
         {
-            _logger.LogDebug("Calculating price for {ModuleCount} modules, {UserCount} users",
+            _logger.LogDebug("Calculating price for ModuleCount={ModuleCount}, UserCount={UserCount}",
                 request.SelectedModuleCodes?.Count ?? 0, request.UserCount);
 
             // Validate request
             if (request.SelectedModuleCodes == null || request.SelectedModuleCodes.Count == 0)
             {
-                await Clients.Caller.SendAsync("PriceCalculated", new PriceCalculationResponse
+                await Clients.Caller.SendAsync(SignalREvents.PriceCalculated, new PriceCalculationResponse
                 {
                     Success = false,
                     Error = "En az bir modül seçmelisiniz"
@@ -72,7 +74,7 @@ public class PricingHub : Hub
 
             if (result.IsSuccess)
             {
-                await Clients.Caller.SendAsync("PriceCalculated", new PriceCalculationResponse
+                await Clients.Caller.SendAsync(SignalREvents.PriceCalculated, new PriceCalculationResponse
                 {
                     Success = true,
                     Data = result.Value
@@ -80,7 +82,7 @@ public class PricingHub : Hub
             }
             else
             {
-                await Clients.Caller.SendAsync("PriceCalculated", new PriceCalculationResponse
+                await Clients.Caller.SendAsync(SignalREvents.PriceCalculated, new PriceCalculationResponse
                 {
                     Success = false,
                     Error = result.Error?.Description ?? "Fiyat hesaplanamadı"
@@ -90,7 +92,7 @@ public class PricingHub : Hub
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error calculating price");
-            await Clients.Caller.SendAsync("PriceCalculated", new PriceCalculationResponse
+            await Clients.Caller.SendAsync(SignalREvents.PriceCalculated, new PriceCalculationResponse
             {
                 Success = false,
                 Error = "Fiyat hesaplanırken bir hata oluştu"
@@ -98,22 +100,3 @@ public class PricingHub : Hub
         }
     }
 }
-
-#region DTOs
-
-public class PriceCalculationRequest
-{
-    public List<string> SelectedModuleCodes { get; set; } = new();
-    public int UserCount { get; set; } = 1;
-    public string? StoragePlanCode { get; set; }
-    public List<string>? SelectedAddOnCodes { get; set; }
-}
-
-public class PriceCalculationResponse
-{
-    public bool Success { get; set; }
-    public object? Data { get; set; }
-    public string? Error { get; set; }
-}
-
-#endregion

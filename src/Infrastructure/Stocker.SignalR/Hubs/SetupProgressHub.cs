@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using Stocker.SignalR.Constants;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -20,13 +21,13 @@ public class SetupProgressHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Setup progress client connected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("SetupProgressHub client connected: ConnectionId={ConnectionId}", Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation("Setup progress client disconnected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("SetupProgressHub client disconnected: ConnectionId={ConnectionId}", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -35,10 +36,10 @@ public class SetupProgressHub : Hub
     /// </summary>
     public async Task JoinSetupGroup(Guid tenantId)
     {
-        var groupName = GetGroupName(tenantId);
+        var groupName = SignalRGroups.ForSetup(tenantId);
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-        await Clients.Caller.SendAsync("JoinedSetupGroup", new
+        await Clients.Caller.SendAsync(SignalREvents.JoinedSetupGroup, new
         {
             tenantId,
             groupName,
@@ -54,10 +55,10 @@ public class SetupProgressHub : Hub
     /// </summary>
     public async Task LeaveSetupGroup(Guid tenantId)
     {
-        var groupName = GetGroupName(tenantId);
+        var groupName = SignalRGroups.ForSetup(tenantId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
 
-        await Clients.Caller.SendAsync("LeftSetupGroup", new
+        await Clients.Caller.SendAsync(SignalREvents.LeftSetupGroup, new
         {
             tenantId,
             groupName,
@@ -71,42 +72,5 @@ public class SetupProgressHub : Hub
     /// <summary>
     /// Get the group name for a tenant's setup progress
     /// </summary>
-    public static string GetGroupName(Guid tenantId) => $"setup-{tenantId}";
+    public static string GetGroupName(Guid tenantId) => SignalRGroups.ForSetup(tenantId);
 }
-
-#region DTOs
-
-/// <summary>
-/// Setup progress update message
-/// </summary>
-public class SetupProgressMessage
-{
-    public Guid TenantId { get; set; }
-    public SetupStep Step { get; set; }
-    public string StepName { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public int ProgressPercentage { get; set; }
-    public bool IsCompleted { get; set; }
-    public bool HasError { get; set; }
-    public string? ErrorMessage { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public Dictionary<string, object>? Metadata { get; set; }
-}
-
-/// <summary>
-/// Setup steps enumeration
-/// </summary>
-public enum SetupStep
-{
-    Initializing = 0,
-    CreatingDatabase = 1,
-    RunningMigrations = 2,
-    SeedingData = 3,
-    ConfiguringModules = 4,
-    CreatingStorage = 5,
-    ActivatingTenant = 6,
-    Completed = 7,
-    Failed = -1
-}
-
-#endregion

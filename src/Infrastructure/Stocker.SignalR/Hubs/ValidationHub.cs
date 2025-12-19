@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
+using Stocker.SignalR.Constants;
+// Use alias to avoid ambiguity with Application.Common.Interfaces types
+using ValidationModels = Stocker.SignalR.Models.Validation;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -24,8 +27,8 @@ public class ValidationHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Client connected: {ConnectionId}", Context.ConnectionId);
-        await Clients.Caller.SendAsync("Connected", new { connectionId = Context.ConnectionId });
+        _logger.LogInformation("ValidationHub client connected: ConnectionId={ConnectionId}", Context.ConnectionId);
+        await Clients.Caller.SendAsync(SignalREvents.Connected, new { connectionId = Context.ConnectionId });
         await base.OnConnectedAsync();
     }
 
@@ -33,12 +36,11 @@ public class ValidationHub : Hub
     {
         if (exception != null)
         {
-            _logger.LogError(exception, "Client disconnected with error: {ConnectionId}, Error: {ErrorMessage}", 
-                Context.ConnectionId, exception.Message);
+            _logger.LogError(exception, "ValidationHub client disconnected with error: ConnectionId={ConnectionId}", Context.ConnectionId);
         }
         else
         {
-            _logger.LogInformation("Client disconnected normally: {ConnectionId}", Context.ConnectionId);
+            _logger.LogInformation("ValidationHub client disconnected: ConnectionId={ConnectionId}", Context.ConnectionId);
         }
         await base.OnDisconnectedAsync(exception);
     }
@@ -51,8 +53,8 @@ public class ValidationHub : Hub
         try
         {
             var validationResult = await _validationService.ValidateEmailAsync(email);
-            
-            var result = new ValidationResult
+
+            var result = new ValidationModels.ValidationResult
             {
                 IsValid = validationResult.IsValid,
                 Message = validationResult.Message,
@@ -64,18 +66,18 @@ public class ValidationHub : Hub
             {
                 result.Details["suggestedEmail"] = validationResult.SuggestedEmail;
             }
-            
+
             if (validationResult.IsDisposable)
             {
                 result.Details["isDisposable"] = "true";
             }
 
-            await Clients.Caller.SendAsync("EmailValidated", result);
+            await Clients.Caller.SendAsync(SignalREvents.EmailValidated, result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating email");
-            await Clients.Caller.SendAsync("ValidationError", "Email doğrulama sırasında bir hata oluştu");
+            _logger.LogError(ex, "Error validating email: {Email}", email);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Email doğrulama sırasında bir hata oluştu");
         }
     }
 
@@ -87,8 +89,8 @@ public class ValidationHub : Hub
         try
         {
             var strengthResult = await _validationService.CheckPasswordStrengthAsync(password);
-            
-            var result = new PasswordStrength
+
+            var result = new ValidationModels.PasswordStrength
             {
                 Score = strengthResult.Score,
                 Level = strengthResult.Level,
@@ -96,12 +98,12 @@ public class ValidationHub : Hub
                 Suggestions = strengthResult.Suggestions.ToArray()
             };
 
-            await Clients.Caller.SendAsync("PasswordStrengthChecked", result);
+            await Clients.Caller.SendAsync(SignalREvents.PasswordStrengthChecked, result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking password strength");
-            await Clients.Caller.SendAsync("ValidationError", "Şifre gücü kontrolü sırasında bir hata oluştu");
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Şifre gücü kontrolü sırasında bir hata oluştu");
         }
     }
 
@@ -113,20 +115,20 @@ public class ValidationHub : Hub
         try
         {
             var domainResult = await _validationService.CheckDomainAvailabilityAsync(domain);
-            
-            var result = new DomainCheckResult
+
+            var result = new ValidationModels.DomainCheckResult
             {
                 IsAvailable = domainResult.IsAvailable,
                 Message = domainResult.Message,
                 Suggestions = domainResult.Suggestions.ToArray()
             };
 
-            await Clients.Caller.SendAsync("DomainChecked", result);
+            await Clients.Caller.SendAsync(SignalREvents.DomainChecked, result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking domain");
-            await Clients.Caller.SendAsync("ValidationError", "Domain kontrolü sırasında bir hata oluştu");
+            _logger.LogError(ex, "Error checking domain: {Domain}", domain);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Domain kontrolü sırasında bir hata oluştu");
         }
     }
 
@@ -138,8 +140,8 @@ public class ValidationHub : Hub
         try
         {
             var phoneResult = await _validationService.ValidatePhoneAsync(phoneNumber, countryCode);
-            
-            var result = new ValidationResult
+
+            var result = new ValidationModels.ValidationResult
             {
                 IsValid = phoneResult.IsValid,
                 Message = phoneResult.Message,
@@ -151,23 +153,23 @@ public class ValidationHub : Hub
             {
                 result.Details["formattedNumber"] = phoneResult.FormattedNumber;
             }
-            
+
             if (!string.IsNullOrEmpty(phoneResult.Carrier))
             {
                 result.Details["carrier"] = phoneResult.Carrier;
             }
-            
+
             if (!string.IsNullOrEmpty(phoneResult.NumberType))
             {
                 result.Details["numberType"] = phoneResult.NumberType;
             }
 
-            await Clients.Caller.SendAsync("PhoneValidated", result);
+            await Clients.Caller.SendAsync(SignalREvents.PhoneValidated, result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating phone");
-            await Clients.Caller.SendAsync("ValidationError", "Telefon doğrulama sırasında bir hata oluştu");
+            _logger.LogError(ex, "Error validating phone: {PhoneNumber}", phoneNumber);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Telefon doğrulama sırasında bir hata oluştu");
         }
     }
 
@@ -179,8 +181,8 @@ public class ValidationHub : Hub
         try
         {
             var companyResult = await _validationService.ValidateCompanyNameAsync(companyName);
-            
-            var result = new ValidationResult
+
+            var result = new ValidationModels.ValidationResult
             {
                 IsValid = companyResult.IsValid,
                 Message = companyResult.Message,
@@ -193,12 +195,12 @@ public class ValidationHub : Hub
                 result.Details["similarNames"] = string.Join(", ", companyResult.SimilarNames);
             }
 
-            await Clients.Caller.SendAsync("CompanyNameChecked", result);
+            await Clients.Caller.SendAsync(SignalREvents.CompanyNameChecked, result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking company name");
-            await Clients.Caller.SendAsync("ValidationError", "Şirket adı kontrolü sırasında bir hata oluştu");
+            _logger.LogError(ex, "Error checking company name: {CompanyName}", companyName);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Şirket adı kontrolü sırasında bir hata oluştu");
         }
     }
 
@@ -209,11 +211,11 @@ public class ValidationHub : Hub
     {
         try
         {
-            _logger.LogInformation("Validating tenant code: {Code}", code);
-            
+            _logger.LogDebug("Validating tenant code: {Code}", code);
+
             var codeResult = await _validationService.ValidateTenantCodeAsync(code);
-            
-            var result = new TenantCodeValidationResult
+
+            var result = new ValidationModels.TenantCodeValidationResult
             {
                 IsAvailable = codeResult.IsAvailable,
                 Message = codeResult.Message,
@@ -221,12 +223,12 @@ public class ValidationHub : Hub
                 SuggestedCodes = codeResult.SuggestedCodes?.ToArray() ?? Array.Empty<string>()
             };
 
-            await Clients.Caller.SendAsync("TenantCodeValidated", result);
+            await Clients.Caller.SendAsync(SignalREvents.TenantCodeValidated, result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating tenant code");
-            await Clients.Caller.SendAsync("ValidationError", "Kod kontrolü sırasında bir hata oluştu");
+            _logger.LogError(ex, "Error validating tenant code: {Code}", code);
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Kod kontrolü sırasında bir hata oluştu");
         }
     }
 
@@ -235,97 +237,46 @@ public class ValidationHub : Hub
     /// </summary>
     public async Task ValidateIdentity(string identityNumber)
     {
-        _logger.LogInformation("=== ValidateIdentity START ===");
-        _logger.LogInformation("ConnectionId: {ConnectionId}", Context.ConnectionId);
-        _logger.LogInformation("Input: {IdentityNumber}", identityNumber);
-        
         try
         {
-            _logger.LogInformation("Calling ValidationService.ValidateIdentityNumberAsync...");
+            _logger.LogDebug("Validating identity number for ConnectionId={ConnectionId}", Context.ConnectionId);
+
             var identityResult = await _validationService.ValidateIdentityNumberAsync(identityNumber);
-            _logger.LogInformation("ValidationService returned: IsValid={IsValid}, Message={Message}, NumberType={NumberType}", 
-                identityResult?.IsValid, identityResult?.Message, identityResult?.NumberType);
-            
+
             if (identityResult == null)
             {
-                _logger.LogError("ValidationService returned NULL!");
-                await Clients.Caller.SendAsync("ValidationError", "Validation service returned null");
+                _logger.LogWarning("ValidationService returned null for identity validation");
+                await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Doğrulama servisi yanıt vermedi");
                 return;
             }
-            
-            var result = new IdentityValidationResult
+
+            var result = new ValidationModels.IdentityValidationResult
             {
                 IsValid = identityResult.IsValid,
-                Message = identityResult.Message ?? "No message",
-                NumberType = identityResult.NumberType ?? "Unknown",
+                Message = identityResult.Message ?? string.Empty,
+                NumberType = identityResult.NumberType ?? string.Empty,
                 Details = identityResult.Details ?? new Dictionary<string, string>()
             };
 
             // Add formatted number if available
             if (!string.IsNullOrEmpty(identityResult.FormattedNumber))
             {
-                _logger.LogInformation("Adding formatted number: {FormattedNumber}", identityResult.FormattedNumber);
                 result.Details["formattedNumber"] = identityResult.FormattedNumber;
             }
-            
+
             // Add test number warning if applicable
             if (identityResult.IsTestNumber)
             {
-                _logger.LogInformation("This is a test number");
                 result.Details["isTestNumber"] = "true";
             }
 
-            _logger.LogInformation("Sending IdentityValidated to client...");
-            await Clients.Caller.SendAsync("IdentityValidated", result);
-            _logger.LogInformation("=== ValidateIdentity SUCCESS ===");
+            await Clients.Caller.SendAsync(SignalREvents.IdentityValidated, result);
+            _logger.LogDebug("Identity validation completed: IsValid={IsValid}", result.IsValid);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "=== ValidateIdentity ERROR === {Message}", ex.Message);
-            _logger.LogError("StackTrace: {StackTrace}", ex.StackTrace);
-            await Clients.Caller.SendAsync("ValidationError", $"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error validating identity number");
+            await Clients.Caller.SendAsync(SignalREvents.ValidationError, "Kimlik doğrulama sırasında bir hata oluştu");
         }
     }
 }
-
-#region DTOs
-
-public class ValidationResult
-{
-    public bool IsValid { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public Dictionary<string, string> Details { get; set; } = new();
-}
-
-public class PasswordStrength
-{
-    public int Score { get; set; }
-    public string Level { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public string[] Suggestions { get; set; } = Array.Empty<string>();
-}
-
-public class DomainCheckResult
-{
-    public bool IsAvailable { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public string[] Suggestions { get; set; } = Array.Empty<string>();
-}
-
-public class IdentityValidationResult
-{
-    public bool IsValid { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public string NumberType { get; set; } = string.Empty;
-    public Dictionary<string, string> Details { get; set; } = new();
-}
-
-public class TenantCodeValidationResult
-{
-    public bool IsAvailable { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string[] SuggestedCodes { get; set; } = Array.Empty<string>();
-}
-
-#endregion

@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Stocker.SignalR.Constants;
 using Stocker.SignalR.Hubs;
+using Stocker.SignalR.Services.Interfaces;
 
 namespace Stocker.SignalR.Services;
 
-public interface INotificationService
-{
-    Task SendToUserAsync(string userId, object notification);
-    Task SendToGroupAsync(string groupName, object notification);
-    Task SendToTenantAsync(string tenantId, object notification);
-    Task SendToAllAsync(object notification);
-    Task SendToRoleAsync(string role, object notification);
-}
-
-public class NotificationService : INotificationService
+/// <summary>
+/// Unified notification service implementing all segregated notification interfaces.
+/// Provides methods for sending notifications to users, tenants, groups, roles, and broadcasts.
+/// </summary>
+public class NotificationService :
+    Interfaces.INotificationService,
+    IUserNotificationService,
+    ITenantNotificationService,
+    IBroadcastNotificationService,
+    IGroupNotificationService,
+    IRoleNotificationService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IConnectionManager _connectionManager;
@@ -38,7 +41,7 @@ public class NotificationService : INotificationService
             {
                 await _hubContext.Clients
                     .Clients(connections)
-                    .SendAsync("ReceiveNotification", notification);
+                    .SendAsync(SignalREvents.ReceiveNotification, notification);
                 
                 _logger.LogInformation("Notification sent to user {UserId}", userId);
             }
@@ -60,7 +63,7 @@ public class NotificationService : INotificationService
         {
             await _hubContext.Clients
                 .Group(groupName)
-                .SendAsync("ReceiveNotification", notification);
+                .SendAsync(SignalREvents.ReceiveNotification, notification);
             
             _logger.LogInformation("Notification sent to group {GroupName}", groupName);
         }
@@ -76,8 +79,8 @@ public class NotificationService : INotificationService
         try
         {
             await _hubContext.Clients
-                .Group($"tenant-{tenantId}")
-                .SendAsync("ReceiveNotification", notification);
+                .Group(SignalRGroups.ForTenant(tenantId))
+                .SendAsync(SignalREvents.ReceiveNotification, notification);
             
             _logger.LogInformation("Notification sent to tenant {TenantId}", tenantId);
         }
@@ -94,7 +97,7 @@ public class NotificationService : INotificationService
         {
             await _hubContext.Clients
                 .All
-                .SendAsync("ReceiveNotification", notification);
+                .SendAsync(SignalREvents.ReceiveNotification, notification);
             
             _logger.LogInformation("Notification broadcasted to all users");
         }
@@ -110,15 +113,123 @@ public class NotificationService : INotificationService
         try
         {
             await _hubContext.Clients
-                .Group($"role-{role}")
-                .SendAsync("ReceiveNotification", notification);
-            
-            _logger.LogInformation("Notification sent to role {Role}", role);
+                .Group(SignalRGroups.ForRole(role))
+                .SendAsync(SignalREvents.ReceiveNotification, notification);
+
+            _logger.LogInformation("Notification sent to role: Role={Role}", role);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending notification to role {Role}", role);
+            _logger.LogError(ex, "Error sending notification to role: Role={Role}", role);
             throw;
         }
     }
+
+    #region Extended Interface Implementations
+
+    /// <inheritdoc />
+    public async Task SendToUserAsync(string userId, string eventName, object notification)
+    {
+        try
+        {
+            var connections = _connectionManager.GetConnections(userId);
+            if (connections.Any())
+            {
+                await _hubContext.Clients
+                    .Clients(connections)
+                    .SendAsync(eventName, notification);
+
+                _logger.LogInformation("Custom notification sent to user: UserId={UserId}, Event={Event}", userId, eventName);
+            }
+            else
+            {
+                _logger.LogWarning("No active connections found for user: UserId={UserId}", userId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending custom notification to user: UserId={UserId}, Event={Event}", userId, eventName);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public bool IsUserOnline(string userId)
+    {
+        return _connectionManager.IsUserOnline(userId);
+    }
+
+    /// <inheritdoc />
+    public async Task SendToTenantAsync(string tenantId, string eventName, object notification)
+    {
+        try
+        {
+            await _hubContext.Clients
+                .Group(SignalRGroups.ForTenant(tenantId))
+                .SendAsync(eventName, notification);
+
+            _logger.LogInformation("Custom notification sent to tenant: TenantId={TenantId}, Event={Event}", tenantId, eventName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending custom notification to tenant: TenantId={TenantId}, Event={Event}", tenantId, eventName);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task SendToAllAsync(string eventName, object notification)
+    {
+        try
+        {
+            await _hubContext.Clients
+                .All
+                .SendAsync(eventName, notification);
+
+            _logger.LogInformation("Custom notification broadcasted to all users: Event={Event}", eventName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting custom notification: Event={Event}", eventName);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task SendToGroupAsync(string groupName, string eventName, object notification)
+    {
+        try
+        {
+            await _hubContext.Clients
+                .Group(groupName)
+                .SendAsync(eventName, notification);
+
+            _logger.LogInformation("Custom notification sent to group: GroupName={GroupName}, Event={Event}", groupName, eventName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending custom notification to group: GroupName={GroupName}, Event={Event}", groupName, eventName);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task SendToRoleAsync(string role, string eventName, object notification)
+    {
+        try
+        {
+            await _hubContext.Clients
+                .Group(SignalRGroups.ForRole(role))
+                .SendAsync(eventName, notification);
+
+            _logger.LogInformation("Custom notification sent to role: Role={Role}, Event={Event}", role, eventName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending custom notification to role: Role={Role}, Event={Event}", role, eventName);
+            throw;
+        }
+    }
+
+    #endregion
 }

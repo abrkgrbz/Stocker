@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
+using Stocker.SignalR.Constants;
 using Stocker.SignalR.Hubs;
 using Stocker.SignalR.Models;
 
@@ -44,17 +45,17 @@ public class TenantCreationProgressService : ITenantCreationProgressService
 
             // Send to registration group (user can subscribe with registrationId)
             await _hubContext.Clients
-                .Group($"registration-{registrationId}")
-                .SendAsync("TenantCreationProgress", progress, cancellationToken);
+                .Group(SignalRGroups.ForRegistration(registrationId))
+                .SendAsync(SignalREvents.TenantCreationProgress, progress, cancellationToken);
 
             _logger.LogInformation(
-                "📊 Tenant creation progress sent for registration {RegistrationId}: {Step} ({Progress}%)",
+                "Tenant creation progress sent: RegistrationId={RegistrationId}, Step={Step}, Progress={Progress}%",
                 registrationId, step, progressPercentage);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "❌ Failed to send tenant creation progress for registration {RegistrationId}",
+                "Failed to send tenant creation progress: RegistrationId={RegistrationId}",
                 registrationId);
         }
     }
@@ -79,17 +80,17 @@ public class TenantCreationProgressService : ITenantCreationProgressService
             };
 
             await _hubContext.Clients
-                .Group($"registration-{registrationId}")
-                .SendAsync("TenantCreationProgress", progress, cancellationToken);
+                .Group(SignalRGroups.ForRegistration(registrationId))
+                .SendAsync(SignalREvents.TenantCreationProgress, progress, cancellationToken);
 
-            _logger.LogError(
-                "❌ Tenant creation failed for registration {RegistrationId}: {Error}",
+            _logger.LogWarning(
+                "Tenant creation failed: RegistrationId={RegistrationId}, Error={Error}",
                 registrationId, errorMessage);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "❌ Failed to send tenant creation error for registration {RegistrationId}",
+                "Failed to send tenant creation error: RegistrationId={RegistrationId}",
                 registrationId);
         }
     }
@@ -119,17 +120,17 @@ public class TenantCreationProgressService : ITenantCreationProgressService
             };
 
             await _hubContext.Clients
-                .Group($"registration-{registrationId}")
-                .SendAsync("TenantCreationProgress", progress, cancellationToken);
+                .Group(SignalRGroups.ForRegistration(registrationId))
+                .SendAsync(SignalREvents.TenantCreationProgress, progress, cancellationToken);
 
             _logger.LogInformation(
-                "✅ Tenant creation completed for registration {RegistrationId}, TenantId: {TenantId}",
+                "Tenant creation completed: RegistrationId={RegistrationId}, TenantId={TenantId}",
                 registrationId, tenantId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "❌ Failed to send tenant creation completion for registration {RegistrationId}",
+                "Failed to send tenant creation completion: RegistrationId={RegistrationId}",
                 registrationId);
         }
     }

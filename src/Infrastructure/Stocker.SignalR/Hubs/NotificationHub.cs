@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Stocker.SignalR.Constants;
+using Stocker.SignalR.Models.Notifications;
 
 namespace Stocker.SignalR.Hubs;
 
@@ -39,16 +41,16 @@ public class NotificationHub : Hub
             // Add user to tenant group if applicable
             if (!string.IsNullOrEmpty(tenantId))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"tenant-{tenantId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.ForTenant(tenantId));
             }
 
             // Add user to their personal group
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroups.ForUser(userId));
 
-            _logger.LogInformation("User {UserId} connected with ConnectionId: {ConnectionId}", userId, Context.ConnectionId);
+            _logger.LogInformation("User {UserId} connected with ConnectionId={ConnectionId}", userId, Context.ConnectionId);
 
             // Send connection confirmation
-            await Clients.Caller.SendAsync("Connected", new
+            await Clients.Caller.SendAsync(SignalREvents.Connected, new
             {
                 connectionId = Context.ConnectionId,
                 message = "Connected to notification hub"
@@ -65,9 +67,9 @@ public class NotificationHub : Hub
             // Remove from groups
             if (!string.IsNullOrEmpty(connection.TenantId))
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"tenant-{connection.TenantId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, SignalRGroups.ForTenant(connection.TenantId));
             }
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user-{connection.UserId}");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, SignalRGroups.ForUser(connection.UserId));
 
             _logger.LogInformation("User {UserId} disconnected", connection.UserId);
         }
@@ -83,7 +85,7 @@ public class NotificationHub : Hub
     {
         try
         {
-            await Clients.Group($"user-{userId}").SendAsync("ReceiveNotification", notification);
+            await Clients.Group(SignalRGroups.ForUser(userId)).SendAsync(SignalREvents.ReceiveNotification, notification);
             _logger.LogInformation("Notification sent to user {UserId}", userId);
         }
         catch (Exception ex)
@@ -101,7 +103,7 @@ public class NotificationHub : Hub
     {
         try
         {
-            await Clients.Group($"tenant-{tenantId}").SendAsync("ReceiveNotification", notification);
+            await Clients.Group(SignalRGroups.ForTenant(tenantId)).SendAsync(SignalREvents.ReceiveNotification, notification);
             _logger.LogInformation("Notification sent to tenant {TenantId}", tenantId);
         }
         catch (Exception ex)
@@ -119,7 +121,7 @@ public class NotificationHub : Hub
     {
         try
         {
-            await Clients.All.SendAsync("ReceiveNotification", notification);
+            await Clients.All.SendAsync(SignalREvents.ReceiveNotification, notification);
             _logger.LogInformation("Notification broadcasted to all users");
         }
         catch (Exception ex)
@@ -137,10 +139,10 @@ public class NotificationHub : Hub
         try
         {
             var userId = Context.UserIdentifier ?? Context.User?.FindFirst("UserId")?.Value;
-            
+
             // TODO: Update notification status in database
-            
-            await Clients.Caller.SendAsync("NotificationRead", new
+
+            await Clients.Caller.SendAsync(SignalREvents.NotificationRead, new
             {
                 notificationId,
                 readAt = DateTime.UtcNow
@@ -164,12 +166,12 @@ public class NotificationHub : Hub
         try
         {
             var tenantId = Context.User?.FindFirst("TenantId")?.Value;
-            
+
             var users = tenantId != null
                 ? _connections.Values.Where(c => c.TenantId == tenantId).ToList()
                 : _connections.Values.ToList();
 
-            await Clients.Caller.SendAsync("OnlineUsers", new
+            await Clients.Caller.SendAsync(SignalREvents.OnlineUsers, new
             {
                 count = users.Count,
                 users = users.Select(u => new
@@ -194,7 +196,7 @@ public class NotificationHub : Hub
         try
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Caller.SendAsync("JoinedGroup", groupName);
+            await Clients.Caller.SendAsync(SignalREvents.JoinedGroup, groupName);
             _logger.LogInformation("Connection {ConnectionId} joined group {GroupName}", Context.ConnectionId, groupName);
         }
         catch (Exception ex)
@@ -212,7 +214,7 @@ public class NotificationHub : Hub
         try
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Caller.SendAsync("LeftGroup", groupName);
+            await Clients.Caller.SendAsync(SignalREvents.LeftGroup, groupName);
             _logger.LogInformation("Connection {ConnectionId} left group {GroupName}", Context.ConnectionId, groupName);
         }
         catch (Exception ex)
@@ -231,9 +233,9 @@ public class NotificationHub : Hub
     {
         try
         {
-            var groupName = $"registration-{registrationId}";
+            var groupName = SignalRGroups.ForRegistration(registrationId);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Caller.SendAsync("JoinedRegistrationGroup", new
+            await Clients.Caller.SendAsync(SignalREvents.JoinedRegistrationGroup, new
             {
                 registrationId,
                 groupName,
@@ -258,9 +260,9 @@ public class NotificationHub : Hub
     {
         try
         {
-            var groupName = $"registration-{registrationId}";
+            var groupName = SignalRGroups.ForRegistration(registrationId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-            await Clients.Caller.SendAsync("LeftRegistrationGroup", new
+            await Clients.Caller.SendAsync(SignalREvents.LeftRegistrationGroup, new
             {
                 registrationId,
                 groupName,
@@ -276,49 +278,3 @@ public class NotificationHub : Hub
         }
     }
 }
-
-#region DTOs
-
-public class UserConnection
-{
-    public string ConnectionId { get; set; } = string.Empty;
-    public string UserId { get; set; } = string.Empty;
-    public string? TenantId { get; set; }
-    public DateTime ConnectedAt { get; set; }
-}
-
-public class NotificationMessage
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Title { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public NotificationType Type { get; set; }
-    public NotificationPriority Priority { get; set; }
-    public Dictionary<string, object>? Data { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string? ActionUrl { get; set; }
-    public string? Icon { get; set; }
-}
-
-public enum NotificationType
-{
-    Info,
-    Success,
-    Warning,
-    Error,
-    System,
-    Payment,
-    Order,
-    Stock,
-    User
-}
-
-public enum NotificationPriority
-{
-    Low,
-    Normal,
-    High,
-    Urgent
-}
-
-#endregion
