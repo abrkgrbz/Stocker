@@ -17,9 +17,10 @@ public class Warehouse : BaseEntity
     public bool IsDefault { get; private set; }
     
     public virtual ICollection<Location> Locations { get; private set; }
+    public virtual ICollection<WarehouseZone> Zones { get; private set; }
     public virtual ICollection<Stock> Stocks { get; private set; }
     public virtual ICollection<StockMovement> StockMovements { get; private set; }
-    
+
     protected Warehouse() { }
     
     public Warehouse(string code, string name, int? branchId = null)
@@ -30,6 +31,7 @@ public class Warehouse : BaseEntity
         IsActive = true;
         IsDefault = false;
         Locations = new List<Location>();
+        Zones = new List<WarehouseZone>();
         Stocks = new List<Stock>();
         StockMovements = new List<StockMovement>();
     }

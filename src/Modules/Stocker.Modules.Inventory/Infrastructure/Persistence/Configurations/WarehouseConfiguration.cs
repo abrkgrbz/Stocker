@@ -60,6 +60,11 @@ public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
             .HasForeignKey(l => l.WarehouseId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(w => w.Zones)
+            .WithOne(z => z.Warehouse)
+            .HasForeignKey(z => z.WarehouseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(w => w.Stocks)
             .WithOne(s => s.Warehouse)
             .HasForeignKey(s => s.WarehouseId)

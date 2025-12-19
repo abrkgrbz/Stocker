@@ -50,6 +50,12 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .HasForeignKey(l => l.WarehouseId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Relationship to WarehouseZone
+        builder.HasOne(l => l.WarehouseZone)
+            .WithMany(z => z.Locations)
+            .HasForeignKey(l => l.WarehouseZoneId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Relationship to Stocks
         builder.HasMany(l => l.Stocks)
             .WithOne(s => s.Location)
@@ -60,6 +66,7 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.HasIndex(l => l.TenantId);
         builder.HasIndex(l => new { l.TenantId, l.WarehouseId, l.Code }).IsUnique();
         builder.HasIndex(l => new { l.TenantId, l.WarehouseId });
+        builder.HasIndex(l => new { l.TenantId, l.WarehouseZoneId });
         builder.HasIndex(l => new { l.TenantId, l.IsActive });
     }
 }

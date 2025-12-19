@@ -5,6 +5,7 @@ namespace Stocker.Modules.Inventory.Domain.Entities;
 public class Location : BaseEntity
 {
     public int WarehouseId { get; private set; }
+    public int? WarehouseZoneId { get; private set; }
     public string Code { get; private set; }
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -14,8 +15,9 @@ public class Location : BaseEntity
     public decimal Capacity { get; private set; }
     public decimal UsedCapacity { get; private set; }
     public bool IsActive { get; private set; }
-    
+
     public virtual Warehouse Warehouse { get; private set; }
+    public virtual WarehouseZone? WarehouseZone { get; private set; }
     public virtual ICollection<Stock> Stocks { get; private set; }
     
     protected Location() { }
@@ -61,7 +63,9 @@ public class Location : BaseEntity
     }
     
     public decimal GetAvailableCapacity() => Capacity - UsedCapacity;
-    
+
+    public void SetWarehouseZone(int? warehouseZoneId) => WarehouseZoneId = warehouseZoneId;
+
     public void Activate() => IsActive = true;
     public void Deactivate() => IsActive = false;
 }
