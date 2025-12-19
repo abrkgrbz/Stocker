@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
@@ -19,20 +18,16 @@ public class SetDefaultWarehouseCommand : IRequest<Result>
 /// </summary>
 public class SetDefaultWarehouseCommandHandler : IRequestHandler<SetDefaultWarehouseCommand, Result>
 {
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public SetDefaultWarehouseCommandHandler(
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public SetDefaultWarehouseCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(SetDefaultWarehouseCommand request, CancellationToken cancellationToken)
     {
-        var warehouse = await _warehouseRepository.GetByIdAsync(request.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(request.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result.Failure(Error.NotFound("Warehouse", $"Warehouse with ID {request.WarehouseId} not found"));
@@ -44,7 +39,7 @@ public class SetDefaultWarehouseCommandHandler : IRequestHandler<SetDefaultWareh
         }
 
         // Unset current default warehouse
-        var currentDefault = await _warehouseRepository.GetDefaultWarehouseAsync(cancellationToken);
+        var currentDefault = await _unitOfWork.Warehouses.GetDefaultWarehouseAsync(cancellationToken);
         if (currentDefault != null && currentDefault.Id != request.WarehouseId)
         {
             currentDefault.UnsetDefault();

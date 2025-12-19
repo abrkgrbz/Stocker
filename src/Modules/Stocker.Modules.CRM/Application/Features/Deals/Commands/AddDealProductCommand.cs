@@ -4,8 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
@@ -13,9 +12,8 @@ namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
 /// <summary>
 /// Command to add a product to a deal
 /// </summary>
-public class AddDealProductCommand : IRequest<Result<DealProductDto>>, ITenantRequest
+public class AddDealProductCommand : IRequest<Result<DealProductDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid DealId { get; set; }
     public CreateDealProductDto ProductData { get; set; } = null!;
 }
@@ -27,9 +25,6 @@ public class AddDealProductCommandValidator : AbstractValidator<AddDealProductCo
 {
     public AddDealProductCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DealId)
             .NotEmpty().WithMessage("Deal ID is required");
 
@@ -81,20 +76,24 @@ public class AddDealProductCommandValidator : AbstractValidator<AddDealProductCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddDealProductCommandHandler : IRequestHandler<AddDealProductCommand, Result<DealProductDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddDealProductCommandHandler(CRMDbContext context)
+    public AddDealProductCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DealProductDto>> Handle(AddDealProductCommand request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
             .Include(d => d.Products)
-            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == tenantId, cancellationToken);
 
         if (deal == null)
             return Result<DealProductDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.DealId} not found"));
@@ -102,7 +101,7 @@ public class AddDealProductCommandHandler : IRequestHandler<AddDealProductComman
         var unitPrice = Money.Create(request.ProductData.UnitPrice, request.ProductData.Currency);
 
         var dealProduct = new DealProduct(
-            request.TenantId,
+            tenantId,
             request.DealId,
             request.ProductData.ProductId,
             request.ProductData.ProductName,
@@ -124,7 +123,7 @@ public class AddDealProductCommandHandler : IRequestHandler<AddDealProductComman
             dealProduct.SetAsRecurring(request.ProductData.RecurringPeriod, request.ProductData.RecurringCycles);
 
         deal.AddProduct(dealProduct);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new DealProductDto
         {

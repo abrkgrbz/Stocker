@@ -1,35 +1,38 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetUpcomingActivitiesQuery : IRequest<IEnumerable<ActivityDto>>, ITenantRequest
+public class GetUpcomingActivitiesQuery : IRequest<IEnumerable<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public int Days { get; set; } = 7;
     public Guid? AssignedToId { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetUpcomingActivitiesQueryHandler : IRequestHandler<GetUpcomingActivitiesQuery, IEnumerable<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetUpcomingActivitiesQueryHandler(CRMDbContext context)
+    public GetUpcomingActivitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<ActivityDto>> Handle(GetUpcomingActivitiesQuery request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
         var now = DateTime.UtcNow;
         var endDate = now.AddDays(request.Days);
 
-        var query = _context.Activities
-            .Where(a => a.TenantId == request.TenantId)
+        var query = _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId)
             .Where(a => a.Status != ActivityStatus.Completed && a.Status != ActivityStatus.Cancelled)
             .Where(a => a.DueDate.HasValue && a.DueDate.Value >= now && a.DueDate.Value <= endDate);
 

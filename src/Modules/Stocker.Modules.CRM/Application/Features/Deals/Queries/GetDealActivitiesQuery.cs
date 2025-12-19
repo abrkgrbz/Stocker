@@ -1,30 +1,33 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 
-public class GetDealActivitiesQuery : IRequest<IEnumerable<ActivityDto>>, ITenantRequest
+public class GetDealActivitiesQuery : IRequest<IEnumerable<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid DealId { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetDealActivitiesQueryHandler : IRequestHandler<GetDealActivitiesQuery, IEnumerable<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetDealActivitiesQueryHandler(CRMDbContext context)
+    public GetDealActivitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<ActivityDto>> Handle(GetDealActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var activities = await _context.Activities
-            .Where(a => a.TenantId == request.TenantId && a.DealId == request.DealId)
+        var tenantId = _unitOfWork.TenantId;
+        var activities = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId && a.DealId == request.DealId)
             .OrderByDescending(a => a.DueDate)
             .ToListAsync(cancellationToken);
 

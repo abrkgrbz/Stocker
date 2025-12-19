@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -24,18 +23,16 @@ public class ReceiveStockTransferCommandValidator : AbstractValidator<ReceiveSto
 
 public class ReceiveStockTransferCommandHandler : IRequestHandler<ReceiveStockTransferCommand, Result<bool>>
 {
-    private readonly IStockTransferRepository _stockTransferRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public ReceiveStockTransferCommandHandler(IStockTransferRepository stockTransferRepository, IUnitOfWork unitOfWork)
+    public ReceiveStockTransferCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockTransferRepository = stockTransferRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ReceiveStockTransferCommand request, CancellationToken cancellationToken)
     {
-        var transfer = await _stockTransferRepository.GetByIdAsync(request.TransferId, cancellationToken);
+        var transfer = await _unitOfWork.StockTransfers.GetByIdAsync(request.TransferId, cancellationToken);
         if (transfer == null)
         {
             return Result<bool>.Failure(new Error("StockTransfer.NotFound", $"Transfer with ID {request.TransferId} not found", ErrorType.NotFound));
@@ -44,7 +41,7 @@ public class ReceiveStockTransferCommandHandler : IRequestHandler<ReceiveStockTr
         try
         {
             transfer.Receive(request.ReceivedByUserId);
-            await _stockTransferRepository.UpdateAsync(transfer, cancellationToken);
+            await _unitOfWork.StockTransfers.UpdateAsync(transfer, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }

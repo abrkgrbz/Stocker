@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
@@ -41,12 +40,10 @@ public class CreateProductAttributeCommandValidator : AbstractValidator<CreatePr
 /// </summary>
 public class CreateProductAttributeCommandHandler : IRequestHandler<CreateProductAttributeCommand, Result<ProductAttributeDto>>
 {
-    private readonly IProductAttributeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateProductAttributeCommandHandler(IProductAttributeRepository repository, IUnitOfWork unitOfWork)
+    public CreateProductAttributeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -55,7 +52,7 @@ public class CreateProductAttributeCommandHandler : IRequestHandler<CreateProduc
         var data = request.AttributeData;
 
         // Check if attribute with same code already exists
-        var existingAttribute = await _repository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingAttribute = await _unitOfWork.ProductAttributes.GetByCodeAsync(data.Code, cancellationToken);
         if (existingAttribute != null)
         {
             return Result<ProductAttributeDto>.Failure(
@@ -71,7 +68,8 @@ public class CreateProductAttributeCommandHandler : IRequestHandler<CreateProduc
         attribute.SetDefaultValue(data.DefaultValue);
         attribute.SetValidationPattern(data.ValidationPattern);
 
-        await _repository.AddAsync(attribute, cancellationToken);
+        attribute.SetTenantId(request.TenantId);
+        await _unitOfWork.ProductAttributes.AddAsync(attribute, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Add options if provided (for Select/MultiSelect types)

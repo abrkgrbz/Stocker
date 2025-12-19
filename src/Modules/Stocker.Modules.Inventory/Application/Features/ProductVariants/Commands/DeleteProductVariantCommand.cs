@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductVariants.Commands;
@@ -32,18 +31,16 @@ public class DeleteProductVariantCommandValidator : AbstractValidator<DeleteProd
 /// </summary>
 public class DeleteProductVariantCommandHandler : IRequestHandler<DeleteProductVariantCommand, Result>
 {
-    private readonly IProductVariantRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteProductVariantCommandHandler(IProductVariantRepository repository, IUnitOfWork unitOfWork)
+    public DeleteProductVariantCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteProductVariantCommand request, CancellationToken cancellationToken)
     {
-        var variant = await _repository.GetWithOptionsAsync(request.VariantId, cancellationToken);
+        var variant = await _unitOfWork.ProductVariants.GetWithOptionsAsync(request.VariantId, cancellationToken);
 
         if (variant == null)
         {
@@ -58,7 +55,7 @@ public class DeleteProductVariantCommandHandler : IRequestHandler<DeleteProductV
                 new Error("ProductVariant.HasStock", "Cannot delete variant with existing stock", ErrorType.Validation));
         }
 
-        _repository.Remove(variant);
+        _unitOfWork.ProductVariants.Remove(variant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

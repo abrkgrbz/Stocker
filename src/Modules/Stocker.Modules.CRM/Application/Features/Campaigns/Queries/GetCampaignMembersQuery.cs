@@ -1,34 +1,38 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Queries;
 
-public class GetCampaignMembersQuery : IRequest<IEnumerable<CampaignMemberDto>>, ITenantRequest
+public class GetCampaignMembersQuery : IRequest<IEnumerable<CampaignMemberDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid CampaignId { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCampaignMembersQueryHandler : IRequestHandler<GetCampaignMembersQuery, IEnumerable<CampaignMemberDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCampaignMembersQueryHandler(CRMDbContext context)
+    public GetCampaignMembersQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<CampaignMemberDto>> Handle(GetCampaignMembersQuery request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
                 .ThenInclude(m => m.Lead)
             .Include(c => c.Members)
                 .ThenInclude(m => m.Contact)
-            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Enumerable.Empty<CampaignMemberDto>();

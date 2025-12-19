@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
@@ -29,17 +28,10 @@ public class CreateStockCountCommandValidator : AbstractValidator<CreateStockCou
 
 public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCommand, Result<StockCountDto>>
 {
-    private readonly IStockCountRepository _stockCountRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateStockCountCommandHandler(
-        IStockCountRepository stockCountRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateStockCountCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockCountRepository = stockCountRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -47,7 +39,7 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
     {
         var data = request.Data;
 
-        var warehouse = await _warehouseRepository.GetByIdAsync(data.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result<StockCountDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
@@ -60,6 +52,7 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
             data.CountType,
             data.CreatedByUserId);
 
+        stockCount.SetTenantId(request.TenantId);
         stockCount.SetLocation(data.LocationId);
         stockCount.SetDescription(data.Description);
         stockCount.SetNotes(data.Notes);
@@ -79,7 +72,7 @@ public class CreateStockCountCommandHandler : IRequestHandler<CreateStockCountCo
                 item.SetLotNumber(itemDto.LotNumber);
         }
 
-        await _stockCountRepository.AddAsync(stockCount, cancellationToken);
+        await _unitOfWork.StockCounts.AddAsync(stockCount, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockCountDto>.Success(new StockCountDto

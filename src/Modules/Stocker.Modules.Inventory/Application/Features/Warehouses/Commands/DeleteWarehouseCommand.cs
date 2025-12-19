@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Warehouses.Commands;
@@ -19,30 +18,23 @@ public class DeleteWarehouseCommand : IRequest<Result>
 /// </summary>
 public class DeleteWarehouseCommandHandler : IRequestHandler<DeleteWarehouseCommand, Result>
 {
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteWarehouseCommandHandler(
-        IWarehouseRepository warehouseRepository,
-        IStockRepository stockRepository,
-        IUnitOfWork unitOfWork)
+    public DeleteWarehouseCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _warehouseRepository = warehouseRepository;
-        _stockRepository = stockRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteWarehouseCommand request, CancellationToken cancellationToken)
     {
-        var warehouse = await _warehouseRepository.GetByIdAsync(request.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(request.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result.Failure(Error.NotFound("Warehouse", $"Warehouse with ID {request.WarehouseId} not found"));
         }
 
         // Check if warehouse has stock
-        var stocks = await _stockRepository.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
+        var stocks = await _unitOfWork.Stocks.GetByWarehouseAsync(request.WarehouseId, cancellationToken);
         if (stocks.Any(s => s.Quantity > 0))
         {
             return Result.Failure(Error.Validation("Warehouse.HasStock", "Cannot delete warehouse with existing stock"));
@@ -54,7 +46,7 @@ public class DeleteWarehouseCommandHandler : IRequestHandler<DeleteWarehouseComm
             return Result.Failure(Error.Validation("Warehouse.IsDefault", "Cannot delete the default warehouse"));
         }
 
-        await _warehouseRepository.RemoveByIdAsync(warehouse.Id, cancellationToken);
+        await _unitOfWork.Warehouses.RemoveByIdAsync(warehouse.Id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

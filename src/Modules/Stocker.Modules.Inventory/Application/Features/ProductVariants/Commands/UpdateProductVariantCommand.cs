@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductVariants.Commands;
@@ -41,18 +40,16 @@ public class UpdateProductVariantCommandValidator : AbstractValidator<UpdateProd
 /// </summary>
 public class UpdateProductVariantCommandHandler : IRequestHandler<UpdateProductVariantCommand, Result<ProductVariantDto>>
 {
-    private readonly IProductVariantRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductVariantCommandHandler(IProductVariantRepository repository, IUnitOfWork unitOfWork)
+    public UpdateProductVariantCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductVariantDto>> Handle(UpdateProductVariantCommand request, CancellationToken cancellationToken)
     {
-        var variant = await _repository.GetWithOptionsAsync(request.VariantId, cancellationToken);
+        var variant = await _unitOfWork.ProductVariants.GetWithOptionsAsync(request.VariantId, cancellationToken);
 
         if (variant == null)
         {
@@ -63,7 +60,7 @@ public class UpdateProductVariantCommandHandler : IRequestHandler<UpdateProductV
         var data = request.VariantData;
 
         // Check SKU uniqueness if changed
-        if (variant.Sku != data.Sku && await _repository.ExistsWithSkuAsync(data.Sku, request.VariantId, cancellationToken))
+        if (variant.Sku != data.Sku && await _unitOfWork.ProductVariants.ExistsWithSkuAsync(data.Sku, request.VariantId, cancellationToken))
         {
             return Result<ProductVariantDto>.Failure(
                 new Error("ProductVariant.DuplicateSku", $"Variant with SKU '{data.Sku}' already exists", ErrorType.Conflict));
@@ -71,7 +68,7 @@ public class UpdateProductVariantCommandHandler : IRequestHandler<UpdateProductV
 
         // Check barcode uniqueness if changed
         if (!string.IsNullOrEmpty(data.Barcode) && variant.Barcode != data.Barcode &&
-            await _repository.ExistsWithBarcodeAsync(data.Barcode, request.VariantId, cancellationToken))
+            await _unitOfWork.ProductVariants.ExistsWithBarcodeAsync(data.Barcode, request.VariantId, cancellationToken))
         {
             return Result<ProductVariantDto>.Failure(
                 new Error("ProductVariant.DuplicateBarcode", $"Variant with barcode '{data.Barcode}' already exists", ErrorType.Conflict));
@@ -92,7 +89,7 @@ public class UpdateProductVariantCommandHandler : IRequestHandler<UpdateProductV
         // Update physical properties
         variant.SetPhysicalProperties(data.Weight, data.WeightUnit, data.Dimensions);
 
-        _repository.Update(variant);
+        _unitOfWork.ProductVariants.Update(variant);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ProductVariantDto

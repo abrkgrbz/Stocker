@@ -80,11 +80,6 @@ public class DealsController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<DealDto>> CreateDeal(CreateDealCommand command)
     {
-        // Set TenantId from HttpContext
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (tenantId.HasValue)
-            command.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);

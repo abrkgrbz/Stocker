@@ -4,40 +4,38 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.Invoices.Commands;
 using Stocker.Modules.Sales.Application.Features.Invoices.Queries;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Sales.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.Invoices.Handlers;
 
+/// <summary>
+/// Handler for CreateInvoiceCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result<InvoiceDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<CreateInvoiceHandler> _logger;
 
     public CreateInvoiceHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<CreateInvoiceHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<InvoiceDto>> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var invoiceNumber = await GenerateInvoiceNumberAsync(tenantId.Value, request.Type, cancellationToken);
+        var invoiceNumber = await _unitOfWork.Invoices.GenerateInvoiceNumberAsync(cancellationToken);
 
         var invoiceResult = Invoice.Create(
-            tenantId.Value,
+            tenantId,
             invoiceNumber,
             request.InvoiceDate,
             request.Type,
@@ -64,7 +62,7 @@ public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result
         foreach (var itemCmd in request.Items)
         {
             var itemResult = InvoiceItem.Create(
-                tenantId.Value,
+                tenantId,
                 invoice.Id,
                 lineNumber++,
                 itemCmd.ProductId,
@@ -87,77 +85,44 @@ public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result
             invoice.AddItem(item);
         }
 
-        _context.Invoices.Add(invoice);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Invoices.AddAsync(invoice, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Invoice {InvoiceNumber} created for tenant {TenantId}", invoiceNumber, tenantId.Value);
+        _logger.LogInformation("Invoice {InvoiceNumber} created for tenant {TenantId}", invoiceNumber, tenantId);
 
-        var savedInvoice = await _context.Invoices
-            .Include(i => i.Items)
-            .FirstAsync(i => i.Id == invoice.Id, cancellationToken);
+        var savedInvoice = await _unitOfWork.Invoices.GetWithItemsAsync(invoice.Id, cancellationToken);
 
-        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(savedInvoice));
-    }
-
-    private async Task<string> GenerateInvoiceNumberAsync(Guid tenantId, InvoiceType type, CancellationToken cancellationToken)
-    {
-        var today = DateTime.UtcNow;
-        var prefix = type switch
-        {
-            InvoiceType.Sales => $"INV-{today:yyyyMMdd}",
-            InvoiceType.Return => $"RET-{today:yyyyMMdd}",
-            InvoiceType.Credit => $"CRN-{today:yyyyMMdd}",
-            InvoiceType.Debit => $"DBN-{today:yyyyMMdd}",
-            _ => $"INV-{today:yyyyMMdd}"
-        };
-
-        var lastInvoice = await _context.Invoices
-            .Where(i => i.TenantId == tenantId && i.InvoiceNumber.StartsWith(prefix))
-            .OrderByDescending(i => i.InvoiceNumber)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var sequence = 1;
-        if (lastInvoice != null)
-        {
-            var lastSequence = lastInvoice.InvoiceNumber.Split('-').LastOrDefault();
-            if (int.TryParse(lastSequence, out var parsed))
-                sequence = parsed + 1;
-        }
-
-        return $"{prefix}-{sequence:D4}";
+        return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(savedInvoice!));
     }
 }
 
+/// <summary>
+/// Handler for CreateInvoiceFromOrderCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateInvoiceFromOrderHandler : IRequestHandler<CreateInvoiceFromOrderCommand, Result<InvoiceDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMediator _mediator;
     private readonly ILogger<CreateInvoiceFromOrderHandler> _logger;
 
     public CreateInvoiceFromOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         IMediator mediator,
         ILogger<CreateInvoiceFromOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _mediator = mediator;
         _logger = logger;
     }
 
     public async Task<Result<InvoiceDto>> Handle(CreateInvoiceFromOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.SalesOrderId && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.SalesOrderId, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<InvoiceDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         if (!order.IsApproved)
@@ -193,26 +158,26 @@ public class CreateInvoiceFromOrderHandler : IRequestHandler<CreateInvoiceFromOr
     }
 }
 
+/// <summary>
+/// Handler for GetInvoicesQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetInvoicesHandler : IRequestHandler<GetInvoicesQuery, Result<PagedResult<InvoiceListDto>>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetInvoicesHandler(SalesDbContext context, ITenantService tenantService)
+    public GetInvoicesHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<InvoiceListDto>>> Handle(GetInvoicesQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<PagedResult<InvoiceListDto>>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var query = _context.Invoices
+        var query = _unitOfWork.Invoices.AsQueryable()
             .Include(i => i.Items)
-            .Where(i => i.TenantId == tenantId.Value)
+            .Where(i => i.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -279,147 +244,137 @@ public class GetInvoicesHandler : IRequestHandler<GetInvoicesQuery, Result<Paged
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        var result = new PagedResult<InvoiceListDto>
-        {
-            Items = items.Select(InvoiceListDto.FromEntity).ToList(),
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        };
+        var result = new PagedResult<InvoiceListDto>(
+            items.Select(InvoiceListDto.FromEntity),
+            request.Page,
+            request.PageSize,
+            totalCount);
 
         return Result<PagedResult<InvoiceListDto>>.Success(result);
     }
 }
 
+/// <summary>
+/// Handler for GetInvoiceByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetInvoiceByIdHandler : IRequestHandler<GetInvoiceByIdQuery, Result<InvoiceDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetInvoiceByIdHandler(SalesDbContext context, ITenantService tenantService)
+    public GetInvoiceByIdHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<InvoiceDto>> Handle(GetInvoiceByIdQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var invoice = await _context.Invoices
-            .Include(i => i.Items.OrderBy(x => x.LineNumber))
-            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId.Value, cancellationToken);
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (invoice == null)
+        if (invoice == null || invoice.TenantId != tenantId)
             return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
 
         return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
     }
 }
 
+/// <summary>
+/// Handler for IssueInvoiceCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class IssueInvoiceHandler : IRequestHandler<IssueInvoiceCommand, Result<InvoiceDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<IssueInvoiceHandler> _logger;
 
     public IssueInvoiceHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<IssueInvoiceHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<InvoiceDto>> Handle(IssueInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var invoice = await _context.Invoices
-            .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId.Value, cancellationToken);
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (invoice == null)
+        if (invoice == null || invoice.TenantId != tenantId)
             return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
 
         var result = invoice.Issue();
         if (!result.IsSuccess)
             return Result<InvoiceDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Invoice {InvoiceId} issued for tenant {TenantId}", invoice.Id, tenantId.Value);
+        _logger.LogInformation("Invoice {InvoiceId} issued for tenant {TenantId}", invoice.Id, tenantId);
 
         return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
     }
 }
 
+/// <summary>
+/// Handler for CancelInvoiceCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CancelInvoiceHandler : IRequestHandler<CancelInvoiceCommand, Result<InvoiceDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<CancelInvoiceHandler> _logger;
 
     public CancelInvoiceHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<CancelInvoiceHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<InvoiceDto>> Handle(CancelInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var invoice = await _context.Invoices
-            .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId.Value, cancellationToken);
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (invoice == null)
+        if (invoice == null || invoice.TenantId != tenantId)
             return Result<InvoiceDto>.Failure(Error.NotFound("Invoice", "Invoice not found"));
 
         var result = invoice.Cancel(request.Reason);
         if (!result.IsSuccess)
             return Result<InvoiceDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Invoice {InvoiceId} cancelled for tenant {TenantId}", invoice.Id, tenantId.Value);
+        _logger.LogInformation("Invoice {InvoiceId} cancelled for tenant {TenantId}", invoice.Id, tenantId);
 
         return Result<InvoiceDto>.Success(InvoiceDto.FromEntity(invoice));
     }
 }
 
+/// <summary>
+/// Handler for GetInvoiceStatisticsQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetInvoiceStatisticsHandler : IRequestHandler<GetInvoiceStatisticsQuery, Result<InvoiceStatisticsDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetInvoiceStatisticsHandler(SalesDbContext context, ITenantService tenantService)
+    public GetInvoiceStatisticsHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<InvoiceStatisticsDto>> Handle(GetInvoiceStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<InvoiceStatisticsDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var query = _context.Invoices
-            .Where(i => i.TenantId == tenantId.Value);
+        var query = _unitOfWork.Invoices.AsQueryable()
+            .Where(i => i.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(i => i.InvoiceDate >= request.FromDate.Value);
@@ -448,42 +403,39 @@ public class GetInvoiceStatisticsHandler : IRequestHandler<GetInvoiceStatisticsQ
     }
 }
 
+/// <summary>
+/// Handler for DeleteInvoiceCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeleteInvoiceHandler : IRequestHandler<DeleteInvoiceCommand, Result>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteInvoiceHandler> _logger;
 
     public DeleteInvoiceHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<DeleteInvoiceHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result> Handle(DeleteInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var invoice = await _context.Invoices
-            .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId.Value, cancellationToken);
+        var invoice = await _unitOfWork.Invoices.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (invoice == null)
+        if (invoice == null || invoice.TenantId != tenantId)
             return Result.Failure(Error.NotFound("Invoice", "Invoice not found"));
 
         if (invoice.Status != InvoiceStatus.Draft && invoice.Status != InvoiceStatus.Cancelled)
             return Result.Failure(Error.Conflict("Invoice", "Only draft or cancelled invoices can be deleted"));
 
-        _context.Invoices.Remove(invoice);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Invoices.Remove(invoice);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Invoice {InvoiceId} deleted for tenant {TenantId}", invoice.Id, tenantId.Value);
+        _logger.LogInformation("Invoice {InvoiceId} deleted for tenant {TenantId}", invoice.Id, tenantId);
 
         return Result.Success();
     }

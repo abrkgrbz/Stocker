@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerTags.Queries;
 
-public class GetCustomerTagsQuery : IRequest<Result<List<CustomerTagDto>>>, ITenantRequest
+public class GetCustomerTagsQuery : IRequest<Result<List<CustomerTagDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid CustomerId { get; set; }
 }
 
@@ -18,27 +17,29 @@ public class GetCustomerTagsQueryValidator : AbstractValidator<GetCustomerTagsQu
 {
     public GetCustomerTagsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CustomerId)
             .NotEmpty().WithMessage("Customer ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCustomerTagsQueryHandler : IRequestHandler<GetCustomerTagsQuery, Result<List<CustomerTagDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCustomerTagsQueryHandler(CRMDbContext context)
+    public GetCustomerTagsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<CustomerTagDto>>> Handle(GetCustomerTagsQuery request, CancellationToken cancellationToken)
     {
-        var tags = await _context.CustomerTags
-            .Where(t => t.CustomerId == request.CustomerId && t.TenantId == request.TenantId)
+        var tenantId = _unitOfWork.TenantId;
+
+        var tags = await _unitOfWork.ReadRepository<CustomerTag>().AsQueryable()
+            .Where(t => t.CustomerId == request.CustomerId && t.TenantId == tenantId)
             .Select(t => new CustomerTagDto
             {
                 Id = t.Id,

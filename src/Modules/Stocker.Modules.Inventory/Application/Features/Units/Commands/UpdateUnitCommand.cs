@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Units.Commands;
@@ -38,18 +37,16 @@ public class UpdateUnitCommandValidator : AbstractValidator<UpdateUnitCommand>
 /// </summary>
 public class UpdateUnitCommandHandler : IRequestHandler<UpdateUnitCommand, Result<UnitDto>>
 {
-    private readonly IUnitRepository _unitRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateUnitCommandHandler(IUnitRepository unitRepository, IUnitOfWork unitOfWork)
+    public UpdateUnitCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _unitRepository = unitRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<UnitDto>> Handle(UpdateUnitCommand request, CancellationToken cancellationToken)
     {
-        var unit = await _unitRepository.GetByIdAsync(request.UnitId, cancellationToken);
+        var unit = await _unitOfWork.Units.GetByIdAsync(request.UnitId, cancellationToken);
 
         if (unit == null)
         {
@@ -64,7 +61,7 @@ public class UpdateUnitCommandHandler : IRequestHandler<UpdateUnitCommand, Resul
             unit.SetConversionFactor(data.ConversionFactor);
         }
 
-        await _unitRepository.UpdateAsync(unit, cancellationToken);
+        await _unitOfWork.Units.UpdateAsync(unit, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new UnitDto

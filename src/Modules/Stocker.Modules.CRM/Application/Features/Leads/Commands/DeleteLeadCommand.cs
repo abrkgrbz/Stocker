@@ -1,15 +1,13 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Commands;
 
-public class DeleteLeadCommand : IRequest<Result<Unit>>, ITenantRequest
+public class DeleteLeadCommand : IRequest<Result<Unit>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -17,27 +15,29 @@ public class DeleteLeadCommandValidator : AbstractValidator<DeleteLeadCommand>
 {
     public DeleteLeadCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Lead ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class DeleteLeadCommandHandler : IRequestHandler<DeleteLeadCommand, Result<Unit>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public DeleteLeadCommandHandler(CRMDbContext context)
+    public DeleteLeadCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Unit>> Handle(DeleteLeadCommand request, CancellationToken cancellationToken)
     {
-        var lead = await _context.Leads
-            .FirstOrDefaultAsync(l => l.Id == request.Id && l.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var lead = await _unitOfWork.ReadRepository<Domain.Entities.Lead>().AsQueryable()
+            .FirstOrDefaultAsync(l => l.Id == request.Id && l.TenantId == tenantId, cancellationToken);
 
         if (lead == null)
             return Result<Unit>.Failure(Error.NotFound("Lead.NotFound", $"Lead with ID {request.Id} not found"));
@@ -46,14 +46,14 @@ public class DeleteLeadCommandHandler : IRequestHandler<DeleteLeadCommand, Resul
             return Result<Unit>.Failure(Error.Conflict("Lead.Converted", "Cannot delete a converted lead"));
 
         // Check for related activities
-        var hasActivities = await _context.Activities
-            .AnyAsync(a => a.LeadId == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var hasActivities = await _unitOfWork.ReadRepository<Domain.Entities.Activity>().AsQueryable()
+            .AnyAsync(a => a.LeadId == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (hasActivities)
             return Result<Unit>.Failure(Error.Conflict("Lead.HasActivities", "Cannot delete lead with existing activities"));
 
-        _context.Leads.Remove(lead);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Domain.Entities.Lead>().Remove(lead);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Unit>.Success(Unit.Value);
     }

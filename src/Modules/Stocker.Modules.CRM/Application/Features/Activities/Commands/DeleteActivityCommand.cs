@@ -1,15 +1,14 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Commands;
 
-public class DeleteActivityCommand : IRequest<Result>, ITenantRequest
+public class DeleteActivityCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -17,33 +16,36 @@ public class DeleteActivityCommandValidator : AbstractValidator<DeleteActivityCo
 {
     public DeleteActivityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Activity ID is required");
     }
 }
 
+/// <summary>
+/// Handler for DeleteActivityCommand
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class DeleteActivityCommandHandler : IRequestHandler<DeleteActivityCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public DeleteActivityCommandHandler(CRMDbContext context)
+    public DeleteActivityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteActivityCommand request, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var activity = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (activity == null)
             return Result.Failure(Error.NotFound("Activity.NotFound", $"Activity with ID {request.Id} not found"));
 
-        _context.Activities.Remove(activity);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Activity>().Remove(activity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

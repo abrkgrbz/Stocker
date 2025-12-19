@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -44,17 +43,10 @@ public class CreateProductBundleCommandValidator : AbstractValidator<CreateProdu
 /// </summary>
 public class CreateProductBundleCommandHandler : IRequestHandler<CreateProductBundleCommand, Result<ProductBundleDto>>
 {
-    private readonly IProductBundleRepository _repository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateProductBundleCommandHandler(
-        IProductBundleRepository repository,
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public CreateProductBundleCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -63,7 +55,7 @@ public class CreateProductBundleCommandHandler : IRequestHandler<CreateProductBu
         var data = request.BundleData;
 
         // Check if bundle with same code already exists
-        if (await _repository.ExistsWithCodeAsync(data.Code, null, cancellationToken))
+        if (await _unitOfWork.ProductBundles.ExistsWithCodeAsync(data.Code, null, cancellationToken))
         {
             return Result<ProductBundleDto>.Failure(
                 new Error("ProductBundle.DuplicateCode", $"Bundle with code '{data.Code}' already exists", ErrorType.Conflict));
@@ -86,7 +78,8 @@ public class CreateProductBundleCommandHandler : IRequestHandler<CreateProductBu
         Money? fixedPrice = data.FixedPrice.HasValue ? Money.Create(data.FixedPrice.Value, data.FixedPriceCurrency ?? "TRY") : null;
         bundle.SetPricing(data.PricingType, fixedPrice, data.DiscountPercentage, data.DiscountAmount);
 
-        await _repository.AddAsync(bundle, cancellationToken);
+        bundle.SetTenantId(request.TenantId);
+        await _unitOfWork.ProductBundles.AddAsync(bundle, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Add items if provided
@@ -95,7 +88,7 @@ public class CreateProductBundleCommandHandler : IRequestHandler<CreateProductBu
             foreach (var itemData in data.Items.OrderBy(i => i.DisplayOrder))
             {
                 // Verify product exists
-                var product = await _productRepository.GetByIdAsync(itemData.ProductId, cancellationToken);
+                var product = await _unitOfWork.Products.GetByIdAsync(itemData.ProductId, cancellationToken);
                 if (product == null)
                 {
                     return Result<ProductBundleDto>.Failure(
@@ -121,7 +114,7 @@ public class CreateProductBundleCommandHandler : IRequestHandler<CreateProductBu
         }
 
         // Reload to get items
-        bundle = await _repository.GetWithItemsAsync(bundle.Id, cancellationToken);
+        bundle = await _unitOfWork.ProductBundles.GetWithItemsAsync(bundle.Id, cancellationToken);
 
         var dto = new ProductBundleDto
         {

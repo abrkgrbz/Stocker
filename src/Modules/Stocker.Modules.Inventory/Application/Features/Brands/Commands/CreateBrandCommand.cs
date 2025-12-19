@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
@@ -36,15 +35,14 @@ public class CreateBrandCommandValidator : AbstractValidator<CreateBrandCommand>
 
 /// <summary>
 /// Handler for CreateBrandCommand
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Result<BrandDto>>
 {
-    private readonly IBrandRepository _brandRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateBrandCommandHandler(IBrandRepository brandRepository, IUnitOfWork unitOfWork)
+    public CreateBrandCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _brandRepository = brandRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -53,7 +51,7 @@ public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Res
         var data = request.BrandData;
 
         // Check if brand with same code already exists
-        var existingBrand = await _brandRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingBrand = await _unitOfWork.Brands.GetByCodeAsync(data.Code, cancellationToken);
         if (existingBrand != null)
         {
             return Result<BrandDto>.Failure(new Error("Brand.DuplicateCode", $"Brand with code '{data.Code}' already exists", ErrorType.Conflict));
@@ -67,7 +65,10 @@ public class CreateBrandCommandHandler : IRequestHandler<CreateBrandCommand, Res
             brand.SetLogo(data.LogoUrl);
         }
 
-        await _brandRepository.AddAsync(brand, cancellationToken);
+        // Set tenant ID for multi-tenancy
+        brand.SetTenantId(request.TenantId);
+
+        await _unitOfWork.Brands.AddAsync(brand, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new BrandDto

@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ConsignmentStocks.Commands;
@@ -35,18 +34,16 @@ public class UpdateConsignmentStockCommandValidator : AbstractValidator<UpdateCo
 /// </summary>
 public class UpdateConsignmentStockCommandHandler : IRequestHandler<UpdateConsignmentStockCommand, Result<ConsignmentStockDto>>
 {
-    private readonly IConsignmentStockRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateConsignmentStockCommandHandler(IConsignmentStockRepository repository, IUnitOfWork unitOfWork)
+    public UpdateConsignmentStockCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ConsignmentStockDto>> Handle(UpdateConsignmentStockCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.ConsignmentStocks.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.NotFound", $"Consignment stock with ID {request.Id} not found", ErrorType.NotFound));
@@ -64,7 +61,7 @@ public class UpdateConsignmentStockCommandHandler : IRequestHandler<UpdateConsig
         entity.SetAgreementNotes(data.AgreementNotes);
         entity.SetInternalNotes(data.InternalNotes);
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.ConsignmentStocks.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ConsignmentStockDto

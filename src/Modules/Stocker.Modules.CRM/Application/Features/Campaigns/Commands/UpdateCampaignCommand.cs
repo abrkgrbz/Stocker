@@ -3,16 +3,15 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 
-public class UpdateCampaignCommand : IRequest<Result<CampaignDto>>, ITenantRequest
+public class UpdateCampaignCommand : IRequest<Result<CampaignDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -33,9 +32,6 @@ public class UpdateCampaignCommandValidator : AbstractValidator<UpdateCampaignCo
 {
     public UpdateCampaignCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Campaign ID is required");
 
@@ -79,19 +75,24 @@ public class UpdateCampaignCommandValidator : AbstractValidator<UpdateCampaignCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdateCampaignCommandHandler : IRequestHandler<UpdateCampaignCommand, Result<CampaignDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateCampaignCommandHandler(CRMDbContext context)
+    public UpdateCampaignCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CampaignDto>> Handle(UpdateCampaignCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
-            .FirstOrDefaultAsync(c => c.Id == request.Id && c.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
+            .FirstOrDefaultAsync(c => c.Id == request.Id && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Result<CampaignDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.Id} not found"));
@@ -107,7 +108,7 @@ public class UpdateCampaignCommandHandler : IRequestHandler<UpdateCampaignComman
             Money.Create(request.ActualRevenue, "USD"),
             0);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CampaignDto>.Success(new CampaignDto
         {

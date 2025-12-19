@@ -4,35 +4,35 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.Commissions.Commands;
 using Stocker.Modules.Sales.Application.Features.Commissions.Queries;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.Commissions.Handlers;
 
+/// <summary>
+/// Handler for CreateCommissionPlanCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateCommissionPlanHandler : IRequestHandler<CreateCommissionPlanCommand, Result<CommissionPlanDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateCommissionPlanHandler(SalesDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateCommissionPlanHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<CommissionPlanDto>> Handle(CreateCommissionPlanCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<CommissionPlanDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var planResult = CommissionPlan.Create(
-            tenantId.Value,
+            tenantId,
             request.Dto.Name,
             request.Dto.Type,
             request.Dto.CalculationType,
@@ -84,29 +84,35 @@ public class CreateCommissionPlanHandler : IRequestHandler<CreateCommissionPlanC
             }
         }
 
-        _context.CommissionPlans.Add(plan);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<CommissionPlan>().AddAsync(plan, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CommissionPlanDto>.Success(_mapper.Map<CommissionPlanDto>(plan));
     }
 }
 
+/// <summary>
+/// Handler for GetCommissionPlanByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetCommissionPlanByIdHandler : IRequestHandler<GetCommissionPlanByIdQuery, Result<CommissionPlanDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetCommissionPlanByIdHandler(SalesDbContext context, IMapper mapper)
+    public GetCommissionPlanByIdHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<CommissionPlanDto>> Handle(GetCommissionPlanByIdQuery request, CancellationToken cancellationToken)
     {
-        var plan = await _context.CommissionPlans
+        var tenantId = _unitOfWork.TenantId;
+
+        var plan = await _unitOfWork.ReadRepository<CommissionPlan>().AsQueryable()
             .Include(p => p.Tiers)
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (plan == null)
             return Result<CommissionPlanDto>.Failure(Error.NotFound("CommissionPlan", "Commission plan not found"));
@@ -115,19 +121,26 @@ public class GetCommissionPlanByIdHandler : IRequestHandler<GetCommissionPlanByI
     }
 }
 
+/// <summary>
+/// Handler for GetCommissionPlansQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetCommissionPlansHandler : IRequestHandler<GetCommissionPlansQuery, Result<PagedResult<CommissionPlanListDto>>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetCommissionPlansHandler(SalesDbContext context)
+    public GetCommissionPlansHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<CommissionPlanListDto>>> Handle(GetCommissionPlansQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.CommissionPlans
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<CommissionPlan>().AsQueryable()
             .Include(p => p.Tiers)
+            .Where(p => p.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -169,38 +182,36 @@ public class GetCommissionPlansHandler : IRequestHandler<GetCommissionPlansQuery
             })
             .ToListAsync(cancellationToken);
 
-        return Result<PagedResult<CommissionPlanListDto>>.Success(new PagedResult<CommissionPlanListDto>
-        {
-            Items = items,
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        });
+        return Result<PagedResult<CommissionPlanListDto>>.Success(new PagedResult<CommissionPlanListDto>(
+            items,
+            request.Page,
+            request.PageSize,
+            totalCount));
     }
 }
 
+/// <summary>
+/// Handler for CalculateSalesCommissionCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CalculateSalesCommissionHandler : IRequestHandler<CalculateSalesCommissionCommand, Result<SalesCommissionDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CalculateSalesCommissionHandler(SalesDbContext context, IMapper mapper, ITenantService tenantService)
+    public CalculateSalesCommissionHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<SalesCommissionDto>> Handle(CalculateSalesCommissionCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesCommissionDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var plan = await _context.CommissionPlans
+        var plan = await _unitOfWork.ReadRepository<CommissionPlan>().AsQueryable()
             .Include(p => p.Tiers)
-            .FirstOrDefaultAsync(p => p.Id == request.Dto.CommissionPlanId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.Dto.CommissionPlanId && p.TenantId == tenantId, cancellationToken);
 
         if (plan == null)
             return Result<SalesCommissionDto>.Failure(Error.NotFound("CommissionPlan", "Commission plan not found"));
@@ -217,7 +228,7 @@ public class CalculateSalesCommissionHandler : IRequestHandler<CalculateSalesCom
         }
 
         var commissionResult = SalesCommission.Create(
-            tenantId.Value,
+            tenantId,
             request.Dto.SalesOrderId,
             request.Dto.SalesPersonId,
             request.Dto.SalesPersonName,
@@ -231,31 +242,37 @@ public class CalculateSalesCommissionHandler : IRequestHandler<CalculateSalesCom
         if (!commissionResult.IsSuccess)
             return Result<SalesCommissionDto>.Failure(commissionResult.Error);
 
-        _context.SalesCommissions.Add(commissionResult.Value);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<SalesCommission>().AddAsync(commissionResult.Value, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesCommissionDto>.Success(_mapper.Map<SalesCommissionDto>(commissionResult.Value));
     }
 }
 
+/// <summary>
+/// Handler for ApproveSalesCommissionCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ApproveSalesCommissionHandler : IRequestHandler<ApproveSalesCommissionCommand, Result<SalesCommissionDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApproveSalesCommissionHandler(SalesDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApproveSalesCommissionHandler(ISalesUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<SalesCommissionDto>> Handle(ApproveSalesCommissionCommand request, CancellationToken cancellationToken)
     {
-        var commission = await _context.SalesCommissions.FindAsync(new object[] { request.Id }, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (commission == null)
+        var commission = await _unitOfWork.Repository<SalesCommission>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (commission == null || commission.TenantId != tenantId)
             return Result<SalesCommissionDto>.Failure(Error.NotFound("SalesCommission", "Sales commission not found"));
 
         var userId = _currentUserService.UserId ?? Guid.Empty;
@@ -264,28 +281,34 @@ public class ApproveSalesCommissionHandler : IRequestHandler<ApproveSalesCommiss
         if (!result.IsSuccess)
             return Result<SalesCommissionDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesCommissionDto>.Success(_mapper.Map<SalesCommissionDto>(commission));
     }
 }
 
+/// <summary>
+/// Handler for MarkCommissionAsPaidCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class MarkCommissionAsPaidHandler : IRequestHandler<MarkCommissionAsPaidCommand, Result<SalesCommissionDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public MarkCommissionAsPaidHandler(SalesDbContext context, IMapper mapper)
+    public MarkCommissionAsPaidHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SalesCommissionDto>> Handle(MarkCommissionAsPaidCommand request, CancellationToken cancellationToken)
     {
-        var commission = await _context.SalesCommissions.FindAsync(new object[] { request.Id }, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (commission == null)
+        var commission = await _unitOfWork.Repository<SalesCommission>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (commission == null || commission.TenantId != tenantId)
             return Result<SalesCommissionDto>.Failure(Error.NotFound("SalesCommission", "Sales commission not found"));
 
         var result = commission.MarkAsPaid(request.PaymentReference);
@@ -293,24 +316,31 @@ public class MarkCommissionAsPaidHandler : IRequestHandler<MarkCommissionAsPaidC
         if (!result.IsSuccess)
             return Result<SalesCommissionDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesCommissionDto>.Success(_mapper.Map<SalesCommissionDto>(commission));
     }
 }
 
+/// <summary>
+/// Handler for GetCommissionSummaryQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetCommissionSummaryHandler : IRequestHandler<GetCommissionSummaryQuery, Result<List<CommissionSummaryDto>>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetCommissionSummaryHandler(SalesDbContext context)
+    public GetCommissionSummaryHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<CommissionSummaryDto>>> Handle(GetCommissionSummaryQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SalesCommissions.AsQueryable();
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<SalesCommission>().AsQueryable()
+            .Where(c => c.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(c => c.CalculatedDate >= request.FromDate.Value);

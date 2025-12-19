@@ -28,12 +28,6 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<IEnumerable<PipelineDto>>> GetPipelines()
     {
         var query = new GetPipelinesQuery();
-
-        // Set TenantId from HttpContext
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (tenantId.HasValue)
-            query.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(query);
         return Ok(result);
     }
@@ -45,12 +39,6 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<PipelineDto>> GetPipeline(Guid id)
     {
         var query = new GetPipelineByIdQuery { Id = id };
-
-        // Set TenantId from HttpContext
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (tenantId.HasValue)
-            query.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(query);
 
         if (result == null)
@@ -65,11 +53,6 @@ public class PipelinesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<PipelineDto>> CreatePipeline(CreatePipelineCommand command)
     {
-        // Set TenantId from HttpContext
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (tenantId.HasValue)
-            command.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -232,12 +215,6 @@ public class PipelinesController : ControllerBase
     public async Task<ActionResult<PipelineDto>> SetDefaultPipeline(Guid id)
     {
         var command = new SetDefaultPipelineCommand { Id = id };
-
-        // Set TenantId from HttpContext
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (tenantId.HasValue)
-            command.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);

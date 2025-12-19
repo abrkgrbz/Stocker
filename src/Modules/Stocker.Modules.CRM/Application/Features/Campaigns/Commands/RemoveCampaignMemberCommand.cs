@@ -1,15 +1,14 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 
-public class RemoveCampaignMemberCommand : IRequest<Result>, ITenantRequest
+public class RemoveCampaignMemberCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid CampaignId { get; set; }
     public Guid MemberId { get; set; }
 }
@@ -18,9 +17,6 @@ public class RemoveCampaignMemberCommandValidator : AbstractValidator<RemoveCamp
 {
     public RemoveCampaignMemberCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CampaignId)
             .NotEmpty().WithMessage("Campaign ID is required");
 
@@ -29,20 +25,25 @@ public class RemoveCampaignMemberCommandValidator : AbstractValidator<RemoveCamp
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class RemoveCampaignMemberCommandHandler : IRequestHandler<RemoveCampaignMemberCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public RemoveCampaignMemberCommandHandler(CRMDbContext context)
+    public RemoveCampaignMemberCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RemoveCampaignMemberCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
-            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Result.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
@@ -53,7 +54,7 @@ public class RemoveCampaignMemberCommandHandler : IRequestHandler<RemoveCampaign
             return Result.Failure(Error.NotFound("CampaignMember.NotFound", $"Member with ID {request.MemberId} not found"));
 
         campaign.RemoveMember(member);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

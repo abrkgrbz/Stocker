@@ -3,15 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Meetings.Queries;
 
-public class GetMeetingsQuery : IRequest<PagedResult<MeetingDto>>, ITenantRequest
+public class GetMeetingsQuery : IRequest<PagedResult<MeetingDto>>
 {
-    public Guid TenantId { get; set; }
     public MeetingType? MeetingType { get; set; }
     public Domain.Entities.MeetingStatus? Status { get; set; }
     public MeetingPriority? Priority { get; set; }
@@ -30,25 +28,30 @@ public class GetMeetingsQuery : IRequest<PagedResult<MeetingDto>>, ITenantReques
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetMeetingsQueryHandler : IRequestHandler<GetMeetingsQuery, PagedResult<MeetingDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetMeetingsQueryHandler(CRMDbContext context)
+    public GetMeetingsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<PagedResult<MeetingDto>> Handle(GetMeetingsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Meetings
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Meeting>().AsQueryable()
             .Include(m => m.Customer)
             .Include(m => m.Contact)
             .Include(m => m.Lead)
             .Include(m => m.Opportunity)
             .Include(m => m.Deal)
             .Include(m => m.Campaign)
-            .Where(m => m.TenantId == request.TenantId);
+            .Where(m => m.TenantId == tenantId);
 
         if (request.MeetingType.HasValue)
             query = query.Where(m => m.MeetingType == request.MeetingType.Value);

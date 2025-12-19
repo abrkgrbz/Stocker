@@ -1,33 +1,36 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 
-public class GetConversionRatesQuery : IRequest<ConversionRatesDto>, ITenantRequest
+public class GetConversionRatesQuery : IRequest<ConversionRatesDto>
 {
-    public Guid TenantId { get; set; }
     public Guid? PipelineId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetConversionRatesQueryHandler : IRequestHandler<GetConversionRatesQuery, ConversionRatesDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetConversionRatesQueryHandler(CRMDbContext context)
+    public GetConversionRatesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ConversionRatesDto> Handle(GetConversionRatesQuery request, CancellationToken cancellationToken)
     {
-        var dealsQuery = _context.Deals
-            .Where(d => d.TenantId == request.TenantId && d.Status != DealStatus.Deleted);
+        var tenantId = _unitOfWork.TenantId;
+        var dealsQuery = _unitOfWork.ReadRepository<Deal>().AsQueryable()
+            .Where(d => d.TenantId == tenantId && d.Status != DealStatus.Deleted);
 
         if (request.PipelineId.HasValue)
             dealsQuery = dealsQuery.Where(d => d.PipelineId == request.PipelineId.Value);
@@ -48,9 +51,9 @@ public class GetConversionRatesQueryHandler : IRequestHandler<GetConversionRates
 
         if (request.PipelineId.HasValue)
         {
-            var pipeline = await _context.Pipelines
+            var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
                 .Include(p => p.Stages)
-                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == request.TenantId, cancellationToken);
+                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == tenantId, cancellationToken);
 
             if (pipeline != null)
             {

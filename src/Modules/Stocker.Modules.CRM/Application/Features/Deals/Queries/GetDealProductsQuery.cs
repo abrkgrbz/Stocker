@@ -2,8 +2,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
@@ -11,9 +11,8 @@ namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 /// <summary>
 /// Query to get products for a specific deal
 /// </summary>
-public class GetDealProductsQuery : IRequest<Result<IEnumerable<DealProductDto>>>, ITenantRequest
+public class GetDealProductsQuery : IRequest<Result<IEnumerable<DealProductDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid DealId { get; set; }
     public string? Search { get; set; }
     public string? SortBy { get; set; } = "SortOrder";
@@ -27,9 +26,6 @@ public class GetDealProductsQueryValidator : AbstractValidator<GetDealProductsQu
 {
     public GetDealProductsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.DealId)
             .NotEmpty().WithMessage("Deal ID is required");
 
@@ -64,20 +60,24 @@ public class GetDealProductsQueryValidator : AbstractValidator<GetDealProductsQu
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetDealProductsQueryHandler : IRequestHandler<GetDealProductsQuery, Result<IEnumerable<DealProductDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetDealProductsQueryHandler(CRMDbContext context)
+    public GetDealProductsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<IEnumerable<DealProductDto>>> Handle(GetDealProductsQuery request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
             .Include(d => d.Products)
-            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(d => d.Id == request.DealId && d.TenantId == tenantId, cancellationToken);
 
         if (deal == null)
             return Result<IEnumerable<DealProductDto>>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.DealId} not found"));

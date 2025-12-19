@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Stock.Commands;
@@ -58,23 +57,10 @@ public class MoveStockCommandValidator : AbstractValidator<MoveStockCommand>
 /// </summary>
 public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<StockMovementDto>>
 {
-    private readonly IStockRepository _stockRepository;
-    private readonly IStockMovementRepository _stockMovementRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public MoveStockCommandHandler(
-        IStockRepository stockRepository,
-        IStockMovementRepository stockMovementRepository,
-        IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public MoveStockCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockRepository = stockRepository;
-        _stockMovementRepository = stockMovementRepository;
-        _productRepository = productRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -83,7 +69,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         var data = request.MoveData;
 
         // Validate product exists
-        var product = await _productRepository.GetByIdAsync(data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<StockMovementDto>.Failure(
@@ -91,7 +77,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         }
 
         // Validate source warehouse exists
-        var sourceWarehouse = await _warehouseRepository.GetByIdAsync(data.SourceWarehouseId, cancellationToken);
+        var sourceWarehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.SourceWarehouseId, cancellationToken);
         if (sourceWarehouse == null)
         {
             return Result<StockMovementDto>.Failure(
@@ -99,7 +85,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         }
 
         // Validate destination warehouse exists
-        var destWarehouse = await _warehouseRepository.GetByIdAsync(data.DestinationWarehouseId, cancellationToken);
+        var destWarehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.DestinationWarehouseId, cancellationToken);
         if (destWarehouse == null)
         {
             return Result<StockMovementDto>.Failure(
@@ -107,7 +93,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         }
 
         // Get source stock
-        var sourceStock = await _stockRepository.GetByProductAndLocationAsync(
+        var sourceStock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(
             data.ProductId, data.SourceWarehouseId, data.SourceLocationId, cancellationToken);
 
         if (sourceStock == null || sourceStock.AvailableQuantity < data.Quantity)
@@ -117,17 +103,18 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         }
 
         // Get or create destination stock
-        var destStock = await _stockRepository.GetByProductAndLocationAsync(
+        var destStock = await _unitOfWork.Stocks.GetByProductAndLocationAsync(
             data.ProductId, data.DestinationWarehouseId, data.DestinationLocationId, cancellationToken);
 
         if (destStock == null)
         {
             destStock = new Domain.Entities.Stock(data.ProductId, data.DestinationWarehouseId, 0);
+            destStock.SetTenantId(request.TenantId);
             if (data.DestinationLocationId.HasValue)
             {
                 destStock.SetLocation(data.DestinationLocationId.Value);
             }
-            await _stockRepository.AddAsync(destStock, cancellationToken);
+            await _unitOfWork.Stocks.AddAsync(destStock, cancellationToken);
         }
 
         // Perform the transfer
@@ -135,7 +122,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
         destStock.IncreaseStock(data.Quantity);
 
         // Create stock movement record
-        var documentNumber = await _stockMovementRepository.GenerateDocumentNumberAsync(
+        var documentNumber = await _unitOfWork.StockMovements.GenerateDocumentNumberAsync(
             StockMovementType.Transfer, cancellationToken);
 
         var movement = new StockMovement(
@@ -148,6 +135,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
             0, // unitCost
             0); // userId - should get from context
 
+        movement.SetTenantId(request.TenantId);
         movement.SetLocations(data.SourceLocationId, data.DestinationLocationId);
 
         if (!string.IsNullOrEmpty(data.Notes))
@@ -155,7 +143,7 @@ public class MoveStockCommandHandler : IRequestHandler<MoveStockCommand, Result<
             movement.SetDescription(data.Notes);
         }
 
-        await _stockMovementRepository.AddAsync(movement, cancellationToken);
+        await _unitOfWork.StockMovements.AddAsync(movement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Return DTO

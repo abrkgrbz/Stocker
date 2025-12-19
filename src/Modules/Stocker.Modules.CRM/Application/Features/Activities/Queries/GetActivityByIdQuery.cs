@@ -1,30 +1,35 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetActivityByIdQuery : IRequest<ActivityDto?>, ITenantRequest
+public class GetActivityByIdQuery : IRequest<ActivityDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Handler for GetActivityByIdQuery
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetActivityByIdQueryHandler : IRequestHandler<GetActivityByIdQuery, ActivityDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetActivityByIdQueryHandler(CRMDbContext context)
+    public GetActivityByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ActivityDto?> Handle(GetActivityByIdQuery request, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var activity = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (activity == null)
             return null;

@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Domain.Common.ValueObjects;
 
@@ -55,21 +54,17 @@ public class CreateWarehouseCommandValidator : AbstractValidator<CreateWarehouse
 /// </summary>
 public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseCommand, Result<WarehouseDto>>
 {
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateWarehouseCommandHandler(
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateWarehouseCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WarehouseDto>> Handle(CreateWarehouseCommand request, CancellationToken cancellationToken)
     {
         // Check if warehouse with same code already exists
-        var existingWarehouse = await _warehouseRepository.GetByCodeAsync(request.WarehouseData.Code, cancellationToken);
+        var existingWarehouse = await _unitOfWork.Warehouses.GetByCodeAsync(request.WarehouseData.Code, cancellationToken);
         if (existingWarehouse != null)
         {
             return Result<WarehouseDto>.Failure(
@@ -81,6 +76,8 @@ public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseComm
             request.WarehouseData.Code,
             request.WarehouseData.Name,
             request.WarehouseData.BranchId);
+
+        warehouse.SetTenantId(request.TenantId);
 
         // Set address and other details if provided
         Address? address = null;
@@ -125,7 +122,7 @@ public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseComm
         if (request.WarehouseData.IsDefault)
         {
             // Unset current default warehouse if exists
-            var currentDefault = await _warehouseRepository.GetDefaultWarehouseAsync(cancellationToken);
+            var currentDefault = await _unitOfWork.Warehouses.GetDefaultWarehouseAsync(cancellationToken);
             if (currentDefault != null)
             {
                 currentDefault.UnsetDefault();
@@ -134,7 +131,7 @@ public class CreateWarehouseCommandHandler : IRequestHandler<CreateWarehouseComm
         }
 
         // Save to repository
-        await _warehouseRepository.AddAsync(warehouse, cancellationToken);
+        await _unitOfWork.Warehouses.AddAsync(warehouse, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO

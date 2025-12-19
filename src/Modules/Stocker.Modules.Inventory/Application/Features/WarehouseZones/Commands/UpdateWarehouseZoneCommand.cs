@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.WarehouseZones.Commands;
@@ -39,18 +38,16 @@ public class UpdateWarehouseZoneCommandValidator : AbstractValidator<UpdateWareh
 /// </summary>
 public class UpdateWarehouseZoneCommandHandler : IRequestHandler<UpdateWarehouseZoneCommand, Result<WarehouseZoneDto>>
 {
-    private readonly IWarehouseZoneRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateWarehouseZoneCommandHandler(IWarehouseZoneRepository repository, IUnitOfWork unitOfWork)
+    public UpdateWarehouseZoneCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WarehouseZoneDto>> Handle(UpdateWarehouseZoneCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.WarehouseZones.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<WarehouseZoneDto>.Failure(new Error("WarehouseZone.NotFound", $"Warehouse zone with ID {request.Id} not found", ErrorType.NotFound));
@@ -72,7 +69,7 @@ public class UpdateWarehouseZoneCommandHandler : IRequestHandler<UpdateWarehouse
         else
             entity.Deactivate();
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.WarehouseZones.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new WarehouseZoneDto

@@ -1,33 +1,38 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetActivityStatisticsQuery : IRequest<ActivityStatisticsDto>, ITenantRequest
+public class GetActivityStatisticsQuery : IRequest<ActivityStatisticsDto>
 {
-    public Guid TenantId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
     public int? OwnerId { get; set; }
 }
 
+/// <summary>
+/// Handler for GetActivityStatisticsQuery
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetActivityStatisticsQueryHandler : IRequestHandler<GetActivityStatisticsQuery, ActivityStatisticsDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetActivityStatisticsQueryHandler(CRMDbContext context)
+    public GetActivityStatisticsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ActivityStatisticsDto> Handle(GetActivityStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Activities
-            .Where(a => a.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(a => a.DueDate >= request.FromDate.Value);

@@ -2,16 +2,15 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 
-public class UpdatePipelineCommand : IRequest<Result<PipelineDto>>, ITenantRequest
+public class UpdatePipelineCommand : IRequest<Result<PipelineDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -24,9 +23,6 @@ public class UpdatePipelineCommandValidator : AbstractValidator<UpdatePipelineCo
 {
     public UpdatePipelineCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Pipeline ID is required");
 
@@ -42,27 +38,32 @@ public class UpdatePipelineCommandValidator : AbstractValidator<UpdatePipelineCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdatePipelineCommandHandler : IRequestHandler<UpdatePipelineCommand, Result<PipelineDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdatePipelineCommandHandler(CRMDbContext context)
+    public UpdatePipelineCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PipelineDto>> Handle(UpdatePipelineCommand request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return Result<PipelineDto>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.Id} not found"));
 
         // Check if name is taken by another pipeline
-        var nameExists = await _context.Pipelines
-            .AnyAsync(p => p.TenantId == request.TenantId && p.Name == request.Name && p.Id != request.Id, cancellationToken);
+        var nameExists = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
+            .AnyAsync(p => p.TenantId == tenantId && p.Name == request.Name && p.Id != request.Id, cancellationToken);
 
         if (nameExists)
             return Result<PipelineDto>.Failure(Error.Conflict("Pipeline.NameExists", $"Pipeline with name '{request.Name}' already exists"));
@@ -72,8 +73,8 @@ public class UpdatePipelineCommandHandler : IRequestHandler<UpdatePipelineComman
         // Handle default status
         if (request.IsDefault && !pipeline.IsDefault)
         {
-            var existingDefault = await _context.Pipelines
-                .FirstOrDefaultAsync(p => p.TenantId == request.TenantId && p.IsDefault && p.Type == pipeline.Type && p.Id != request.Id, cancellationToken);
+            var existingDefault = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
+                .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.IsDefault && p.Type == pipeline.Type && p.Id != request.Id, cancellationToken);
 
             existingDefault?.UnsetDefault();
             pipeline.SetAsDefault();
@@ -89,7 +90,7 @@ public class UpdatePipelineCommandHandler : IRequestHandler<UpdatePipelineComman
         else if (!request.IsActive && pipeline.IsActive)
             pipeline.Deactivate();
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new PipelineDto
         {

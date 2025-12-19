@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
@@ -11,9 +10,8 @@ namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
 /// <summary>
 /// Command to mark an opportunity as lost
 /// </summary>
-public class LoseOpportunityCommand : IRequest<Result<OpportunityDto>>, ITenantRequest
+public class LoseOpportunityCommand : IRequest<Result<OpportunityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public DateTime? LostDate { get; set; }
     public string? LostReason { get; set; }
@@ -28,9 +26,6 @@ public class LoseOpportunityCommandValidator : AbstractValidator<LoseOpportunity
 {
     public LoseOpportunityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Opportunity ID is required");
 
@@ -49,21 +44,26 @@ public class LoseOpportunityCommandValidator : AbstractValidator<LoseOpportunity
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class LoseOpportunityCommandHandler : IRequestHandler<LoseOpportunityCommand, Result<OpportunityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public LoseOpportunityCommandHandler(CRMDbContext context)
+    public LoseOpportunityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<OpportunityDto>> Handle(LoseOpportunityCommand request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
             .Include(o => o.Pipeline)
             .Include(o => o.Stage)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result<OpportunityDto>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.Id} not found"));
@@ -71,7 +71,7 @@ public class LoseOpportunityCommandHandler : IRequestHandler<LoseOpportunityComm
         var lostDate = request.LostDate ?? DateTime.UtcNow;
         opportunity.MarkAsLost(lostDate, request.LostReason ?? string.Empty, request.CompetitorName);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new OpportunityDto
         {

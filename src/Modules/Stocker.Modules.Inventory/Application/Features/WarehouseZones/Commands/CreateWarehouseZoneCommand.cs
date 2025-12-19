@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.WarehouseZones.Commands;
@@ -41,12 +40,10 @@ public class CreateWarehouseZoneCommandValidator : AbstractValidator<CreateWareh
 /// </summary>
 public class CreateWarehouseZoneCommandHandler : IRequestHandler<CreateWarehouseZoneCommand, Result<WarehouseZoneDto>>
 {
-    private readonly IWarehouseZoneRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateWarehouseZoneCommandHandler(IWarehouseZoneRepository repository, IUnitOfWork unitOfWork)
+    public CreateWarehouseZoneCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -55,7 +52,7 @@ public class CreateWarehouseZoneCommandHandler : IRequestHandler<CreateWarehouse
         var data = request.Data;
 
         // Check if code already exists in warehouse
-        var existingZone = await _repository.GetByCodeAsync(data.WarehouseId, data.Code, cancellationToken);
+        var existingZone = await _unitOfWork.WarehouseZones.GetByCodeAsync(data.WarehouseId, data.Code, cancellationToken);
         if (existingZone != null)
         {
             return Result<WarehouseZoneDto>.Failure(new Error("WarehouseZone.DuplicateCode", $"Zone with code '{data.Code}' already exists in this warehouse", ErrorType.Conflict));
@@ -64,6 +61,7 @@ public class CreateWarehouseZoneCommandHandler : IRequestHandler<CreateWarehouse
         var zoneType = Enum.Parse<ZoneType>(data.ZoneType);
         var entity = new WarehouseZone(data.WarehouseId, data.Code, data.Name, zoneType);
 
+        entity.SetTenantId(request.TenantId);
         entity.SetDescription(data.Description);
         entity.SetPriority(data.Priority);
         entity.SetTemperatureControl(data.MinTemperature, data.MaxTemperature, data.TargetTemperature, data.RequiresTemperatureMonitoring);
@@ -73,7 +71,7 @@ public class CreateWarehouseZoneCommandHandler : IRequestHandler<CreateWarehouse
         entity.SetCapacity(data.TotalArea, data.UsableArea, data.MaxPalletCapacity, data.MaxHeight);
         entity.SetOperationFlags(data.IsDefaultPickingZone, data.IsDefaultPutawayZone, data.IsQuarantineZone, data.IsReturnsZone);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.WarehouseZones.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new WarehouseZoneDto

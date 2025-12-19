@@ -5,37 +5,36 @@ using Stocker.Modules.Purchase.Application.DTOs;
 using Stocker.Modules.Purchase.Application.Features.GoodsReceipts.Commands;
 using Stocker.Modules.Purchase.Application.Features.GoodsReceipts.Queries;
 using Stocker.Modules.Purchase.Domain.Entities;
-using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Purchase.Application.Features.GoodsReceipts.Handlers;
 
+/// <summary>
+/// Handler for CreateGoodsReceiptCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CreateGoodsReceiptHandler : IRequestHandler<CreateGoodsReceiptCommand, Result<GoodsReceiptDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
     private readonly ICurrentUserService _currentUserService;
 
     public CreateGoodsReceiptHandler(
-        PurchaseDbContext context,
+        IPurchaseUnitOfWork unitOfWork,
         IMapper mapper,
-        ITenantService tenantService,
         ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<GoodsReceiptDto>> Handle(CreateGoodsReceiptCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<GoodsReceiptDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var receiptNumber = $"GR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
         var receivedById = _currentUserService.UserId ?? Guid.Empty;
@@ -49,7 +48,7 @@ public class CreateGoodsReceiptHandler : IRequestHandler<CreateGoodsReceiptComma
             request.Dto.SupplierName,
             request.Dto.WarehouseId ?? Guid.Empty,
             request.Dto.WarehouseName,
-            tenantId.Value,
+            tenantId,
             request.Dto.Type
         );
 
@@ -83,7 +82,7 @@ public class CreateGoodsReceiptHandler : IRequestHandler<CreateGoodsReceiptComma
                 itemDto.ReceivedQuantity,
                 itemDto.UnitPrice,
                 lineNumber++,
-                tenantId.Value
+                tenantId
             );
 
             if (!string.IsNullOrEmpty(itemDto.BatchNumber) || itemDto.ExpiryDate.HasValue)
@@ -98,29 +97,35 @@ public class CreateGoodsReceiptHandler : IRequestHandler<CreateGoodsReceiptComma
             receipt.AddItem(item);
         }
 
-        _context.GoodsReceipts.Add(receipt);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<GoodsReceipt>().AddAsync(receipt, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<GoodsReceiptDto>.Success(_mapper.Map<GoodsReceiptDto>(receipt));
     }
 }
 
+/// <summary>
+/// Handler for GetGoodsReceiptByIdQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetGoodsReceiptByIdHandler : IRequestHandler<GetGoodsReceiptByIdQuery, Result<GoodsReceiptDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetGoodsReceiptByIdHandler(PurchaseDbContext context, IMapper mapper)
+    public GetGoodsReceiptByIdHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<GoodsReceiptDto>> Handle(GetGoodsReceiptByIdQuery request, CancellationToken cancellationToken)
     {
-        var receipt = await _context.GoodsReceipts
+        var tenantId = _unitOfWork.TenantId;
+
+        var receipt = await _unitOfWork.ReadRepository<GoodsReceipt>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (receipt == null)
             return Result<GoodsReceiptDto>.Failure(Error.NotFound("GoodsReceipt", "Goods receipt not found"));
@@ -129,20 +134,26 @@ public class GetGoodsReceiptByIdHandler : IRequestHandler<GetGoodsReceiptByIdQue
     }
 }
 
+/// <summary>
+/// Handler for GetGoodsReceiptsQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetGoodsReceiptsHandler : IRequestHandler<GetGoodsReceiptsQuery, Result<PagedResult<GoodsReceiptListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetGoodsReceiptsHandler(PurchaseDbContext context)
+    public GetGoodsReceiptsHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<GoodsReceiptListDto>>> Handle(GetGoodsReceiptsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.GoodsReceipts
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<GoodsReceipt>().AsQueryable()
             .Include(r => r.Items)
-            .AsQueryable();
+            .Where(r => r.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -208,24 +219,30 @@ public class GetGoodsReceiptsHandler : IRequestHandler<GetGoodsReceiptsQuery, Re
     }
 }
 
+/// <summary>
+/// Handler for PerformQualityCheckCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class PerformQualityCheckHandler : IRequestHandler<PerformQualityCheckCommand, Result<GoodsReceiptDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public PerformQualityCheckHandler(PurchaseDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public PerformQualityCheckHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<GoodsReceiptDto>> Handle(PerformQualityCheckCommand request, CancellationToken cancellationToken)
     {
-        var receipt = await _context.GoodsReceipts
+        var tenantId = _unitOfWork.TenantId;
+
+        var receipt = await _unitOfWork.ReadRepository<GoodsReceipt>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (receipt == null)
             return Result<GoodsReceiptDto>.Failure(Error.NotFound("GoodsReceipt", "Goods receipt not found"));
@@ -245,80 +262,97 @@ public class PerformQualityCheckHandler : IRequestHandler<PerformQualityCheckCom
         }
 
         receipt.CompleteQualityCheck(userId, userName, request.Dto.QualityNotes);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<GoodsReceiptDto>.Success(_mapper.Map<GoodsReceiptDto>(receipt));
     }
 }
 
+/// <summary>
+/// Handler for CompleteGoodsReceiptCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CompleteGoodsReceiptHandler : IRequestHandler<CompleteGoodsReceiptCommand, Result<GoodsReceiptDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public CompleteGoodsReceiptHandler(PurchaseDbContext context, IMapper mapper)
+    public CompleteGoodsReceiptHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<GoodsReceiptDto>> Handle(CompleteGoodsReceiptCommand request, CancellationToken cancellationToken)
     {
-        var receipt = await _context.GoodsReceipts
+        var tenantId = _unitOfWork.TenantId;
+
+        var receipt = await _unitOfWork.ReadRepository<GoodsReceipt>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (receipt == null)
             return Result<GoodsReceiptDto>.Failure(Error.NotFound("GoodsReceipt", "Goods receipt not found"));
 
         receipt.Complete();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<GoodsReceiptDto>.Success(_mapper.Map<GoodsReceiptDto>(receipt));
     }
 }
 
+/// <summary>
+/// Handler for DeleteGoodsReceiptCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeleteGoodsReceiptHandler : IRequestHandler<DeleteGoodsReceiptCommand, Result>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public DeleteGoodsReceiptHandler(PurchaseDbContext context)
+    public DeleteGoodsReceiptHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteGoodsReceiptCommand request, CancellationToken cancellationToken)
     {
-        var receipt = await _context.GoodsReceipts
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (receipt == null)
+        var receipt = await _unitOfWork.Repository<GoodsReceipt>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (receipt == null || receipt.TenantId != tenantId)
             return Result.Failure(Error.NotFound("GoodsReceipt", "Goods receipt not found"));
 
         if (receipt.Status != GoodsReceiptStatus.Draft)
             return Result.Failure(Error.Conflict("GoodsReceipt.Status", "Only draft receipts can be deleted"));
 
-        _context.GoodsReceipts.Remove(receipt);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<GoodsReceipt>().Remove(receipt);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
 }
 
+/// <summary>
+/// Handler for GetPendingQualityCheckQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPendingQualityCheckHandler : IRequestHandler<GetPendingQualityCheckQuery, Result<List<GoodsReceiptListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetPendingQualityCheckHandler(PurchaseDbContext context)
+    public GetPendingQualityCheckHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<GoodsReceiptListDto>>> Handle(GetPendingQualityCheckQuery request, CancellationToken cancellationToken)
     {
-        var receipts = await _context.GoodsReceipts
+        var tenantId = _unitOfWork.TenantId;
+
+        var receipts = await _unitOfWork.ReadRepository<GoodsReceipt>().AsQueryable()
             .Include(r => r.Items)
-            .Where(r => r.RequiresQualityCheck && !r.QualityCheckCompleted && r.Status == GoodsReceiptStatus.Pending)
+            .Where(r => r.TenantId == tenantId && r.RequiresQualityCheck && !r.QualityCheckCompleted && r.Status == GoodsReceiptStatus.Pending)
             .OrderBy(r => r.ReceiptDate)
             .Select(r => new GoodsReceiptListDto
             {

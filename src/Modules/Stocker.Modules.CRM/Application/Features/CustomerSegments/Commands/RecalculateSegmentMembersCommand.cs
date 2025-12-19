@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
@@ -11,9 +10,8 @@ namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 /// <summary>
 /// Command to recalculate members for a dynamic segment based on its criteria
 /// </summary>
-public class RecalculateSegmentMembersCommand : IRequest<Result<CustomerSegmentDto>>, ITenantRequest
+public class RecalculateSegmentMembersCommand : IRequest<Result<CustomerSegmentDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid SegmentId { get; set; }
 }
 
@@ -21,28 +19,30 @@ public class RecalculateSegmentMembersCommandValidator : AbstractValidator<Recal
 {
     public RecalculateSegmentMembersCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.SegmentId)
             .NotEmpty().WithMessage("Segment ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class RecalculateSegmentMembersCommandHandler : IRequestHandler<RecalculateSegmentMembersCommand, Result<CustomerSegmentDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public RecalculateSegmentMembersCommandHandler(CRMDbContext context)
+    public RecalculateSegmentMembersCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerSegmentDto>> Handle(RecalculateSegmentMembersCommand request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
             .Include(s => s.Members)
-            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == tenantId, cancellationToken);
 
         if (segment == null)
         {
@@ -52,8 +52,8 @@ public class RecalculateSegmentMembersCommandHandler : IRequestHandler<Recalcula
 
         // For now, just get all active customers as a placeholder
         // In a real implementation, the criteria would be parsed and evaluated
-        var customerIds = await _context.Customers
-            .Where(c => c.TenantId == request.TenantId && c.IsActive)
+        var customerIds = await _unitOfWork.ReadRepository<Domain.Entities.Customer>().AsQueryable()
+            .Where(c => c.TenantId == tenantId && c.IsActive)
             .Select(c => c.Id)
             .ToListAsync(cancellationToken);
 
@@ -63,7 +63,7 @@ public class RecalculateSegmentMembersCommandHandler : IRequestHandler<Recalcula
             return Result<CustomerSegmentDto>.Failure(result.Error);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new CustomerSegmentDto
         {

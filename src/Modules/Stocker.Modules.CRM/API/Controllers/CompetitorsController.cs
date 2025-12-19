@@ -38,10 +38,8 @@ public class CompetitorsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
         var query = new GetCompetitorsQuery
         {
-            TenantId = tenantId,
             IsActive = isActive,
             ThreatLevel = threatLevel,
             SearchTerm = searchTerm,
@@ -56,8 +54,7 @@ public class CompetitorsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCompetitor(Guid id, CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
-        var query = new GetCompetitorByIdQuery { TenantId = tenantId, Id = id };
+        var query = new GetCompetitorByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
         return result != null

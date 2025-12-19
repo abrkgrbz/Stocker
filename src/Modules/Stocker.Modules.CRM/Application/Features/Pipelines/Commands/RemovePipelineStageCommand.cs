@@ -1,8 +1,8 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
@@ -10,9 +10,8 @@ namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 /// <summary>
 /// Command to remove a pipeline stage
 /// </summary>
-public class RemovePipelineStageCommand : IRequest<Result<Unit>>, ITenantRequest
+public class RemovePipelineStageCommand : IRequest<Result<Unit>>
 {
-    public Guid TenantId { get; set; }
     public Guid PipelineId { get; set; }
     public Guid StageId { get; set; }
 }
@@ -24,9 +23,6 @@ public class RemovePipelineStageCommandValidator : AbstractValidator<RemovePipel
 {
     public RemovePipelineStageCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PipelineId)
             .NotEmpty().WithMessage("Pipeline ID is required");
 
@@ -35,27 +31,32 @@ public class RemovePipelineStageCommandValidator : AbstractValidator<RemovePipel
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class RemovePipelineStageCommandHandler : IRequestHandler<RemovePipelineStageCommand, Result<Unit>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public RemovePipelineStageCommandHandler(CRMDbContext context)
+    public RemovePipelineStageCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Unit>> Handle(RemovePipelineStageCommand request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return Result<Unit>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.PipelineId} not found"));
 
         // Check if stage has opportunities
-        var hasOpportunities = await _context.Opportunities
-            .AnyAsync(o => o.StageId == request.StageId && o.TenantId == request.TenantId, cancellationToken);
+        var hasOpportunities = await _unitOfWork.ReadRepository<Opportunity>().AsQueryable()
+            .AnyAsync(o => o.StageId == request.StageId && o.TenantId == tenantId, cancellationToken);
 
         if (hasOpportunities)
             return Result<Unit>.Failure(Error.Conflict("PipelineStage.HasOpportunities", "Cannot remove stage with existing opportunities"));
@@ -63,7 +64,7 @@ public class RemovePipelineStageCommandHandler : IRequestHandler<RemovePipelineS
         try
         {
             pipeline.RemoveStage(request.StageId);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result<Unit>.Success(Unit.Value);
         }

@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -24,18 +23,16 @@ public class ExtendReservationExpirationCommandValidator : AbstractValidator<Ext
 
 public class ExtendReservationExpirationCommandHandler : IRequestHandler<ExtendReservationExpirationCommand, Result<bool>>
 {
-    private readonly IStockReservationRepository _stockReservationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public ExtendReservationExpirationCommandHandler(IStockReservationRepository stockReservationRepository, IUnitOfWork unitOfWork)
+    public ExtendReservationExpirationCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockReservationRepository = stockReservationRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(ExtendReservationExpirationCommand request, CancellationToken cancellationToken)
     {
-        var reservation = await _stockReservationRepository.GetByIdAsync(request.ReservationId, cancellationToken);
+        var reservation = await _unitOfWork.StockReservations.GetByIdAsync(request.ReservationId, cancellationToken);
         if (reservation == null)
         {
             return Result<bool>.Failure(new Error("StockReservation.NotFound", $"Reservation with ID {request.ReservationId} not found", ErrorType.NotFound));
@@ -44,7 +41,7 @@ public class ExtendReservationExpirationCommandHandler : IRequestHandler<ExtendR
         try
         {
             reservation.ExtendExpiration(request.NewExpirationDate);
-            await _stockReservationRepository.UpdateAsync(reservation, cancellationToken);
+            await _unitOfWork.StockReservations.UpdateAsync(reservation, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }

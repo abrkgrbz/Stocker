@@ -1,15 +1,13 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 
-public class RemoveSegmentMemberCommand : IRequest<Result>, ITenantRequest
+public class RemoveSegmentMemberCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid SegmentId { get; set; }
     public Guid CustomerId { get; set; }
 }
@@ -18,9 +16,6 @@ public class RemoveSegmentMemberCommandValidator : AbstractValidator<RemoveSegme
 {
     public RemoveSegmentMemberCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.SegmentId)
             .NotEmpty().WithMessage("Segment ID is required");
 
@@ -29,20 +24,25 @@ public class RemoveSegmentMemberCommandValidator : AbstractValidator<RemoveSegme
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class RemoveSegmentMemberCommandHandler : IRequestHandler<RemoveSegmentMemberCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public RemoveSegmentMemberCommandHandler(CRMDbContext context)
+    public RemoveSegmentMemberCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RemoveSegmentMemberCommand request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
             .Include(s => s.Members)
-            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == tenantId, cancellationToken);
 
         if (segment == null)
         {
@@ -56,7 +56,7 @@ public class RemoveSegmentMemberCommandHandler : IRequestHandler<RemoveSegmentMe
             return result;
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

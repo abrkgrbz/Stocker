@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
@@ -41,18 +40,16 @@ public class UpdateProductAttributeOptionCommandValidator : AbstractValidator<Up
 /// </summary>
 public class UpdateProductAttributeOptionCommandHandler : IRequestHandler<UpdateProductAttributeOptionCommand, Result<ProductAttributeOptionDto>>
 {
-    private readonly IProductAttributeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductAttributeOptionCommandHandler(IProductAttributeRepository repository, IUnitOfWork unitOfWork)
+    public UpdateProductAttributeOptionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductAttributeOptionDto>> Handle(UpdateProductAttributeOptionCommand request, CancellationToken cancellationToken)
     {
-        var option = await _repository.GetOptionByIdAsync(request.OptionId, cancellationToken);
+        var option = await _unitOfWork.ProductAttributes.GetOptionByIdAsync(request.OptionId, cancellationToken);
 
         if (option == null || option.ProductAttributeId != request.AttributeId)
         {
@@ -67,7 +64,7 @@ public class UpdateProductAttributeOptionCommandHandler : IRequestHandler<Update
         option.SetImageUrl(data.ImageUrl);
         option.SetDisplayOrder(data.DisplayOrder);
 
-        _repository.UpdateOption(option);
+        _unitOfWork.ProductAttributes.UpdateOption(option);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ProductAttributeOptionDto

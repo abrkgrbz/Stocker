@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Domain.Common.ValueObjects;
 
@@ -51,20 +50,16 @@ public class UpdateWarehouseCommandValidator : AbstractValidator<UpdateWarehouse
 /// </summary>
 public class UpdateWarehouseCommandHandler : IRequestHandler<UpdateWarehouseCommand, Result<WarehouseDto>>
 {
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateWarehouseCommandHandler(
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateWarehouseCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<WarehouseDto>> Handle(UpdateWarehouseCommand request, CancellationToken cancellationToken)
     {
-        var warehouse = await _warehouseRepository.GetByIdAsync(request.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(request.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result<WarehouseDto>.Failure(

@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -32,18 +31,16 @@ public class DeleteProductBundleCommandValidator : AbstractValidator<DeleteProdu
 /// </summary>
 public class DeleteProductBundleCommandHandler : IRequestHandler<DeleteProductBundleCommand, Result>
 {
-    private readonly IProductBundleRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteProductBundleCommandHandler(IProductBundleRepository repository, IUnitOfWork unitOfWork)
+    public DeleteProductBundleCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteProductBundleCommand request, CancellationToken cancellationToken)
     {
-        var bundle = await _repository.GetByIdAsync(request.BundleId, cancellationToken);
+        var bundle = await _unitOfWork.ProductBundles.GetByIdAsync(request.BundleId, cancellationToken);
 
         if (bundle == null)
         {
@@ -58,7 +55,7 @@ public class DeleteProductBundleCommandHandler : IRequestHandler<DeleteProductBu
                 new Error("ProductBundle.IsActive", "Cannot delete an active bundle. Deactivate it first.", ErrorType.Validation));
         }
 
-        _repository.Remove(bundle);
+        _unitOfWork.ProductBundles.Remove(bundle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

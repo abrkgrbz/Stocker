@@ -2,8 +2,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
@@ -11,9 +11,8 @@ namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 /// <summary>
 /// Command to activate a pipeline
 /// </summary>
-public class ActivatePipelineCommand : IRequest<Result<PipelineDto>>, ITenantRequest
+public class ActivatePipelineCommand : IRequest<Result<PipelineDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -24,34 +23,36 @@ public class ActivatePipelineCommandValidator : AbstractValidator<ActivatePipeli
 {
     public ActivatePipelineCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Pipeline ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class ActivatePipelineCommandHandler : IRequestHandler<ActivatePipelineCommand, Result<PipelineDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public ActivatePipelineCommandHandler(CRMDbContext context)
+    public ActivatePipelineCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PipelineDto>> Handle(ActivatePipelineCommand request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return Result<PipelineDto>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.Id} not found"));
 
         pipeline.Activate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new PipelineDto
         {

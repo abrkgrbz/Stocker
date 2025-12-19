@@ -2,15 +2,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Competitors.Queries;
 
-public class GetCompetitorsQuery : IRequest<PagedResult<CompetitorDto>>, ITenantRequest
+public class GetCompetitorsQuery : IRequest<PagedResult<CompetitorDto>>
 {
-    public Guid TenantId { get; set; }
     public bool? IsActive { get; set; }
     public ThreatLevel? ThreatLevel { get; set; }
     public string? SearchTerm { get; set; }
@@ -18,19 +16,24 @@ public class GetCompetitorsQuery : IRequest<PagedResult<CompetitorDto>>, ITenant
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCompetitorsQueryHandler : IRequestHandler<GetCompetitorsQuery, PagedResult<CompetitorDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCompetitorsQueryHandler(CRMDbContext context)
+    public GetCompetitorsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<PagedResult<CompetitorDto>> Handle(GetCompetitorsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Competitors
-            .Where(c => c.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Competitor>().AsQueryable()
+            .Where(c => c.TenantId == tenantId);
 
         if (request.IsActive.HasValue)
             query = query.Where(c => c.IsActive == request.IsActive.Value);

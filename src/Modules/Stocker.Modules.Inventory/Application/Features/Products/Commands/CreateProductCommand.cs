@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Domain.Common.ValueObjects;
 
@@ -76,35 +75,14 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
 /// <summary>
 /// Handler for CreateProductCommand
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<ProductDto>>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly ICategoryRepository _categoryRepository;
-    private readonly IUnitRepository _unitRepository;
-    private readonly IBrandRepository _brandRepository;
-    private readonly IStockRepository _stockRepository;
-    private readonly IStockMovementRepository _stockMovementRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateProductCommandHandler(
-        IProductRepository productRepository,
-        ICategoryRepository categoryRepository,
-        IUnitRepository unitRepository,
-        IBrandRepository brandRepository,
-        IStockRepository stockRepository,
-        IStockMovementRepository stockMovementRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateProductCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _productRepository = productRepository;
-        _categoryRepository = categoryRepository;
-        _unitRepository = unitRepository;
-        _brandRepository = brandRepository;
-        _stockRepository = stockRepository;
-        _stockMovementRepository = stockMovementRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -113,7 +91,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         var data = request.ProductData;
 
         // Check if product with same code already exists
-        var existingProduct = await _productRepository.GetByCodeAsync(data.Code, cancellationToken);
+        var existingProduct = await _unitOfWork.Products.GetByCodeAsync(data.Code, cancellationToken);
         if (existingProduct != null)
         {
             return Result<ProductDto>.Failure(
@@ -123,7 +101,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         // Check if SKU is unique (if provided)
         if (!string.IsNullOrEmpty(data.SKU))
         {
-            var existingBySku = await _productRepository.GetBySkuAsync(data.SKU, cancellationToken);
+            var existingBySku = await _unitOfWork.Products.GetBySkuAsync(data.SKU, cancellationToken);
             if (existingBySku != null)
             {
                 return Result<ProductDto>.Failure(
@@ -132,7 +110,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         }
 
         // Check if category exists
-        var category = await _categoryRepository.GetByIdAsync(data.CategoryId, cancellationToken);
+        var category = await _unitOfWork.Categories.GetByIdAsync(data.CategoryId, cancellationToken);
         if (category == null)
         {
             return Result<ProductDto>.Failure(
@@ -140,7 +118,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         }
 
         // Check if unit exists
-        var unit = await _unitRepository.GetByIdAsync(data.UnitId, cancellationToken);
+        var unit = await _unitOfWork.Units.GetByIdAsync(data.UnitId, cancellationToken);
         if (unit == null)
         {
             return Result<ProductDto>.Failure(
@@ -151,7 +129,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         Domain.Entities.Brand? brand = null;
         if (data.BrandId.HasValue)
         {
-            brand = await _brandRepository.GetByIdAsync(data.BrandId.Value, cancellationToken);
+            brand = await _unitOfWork.Brands.GetByIdAsync(data.BrandId.Value, cancellationToken);
             if (brand == null)
             {
                 return Result<ProductDto>.Failure(
@@ -223,7 +201,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             data.DimensionUnit);
 
         // Save to repository
-        await _productRepository.AddAsync(product, cancellationToken);
+        await _unitOfWork.Products.AddAsync(product, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Create initial stock entries if provided
@@ -234,7 +212,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                 if (stockEntry.Quantity <= 0) continue;
 
                 // Verify warehouse exists
-                var warehouse = await _warehouseRepository.GetByIdAsync(stockEntry.WarehouseId, cancellationToken);
+                var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(stockEntry.WarehouseId, cancellationToken);
                 if (warehouse == null) continue;
 
                 // Create stock record
@@ -243,10 +221,10 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                 {
                     stock.SetLocation(stockEntry.LocationId.Value);
                 }
-                await _stockRepository.AddAsync(stock, cancellationToken);
+                await _unitOfWork.Stocks.AddAsync(stock, cancellationToken);
 
                 // Create stock movement record for audit trail
-                var documentNumber = await _stockMovementRepository.GenerateDocumentNumberAsync(
+                var documentNumber = await _unitOfWork.StockMovements.GenerateDocumentNumberAsync(
                     StockMovementType.AdjustmentIncrease, cancellationToken);
 
                 var movement = new StockMovement(
@@ -260,7 +238,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
                     0); // userId - should get from context
 
                 movement.SetReference("InitialStock", "Initial stock entry on product creation", null);
-                await _stockMovementRepository.AddAsync(movement, cancellationToken);
+                await _unitOfWork.StockMovements.AddAsync(movement, cancellationToken);
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

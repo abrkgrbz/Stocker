@@ -1,15 +1,14 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 
-public class GetDealsQuery : IRequest<IEnumerable<DealDto>>, ITenantRequest
+public class GetDealsQuery : IRequest<IEnumerable<DealDto>>
 {
-    public Guid TenantId { get; set; }
     public string? Search { get; set; }
     public DealStatus? Status { get; set; }
     public Guid? CustomerId { get; set; }
@@ -23,21 +22,25 @@ public class GetDealsQuery : IRequest<IEnumerable<DealDto>>, ITenantRequest
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetDealsQueryHandler : IRequestHandler<GetDealsQuery, IEnumerable<DealDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetDealsQueryHandler(CRMDbContext context)
+    public GetDealsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<DealDto>> Handle(GetDealsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Deals
+        var tenantId = _unitOfWork.TenantId;
+        var query = _unitOfWork.ReadRepository<Deal>().AsQueryable()
             .Include(d => d.Pipeline)
             .Include(d => d.Stage)
-            .Where(d => d.TenantId == request.TenantId && d.Status != DealStatus.Deleted);
+            .Where(d => d.TenantId == tenantId && d.Status != DealStatus.Deleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

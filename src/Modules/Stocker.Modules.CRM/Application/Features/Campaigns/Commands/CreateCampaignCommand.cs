@@ -4,15 +4,13 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 
-public class CreateCampaignCommand : IRequest<Result<CampaignDto>>, ITenantRequest
+public class CreateCampaignCommand : IRequest<Result<CampaignDto>>
 {
-    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public CampaignType Type { get; set; }
@@ -30,9 +28,6 @@ public class CreateCampaignCommandValidator : AbstractValidator<CreateCampaignCo
 {
     public CreateCampaignCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Campaign name is required")
             .MaximumLength(200).WithMessage("Campaign name must not exceed 200 characters");
@@ -67,17 +62,22 @@ public class CreateCampaignCommandValidator : AbstractValidator<CreateCampaignCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreateCampaignCommandHandler : IRequestHandler<CreateCampaignCommand, Result<CampaignDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateCampaignCommandHandler(CRMDbContext context)
+    public CreateCampaignCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CampaignDto>> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         var ownerId = 0;
         if (!string.IsNullOrEmpty(request.OwnerId) && int.TryParse(request.OwnerId, out var parsedOwnerId))
         {
@@ -85,7 +85,7 @@ public class CreateCampaignCommandHandler : IRequestHandler<CreateCampaignComman
         }
 
         var campaign = new Campaign(
-            request.TenantId,
+            tenantId,
             request.Name,
             request.Type,
             request.StartDate,
@@ -99,8 +99,8 @@ public class CreateCampaignCommandHandler : IRequestHandler<CreateCampaignComman
             Money.Create(request.ExpectedRevenue, "USD"),
             request.TargetLeads);
 
-        _context.Campaigns.Add(campaign);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Campaign>().AddAsync(campaign);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CampaignDto>.Success(new CampaignDto
         {

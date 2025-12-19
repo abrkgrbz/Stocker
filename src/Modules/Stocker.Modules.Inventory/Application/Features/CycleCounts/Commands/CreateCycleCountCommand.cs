@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.CycleCounts.Commands;
@@ -40,12 +39,10 @@ public class CreateCycleCountCommandValidator : AbstractValidator<CreateCycleCou
 /// </summary>
 public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCommand, Result<CycleCountDto>>
 {
-    private readonly ICycleCountRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateCycleCountCommandHandler(ICycleCountRepository repository, IUnitOfWork unitOfWork)
+    public CreateCycleCountCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -57,7 +54,7 @@ public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCo
         var planNumber = $"CC-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
 
         // Check if plan number already exists
-        var existingPlan = await _repository.GetByPlanNumberAsync(planNumber, cancellationToken);
+        var existingPlan = await _unitOfWork.CycleCounts.GetByPlanNumberAsync(planNumber, cancellationToken);
         if (existingPlan != null)
         {
             return Result<CycleCountDto>.Failure(new Error("CycleCount.DuplicateNumber", $"Cycle count with plan number '{planNumber}' already exists", ErrorType.Conflict));
@@ -93,7 +90,8 @@ public class CreateCycleCountCommandHandler : IRequestHandler<CreateCycleCountCo
             entity.AssignTo(data.AssignedTo ?? "", data.AssignedUserId);
         }
 
-        await _repository.AddAsync(entity, cancellationToken);
+        entity.SetTenantId(request.TenantId);
+        await _unitOfWork.CycleCounts.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new CycleCountDto

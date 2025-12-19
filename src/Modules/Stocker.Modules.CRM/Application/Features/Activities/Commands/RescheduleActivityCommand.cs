@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Commands;
 
-public class RescheduleActivityCommand : IRequest<Result<ActivityDto>>, ITenantRequest
+public class RescheduleActivityCommand : IRequest<Result<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public DateTime NewDueDate { get; set; }
     public string? RescheduleReason { get; set; }
@@ -20,9 +19,6 @@ public class RescheduleActivityCommandValidator : AbstractValidator<RescheduleAc
 {
     public RescheduleActivityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Activity ID is required");
 
@@ -35,26 +31,32 @@ public class RescheduleActivityCommandValidator : AbstractValidator<RescheduleAc
     }
 }
 
+/// <summary>
+/// Handler for RescheduleActivityCommand
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class RescheduleActivityCommandHandler : IRequestHandler<RescheduleActivityCommand, Result<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public RescheduleActivityCommandHandler(CRMDbContext context)
+    public RescheduleActivityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ActivityDto>> Handle(RescheduleActivityCommand request, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var activity = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (activity == null)
             return Result<ActivityDto>.Failure(Error.NotFound("Activity.NotFound", $"Activity with ID {request.Id} not found"));
 
         activity.Defer(request.NewDueDate);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ActivityDto
         {

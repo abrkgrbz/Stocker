@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Products.Commands;
@@ -19,20 +18,16 @@ public class DeactivateProductCommand : IRequest<Result>
 /// </summary>
 public class DeactivateProductCommandHandler : IRequestHandler<DeactivateProductCommand, Result>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeactivateProductCommandHandler(
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public DeactivateProductCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeactivateProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result.Failure(Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));

@@ -1,33 +1,37 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.SalesTeams.Queries;
 
-public class GetSalesTeamByIdQuery : IRequest<SalesTeamDto?>, ITenantRequest
+public class GetSalesTeamByIdQuery : IRequest<SalesTeamDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesTeamByIdQueryHandler : IRequestHandler<GetSalesTeamByIdQuery, SalesTeamDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetSalesTeamByIdQueryHandler(CRMDbContext context)
+    public GetSalesTeamByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<SalesTeamDto?> Handle(GetSalesTeamByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.SalesTeams
+        var tenantId = _unitOfWork.TenantId;
+
+        var entity = await _unitOfWork.ReadRepository<SalesTeam>().AsQueryable()
             .Include(s => s.ParentTeam)
             .Include(s => s.Territory)
             .Include(s => s.Members)
-            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
         if (entity == null)
             return null;

@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
 
-public class CloseDealLostCommand : IRequest<Result<DealDto>>, ITenantRequest
+public class CloseDealLostCommand : IRequest<Result<DealDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public DateTime? ActualCloseDate { get; set; }
     public string LostReason { get; set; } = string.Empty;
@@ -21,9 +20,6 @@ public class CloseDealLostCommandValidator : AbstractValidator<CloseDealLostComm
 {
     public CloseDealLostCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Deal ID is required");
 
@@ -40,19 +36,23 @@ public class CloseDealLostCommandValidator : AbstractValidator<CloseDealLostComm
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CloseDealLostCommandHandler : IRequestHandler<CloseDealLostCommand, Result<DealDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CloseDealLostCommandHandler(CRMDbContext context)
+    public CloseDealLostCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DealDto>> Handle(CloseDealLostCommand request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
-            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == tenantId, cancellationToken);
 
         if (deal == null)
             return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.Id} not found"));
@@ -60,7 +60,7 @@ public class CloseDealLostCommandHandler : IRequestHandler<CloseDealLostCommand,
         var closeDate = request.ActualCloseDate ?? DateTime.UtcNow;
         deal.MarkAsLost(closeDate, request.LostReason, request.CompetitorName);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new DealDto
         {

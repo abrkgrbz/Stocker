@@ -2,15 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 
-public class AddSegmentMemberCommand : IRequest<Result>, ITenantRequest
+public class AddSegmentMemberCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid SegmentId { get; set; }
     public Guid CustomerId { get; set; }
     public SegmentMembershipReason Reason { get; set; } = SegmentMembershipReason.Manual;
@@ -20,9 +18,6 @@ public class AddSegmentMemberCommandValidator : AbstractValidator<AddSegmentMemb
 {
     public AddSegmentMemberCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.SegmentId)
             .NotEmpty().WithMessage("Segment ID is required");
 
@@ -34,20 +29,25 @@ public class AddSegmentMemberCommandValidator : AbstractValidator<AddSegmentMemb
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddSegmentMemberCommandHandler : IRequestHandler<AddSegmentMemberCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddSegmentMemberCommandHandler(CRMDbContext context)
+    public AddSegmentMemberCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(AddSegmentMemberCommand request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
             .Include(s => s.Members)
-            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.SegmentId && s.TenantId == tenantId, cancellationToken);
 
         if (segment == null)
         {
@@ -56,8 +56,8 @@ public class AddSegmentMemberCommandHandler : IRequestHandler<AddSegmentMemberCo
         }
 
         // Verify customer exists
-        var customerExists = await _context.Customers
-            .AnyAsync(c => c.Id == request.CustomerId && c.TenantId == request.TenantId, cancellationToken);
+        var customerExists = await _unitOfWork.ReadRepository<Domain.Entities.Customer>().AsQueryable()
+            .AnyAsync(c => c.Id == request.CustomerId && c.TenantId == tenantId, cancellationToken);
 
         if (!customerExists)
         {
@@ -71,7 +71,7 @@ public class AddSegmentMemberCommandHandler : IRequestHandler<AddSegmentMemberCo
             return result;
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

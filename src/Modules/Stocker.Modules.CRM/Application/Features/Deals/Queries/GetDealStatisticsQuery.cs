@@ -1,32 +1,35 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 
-public class GetDealStatisticsQuery : IRequest<DealStatisticsDto>, ITenantRequest
+public class GetDealStatisticsQuery : IRequest<DealStatisticsDto>
 {
-    public Guid TenantId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetDealStatisticsQueryHandler : IRequestHandler<GetDealStatisticsQuery, DealStatisticsDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetDealStatisticsQueryHandler(CRMDbContext context)
+    public GetDealStatisticsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<DealStatisticsDto> Handle(GetDealStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Deals
-            .Where(d => d.TenantId == request.TenantId && d.Status != DealStatus.Deleted);
+        var tenantId = _unitOfWork.TenantId;
+        var query = _unitOfWork.ReadRepository<Deal>().AsQueryable()
+            .Where(d => d.TenantId == tenantId && d.Status != DealStatus.Deleted);
 
         if (request.FromDate.HasValue)
             query = query.Where(d => d.CreatedAt >= request.FromDate.Value);

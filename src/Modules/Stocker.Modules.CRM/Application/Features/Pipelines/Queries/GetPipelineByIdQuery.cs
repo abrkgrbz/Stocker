@@ -1,31 +1,35 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Queries;
 
-public class GetPipelineByIdQuery : IRequest<PipelineDto?>, ITenantRequest
+public class GetPipelineByIdQuery : IRequest<PipelineDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetPipelineByIdQueryHandler : IRequestHandler<GetPipelineByIdQuery, PipelineDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetPipelineByIdQueryHandler(CRMDbContext context)
+    public GetPipelineByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PipelineDto?> Handle(GetPipelineByIdQuery request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return null;

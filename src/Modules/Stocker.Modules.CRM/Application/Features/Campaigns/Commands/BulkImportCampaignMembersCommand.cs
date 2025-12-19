@@ -3,8 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
@@ -12,9 +11,8 @@ namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 /// <summary>
 /// Command to bulk import campaign members
 /// </summary>
-public class BulkImportCampaignMembersCommand : IRequest<Result<BulkImportResultDto>>, ITenantRequest
+public class BulkImportCampaignMembersCommand : IRequest<Result<BulkImportResultDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid CampaignId { get; set; }
     public List<CampaignMemberImportDto> Members { get; set; } = new();
     public bool SkipDuplicates { get; set; } = true;
@@ -48,9 +46,6 @@ public class BulkImportCampaignMembersCommandValidator : AbstractValidator<BulkI
 {
     public BulkImportCampaignMembersCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CampaignId)
             .NotEmpty().WithMessage("Campaign ID is required");
 
@@ -99,20 +94,25 @@ public class BulkImportCampaignMembersCommandValidator : AbstractValidator<BulkI
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class BulkImportCampaignMembersCommandHandler : IRequestHandler<BulkImportCampaignMembersCommand, Result<BulkImportResultDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public BulkImportCampaignMembersCommandHandler(CRMDbContext context)
+    public BulkImportCampaignMembersCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<BulkImportResultDto>> Handle(BulkImportCampaignMembersCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
-            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Result<BulkImportResultDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
@@ -143,7 +143,7 @@ public class BulkImportCampaignMembersCommandHandler : IRequestHandler<BulkImpor
 
                 // Create a new lead from the import data
                 var leadResult = Lead.Create(
-                    request.TenantId,
+                    tenantId,
                     memberDto.FirstName ?? "Unknown",
                     memberDto.LastName ?? "Unknown",
                     memberDto.Email,
@@ -159,10 +159,10 @@ public class BulkImportCampaignMembersCommandHandler : IRequestHandler<BulkImpor
                 }
 
                 var lead = leadResult.Value;
-                _context.Leads.Add(lead);
+                await _unitOfWork.Repository<Lead>().AddAsync(lead);
 
                 var member = new CampaignMember(
-                    request.TenantId,
+                    tenantId,
                     request.CampaignId,
                     null,
                     lead.Id);
@@ -178,7 +178,7 @@ public class BulkImportCampaignMembersCommandHandler : IRequestHandler<BulkImpor
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<BulkImportResultDto>.Success(result);
     }

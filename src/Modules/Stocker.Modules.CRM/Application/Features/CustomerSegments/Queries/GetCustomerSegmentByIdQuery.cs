@@ -2,15 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Queries;
 
-public class GetCustomerSegmentByIdQuery : IRequest<Result<CustomerSegmentDto>>, ITenantRequest
+public class GetCustomerSegmentByIdQuery : IRequest<Result<CustomerSegmentDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -18,27 +16,29 @@ public class GetCustomerSegmentByIdQueryValidator : AbstractValidator<GetCustome
 {
     public GetCustomerSegmentByIdQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Segment ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCustomerSegmentByIdQueryHandler : IRequestHandler<GetCustomerSegmentByIdQuery, Result<CustomerSegmentDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCustomerSegmentByIdQueryHandler(CRMDbContext context)
+    public GetCustomerSegmentByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerSegmentDto>> Handle(GetCustomerSegmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
-            .Where(s => s.Id == request.Id && s.TenantId == request.TenantId)
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+            .Where(s => s.Id == request.Id && s.TenantId == tenantId)
             .Select(s => new CustomerSegmentDto
             {
                 Id = s.Id,

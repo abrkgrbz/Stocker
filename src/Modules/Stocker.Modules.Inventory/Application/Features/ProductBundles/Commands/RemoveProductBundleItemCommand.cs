@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -34,18 +33,16 @@ public class RemoveProductBundleItemCommandValidator : AbstractValidator<RemoveP
 /// </summary>
 public class RemoveProductBundleItemCommandHandler : IRequestHandler<RemoveProductBundleItemCommand, Result>
 {
-    private readonly IProductBundleRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public RemoveProductBundleItemCommandHandler(IProductBundleRepository repository, IUnitOfWork unitOfWork)
+    public RemoveProductBundleItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RemoveProductBundleItemCommand request, CancellationToken cancellationToken)
     {
-        var bundle = await _repository.GetWithItemsAsync(request.BundleId, cancellationToken);
+        var bundle = await _unitOfWork.ProductBundles.GetWithItemsAsync(request.BundleId, cancellationToken);
 
         if (bundle == null)
         {
@@ -69,7 +66,7 @@ public class RemoveProductBundleItemCommandHandler : IRequestHandler<RemoveProdu
 
         bundle.RemoveItem(item.ProductId);
 
-        _repository.Update(bundle);
+        _unitOfWork.ProductBundles.Update(bundle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

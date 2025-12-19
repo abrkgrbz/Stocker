@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Locations.Commands;
@@ -28,18 +27,16 @@ public class UpdateLocationCommandValidator : AbstractValidator<UpdateLocationCo
 
 public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationCommand, Result<LocationDto>>
 {
-    private readonly ILocationRepository _locationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateLocationCommandHandler(ILocationRepository locationRepository, IUnitOfWork unitOfWork)
+    public UpdateLocationCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _locationRepository = locationRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LocationDto>> Handle(UpdateLocationCommand request, CancellationToken cancellationToken)
     {
-        var location = await _locationRepository.GetByIdAsync(request.LocationId, cancellationToken);
+        var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationId, cancellationToken);
         if (location == null)
         {
             return Result<LocationDto>.Failure(new Error("Location.NotFound", $"Location with ID {request.LocationId} not found", ErrorType.NotFound));
@@ -50,7 +47,7 @@ public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComman
         location.SetLocationDetails(data.Aisle, data.Shelf, data.Bin);
         location.SetCapacity(data.Capacity);
 
-        await _locationRepository.UpdateAsync(location, cancellationToken);
+        await _unitOfWork.Locations.UpdateAsync(location, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<LocationDto>.Success(new LocationDto

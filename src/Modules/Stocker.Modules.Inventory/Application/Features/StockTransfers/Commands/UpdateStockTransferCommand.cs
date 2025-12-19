@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -49,20 +48,16 @@ public class UpdateStockTransferCommandValidator : AbstractValidator<UpdateStock
 /// </summary>
 public class UpdateStockTransferCommandHandler : IRequestHandler<UpdateStockTransferCommand, Result<StockTransferDto>>
 {
-    private readonly IStockTransferRepository _stockTransferRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateStockTransferCommandHandler(
-        IStockTransferRepository stockTransferRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateStockTransferCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockTransferRepository = stockTransferRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockTransferDto>> Handle(UpdateStockTransferCommand request, CancellationToken cancellationToken)
     {
-        var transfer = await _stockTransferRepository.GetWithItemsAsync(request.TransferId, cancellationToken);
+        var transfer = await _unitOfWork.StockTransfers.GetWithItemsAsync(request.TransferId, cancellationToken);
         if (transfer == null)
         {
             return Result<StockTransferDto>.Failure(

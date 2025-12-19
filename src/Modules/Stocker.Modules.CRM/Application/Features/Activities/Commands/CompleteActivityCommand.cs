@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Commands;
 
-public class CompleteActivityCommand : IRequest<Result<ActivityDto>>, ITenantRequest
+public class CompleteActivityCommand : IRequest<Result<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string? Outcome { get; set; }
     public string? Notes { get; set; }
@@ -21,9 +20,6 @@ public class CompleteActivityCommandValidator : AbstractValidator<CompleteActivi
 {
     public CompleteActivityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Activity ID is required");
 
@@ -39,26 +35,32 @@ public class CompleteActivityCommandValidator : AbstractValidator<CompleteActivi
     }
 }
 
+/// <summary>
+/// Handler for CompleteActivityCommand
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CompleteActivityCommandHandler : IRequestHandler<CompleteActivityCommand, Result<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CompleteActivityCommandHandler(CRMDbContext context)
+    public CompleteActivityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ActivityDto>> Handle(CompleteActivityCommand request, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var activity = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (activity == null)
             return Result<ActivityDto>.Failure(Error.NotFound("Activity.NotFound", $"Activity with ID {request.Id} not found"));
 
         activity.Complete(request.Outcome);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ActivityDto
         {

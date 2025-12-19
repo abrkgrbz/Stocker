@@ -1,16 +1,15 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetActivitiesQuery : IRequest<PagedResult<ActivityDto>>, ITenantRequest
+public class GetActivitiesQuery : IRequest<PagedResult<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public ActivityType? Type { get; set; }
     public ActivityStatus? Status { get; set; }
     public Guid? LeadId { get; set; }
@@ -26,19 +25,25 @@ public class GetActivitiesQuery : IRequest<PagedResult<ActivityDto>>, ITenantReq
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Handler for GetActivitiesQuery
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetActivitiesQueryHandler : IRequestHandler<GetActivitiesQuery, PagedResult<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetActivitiesQueryHandler(CRMDbContext context)
+    public GetActivitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PagedResult<ActivityDto>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Activities
-            .Where(a => a.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId);
 
         // Apply filters
         if (request.Type.HasValue)

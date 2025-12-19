@@ -2,15 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Queries;
 
-public class GetSegmentMembersQuery : IRequest<Result<List<CustomerSegmentMemberDto>>>, ITenantRequest
+public class GetSegmentMembersQuery : IRequest<Result<List<CustomerSegmentMemberDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid SegmentId { get; set; }
 }
 
@@ -18,28 +16,30 @@ public class GetSegmentMembersQueryValidator : AbstractValidator<GetSegmentMembe
 {
     public GetSegmentMembersQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.SegmentId)
             .NotEmpty().WithMessage("Segment ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetSegmentMembersQueryHandler : IRequestHandler<GetSegmentMembersQuery, Result<List<CustomerSegmentMemberDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetSegmentMembersQueryHandler(CRMDbContext context)
+    public GetSegmentMembersQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<CustomerSegmentMemberDto>>> Handle(GetSegmentMembersQuery request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         // Verify segment exists
-        var segmentExists = await _context.CustomerSegments
-            .AnyAsync(s => s.Id == request.SegmentId && s.TenantId == request.TenantId, cancellationToken);
+        var segmentExists = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+            .AnyAsync(s => s.Id == request.SegmentId && s.TenantId == tenantId, cancellationToken);
 
         if (!segmentExists)
         {
@@ -47,9 +47,9 @@ public class GetSegmentMembersQueryHandler : IRequestHandler<GetSegmentMembersQu
                 Error.NotFound("CustomerSegment.NotFound", $"Segment with ID {request.SegmentId} not found"));
         }
 
-        var members = await _context.CustomerSegmentMembers
+        var members = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegmentMember>().AsQueryable()
             .Include(m => m.Customer)
-            .Where(m => m.SegmentId == request.SegmentId && m.TenantId == request.TenantId)
+            .Where(m => m.SegmentId == request.SegmentId && m.TenantId == tenantId)
             .Select(m => new CustomerSegmentMemberDto
             {
                 Id = m.Id,

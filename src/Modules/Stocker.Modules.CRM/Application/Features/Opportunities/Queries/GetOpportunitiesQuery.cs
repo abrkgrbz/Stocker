@@ -2,14 +2,12 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 
-public class GetOpportunitiesQuery : IRequest<IEnumerable<OpportunityDto>>, ITenantRequest
+public class GetOpportunitiesQuery : IRequest<IEnumerable<OpportunityDto>>
 {
-    public Guid TenantId { get; set; }
     public string? Search { get; set; }
     public OpportunityStatus? Status { get; set; }
     public Guid? CustomerId { get; set; }
@@ -23,21 +21,26 @@ public class GetOpportunitiesQuery : IRequest<IEnumerable<OpportunityDto>>, ITen
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetOpportunitiesQueryHandler : IRequestHandler<GetOpportunitiesQuery, IEnumerable<OpportunityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetOpportunitiesQueryHandler(CRMDbContext context)
+    public GetOpportunitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<OpportunityDto>> Handle(GetOpportunitiesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
             .Include(o => o.Pipeline)
             .Include(o => o.Stage)
-            .Where(o => o.TenantId == request.TenantId);
+            .Where(o => o.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

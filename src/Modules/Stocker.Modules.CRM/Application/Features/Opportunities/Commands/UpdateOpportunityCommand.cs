@@ -4,15 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
 
-public class UpdateOpportunityCommand : IRequest<Result<OpportunityDto>>, ITenantRequest
+public class UpdateOpportunityCommand : IRequest<Result<OpportunityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -35,9 +33,6 @@ public class UpdateOpportunityCommandValidator : AbstractValidator<UpdateOpportu
 {
     public UpdateOpportunityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Opportunity ID is required");
 
@@ -81,21 +76,26 @@ public class UpdateOpportunityCommandValidator : AbstractValidator<UpdateOpportu
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunityCommand, Result<OpportunityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateOpportunityCommandHandler(CRMDbContext context)
+    public UpdateOpportunityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<OpportunityDto>> Handle(UpdateOpportunityCommand request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
             .Include(o => o.Pipeline)
             .Include(o => o.Stage)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result<OpportunityDto>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.Id} not found"));
@@ -106,14 +106,14 @@ public class UpdateOpportunityCommandHandler : IRequestHandler<UpdateOpportunity
 
         if (request.CurrentStageId.HasValue && request.CurrentStageId.Value != opportunity.StageId)
         {
-            var stage = await _context.PipelineStages
+            var stage = await _unitOfWork.ReadRepository<Domain.Entities.PipelineStage>().AsQueryable()
                 .FirstOrDefaultAsync(s => s.Id == request.CurrentStageId.Value && s.PipelineId == opportunity.PipelineId, cancellationToken);
 
             if (stage != null)
                 opportunity.MoveToStage(request.CurrentStageId.Value, stage.Probability);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new OpportunityDto
         {

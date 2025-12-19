@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
@@ -39,18 +38,16 @@ public class UpdateProductAttributeCommandValidator : AbstractValidator<UpdatePr
 /// </summary>
 public class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProductAttributeCommand, Result<ProductAttributeDto>>
 {
-    private readonly IProductAttributeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductAttributeCommandHandler(IProductAttributeRepository repository, IUnitOfWork unitOfWork)
+    public UpdateProductAttributeCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductAttributeDto>> Handle(UpdateProductAttributeCommand request, CancellationToken cancellationToken)
     {
-        var attribute = await _repository.GetWithOptionsAsync(request.AttributeId, cancellationToken);
+        var attribute = await _unitOfWork.ProductAttributes.GetWithOptionsAsync(request.AttributeId, cancellationToken);
 
         if (attribute == null)
         {
@@ -67,7 +64,7 @@ public class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProduc
         attribute.SetDefaultValue(data.DefaultValue);
         attribute.SetValidationPattern(data.ValidationPattern);
 
-        _repository.Update(attribute);
+        _unitOfWork.ProductAttributes.Update(attribute);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ProductAttributeDto

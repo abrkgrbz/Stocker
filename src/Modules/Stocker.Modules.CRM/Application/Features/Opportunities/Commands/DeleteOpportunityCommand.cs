@@ -1,15 +1,13 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
 
-public class DeleteOpportunityCommand : IRequest<Result>, ITenantRequest
+public class DeleteOpportunityCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -17,33 +15,35 @@ public class DeleteOpportunityCommandValidator : AbstractValidator<DeleteOpportu
 {
     public DeleteOpportunityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Opportunity ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class DeleteOpportunityCommandHandler : IRequestHandler<DeleteOpportunityCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public DeleteOpportunityCommandHandler(CRMDbContext context)
+    public DeleteOpportunityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteOpportunityCommand request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.Id} not found"));
 
-        _context.Opportunities.Remove(opportunity);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Domain.Entities.Opportunity>().Remove(opportunity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

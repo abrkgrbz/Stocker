@@ -5,15 +5,13 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
 
-public class CreateDealCommand : IRequest<Result<DealDto>>, ITenantRequest
+public class CreateDealCommand : IRequest<Result<DealDto>>
 {
-    public Guid TenantId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Guid CustomerId { get; set; }
@@ -34,9 +32,6 @@ public class CreateDealCommandValidator : AbstractValidator<CreateDealCommand>
 {
     public CreateDealCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Deal title is required")
             .MaximumLength(200).WithMessage("Deal title must not exceed 200 characters");
@@ -75,24 +70,28 @@ public class CreateDealCommandValidator : AbstractValidator<CreateDealCommand>
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Result<DealDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateDealCommandHandler(CRMDbContext context)
+    public CreateDealCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DealDto>> Handle(CreateDealCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
         Guid pipelineId = request.PipelineId ?? Guid.Empty;
         Guid stageId = request.StageId ?? Guid.Empty;
 
         if (request.PipelineId.HasValue)
         {
-            var pipeline = await _context.Pipelines
-                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == request.TenantId, cancellationToken);
+            var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
+                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == tenantId, cancellationToken);
 
             if (pipeline == null)
                 return Result<DealDto>.Failure(Error.NotFound("Pipeline.NotFound", "Pipeline not found"));
@@ -101,7 +100,7 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
 
             if (request.StageId.HasValue)
             {
-                var stage = await _context.PipelineStages
+                var stage = await _unitOfWork.ReadRepository<PipelineStage>().AsQueryable()
                     .FirstOrDefaultAsync(s => s.Id == request.StageId.Value && s.PipelineId == pipelineId, cancellationToken);
 
                 if (stage == null)
@@ -119,7 +118,7 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             ownerId = parsedOwnerId;
         }
 
-        var deal = new Deal(request.TenantId, request.Title, pipelineId, stageId, value, ownerId);
+        var deal = new Deal(tenantId, request.Title, pipelineId, stageId, value, ownerId);
         deal.UpdateDetails(request.Title, request.Description, value);
         deal.SetExpectedCloseDate(request.ExpectedCloseDate);
         deal.SetPriority(request.Priority);
@@ -129,8 +128,8 @@ public class CreateDealCommandHandler : IRequestHandler<CreateDealCommand, Resul
             deal.AssignToCustomer(request.CustomerId);
         }
 
-        _context.Deals.Add(deal);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Deal>().AddAsync(deal);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new DealDto
         {

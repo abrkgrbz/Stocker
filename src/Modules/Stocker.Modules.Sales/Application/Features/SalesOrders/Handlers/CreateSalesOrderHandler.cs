@@ -4,40 +4,38 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 
+/// <summary>
+/// Handler for CreateSalesOrderCommand
+/// Uses ISalesUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
+/// </summary>
 public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<CreateSalesOrderHandler> _logger;
 
     public CreateSalesOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<CreateSalesOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(CreateSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
         // Generate order number
-        var orderNumber = await GenerateOrderNumberAsync(tenantId.Value, cancellationToken);
+        var orderNumber = await _unitOfWork.SalesOrders.GenerateOrderNumberAsync(cancellationToken);
 
         // Create order
         var orderResult = SalesOrder.Create(
-            tenantId.Value,
+            tenantId,
             orderNumber,
             request.OrderDate,
             request.CustomerId,
@@ -65,7 +63,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         foreach (var itemCmd in request.Items)
         {
             var itemResult = SalesOrderItem.Create(
-                tenantId.Value,
+                tenantId,
                 order.Id,
                 lineNumber++,
                 itemCmd.ProductId,
@@ -87,37 +85,14 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
             order.AddItem(item);
         }
 
-        _context.SalesOrders.Add(order);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SalesOrders.AddAsync(order, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Sales order {OrderNumber} created for tenant {TenantId}", orderNumber, tenantId.Value);
+        _logger.LogInformation("Sales order {OrderNumber} created for tenant {TenantId}", orderNumber, tenantId);
 
         // Reload with items
-        var savedOrder = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstAsync(o => o.Id == order.Id, cancellationToken);
+        var savedOrder = await _unitOfWork.SalesOrders.GetWithItemsAsync(order.Id, cancellationToken);
 
-        return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder));
-    }
-
-    private async Task<string> GenerateOrderNumberAsync(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var today = DateTime.UtcNow;
-        var prefix = $"SO-{today:yyyyMMdd}";
-
-        var lastOrder = await _context.SalesOrders
-            .Where(o => o.TenantId == tenantId && o.OrderNumber.StartsWith(prefix))
-            .OrderByDescending(o => o.OrderNumber)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        var sequence = 1;
-        if (lastOrder != null)
-        {
-            var lastSequence = lastOrder.OrderNumber.Split('-').LastOrDefault();
-            if (int.TryParse(lastSequence, out var parsed))
-                sequence = parsed + 1;
-        }
-
-        return $"{prefix}-{sequence:D4}";
+        return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder!));
     }
 }

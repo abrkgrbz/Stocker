@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.InventoryAdjustments.Commands;
@@ -40,12 +39,10 @@ public class CreateInventoryAdjustmentCommandValidator : AbstractValidator<Creat
 /// </summary>
 public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInventoryAdjustmentCommand, Result<InventoryAdjustmentDto>>
 {
-    private readonly IInventoryAdjustmentRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateInventoryAdjustmentCommandHandler(IInventoryAdjustmentRepository repository, IUnitOfWork unitOfWork)
+    public CreateInventoryAdjustmentCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -57,7 +54,7 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
         var adjustmentNumber = $"ADJ-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
 
         // Check if adjustment number already exists
-        var existingAdjustment = await _repository.GetByNumberAsync(adjustmentNumber, cancellationToken);
+        var existingAdjustment = await _unitOfWork.InventoryAdjustments.GetByNumberAsync(adjustmentNumber, cancellationToken);
         if (existingAdjustment != null)
         {
             return Result<InventoryAdjustmentDto>.Failure(new Error("InventoryAdjustment.DuplicateNumber", $"Adjustment with number '{adjustmentNumber}' already exists", ErrorType.Conflict));
@@ -73,7 +70,8 @@ public class CreateInventoryAdjustmentCommandHandler : IRequestHandler<CreateInv
         entity.SetInternalNotes(data.InternalNotes);
         entity.SetAccountingNotes(data.AccountingNotes);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        entity.SetTenantId(request.TenantId);
+        await _unitOfWork.InventoryAdjustments.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new InventoryAdjustmentDto

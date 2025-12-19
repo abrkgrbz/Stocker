@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -32,17 +31,10 @@ public class CreateStockTransferCommandValidator : AbstractValidator<CreateStock
 
 public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTransferCommand, Result<StockTransferDto>>
 {
-    private readonly IStockTransferRepository _stockTransferRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateStockTransferCommandHandler(
-        IStockTransferRepository stockTransferRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateStockTransferCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockTransferRepository = stockTransferRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -50,13 +42,13 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
     {
         var data = request.Data;
 
-        var sourceWarehouse = await _warehouseRepository.GetByIdAsync(data.SourceWarehouseId, cancellationToken);
+        var sourceWarehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.SourceWarehouseId, cancellationToken);
         if (sourceWarehouse == null)
         {
             return Result<StockTransferDto>.Failure(new Error("Warehouse.NotFound", $"Source warehouse with ID {data.SourceWarehouseId} not found", ErrorType.NotFound));
         }
 
-        var destWarehouse = await _warehouseRepository.GetByIdAsync(data.DestinationWarehouseId, cancellationToken);
+        var destWarehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.DestinationWarehouseId, cancellationToken);
         if (destWarehouse == null)
         {
             return Result<StockTransferDto>.Failure(new Error("Warehouse.NotFound", $"Destination warehouse with ID {data.DestinationWarehouseId} not found", ErrorType.NotFound));
@@ -70,6 +62,7 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
             data.TransferType,
             data.CreatedByUserId);
 
+        transfer.SetTenantId(request.TenantId);
         transfer.SetDescription(data.Description);
         transfer.SetNotes(data.Notes);
         transfer.SetExpectedArrival(data.ExpectedArrivalDate);
@@ -92,7 +85,7 @@ public class CreateStockTransferCommandHandler : IRequestHandler<CreateStockTran
                 item.SetNotes(itemDto.Notes);
         }
 
-        await _stockTransferRepository.AddAsync(transfer, cancellationToken);
+        await _unitOfWork.StockTransfers.AddAsync(transfer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockTransferDto>.Success(new StockTransferDto

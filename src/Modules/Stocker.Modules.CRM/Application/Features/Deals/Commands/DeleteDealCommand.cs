@@ -1,15 +1,14 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
 
-public class DeleteDealCommand : IRequest<Result>, ITenantRequest
+public class DeleteDealCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -17,33 +16,34 @@ public class DeleteDealCommandValidator : AbstractValidator<DeleteDealCommand>
 {
     public DeleteDealCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Deal ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class DeleteDealCommandHandler : IRequestHandler<DeleteDealCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public DeleteDealCommandHandler(CRMDbContext context)
+    public DeleteDealCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteDealCommand request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
-            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == tenantId, cancellationToken);
 
         if (deal == null)
             return Result.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.Id} not found"));
 
         deal.Delete();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

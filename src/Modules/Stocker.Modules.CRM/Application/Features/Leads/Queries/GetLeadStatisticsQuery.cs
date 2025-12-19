@@ -2,30 +2,34 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Queries;
 
-public class GetLeadStatisticsQuery : IRequest<LeadStatisticsDto>, ITenantRequest
+public class GetLeadStatisticsQuery : IRequest<LeadStatisticsDto>
 {
-    public Guid TenantId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetLeadStatisticsQueryHandler : IRequestHandler<GetLeadStatisticsQuery, LeadStatisticsDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetLeadStatisticsQueryHandler(CRMDbContext context)
+    public GetLeadStatisticsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LeadStatisticsDto> Handle(GetLeadStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Leads.Where(l => l.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Domain.Entities.Lead>().AsQueryable()
+            .Where(l => l.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(l => l.CreatedAt >= request.FromDate.Value);

@@ -3,15 +3,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerTags.Commands;
 
-public class AddCustomerTagCommand : IRequest<Result<CustomerTagDto>>, ITenantRequest
+public class AddCustomerTagCommand : IRequest<Result<CustomerTagDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid CustomerId { get; set; }
     public string Tag { get; set; } = string.Empty;
     public string? Color { get; set; }
@@ -22,9 +20,6 @@ public class AddCustomerTagCommandValidator : AbstractValidator<AddCustomerTagCo
 {
     public AddCustomerTagCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CustomerId)
             .NotEmpty().WithMessage("Customer ID is required");
 
@@ -37,20 +32,25 @@ public class AddCustomerTagCommandValidator : AbstractValidator<AddCustomerTagCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddCustomerTagCommandHandler : IRequestHandler<AddCustomerTagCommand, Result<CustomerTagDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddCustomerTagCommandHandler(CRMDbContext context)
+    public AddCustomerTagCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerTagDto>> Handle(AddCustomerTagCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         // Verify customer exists
-        var customerExists = await _context.Customers
-            .AnyAsync(c => c.Id == request.CustomerId && c.TenantId == request.TenantId, cancellationToken);
+        var customerExists = await _unitOfWork.ReadRepository<Customer>().AsQueryable()
+            .AnyAsync(c => c.Id == request.CustomerId && c.TenantId == tenantId, cancellationToken);
 
         if (!customerExists)
         {
@@ -59,10 +59,10 @@ public class AddCustomerTagCommandHandler : IRequestHandler<AddCustomerTagComman
         }
 
         // Check if tag already exists for this customer
-        var tagExists = await _context.CustomerTags
+        var tagExists = await _unitOfWork.ReadRepository<CustomerTag>().AsQueryable()
             .AnyAsync(t => t.CustomerId == request.CustomerId &&
                           t.Tag == request.Tag &&
-                          t.TenantId == request.TenantId, cancellationToken);
+                          t.TenantId == tenantId, cancellationToken);
 
         if (tagExists)
         {
@@ -71,14 +71,14 @@ public class AddCustomerTagCommandHandler : IRequestHandler<AddCustomerTagComman
         }
 
         var customerTag = new CustomerTag(
-            request.TenantId,
+            tenantId,
             request.CustomerId,
             request.Tag,
             request.CreatedBy,
             request.Color);
 
-        _context.CustomerTags.Add(customerTag);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<CustomerTag>().AddAsync(customerTag);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new CustomerTagDto
         {

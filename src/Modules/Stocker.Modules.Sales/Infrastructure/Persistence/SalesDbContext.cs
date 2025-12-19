@@ -81,16 +81,20 @@ public class SalesDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Set TenantId for new entities
         var tenantId = _tenantService.GetCurrentTenantId();
 
-        if (tenantId.HasValue)
+        foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
         {
-            foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+            if (entry.State == EntityState.Added && entry.Entity.TenantId == Guid.Empty)
             {
-                if (entry.State == EntityState.Added && entry.Entity.TenantId == Guid.Empty)
+                if (!tenantId.HasValue)
                 {
-                    entry.Property(nameof(ITenantEntity.TenantId)).CurrentValue = tenantId.Value;
+                    throw new InvalidOperationException(
+                        $"Cannot save entity '{entry.Entity.GetType().Name}' without TenantId. " +
+                        "Either set TenantId explicitly on the entity or ensure tenant context is available.");
                 }
+                entry.Property(nameof(ITenantEntity.TenantId)).CurrentValue = tenantId.Value;
             }
         }
 

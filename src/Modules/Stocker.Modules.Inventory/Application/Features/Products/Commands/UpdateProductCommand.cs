@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 using Stocker.Domain.Common.ValueObjects;
 
@@ -58,30 +57,23 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
 /// </summary>
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result<ProductDto>>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly ICategoryRepository _categoryRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductCommandHandler(
-        IProductRepository productRepository,
-        ICategoryRepository categoryRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateProductCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _productRepository = productRepository;
-        _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductDto>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<ProductDto>.Failure(
                 Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
         }
 
-        var category = await _categoryRepository.GetByIdAsync(request.ProductData.CategoryId, cancellationToken);
+        var category = await _unitOfWork.Categories.GetByIdAsync(request.ProductData.CategoryId, cancellationToken);
         if (category == null)
         {
             return Result<ProductDto>.Failure(

@@ -6,34 +6,33 @@ using Stocker.Modules.CRM.Application.Contracts;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Common;
-using Stocker.SharedKernel.MultiTenancy;
 
 namespace Stocker.Modules.CRM.Application.Features.Documents.Commands.UploadDocument;
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentCommand, Result<UploadDocumentResponse>>
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentStorageService _storageService;
-    private readonly ITenantService _tenantService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
     public UploadDocumentCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentStorageService storageService,
-        ITenantService tenantService,
         ICurrentUserService currentUserService,
-        CRMDbContext context,
+        ICRMUnitOfWork unitOfWork,
         ILogger<UploadDocumentCommandHandler> logger)
     {
         _documentRepository = documentRepository;
         _storageService = storageService;
-        _tenantService = tenantService;
         _currentUserService = currentUserService;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -43,8 +42,8 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
     {
         try
         {
-            var tenantId = _tenantService.GetCurrentTenantId();
-            if (!tenantId.HasValue)
+            var tenantId = _unitOfWork.TenantId;
+            if (tenantId == Guid.Empty)
                 return Result<UploadDocumentResponse>.Failure(Error.Validation("Document", "Tenant context is required"));
 
             // Get current authenticated user ID
@@ -62,7 +61,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
                 request.FileData,
                 request.OriginalFileName,
                 request.ContentType,
-                tenantId.Value,
+                tenantId,
                 request.EntityType,
                 request.EntityId,
                 cancellationToken);
@@ -80,7 +79,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
                 request.EntityId,
                 request.EntityType,
                 request.Category,
-                tenantId.Value,
+                tenantId,
                 userId.Value,
                 request.Description,
                 request.Tags);
@@ -107,7 +106,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
 
             // Create Activity for document upload
             var activity = new Activity(
-                tenantId: tenantId.Value,
+                tenantId: tenantId,
                 subject: $"Doküman yüklendi: {document.OriginalFileName}",
                 type: ActivityType.Document,
                 ownerId: 1); // TODO: Map UserId from Guid to int properly
@@ -144,8 +143,8 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             activity.Complete($"Doküman başarıyla yüklendi: {document.StoragePath}");
 
             // Save activity
-            _context.Activities.Add(activity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.Repository<Activity>().AddAsync(activity);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "Document uploaded successfully. DocumentId: {DocumentId}, FileName: {FileName}, EntityId: {EntityId}, EntityType: {EntityType}",

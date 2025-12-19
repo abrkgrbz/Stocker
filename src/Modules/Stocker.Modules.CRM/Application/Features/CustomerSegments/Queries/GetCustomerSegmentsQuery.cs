@@ -2,15 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Queries;
 
-public class GetCustomerSegmentsQuery : IRequest<Result<List<CustomerSegmentDto>>>, ITenantRequest
+public class GetCustomerSegmentsQuery : IRequest<Result<List<CustomerSegmentDto>>>
 {
-    public Guid TenantId { get; set; }
     public bool? IsActive { get; set; }
 }
 
@@ -18,24 +16,27 @@ public class GetCustomerSegmentsQueryValidator : AbstractValidator<GetCustomerSe
 {
     public GetCustomerSegmentsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCustomerSegmentsQueryHandler : IRequestHandler<GetCustomerSegmentsQuery, Result<List<CustomerSegmentDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCustomerSegmentsQueryHandler(CRMDbContext context)
+    public GetCustomerSegmentsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<CustomerSegmentDto>>> Handle(GetCustomerSegmentsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.CustomerSegments
-            .Where(s => s.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+            .Where(s => s.TenantId == tenantId);
 
         if (request.IsActive.HasValue)
         {

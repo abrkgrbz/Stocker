@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
@@ -11,9 +10,8 @@ namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 /// <summary>
 /// Query to get products for a specific opportunity
 /// </summary>
-public class GetOpportunityProductsQuery : IRequest<Result<IEnumerable<OpportunityProductDto>>>, ITenantRequest
+public class GetOpportunityProductsQuery : IRequest<Result<IEnumerable<OpportunityProductDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid OpportunityId { get; set; }
     public string? Search { get; set; }
     public string? SortBy { get; set; } = "SortOrder";
@@ -27,9 +25,6 @@ public class GetOpportunityProductsQueryValidator : AbstractValidator<GetOpportu
 {
     public GetOpportunityProductsQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.OpportunityId)
             .NotEmpty().WithMessage("Opportunity ID is required");
 
@@ -64,20 +59,25 @@ public class GetOpportunityProductsQueryValidator : AbstractValidator<GetOpportu
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetOpportunityProductsQueryHandler : IRequestHandler<GetOpportunityProductsQuery, Result<IEnumerable<OpportunityProductDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetOpportunityProductsQueryHandler(CRMDbContext context)
+    public GetOpportunityProductsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<IEnumerable<OpportunityProductDto>>> Handle(GetOpportunityProductsQuery request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
             .Include(o => o.Products)
-            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result<IEnumerable<OpportunityProductDto>>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));

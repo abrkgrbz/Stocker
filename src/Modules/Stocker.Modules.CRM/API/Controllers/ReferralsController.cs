@@ -38,10 +38,8 @@ public class ReferralsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
         var query = new GetReferralsQuery
         {
-            TenantId = tenantId,
             Status = status,
             ReferralType = type,
             ReferrerCustomerId = referrerCustomerId,
@@ -56,8 +54,7 @@ public class ReferralsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetReferral(Guid id, CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
-        var query = new GetReferralByIdQuery { TenantId = tenantId, Id = id };
+        var query = new GetReferralByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
         return result != null

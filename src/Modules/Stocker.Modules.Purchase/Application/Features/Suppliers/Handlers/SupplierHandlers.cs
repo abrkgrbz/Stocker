@@ -5,34 +5,33 @@ using Stocker.Modules.Purchase.Application.DTOs;
 using Stocker.Modules.Purchase.Application.Features.Suppliers.Commands;
 using Stocker.Modules.Purchase.Application.Features.Suppliers.Queries;
 using Stocker.Modules.Purchase.Domain.Entities;
-using Stocker.Modules.Purchase.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Purchase.Application.Features.Suppliers.Handlers;
 
+/// <summary>
+/// Handler for CreateSupplierCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CreateSupplierHandler : IRequestHandler<CreateSupplierCommand, Result<SupplierDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateSupplierHandler(PurchaseDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateSupplierHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<SupplierDto>> Handle(CreateSupplierCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SupplierDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var existingSupplier = await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.Code == request.Dto.Code, cancellationToken);
+        var existingSupplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .FirstOrDefaultAsync(s => s.Code == request.Dto.Code && s.TenantId == tenantId, cancellationToken);
 
         if (existingSupplier != null)
             return Result<SupplierDto>.Failure(Error.Conflict("Supplier.Code", "Supplier code already exists"));
@@ -41,7 +40,7 @@ public class CreateSupplierHandler : IRequestHandler<CreateSupplierCommand, Resu
             request.Dto.Code,
             request.Dto.Name,
             request.Dto.Type,
-            tenantId.Value,
+            tenantId,
             request.Dto.TaxNumber,
             request.Dto.Email,
             request.Dto.Phone
@@ -74,30 +73,36 @@ public class CreateSupplierHandler : IRequestHandler<CreateSupplierCommand, Resu
         if (request.Dto.DiscountRate > 0)
             supplier.SetDiscountRate(request.Dto.DiscountRate);
 
-        _context.Suppliers.Add(supplier);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Supplier>().AddAsync(supplier, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
     }
 }
 
+/// <summary>
+/// Handler for GetSupplierByIdQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetSupplierByIdHandler : IRequestHandler<GetSupplierByIdQuery, Result<SupplierDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetSupplierByIdHandler(PurchaseDbContext context, IMapper mapper)
+    public GetSupplierByIdHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierDto>> Handle(GetSupplierByIdQuery request, CancellationToken cancellationToken)
     {
-        var supplier = await _context.Suppliers
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
             .Include(s => s.Contacts)
             .Include(s => s.Products)
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
         if (supplier == null)
             return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
@@ -106,20 +111,25 @@ public class GetSupplierByIdHandler : IRequestHandler<GetSupplierByIdQuery, Resu
     }
 }
 
+/// <summary>
+/// Handler for GetSuppliersQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetSuppliersHandler : IRequestHandler<GetSuppliersQuery, Result<PagedResult<SupplierListDto>>>
 {
-    private readonly PurchaseDbContext _context;
-    private readonly IMapper _mapper;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetSuppliersHandler(PurchaseDbContext context, IMapper mapper)
+    public GetSuppliersHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
-        _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<SupplierListDto>>> Handle(GetSuppliersQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Suppliers.AsQueryable();
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Where(s => s.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -181,23 +191,29 @@ public class GetSuppliersHandler : IRequestHandler<GetSuppliersQuery, Result<Pag
     }
 }
 
+/// <summary>
+/// Handler for UpdateSupplierCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class UpdateSupplierHandler : IRequestHandler<UpdateSupplierCommand, Result<SupplierDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public UpdateSupplierHandler(PurchaseDbContext context, IMapper mapper)
+    public UpdateSupplierHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierDto>> Handle(UpdateSupplierCommand request, CancellationToken cancellationToken)
     {
-        var supplier = await _context.Suppliers
+        var tenantId = _unitOfWork.TenantId;
+
+        var supplier = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
             .Include(s => s.Contacts)
             .Include(s => s.Products)
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
         if (supplier == null)
             return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
@@ -231,107 +247,128 @@ public class UpdateSupplierHandler : IRequestHandler<UpdateSupplierCommand, Resu
         if (request.Dto.DiscountRate.HasValue)
             supplier.SetDiscountRate(request.Dto.DiscountRate.Value);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
     }
 }
 
+/// <summary>
+/// Handler for ActivateSupplierCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ActivateSupplierHandler : IRequestHandler<ActivateSupplierCommand, Result<SupplierDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ActivateSupplierHandler(PurchaseDbContext context, IMapper mapper)
+    public ActivateSupplierHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierDto>> Handle(ActivateSupplierCommand request, CancellationToken cancellationToken)
     {
-        var supplier = await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (supplier == null)
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
             return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
 
         supplier.Activate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
     }
 }
 
+/// <summary>
+/// Handler for DeactivateSupplierCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeactivateSupplierHandler : IRequestHandler<DeactivateSupplierCommand, Result<SupplierDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public DeactivateSupplierHandler(PurchaseDbContext context, IMapper mapper)
+    public DeactivateSupplierHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierDto>> Handle(DeactivateSupplierCommand request, CancellationToken cancellationToken)
     {
-        var supplier = await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (supplier == null)
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
             return Result<SupplierDto>.Failure(Error.NotFound("Supplier", "Supplier not found"));
 
         supplier.Deactivate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierDto>.Success(_mapper.Map<SupplierDto>(supplier));
     }
 }
 
+/// <summary>
+/// Handler for DeleteSupplierCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeleteSupplierHandler : IRequestHandler<DeleteSupplierCommand, Result>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public DeleteSupplierHandler(PurchaseDbContext context)
+    public DeleteSupplierHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteSupplierCommand request, CancellationToken cancellationToken)
     {
-        var supplier = await _context.Suppliers
-            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (supplier == null)
+        var supplier = await _unitOfWork.Repository<Supplier>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (supplier == null || supplier.TenantId != tenantId)
             return Result.Failure(Error.NotFound("Supplier", "Supplier not found"));
 
-        var hasOrders = await _context.PurchaseOrders
-            .AnyAsync(po => po.SupplierId == request.Id, cancellationToken);
+        var hasOrders = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
+            .AnyAsync(po => po.SupplierId == request.Id && po.TenantId == tenantId, cancellationToken);
 
         if (hasOrders)
             return Result.Failure(Error.Conflict("Supplier", "Cannot delete supplier with existing orders"));
 
-        _context.Suppliers.Remove(supplier);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Supplier>().Remove(supplier);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
 }
 
+/// <summary>
+/// Handler for GetActiveSuppliersQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetActiveSuppliersHandler : IRequestHandler<GetActiveSuppliersQuery, Result<List<SupplierListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetActiveSuppliersHandler(PurchaseDbContext context)
+    public GetActiveSuppliersHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<SupplierListDto>>> Handle(GetActiveSuppliersQuery request, CancellationToken cancellationToken)
     {
-        var suppliers = await _context.Suppliers
-            .Where(s => s.IsActive && s.Status == SupplierStatus.Active)
+        var tenantId = _unitOfWork.TenantId;
+
+        var suppliers = await _unitOfWork.ReadRepository<Supplier>().AsQueryable()
+            .Where(s => s.TenantId == tenantId && s.IsActive && s.Status == SupplierStatus.Active)
             .OrderBy(s => s.Name)
             .Select(s => new SupplierListDto
             {

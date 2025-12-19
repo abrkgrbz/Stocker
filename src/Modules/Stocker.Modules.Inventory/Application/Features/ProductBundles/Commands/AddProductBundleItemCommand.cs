@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -48,23 +47,16 @@ public class AddProductBundleItemCommandValidator : AbstractValidator<AddProduct
 /// </summary>
 public class AddProductBundleItemCommandHandler : IRequestHandler<AddProductBundleItemCommand, Result<ProductBundleItemDto>>
 {
-    private readonly IProductBundleRepository _bundleRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public AddProductBundleItemCommandHandler(
-        IProductBundleRepository bundleRepository,
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public AddProductBundleItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _bundleRepository = bundleRepository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductBundleItemDto>> Handle(AddProductBundleItemCommand request, CancellationToken cancellationToken)
     {
-        var bundle = await _bundleRepository.GetWithItemsAsync(request.BundleId, cancellationToken);
+        var bundle = await _unitOfWork.ProductBundles.GetWithItemsAsync(request.BundleId, cancellationToken);
 
         if (bundle == null)
         {
@@ -73,7 +65,7 @@ public class AddProductBundleItemCommandHandler : IRequestHandler<AddProductBund
         }
 
         // Verify product exists
-        var product = await _productRepository.GetByIdAsync(request.ItemData.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ItemData.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<ProductBundleItemDto>.Failure(
@@ -106,7 +98,7 @@ public class AddProductBundleItemCommandHandler : IRequestHandler<AddProductBund
             item.SetDiscount(data.DiscountPercentage);
         }
 
-        _bundleRepository.Update(bundle);
+        _unitOfWork.ProductBundles.Update(bundle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ProductBundleItemDto

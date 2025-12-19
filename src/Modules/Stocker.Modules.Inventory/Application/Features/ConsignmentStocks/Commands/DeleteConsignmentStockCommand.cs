@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ConsignmentStocks.Commands;
@@ -34,18 +33,16 @@ public class DeleteConsignmentStockCommandValidator : AbstractValidator<DeleteCo
 /// </summary>
 public class DeleteConsignmentStockCommandHandler : IRequestHandler<DeleteConsignmentStockCommand, Result<bool>>
 {
-    private readonly IConsignmentStockRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteConsignmentStockCommandHandler(IConsignmentStockRepository repository, IUnitOfWork unitOfWork)
+    public DeleteConsignmentStockCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteConsignmentStockCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.ConsignmentStocks.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<bool>.Failure(new Error("ConsignmentStock.NotFound", $"Consignment stock with ID {request.Id} not found", ErrorType.NotFound));
@@ -71,7 +68,7 @@ public class DeleteConsignmentStockCommandHandler : IRequestHandler<DeleteConsig
             return Result<bool>.Failure(new Error("ConsignmentStock.InvalidOperation", ex.Message, ErrorType.Validation));
         }
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.ConsignmentStocks.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

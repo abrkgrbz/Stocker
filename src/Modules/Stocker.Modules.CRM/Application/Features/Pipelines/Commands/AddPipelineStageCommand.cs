@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 
-public class AddPipelineStageCommand : IRequest<Result<PipelineStageDto>>, ITenantRequest
+public class AddPipelineStageCommand : IRequest<Result<PipelineStageDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid PipelineId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -25,9 +24,6 @@ public class AddPipelineStageCommandValidator : AbstractValidator<AddPipelineSta
 {
     public AddPipelineStageCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PipelineId)
             .NotEmpty().WithMessage("Pipeline ID is required");
 
@@ -49,20 +45,25 @@ public class AddPipelineStageCommandValidator : AbstractValidator<AddPipelineSta
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddPipelineStageCommandHandler : IRequestHandler<AddPipelineStageCommand, Result<PipelineStageDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddPipelineStageCommandHandler(CRMDbContext context)
+    public AddPipelineStageCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PipelineStageDto>> Handle(AddPipelineStageCommand request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return Result<PipelineStageDto>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.PipelineId} not found"));
@@ -76,7 +77,7 @@ public class AddPipelineStageCommandHandler : IRequestHandler<AddPipelineStageCo
 
             stage.SetColor(request.Color);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var dto = new PipelineStageDto
             {

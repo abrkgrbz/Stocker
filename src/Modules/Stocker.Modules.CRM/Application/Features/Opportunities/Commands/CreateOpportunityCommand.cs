@@ -5,15 +5,13 @@ using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
 
-public class CreateOpportunityCommand : IRequest<Result<OpportunityDto>>, ITenantRequest
+public class CreateOpportunityCommand : IRequest<Result<OpportunityDto>>
 {
-    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Guid CustomerId { get; set; }
@@ -34,9 +32,6 @@ public class CreateOpportunityCommandValidator : AbstractValidator<CreateOpportu
 {
     public CreateOpportunityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Opportunity name is required")
             .MaximumLength(200).WithMessage("Opportunity name must not exceed 200 characters");
@@ -75,17 +70,21 @@ public class CreateOpportunityCommandValidator : AbstractValidator<CreateOpportu
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunityCommand, Result<OpportunityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateOpportunityCommandHandler(CRMDbContext context)
+    public CreateOpportunityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<OpportunityDto>> Handle(CreateOpportunityCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
         Guid pipelineId;
         Guid stageId;
 
@@ -94,7 +93,7 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
             pipelineId = request.PipelineId.Value;
             stageId = request.CurrentStageId.Value;
 
-            var stage = await _context.PipelineStages
+            var stage = await _unitOfWork.ReadRepository<Domain.Entities.PipelineStage>().AsQueryable()
                 .FirstOrDefaultAsync(s => s.Id == stageId && s.PipelineId == pipelineId, cancellationToken);
 
             if (stage == null)
@@ -102,9 +101,9 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
         }
         else
         {
-            var defaultPipeline = await _context.Pipelines
+            var defaultPipeline = await _unitOfWork.ReadRepository<Domain.Entities.Pipeline>().AsQueryable()
                 .Include(p => p.Stages)
-                .FirstOrDefaultAsync(p => p.TenantId == request.TenantId && p.IsActive, cancellationToken);
+                .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.IsActive, cancellationToken);
 
             if (defaultPipeline == null)
                 return Result<OpportunityDto>.Failure(Error.NotFound("Pipeline.NotFound", "No active pipeline found"));
@@ -121,7 +120,7 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
         var amount = Money.Create(request.Amount, request.Currency);
 
         var opportunity = new Opportunity(
-            request.TenantId,
+            tenantId,
             request.Name,
             pipelineId,
             stageId,
@@ -131,8 +130,8 @@ public class CreateOpportunityCommandHandler : IRequestHandler<CreateOpportunity
 
         opportunity.AssignToCustomer(request.CustomerId);
 
-        _context.Opportunities.Add(opportunity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Opportunity>().AddAsync(opportunity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new OpportunityDto
         {

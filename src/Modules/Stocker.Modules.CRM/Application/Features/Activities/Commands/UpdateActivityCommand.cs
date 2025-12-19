@@ -2,16 +2,15 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Commands;
 
-public class UpdateActivityCommand : IRequest<Result<ActivityDto>>, ITenantRequest
+public class UpdateActivityCommand : IRequest<Result<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Subject { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -34,9 +33,6 @@ public class UpdateActivityCommandValidator : AbstractValidator<UpdateActivityCo
 {
     public UpdateActivityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Activity ID is required");
 
@@ -71,19 +67,25 @@ public class UpdateActivityCommandValidator : AbstractValidator<UpdateActivityCo
     }
 }
 
+/// <summary>
+/// Handler for UpdateActivityCommand
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdateActivityCommandHandler : IRequestHandler<UpdateActivityCommand, Result<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateActivityCommandHandler(CRMDbContext context)
+    public UpdateActivityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ActivityDto>> Handle(UpdateActivityCommand request, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var activity = await _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .FirstOrDefaultAsync(a => a.Id == request.Id && a.TenantId == tenantId, cancellationToken);
 
         if (activity == null)
             return Result<ActivityDto>.Failure(Error.NotFound("Activity.NotFound", $"Activity with ID {request.Id} not found"));
@@ -108,7 +110,7 @@ public class UpdateActivityCommandHandler : IRequestHandler<UpdateActivityComman
         else if (request.DealId.HasValue)
             activity.RelateToDeal(request.DealId.Value);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ActivityDto
         {

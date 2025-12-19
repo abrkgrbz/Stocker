@@ -2,15 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Commands;
 
-public class AssignLeadCommand : IRequest<Result<LeadDto>>, ITenantRequest
+public class AssignLeadCommand : IRequest<Result<LeadDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public Guid AssignToUserId { get; set; }
 }
@@ -19,9 +17,6 @@ public class AssignLeadCommandValidator : AbstractValidator<AssignLeadCommand>
 {
     public AssignLeadCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Lead ID is required");
 
@@ -30,19 +25,24 @@ public class AssignLeadCommandValidator : AbstractValidator<AssignLeadCommand>
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AssignLeadCommandHandler : IRequestHandler<AssignLeadCommand, Result<LeadDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AssignLeadCommandHandler(CRMDbContext context)
+    public AssignLeadCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<LeadDto>> Handle(AssignLeadCommand request, CancellationToken cancellationToken)
     {
-        var lead = await _context.Leads
-            .FirstOrDefaultAsync(l => l.Id == request.Id && l.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var lead = await _unitOfWork.ReadRepository<Domain.Entities.Lead>().AsQueryable()
+            .FirstOrDefaultAsync(l => l.Id == request.Id && l.TenantId == tenantId, cancellationToken);
 
         if (lead == null)
             return Result<LeadDto>.Failure(Error.NotFound("Lead.NotFound", $"Lead with ID {request.Id} not found"));
@@ -51,7 +51,7 @@ public class AssignLeadCommandHandler : IRequestHandler<AssignLeadCommand, Resul
         if (result.IsFailure)
             return Result<LeadDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new LeadDto
         {

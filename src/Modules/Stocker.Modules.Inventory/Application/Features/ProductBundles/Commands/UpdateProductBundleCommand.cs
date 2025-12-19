@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -43,18 +42,16 @@ public class UpdateProductBundleCommandValidator : AbstractValidator<UpdateProdu
 /// </summary>
 public class UpdateProductBundleCommandHandler : IRequestHandler<UpdateProductBundleCommand, Result<ProductBundleDto>>
 {
-    private readonly IProductBundleRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductBundleCommandHandler(IProductBundleRepository repository, IUnitOfWork unitOfWork)
+    public UpdateProductBundleCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductBundleDto>> Handle(UpdateProductBundleCommand request, CancellationToken cancellationToken)
     {
-        var bundle = await _repository.GetWithItemsAsync(request.BundleId, cancellationToken);
+        var bundle = await _unitOfWork.ProductBundles.GetWithItemsAsync(request.BundleId, cancellationToken);
 
         if (bundle == null)
         {
@@ -74,7 +71,7 @@ public class UpdateProductBundleCommandHandler : IRequestHandler<UpdateProductBu
         Money? fixedPrice = data.FixedPrice.HasValue ? Money.Create(data.FixedPrice.Value, data.FixedPriceCurrency ?? "TRY") : null;
         bundle.SetPricing(data.PricingType, fixedPrice, data.DiscountPercentage, data.DiscountAmount);
 
-        _repository.Update(bundle);
+        _unitOfWork.ProductBundles.Update(bundle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ProductBundleDto

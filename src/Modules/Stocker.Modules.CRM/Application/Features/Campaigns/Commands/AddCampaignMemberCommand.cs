@@ -4,15 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 
-public class AddCampaignMemberCommand : IRequest<Result<CampaignMemberDto>>, ITenantRequest
+public class AddCampaignMemberCommand : IRequest<Result<CampaignMemberDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid CampaignId { get; set; }
     public Guid? LeadId { get; set; }
     public Guid? ContactId { get; set; }
@@ -25,9 +23,6 @@ public class AddCampaignMemberCommandValidator : AbstractValidator<AddCampaignMe
 {
     public AddCampaignMemberCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CampaignId)
             .NotEmpty().WithMessage("Campaign ID is required");
 
@@ -49,20 +44,25 @@ public class AddCampaignMemberCommandValidator : AbstractValidator<AddCampaignMe
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddCampaignMemberCommandHandler : IRequestHandler<AddCampaignMemberCommand, Result<CampaignMemberDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddCampaignMemberCommandHandler(CRMDbContext context)
+    public AddCampaignMemberCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CampaignMemberDto>> Handle(AddCampaignMemberCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
-            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Result<CampaignMemberDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
@@ -76,13 +76,13 @@ public class AddCampaignMemberCommandHandler : IRequestHandler<AddCampaignMember
             return Result<CampaignMemberDto>.Failure(Error.Conflict("CampaignMember.AlreadyExists", "Member already exists in this campaign"));
 
         var member = new CampaignMember(
-            request.TenantId,
+            tenantId,
             request.CampaignId,
             request.ContactId,
             request.LeadId);
 
         campaign.AddMember(member);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CampaignMemberDto>.Success(new CampaignMemberDto
         {

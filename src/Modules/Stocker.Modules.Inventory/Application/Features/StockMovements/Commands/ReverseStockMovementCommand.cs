@@ -1,7 +1,6 @@
 using MediatR;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands;
@@ -16,18 +15,16 @@ public class ReverseStockMovementCommand : IRequest<Result<int>>
 
 public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMovementCommand, Result<int>>
 {
-    private readonly IStockMovementRepository _stockMovementRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public ReverseStockMovementCommandHandler(IStockMovementRepository stockMovementRepository, IUnitOfWork unitOfWork)
+    public ReverseStockMovementCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockMovementRepository = stockMovementRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<int>> Handle(ReverseStockMovementCommand request, CancellationToken cancellationToken)
     {
-        var movement = await _stockMovementRepository.GetByIdAsync(request.MovementId, cancellationToken);
+        var movement = await _unitOfWork.StockMovements.GetByIdAsync(request.MovementId, cancellationToken);
         if (movement == null)
         {
             return Result<int>.Failure(new Error("StockMovement.NotFound", $"Stock movement with ID {request.MovementId} not found", ErrorType.NotFound));
@@ -50,6 +47,7 @@ public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMo
             movement.UnitCost,
             request.UserId);
 
+        reversalMovement.SetTenantId(request.TenantId);
         reversalMovement.SetLocations(movement.ToLocationId, movement.FromLocationId); // Swap locations
         reversalMovement.SetReference("Reversal", movement.DocumentNumber, movement.Id);
 
@@ -58,11 +56,11 @@ public class ReverseStockMovementCommandHandler : IRequestHandler<ReverseStockMo
         else
             reversalMovement.SetDescription($"Reversal of movement {movement.DocumentNumber}");
 
-        await _stockMovementRepository.AddAsync(reversalMovement, cancellationToken);
+        await _unitOfWork.StockMovements.AddAsync(reversalMovement, cancellationToken);
 
         // Mark original movement as reversed
         movement.Reverse(reversalMovement.Id);
-        await _stockMovementRepository.UpdateAsync(movement, cancellationToken);
+        await _unitOfWork.StockMovements.UpdateAsync(movement, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

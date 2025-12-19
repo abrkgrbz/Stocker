@@ -3,15 +3,13 @@ using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 
-public class CreateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>, ITenantRequest
+public class CreateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>
 {
-    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public SegmentType Type { get; set; }
@@ -24,9 +22,6 @@ public class CreateCustomerSegmentCommandValidator : AbstractValidator<CreateCus
 {
     public CreateCustomerSegmentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Segment name is required")
             .MaximumLength(200).WithMessage("Segment name must not exceed 200 characters");
@@ -49,19 +44,24 @@ public class CreateCustomerSegmentCommandValidator : AbstractValidator<CreateCus
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreateCustomerSegmentCommandHandler : IRequestHandler<CreateCustomerSegmentCommand, Result<CustomerSegmentDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateCustomerSegmentCommandHandler(CRMDbContext context)
+    public CreateCustomerSegmentCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerSegmentDto>> Handle(CreateCustomerSegmentCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         var segment = new Domain.Entities.CustomerSegment(
-            request.TenantId,
+            tenantId,
             request.Name,
             request.Type,
             request.Color,
@@ -69,8 +69,8 @@ public class CreateCustomerSegmentCommandHandler : IRequestHandler<CreateCustome
             request.Description,
             request.Criteria);
 
-        _context.CustomerSegments.Add(segment);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Domain.Entities.CustomerSegment>().AddAsync(segment, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new CustomerSegmentDto
         {

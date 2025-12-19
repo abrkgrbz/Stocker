@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductBundles.Commands;
@@ -48,23 +47,16 @@ public class UpdateProductBundleItemCommandValidator : AbstractValidator<UpdateP
 /// </summary>
 public class UpdateProductBundleItemCommandHandler : IRequestHandler<UpdateProductBundleItemCommand, Result<ProductBundleItemDto>>
 {
-    private readonly IProductBundleRepository _bundleRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateProductBundleItemCommandHandler(
-        IProductBundleRepository bundleRepository,
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateProductBundleItemCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _bundleRepository = bundleRepository;
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductBundleItemDto>> Handle(UpdateProductBundleItemCommand request, CancellationToken cancellationToken)
     {
-        var bundle = await _bundleRepository.GetWithItemsAsync(request.BundleId, cancellationToken);
+        var bundle = await _unitOfWork.ProductBundles.GetWithItemsAsync(request.BundleId, cancellationToken);
 
         if (bundle == null)
         {
@@ -94,11 +86,11 @@ public class UpdateProductBundleItemCommandHandler : IRequestHandler<UpdateProdu
         item.SetRequired(data.IsRequired);
         item.SetDefault(data.IsDefault);
 
-        _bundleRepository.Update(bundle);
+        _unitOfWork.ProductBundles.Update(bundle);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Get product info for DTO
-        var product = await _productRepository.GetByIdAsync(item.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(item.ProductId, cancellationToken);
 
         var dto = new ProductBundleItemDto
         {

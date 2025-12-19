@@ -5,6 +5,7 @@ using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.SharedKernel.Authorization;
+using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.Sales.API.Controllers;
 

@@ -2,45 +2,47 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 
-public class GetPipelineReportQuery : IRequest<PipelineReportDto>, ITenantRequest
+public class GetPipelineReportQuery : IRequest<PipelineReportDto>
 {
-    public Guid TenantId { get; set; }
     public Guid? PipelineId { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetPipelineReportQueryHandler : IRequestHandler<GetPipelineReportQuery, PipelineReportDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetPipelineReportQueryHandler(CRMDbContext context)
+    public GetPipelineReportQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PipelineReportDto> Handle(GetPipelineReportQuery request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
         var fromDate = request.FromDate ?? DateTime.UtcNow.AddMonths(-12);
         var toDate = request.ToDate ?? DateTime.UtcNow;
 
-        var opportunitiesQuery = _context.Opportunities
-            .Where(o => o.TenantId == request.TenantId && o.CreatedAt >= fromDate && o.CreatedAt <= toDate);
+        var opportunitiesQuery = _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
+            .Where(o => o.TenantId == tenantId && o.CreatedAt >= fromDate && o.CreatedAt <= toDate);
 
-        var dealsQuery = _context.Deals
-            .Where(d => d.TenantId == request.TenantId && d.CreatedAt >= fromDate && d.CreatedAt <= toDate && d.Status != DealStatus.Deleted);
+        var dealsQuery = _unitOfWork.ReadRepository<Domain.Entities.Deal>().AsQueryable()
+            .Where(d => d.TenantId == tenantId && d.CreatedAt >= fromDate && d.CreatedAt <= toDate && d.Status != DealStatus.Deleted);
 
         string? pipelineName = null;
 
         if (request.PipelineId.HasValue)
         {
-            var pipeline = await _context.Pipelines
-                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == request.TenantId, cancellationToken);
+            var pipeline = await _unitOfWork.ReadRepository<Domain.Entities.Pipeline>().AsQueryable()
+                .FirstOrDefaultAsync(p => p.Id == request.PipelineId.Value && p.TenantId == tenantId, cancellationToken);
 
             pipelineName = pipeline?.Name;
             opportunitiesQuery = opportunitiesQuery.Where(o => o.PipelineId == request.PipelineId.Value);
@@ -50,8 +52,8 @@ public class GetPipelineReportQueryHandler : IRequestHandler<GetPipelineReportQu
         var opportunities = await opportunitiesQuery.ToListAsync(cancellationToken);
         var deals = await dealsQuery.ToListAsync(cancellationToken);
 
-        var stages = await _context.PipelineStages
-            .Where(s => s.TenantId == request.TenantId &&
+        var stages = await _unitOfWork.ReadRepository<Domain.Entities.PipelineStage>().AsQueryable()
+            .Where(s => s.TenantId == tenantId &&
                         (!request.PipelineId.HasValue || s.PipelineId == request.PipelineId.Value))
             .OrderBy(s => s.DisplayOrder)
             .ToListAsync(cancellationToken);

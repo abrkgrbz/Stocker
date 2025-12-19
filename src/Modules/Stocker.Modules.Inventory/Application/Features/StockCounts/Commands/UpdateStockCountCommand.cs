@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
@@ -49,20 +48,16 @@ public class UpdateStockCountCommandValidator : AbstractValidator<UpdateStockCou
 /// </summary>
 public class UpdateStockCountCommandHandler : IRequestHandler<UpdateStockCountCommand, Result<StockCountDto>>
 {
-    private readonly IStockCountRepository _stockCountRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateStockCountCommandHandler(
-        IStockCountRepository stockCountRepository,
-        IUnitOfWork unitOfWork)
+    public UpdateStockCountCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockCountRepository = stockCountRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<StockCountDto>> Handle(UpdateStockCountCommand request, CancellationToken cancellationToken)
     {
-        var stockCount = await _stockCountRepository.GetWithItemsAsync(request.StockCountId, cancellationToken);
+        var stockCount = await _unitOfWork.StockCounts.GetWithItemsAsync(request.StockCountId, cancellationToken);
         if (stockCount == null)
         {
             return Result<StockCountDto>.Failure(

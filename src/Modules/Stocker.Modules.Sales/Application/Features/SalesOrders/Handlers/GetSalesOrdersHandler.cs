@@ -4,37 +4,36 @@ using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Sales.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 
+/// <summary>
+/// Handler for GetSalesOrdersQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result<PagedResult<SalesOrderListDto>>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<GetSalesOrdersHandler> _logger;
 
     public GetSalesOrdersHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<GetSalesOrdersHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<PagedResult<SalesOrderListDto>>> Handle(GetSalesOrdersQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<PagedResult<SalesOrderListDto>>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var query = _context.SalesOrders
+        var query = _unitOfWork.SalesOrders.AsQueryable()
             .Include(o => o.Items)
-            .Where(o => o.TenantId == tenantId.Value)
+            .Where(o => o.TenantId == tenantId)
             .AsQueryable();
 
         // Apply filters
@@ -91,65 +90,61 @@ public class GetSalesOrdersHandler : IRequestHandler<GetSalesOrdersQuery, Result
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        var result = new PagedResult<SalesOrderListDto>
-        {
-            Items = items.Select(SalesOrderListDto.FromEntity).ToList(),
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        };
+        var result = new PagedResult<SalesOrderListDto>(
+            items.Select(SalesOrderListDto.FromEntity),
+            request.Page,
+            request.PageSize,
+            totalCount);
 
         return Result<PagedResult<SalesOrderListDto>>.Success(result);
     }
 }
 
+/// <summary>
+/// Handler for GetSalesOrderByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesOrderByIdHandler : IRequestHandler<GetSalesOrderByIdQuery, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetSalesOrderByIdHandler(SalesDbContext context, ITenantService tenantService)
+    public GetSalesOrderByIdHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(GetSalesOrderByIdQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items.OrderBy(i => i.LineNumber))
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
 }
 
+/// <summary>
+/// Handler for GetSalesOrderStatisticsQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesOrderStatisticsHandler : IRequestHandler<GetSalesOrderStatisticsQuery, Result<SalesOrderStatisticsDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetSalesOrderStatisticsHandler(SalesDbContext context, ITenantService tenantService)
+    public GetSalesOrderStatisticsHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<SalesOrderStatisticsDto>> Handle(GetSalesOrderStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderStatisticsDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var query = _context.SalesOrders
-            .Where(o => o.TenantId == tenantId.Value);
+        var query = _unitOfWork.SalesOrders.AsQueryable()
+            .Where(o => o.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(o => o.OrderDate >= request.FromDate.Value);

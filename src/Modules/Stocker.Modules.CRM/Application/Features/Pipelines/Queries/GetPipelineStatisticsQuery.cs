@@ -1,38 +1,42 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Queries;
 
-public class GetPipelineStatisticsQuery : IRequest<PipelineStatisticsDto>, ITenantRequest
+public class GetPipelineStatisticsQuery : IRequest<PipelineStatisticsDto>
 {
-    public Guid TenantId { get; set; }
     public Guid PipelineId { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetPipelineStatisticsQueryHandler : IRequestHandler<GetPipelineStatisticsQuery, PipelineStatisticsDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetPipelineStatisticsQueryHandler(CRMDbContext context)
+    public GetPipelineStatisticsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PipelineStatisticsDto> Handle(GetPipelineStatisticsQuery request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return new PipelineStatisticsDto { PipelineId = request.PipelineId };
 
-        var opportunities = await _context.Opportunities
-            .Where(o => o.PipelineId == request.PipelineId && o.TenantId == request.TenantId)
+        var opportunities = await _unitOfWork.ReadRepository<Opportunity>().AsQueryable()
+            .Where(o => o.PipelineId == request.PipelineId && o.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
         var openOpportunities = opportunities.Where(o => o.Status == OpportunityStatus.Open).ToList();

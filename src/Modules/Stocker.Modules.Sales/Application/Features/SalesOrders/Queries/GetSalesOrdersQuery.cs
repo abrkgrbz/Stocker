@@ -1,5 +1,6 @@
 using MediatR;
 using Stocker.Modules.Sales.Application.DTOs;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
@@ -46,13 +47,3 @@ public record SalesOrderStatisticsDto
     public string Currency { get; init; } = "TRY";
 }
 
-public record PagedResult<T>
-{
-    public List<T> Items { get; init; } = new();
-    public int TotalCount { get; init; }
-    public int Page { get; init; }
-    public int PageSize { get; init; }
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
-    public bool HasPreviousPage => Page > 1;
-    public bool HasNextPage => Page < TotalPages;
-}

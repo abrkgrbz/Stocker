@@ -1,33 +1,36 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 
-public class GetOpportunityByIdQuery : IRequest<OpportunityDto?>, ITenantRequest
+public class GetOpportunityByIdQuery : IRequest<OpportunityDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetOpportunityByIdQueryHandler : IRequestHandler<GetOpportunityByIdQuery, OpportunityDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetOpportunityByIdQueryHandler(CRMDbContext context)
+    public GetOpportunityByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<OpportunityDto?> Handle(GetOpportunityByIdQuery request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
             .Include(o => o.Pipeline)
             .Include(o => o.Stage)
             .Include(o => o.Products)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return null;

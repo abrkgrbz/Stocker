@@ -4,38 +4,38 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.Quotations.Commands;
 using Stocker.Modules.Sales.Application.Features.Quotations.Queries;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.Quotations.Handlers;
 
+/// <summary>
+/// Handler for CreateQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateQuotationHandler : IRequestHandler<CreateQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateQuotationHandler(SalesDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<QuotationDto>> Handle(CreateQuotationCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<QuotationDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var quotationNumber = Quotation.GenerateQuotationNumber();
         var quotationDate = request.Dto.QuotationDate ?? DateTime.UtcNow;
 
         var quotationResult = Quotation.Create(
-            tenantId.Value,
+            tenantId,
             quotationNumber,
             quotationDate,
             request.Dto.CustomerId,
@@ -68,7 +68,7 @@ public class CreateQuotationHandler : IRequestHandler<CreateQuotationCommand, Re
         foreach (var itemDto in request.Dto.Items)
         {
             var itemResult = QuotationItem.Create(
-                tenantId.Value,
+                tenantId,
                 itemDto.ProductId,
                 itemDto.ProductName,
                 itemDto.ProductCode,
@@ -89,29 +89,35 @@ public class CreateQuotationHandler : IRequestHandler<CreateQuotationCommand, Re
             quotation.AddItem(item);
         }
 
-        _context.Quotations.Add(quotation);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Quotation>().AddAsync(quotation, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for GetQuotationByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetQuotationByIdHandler : IRequestHandler<GetQuotationByIdQuery, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetQuotationByIdHandler(SalesDbContext context, IMapper mapper)
+    public GetQuotationByIdHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(GetQuotationByIdQuery request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -120,21 +126,26 @@ public class GetQuotationByIdHandler : IRequestHandler<GetQuotationByIdQuery, Re
     }
 }
 
+/// <summary>
+/// Handler for GetQuotationsQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetQuotationsHandler : IRequestHandler<GetQuotationsQuery, Result<PagedResult<QuotationListDto>>>
 {
-    private readonly SalesDbContext _context;
-    private readonly IMapper _mapper;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetQuotationsHandler(SalesDbContext context, IMapper mapper)
+    public GetQuotationsHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
-        _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<QuotationListDto>>> Handle(GetQuotationsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
+            .Where(q => q.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -193,32 +204,36 @@ public class GetQuotationsHandler : IRequestHandler<GetQuotationsQuery, Result<P
             })
             .ToListAsync(cancellationToken);
 
-        return Result<PagedResult<QuotationListDto>>.Success(new PagedResult<QuotationListDto>
-        {
-            Items = items,
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        });
+        return Result<PagedResult<QuotationListDto>>.Success(new PagedResult<QuotationListDto>(
+            items,
+            request.Page,
+            request.PageSize,
+            totalCount));
     }
 }
 
+/// <summary>
+/// Handler for UpdateQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class UpdateQuotationHandler : IRequestHandler<UpdateQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public UpdateQuotationHandler(SalesDbContext context, IMapper mapper)
+    public UpdateQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(UpdateQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -269,30 +284,36 @@ public class UpdateQuotationHandler : IRequestHandler<UpdateQuotationCommand, Re
         if (request.Dto.Notes != null)
             quotation.SetNotes(request.Dto.Notes, null);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for ApproveQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ApproveQuotationHandler : IRequestHandler<ApproveQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApproveQuotationHandler(SalesDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApproveQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<QuotationDto>> Handle(ApproveQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -303,28 +324,34 @@ public class ApproveQuotationHandler : IRequestHandler<ApproveQuotationCommand, 
         if (!result.IsSuccess)
             return Result<QuotationDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for SendQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class SendQuotationHandler : IRequestHandler<SendQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public SendQuotationHandler(SalesDbContext context, IMapper mapper)
+    public SendQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(SendQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -334,28 +361,34 @@ public class SendQuotationHandler : IRequestHandler<SendQuotationCommand, Result
         if (!result.IsSuccess)
             return Result<QuotationDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for AcceptQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class AcceptQuotationHandler : IRequestHandler<AcceptQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public AcceptQuotationHandler(SalesDbContext context, IMapper mapper)
+    public AcceptQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(AcceptQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -365,28 +398,34 @@ public class AcceptQuotationHandler : IRequestHandler<AcceptQuotationCommand, Re
         if (!result.IsSuccess)
             return Result<QuotationDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for RejectQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class RejectQuotationHandler : IRequestHandler<RejectQuotationCommand, Result<QuotationDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public RejectQuotationHandler(SalesDbContext context, IMapper mapper)
+    public RejectQuotationHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<QuotationDto>> Handle(RejectQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
+        var tenantId = _unitOfWork.TenantId;
+
+        var quotation = await _unitOfWork.ReadRepository<Quotation>().AsQueryable()
             .Include(q => q.Items)
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(q => q.Id == request.Id && q.TenantId == tenantId, cancellationToken);
 
         if (quotation == null)
             return Result<QuotationDto>.Failure(Error.NotFound("Quotation", "Quotation not found"));
@@ -396,34 +435,39 @@ public class RejectQuotationHandler : IRequestHandler<RejectQuotationCommand, Re
         if (!result.IsSuccess)
             return Result<QuotationDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<QuotationDto>.Success(_mapper.Map<QuotationDto>(quotation));
     }
 }
 
+/// <summary>
+/// Handler for DeleteQuotationCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeleteQuotationHandler : IRequestHandler<DeleteQuotationCommand, Result>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public DeleteQuotationHandler(SalesDbContext context)
+    public DeleteQuotationHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteQuotationCommand request, CancellationToken cancellationToken)
     {
-        var quotation = await _context.Quotations
-            .FirstOrDefaultAsync(q => q.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (quotation == null)
+        var quotation = await _unitOfWork.Repository<Quotation>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (quotation == null || quotation.TenantId != tenantId)
             return Result.Failure(Error.NotFound("Quotation", "Quotation not found"));
 
         if (quotation.Status != QuotationStatus.Draft && quotation.Status != QuotationStatus.Cancelled)
             return Result.Failure(Error.Conflict("Quotation.Status", "Only draft or cancelled quotations can be deleted"));
 
-        _context.Quotations.Remove(quotation);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Quotation>().Remove(quotation);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

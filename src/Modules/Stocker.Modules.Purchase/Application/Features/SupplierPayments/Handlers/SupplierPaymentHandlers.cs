@@ -5,31 +5,31 @@ using Stocker.Modules.Purchase.Application.DTOs;
 using Stocker.Modules.Purchase.Application.Features.SupplierPayments.Commands;
 using Stocker.Modules.Purchase.Application.Features.SupplierPayments.Queries;
 using Stocker.Modules.Purchase.Domain.Entities;
-using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Purchase.Application.Features.SupplierPayments.Handlers;
 
+/// <summary>
+/// Handler for CreateSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CreateSupplierPaymentHandler : IRequestHandler<CreateSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(CreateSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SupplierPaymentDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var paymentNumber = $"SP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
 
@@ -39,7 +39,7 @@ public class CreateSupplierPaymentHandler : IRequestHandler<CreateSupplierPaymen
             request.Dto.SupplierName,
             request.Dto.Amount,
             request.Dto.Method,
-            tenantId.Value,
+            tenantId,
             request.Dto.Type,
             request.Dto.Currency
         );
@@ -69,28 +69,34 @@ public class CreateSupplierPaymentHandler : IRequestHandler<CreateSupplierPaymen
         if (!string.IsNullOrEmpty(request.Dto.LinkedInvoiceIds))
             payment.LinkToMultipleInvoices(request.Dto.LinkedInvoiceIds);
 
-        _context.SupplierPayments.Add(payment);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<SupplierPayment>().AddAsync(payment, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for GetSupplierPaymentByIdQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetSupplierPaymentByIdHandler : IRequestHandler<GetSupplierPaymentByIdQuery, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetSupplierPaymentByIdHandler(PurchaseDbContext context, IMapper mapper)
+    public GetSupplierPaymentByIdHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(GetSupplierPaymentByIdQuery request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
@@ -99,18 +105,25 @@ public class GetSupplierPaymentByIdHandler : IRequestHandler<GetSupplierPaymentB
     }
 }
 
+/// <summary>
+/// Handler for GetSupplierPaymentsQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetSupplierPaymentsHandler : IRequestHandler<GetSupplierPaymentsQuery, Result<PagedResult<SupplierPaymentListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetSupplierPaymentsHandler(PurchaseDbContext context)
+    public GetSupplierPaymentsHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<SupplierPaymentListDto>>> Handle(GetSupplierPaymentsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SupplierPayments.AsQueryable();
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .Where(p => p.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -179,49 +192,61 @@ public class GetSupplierPaymentsHandler : IRequestHandler<GetSupplierPaymentsQue
     }
 }
 
+/// <summary>
+/// Handler for SubmitSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class SubmitSupplierPaymentHandler : IRequestHandler<SubmitSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public SubmitSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper)
+    public SubmitSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(SubmitSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
 
         payment.Submit();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for ApproveSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ApproveSupplierPaymentHandler : IRequestHandler<ApproveSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApproveSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApproveSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(ApproveSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
@@ -230,29 +255,35 @@ public class ApproveSupplierPaymentHandler : IRequestHandler<ApproveSupplierPaym
         var userName = _currentUserService.UserName;
 
         payment.Approve(userId, userName);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for ProcessSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ProcessSupplierPaymentHandler : IRequestHandler<ProcessSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ProcessSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ProcessSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(ProcessSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
@@ -264,104 +295,127 @@ public class ProcessSupplierPaymentHandler : IRequestHandler<ProcessSupplierPaym
             payment.SetTransactionReference(request.Dto.TransactionReference);
 
         payment.Process(userId, userName);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for CompleteSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CompleteSupplierPaymentHandler : IRequestHandler<CompleteSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public CompleteSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper)
+    public CompleteSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(CompleteSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
 
         payment.Complete();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for ReconcileSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ReconcileSupplierPaymentHandler : IRequestHandler<ReconcileSupplierPaymentCommand, Result<SupplierPaymentDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ReconcileSupplierPaymentHandler(PurchaseDbContext context, IMapper mapper)
+    public ReconcileSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SupplierPaymentDto>> Handle(ReconcileSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var payment = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .FirstOrDefaultAsync(p => p.Id == request.Id && p.TenantId == tenantId, cancellationToken);
 
         if (payment == null)
             return Result<SupplierPaymentDto>.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
 
         payment.MarkAsReconciled(request.Dto.ReconciliationReference);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SupplierPaymentDto>.Success(_mapper.Map<SupplierPaymentDto>(payment));
     }
 }
 
+/// <summary>
+/// Handler for DeleteSupplierPaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeleteSupplierPaymentHandler : IRequestHandler<DeleteSupplierPaymentCommand, Result>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public DeleteSupplierPaymentHandler(PurchaseDbContext context)
+    public DeleteSupplierPaymentHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteSupplierPaymentCommand request, CancellationToken cancellationToken)
     {
-        var payment = await _context.SupplierPayments
-            .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (payment == null)
+        var payment = await _unitOfWork.Repository<SupplierPayment>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (payment == null || payment.TenantId != tenantId)
             return Result.Failure(Error.NotFound("SupplierPayment", "Supplier payment not found"));
 
         if (payment.Status != SupplierPaymentStatus.Draft)
             return Result.Failure(Error.Conflict("SupplierPayment.Status", "Only draft payments can be deleted"));
 
-        _context.SupplierPayments.Remove(payment);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<SupplierPayment>().Remove(payment);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
 }
 
+/// <summary>
+/// Handler for GetPendingApprovalPaymentsQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPendingApprovalPaymentsHandler : IRequestHandler<GetPendingApprovalPaymentsQuery, Result<List<SupplierPaymentListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetPendingApprovalPaymentsHandler(PurchaseDbContext context)
+    public GetPendingApprovalPaymentsHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<SupplierPaymentListDto>>> Handle(GetPendingApprovalPaymentsQuery request, CancellationToken cancellationToken)
     {
-        var payments = await _context.SupplierPayments
-            .Where(p => p.Status == SupplierPaymentStatus.PendingApproval)
+        var tenantId = _unitOfWork.TenantId;
+
+        var payments = await _unitOfWork.ReadRepository<SupplierPayment>().AsQueryable()
+            .Where(p => p.TenantId == tenantId && p.Status == SupplierPaymentStatus.PendingApproval)
             .OrderBy(p => p.CreatedAt)
             .Select(p => new SupplierPaymentListDto
             {

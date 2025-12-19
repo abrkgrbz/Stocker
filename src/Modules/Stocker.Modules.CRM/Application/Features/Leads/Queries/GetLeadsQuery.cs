@@ -2,15 +2,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Leads.Queries;
 
-public class GetLeadsQuery : IRequest<PagedResult<LeadDto>>, ITenantRequest
+public class GetLeadsQuery : IRequest<PagedResult<LeadDto>>
 {
-    public Guid TenantId { get; set; }
     public string? Search { get; set; }
     public LeadStatus? Status { get; set; }
     public LeadRating? Rating { get; set; }
@@ -21,19 +19,24 @@ public class GetLeadsQuery : IRequest<PagedResult<LeadDto>>, ITenantRequest
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetLeadsQueryHandler : IRequestHandler<GetLeadsQuery, PagedResult<LeadDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetLeadsQueryHandler(CRMDbContext context)
+    public GetLeadsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PagedResult<LeadDto>> Handle(GetLeadsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Leads
-            .Where(l => l.TenantId == request.TenantId);
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Domain.Entities.Lead>().AsQueryable()
+            .Where(l => l.TenantId == tenantId);
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(request.Search))

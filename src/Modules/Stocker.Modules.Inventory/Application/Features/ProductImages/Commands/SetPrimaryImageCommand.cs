@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
@@ -39,21 +38,17 @@ public class SetPrimaryImageCommandValidator : AbstractValidator<SetPrimaryImage
 /// </summary>
 public class SetPrimaryImageCommandHandler : IRequestHandler<SetPrimaryImageCommand, Result>
 {
-    private readonly IProductRepository _productRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public SetPrimaryImageCommandHandler(
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork)
+    public SetPrimaryImageCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _productRepository = productRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(SetPrimaryImageCommand request, CancellationToken cancellationToken)
     {
         // Get product with images
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result.Failure(

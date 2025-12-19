@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Infrastructure.Persistence;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Queries;
@@ -19,37 +19,36 @@ public class GetProductImagesQuery : IRequest<Result<List<ProductImageDto>>>
 
 /// <summary>
 /// Handler for GetProductImagesQuery
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuery, Result<List<ProductImageDto>>>
 {
-    private readonly InventoryDbContext _dbContext;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public GetProductImagesQueryHandler(InventoryDbContext dbContext)
+    public GetProductImagesQueryHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<ProductImageDto>>> Handle(GetProductImagesQuery request, CancellationToken cancellationToken)
     {
-        // Verify product exists
-        var productExists = await _dbContext.Set<Product>()
-            .AnyAsync(p => p.Id == request.ProductId, cancellationToken);
-        if (!productExists)
+        // Verify product exists and get with images navigation property
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product == null)
         {
             return Result<List<ProductImageDto>>.Failure(
                 Error.NotFound("Product", $"Product with ID {request.ProductId} not found"));
         }
 
-        // Query images directly from ProductImage table
-        var query = _dbContext.Set<ProductImage>()
-            .Where(i => i.ProductId == request.ProductId);
+        // Query images using Product's navigation property
+        var imagesQuery = product.Images?.AsQueryable() ?? Enumerable.Empty<ProductImage>().AsQueryable();
 
         if (!request.IncludeInactive)
         {
-            query = query.Where(i => i.IsActive);
+            imagesQuery = imagesQuery.Where(i => i.IsActive);
         }
 
-        var images = await query
+        var images = imagesQuery
             .OrderBy(i => i.DisplayOrder)
             .Select(i => new ProductImageDto
             {
@@ -59,7 +58,7 @@ public class GetProductImagesQueryHandler : IRequestHandler<GetProductImagesQuer
                 IsPrimary = i.IsPrimary,
                 DisplayOrder = i.DisplayOrder
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Result<List<ProductImageDto>>.Success(images);
     }

@@ -4,8 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
@@ -13,9 +12,8 @@ namespace Stocker.Modules.CRM.Application.Features.Opportunities.Commands;
 /// <summary>
 /// Command to add a product to an opportunity
 /// </summary>
-public class AddOpportunityProductCommand : IRequest<Result<OpportunityProductDto>>, ITenantRequest
+public class AddOpportunityProductCommand : IRequest<Result<OpportunityProductDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid OpportunityId { get; set; }
     public CreateOpportunityProductDto ProductData { get; set; } = null!;
 }
@@ -27,9 +25,6 @@ public class AddOpportunityProductCommandValidator : AbstractValidator<AddOpport
 {
     public AddOpportunityProductCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.OpportunityId)
             .NotEmpty().WithMessage("Opportunity ID is required");
 
@@ -70,20 +65,25 @@ public class AddOpportunityProductCommandValidator : AbstractValidator<AddOpport
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class AddOpportunityProductCommandHandler : IRequestHandler<AddOpportunityProductCommand, Result<OpportunityProductDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public AddOpportunityProductCommandHandler(CRMDbContext context)
+    public AddOpportunityProductCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<OpportunityProductDto>> Handle(AddOpportunityProductCommand request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Opportunity>().AsQueryable()
             .Include(o => o.Products)
-            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result<OpportunityProductDto>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
@@ -91,7 +91,7 @@ public class AddOpportunityProductCommandHandler : IRequestHandler<AddOpportunit
         var unitPrice = Money.Create(request.ProductData.UnitPrice, request.ProductData.Currency);
 
         var product = new OpportunityProduct(
-            request.TenantId,
+            tenantId,
             request.OpportunityId,
             request.ProductData.ProductId,
             request.ProductData.ProductName,
@@ -109,7 +109,7 @@ public class AddOpportunityProductCommandHandler : IRequestHandler<AddOpportunit
             product.ApplyDiscountPercent(request.ProductData.DiscountPercent);
 
         opportunity.AddProduct(product);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new OpportunityProductDto
         {

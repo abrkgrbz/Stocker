@@ -1,6 +1,6 @@
 using MediatR;
 using Stocker.Modules.Sales.Application.DTOs;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.Payments.Queries;

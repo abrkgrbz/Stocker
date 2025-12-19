@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockReservations.Commands;
@@ -31,20 +30,10 @@ public class CreateStockReservationCommandValidator : AbstractValidator<CreateSt
 
 public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockReservationCommand, Result<StockReservationDto>>
 {
-    private readonly IStockReservationRepository _stockReservationRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateStockReservationCommandHandler(
-        IStockReservationRepository stockReservationRepository,
-        IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateStockReservationCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockReservationRepository = stockReservationRepository;
-        _productRepository = productRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -52,13 +41,13 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
     {
         var data = request.Data;
 
-        var product = await _productRepository.GetByIdAsync(data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<StockReservationDto>.Failure(new Error("Product.NotFound", $"Product with ID {data.ProductId} not found", ErrorType.NotFound));
         }
 
-        var warehouse = await _warehouseRepository.GetByIdAsync(data.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result<StockReservationDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
@@ -73,6 +62,7 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
             data.CreatedByUserId,
             data.ExpirationDate);
 
+        reservation.SetTenantId(request.TenantId);
         reservation.SetLocation(data.LocationId);
 
         if (!string.IsNullOrEmpty(data.ReferenceDocumentType) && !string.IsNullOrEmpty(data.ReferenceDocumentNumber))
@@ -81,7 +71,7 @@ public class CreateStockReservationCommandHandler : IRequestHandler<CreateStockR
         if (!string.IsNullOrEmpty(data.Notes))
             reservation.SetNotes(data.Notes);
 
-        await _stockReservationRepository.AddAsync(reservation, cancellationToken);
+        await _unitOfWork.StockReservations.AddAsync(reservation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockReservationDto>.Success(new StockReservationDto

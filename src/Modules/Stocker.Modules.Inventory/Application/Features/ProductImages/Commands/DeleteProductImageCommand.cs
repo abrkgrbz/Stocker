@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Inventory.Application.Contracts;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductImages.Commands;
@@ -41,24 +40,21 @@ public class DeleteProductImageCommandValidator : AbstractValidator<DeleteProduc
 /// </summary>
 public class DeleteProductImageCommandHandler : IRequestHandler<DeleteProductImageCommand, Result>
 {
-    private readonly IProductRepository _productRepository;
+    private readonly IInventoryUnitOfWork _unitOfWork;
     private readonly IProductImageStorageService _storageService;
-    private readonly IUnitOfWork _unitOfWork;
 
     public DeleteProductImageCommandHandler(
-        IProductRepository productRepository,
-        IProductImageStorageService storageService,
-        IUnitOfWork unitOfWork)
+        IInventoryUnitOfWork unitOfWork,
+        IProductImageStorageService storageService)
     {
-        _productRepository = productRepository;
-        _storageService = storageService;
         _unitOfWork = unitOfWork;
+        _storageService = storageService;
     }
 
     public async Task<Result> Handle(DeleteProductImageCommand request, CancellationToken cancellationToken)
     {
         // Get product with images
-        var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
         {
             return Result.Failure(

@@ -1,15 +1,14 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.SalesTeams.Queries;
 
-public class GetSalesTeamsQuery : IRequest<PagedResult<SalesTeamDto>>, ITenantRequest
+public class GetSalesTeamsQuery : IRequest<PagedResult<SalesTeamDto>>
 {
-    public Guid TenantId { get; set; }
     public bool? IsActive { get; set; }
     public Guid? ParentTeamId { get; set; }
     public Guid? TerritoryId { get; set; }
@@ -19,22 +18,27 @@ public class GetSalesTeamsQuery : IRequest<PagedResult<SalesTeamDto>>, ITenantRe
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesTeamsQueryHandler : IRequestHandler<GetSalesTeamsQuery, PagedResult<SalesTeamDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetSalesTeamsQueryHandler(CRMDbContext context)
+    public GetSalesTeamsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<PagedResult<SalesTeamDto>> Handle(GetSalesTeamsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SalesTeams
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<SalesTeam>().AsQueryable()
             .Include(s => s.ParentTeam)
             .Include(s => s.Territory)
             .Include(s => s.Members)
-            .Where(s => s.TenantId == request.TenantId);
+            .Where(s => s.TenantId == tenantId);
 
         if (request.IsActive.HasValue)
             query = query.Where(s => s.IsActive == request.IsActive.Value);

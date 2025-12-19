@@ -1,36 +1,40 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Meetings.Queries;
 
-public class GetMeetingByIdQuery : IRequest<MeetingDto?>, ITenantRequest
+public class GetMeetingByIdQuery : IRequest<MeetingDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetMeetingByIdQueryHandler : IRequestHandler<GetMeetingByIdQuery, MeetingDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetMeetingByIdQueryHandler(CRMDbContext context)
+    public GetMeetingByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<MeetingDto?> Handle(GetMeetingByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Meetings
+        var tenantId = _unitOfWork.TenantId;
+
+        var entity = await _unitOfWork.ReadRepository<Meeting>().AsQueryable()
             .Include(m => m.Customer)
             .Include(m => m.Contact)
             .Include(m => m.Lead)
             .Include(m => m.Opportunity)
             .Include(m => m.Deal)
             .Include(m => m.Campaign)
-            .FirstOrDefaultAsync(m => m.Id == request.Id && m.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(m => m.Id == request.Id && m.TenantId == tenantId, cancellationToken);
 
         if (entity == null)
             return null;

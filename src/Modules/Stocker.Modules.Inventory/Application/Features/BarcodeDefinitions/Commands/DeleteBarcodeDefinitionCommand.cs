@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.BarcodeDefinitions.Commands;
@@ -32,18 +31,16 @@ public class DeleteBarcodeDefinitionCommandValidator : AbstractValidator<DeleteB
 /// </summary>
 public class DeleteBarcodeDefinitionCommandHandler : IRequestHandler<DeleteBarcodeDefinitionCommand, Result<bool>>
 {
-    private readonly IBarcodeDefinitionRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteBarcodeDefinitionCommandHandler(IBarcodeDefinitionRepository repository, IUnitOfWork unitOfWork)
+    public DeleteBarcodeDefinitionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(DeleteBarcodeDefinitionCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.BarcodeDefinitions.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<bool>.Failure(new Error("BarcodeDefinition.NotFound", $"Barcode definition with ID {request.Id} not found", ErrorType.NotFound));
@@ -56,7 +53,7 @@ public class DeleteBarcodeDefinitionCommandHandler : IRequestHandler<DeleteBarco
         }
 
         entity.Delete("system");
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.BarcodeDefinitions.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<bool>.Success(true);

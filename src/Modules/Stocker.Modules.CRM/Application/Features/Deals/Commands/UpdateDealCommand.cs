@@ -3,16 +3,15 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Common.ValueObjects;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Commands;
 
-public class UpdateDealCommand : IRequest<Result<DealDto>>, ITenantRequest
+public class UpdateDealCommand : IRequest<Result<DealDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -36,9 +35,6 @@ public class UpdateDealCommandValidator : AbstractValidator<UpdateDealCommand>
 {
     public UpdateDealCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Deal ID is required");
 
@@ -85,19 +81,23 @@ public class UpdateDealCommandValidator : AbstractValidator<UpdateDealCommand>
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdateDealCommandHandler : IRequestHandler<UpdateDealCommand, Result<DealDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateDealCommandHandler(CRMDbContext context)
+    public UpdateDealCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DealDto>> Handle(UpdateDealCommand request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
-            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == tenantId, cancellationToken);
 
         if (deal == null)
             return Result<DealDto>.Failure(Error.NotFound("Deal.NotFound", $"Deal with ID {request.Id} not found"));
@@ -117,7 +117,7 @@ public class UpdateDealCommandHandler : IRequestHandler<UpdateDealCommand, Resul
             deal.MoveToStage(request.StageId.Value, request.Probability);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new DealDto
         {

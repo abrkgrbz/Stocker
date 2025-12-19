@@ -2,15 +2,14 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Commands;
 
-public class ConvertCampaignMemberCommand : IRequest<Result<CampaignMemberDto>>, ITenantRequest
+public class ConvertCampaignMemberCommand : IRequest<Result<CampaignMemberDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid CampaignId { get; set; }
     public Guid MemberId { get; set; }
     public Guid OpportunityId { get; set; }
@@ -20,9 +19,6 @@ public class ConvertCampaignMemberCommandValidator : AbstractValidator<ConvertCa
 {
     public ConvertCampaignMemberCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.CampaignId)
             .NotEmpty().WithMessage("Campaign ID is required");
 
@@ -34,20 +30,25 @@ public class ConvertCampaignMemberCommandValidator : AbstractValidator<ConvertCa
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class ConvertCampaignMemberCommandHandler : IRequestHandler<ConvertCampaignMemberCommand, Result<CampaignMemberDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public ConvertCampaignMemberCommandHandler(CRMDbContext context)
+    public ConvertCampaignMemberCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CampaignMemberDto>> Handle(ConvertCampaignMemberCommand request, CancellationToken cancellationToken)
     {
-        var campaign = await _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var campaign = await _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
-            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == request.CampaignId && c.TenantId == tenantId, cancellationToken);
 
         if (campaign == null)
             return Result<CampaignMemberDto>.Failure(Error.NotFound("Campaign.NotFound", $"Campaign with ID {request.CampaignId} not found"));
@@ -58,7 +59,7 @@ public class ConvertCampaignMemberCommandHandler : IRequestHandler<ConvertCampai
             return Result<CampaignMemberDto>.Failure(Error.NotFound("CampaignMember.NotFound", $"Member with ID {request.MemberId} not found"));
 
         member.MarkAsConverted(request.OpportunityId);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CampaignMemberDto>.Success(new CampaignMemberDto
         {

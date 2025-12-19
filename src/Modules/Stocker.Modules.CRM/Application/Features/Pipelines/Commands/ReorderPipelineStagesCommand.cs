@@ -2,8 +2,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
@@ -11,9 +11,8 @@ namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 /// <summary>
 /// Command to reorder pipeline stages
 /// </summary>
-public class ReorderPipelineStagesCommand : IRequest<Result<IEnumerable<PipelineStageDto>>>, ITenantRequest
+public class ReorderPipelineStagesCommand : IRequest<Result<IEnumerable<PipelineStageDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid PipelineId { get; set; }
     public List<StageOrderDto> StageOrders { get; set; } = new();
 }
@@ -34,9 +33,6 @@ public class ReorderPipelineStagesCommandValidator : AbstractValidator<ReorderPi
 {
     public ReorderPipelineStagesCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.PipelineId)
             .NotEmpty().WithMessage("Pipeline ID is required");
 
@@ -54,20 +50,25 @@ public class ReorderPipelineStagesCommandValidator : AbstractValidator<ReorderPi
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class ReorderPipelineStagesCommandHandler : IRequestHandler<ReorderPipelineStagesCommand, Result<IEnumerable<PipelineStageDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public ReorderPipelineStagesCommandHandler(CRMDbContext context)
+    public ReorderPipelineStagesCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<IEnumerable<PipelineStageDto>>> Handle(ReorderPipelineStagesCommand request, CancellationToken cancellationToken)
     {
-        var pipeline = await _context.Pipelines
+        var tenantId = _unitOfWork.TenantId;
+
+        var pipeline = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
             .Include(p => p.Stages)
-            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == request.PipelineId && p.TenantId == tenantId, cancellationToken);
 
         if (pipeline == null)
             return Result<IEnumerable<PipelineStageDto>>.Failure(Error.NotFound("Pipeline.NotFound", $"Pipeline with ID {request.PipelineId} not found"));
@@ -76,7 +77,7 @@ public class ReorderPipelineStagesCommandHandler : IRequestHandler<ReorderPipeli
         {
             var stageIds = request.StageOrders.OrderBy(s => s.Order).Select(s => s.StageId).ToList();
             pipeline.ReorderStages(stageIds);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var stages = pipeline.Stages.Select(s => new PipelineStageDto
             {

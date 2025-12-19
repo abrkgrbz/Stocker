@@ -1,33 +1,36 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Queries;
 
-public class GetOverdueActivitiesQuery : IRequest<IEnumerable<ActivityDto>>, ITenantRequest
+public class GetOverdueActivitiesQuery : IRequest<IEnumerable<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid? AssignedToId { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetOverdueActivitiesQueryHandler : IRequestHandler<GetOverdueActivitiesQuery, IEnumerable<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetOverdueActivitiesQueryHandler(CRMDbContext context)
+    public GetOverdueActivitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<ActivityDto>> Handle(GetOverdueActivitiesQuery request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
         var now = DateTime.UtcNow;
 
-        var query = _context.Activities
-            .Where(a => a.TenantId == request.TenantId)
+        var query = _unitOfWork.ReadRepository<Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId)
             .Where(a => a.Status != ActivityStatus.Completed && a.Status != ActivityStatus.Cancelled)
             .Where(a => a.DueDate.HasValue && a.DueDate.Value < now);
 

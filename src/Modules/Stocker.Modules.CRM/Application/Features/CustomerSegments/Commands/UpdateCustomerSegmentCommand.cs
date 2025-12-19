@@ -3,15 +3,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 
-public class UpdateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>, ITenantRequest
+public class UpdateCustomerSegmentCommand : IRequest<Result<CustomerSegmentDto>>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -23,9 +21,6 @@ public class UpdateCustomerSegmentCommandValidator : AbstractValidator<UpdateCus
 {
     public UpdateCustomerSegmentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Segment ID is required");
 
@@ -44,19 +39,24 @@ public class UpdateCustomerSegmentCommandValidator : AbstractValidator<UpdateCus
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class UpdateCustomerSegmentCommandHandler : IRequestHandler<UpdateCustomerSegmentCommand, Result<CustomerSegmentDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public UpdateCustomerSegmentCommandHandler(CRMDbContext context)
+    public UpdateCustomerSegmentCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CustomerSegmentDto>> Handle(UpdateCustomerSegmentCommand request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
-            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
         if (segment == null)
         {
@@ -70,7 +70,7 @@ public class UpdateCustomerSegmentCommandHandler : IRequestHandler<UpdateCustome
             return Result<CustomerSegmentDto>.Failure(result.Error);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new CustomerSegmentDto
         {

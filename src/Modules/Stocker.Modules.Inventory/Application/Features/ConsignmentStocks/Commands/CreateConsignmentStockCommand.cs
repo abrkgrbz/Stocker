@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ConsignmentStocks.Commands;
@@ -42,12 +41,10 @@ public class CreateConsignmentStockCommandValidator : AbstractValidator<CreateCo
 /// </summary>
 public class CreateConsignmentStockCommandHandler : IRequestHandler<CreateConsignmentStockCommand, Result<ConsignmentStockDto>>
 {
-    private readonly IConsignmentStockRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateConsignmentStockCommandHandler(IConsignmentStockRepository repository, IUnitOfWork unitOfWork)
+    public CreateConsignmentStockCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -59,7 +56,7 @@ public class CreateConsignmentStockCommandHandler : IRequestHandler<CreateConsig
         var consignmentNumber = $"CON-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
 
         // Check if consignment number already exists
-        var existingConsignment = await _repository.GetByNumberAsync(consignmentNumber, cancellationToken);
+        var existingConsignment = await _unitOfWork.ConsignmentStocks.GetByNumberAsync(consignmentNumber, cancellationToken);
         if (existingConsignment != null)
         {
             return Result<ConsignmentStockDto>.Failure(new Error("ConsignmentStock.DuplicateNumber", $"Consignment with number '{consignmentNumber}' already exists", ErrorType.Conflict));
@@ -83,7 +80,8 @@ public class CreateConsignmentStockCommandHandler : IRequestHandler<CreateConsig
         entity.SetAgreementEndDate(data.AgreementEndDate);
         entity.SetAgreementNotes(data.AgreementNotes);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        entity.SetTenantId(request.TenantId);
+        await _unitOfWork.ConsignmentStocks.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ConsignmentStockDto

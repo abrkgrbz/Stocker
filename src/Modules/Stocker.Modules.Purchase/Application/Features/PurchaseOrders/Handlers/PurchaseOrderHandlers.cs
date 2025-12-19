@@ -5,31 +5,31 @@ using Stocker.Modules.Purchase.Application.DTOs;
 using Stocker.Modules.Purchase.Application.Features.PurchaseOrders.Commands;
 using Stocker.Modules.Purchase.Application.Features.PurchaseOrders.Queries;
 using Stocker.Modules.Purchase.Domain.Entities;
-using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Purchase.Application.Features.PurchaseOrders.Handlers;
 
+/// <summary>
+/// Handler for CreatePurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CreatePurchaseOrderHandler : IRequestHandler<CreatePurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreatePurchaseOrderHandler(PurchaseDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreatePurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(CreatePurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<PurchaseOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var orderNumber = $"PO-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
 
@@ -37,7 +37,7 @@ public class CreatePurchaseOrderHandler : IRequestHandler<CreatePurchaseOrderCom
             orderNumber,
             request.Dto.SupplierId,
             request.Dto.SupplierName,
-            tenantId.Value,
+            tenantId,
             request.Dto.Type,
             request.Dto.Currency ?? "TRY",
             request.Dto.WarehouseId,
@@ -82,7 +82,7 @@ public class CreatePurchaseOrderHandler : IRequestHandler<CreatePurchaseOrderCom
                 itemDto.UnitPrice,
                 itemDto.VatRate,
                 lineNumber++,
-                tenantId.Value,
+                tenantId,
                 request.Dto.Currency ?? "TRY"
             );
 
@@ -98,29 +98,35 @@ public class CreatePurchaseOrderHandler : IRequestHandler<CreatePurchaseOrderCom
         if (request.Dto.DiscountRate > 0)
             purchaseOrder.ApplyDiscount(request.Dto.DiscountRate);
 
-        _context.PurchaseOrders.Add(purchaseOrder);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<PurchaseOrder>().AddAsync(purchaseOrder, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(purchaseOrder));
     }
 }
 
+/// <summary>
+/// Handler for GetPurchaseOrderByIdQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPurchaseOrderByIdHandler : IRequestHandler<GetPurchaseOrderByIdQuery, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetPurchaseOrderByIdHandler(PurchaseDbContext context, IMapper mapper)
+    public GetPurchaseOrderByIdHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(GetPurchaseOrderByIdQuery request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
@@ -129,20 +135,26 @@ public class GetPurchaseOrderByIdHandler : IRequestHandler<GetPurchaseOrderByIdQ
     }
 }
 
+/// <summary>
+/// Handler for GetPurchaseOrdersQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPurchaseOrdersHandler : IRequestHandler<GetPurchaseOrdersQuery, Result<PagedResult<PurchaseOrderListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetPurchaseOrdersHandler(PurchaseDbContext context)
+    public GetPurchaseOrdersHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<PurchaseOrderListDto>>> Handle(GetPurchaseOrdersQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .AsQueryable();
+            .Where(o => o.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -204,22 +216,28 @@ public class GetPurchaseOrdersHandler : IRequestHandler<GetPurchaseOrdersQuery, 
     }
 }
 
+/// <summary>
+/// Handler for UpdatePurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class UpdatePurchaseOrderHandler : IRequestHandler<UpdatePurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public UpdatePurchaseOrderHandler(PurchaseDbContext context, IMapper mapper)
+    public UpdatePurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(UpdatePurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
@@ -250,30 +268,36 @@ public class UpdatePurchaseOrderHandler : IRequestHandler<UpdatePurchaseOrderCom
         if (request.Dto.InternalNotes != null || request.Dto.SupplierNotes != null)
             order.SetNotes(request.Dto.InternalNotes ?? order.InternalNotes, request.Dto.SupplierNotes ?? order.SupplierNotes);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(order));
     }
 }
 
+/// <summary>
+/// Handler for ApprovePurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ApprovePurchaseOrderHandler : IRequestHandler<ApprovePurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApprovePurchaseOrderHandler(PurchaseDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApprovePurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(ApprovePurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
@@ -282,135 +306,164 @@ public class ApprovePurchaseOrderHandler : IRequestHandler<ApprovePurchaseOrderC
         var userName = _currentUserService.UserName;
 
         order.Approve(userId, userName);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(order));
     }
 }
 
+/// <summary>
+/// Handler for ConfirmPurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ConfirmPurchaseOrderHandler : IRequestHandler<ConfirmPurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ConfirmPurchaseOrderHandler(PurchaseDbContext context, IMapper mapper)
+    public ConfirmPurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(ConfirmPurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
 
         // Submit the order (which automatically approves if no approval is required)
         order.Submit();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(order));
     }
 }
 
+/// <summary>
+/// Handler for SendPurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class SendPurchaseOrderHandler : IRequestHandler<SendPurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public SendPurchaseOrderHandler(PurchaseDbContext context, IMapper mapper)
+    public SendPurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(SendPurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
 
         order.Send();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(order));
     }
 }
 
+/// <summary>
+/// Handler for CancelPurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CancelPurchaseOrderHandler : IRequestHandler<CancelPurchaseOrderCommand, Result<PurchaseOrderDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public CancelPurchaseOrderHandler(PurchaseDbContext context, IMapper mapper)
+    public CancelPurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseOrderDto>> Handle(CancelPurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var order = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId, cancellationToken);
 
         if (order == null)
             return Result<PurchaseOrderDto>.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
 
         order.Cancel(request.Reason);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseOrderDto>.Success(_mapper.Map<PurchaseOrderDto>(order));
     }
 }
 
+/// <summary>
+/// Handler for DeletePurchaseOrderCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeletePurchaseOrderHandler : IRequestHandler<DeletePurchaseOrderCommand, Result>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public DeletePurchaseOrderHandler(PurchaseDbContext context)
+    public DeletePurchaseOrderHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeletePurchaseOrderCommand request, CancellationToken cancellationToken)
     {
-        var order = await _context.PurchaseOrders
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (order == null)
+        var order = await _unitOfWork.Repository<PurchaseOrder>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (order == null || order.TenantId != tenantId)
             return Result.Failure(Error.NotFound("PurchaseOrder", "Purchase order not found"));
 
         if (order.Status != PurchaseOrderStatus.Draft && order.Status != PurchaseOrderStatus.Cancelled)
             return Result.Failure(Error.Conflict("PurchaseOrder.Status", "Only draft or cancelled orders can be deleted"));
 
-        _context.PurchaseOrders.Remove(order);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<PurchaseOrder>().Remove(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
 }
 
+/// <summary>
+/// Handler for GetPendingPurchaseOrdersQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPendingPurchaseOrdersHandler : IRequestHandler<GetPendingPurchaseOrdersQuery, Result<List<PurchaseOrderListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetPendingPurchaseOrdersHandler(PurchaseDbContext context)
+    public GetPendingPurchaseOrdersHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PurchaseOrderListDto>>> Handle(GetPendingPurchaseOrdersQuery request, CancellationToken cancellationToken)
     {
-        var orders = await _context.PurchaseOrders
+        var tenantId = _unitOfWork.TenantId;
+
+        var orders = await _unitOfWork.ReadRepository<PurchaseOrder>().AsQueryable()
             .Include(o => o.Items)
-            .Where(o => o.Status == PurchaseOrderStatus.PendingApproval)
+            .Where(o => o.TenantId == tenantId && o.Status == PurchaseOrderStatus.PendingApproval)
             .OrderBy(o => o.CreatedAt)
             .Select(o => new PurchaseOrderListDto
             {

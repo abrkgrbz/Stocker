@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
@@ -40,18 +39,16 @@ public class AddProductAttributeOptionCommandValidator : AbstractValidator<AddPr
 /// </summary>
 public class AddProductAttributeOptionCommandHandler : IRequestHandler<AddProductAttributeOptionCommand, Result<ProductAttributeOptionDto>>
 {
-    private readonly IProductAttributeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public AddProductAttributeOptionCommandHandler(IProductAttributeRepository repository, IUnitOfWork unitOfWork)
+    public AddProductAttributeOptionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ProductAttributeOptionDto>> Handle(AddProductAttributeOptionCommand request, CancellationToken cancellationToken)
     {
-        var attribute = await _repository.GetWithOptionsAsync(request.AttributeId, cancellationToken);
+        var attribute = await _unitOfWork.ProductAttributes.GetWithOptionsAsync(request.AttributeId, cancellationToken);
 
         if (attribute == null)
         {

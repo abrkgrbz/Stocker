@@ -1,7 +1,6 @@
 using FluentValidation;
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.ProductAttributes.Commands;
@@ -34,18 +33,16 @@ public class DeleteProductAttributeOptionCommandValidator : AbstractValidator<De
 /// </summary>
 public class DeleteProductAttributeOptionCommandHandler : IRequestHandler<DeleteProductAttributeOptionCommand, Result>
 {
-    private readonly IProductAttributeRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public DeleteProductAttributeOptionCommandHandler(IProductAttributeRepository repository, IUnitOfWork unitOfWork)
+    public DeleteProductAttributeOptionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteProductAttributeOptionCommand request, CancellationToken cancellationToken)
     {
-        var option = await _repository.GetOptionByIdAsync(request.OptionId, cancellationToken);
+        var option = await _unitOfWork.ProductAttributes.GetOptionByIdAsync(request.OptionId, cancellationToken);
 
         if (option == null || option.ProductAttributeId != request.AttributeId)
         {
@@ -53,7 +50,7 @@ public class DeleteProductAttributeOptionCommandHandler : IRequestHandler<Delete
                 new Error("ProductAttributeOption.NotFound", $"Option with ID {request.OptionId} not found for attribute {request.AttributeId}", ErrorType.NotFound));
         }
 
-        _repository.RemoveOption(option);
+        _unitOfWork.ProductAttributes.RemoveOption(option);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

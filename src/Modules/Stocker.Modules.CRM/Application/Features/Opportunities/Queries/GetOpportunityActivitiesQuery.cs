@@ -3,8 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
@@ -12,9 +11,8 @@ namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 /// <summary>
 /// Query to get activities for a specific opportunity
 /// </summary>
-public class GetOpportunityActivitiesQuery : IRequest<Result<IEnumerable<ActivityDto>>>, ITenantRequest
+public class GetOpportunityActivitiesQuery : IRequest<Result<IEnumerable<ActivityDto>>>
 {
-    public Guid TenantId { get; set; }
     public Guid OpportunityId { get; set; }
     public ActivityType? Type { get; set; }
     public ActivityStatus? Status { get; set; }
@@ -35,9 +33,6 @@ public class GetOpportunityActivitiesQueryValidator : AbstractValidator<GetOppor
 {
     public GetOpportunityActivitiesQueryValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.OpportunityId)
             .NotEmpty().WithMessage("Opportunity ID is required");
 
@@ -90,25 +85,30 @@ public class GetOpportunityActivitiesQueryValidator : AbstractValidator<GetOppor
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetOpportunityActivitiesQueryHandler : IRequestHandler<GetOpportunityActivitiesQuery, Result<IEnumerable<ActivityDto>>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetOpportunityActivitiesQueryHandler(CRMDbContext context)
+    public GetOpportunityActivitiesQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<IEnumerable<ActivityDto>>> Handle(GetOpportunityActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var opportunity = await _context.Opportunities
-            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunity = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
+            .FirstOrDefaultAsync(o => o.Id == request.OpportunityId && o.TenantId == tenantId, cancellationToken);
 
         if (opportunity == null)
             return Result<IEnumerable<ActivityDto>>.Failure(Error.NotFound("Opportunity.NotFound", $"Opportunity with ID {request.OpportunityId} not found"));
 
-        var query = _context.Activities
-            .Where(a => a.TenantId == request.TenantId && a.OpportunityId == request.OpportunityId);
+        var query = _unitOfWork.ReadRepository<Domain.Entities.Activity>().AsQueryable()
+            .Where(a => a.TenantId == tenantId && a.OpportunityId == request.OpportunityId);
 
         if (request.Type.HasValue)
             query = query.Where(a => a.Type == request.Type.Value);

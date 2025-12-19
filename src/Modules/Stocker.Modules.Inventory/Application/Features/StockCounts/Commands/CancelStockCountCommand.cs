@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockCounts.Commands;
@@ -14,18 +13,16 @@ public class CancelStockCountCommand : IRequest<Result<bool>>
 
 public class CancelStockCountCommandHandler : IRequestHandler<CancelStockCountCommand, Result<bool>>
 {
-    private readonly IStockCountRepository _stockCountRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CancelStockCountCommandHandler(IStockCountRepository stockCountRepository, IUnitOfWork unitOfWork)
+    public CancelStockCountCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockCountRepository = stockCountRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<bool>> Handle(CancelStockCountCommand request, CancellationToken cancellationToken)
     {
-        var stockCount = await _stockCountRepository.GetByIdAsync(request.StockCountId, cancellationToken);
+        var stockCount = await _unitOfWork.StockCounts.GetByIdAsync(request.StockCountId, cancellationToken);
         if (stockCount == null)
         {
             return Result<bool>.Failure(new Error("StockCount.NotFound", $"Stock count with ID {request.StockCountId} not found", ErrorType.NotFound));
@@ -34,7 +31,7 @@ public class CancelStockCountCommandHandler : IRequestHandler<CancelStockCountCo
         try
         {
             stockCount.Cancel(request.Reason);
-            await _stockCountRepository.UpdateAsync(stockCount, cancellationToken);
+            await _unitOfWork.StockCounts.UpdateAsync(stockCount, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<bool>.Success(true);
         }

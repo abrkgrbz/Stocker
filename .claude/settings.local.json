@@ -87,7 +87,13 @@
       "Bash(move \"(auth)\\updates\" \"(public)\\updates\")",
       "Bash(move \"(auth)\\demo\" \"(public)\\demo\")",
       "Bash(Select-String -Pattern \"InternationalPhoneInput|LeadForm|CompetitorForm|CustomerForm|ReferralForm\")",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(copy \"C:\\Users\\PC\\Downloads\\files\\stoocker_black.png\" \"c:\\Users\\PC\\source\\repos\\Stocker\\stocker-nextjs\\public\\stoocker_black.png\")",
+      "Bash(copy \"C:\\Users\\PC\\Downloads\\files\\stoocker_white.png\" \"c:\\Users\\PC\\source\\repos\\Stocker\\stocker-nextjs\\public\\stoocker_white.png\")",
+      "Bash(git push)",
+      "Bash(if not exist \"c:\\\\Users\\\\PC\\\\source\\\\repos\\\\Stocker\\\\claudedocs\" mkdir \"c:\\\\Users\\\\PC\\\\source\\\\repos\\\\Stocker\\\\claudedocs\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor\\(identity\\): Comprehensive security and code quality improvements\n\nSecurity fixes:\n- Upgrade PBKDF2 iterations to 600,000 \\(OWASP 2023 recommendation\\)\n- Add backward compatibility for legacy 10,000 iteration hashes\n- Remove sensitive password logging from PasswordService\n- Replace Console.WriteLine with structured logging in DI registration\n- Add constant-time comparison for password verification\n\nCode cleanup:\n- Remove redundant wrapper classes \\(ApplicationPasswordServiceWrapper, \n  ApplicationPasswordValidatorWrapper\\)\n- Delete RefactoredAuthenticationService, consolidate into AuthenticationService\n- Fix Turkish character encoding issues in error messages\n\nNew features:\n- Add IdentityLogEvents.cs for structured logging with event IDs\n- Implement missing IAuthenticationService methods:\n  - GenerateAuthResponseForMasterUserAsync\n  - ValidateTokenAsync\n- Add comprehensive XML documentation to public interfaces\n\nArchitecture:\n- Standardize interface implementations across Application/Identity layers\n- Improve DI registration with proper scoping and logging\n- Add GetHashingInfo method for debugging hash algorithm detection\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(dir /b /s \"c:\\\\Users\\\\PC\\\\source\\\\repos\\\\Stocker\\\\src\\\\Modules\\\\Stocker.Modules.CRM\\\\Application\\\\Features\\\\Campaigns\")"
     ],
     "deny": [],
     "ask": []

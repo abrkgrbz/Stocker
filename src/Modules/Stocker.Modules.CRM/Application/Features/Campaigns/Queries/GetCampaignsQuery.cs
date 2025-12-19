@@ -1,15 +1,14 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Campaigns.Queries;
 
-public class GetCampaignsQuery : IRequest<IEnumerable<CampaignDto>>, ITenantRequest
+public class GetCampaignsQuery : IRequest<IEnumerable<CampaignDto>>
 {
-    public Guid TenantId { get; set; }
     public string? Search { get; set; }
     public CampaignStatus? Status { get; set; }
     public CampaignType? Type { get; set; }
@@ -19,20 +18,25 @@ public class GetCampaignsQuery : IRequest<IEnumerable<CampaignDto>>, ITenantRequ
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetCampaignsQueryHandler : IRequestHandler<GetCampaignsQuery, IEnumerable<CampaignDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetCampaignsQueryHandler(CRMDbContext context)
+    public GetCampaignsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<CampaignDto>> Handle(GetCampaignsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Campaigns
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Campaign>().AsQueryable()
             .Include(c => c.Members)
-            .Where(c => c.TenantId == request.TenantId);
+            .Where(c => c.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

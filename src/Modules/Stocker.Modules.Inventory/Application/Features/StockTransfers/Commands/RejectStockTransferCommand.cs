@@ -1,6 +1,5 @@
 using MediatR;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockTransfers.Commands;
@@ -21,20 +20,16 @@ public class RejectStockTransferCommand : IRequest<Result>
 /// </summary>
 public class RejectStockTransferCommandHandler : IRequestHandler<RejectStockTransferCommand, Result>
 {
-    private readonly IStockTransferRepository _stockTransferRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public RejectStockTransferCommandHandler(
-        IStockTransferRepository stockTransferRepository,
-        IUnitOfWork unitOfWork)
+    public RejectStockTransferCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockTransferRepository = stockTransferRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(RejectStockTransferCommand request, CancellationToken cancellationToken)
     {
-        var transfer = await _stockTransferRepository.GetByIdAsync(request.TransferId, cancellationToken);
+        var transfer = await _unitOfWork.StockTransfers.GetByIdAsync(request.TransferId, cancellationToken);
         if (transfer == null)
         {
             return Result.Failure(Error.NotFound("StockTransfer", $"Stock transfer with ID {request.TransferId} not found"));

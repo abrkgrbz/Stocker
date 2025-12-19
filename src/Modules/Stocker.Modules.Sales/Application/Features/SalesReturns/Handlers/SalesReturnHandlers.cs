@@ -2,46 +2,44 @@ using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Application.DTOs;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Application.Features.SalesReturns.Commands;
 using Stocker.Modules.Sales.Application.Features.SalesReturns.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesReturns.Handlers;
 
+/// <summary>
+/// Handler for CreateSalesReturnCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateSalesReturnHandler : IRequestHandler<CreateSalesReturnCommand, Result<SalesReturnDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateSalesReturnHandler(SalesDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateSalesReturnHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<SalesReturnDto>> Handle(CreateSalesReturnCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesReturnDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var salesOrder = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Dto.SalesOrderId, cancellationToken);
+        var salesOrder = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Dto.SalesOrderId, cancellationToken);
 
-        if (salesOrder == null)
+        if (salesOrder == null || salesOrder.TenantId != tenantId)
             return Result<SalesReturnDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         var returnNumber = SalesReturn.GenerateReturnNumber();
 
         var returnResult = SalesReturn.Create(
-            tenantId.Value,
+            tenantId,
             returnNumber,
             salesOrder.Id,
             salesOrder.OrderNumber,
@@ -65,7 +63,7 @@ public class CreateSalesReturnHandler : IRequestHandler<CreateSalesReturnCommand
         foreach (var itemDto in request.Dto.Items)
         {
             var itemResult = SalesReturnItem.Create(
-                tenantId.Value,
+                tenantId,
                 itemDto.SalesOrderItemId,
                 itemDto.ProductId,
                 itemDto.ProductName,
@@ -87,29 +85,35 @@ public class CreateSalesReturnHandler : IRequestHandler<CreateSalesReturnCommand
             salesReturn.AddItem(item);
         }
 
-        _context.SalesReturns.Add(salesReturn);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<SalesReturn>().AddAsync(salesReturn, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesReturnDto>.Success(_mapper.Map<SalesReturnDto>(salesReturn));
     }
 }
 
+/// <summary>
+/// Handler for GetSalesReturnByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesReturnByIdHandler : IRequestHandler<GetSalesReturnByIdQuery, Result<SalesReturnDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetSalesReturnByIdHandler(SalesDbContext context, IMapper mapper)
+    public GetSalesReturnByIdHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SalesReturnDto>> Handle(GetSalesReturnByIdQuery request, CancellationToken cancellationToken)
     {
-        var salesReturn = await _context.SalesReturns
+        var tenantId = _unitOfWork.TenantId;
+
+        var salesReturn = await _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (salesReturn == null)
             return Result<SalesReturnDto>.Failure(Error.NotFound("SalesReturn", "Sales return not found"));
@@ -118,19 +122,26 @@ public class GetSalesReturnByIdHandler : IRequestHandler<GetSalesReturnByIdQuery
     }
 }
 
+/// <summary>
+/// Handler for GetSalesReturnsQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesReturnsHandler : IRequestHandler<GetSalesReturnsQuery, Result<PagedResult<SalesReturnListDto>>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetSalesReturnsHandler(SalesDbContext context)
+    public GetSalesReturnsHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<SalesReturnListDto>>> Handle(GetSalesReturnsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SalesReturns
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
             .Include(r => r.Items)
+            .Where(r => r.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -188,32 +199,36 @@ public class GetSalesReturnsHandler : IRequestHandler<GetSalesReturnsQuery, Resu
             })
             .ToListAsync(cancellationToken);
 
-        return Result<PagedResult<SalesReturnListDto>>.Success(new PagedResult<SalesReturnListDto>
-        {
-            Items = items,
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        });
+        return Result<PagedResult<SalesReturnListDto>>.Success(new PagedResult<SalesReturnListDto>(
+            items,
+            request.Page,
+            request.PageSize,
+            totalCount));
     }
 }
 
+/// <summary>
+/// Handler for SubmitSalesReturnCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class SubmitSalesReturnHandler : IRequestHandler<SubmitSalesReturnCommand, Result<SalesReturnDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public SubmitSalesReturnHandler(SalesDbContext context, IMapper mapper)
+    public SubmitSalesReturnHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SalesReturnDto>> Handle(SubmitSalesReturnCommand request, CancellationToken cancellationToken)
     {
-        var salesReturn = await _context.SalesReturns
+        var tenantId = _unitOfWork.TenantId;
+
+        var salesReturn = await _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (salesReturn == null)
             return Result<SalesReturnDto>.Failure(Error.NotFound("SalesReturn", "Sales return not found"));
@@ -223,30 +238,36 @@ public class SubmitSalesReturnHandler : IRequestHandler<SubmitSalesReturnCommand
         if (!result.IsSuccess)
             return Result<SalesReturnDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesReturnDto>.Success(_mapper.Map<SalesReturnDto>(salesReturn));
     }
 }
 
+/// <summary>
+/// Handler for ApproveSalesReturnCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ApproveSalesReturnHandler : IRequestHandler<ApproveSalesReturnCommand, Result<SalesReturnDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApproveSalesReturnHandler(SalesDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApproveSalesReturnHandler(ISalesUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<SalesReturnDto>> Handle(ApproveSalesReturnCommand request, CancellationToken cancellationToken)
     {
-        var salesReturn = await _context.SalesReturns
+        var tenantId = _unitOfWork.TenantId;
+
+        var salesReturn = await _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (salesReturn == null)
             return Result<SalesReturnDto>.Failure(Error.NotFound("SalesReturn", "Sales return not found"));
@@ -257,28 +278,34 @@ public class ApproveSalesReturnHandler : IRequestHandler<ApproveSalesReturnComma
         if (!result.IsSuccess)
             return Result<SalesReturnDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesReturnDto>.Success(_mapper.Map<SalesReturnDto>(salesReturn));
     }
 }
 
+/// <summary>
+/// Handler for ProcessRefundCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ProcessRefundHandler : IRequestHandler<ProcessRefundCommand, Result<SalesReturnDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ProcessRefundHandler(SalesDbContext context, IMapper mapper)
+    public ProcessRefundHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<SalesReturnDto>> Handle(ProcessRefundCommand request, CancellationToken cancellationToken)
     {
-        var salesReturn = await _context.SalesReturns
+        var tenantId = _unitOfWork.TenantId;
+
+        var salesReturn = await _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
             .Include(r => r.Items)
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (salesReturn == null)
             return Result<SalesReturnDto>.Failure(Error.NotFound("SalesReturn", "Sales return not found"));
@@ -288,24 +315,31 @@ public class ProcessRefundHandler : IRequestHandler<ProcessRefundCommand, Result
         if (!result.IsSuccess)
             return Result<SalesReturnDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<SalesReturnDto>.Success(_mapper.Map<SalesReturnDto>(salesReturn));
     }
 }
 
+/// <summary>
+/// Handler for GetReturnSummaryQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetReturnSummaryHandler : IRequestHandler<GetReturnSummaryQuery, Result<SalesReturnSummaryDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetReturnSummaryHandler(SalesDbContext context)
+    public GetReturnSummaryHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<SalesReturnSummaryDto>> Handle(GetReturnSummaryQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SalesReturns.AsQueryable();
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<SalesReturn>().AsQueryable()
+            .Where(r => r.TenantId == tenantId);
 
         if (request.FromDate.HasValue)
             query = query.Where(r => r.ReturnDate >= request.FromDate.Value);
@@ -338,28 +372,33 @@ public class GetReturnSummaryHandler : IRequestHandler<GetReturnSummaryQuery, Re
     }
 }
 
+/// <summary>
+/// Handler for DeleteSalesReturnCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeleteSalesReturnHandler : IRequestHandler<DeleteSalesReturnCommand, Result>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public DeleteSalesReturnHandler(SalesDbContext context)
+    public DeleteSalesReturnHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteSalesReturnCommand request, CancellationToken cancellationToken)
     {
-        var salesReturn = await _context.SalesReturns
-            .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (salesReturn == null)
+        var salesReturn = await _unitOfWork.Repository<SalesReturn>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (salesReturn == null || salesReturn.TenantId != tenantId)
             return Result.Failure(Error.NotFound("SalesReturn", "Sales return not found"));
 
         if (salesReturn.Status != SalesReturnStatus.Pending && salesReturn.Status != SalesReturnStatus.Cancelled)
             return Result.Failure(Error.Conflict("SalesReturn.Status", "Only pending or cancelled returns can be deleted"));
 
-        _context.SalesReturns.Remove(salesReturn);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<SalesReturn>().Remove(salesReturn);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

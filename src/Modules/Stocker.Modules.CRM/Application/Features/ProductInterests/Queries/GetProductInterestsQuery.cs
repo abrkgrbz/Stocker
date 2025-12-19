@@ -2,15 +2,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.ProductInterests.Queries;
 
-public class GetProductInterestsQuery : IRequest<PagedResult<ProductInterestDto>>, ITenantRequest
+public class GetProductInterestsQuery : IRequest<PagedResult<ProductInterestDto>>
 {
-    public Guid TenantId { get; set; }
     public InterestLevel? InterestLevel { get; set; }
     public InterestStatus? Status { get; set; }
     public InterestSource? Source { get; set; }
@@ -26,24 +24,29 @@ public class GetProductInterestsQuery : IRequest<PagedResult<ProductInterestDto>
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetProductInterestsQueryHandler : IRequestHandler<GetProductInterestsQuery, PagedResult<ProductInterestDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetProductInterestsQueryHandler(CRMDbContext context)
+    public GetProductInterestsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<PagedResult<ProductInterestDto>> Handle(GetProductInterestsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.ProductInterests
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<ProductInterest>().AsQueryable()
             .Include(p => p.Customer)
             .Include(p => p.Contact)
             .Include(p => p.Lead)
             .Include(p => p.Opportunity)
             .Include(p => p.Campaign)
-            .Where(p => p.TenantId == request.TenantId);
+            .Where(p => p.TenantId == tenantId);
 
         if (request.InterestLevel.HasValue)
             query = query.Where(p => p.InterestLevel == request.InterestLevel.Value);

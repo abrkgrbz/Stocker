@@ -48,7 +48,6 @@ public class ActivitiesController : ControllerBase
     {
         var query = new GetActivitiesQuery
         {
-            TenantId = _currentUserService.TenantId ?? Guid.Empty,
             Type = type,
             Status = status,
             LeadId = leadId,
@@ -89,15 +88,6 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<ActionResult<ActivityDto>> CreateActivity(CreateActivityCommand command)
     {
-        // Set TenantId from TenantResolutionMiddleware context
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (!tenantId.HasValue)
-        {
-            return BadRequest(new { code = "Tenant.Required", description = "Tenant ID is required", type = "Validation" });
-        }
-
-        command.TenantId = tenantId.Value;
-
         var result = await _mediator.Send(command);
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -114,15 +104,6 @@ public class ActivitiesController : ControllerBase
     {
         if (id != command.Id)
             return BadRequest("Id mismatch");
-
-        // Set TenantId from TenantResolutionMiddleware context
-        var tenantId = HttpContext.Items["TenantId"] as Guid?;
-        if (!tenantId.HasValue)
-        {
-            return BadRequest(new { code = "Tenant.Required", description = "Tenant ID is required", type = "Validation" });
-        }
-
-        command.TenantId = tenantId.Value;
 
         var result = await _mediator.Send(command);
         if (result.IsFailure)

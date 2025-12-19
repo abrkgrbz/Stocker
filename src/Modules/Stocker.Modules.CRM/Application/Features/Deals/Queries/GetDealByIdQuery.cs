@@ -1,34 +1,37 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
+using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Deals.Queries;
 
-public class GetDealByIdQuery : IRequest<DealDto?>, ITenantRequest
+public class GetDealByIdQuery : IRequest<DealDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetDealByIdQueryHandler : IRequestHandler<GetDealByIdQuery, DealDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetDealByIdQueryHandler(CRMDbContext context)
+    public GetDealByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<DealDto?> Handle(GetDealByIdQuery request, CancellationToken cancellationToken)
     {
-        var deal = await _context.Deals
+        var tenantId = _unitOfWork.TenantId;
+        var deal = await _unitOfWork.ReadRepository<Deal>().AsQueryable()
             .Include(d => d.Pipeline)
             .Include(d => d.Stage)
             .Include(d => d.Products)
-            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == request.TenantId && d.Status != DealStatus.Deleted, cancellationToken);
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == tenantId && d.Status != DealStatus.Deleted, cancellationToken);
 
         if (deal == null)
             return null;

@@ -4,41 +4,40 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.Discounts.Commands;
 using Stocker.Modules.Sales.Application.Features.Discounts.Queries;
-using Stocker.Modules.Sales.Application.Features.SalesOrders.Queries;
 using Stocker.Modules.Sales.Domain.Entities;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Sales.Interfaces;
+using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.Discounts.Handlers;
 
+/// <summary>
+/// Handler for CreateDiscountCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CreateDiscountHandler : IRequestHandler<CreateDiscountCommand, Result<DiscountDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreateDiscountHandler(SalesDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreateDiscountHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<DiscountDto>> Handle(CreateDiscountCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<DiscountDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var existingDiscount = await _context.Discounts
-            .AnyAsync(d => d.Code == request.Dto.Code.ToUpperInvariant(), cancellationToken);
+        var existingDiscount = await _unitOfWork.ReadRepository<Discount>().AsQueryable()
+            .AnyAsync(d => d.Code == request.Dto.Code.ToUpperInvariant() && d.TenantId == tenantId, cancellationToken);
 
         if (existingDiscount)
             return Result<DiscountDto>.Failure(Error.Conflict("Discount.Code", "Discount code already exists"));
 
         var discountResult = Discount.Create(
-            tenantId.Value,
+            tenantId,
             request.Dto.Code,
             request.Dto.Name,
             request.Dto.Type,
@@ -93,28 +92,34 @@ public class CreateDiscountHandler : IRequestHandler<CreateDiscountCommand, Resu
 
         discount.SetExclusions(excludedProductIds, excludedCategoryIds);
 
-        _context.Discounts.Add(discount);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Discount>().AddAsync(discount, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<DiscountDto>.Success(_mapper.Map<DiscountDto>(discount));
     }
 }
 
+/// <summary>
+/// Handler for GetDiscountByIdQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetDiscountByIdHandler : IRequestHandler<GetDiscountByIdQuery, Result<DiscountDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetDiscountByIdHandler(SalesDbContext context, IMapper mapper)
+    public GetDiscountByIdHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<DiscountDto>> Handle(GetDiscountByIdQuery request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts
-            .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var discount = await _unitOfWork.ReadRepository<Discount>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Id == request.Id && d.TenantId == tenantId, cancellationToken);
 
         if (discount == null)
             return Result<DiscountDto>.Failure(Error.NotFound("Discount", "Discount not found"));
@@ -124,21 +129,27 @@ public class GetDiscountByIdHandler : IRequestHandler<GetDiscountByIdQuery, Resu
     }
 }
 
+/// <summary>
+/// Handler for GetDiscountByCodeQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetDiscountByCodeHandler : IRequestHandler<GetDiscountByCodeQuery, Result<DiscountDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetDiscountByCodeHandler(SalesDbContext context, IMapper mapper)
+    public GetDiscountByCodeHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<DiscountDto>> Handle(GetDiscountByCodeQuery request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts
-            .FirstOrDefaultAsync(d => d.Code == request.Code.ToUpperInvariant(), cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var discount = await _unitOfWork.ReadRepository<Discount>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Code == request.Code.ToUpperInvariant() && d.TenantId == tenantId, cancellationToken);
 
         if (discount == null)
             return Result<DiscountDto>.Failure(Error.NotFound("Discount", "Discount not found"));
@@ -148,18 +159,25 @@ public class GetDiscountByCodeHandler : IRequestHandler<GetDiscountByCodeQuery, 
     }
 }
 
+/// <summary>
+/// Handler for GetDiscountsQuery
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class GetDiscountsHandler : IRequestHandler<GetDiscountsQuery, Result<PagedResult<DiscountListDto>>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public GetDiscountsHandler(SalesDbContext context)
+    public GetDiscountsHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<DiscountListDto>>> Handle(GetDiscountsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Discounts.AsQueryable();
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Discount>().AsQueryable()
+            .Where(d => d.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -206,29 +224,33 @@ public class GetDiscountsHandler : IRequestHandler<GetDiscountsQuery, Result<Pag
             IsValid = d.IsValid()
         }).ToList();
 
-        return Result<PagedResult<DiscountListDto>>.Success(new PagedResult<DiscountListDto>
-        {
-            Items = items,
-            TotalCount = totalCount,
-            Page = request.Page,
-            PageSize = request.PageSize
-        });
+        return Result<PagedResult<DiscountListDto>>.Success(new PagedResult<DiscountListDto>(
+            items,
+            request.Page,
+            request.PageSize,
+            totalCount));
     }
 }
 
+/// <summary>
+/// Handler for ValidateDiscountCodeCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ValidateDiscountCodeHandler : IRequestHandler<ValidateDiscountCodeCommand, Result<DiscountCalculationResultDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public ValidateDiscountCodeHandler(SalesDbContext context)
+    public ValidateDiscountCodeHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<DiscountCalculationResultDto>> Handle(ValidateDiscountCodeCommand request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts
-            .FirstOrDefaultAsync(d => d.Code == request.Code.ToUpperInvariant(), cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var discount = await _unitOfWork.ReadRepository<Discount>().AsQueryable()
+            .FirstOrDefaultAsync(d => d.Code == request.Code.ToUpperInvariant() && d.TenantId == tenantId, cancellationToken);
 
         if (discount == null)
             return Result<DiscountCalculationResultDto>.Success(new DiscountCalculationResultDto
@@ -257,77 +279,95 @@ public class ValidateDiscountCodeHandler : IRequestHandler<ValidateDiscountCodeC
     }
 }
 
+/// <summary>
+/// Handler for ActivateDiscountCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ActivateDiscountHandler : IRequestHandler<ActivateDiscountCommand, Result<DiscountDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public ActivateDiscountHandler(SalesDbContext context, IMapper mapper)
+    public ActivateDiscountHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<DiscountDto>> Handle(ActivateDiscountCommand request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts.FindAsync(new object[] { request.Id }, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (discount == null)
+        var discount = await _unitOfWork.Repository<Discount>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (discount == null || discount.TenantId != tenantId)
             return Result<DiscountDto>.Failure(Error.NotFound("Discount", "Discount not found"));
 
         discount.Activate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<DiscountDto>.Success(_mapper.Map<DiscountDto>(discount));
     }
 }
 
+/// <summary>
+/// Handler for DeactivateDiscountCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeactivateDiscountHandler : IRequestHandler<DeactivateDiscountCommand, Result<DiscountDto>>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public DeactivateDiscountHandler(SalesDbContext context, IMapper mapper)
+    public DeactivateDiscountHandler(ISalesUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<DiscountDto>> Handle(DeactivateDiscountCommand request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts.FindAsync(new object[] { request.Id }, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (discount == null)
+        var discount = await _unitOfWork.Repository<Discount>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (discount == null || discount.TenantId != tenantId)
             return Result<DiscountDto>.Failure(Error.NotFound("Discount", "Discount not found"));
 
         discount.Deactivate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<DiscountDto>.Success(_mapper.Map<DiscountDto>(discount));
     }
 }
 
+/// <summary>
+/// Handler for DeleteDiscountCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeleteDiscountHandler : IRequestHandler<DeleteDiscountCommand, Result>
 {
-    private readonly SalesDbContext _context;
+    private readonly ISalesUnitOfWork _unitOfWork;
 
-    public DeleteDiscountHandler(SalesDbContext context)
+    public DeleteDiscountHandler(ISalesUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteDiscountCommand request, CancellationToken cancellationToken)
     {
-        var discount = await _context.Discounts.FindAsync(new object[] { request.Id }, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (discount == null)
+        var discount = await _unitOfWork.Repository<Discount>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (discount == null || discount.TenantId != tenantId)
             return Result.Failure(Error.NotFound("Discount", "Discount not found"));
 
         if (discount.UsageCount > 0)
             return Result.Failure(Error.Conflict("Discount.UsageCount", "Cannot delete discount that has been used"));
 
-        _context.Discounts.Remove(discount);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<Discount>().Remove(discount);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

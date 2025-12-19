@@ -1,15 +1,13 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.CustomerSegments.Commands;
 
-public class ActivateSegmentCommand : IRequest<Result>, ITenantRequest
+public class ActivateSegmentCommand : IRequest<Result>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
@@ -17,27 +15,29 @@ public class ActivateSegmentCommandValidator : AbstractValidator<ActivateSegment
 {
     public ActivateSegmentCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("Segment ID is required");
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class ActivateSegmentCommandHandler : IRequestHandler<ActivateSegmentCommand, Result>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public ActivateSegmentCommandHandler(CRMDbContext context)
+    public ActivateSegmentCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(ActivateSegmentCommand request, CancellationToken cancellationToken)
     {
-        var segment = await _context.CustomerSegments
-            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == request.TenantId, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
+
+        var segment = await _unitOfWork.ReadRepository<Domain.Entities.CustomerSegment>().AsQueryable()
+            .FirstOrDefaultAsync(s => s.Id == request.Id && s.TenantId == tenantId, cancellationToken);
 
         if (segment == null)
         {
@@ -46,7 +46,7 @@ public class ActivateSegmentCommandHandler : IRequestHandler<ActivateSegmentComm
         }
 
         segment.Activate();
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

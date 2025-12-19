@@ -1,8 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Brands.Commands;
@@ -36,21 +35,20 @@ public class UpdateBrandCommandValidator : AbstractValidator<UpdateBrandCommand>
 
 /// <summary>
 /// Handler for UpdateBrandCommand
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class UpdateBrandCommandHandler : IRequestHandler<UpdateBrandCommand, Result<BrandDto>>
 {
-    private readonly IBrandRepository _brandRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateBrandCommandHandler(IBrandRepository brandRepository, IUnitOfWork unitOfWork)
+    public UpdateBrandCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _brandRepository = brandRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<BrandDto>> Handle(UpdateBrandCommand request, CancellationToken cancellationToken)
     {
-        var brand = await _brandRepository.GetByIdAsync(request.BrandId, cancellationToken);
+        var brand = await _unitOfWork.Brands.GetByIdAsync(request.BrandId, cancellationToken);
 
         if (brand == null)
         {
@@ -65,7 +63,7 @@ public class UpdateBrandCommandHandler : IRequestHandler<UpdateBrandCommand, Res
             brand.SetLogo(data.LogoUrl);
         }
 
-        await _brandRepository.UpdateAsync(brand, cancellationToken);
+        await _unitOfWork.Brands.UpdateAsync(brand, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new BrandDto

@@ -2,31 +2,34 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Opportunities.Queries;
 
-public class GetSalesForecastQuery : IRequest<ForecastDto>, ITenantRequest
+public class GetSalesForecastQuery : IRequest<ForecastDto>
 {
-    public Guid TenantId { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetSalesForecastQueryHandler : IRequestHandler<GetSalesForecastQuery, ForecastDto>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetSalesForecastQueryHandler(CRMDbContext context)
+    public GetSalesForecastQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ForecastDto> Handle(GetSalesForecastQuery request, CancellationToken cancellationToken)
     {
-        var opportunities = await _context.Opportunities
-            .Where(o => o.TenantId == request.TenantId &&
+        var tenantId = _unitOfWork.TenantId;
+
+        var opportunities = await _unitOfWork.ReadRepository<Domain.Entities.Opportunity>().AsQueryable()
+            .Where(o => o.TenantId == tenantId &&
                         o.Status == OpportunityStatus.Open &&
                         o.ExpectedCloseDate >= request.FromDate &&
                         o.ExpectedCloseDate <= request.ToDate)

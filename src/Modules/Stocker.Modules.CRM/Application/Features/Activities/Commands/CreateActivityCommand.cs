@@ -3,15 +3,13 @@ using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Activities.Commands;
 
-public class CreateActivityCommand : IRequest<Result<ActivityDto>>, ITenantRequest
+public class CreateActivityCommand : IRequest<Result<ActivityDto>>
 {
-    public Guid TenantId { get; set; }
     public string Subject { get; set; } = string.Empty;
     public string? Description { get; set; }
     public ActivityType Type { get; set; }
@@ -33,9 +31,6 @@ public class CreateActivityCommandValidator : AbstractValidator<CreateActivityCo
 {
     public CreateActivityCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Subject)
             .NotEmpty().WithMessage("Subject is required")
             .MaximumLength(200).WithMessage("Subject must not exceed 200 characters");
@@ -80,19 +75,25 @@ public class CreateActivityCommandValidator : AbstractValidator<CreateActivityCo
     }
 }
 
+/// <summary>
+/// Handler for CreateActivityCommand
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreateActivityCommandHandler : IRequestHandler<CreateActivityCommand, Result<ActivityDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreateActivityCommandHandler(CRMDbContext context)
+    public CreateActivityCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<ActivityDto>> Handle(CreateActivityCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         var activity = new Activity(
-            request.TenantId,
+            tenantId,
             request.Subject,
             request.Type,
             1); // Default OwnerId - should come from current user context
@@ -117,8 +118,8 @@ public class CreateActivityCommandHandler : IRequestHandler<CreateActivityComman
         else if (request.DealId.HasValue)
             activity.RelateToDeal(request.DealId.Value);
 
-        _context.Activities.Add(activity);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Activity>().AddAsync(activity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new ActivityDto
         {

@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.BarcodeDefinitions.Commands;
@@ -40,12 +39,10 @@ public class CreateBarcodeDefinitionCommandValidator : AbstractValidator<CreateB
 /// </summary>
 public class CreateBarcodeDefinitionCommandHandler : IRequestHandler<CreateBarcodeDefinitionCommand, Result<BarcodeDefinitionDto>>
 {
-    private readonly IBarcodeDefinitionRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateBarcodeDefinitionCommandHandler(IBarcodeDefinitionRepository repository, IUnitOfWork unitOfWork)
+    public CreateBarcodeDefinitionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
@@ -54,7 +51,7 @@ public class CreateBarcodeDefinitionCommandHandler : IRequestHandler<CreateBarco
         var data = request.Data;
 
         // Check if barcode already exists
-        var existingBarcode = await _repository.GetByBarcodeValueAsync(data.Barcode, cancellationToken);
+        var existingBarcode = await _unitOfWork.BarcodeDefinitions.GetByBarcodeValueAsync(data.Barcode, cancellationToken);
         if (existingBarcode != null)
         {
             return Result<BarcodeDefinitionDto>.Failure(new Error("BarcodeDefinition.DuplicateBarcode", $"Barcode '{data.Barcode}' already exists", ErrorType.Conflict));
@@ -76,7 +73,8 @@ public class CreateBarcodeDefinitionCommandHandler : IRequestHandler<CreateBarco
         entity.SetDescription(data.Description);
         entity.SetValidityPeriod(data.ValidFrom, data.ValidUntil);
 
-        await _repository.AddAsync(entity, cancellationToken);
+        entity.SetTenantId(request.TenantId);
+        await _unitOfWork.BarcodeDefinitions.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new BarcodeDefinitionDto

@@ -1,29 +1,33 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Domain.Entities;
+using Stocker.Modules.CRM.Interfaces;
 
 namespace Stocker.Modules.CRM.Application.Features.Referrals.Queries;
 
-public class GetReferralByIdQuery : IRequest<ReferralDto?>, ITenantRequest
+public class GetReferralByIdQuery : IRequest<ReferralDto?>
 {
-    public Guid TenantId { get; set; }
     public Guid Id { get; set; }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetReferralByIdQueryHandler : IRequestHandler<GetReferralByIdQuery, ReferralDto?>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetReferralByIdQueryHandler(CRMDbContext context)
+    public GetReferralByIdQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<ReferralDto?> Handle(GetReferralByIdQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Referrals
+        var tenantId = _unitOfWork.TenantId;
+
+        var entity = await _unitOfWork.ReadRepository<Referral>().AsQueryable()
             .Include(r => r.ReferrerCustomer)
             .Include(r => r.ReferrerContact)
             .Include(r => r.ReferredCustomer)
@@ -31,7 +35,7 @@ public class GetReferralByIdQueryHandler : IRequestHandler<GetReferralByIdQuery,
             .Include(r => r.Campaign)
             .Include(r => r.Opportunity)
             .Include(r => r.Deal)
-            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == request.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == request.Id && r.TenantId == tenantId, cancellationToken);
 
         if (entity == null)
             return null;

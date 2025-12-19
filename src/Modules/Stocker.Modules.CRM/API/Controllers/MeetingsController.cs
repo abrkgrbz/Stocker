@@ -39,10 +39,8 @@ public class MeetingsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
         var query = new GetMeetingsQuery
         {
-            TenantId = tenantId,
             FromDate = fromDate,
             ToDate = toDate,
             Status = status,
@@ -58,8 +56,7 @@ public class MeetingsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetMeeting(Guid id, CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
-        var query = new GetMeetingByIdQuery { TenantId = tenantId, Id = id };
+        var query = new GetMeetingByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
         return result != null

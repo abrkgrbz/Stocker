@@ -3,8 +3,7 @@ using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
 using Stocker.Modules.Inventory.Domain.Enums;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.StockMovements.Commands;
@@ -32,20 +31,10 @@ public class CreateStockMovementCommandValidator : AbstractValidator<CreateStock
 
 public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMovementCommand, Result<StockMovementDto>>
 {
-    private readonly IStockMovementRepository _stockMovementRepository;
-    private readonly IProductRepository _productRepository;
-    private readonly IWarehouseRepository _warehouseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateStockMovementCommandHandler(
-        IStockMovementRepository stockMovementRepository,
-        IProductRepository productRepository,
-        IWarehouseRepository warehouseRepository,
-        IUnitOfWork unitOfWork)
+    public CreateStockMovementCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _stockMovementRepository = stockMovementRepository;
-        _productRepository = productRepository;
-        _warehouseRepository = warehouseRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -53,13 +42,13 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
     {
         var data = request.Data;
 
-        var product = await _productRepository.GetByIdAsync(data.ProductId, cancellationToken);
+        var product = await _unitOfWork.Products.GetByIdAsync(data.ProductId, cancellationToken);
         if (product == null)
         {
             return Result<StockMovementDto>.Failure(new Error("Product.NotFound", $"Product with ID {data.ProductId} not found", ErrorType.NotFound));
         }
 
-        var warehouse = await _warehouseRepository.GetByIdAsync(data.WarehouseId, cancellationToken);
+        var warehouse = await _unitOfWork.Warehouses.GetByIdAsync(data.WarehouseId, cancellationToken);
         if (warehouse == null)
         {
             return Result<StockMovementDto>.Failure(new Error("Warehouse.NotFound", $"Warehouse with ID {data.WarehouseId} not found", ErrorType.NotFound));
@@ -75,6 +64,7 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
             data.UnitCost,
             data.UserId);
 
+        movement.SetTenantId(request.TenantId);
         movement.SetLocations(data.FromLocationId, data.ToLocationId);
 
         if (!string.IsNullOrEmpty(data.SerialNumber))
@@ -89,7 +79,7 @@ public class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMove
         if (!string.IsNullOrEmpty(data.Description))
             movement.SetDescription(data.Description);
 
-        await _stockMovementRepository.AddAsync(movement, cancellationToken);
+        await _unitOfWork.StockMovements.AddAsync(movement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<StockMovementDto>.Success(new StockMovementDto

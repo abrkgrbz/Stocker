@@ -39,10 +39,8 @@ public class ProductInterestsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
         var query = new GetProductInterestsQuery
         {
-            TenantId = tenantId,
             CustomerId = customerId,
             LeadId = leadId,
             Status = status,
@@ -58,8 +56,7 @@ public class ProductInterestsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProductInterest(Guid id, CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
-        var query = new GetProductInterestByIdQuery { TenantId = tenantId, Id = id };
+        var query = new GetProductInterestByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
         return result != null

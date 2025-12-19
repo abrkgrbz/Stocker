@@ -5,31 +5,31 @@ using Stocker.Modules.Purchase.Application.DTOs;
 using Stocker.Modules.Purchase.Application.Features.PurchaseInvoices.Commands;
 using Stocker.Modules.Purchase.Application.Features.PurchaseInvoices.Queries;
 using Stocker.Modules.Purchase.Domain.Entities;
-using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Pagination;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Purchase.Application.Features.PurchaseInvoices.Handlers;
 
+/// <summary>
+/// Handler for CreatePurchaseInvoiceCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class CreatePurchaseInvoiceHandler : IRequestHandler<CreatePurchaseInvoiceCommand, Result<PurchaseInvoiceDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ITenantService _tenantService;
 
-    public CreatePurchaseInvoiceHandler(PurchaseDbContext context, IMapper mapper, ITenantService tenantService)
+    public CreatePurchaseInvoiceHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _tenantService = tenantService;
     }
 
     public async Task<Result<PurchaseInvoiceDto>> Handle(CreatePurchaseInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<PurchaseInvoiceDto>.Failure(Error.Unauthorized("Tenant", "Tenant is required"));
+        var tenantId = _unitOfWork.TenantId;
 
         var invoiceNumber = $"PI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
 
@@ -37,7 +37,7 @@ public class CreatePurchaseInvoiceHandler : IRequestHandler<CreatePurchaseInvoic
             invoiceNumber,
             request.Dto.SupplierId,
             request.Dto.SupplierName,
-            tenantId.Value,
+            tenantId,
             request.Dto.Type,
             request.Dto.Currency ?? "TRY"
         );
@@ -83,7 +83,7 @@ public class CreatePurchaseInvoiceHandler : IRequestHandler<CreatePurchaseInvoic
                 itemDto.UnitPrice,
                 itemDto.VatRate,
                 lineNumber++,
-                tenantId.Value
+                tenantId
             );
 
             if (itemDto.DiscountRate > 0)
@@ -95,29 +95,35 @@ public class CreatePurchaseInvoiceHandler : IRequestHandler<CreatePurchaseInvoic
         if (request.Dto.DiscountRate > 0)
             invoice.ApplyDiscount(request.Dto.DiscountRate);
 
-        _context.PurchaseInvoices.Add(invoice);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<PurchaseInvoice>().AddAsync(invoice, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseInvoiceDto>.Success(_mapper.Map<PurchaseInvoiceDto>(invoice));
     }
 }
 
+/// <summary>
+/// Handler for GetPurchaseInvoiceByIdQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPurchaseInvoiceByIdHandler : IRequestHandler<GetPurchaseInvoiceByIdQuery, Result<PurchaseInvoiceDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetPurchaseInvoiceByIdHandler(PurchaseDbContext context, IMapper mapper)
+    public GetPurchaseInvoiceByIdHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseInvoiceDto>> Handle(GetPurchaseInvoiceByIdQuery request, CancellationToken cancellationToken)
     {
-        var invoice = await _context.PurchaseInvoices
+        var tenantId = _unitOfWork.TenantId;
+
+        var invoice = await _unitOfWork.ReadRepository<PurchaseInvoice>().AsQueryable()
             .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId, cancellationToken);
 
         if (invoice == null)
             return Result<PurchaseInvoiceDto>.Failure(Error.NotFound("PurchaseInvoice", "Purchase invoice not found"));
@@ -126,20 +132,26 @@ public class GetPurchaseInvoiceByIdHandler : IRequestHandler<GetPurchaseInvoiceB
     }
 }
 
+/// <summary>
+/// Handler for GetPurchaseInvoicesQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetPurchaseInvoicesHandler : IRequestHandler<GetPurchaseInvoicesQuery, Result<PagedResult<PurchaseInvoiceListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetPurchaseInvoicesHandler(PurchaseDbContext context)
+    public GetPurchaseInvoicesHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PagedResult<PurchaseInvoiceListDto>>> Handle(GetPurchaseInvoicesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.PurchaseInvoices
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<PurchaseInvoice>().AsQueryable()
             .Include(i => i.Items)
-            .AsQueryable();
+            .Where(i => i.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
@@ -214,24 +226,30 @@ public class GetPurchaseInvoicesHandler : IRequestHandler<GetPurchaseInvoicesQue
     }
 }
 
+/// <summary>
+/// Handler for ApprovePurchaseInvoiceCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class ApprovePurchaseInvoiceHandler : IRequestHandler<ApprovePurchaseInvoiceCommand, Result<PurchaseInvoiceDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public ApprovePurchaseInvoiceHandler(PurchaseDbContext context, IMapper mapper, ICurrentUserService currentUserService)
+    public ApprovePurchaseInvoiceHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _currentUserService = currentUserService;
     }
 
     public async Task<Result<PurchaseInvoiceDto>> Handle(ApprovePurchaseInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var invoice = await _context.PurchaseInvoices
+        var tenantId = _unitOfWork.TenantId;
+
+        var invoice = await _unitOfWork.ReadRepository<PurchaseInvoice>().AsQueryable()
             .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId, cancellationToken);
 
         if (invoice == null)
             return Result<PurchaseInvoiceDto>.Failure(Error.NotFound("PurchaseInvoice", "Purchase invoice not found"));
@@ -240,80 +258,97 @@ public class ApprovePurchaseInvoiceHandler : IRequestHandler<ApprovePurchaseInvo
         var userName = _currentUserService.UserName;
 
         invoice.Approve(userId, userName);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseInvoiceDto>.Success(_mapper.Map<PurchaseInvoiceDto>(invoice));
     }
 }
 
+/// <summary>
+/// Handler for RecordInvoicePaymentCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class RecordInvoicePaymentHandler : IRequestHandler<RecordInvoicePaymentCommand, Result<PurchaseInvoiceDto>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public RecordInvoicePaymentHandler(PurchaseDbContext context, IMapper mapper)
+    public RecordInvoicePaymentHandler(IPurchaseUnitOfWork unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
     public async Task<Result<PurchaseInvoiceDto>> Handle(RecordInvoicePaymentCommand request, CancellationToken cancellationToken)
     {
-        var invoice = await _context.PurchaseInvoices
+        var tenantId = _unitOfWork.TenantId;
+
+        var invoice = await _unitOfWork.ReadRepository<PurchaseInvoice>().AsQueryable()
             .Include(i => i.Items)
-            .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == request.Id && i.TenantId == tenantId, cancellationToken);
 
         if (invoice == null)
             return Result<PurchaseInvoiceDto>.Failure(Error.NotFound("PurchaseInvoice", "Purchase invoice not found"));
 
         invoice.RecordPayment(request.Dto.Amount);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<PurchaseInvoiceDto>.Success(_mapper.Map<PurchaseInvoiceDto>(invoice));
     }
 }
 
+/// <summary>
+/// Handler for DeletePurchaseInvoiceCommand
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class DeletePurchaseInvoiceHandler : IRequestHandler<DeletePurchaseInvoiceCommand, Result>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public DeletePurchaseInvoiceHandler(PurchaseDbContext context)
+    public DeletePurchaseInvoiceHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeletePurchaseInvoiceCommand request, CancellationToken cancellationToken)
     {
-        var invoice = await _context.PurchaseInvoices
-            .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+        var tenantId = _unitOfWork.TenantId;
 
-        if (invoice == null)
+        var invoice = await _unitOfWork.Repository<PurchaseInvoice>().GetByIdAsync(request.Id, cancellationToken);
+
+        if (invoice == null || invoice.TenantId != tenantId)
             return Result.Failure(Error.NotFound("PurchaseInvoice", "Purchase invoice not found"));
 
         if (invoice.Status != PurchaseInvoiceStatus.Draft)
             return Result.Failure(Error.Conflict("PurchaseInvoice.Status", "Only draft invoices can be deleted"));
 
-        _context.PurchaseInvoices.Remove(invoice);
-        await _context.SaveChangesAsync(cancellationToken);
+        _unitOfWork.Repository<PurchaseInvoice>().Remove(invoice);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
 }
 
+/// <summary>
+/// Handler for GetOverduePurchaseInvoicesQuery
+/// Uses IPurchaseUnitOfWork for consistent data access
+/// </summary>
 public class GetOverduePurchaseInvoicesHandler : IRequestHandler<GetOverduePurchaseInvoicesQuery, Result<List<PurchaseInvoiceListDto>>>
 {
-    private readonly PurchaseDbContext _context;
+    private readonly IPurchaseUnitOfWork _unitOfWork;
 
-    public GetOverduePurchaseInvoicesHandler(PurchaseDbContext context)
+    public GetOverduePurchaseInvoicesHandler(IPurchaseUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<PurchaseInvoiceListDto>>> Handle(GetOverduePurchaseInvoicesQuery request, CancellationToken cancellationToken)
     {
-        var invoices = await _context.PurchaseInvoices
+        var tenantId = _unitOfWork.TenantId;
+
+        var invoices = await _unitOfWork.ReadRepository<PurchaseInvoice>().AsQueryable()
             .Include(i => i.Items)
-            .Where(i => i.DueDate < DateTime.UtcNow && i.RemainingAmount > 0)
+            .Where(i => i.TenantId == tenantId && i.DueDate < DateTime.UtcNow && i.RemainingAmount > 0)
             .OrderBy(i => i.DueDate)
             .Select(i => new PurchaseInvoiceListDto
             {

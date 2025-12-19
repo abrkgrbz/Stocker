@@ -2,7 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.Categories.Commands;
@@ -50,20 +50,21 @@ public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCo
 
 /// <summary>
 /// Handler for CreateCategoryCommand
+/// Uses IInventoryUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
 /// </summary>
 public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, Result<CategoryDto>>
 {
-    private readonly ICategoryRepository _categoryRepository;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public CreateCategoryCommandHandler(ICategoryRepository categoryRepository)
+    public CreateCategoryCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
         // Check if category with same code already exists
-        var existingCategory = await _categoryRepository.GetByCodeAsync(request.CategoryData.Code, cancellationToken);
+        var existingCategory = await _unitOfWork.Categories.GetByCodeAsync(request.CategoryData.Code, cancellationToken);
         if (existingCategory != null)
         {
             return Result<CategoryDto>.Failure(
@@ -74,7 +75,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         Category? parentCategory = null;
         if (request.CategoryData.ParentCategoryId.HasValue)
         {
-            parentCategory = await _categoryRepository.GetByIdAsync(
+            parentCategory = await _unitOfWork.Categories.GetByIdAsync(
                 request.CategoryData.ParentCategoryId.Value, cancellationToken);
 
             if (parentCategory == null)
@@ -101,8 +102,8 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         category.SetDisplayOrder(request.CategoryData.DisplayOrder);
 
         // Save to repository
-        await _categoryRepository.AddAsync(category, cancellationToken);
-        await _categoryRepository.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Categories.AddAsync(category, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Map to DTO
         var categoryDto = new CategoryDto

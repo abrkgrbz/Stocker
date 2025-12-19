@@ -36,10 +36,8 @@ public class SalesTeamsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
         var query = new GetSalesTeamsQuery
         {
-            TenantId = tenantId,
             IsActive = isActive,
             Page = page,
             PageSize = pageSize
@@ -52,8 +50,7 @@ public class SalesTeamsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetSalesTeam(Guid id, CancellationToken cancellationToken = default)
     {
-        var tenantId = GetTenantId();
-        var query = new GetSalesTeamByIdQuery { TenantId = tenantId, Id = id };
+        var query = new GetSalesTeamByIdQuery { Id = id };
         var result = await _mediator.Send(query, cancellationToken);
 
         return result != null

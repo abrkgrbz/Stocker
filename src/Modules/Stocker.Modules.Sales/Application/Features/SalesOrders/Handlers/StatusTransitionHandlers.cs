@@ -1,173 +1,159 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
-using Stocker.Modules.Sales.Infrastructure.Persistence;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 
+/// <summary>
+/// Handler for ConfirmSalesOrderCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ConfirmSalesOrderHandler : IRequestHandler<ConfirmSalesOrderCommand, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<ConfirmSalesOrderHandler> _logger;
 
     public ConfirmSalesOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<ConfirmSalesOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(ConfirmSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         var result = order.Confirm();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Sales order {OrderId} confirmed for tenant {TenantId}", order.Id, tenantId.Value);
+        _logger.LogInformation("Sales order {OrderId} confirmed for tenant {TenantId}", order.Id, tenantId);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
 }
 
+/// <summary>
+/// Handler for ShipSalesOrderCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class ShipSalesOrderHandler : IRequestHandler<ShipSalesOrderCommand, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<ShipSalesOrderHandler> _logger;
 
     public ShipSalesOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<ShipSalesOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(ShipSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         var result = order.Ship();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Sales order {OrderId} shipped for tenant {TenantId}", order.Id, tenantId.Value);
+        _logger.LogInformation("Sales order {OrderId} shipped for tenant {TenantId}", order.Id, tenantId);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
 }
 
+/// <summary>
+/// Handler for DeliverSalesOrderCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class DeliverSalesOrderHandler : IRequestHandler<DeliverSalesOrderCommand, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<DeliverSalesOrderHandler> _logger;
 
     public DeliverSalesOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<DeliverSalesOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(DeliverSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         var result = order.Deliver();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Sales order {OrderId} delivered for tenant {TenantId}", order.Id, tenantId.Value);
+        _logger.LogInformation("Sales order {OrderId} delivered for tenant {TenantId}", order.Id, tenantId);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }
 }
 
+/// <summary>
+/// Handler for CompleteSalesOrderCommand
+/// Uses ISalesUnitOfWork for consistent data access
+/// </summary>
 public class CompleteSalesOrderHandler : IRequestHandler<CompleteSalesOrderCommand, Result<SalesOrderDto>>
 {
-    private readonly SalesDbContext _context;
-    private readonly ITenantService _tenantService;
+    private readonly ISalesUnitOfWork _unitOfWork;
     private readonly ILogger<CompleteSalesOrderHandler> _logger;
 
     public CompleteSalesOrderHandler(
-        SalesDbContext context,
-        ITenantService tenantService,
+        ISalesUnitOfWork unitOfWork,
         ILogger<CompleteSalesOrderHandler> logger)
     {
-        _context = context;
-        _tenantService = tenantService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
     public async Task<Result<SalesOrderDto>> Handle(CompleteSalesOrderCommand request, CancellationToken cancellationToken)
     {
-        var tenantId = _tenantService.GetCurrentTenantId();
-        if (!tenantId.HasValue)
-            return Result<SalesOrderDto>.Failure(Error.Unauthorized("Tenant", "Tenant not found"));
+        var tenantId = _unitOfWork.TenantId;
 
-        var order = await _context.SalesOrders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == request.Id && o.TenantId == tenantId.Value, cancellationToken);
+        var order = await _unitOfWork.SalesOrders.GetWithItemsAsync(request.Id, cancellationToken);
 
-        if (order == null)
+        if (order == null || order.TenantId != tenantId)
             return Result<SalesOrderDto>.Failure(Error.NotFound("SalesOrder", "Sales order not found"));
 
         var result = order.Complete();
         if (!result.IsSuccess)
             return Result<SalesOrderDto>.Failure(result.Error);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Sales order {OrderId} completed for tenant {TenantId}", order.Id, tenantId.Value);
+        _logger.LogInformation("Sales order {OrderId} completed for tenant {TenantId}", order.Id, tenantId);
 
         return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(order));
     }

@@ -4,15 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.Application.Features.Pipelines.Commands;
 
-public class CreatePipelineCommand : IRequest<Result<PipelineDto>>, ITenantRequest
+public class CreatePipelineCommand : IRequest<Result<PipelineDto>>
 {
-    public Guid TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public PipelineType Type { get; set; }
@@ -36,9 +34,6 @@ public class CreatePipelineCommandValidator : AbstractValidator<CreatePipelineCo
 {
     public CreatePipelineCommandValidator()
     {
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("Tenant ID is required");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Pipeline name is required")
             .MaximumLength(200).WithMessage("Pipeline name must not exceed 200 characters");
@@ -73,20 +68,25 @@ public class CreatePipelineCommandValidator : AbstractValidator<CreatePipelineCo
     }
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class CreatePipelineCommandHandler : IRequestHandler<CreatePipelineCommand, Result<PipelineDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public CreatePipelineCommandHandler(CRMDbContext context)
+    public CreatePipelineCommandHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<PipelineDto>> Handle(CreatePipelineCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _unitOfWork.TenantId;
+
         // Check if name already exists for tenant
-        var nameExists = await _context.Pipelines
-            .AnyAsync(p => p.TenantId == request.TenantId && p.Name == request.Name, cancellationToken);
+        var nameExists = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
+            .AnyAsync(p => p.TenantId == tenantId && p.Name == request.Name, cancellationToken);
 
         if (nameExists)
             return Result<PipelineDto>.Failure(Error.Conflict("Pipeline.NameExists", $"Pipeline with name '{request.Name}' already exists"));
@@ -94,13 +94,13 @@ public class CreatePipelineCommandHandler : IRequestHandler<CreatePipelineComman
         // If this is marked as default, unset any existing default
         if (request.IsDefault)
         {
-            var existingDefault = await _context.Pipelines
-                .FirstOrDefaultAsync(p => p.TenantId == request.TenantId && p.IsDefault && p.Type == request.Type, cancellationToken);
+            var existingDefault = await _unitOfWork.ReadRepository<Pipeline>().AsQueryable()
+                .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.IsDefault && p.Type == request.Type, cancellationToken);
 
             existingDefault?.UnsetDefault();
         }
 
-        var pipeline = new Pipeline(request.TenantId, request.Name, request.Type);
+        var pipeline = new Pipeline(tenantId, request.Name, request.Type);
 
         if (!string.IsNullOrEmpty(request.Description))
             pipeline.UpdateDetails(request.Name, request.Description);
@@ -120,8 +120,8 @@ public class CreatePipelineCommandHandler : IRequestHandler<CreatePipelineComman
             stage.SetColor(stageDto.Color);
         }
 
-        _context.Pipelines.Add(pipeline);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Repository<Pipeline>().AddAsync(pipeline, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new PipelineDto
         {

@@ -2,8 +2,7 @@ using FluentValidation;
 using MediatR;
 using Stocker.Modules.Inventory.Application.DTOs;
 using Stocker.Modules.Inventory.Domain.Entities;
-using Stocker.Modules.Inventory.Domain.Repositories;
-using Stocker.SharedKernel.Interfaces;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Inventory.Application.Features.BarcodeDefinitions.Commands;
@@ -39,18 +38,16 @@ public class UpdateBarcodeDefinitionCommandValidator : AbstractValidator<UpdateB
 /// </summary>
 public class UpdateBarcodeDefinitionCommandHandler : IRequestHandler<UpdateBarcodeDefinitionCommand, Result<BarcodeDefinitionDto>>
 {
-    private readonly IBarcodeDefinitionRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IInventoryUnitOfWork _unitOfWork;
 
-    public UpdateBarcodeDefinitionCommandHandler(IBarcodeDefinitionRepository repository, IUnitOfWork unitOfWork)
+    public UpdateBarcodeDefinitionCommandHandler(IInventoryUnitOfWork unitOfWork)
     {
-        _repository = repository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<BarcodeDefinitionDto>> Handle(UpdateBarcodeDefinitionCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        var entity = await _unitOfWork.BarcodeDefinitions.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             return Result<BarcodeDefinitionDto>.Failure(new Error("BarcodeDefinition.NotFound", $"Barcode definition with ID {request.Id} not found", ErrorType.NotFound));
@@ -75,7 +72,7 @@ public class UpdateBarcodeDefinitionCommandHandler : IRequestHandler<UpdateBarco
         entity.SetDescription(data.Description);
         entity.SetValidityPeriod(data.ValidFrom, data.ValidUntil);
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await _unitOfWork.BarcodeDefinitions.UpdateAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = new BarcodeDefinitionDto

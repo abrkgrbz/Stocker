@@ -2,15 +2,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Infrastructure.Persistence;
-using Stocker.SharedKernel.MultiTenancy;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Pagination;
 
 namespace Stocker.Modules.CRM.Application.Features.Referrals.Queries;
 
-public class GetReferralsQuery : IRequest<PagedResult<ReferralDto>>, ITenantRequest
+public class GetReferralsQuery : IRequest<PagedResult<ReferralDto>>
 {
-    public Guid TenantId { get; set; }
     public ReferralStatus? Status { get; set; }
     public ReferralType? ReferralType { get; set; }
     public Guid? ReferrerCustomerId { get; set; }
@@ -28,18 +26,23 @@ public class GetReferralsQuery : IRequest<PagedResult<ReferralDto>>, ITenantRequ
     public int PageSize { get; set; } = 10;
 }
 
+/// <summary>
+/// Uses ICRMUnitOfWork for consistent data access
+/// </summary>
 public class GetReferralsQueryHandler : IRequestHandler<GetReferralsQuery, PagedResult<ReferralDto>>
 {
-    private readonly CRMDbContext _context;
+    private readonly ICRMUnitOfWork _unitOfWork;
 
-    public GetReferralsQueryHandler(CRMDbContext context)
+    public GetReferralsQueryHandler(ICRMUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async System.Threading.Tasks.Task<PagedResult<ReferralDto>> Handle(GetReferralsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Referrals
+        var tenantId = _unitOfWork.TenantId;
+
+        var query = _unitOfWork.ReadRepository<Referral>().AsQueryable()
             .Include(r => r.ReferrerCustomer)
             .Include(r => r.ReferrerContact)
             .Include(r => r.ReferredCustomer)
@@ -47,7 +50,7 @@ public class GetReferralsQueryHandler : IRequestHandler<GetReferralsQuery, Paged
             .Include(r => r.Campaign)
             .Include(r => r.Opportunity)
             .Include(r => r.Deal)
-            .Where(r => r.TenantId == request.TenantId);
+            .Where(r => r.TenantId == tenantId);
 
         if (request.Status.HasValue)
             query = query.Where(r => r.Status == request.Status.Value);
