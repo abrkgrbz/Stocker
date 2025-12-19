@@ -3,14 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Card,
   Button,
   Table,
   Space,
   Tag,
   Input,
-  Typography,
-  message,
   Dropdown,
   Select,
   Progress,
@@ -42,22 +39,13 @@ import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const statusColors: Record<ReservationStatus, string> = {
-  Active: 'processing',
-  PartiallyFulfilled: 'warning',
-  Fulfilled: 'success',
-  Cancelled: 'default',
-  Expired: 'error',
-};
-
-const statusLabels: Record<ReservationStatus, string> = {
-  Active: 'Aktif',
-  PartiallyFulfilled: 'Kısmen Karşılandı',
-  Fulfilled: 'Karşılandı',
-  Cancelled: 'İptal Edildi',
-  Expired: 'Süresi Doldu',
+// Monochrome status configuration
+const statusConfig: Record<ReservationStatus, { color: string; bgColor: string; label: string }> = {
+  Active: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Aktif' },
+  PartiallyFulfilled: { color: '#475569', bgColor: '#f1f5f9', label: 'Kısmen Karşılandı' },
+  Fulfilled: { color: '#334155', bgColor: '#e2e8f0', label: 'Karşılandı' },
+  Cancelled: { color: '#94a3b8', bgColor: '#f8fafc', label: 'İptal Edildi' },
+  Expired: { color: '#64748b', bgColor: '#f1f5f9', label: 'Süresi Doldu' },
 };
 
 export default function StockReservationsPage() {
@@ -89,6 +77,16 @@ export default function StockReservationsPage() {
     res.productCode?.toLowerCase().includes(searchText.toLowerCase()) ||
     res.productName?.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  // Calculate stats
+  const stats = {
+    total: reservations.length,
+    active: reservations.filter(r => r.status === 'Active').length,
+    partial: reservations.filter(r => r.status === 'PartiallyFulfilled').length,
+    fulfilled: reservations.filter(r => r.status === 'Fulfilled').length,
+    cancelled: reservations.filter(r => r.status === 'Cancelled').length,
+    expired: reservations.filter(r => r.status === 'Expired').length,
+  };
 
   const handleFulfill = async () => {
     if (!selectedReservation) return;
@@ -193,14 +191,11 @@ export default function StockReservationsPage() {
       sorter: (a, b) => a.reservationNumber.localeCompare(b.reservationNumber),
       render: (number: string) => (
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ background: '#f9731615' }}
-          >
-            <LockOutlined style={{ fontSize: 18, color: '#f97316' }} />
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <LockOutlined className="text-lg text-slate-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{number}</div>
+            <div className="font-semibold text-slate-900">{number}</div>
           </div>
         </div>
       ),
@@ -210,8 +205,8 @@ export default function StockReservationsPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <div className="font-medium text-gray-700">{record.productName}</div>
-          <div className="text-xs text-gray-400">{record.productCode}</div>
+          <div className="font-medium text-slate-900">{record.productName}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
         </div>
       ),
     },
@@ -219,6 +214,7 @@ export default function StockReservationsPage() {
       title: 'Depo',
       dataIndex: 'warehouseName',
       key: 'warehouseName',
+      render: (name: string) => <span className="text-slate-700">{name}</span>,
     },
     {
       title: 'Miktar',
@@ -234,6 +230,8 @@ export default function StockReservationsPage() {
               percent={percent}
               size="small"
               format={() => `${record.fulfilledQuantity}/${record.quantity}`}
+              strokeColor="#334155"
+              trailColor="#e2e8f0"
             />
           </div>
         );
@@ -244,15 +242,15 @@ export default function StockReservationsPage() {
       key: 'dates',
       render: (_, record) => (
         <div className="text-sm">
-          <div className="text-gray-600">
+          <div className="text-slate-700">
             {dayjs(record.reservationDate).format('DD.MM.YYYY')}
           </div>
           {record.expirationDate && (
-            <div className="text-xs text-gray-400 flex items-center gap-1">
+            <div className="text-xs text-slate-500 flex items-center gap-1">
               <ClockCircleOutlined />
               {dayjs(record.expirationDate).format('DD.MM.YYYY')}
               {dayjs(record.expirationDate).isBefore(dayjs()) && (
-                <Tag color="error" className="ml-1">Süresi Doldu</Tag>
+                <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-slate-200 text-slate-700">Süresi Doldu</span>
               )}
             </div>
           )}
@@ -272,11 +270,17 @@ export default function StockReservationsPage() {
         { text: 'Süresi Doldu', value: 'Expired' },
       ],
       onFilter: (value, record) => record.status === value,
-      render: (status: ReservationStatus) => (
-        <Tag color={statusColors[status]}>
-          {statusLabels[status]}
-        </Tag>
-      ),
+      render: (status: ReservationStatus) => {
+        const config = statusConfig[status];
+        return (
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.label}
+          </span>
+        );
+      },
     },
     {
       title: '',
@@ -289,38 +293,112 @@ export default function StockReservationsPage() {
           trigger={['click']}
           placement="bottomRight"
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreOutlined />} className="text-slate-600 hover:text-slate-900" />
         </Dropdown>
       ),
     },
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <Title level={3} className="!mb-1">Stok Rezervasyonları</Title>
-          <Text type="secondary">Stok rezervasyonlarını yönetin</Text>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Rezervasyonları</h1>
+          <p className="text-slate-500 mt-1">Stok rezervasyonlarını yönetin</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
             Yenile
           </Button>
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/inventory/stock-reservations/new')}
-            style={{ background: '#f97316', borderColor: '#f97316' }}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
             Yeni Rezervasyon
           </Button>
         </Space>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <LockOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ClockCircleOutlined className="text-lg text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.active}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Aktif</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-lg text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.partial}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Kısmen</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <CheckOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{stats.fulfilled}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Karşılandı</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <CloseOutlined className="text-lg text-slate-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-500">{stats.cancelled}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">İptal</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <ClockCircleOutlined className="text-lg text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Süresi Doldu</div>
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
-      <Card className="mb-4">
-        <Space wrap>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap gap-3">
           <Select
             placeholder="Depo seçin"
             allowClear
@@ -331,6 +409,7 @@ export default function StockReservationsPage() {
               value: w.id,
               label: w.name,
             }))}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Select
             placeholder="Durum seçin"
@@ -345,20 +424,22 @@ export default function StockReservationsPage() {
               { value: 'Cancelled', label: 'İptal Edildi' },
               { value: 'Expired', label: 'Süresi Doldu' },
             ]}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           />
           <Input
             placeholder="Rezervasyon ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<SearchOutlined className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
             allowClear
+            className="!rounded-lg !border-slate-300"
           />
-        </Space>
-      </Card>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Table
           columns={columns}
           dataSource={filteredReservations}
@@ -369,12 +450,13 @@ export default function StockReservationsPage() {
             showSizeChanger: true,
             showTotal: (total) => `Toplam ${total} rezervasyon`,
           }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
+      </div>
 
       {/* Fulfill Modal */}
       <Modal
-        title="Rezervasyonu Karşıla"
+        title={<span className="text-slate-900 font-semibold">Rezervasyonu Karşıla</span>}
         open={fulfillModalVisible}
         onOk={handleFulfill}
         onCancel={() => {
@@ -384,25 +466,28 @@ export default function StockReservationsPage() {
         confirmLoading={fulfillReservation.isPending}
         okText="Karşıla"
         cancelText="İptal"
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <div className="py-4">
-          <Text className="block mb-2">Karşılanacak miktar:</Text>
+          <p className="text-sm text-slate-700 mb-2">Karşılanacak miktar:</p>
           <InputNumber
             value={fulfillQuantity}
             onChange={(val) => setFulfillQuantity(val || 0)}
             min={1}
             max={selectedReservation ? selectedReservation.quantity - selectedReservation.fulfilledQuantity : 1}
             style={{ width: '100%' }}
+            className="!rounded-lg"
           />
-          <Text type="secondary" className="block mt-2 text-xs">
+          <p className="text-xs text-slate-500 mt-2">
             Kalan miktar: {selectedReservation ? selectedReservation.quantity - selectedReservation.fulfilledQuantity : 0}
-          </Text>
+          </p>
         </div>
       </Modal>
 
       {/* Extend Modal */}
       <Modal
-        title="Rezervasyon Süresini Uzat"
+        title={<span className="text-slate-900 font-semibold">Rezervasyon Süresini Uzat</span>}
         open={extendModalVisible}
         onOk={handleExtend}
         onCancel={() => {
@@ -412,14 +497,17 @@ export default function StockReservationsPage() {
         confirmLoading={extendReservation.isPending}
         okText="Uzat"
         cancelText="İptal"
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <div className="py-4">
-          <Text className="block mb-2">Yeni bitiş tarihi:</Text>
+          <p className="text-sm text-slate-700 mb-2">Yeni bitiş tarihi:</p>
           <DatePicker
             value={extendDate}
             onChange={setExtendDate}
             style={{ width: '100%' }}
             disabledDate={(current) => current && current < dayjs().endOf('day')}
+            className="!rounded-lg !border-slate-300"
           />
         </div>
       </Modal>
@@ -427,9 +515,9 @@ export default function StockReservationsPage() {
       {/* Cancel Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-red-500">
-            <ExclamationCircleOutlined />
-            Rezervasyonu İptal Et
+          <div className="flex items-center gap-2 text-slate-900">
+            <ExclamationCircleOutlined className="text-slate-600" />
+            <span className="font-semibold">Rezervasyonu İptal Et</span>
           </div>
         }
         open={cancelModalVisible}
@@ -443,14 +531,16 @@ export default function StockReservationsPage() {
         okText="İptal Et"
         okButtonProps={{ danger: true }}
         cancelText="Vazgeç"
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <div className="py-4">
-          <Text className="block mb-2">İptal nedeni (opsiyonel):</Text>
+          <p className="text-sm text-slate-700 mb-2">İptal nedeni (opsiyonel):</p>
           <Input.TextArea
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             rows={3}
             placeholder="İptal nedenini belirtin..."
+            className="!rounded-lg !border-slate-300"
           />
         </div>
       </Modal>

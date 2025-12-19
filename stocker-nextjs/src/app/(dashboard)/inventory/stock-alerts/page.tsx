@@ -3,15 +3,10 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
   Button,
   Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Select,
   Form,
@@ -20,7 +15,6 @@ import {
   Progress,
   Tooltip,
   Tabs,
-  Badge,
   message,
 } from 'antd';
 import {
@@ -32,8 +26,6 @@ import {
   CheckCircleOutlined,
   MinusCircleOutlined,
   InfoCircleOutlined,
-  ShoppingCartOutlined,
-  ClockCircleOutlined,
 } from '@ant-design/icons';
 import {
   useProducts,
@@ -45,24 +37,22 @@ import {
 import type { ProductDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 
-const { Title, Text } = Typography;
-
-// Stock level status helper
-function getStockStatus(product: ProductDto): { status: string; color: string; icon: React.ReactNode; percent: number } {
+// Stock level status helper with monochrome colors
+function getStockStatus(product: ProductDto): { status: string; color: string; bgColor: string; icon: React.ReactNode; percent: number } {
   const ratio = product.minStockLevel > 0
     ? (product.totalStockQuantity / product.minStockLevel) * 100
     : 100;
 
   if (product.totalStockQuantity === 0) {
-    return { status: 'Stok Yok', color: 'red', icon: <MinusCircleOutlined />, percent: 0 };
+    return { status: 'Stok Yok', color: '#1e293b', bgColor: '#e2e8f0', icon: <MinusCircleOutlined />, percent: 0 };
   } else if (product.totalStockQuantity <= product.minStockLevel) {
-    return { status: 'Kritik', color: 'red', icon: <ExclamationCircleOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Kritik', color: '#1e293b', bgColor: '#cbd5e1', icon: <ExclamationCircleOutlined />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.reorderLevel) {
-    return { status: 'Düşük', color: 'orange', icon: <WarningOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Düşük', color: '#475569', bgColor: '#f1f5f9', icon: <WarningOutlined />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.maxStockLevel) {
-    return { status: 'Normal', color: 'green', icon: <CheckCircleOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Normal', color: '#334155', bgColor: '#e2e8f0', icon: <CheckCircleOutlined />, percent: Math.min(ratio, 100) };
   } else {
-    return { status: 'Yüksek', color: 'blue', icon: <InfoCircleOutlined />, percent: 100 };
+    return { status: 'Yüksek', color: '#64748b', bgColor: '#f1f5f9', icon: <InfoCircleOutlined />, percent: 100 };
   }
 }
 
@@ -224,10 +214,10 @@ export default function StockAlertsPage() {
       key: 'product',
       width: 250,
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.name}</Text>
-          <Text type="secondary" className="text-xs">{record.code}</Text>
-        </Space>
+        <div>
+          <div className="font-semibold text-slate-900">{record.name}</div>
+          <div className="text-xs text-slate-500">{record.code}</div>
+        </div>
       ),
     },
     {
@@ -235,6 +225,7 @@ export default function StockAlertsPage() {
       dataIndex: 'categoryName',
       key: 'categoryName',
       width: 120,
+      render: (name: string) => <span className="text-slate-700">{name}</span>,
     },
     {
       title: 'Stok Durumu',
@@ -243,19 +234,24 @@ export default function StockAlertsPage() {
       render: (_, record) => {
         const status = getStockStatus(record);
         return (
-          <Space direction="vertical" size={4} style={{ width: '100%' }}>
-            <Tag color={status.color} icon={status.icon}>
+          <div className="space-y-2" style={{ width: '100%' }}>
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+              style={{ backgroundColor: status.bgColor, color: status.color }}
+            >
+              {status.icon}
               {status.status}
-            </Tag>
+            </span>
             <Tooltip title={`Mevcut: ${record.totalStockQuantity} / Min: ${record.minStockLevel}`}>
               <Progress
                 percent={status.percent}
                 size="small"
-                strokeColor={status.color === 'red' ? '#ff4d4f' : status.color === 'orange' ? '#fa8c16' : '#52c41a'}
+                strokeColor="#475569"
+                trailColor="#e2e8f0"
                 showInfo={false}
               />
             </Tooltip>
-          </Space>
+          </div>
         );
       },
     },
@@ -266,7 +262,7 @@ export default function StockAlertsPage() {
       width: 100,
       align: 'right',
       render: (value: number) => (
-        <Text strong>{value.toLocaleString('tr-TR')}</Text>
+        <span className="font-semibold text-slate-900">{value.toLocaleString('tr-TR')}</span>
       ),
     },
     {
@@ -276,9 +272,9 @@ export default function StockAlertsPage() {
       width: 80,
       align: 'right',
       render: (value: number) => (
-        <Text type={value === 0 ? 'secondary' : undefined}>
+        <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {value === 0 ? '-' : value.toLocaleString('tr-TR')}
-        </Text>
+        </span>
       ),
     },
     {
@@ -288,9 +284,9 @@ export default function StockAlertsPage() {
       width: 100,
       align: 'right',
       render: (value: number) => (
-        <Text type={value === 0 ? 'secondary' : undefined}>
+        <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {value === 0 ? '-' : value.toLocaleString('tr-TR')}
-        </Text>
+        </span>
       ),
     },
     {
@@ -300,9 +296,9 @@ export default function StockAlertsPage() {
       width: 80,
       align: 'right',
       render: (value: number) => (
-        <Text type={value === 0 ? 'secondary' : undefined}>
+        <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {value === 0 ? '-' : value.toLocaleString('tr-TR')}
-        </Text>
+        </span>
       ),
     },
     {
@@ -312,9 +308,9 @@ export default function StockAlertsPage() {
       width: 100,
       align: 'right',
       render: (value: number) => (
-        <Text type={value === 0 ? 'secondary' : undefined}>
+        <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {value === 0 ? '-' : `${value} gün`}
-        </Text>
+        </span>
       ),
     },
     {
@@ -327,6 +323,7 @@ export default function StockAlertsPage() {
           type="text"
           icon={<EditOutlined />}
           onClick={() => handleConfigClick(record)}
+          className="!text-slate-600 hover:!text-slate-900"
         >
           Ayarla
         </Button>
@@ -339,69 +336,88 @@ export default function StockAlertsPage() {
     {
       key: 'all',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <AlertOutlined />
           Tüm Ürünler
-          <Badge count={stats.total} showZero style={{ backgroundColor: '#1890ff' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.total}
+          </span>
+        </span>
       ),
     },
     {
       key: 'critical',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <ExclamationCircleOutlined />
           Kritik
-          <Badge count={stats.critical + stats.noStock} showZero style={{ backgroundColor: '#ff4d4f' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-400 text-white">
+            {stats.critical + stats.noStock}
+          </span>
+        </span>
       ),
     },
     {
       key: 'low',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <WarningOutlined />
           Düşük
-          <Badge count={stats.low} showZero style={{ backgroundColor: '#fa8c16' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
+            {stats.low}
+          </span>
+        </span>
       ),
     },
     {
       key: 'normal',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <CheckCircleOutlined />
           Normal
-          <Badge count={stats.normal} showZero style={{ backgroundColor: '#52c41a' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.normal}
+          </span>
+        </span>
       ),
     },
     {
       key: 'unconfigured',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <InfoCircleOutlined />
           Yapılandırılmamış
-          <Badge count={stats.unconfigured} showZero style={{ backgroundColor: '#d9d9d9' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-100 text-slate-500">
+            {stats.unconfigured}
+          </span>
+        </span>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <Title level={4} className="!mb-1">Stok Seviye Uyarıları</Title>
-          <Text type="secondary">Ürün stok seviyelerini izleyin ve uyarı eşiklerini yapılandırın</Text>
+          <h1 className="text-2xl font-bold text-slate-900">Stok Seviye Uyarıları</h1>
+          <p className="text-slate-500 mt-1">Ürün stok seviyelerini izleyin ve uyarı eşiklerini yapılandırın</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
             Yenile
           </Button>
           {selectedRowKeys.length > 0 && (
-            <Button type="primary" icon={<EditOutlined />} onClick={handleBulkConfigClick}>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={handleBulkConfigClick}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+            >
               Toplu Yapılandır ({selectedRowKeys.length})
             </Button>
           )}
@@ -409,66 +425,74 @@ export default function StockAlertsPage() {
       </div>
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Ürün"
-              value={stats.total}
-              prefix={<AlertOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Stok Yok"
-              value={stats.noStock}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<MinusCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Kritik Seviye"
-              value={stats.critical}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<ExclamationCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Düşük Stok"
-              value={stats.low}
-              valueStyle={{ color: '#fa8c16' }}
-              prefix={<WarningOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Normal"
-              value={stats.normal}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Yapılandırılmamış"
-              value={stats.unconfigured}
-              prefix={<InfoCircleOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <AlertOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Ürün</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <MinusCircleOutlined className="text-lg text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.noStock}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Stok Yok</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-lg text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.critical}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Kritik Seviye</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <WarningOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{stats.low}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Düşük Stok</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <CheckCircleOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{stats.normal}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Normal</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InfoCircleOutlined className="text-lg text-slate-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-500">{stats.unconfigured}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Yapılandırılmamış</div>
+          </div>
+        </div>
+      </div>
 
       {/* Alerts */}
       {(stats.critical + stats.noStock) > 0 && (
@@ -478,6 +502,7 @@ export default function StockAlertsPage() {
           icon={<ExclamationCircleOutlined />}
           message={`${stats.critical + stats.noStock} ürün kritik stok seviyesinde veya stok dışı!`}
           description="Bu ürünler için acil sipariş gerekebilir."
+          className="mb-6 !border-slate-300 !bg-slate-100 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
         />
       )}
       {stats.unconfigured > 0 && (
@@ -487,26 +512,28 @@ export default function StockAlertsPage() {
           icon={<InfoCircleOutlined />}
           message={`${stats.unconfigured} ürün için stok seviye ayarları yapılmamış`}
           description="Stok seviye uyarılarını etkinleştirmek için minimum ve maksimum stok seviyelerini ayarlayın."
+          className="mb-6 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
         />
       )}
 
       {/* Tabs and Filters */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          className="mb-4"
+          className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
         />
 
         {/* Filters */}
-        <Space wrap className="mb-4">
+        <div className="flex flex-wrap gap-3 mb-6">
           <Select
             placeholder="Kategori"
             allowClear
             style={{ width: 180 }}
             value={selectedCategory}
             onChange={setSelectedCategory}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {categories.map((c) => (
               <Select.Option key={c.id} value={c.id}>
@@ -521,6 +548,7 @@ export default function StockAlertsPage() {
             style={{ width: 150 }}
             value={selectedBrand}
             onChange={setSelectedBrand}
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {brands.map((b) => (
               <Select.Option key={b.id} value={b.id}>
@@ -528,7 +556,7 @@ export default function StockAlertsPage() {
               </Select.Option>
             ))}
           </Select>
-        </Space>
+        </div>
 
         {/* Table */}
         <Table
@@ -544,12 +572,13 @@ export default function StockAlertsPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1200 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
+      </div>
 
       {/* Config Modal */}
       <Modal
-        title={`Stok Seviye Ayarları: ${selectedProduct?.name || ''}`}
+        title={<span className="text-slate-900 font-semibold">Stok Seviye Ayarları: {selectedProduct?.name || ''}</span>}
         open={configModalOpen}
         onCancel={() => {
           setConfigModalOpen(false);
@@ -561,97 +590,96 @@ export default function StockAlertsPage() {
         cancelText="İptal"
         confirmLoading={updateProduct.isPending}
         width={600}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Alert
           type="info"
           message="Stok Seviye Açıklamaları"
           description={
-            <ul className="mt-2 space-y-1 text-sm">
-              <li><strong>Min. Stok:</strong> Bu seviyenin altına düşünce kritik uyarı verilir</li>
-              <li><strong>Yeniden Sipariş:</strong> Bu seviyeye ulaşıldığında sipariş önerisi yapılır</li>
-              <li><strong>Max. Stok:</strong> Stok bu seviyeyi aşmamalıdır</li>
-              <li><strong>Sipariş Miktarı:</strong> Sipariş verildiğinde önerilen miktar</li>
-              <li><strong>Tedarik Süresi:</strong> Sipariş sonrası beklenen teslim süresi</li>
+            <ul className="mt-2 space-y-1 text-sm text-slate-600">
+              <li><strong className="text-slate-700">Min. Stok:</strong> Bu seviyenin altına düşünce kritik uyarı verilir</li>
+              <li><strong className="text-slate-700">Yeniden Sipariş:</strong> Bu seviyeye ulaşıldığında sipariş önerisi yapılır</li>
+              <li><strong className="text-slate-700">Max. Stok:</strong> Stok bu seviyeyi aşmamalıdır</li>
+              <li><strong className="text-slate-700">Sipariş Miktarı:</strong> Sipariş verildiğinde önerilen miktar</li>
+              <li><strong className="text-slate-700">Tedarik Süresi:</strong> Sipariş sonrası beklenen teslim süresi</li>
             </ul>
           }
-          className="mb-4"
+          className="mb-4 !border-slate-300 !bg-slate-50"
           showIcon
         />
         <Form
           form={configForm}
           layout="vertical"
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="minStockLevel"
-                label="Minimum Stok Seviyesi"
-                rules={[{ required: true, message: 'Minimum stok seviyesi gerekli' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                  addonAfter="adet"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="maxStockLevel"
-                label="Maksimum Stok Seviyesi"
-                rules={[{ required: true, message: 'Maksimum stok seviyesi gerekli' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                  addonAfter="adet"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="minStockLevel"
+              label={<span className="text-slate-700 font-medium">Minimum Stok Seviyesi</span>}
+              rules={[{ required: true, message: 'Minimum stok seviyesi gerekli' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="adet"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+            <Form.Item
+              name="maxStockLevel"
+              label={<span className="text-slate-700 font-medium">Maksimum Stok Seviyesi</span>}
+              rules={[{ required: true, message: 'Maksimum stok seviyesi gerekli' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="adet"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="reorderLevel"
-                label="Yeniden Sipariş Seviyesi"
-                rules={[{ required: true, message: 'Yeniden sipariş seviyesi gerekli' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                  addonAfter="adet"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="reorderQuantity"
-                label="Sipariş Miktarı"
-                rules={[{ required: true, message: 'Sipariş miktarı gerekli' }]}
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                  addonAfter="adet"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="reorderLevel"
+              label={<span className="text-slate-700 font-medium">Yeniden Sipariş Seviyesi</span>}
+              rules={[{ required: true, message: 'Yeniden sipariş seviyesi gerekli' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="adet"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+            <Form.Item
+              name="reorderQuantity"
+              label={<span className="text-slate-700 font-medium">Sipariş Miktarı</span>}
+              rules={[{ required: true, message: 'Sipariş miktarı gerekli' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="0"
+                addonAfter="adet"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="leadTimeDays"
-            label="Tedarik Süresi"
+            label={<span className="text-slate-700 font-medium">Tedarik Süresi</span>}
           >
             <InputNumber
               min={0}
               style={{ width: '100%' }}
               placeholder="0"
               addonAfter="gün"
+              className="!rounded-lg"
             />
           </Form.Item>
         </Form>
@@ -659,7 +687,7 @@ export default function StockAlertsPage() {
 
       {/* Bulk Config Modal */}
       <Modal
-        title={`Toplu Stok Seviye Ayarları (${selectedRowKeys.length} ürün)`}
+        title={<span className="text-slate-900 font-semibold">Toplu Stok Seviye Ayarları ({selectedRowKeys.length} ürün)</span>}
         open={bulkConfigModalOpen}
         onCancel={() => {
           setBulkConfigModalOpen(false);
@@ -670,80 +698,79 @@ export default function StockAlertsPage() {
         cancelText="İptal"
         confirmLoading={updateProduct.isPending}
         width={600}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Alert
           type="warning"
           message="Sadece doldurduğunuz alanlar güncellenecektir"
           description="Boş bıraktığınız alanlar mevcut değerlerini koruyacaktır."
-          className="mb-4"
+          className="mb-4 !border-slate-300 !bg-slate-50"
           showIcon
         />
         <Form
           form={bulkConfigForm}
           layout="vertical"
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="minStockLevel"
-                label="Minimum Stok Seviyesi"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="Değiştirme"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="maxStockLevel"
-                label="Maksimum Stok Seviyesi"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="Değiştirme"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="minStockLevel"
+              label={<span className="text-slate-700 font-medium">Minimum Stok Seviyesi</span>}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="Değiştirme"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+            <Form.Item
+              name="maxStockLevel"
+              label={<span className="text-slate-700 font-medium">Maksimum Stok Seviyesi</span>}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="Değiştirme"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="reorderLevel"
-                label="Yeniden Sipariş Seviyesi"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="Değiştirme"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="reorderQuantity"
-                label="Sipariş Miktarı"
-              >
-                <InputNumber
-                  min={0}
-                  style={{ width: '100%' }}
-                  placeholder="Değiştirme"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="reorderLevel"
+              label={<span className="text-slate-700 font-medium">Yeniden Sipariş Seviyesi</span>}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="Değiştirme"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+            <Form.Item
+              name="reorderQuantity"
+              label={<span className="text-slate-700 font-medium">Sipariş Miktarı</span>}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder="Değiştirme"
+                className="!rounded-lg"
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="leadTimeDays"
-            label="Tedarik Süresi (gün)"
+            label={<span className="text-slate-700 font-medium">Tedarik Süresi (gün)</span>}
           >
             <InputNumber
               min={0}
               style={{ width: '100%' }}
               placeholder="Değiştirme"
+              className="!rounded-lg"
             />
           </Form.Item>
         </Form>

@@ -3,15 +3,10 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
   Button,
   Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Dropdown,
   Select,
@@ -70,22 +65,24 @@ import type {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-// Serial number status configuration
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
+
+// Serial number status configuration - monochrome
 const statusConfig: Record<SerialNumberStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Available: { color: 'green', label: 'Mevcut', icon: <CheckCircleOutlined /> },
-  InStock: { color: 'blue', label: 'Stokta', icon: <BarcodeOutlined /> },
-  Reserved: { color: 'gold', label: 'Rezerve', icon: <LockOutlined /> },
-  Sold: { color: 'cyan', label: 'Satıldı', icon: <ShoppingOutlined /> },
-  Returned: { color: 'purple', label: 'İade', icon: <RollbackOutlined /> },
-  Defective: { color: 'orange', label: 'Arızalı', icon: <ExclamationCircleOutlined /> },
-  InRepair: { color: 'volcano', label: 'Tamirde', icon: <ToolOutlined /> },
-  Scrapped: { color: 'red', label: 'Hurda', icon: <DeleteOutlined /> },
-  Lost: { color: 'default', label: 'Kayıp', icon: <WarningOutlined /> },
-  OnLoan: { color: 'geekblue', label: 'Ödünç', icon: <ShoppingCartOutlined /> },
-  InTransit: { color: 'lime', label: 'Taşımada', icon: <ClockCircleOutlined /> },
+  Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleOutlined /> },
+  InStock: { color: '#334155', label: 'Stokta', icon: <BarcodeOutlined /> },
+  Reserved: { color: '#475569', label: 'Rezerve', icon: <LockOutlined /> },
+  Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingOutlined /> },
+  Returned: { color: '#94a3b8', label: 'İade', icon: <RollbackOutlined /> },
+  Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleOutlined /> },
+  InRepair: { color: '#475569', label: 'Tamirde', icon: <ToolOutlined /> },
+  Scrapped: { color: '#1e293b', label: 'Hurda', icon: <DeleteOutlined /> },
+  Lost: { color: '#94a3b8', label: 'Kayıp', icon: <WarningOutlined /> },
+  OnLoan: { color: '#64748b', label: 'Ödünç', icon: <ShoppingCartOutlined /> },
+  InTransit: { color: '#334155', label: 'Taşımada', icon: <ClockCircleOutlined /> },
 };
 
 export default function SerialNumbersPage() {
@@ -186,6 +183,7 @@ export default function SerialNumbersPage() {
       content: `"${serial.serial}" seri numarasını teslim almak istediğinizden emin misiniz?`,
       okText: 'Teslim Al',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
       onOk: async () => {
         try {
           await receiveSerialNumber.mutateAsync({ id: serial.id });
@@ -224,6 +222,7 @@ export default function SerialNumbersPage() {
       content: `"${serial.serial}" seri numarasının rezervasyonunu kaldırmak istediğinizden emin misiniz?`,
       okText: 'Kaldır',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 !border-slate-900' },
       onOk: async () => {
         try {
           await releaseSerialNumber.mutateAsync(serial.id);
@@ -328,16 +327,22 @@ export default function SerialNumbersPage() {
       key: 'serial',
       width: 180,
       render: (text: string, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong className="text-blue-600 cursor-pointer hover:underline" onClick={() => handleViewDetail(record.id)}>
+        <div>
+          <span
+            className="font-semibold text-slate-900 cursor-pointer hover:text-slate-600"
+            onClick={() => handleViewDetail(record.id)}
+          >
             {text}
-          </Text>
+          </span>
           {record.isUnderWarranty && (
-            <Tag color="green" icon={<SafetyCertificateOutlined />} className="text-xs">
-              Garanti: {record.remainingWarrantyDays} gün
-            </Tag>
+            <div className="mt-1">
+              <Tag className="text-xs bg-slate-900 text-white border-none">
+                <SafetyCertificateOutlined className="mr-1" />
+                Garanti: {record.remainingWarrantyDays} gün
+              </Tag>
+            </div>
           )}
-        </Space>
+        </div>
       ),
     },
     {
@@ -345,10 +350,11 @@ export default function SerialNumbersPage() {
       key: 'product',
       width: 200,
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.productName}</Text>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
-        </Space>
+        <div>
+          <span className="font-semibold text-slate-900">{record.productName}</span>
+          <br />
+          <span className="text-xs text-slate-500">{record.productCode}</span>
+        </div>
       ),
     },
     {
@@ -359,8 +365,8 @@ export default function SerialNumbersPage() {
       render: (status: SerialNumberStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.label}
+          <Tag style={{ backgroundColor: config.color, color: '#fff', border: 'none', fontWeight: 500 }}>
+            {config.icon} {config.label}
           </Tag>
         );
       },
@@ -370,7 +376,7 @@ export default function SerialNumbersPage() {
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 150,
-      render: (text: string | undefined) => text || <Text type="secondary">-</Text>,
+      render: (text: string | undefined) => text || <span className="text-slate-400">-</span>,
     },
     {
       title: 'İşlemler',
@@ -463,170 +469,191 @@ export default function SerialNumbersPage() {
     {
       key: 'all',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <BarcodeOutlined />
           Tümü
-          <Badge count={stats.total} showZero style={{ backgroundColor: '#1890ff' }} />
-        </Space>
+          <Badge count={stats.total} showZero style={{ backgroundColor: '#1e293b' }} />
+        </span>
       ),
     },
     {
       key: 'available',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <CheckCircleOutlined />
           Mevcut
-          <Badge count={stats.available} showZero style={{ backgroundColor: '#52c41a' }} />
-        </Space>
+          <Badge count={stats.available} showZero style={{ backgroundColor: '#334155' }} />
+        </span>
       ),
     },
     {
       key: 'reserved',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <LockOutlined />
           Rezerve
-          <Badge count={stats.reserved} showZero style={{ backgroundColor: '#faad14' }} />
-        </Space>
+          <Badge count={stats.reserved} showZero style={{ backgroundColor: '#475569' }} />
+        </span>
       ),
     },
     {
       key: 'sold',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <ShoppingOutlined />
           Satılan
-          <Badge count={stats.sold} showZero style={{ backgroundColor: '#13c2c2' }} />
-        </Space>
+          <Badge count={stats.sold} showZero style={{ backgroundColor: '#64748b' }} />
+        </span>
       ),
     },
     {
       key: 'warranty',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <SafetyCertificateOutlined />
           Garantili
-          <Badge count={stats.underWarranty} showZero style={{ backgroundColor: '#52c41a' }} />
-        </Space>
+          <Badge count={stats.underWarranty} showZero style={{ backgroundColor: '#1e293b' }} />
+        </span>
       ),
     },
     {
       key: 'defective',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <ExclamationCircleOutlined />
           Arızalı
-          <Badge count={stats.defective} showZero style={{ backgroundColor: '#fa8c16' }} />
-        </Space>
+          <Badge count={stats.defective} showZero style={{ backgroundColor: '#94a3b8' }} />
+        </span>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <Title level={4} className="!mb-1">Seri Numarası Yönetimi</Title>
-          <Text type="secondary">Ürün seri numaralarını takip edin ve yönetin</Text>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <BarcodeOutlined className="text-white text-lg" />
+            </div>
+            Seri Numarası Yönetimi
+          </h1>
+          <p className="text-slate-500 mt-1">Ürün seri numaralarını takip edin ve yönetin</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            className="!border-slate-200 !text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
+          >
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalOpen(true)}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
             Yeni Seri Numarası
           </Button>
         </Space>
       </div>
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam"
-              value={stats.total}
-              prefix={<BarcodeOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Mevcut"
-              value={stats.available}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Rezerve"
-              value={stats.reserved}
-              valueStyle={{ color: '#faad14' }}
-              prefix={<LockOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Satılan"
-              value={stats.sold}
-              valueStyle={{ color: '#13c2c2' }}
-              prefix={<ShoppingOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Garantili"
-              value={stats.underWarranty}
-              valueStyle={{ color: '#52c41a' }}
-              prefix={<SafetyCertificateOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Arızalı"
-              value={stats.defective}
-              valueStyle={{ color: '#fa8c16' }}
-              prefix={<ExclamationCircleOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-12 gap-6 mb-6">
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BarcodeOutlined className="text-slate-600 text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs text-slate-500 mt-1">Toplam</div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                <CheckCircleOutlined className="text-white text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.available}</div>
+            <div className="text-xs text-slate-500 mt-1">Mevcut</div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <LockOutlined className="text-slate-600 text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.reserved}</div>
+            <div className="text-xs text-slate-500 mt-1">Rezerve</div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ShoppingOutlined className="text-slate-600 text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.sold}</div>
+            <div className="text-xs text-slate-500 mt-1">Satılan</div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <SafetyCertificateOutlined className="text-slate-600 text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.underWarranty}</div>
+            <div className="text-xs text-slate-500 mt-1">Garantili</div>
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-slate-600 text-lg" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.defective}</div>
+            <div className="text-xs text-slate-500 mt-1">Arızalı</div>
+          </div>
+        </div>
+      </div>
 
       {/* Tabs and Filters */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          className="mb-4"
+          className="mb-4 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
         />
 
         {/* Filters */}
         <Space wrap className="mb-4">
           <Input
             placeholder="Seri numarası ara..."
-            prefix={<SearchOutlined />}
+            prefix={<SearchOutlined className="text-slate-400" />}
             value={searchSerial}
             onChange={(e) => setSearchSerial(e.target.value)}
-            style={{ width: 200 }}
+            className="w-52 [&_.ant-input]:!border-slate-200"
             allowClear
           />
 
           <Select
             placeholder="Ürün"
             allowClear
-            style={{ width: 200 }}
+            className="w-52 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
             value={selectedProduct}
             onChange={setSelectedProduct}
             showSearch
@@ -642,7 +669,7 @@ export default function SerialNumbersPage() {
           <Select
             placeholder="Depo"
             allowClear
-            style={{ width: 150 }}
+            className="w-40 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
             value={selectedWarehouse}
             onChange={setSelectedWarehouse}
           >
@@ -657,13 +684,13 @@ export default function SerialNumbersPage() {
             <Select
               placeholder="Durum"
               allowClear
-              style={{ width: 130 }}
+              className="w-36 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               value={selectedStatus}
               onChange={setSelectedStatus}
             >
               {Object.entries(statusConfig).map(([key, config]) => (
                 <Select.Option key={key} value={key}>
-                  <Tag color={config.color}>{config.label}</Tag>
+                  <Tag style={{ backgroundColor: config.color, color: '#fff', border: 'none' }}>{config.label}</Tag>
                 </Select.Option>
               ))}
             </Select>
@@ -683,12 +710,13 @@ export default function SerialNumbersPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 900 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
         />
-      </Card>
+      </div>
 
       {/* Create Modal */}
       <Modal
-        title="Yeni Seri Numarası Ekle"
+        title={<span className="text-slate-900 font-semibold">Yeni Seri Numarası Ekle</span>}
         open={createModalOpen}
         onCancel={() => {
           setCreateModalOpen(false);
@@ -699,106 +727,96 @@ export default function SerialNumbersPage() {
         cancelText="İptal"
         confirmLoading={createSerialNumber.isPending}
         width={600}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
       >
         <Form
           form={createForm}
           layout="vertical"
           className="mt-4"
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="serial"
-                label="Seri Numarası"
-                rules={[{ required: true, message: 'Seri numarası gerekli' }]}
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="serial"
+              label={<span className="text-slate-700">Seri Numarası</span>}
+              rules={[{ required: true, message: 'Seri numarası gerekli' }]}
+            >
+              <Input placeholder="SN-2024-00001" className="!border-slate-200 !rounded-lg" />
+            </Form.Item>
+            <Form.Item
+              name="productId"
+              label={<span className="text-slate-700">Ürün</span>}
+              rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+            >
+              <Select
+                placeholder="Ürün seçin"
+                showSearch
+                optionFilterProp="children"
+                className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
               >
-                <Input placeholder="SN-2024-00001" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-              >
-                <Select
-                  placeholder="Ürün seçin"
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {products.filter(p => p.trackSerialNumbers).map((p) => (
-                    <Select.Option key={p.id} value={p.id}>
-                      {p.code} - {p.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+                {products.filter(p => p.trackSerialNumbers).map((p) => (
+                  <Select.Option key={p.id} value={p.id}>
+                    {p.code} - {p.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="warehouseId"
-                label="Depo"
-              >
-                <Select placeholder="Depo seçin" allowClear>
-                  {warehouses.map((w) => (
-                    <Select.Option key={w.id} value={w.id}>
-                      {w.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="manufacturedDate"
-                label="Üretim Tarihi"
-              >
-                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="warehouseId"
+              label={<span className="text-slate-700">Depo</span>}
+            >
+              <Select placeholder="Depo seçin" allowClear className="[&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg">
+                {warehouses.map((w) => (
+                  <Select.Option key={w.id} value={w.id}>
+                    {w.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="manufacturedDate"
+              label={<span className="text-slate-700">Üretim Tarihi</span>}
+            >
+              <DatePicker className="w-full !border-slate-200 !rounded-lg" format="DD.MM.YYYY" />
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="batchNumber"
-                label="Parti/Lot Numarası"
-              >
-                <Input placeholder="LOT-2024-001" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="supplierSerial"
-                label="Tedarikçi Seri No"
-              >
-                <Input placeholder="Tedarikçinin seri numarası" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="batchNumber"
+              label={<span className="text-slate-700">Parti/Lot Numarası</span>}
+            >
+              <Input placeholder="LOT-2024-001" className="!border-slate-200 !rounded-lg" />
+            </Form.Item>
+            <Form.Item
+              name="supplierSerial"
+              label={<span className="text-slate-700">Tedarikçi Seri No</span>}
+            >
+              <Input placeholder="Tedarikçinin seri numarası" className="!border-slate-200 !rounded-lg" />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="notes"
-            label="Notlar"
+            label={<span className="text-slate-700">Notlar</span>}
           >
-            <TextArea rows={3} placeholder="Seri numarası hakkında ek bilgiler..." />
+            <TextArea rows={3} placeholder="Seri numarası hakkında ek bilgiler..." className="!border-slate-200 !rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Detail Modal */}
       <Modal
-        title={`Seri Numarası Detayı: ${selectedSerial?.serial || ''}`}
+        title={<span className="text-slate-900 font-semibold">Seri Numarası Detayı: {selectedSerial?.serial || ''}</span>}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
           setSelectedSerialId(null);
         }}
         footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
+          <Button key="close" onClick={() => setDetailModalOpen(false)} className="!border-slate-200">
             Kapat
           </Button>,
         ]}
@@ -806,43 +824,43 @@ export default function SerialNumbersPage() {
       >
         {selectedSerial && (
           <div className="space-y-4">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text type="secondary">Seri Numarası</Text>
-                <div><Text strong className="text-lg">{selectedSerial.serial}</Text></div>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">Durum</Text>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-slate-500">Seri Numarası</span>
+                <div className="text-lg font-semibold text-slate-900">{selectedSerial.serial}</div>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Durum</span>
                 <div>
-                  <Tag color={statusConfig[selectedSerial.status].color} icon={statusConfig[selectedSerial.status].icon}>
-                    {statusConfig[selectedSerial.status].label}
+                  <Tag style={{ backgroundColor: statusConfig[selectedSerial.status].color, color: '#fff', border: 'none', fontWeight: 500 }}>
+                    {statusConfig[selectedSerial.status].icon} {statusConfig[selectedSerial.status].label}
                   </Tag>
                 </div>
-              </Col>
-            </Row>
+              </div>
+            </div>
 
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text type="secondary">Ürün</Text>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-slate-500">Ürün</span>
                 <div>
-                  <Text strong>{selectedSerial.productName}</Text>
+                  <span className="font-semibold text-slate-900">{selectedSerial.productName}</span>
                   <br />
-                  <Text type="secondary">{selectedSerial.productCode}</Text>
+                  <span className="text-slate-500 text-sm">{selectedSerial.productCode}</span>
                 </div>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">Depo / Konum</Text>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Depo / Konum</span>
                 <div>
-                  <Text>{selectedSerial.warehouseName || '-'}</Text>
+                  <span className="text-slate-900">{selectedSerial.warehouseName || '-'}</span>
                   {selectedSerial.locationName && (
                     <>
                       <br />
-                      <Text type="secondary">{selectedSerial.locationName}</Text>
+                      <span className="text-slate-500 text-sm">{selectedSerial.locationName}</span>
                     </>
                   )}
                 </div>
-              </Col>
-            </Row>
+              </div>
+            </div>
 
             {selectedSerial.isUnderWarranty && (
               <Alert
@@ -851,106 +869,97 @@ export default function SerialNumbersPage() {
                 description={`${selectedSerial.remainingWarrantyDays} gün garanti süresi kaldı`}
                 icon={<SafetyCertificateOutlined />}
                 showIcon
+                className="!bg-slate-50 !border-slate-200"
               />
             )}
 
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Text type="secondary">Üretim Tarihi</Text>
-                <div>
-                  <Text>
-                    {selectedSerial.manufacturedDate
-                      ? dayjs(selectedSerial.manufacturedDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <span className="text-xs text-slate-500">Üretim Tarihi</span>
+                <div className="text-slate-900">
+                  {selectedSerial.manufacturedDate
+                    ? dayjs(selectedSerial.manufacturedDate).format('DD.MM.YYYY')
+                    : '-'}
                 </div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Teslim Tarihi</Text>
-                <div>
-                  <Text>
-                    {selectedSerial.receivedDate
-                      ? dayjs(selectedSerial.receivedDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Teslim Tarihi</span>
+                <div className="text-slate-900">
+                  {selectedSerial.receivedDate
+                    ? dayjs(selectedSerial.receivedDate).format('DD.MM.YYYY')
+                    : '-'}
                 </div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Satış Tarihi</Text>
-                <div>
-                  <Text>
-                    {selectedSerial.soldDate
-                      ? dayjs(selectedSerial.soldDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Satış Tarihi</span>
+                <div className="text-slate-900">
+                  {selectedSerial.soldDate
+                    ? dayjs(selectedSerial.soldDate).format('DD.MM.YYYY')
+                    : '-'}
                 </div>
-              </Col>
-            </Row>
+              </div>
+            </div>
 
             {(selectedSerial.warrantyStartDate || selectedSerial.warrantyEndDate) && (
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Text type="secondary">Garanti Başlangıç</Text>
-                  <div>
-                    <Text>
-                      {selectedSerial.warrantyStartDate
-                        ? dayjs(selectedSerial.warrantyStartDate).format('DD.MM.YYYY')
-                        : '-'}
-                    </Text>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-slate-500">Garanti Başlangıç</span>
+                  <div className="text-slate-900">
+                    {selectedSerial.warrantyStartDate
+                      ? dayjs(selectedSerial.warrantyStartDate).format('DD.MM.YYYY')
+                      : '-'}
                   </div>
-                </Col>
-                <Col span={12}>
-                  <Text type="secondary">Garanti Bitiş</Text>
-                  <div>
-                    <Text>
-                      {selectedSerial.warrantyEndDate
-                        ? dayjs(selectedSerial.warrantyEndDate).format('DD.MM.YYYY')
-                        : '-'}
-                    </Text>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500">Garanti Bitiş</span>
+                  <div className="text-slate-900">
+                    {selectedSerial.warrantyEndDate
+                      ? dayjs(selectedSerial.warrantyEndDate).format('DD.MM.YYYY')
+                      : '-'}
                   </div>
-                </Col>
-              </Row>
+                </div>
+              </div>
             )}
 
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Text type="secondary">Parti/Lot No</Text>
-                <div><Text>{selectedSerial.batchNumber || '-'}</Text></div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Tedarikçi Seri No</Text>
-                <div><Text>{selectedSerial.supplierSerial || '-'}</Text></div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Müşteri ID</Text>
-                <div><Text>{selectedSerial.customerId || '-'}</Text></div>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <span className="text-xs text-slate-500">Parti/Lot No</span>
+                <div className="text-slate-900">{selectedSerial.batchNumber || '-'}</div>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Tedarikçi Seri No</span>
+                <div className="text-slate-900">{selectedSerial.supplierSerial || '-'}</div>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Müşteri ID</span>
+                <div className="text-slate-900">{selectedSerial.customerId || '-'}</div>
+              </div>
+            </div>
 
             {(selectedSerial.salesOrderId || selectedSerial.purchaseOrderId) && (
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Text type="secondary">Satış Siparişi</Text>
-                  <div><Text>{selectedSerial.salesOrderId || '-'}</Text></div>
-                </Col>
-                <Col span={12}>
-                  <Text type="secondary">Satınalma Siparişi</Text>
-                  <div><Text>{selectedSerial.purchaseOrderId || '-'}</Text></div>
-                </Col>
-              </Row>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-slate-500">Satış Siparişi</span>
+                  <div className="text-slate-900">{selectedSerial.salesOrderId || '-'}</div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500">Satınalma Siparişi</span>
+                  <div className="text-slate-900">{selectedSerial.purchaseOrderId || '-'}</div>
+                </div>
+              </div>
             )}
 
             {selectedSerial.notes && (
               <div>
-                <Text type="secondary">Notlar</Text>
-                <div><Text>{selectedSerial.notes}</Text></div>
+                <span className="text-xs text-slate-500">Notlar</span>
+                <div className="text-slate-900">{selectedSerial.notes}</div>
               </div>
             )}
 
-            <div className="border-t pt-4 mt-4">
-              <Text type="secondary" className="text-xs">
+            <div className="border-t border-slate-200 pt-4 mt-4">
+              <span className="text-xs text-slate-400">
                 Oluşturulma: {dayjs(selectedSerial.createdAt).format('DD.MM.YYYY HH:mm')}
-              </Text>
+              </span>
             </div>
           </div>
         )}
@@ -958,7 +967,7 @@ export default function SerialNumbersPage() {
 
       {/* Sell Modal */}
       <Modal
-        title="Seri Numarasını Sat"
+        title={<span className="text-slate-900 font-semibold">Seri Numarasını Sat</span>}
         open={sellModalOpen}
         onCancel={() => {
           setSellModalOpen(false);
@@ -968,34 +977,35 @@ export default function SerialNumbersPage() {
         okText="Sat"
         cancelText="İptal"
         confirmLoading={sellSerialNumber.isPending}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
       >
         <Form form={sellForm} layout="vertical" className="mt-4">
           <Form.Item
             name="customerId"
-            label="Müşteri ID"
+            label={<span className="text-slate-700">Müşteri ID</span>}
             rules={[{ required: true, message: 'Müşteri ID gerekli' }]}
           >
-            <Input placeholder="Müşteri ID girin" />
+            <Input placeholder="Müşteri ID girin" className="!border-slate-200 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="salesOrderId"
-            label="Satış Siparişi No"
+            label={<span className="text-slate-700">Satış Siparişi No</span>}
             rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
           >
-            <Input placeholder="Satış siparişi numarası" />
+            <Input placeholder="Satış siparişi numarası" className="!border-slate-200 !rounded-lg" />
           </Form.Item>
           <Form.Item
             name="warrantyMonths"
-            label="Garanti Süresi (Ay)"
+            label={<span className="text-slate-700">Garanti Süresi (Ay)</span>}
           >
-            <InputNumber min={0} max={120} style={{ width: '100%' }} placeholder="12" />
+            <InputNumber min={0} max={120} className="w-full !border-slate-200 !rounded-lg" placeholder="12" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Reserve Modal */}
       <Modal
-        title="Seri Numarasını Rezerve Et"
+        title={<span className="text-slate-900 font-semibold">Seri Numarasını Rezerve Et</span>}
         open={reserveModalOpen}
         onCancel={() => {
           setReserveModalOpen(false);
@@ -1005,21 +1015,22 @@ export default function SerialNumbersPage() {
         okText="Rezerve Et"
         cancelText="İptal"
         confirmLoading={reserveSerialNumber.isPending}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
       >
         <Form form={reserveForm} layout="vertical" className="mt-4">
           <Form.Item
             name="salesOrderId"
-            label="Satış Siparişi No"
+            label={<span className="text-slate-700">Satış Siparişi No</span>}
             rules={[{ required: true, message: 'Satış siparişi numarası gerekli' }]}
           >
-            <Input placeholder="Satış siparişi numarası" />
+            <Input placeholder="Satış siparişi numarası" className="!border-slate-200 !rounded-lg" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Defective Modal */}
       <Modal
-        title="Arızalı Olarak İşaretle"
+        title={<span className="text-slate-900 font-semibold">Arızalı Olarak İşaretle</span>}
         open={defectiveModalOpen}
         onCancel={() => {
           setDefectiveModalOpen(false);
@@ -1035,17 +1046,18 @@ export default function SerialNumbersPage() {
           type="warning"
           message="Bu işlem seri numarasını arızalı olarak işaretleyecektir"
           description="Arızalı seri numaraları satışa kapalı olacaktır."
-          className="mb-4"
+          className="mb-4 !bg-slate-50 !border-slate-300"
           showIcon
         />
         <Form form={defectiveForm} layout="vertical">
           <Form.Item
             name="reason"
-            label="Arıza Sebebi"
+            label={<span className="text-slate-700">Arıza Sebebi</span>}
           >
             <TextArea
               rows={4}
               placeholder="Arıza sebebini açıklayın..."
+              className="!border-slate-200 !rounded-lg"
             />
           </Form.Item>
         </Form>

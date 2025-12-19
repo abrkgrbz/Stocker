@@ -3,17 +3,11 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Typography,
   Button,
   Space,
   Table,
   Tag,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Modal,
-  Dropdown,
   Select,
   DatePicker,
   Progress,
@@ -23,7 +17,7 @@ import {
   Tooltip,
   Alert,
   Tabs,
-  Badge,
+  Dropdown,
 } from 'antd';
 import {
   PlusOutlined,
@@ -40,7 +34,6 @@ import {
   SafetyOutlined,
   ExperimentOutlined,
   DeleteOutlined,
-  EditOutlined,
 } from '@ant-design/icons';
 import {
   useLotBatches,
@@ -61,19 +54,21 @@ import type {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-// Lot batch status configuration
-const statusConfig: Record<LotBatchStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'gold', label: 'Beklemede', icon: <ClockCircleOutlined /> },
-  Received: { color: 'cyan', label: 'Teslim Alındı', icon: <InboxOutlined /> },
-  Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Quarantined: { color: 'orange', label: 'Karantinada', icon: <ExclamationCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Exhausted: { color: 'default', label: 'Tükendi', icon: <DeleteOutlined /> },
-  Expired: { color: 'volcano', label: 'Tarihi Geçti', icon: <WarningOutlined /> },
-  Recalled: { color: 'magenta', label: 'Geri Çağrıldı', icon: <StopOutlined /> },
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
+
+// Lot batch status configuration with monochrome colors
+const statusConfig: Record<LotBatchStatus, { color: string; bgColor: string; label: string; icon: React.ReactNode }> = {
+  Pending: { color: '#64748b', bgColor: '#f1f5f9', label: 'Beklemede', icon: <ClockCircleOutlined /> },
+  Received: { color: '#475569', bgColor: '#e2e8f0', label: 'Teslim Alındı', icon: <InboxOutlined /> },
+  Approved: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
+  Quarantined: { color: '#334155', bgColor: '#f1f5f9', label: 'Karantinada', icon: <ExclamationCircleOutlined /> },
+  Rejected: { color: '#475569', bgColor: '#f1f5f9', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
+  Exhausted: { color: '#94a3b8', bgColor: '#f8fafc', label: 'Tükendi', icon: <DeleteOutlined /> },
+  Expired: { color: '#64748b', bgColor: '#f1f5f9', label: 'Tarihi Geçti', icon: <WarningOutlined /> },
+  Recalled: { color: '#334155', bgColor: '#e2e8f0', label: 'Geri Çağrıldı', icon: <StopOutlined /> },
 };
 
 export default function LotBatchesPage() {
@@ -128,8 +123,6 @@ export default function LotBatchesPage() {
 
   // Calculate stats
   const allBatches = useMemo(() => {
-    // For stats, we need all batches - this is a simplified approach
-    // In production, you might want to fetch stats from a separate endpoint
     return lotBatches;
   }, [lotBatches]);
 
@@ -157,6 +150,7 @@ export default function LotBatchesPage() {
       content: `"${lotBatch.lotNumber}" lot/partisini onaylamak istediğinizden emin misiniz?`,
       okText: 'Onayla',
       cancelText: 'İptal',
+      okButtonProps: { className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' },
       onOk: async () => {
         try {
           await approveLotBatch.mutateAsync(lotBatch.id);
@@ -219,13 +213,26 @@ export default function LotBatchesPage() {
       key: 'lotNumber',
       width: 150,
       render: (text: string, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong className="text-blue-600 cursor-pointer hover:underline" onClick={() => handleViewDetail(record.id)}>
+        <div className="space-y-1">
+          <span
+            className="font-semibold text-slate-900 cursor-pointer hover:text-slate-600"
+            onClick={() => handleViewDetail(record.id)}
+          >
             {text}
-          </Text>
-          {record.isExpired && <Tag color="red" icon={<WarningOutlined />}>Süresi Doldu</Tag>}
-          {record.isQuarantined && <Tag color="orange" icon={<ExclamationCircleOutlined />}>Karantinada</Tag>}
-        </Space>
+          </span>
+          <div className="flex gap-1">
+            {record.isExpired && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
+                <WarningOutlined className="text-xs" /> Süresi Doldu
+              </span>
+            )}
+            {record.isQuarantined && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-300 text-slate-800">
+                <ExclamationCircleOutlined className="text-xs" /> Karantinada
+              </span>
+            )}
+          </div>
+        </div>
       ),
     },
     {
@@ -233,10 +240,10 @@ export default function LotBatchesPage() {
       key: 'product',
       width: 200,
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.productName}</Text>
-          <Text type="secondary" className="text-xs">{record.productCode}</Text>
-        </Space>
+        <div>
+          <div className="font-medium text-slate-900">{record.productName}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
+        </div>
       ),
     },
     {
@@ -247,9 +254,13 @@ export default function LotBatchesPage() {
       render: (status: LotBatchStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: config.bgColor, color: config.color }}
+          >
+            {config.icon}
             {config.label}
-          </Tag>
+          </span>
         );
       },
     },
@@ -258,12 +269,12 @@ export default function LotBatchesPage() {
       key: 'quantity',
       width: 150,
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text>Mevcut: <Text strong>{record.currentQuantity.toLocaleString('tr-TR')}</Text></Text>
-          <Text type="secondary" className="text-xs">
+        <div>
+          <div className="text-slate-900">Mevcut: <span className="font-semibold">{record.currentQuantity.toLocaleString('tr-TR')}</span></div>
+          <div className="text-xs text-slate-500">
             Kullanılabilir: {record.availableQuantity.toLocaleString('tr-TR')}
-          </Text>
-        </Space>
+          </div>
+        </div>
       ),
     },
     {
@@ -272,34 +283,46 @@ export default function LotBatchesPage() {
       key: 'expiryDate',
       width: 160,
       render: (date: string | undefined, record) => {
-        if (!date) return <Text type="secondary">-</Text>;
+        if (!date) return <span className="text-slate-400">-</span>;
 
         const expiryDate = dayjs(date);
         const daysLeft = record.daysUntilExpiry;
 
-        let color = 'default';
+        let bgColor = '#f1f5f9';
+        let textColor = '#64748b';
         if (record.isExpired) {
-          color = 'red';
+          bgColor = '#e2e8f0';
+          textColor = '#334155';
         } else if (daysLeft !== undefined) {
-          if (daysLeft <= 7) color = 'red';
-          else if (daysLeft <= 30) color = 'orange';
-          else if (daysLeft <= 90) color = 'gold';
+          if (daysLeft <= 7) {
+            bgColor = '#e2e8f0';
+            textColor = '#1e293b';
+          } else if (daysLeft <= 30) {
+            bgColor = '#f1f5f9';
+            textColor = '#475569';
+          }
         }
 
         return (
-          <Space direction="vertical" size={0}>
-            <Text>{expiryDate.format('DD.MM.YYYY')}</Text>
+          <div className="space-y-1">
+            <div className="text-slate-900">{expiryDate.format('DD.MM.YYYY')}</div>
             {daysLeft !== undefined && !record.isExpired && (
-              <Tag color={color} className="text-xs">
+              <span
+                className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                style={{ backgroundColor: bgColor, color: textColor }}
+              >
                 {daysLeft} gün kaldı
-              </Tag>
+              </span>
             )}
             {record.isExpired && (
-              <Tag color="red" className="text-xs">
+              <span
+                className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                style={{ backgroundColor: '#e2e8f0', color: '#1e293b' }}
+              >
                 Süresi Doldu
-              </Tag>
+              </span>
             )}
-          </Space>
+          </div>
         );
       },
     },
@@ -341,7 +364,7 @@ export default function LotBatchesPage() {
             menu={{ items: menuItems }}
             trigger={['click']}
           >
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button type="text" icon={<MoreOutlined />} className="text-slate-600 hover:text-slate-900" />
           </Dropdown>
         );
       },
@@ -353,134 +376,161 @@ export default function LotBatchesPage() {
     {
       key: 'all',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <InboxOutlined />
           Tüm Lotlar
-          <Badge count={stats.total} showZero style={{ backgroundColor: '#1890ff' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
+            {stats.total}
+          </span>
+        </span>
       ),
     },
     {
       key: 'pending',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <ClockCircleOutlined />
           Bekleyenler
-          <Badge count={stats.pending} showZero style={{ backgroundColor: '#faad14' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
+            {stats.pending}
+          </span>
+        </span>
       ),
     },
     {
       key: 'quarantine',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <ExclamationCircleOutlined />
           Karantina
-          <Badge count={stats.quarantined} showZero style={{ backgroundColor: '#fa8c16' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-400 text-white">
+            {stats.quarantined}
+          </span>
+        </span>
       ),
     },
     {
       key: 'expiring',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <WarningOutlined />
           Süresi Yaklaşanlar
-          <Badge count={stats.expiringSoon} showZero style={{ backgroundColor: '#faad14' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
+            {stats.expiringSoon}
+          </span>
+        </span>
       ),
     },
     {
       key: 'expired',
       label: (
-        <Space>
+        <span className="flex items-center gap-2">
           <StopOutlined />
           Süresi Dolanlar
-          <Badge count={stats.expired} showZero style={{ backgroundColor: '#ff4d4f' }} />
-        </Space>
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-500 text-white">
+            {stats.expired}
+          </span>
+        </span>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <Title level={4} className="!mb-1">Lot/Parti Yönetimi</Title>
-          <Text type="secondary">Ürün lotlarını ve partilerini yönetin, son kullanma tarihlerini takip edin</Text>
+          <h1 className="text-2xl font-bold text-slate-900">Lot/Parti Yönetimi</h1>
+          <p className="text-slate-500 mt-1">Ürün lotlarını ve partilerini yönetin, son kullanma tarihlerini takip edin</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
+          >
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalOpen(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalOpen(true)}
+            className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+          >
             Yeni Lot/Parti
           </Button>
         </Space>
       </div>
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Lot"
-              value={stats.total}
-              prefix={<InboxOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Bekleyen"
-              value={stats.pending}
-              valueStyle={{ color: '#faad14' }}
-              prefix={<ClockCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Karantina"
-              value={stats.quarantined}
-              valueStyle={{ color: '#fa8c16' }}
-              prefix={<ExclamationCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Süresi Yaklaşan"
-              value={stats.expiringSoon}
-              valueStyle={{ color: '#faad14' }}
-              prefix={<WarningOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Süresi Dolan"
-              value={stats.expired}
-              valueStyle={{ color: '#ff4d4f' }}
-              prefix={<StopOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Miktar"
-              value={stats.totalQuantity}
-              prefix={<ExperimentOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <InboxOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Lot</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <ClockCircleOutlined className="text-lg text-slate-700" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-700">{stats.pending}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Bekleyen</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
+                <ExclamationCircleOutlined className="text-lg text-slate-800" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{stats.quarantined}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Karantina</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+                <WarningOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-600">{stats.expiringSoon}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Süresi Yaklaşan</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
+                <StopOutlined className="text-lg text-white" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Süresi Dolan</div>
+          </div>
+        </div>
+        <div className="col-span-12 md:col-span-4 lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ExperimentOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats.totalQuantity.toLocaleString('tr-TR')}</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-1">Toplam Miktar</div>
+          </div>
+        </div>
+      </div>
 
       {/* Alerts */}
       {stats.expired > 0 && (
@@ -490,6 +540,7 @@ export default function LotBatchesPage() {
           icon={<WarningOutlined />}
           message={`${stats.expired} adet lot/partinin son kullanma tarihi geçmiş durumda!`}
           description="Bu lotları kontrol edin ve gerekli aksiyonları alın."
+          className="mb-6 !border-slate-300 !bg-slate-100 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
         />
       )}
       {stats.expiringSoon > 0 && stats.expired === 0 && (
@@ -499,20 +550,21 @@ export default function LotBatchesPage() {
           icon={<ClockCircleOutlined />}
           message={`${stats.expiringSoon} adet lot/partinin son kullanma tarihi yaklaşıyor!`}
           description="30 gün içinde süresi dolacak lotları kontrol edin."
+          className="mb-6 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
         />
       )}
 
       {/* Tabs and Filters */}
-      <Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          className="mb-4"
+          className="mb-6 [&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
         />
 
         {/* Filters */}
-        <Space wrap className="mb-4">
+        <div className="flex flex-wrap gap-3 mb-6">
           <Select
             placeholder="Ürün"
             allowClear
@@ -521,6 +573,7 @@ export default function LotBatchesPage() {
             onChange={setSelectedProduct}
             showSearch
             optionFilterProp="children"
+            className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
           >
             {products.map((p) => (
               <Select.Option key={p.id} value={p.id}>
@@ -536,10 +589,16 @@ export default function LotBatchesPage() {
               style={{ width: 150 }}
               value={selectedStatus}
               onChange={setSelectedStatus}
+              className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             >
               {Object.entries(statusConfig).map(([key, config]) => (
                 <Select.Option key={key} value={key}>
-                  <Tag color={config.color}>{config.label}</Tag>
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs"
+                    style={{ backgroundColor: config.bgColor, color: config.color }}
+                  >
+                    {config.label}
+                  </span>
                 </Select.Option>
               ))}
             </Select>
@@ -551,6 +610,7 @@ export default function LotBatchesPage() {
               style={{ width: 130 }}
               value={expiringWithinDays || 30}
               onChange={setExpiringWithinDays}
+              className="[&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector]:!rounded-lg"
             >
               <Select.Option value={7}>7 gün</Select.Option>
               <Select.Option value={14}>14 gün</Select.Option>
@@ -559,7 +619,7 @@ export default function LotBatchesPage() {
               <Select.Option value={90}>90 gün</Select.Option>
             </Select>
           )}
-        </Space>
+        </div>
 
         {/* Table */}
         <Table
@@ -574,12 +634,13 @@ export default function LotBatchesPage() {
             showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
           }}
           scroll={{ x: 1000 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wider [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100 [&_.ant-table-row:hover_td]:!bg-slate-50"
         />
-      </Card>
+      </div>
 
       {/* Create Modal */}
       <Modal
-        title="Yeni Lot/Parti Oluştur"
+        title={<span className="text-slate-900 font-semibold">Yeni Lot/Parti Oluştur</span>}
         open={createModalOpen}
         onCancel={() => {
           setCreateModalOpen(false);
@@ -590,135 +651,124 @@ export default function LotBatchesPage() {
         cancelText="İptal"
         confirmLoading={createLotBatch.isPending}
         width={600}
+        okButtonProps={{ className: '!bg-slate-900 hover:!bg-slate-800 !border-slate-900' }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Form
           form={createForm}
           layout="vertical"
           className="mt-4"
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="lotNumber"
-                label="Lot Numarası"
-                rules={[{ required: true, message: 'Lot numarası gerekli' }]}
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="lotNumber"
+              label={<span className="text-slate-700 font-medium">Lot Numarası</span>}
+              rules={[{ required: true, message: 'Lot numarası gerekli' }]}
+            >
+              <Input placeholder="LOT-2024-001" className="!rounded-lg !border-slate-300" />
+            </Form.Item>
+            <Form.Item
+              name="productId"
+              label={<span className="text-slate-700 font-medium">Ürün</span>}
+              rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
+            >
+              <Select
+                placeholder="Ürün seçin"
+                showSearch
+                optionFilterProp="children"
+                className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
               >
-                <Input placeholder="LOT-2024-001" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="productId"
-                label="Ürün"
-                rules={[{ required: true, message: 'Ürün seçimi gerekli' }]}
-              >
-                <Select
-                  placeholder="Ürün seçin"
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {products.filter(p => p.trackLotNumbers).map((p) => (
-                    <Select.Option key={p.id} value={p.id}>
-                      {p.code} - {p.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+                {products.filter(p => p.trackLotNumbers).map((p) => (
+                  <Select.Option key={p.id} value={p.id}>
+                    {p.code} - {p.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="initialQuantity"
-                label="Başlangıç Miktarı"
-                rules={[{ required: true, message: 'Miktar gerekli' }]}
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="initialQuantity"
+              label={<span className="text-slate-700 font-medium">Başlangıç Miktarı</span>}
+              rules={[{ required: true, message: 'Miktar gerekli' }]}
+            >
+              <InputNumber
+                min={1}
+                style={{ width: '100%' }}
+                placeholder="0"
+                className="!rounded-lg [&_.ant-input-number-input]:!border-slate-300"
+              />
+            </Form.Item>
+            <Form.Item
+              name="supplierId"
+              label={<span className="text-slate-700 font-medium">Tedarikçi</span>}
+            >
+              <Select
+                placeholder="Tedarikçi seçin"
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                className="[&_.ant-select-selector]:!rounded-lg [&_.ant-select-selector]:!border-slate-300"
               >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="supplierId"
-                label="Tedarikçi"
-              >
-                <Select
-                  placeholder="Tedarikçi seçin"
-                  allowClear
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {suppliers.map((s) => (
-                    <Select.Option key={s.id} value={s.id}>
-                      {s.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+                {suppliers.map((s) => (
+                  <Select.Option key={s.id} value={s.id}>
+                    {s.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="manufacturedDate"
-                label="Üretim Tarihi"
-              >
-                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="expiryDate"
-                label="Son Kullanma Tarihi"
-              >
-                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="manufacturedDate"
+              label={<span className="text-slate-700 font-medium">Üretim Tarihi</span>}
+            >
+              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="!rounded-lg !border-slate-300" />
+            </Form.Item>
+            <Form.Item
+              name="expiryDate"
+              label={<span className="text-slate-700 font-medium">Son Kullanma Tarihi</span>}
+            >
+              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" className="!rounded-lg !border-slate-300" />
+            </Form.Item>
+          </div>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="supplierLotNumber"
-                label="Tedarikçi Lot No"
-              >
-                <Input placeholder="Tedarikçinin lot numarası" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="certificateNumber"
-                label="Sertifika No"
-              >
-                <Input placeholder="Kalite sertifika numarası" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="supplierLotNumber"
+              label={<span className="text-slate-700 font-medium">Tedarikçi Lot No</span>}
+            >
+              <Input placeholder="Tedarikçinin lot numarası" className="!rounded-lg !border-slate-300" />
+            </Form.Item>
+            <Form.Item
+              name="certificateNumber"
+              label={<span className="text-slate-700 font-medium">Sertifika No</span>}
+            >
+              <Input placeholder="Kalite sertifika numarası" className="!rounded-lg !border-slate-300" />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="notes"
-            label="Notlar"
+            label={<span className="text-slate-700 font-medium">Notlar</span>}
           >
-            <TextArea rows={3} placeholder="Lot hakkında ek bilgiler..." />
+            <TextArea rows={3} placeholder="Lot hakkında ek bilgiler..." className="!rounded-lg !border-slate-300" />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Detail Modal */}
       <Modal
-        title={`Lot Detayı: ${selectedLotBatch?.lotNumber || ''}`}
+        title={<span className="text-slate-900 font-semibold">Lot Detayı: {selectedLotBatch?.lotNumber || ''}</span>}
         open={detailModalOpen}
         onCancel={() => {
           setDetailModalOpen(false);
           setSelectedLotBatchId(null);
         }}
         footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
+          <Button key="close" onClick={() => setDetailModalOpen(false)} className="!border-slate-300 !text-slate-600">
             Kapat
           </Button>,
           selectedLotBatch?.status === 'Pending' || selectedLotBatch?.status === 'Received' ? (
@@ -726,6 +776,7 @@ export default function LotBatchesPage() {
               key="approve"
               type="primary"
               icon={<CheckCircleOutlined />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               onClick={() => {
                 if (selectedLotBatch) {
                   handleApprove(selectedLotBatch as unknown as LotBatchListDto);
@@ -740,105 +791,103 @@ export default function LotBatchesPage() {
         width={700}
       >
         {selectedLotBatch && (
-          <div className="space-y-4">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text type="secondary">Lot Numarası</Text>
-                <div><Text strong className="text-lg">{selectedLotBatch.lotNumber}</Text></div>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">Durum</Text>
-                <div>
-                  <Tag color={statusConfig[selectedLotBatch.status].color} icon={statusConfig[selectedLotBatch.status].icon}>
-                    {statusConfig[selectedLotBatch.status].label}
-                  </Tag>
-                </div>
-              </Col>
-            </Row>
+          <div className="space-y-6 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Lot Numarası</p>
+                <p className="text-lg font-semibold text-slate-900">{selectedLotBatch.lotNumber}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Durum</p>
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+                  style={{
+                    backgroundColor: statusConfig[selectedLotBatch.status].bgColor,
+                    color: statusConfig[selectedLotBatch.status].color
+                  }}
+                >
+                  {statusConfig[selectedLotBatch.status].icon}
+                  {statusConfig[selectedLotBatch.status].label}
+                </span>
+              </div>
+            </div>
 
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text type="secondary">Ürün</Text>
-                <div>
-                  <Text strong>{selectedLotBatch.productName}</Text>
-                  <br />
-                  <Text type="secondary">{selectedLotBatch.productCode}</Text>
-                </div>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">Tedarikçi</Text>
-                <div><Text>{selectedLotBatch.supplierName || '-'}</Text></div>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Ürün</p>
+                <p className="font-semibold text-slate-900">{selectedLotBatch.productName}</p>
+                <p className="text-sm text-slate-500">{selectedLotBatch.productCode}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Tedarikçi</p>
+                <p className="text-slate-700">{selectedLotBatch.supplierName || '-'}</p>
+              </div>
+            </div>
 
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Text type="secondary">Başlangıç Miktarı</Text>
-                <div><Text strong>{selectedLotBatch.initialQuantity.toLocaleString('tr-TR')}</Text></div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Mevcut Miktar</Text>
-                <div><Text strong>{selectedLotBatch.currentQuantity.toLocaleString('tr-TR')}</Text></div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Kullanılabilir</Text>
-                <div><Text strong>{selectedLotBatch.availableQuantity.toLocaleString('tr-TR')}</Text></div>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Başlangıç Miktarı</p>
+                <p className="font-semibold text-slate-900">{selectedLotBatch.initialQuantity.toLocaleString('tr-TR')}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Mevcut Miktar</p>
+                <p className="font-semibold text-slate-900">{selectedLotBatch.currentQuantity.toLocaleString('tr-TR')}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Kullanılabilir</p>
+                <p className="font-semibold text-slate-900">{selectedLotBatch.availableQuantity.toLocaleString('tr-TR')}</p>
+              </div>
+            </div>
 
             {selectedLotBatch.reservedQuantity > 0 && (
               <Alert
                 type="info"
                 message={`${selectedLotBatch.reservedQuantity.toLocaleString('tr-TR')} adet rezerve edilmiş`}
                 showIcon
+                className="!border-slate-300 !bg-slate-50"
               />
             )}
 
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Text type="secondary">Üretim Tarihi</Text>
-                <div>
-                  <Text>
-                    {selectedLotBatch.manufacturedDate
-                      ? dayjs(selectedLotBatch.manufacturedDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
-                </div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Son Kullanma Tarihi</Text>
-                <div>
-                  <Text type={selectedLotBatch.isExpired ? 'danger' : undefined}>
-                    {selectedLotBatch.expiryDate
-                      ? dayjs(selectedLotBatch.expiryDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
-                  {selectedLotBatch.daysUntilExpiry !== undefined && !selectedLotBatch.isExpired && (
-                    <Tag color={selectedLotBatch.daysUntilExpiry <= 30 ? 'orange' : 'default'} className="ml-2">
-                      {selectedLotBatch.daysUntilExpiry} gün
-                    </Tag>
-                  )}
-                </div>
-              </Col>
-              <Col span={8}>
-                <Text type="secondary">Teslim Tarihi</Text>
-                <div>
-                  <Text>
-                    {selectedLotBatch.receivedDate
-                      ? dayjs(selectedLotBatch.receivedDate).format('DD.MM.YYYY')
-                      : '-'}
-                  </Text>
-                </div>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Üretim Tarihi</p>
+                <p className="text-slate-700">
+                  {selectedLotBatch.manufacturedDate
+                    ? dayjs(selectedLotBatch.manufacturedDate).format('DD.MM.YYYY')
+                    : '-'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Son Kullanma Tarihi</p>
+                <p className={selectedLotBatch.isExpired ? 'text-slate-900 font-semibold' : 'text-slate-700'}>
+                  {selectedLotBatch.expiryDate
+                    ? dayjs(selectedLotBatch.expiryDate).format('DD.MM.YYYY')
+                    : '-'}
+                </p>
+                {selectedLotBatch.daysUntilExpiry !== undefined && !selectedLotBatch.isExpired && (
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                    {selectedLotBatch.daysUntilExpiry} gün
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Teslim Tarihi</p>
+                <p className="text-slate-700">
+                  {selectedLotBatch.receivedDate
+                    ? dayjs(selectedLotBatch.receivedDate).format('DD.MM.YYYY')
+                    : '-'}
+                </p>
+              </div>
+            </div>
 
             {selectedLotBatch.remainingShelfLifePercentage !== undefined && (
               <div>
-                <Text type="secondary">Kalan Raf Ömrü</Text>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Kalan Raf Ömrü</p>
                 <Progress
                   percent={Math.round(selectedLotBatch.remainingShelfLifePercentage)}
                   status={selectedLotBatch.remainingShelfLifePercentage < 20 ? 'exception' : undefined}
-                  strokeColor={selectedLotBatch.remainingShelfLifePercentage < 50 ? '#faad14' : '#52c41a'}
+                  strokeColor={selectedLotBatch.remainingShelfLifePercentage < 50 ? '#64748b' : '#334155'}
+                  trailColor="#e2e8f0"
                 />
               </div>
             )}
@@ -849,41 +898,42 @@ export default function LotBatchesPage() {
                 message="Karantina Sebebi"
                 description={selectedLotBatch.quarantineReason}
                 showIcon
+                className="!border-slate-300 !bg-slate-50"
               />
             )}
 
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text type="secondary">Tedarikçi Lot No</Text>
-                <div><Text>{selectedLotBatch.supplierLotNumber || '-'}</Text></div>
-              </Col>
-              <Col span={12}>
-                <Text type="secondary">Sertifika No</Text>
-                <div><Text>{selectedLotBatch.certificateNumber || '-'}</Text></div>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Tedarikçi Lot No</p>
+                <p className="text-slate-700">{selectedLotBatch.supplierLotNumber || '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Sertifika No</p>
+                <p className="text-slate-700">{selectedLotBatch.certificateNumber || '-'}</p>
+              </div>
+            </div>
 
             {selectedLotBatch.notes && (
               <div>
-                <Text type="secondary">Notlar</Text>
-                <div><Text>{selectedLotBatch.notes}</Text></div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Notlar</p>
+                <p className="text-slate-700">{selectedLotBatch.notes}</p>
               </div>
             )}
 
             {selectedLotBatch.inspectionNotes && (
               <div>
-                <Text type="secondary">Denetim Notları</Text>
-                <div><Text>{selectedLotBatch.inspectionNotes}</Text></div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Denetim Notları</p>
+                <p className="text-slate-700">{selectedLotBatch.inspectionNotes}</p>
               </div>
             )}
 
-            <div className="border-t pt-4 mt-4">
-              <Text type="secondary" className="text-xs">
+            <div className="border-t border-slate-200 pt-4 mt-4">
+              <p className="text-xs text-slate-400">
                 Oluşturulma: {dayjs(selectedLotBatch.createdAt).format('DD.MM.YYYY HH:mm')}
                 {selectedLotBatch.inspectedDate && (
                   <> | Denetim: {dayjs(selectedLotBatch.inspectedDate).format('DD.MM.YYYY HH:mm')}</>
                 )}
-              </Text>
+              </p>
             </div>
           </div>
         )}
@@ -891,7 +941,7 @@ export default function LotBatchesPage() {
 
       {/* Quarantine Modal */}
       <Modal
-        title="Karantinaya Al"
+        title={<span className="text-slate-900 font-semibold">Karantinaya Al</span>}
         open={quarantineModalOpen}
         onCancel={() => {
           setQuarantineModalOpen(false);
@@ -902,23 +952,25 @@ export default function LotBatchesPage() {
         cancelText="İptal"
         confirmLoading={quarantineLotBatch.isPending}
         okButtonProps={{ danger: true }}
+        cancelButtonProps={{ className: '!border-slate-300 !text-slate-600' }}
       >
         <Alert
           type="warning"
           message="Bu işlem lot/partiyi karantinaya alacaktır"
           description="Karantinaya alınan lotlar satışa veya kullanıma kapalı olacaktır."
-          className="mb-4"
+          className="mb-4 !border-slate-300 !bg-slate-50"
           showIcon
         />
         <Form form={quarantineForm} layout="vertical">
           <Form.Item
             name="reason"
-            label="Karantina Sebebi"
+            label={<span className="text-slate-700 font-medium">Karantina Sebebi</span>}
             rules={[{ required: true, message: 'Karantina sebebi gerekli' }]}
           >
             <TextArea
               rows={4}
               placeholder="Karantinaya alma sebebini açıklayın..."
+              className="!rounded-lg !border-slate-300"
             />
           </Form.Item>
         </Form>
