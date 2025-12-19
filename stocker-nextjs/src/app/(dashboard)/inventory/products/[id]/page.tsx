@@ -1,27 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  Typography,
   Button,
   Space,
-  Card,
-  Descriptions,
   Tag,
-  Row,
-  Col,
-  Statistic,
   Spin,
-  Alert,
-  Divider,
   Modal,
   Upload,
   Image,
   Empty,
-  message,
+  Tooltip,
+  Progress,
 } from 'antd';
-import type { UploadFile, RcFile } from 'antd/es/upload';
+import type { RcFile } from 'antd/es/upload';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -30,11 +23,18 @@ import {
   StopOutlined,
   WarningOutlined,
   BarcodeOutlined,
-  TagOutlined,
   PlusOutlined,
   PictureOutlined,
   StarOutlined,
   StarFilled,
+  BoxPlotOutlined,
+  DollarOutlined,
+  SettingOutlined,
+  ClockCircleOutlined,
+  TagOutlined,
+  AppstoreOutlined,
+  ScissorOutlined,
+  ExpandOutlined,
 } from '@ant-design/icons';
 import {
   useProduct,
@@ -46,23 +46,24 @@ import {
   useDeleteProductImage,
   useSetProductImageAsPrimary,
 } from '@/lib/api/hooks/useInventory';
-import type { ProductType, ProductImageDto } from '@/lib/api/services/inventory.types';
+import type { ProductType } from '@/lib/api/services/inventory.types';
+import { formatCurrency, formatNumber } from '@/lib/utils/format';
+import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
-
-const productTypeConfig: Record<ProductType, { color: string; label: string }> = {
-  Raw: { color: 'blue', label: 'Hammadde' },
-  SemiFinished: { color: 'cyan', label: 'Yarı Mamul' },
-  Finished: { color: 'green', label: 'Mamul' },
-  Service: { color: 'purple', label: 'Hizmet' },
-  Consumable: { color: 'orange', label: 'Sarf Malzeme' },
-  FixedAsset: { color: 'gold', label: 'Duran Varlık' },
+const productTypeConfig: Record<ProductType, { color: string; label: string; bgColor: string }> = {
+  Raw: { color: '#475569', label: 'Hammadde', bgColor: '#f1f5f9' },
+  SemiFinished: { color: '#475569', label: 'Yarı Mamul', bgColor: '#f1f5f9' },
+  Finished: { color: '#1e293b', label: 'Mamul', bgColor: '#e2e8f0' },
+  Service: { color: '#64748b', label: 'Hizmet', bgColor: '#f8fafc' },
+  Consumable: { color: '#475569', label: 'Sarf Malzeme', bgColor: '#f1f5f9' },
+  FixedAsset: { color: '#334155', label: 'Duran Varlık', bgColor: '#e2e8f0' },
 };
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = Number(params.id);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const { data: product, isLoading, error } = useProduct(productId);
   const { data: images = [], isLoading: imagesLoading } = useProductImages(productId);
@@ -83,7 +84,7 @@ export default function ProductDetailPage() {
     } catch (error) {
       // Error handled by hook
     }
-    return false; // Prevent default upload behavior
+    return false;
   };
 
   const handleDeleteImage = async (imageId: number) => {
@@ -143,317 +144,527 @@ export default function ProductDetailPage() {
     }
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
   }
 
+  // Error state
   if (error || !product) {
     return (
-      <div className="p-6">
-        <Alert
-          message="Ürün Bulunamadı"
-          description="İstenen ürün bulunamadı veya bir hata oluştu."
-          type="error"
-          showIcon
-          action={
-            <Button onClick={() => router.push('/inventory/products')}>
-              Ürünlere Dön
-            </Button>
-          }
-        />
+      <div className="min-h-screen bg-slate-50 p-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center max-w-lg mx-auto mt-20">
+          <WarningOutlined className="text-5xl text-slate-300 mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Ürün Bulunamadı</h2>
+          <p className="text-slate-500 mb-6">İstenen ürün bulunamadı veya bir hata oluştu.</p>
+          <Button onClick={() => router.push('/inventory/products')} className="!border-slate-300">
+            Ürünlere Dön
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const typeConfig = productTypeConfig[product.productType] || { color: 'default', label: product.productType };
+  const typeConfig = productTypeConfig[product.productType] || { color: '#64748b', label: product.productType, bgColor: '#f1f5f9' };
   const isLowStock = product.totalStockQuantity < product.minStockLevel;
+  const stockPercentage = product.maxStockLevel > 0
+    ? Math.min((product.totalStockQuantity / product.maxStockLevel) * 100, 100)
+    : product.totalStockQuantity > 0 ? 50 : 0;
+  const stockValue = (product.unitPrice || 0) * product.totalStockQuantity;
+  const primaryImage = images.find(img => img.isPrimary) || images[0];
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
-            Geri
-          </Button>
-          <div>
-            <div className="flex items-center gap-2">
-              <Title level={2} style={{ margin: 0 }}>{product.name}</Title>
-              {product.isActive ? (
-                <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
-              ) : (
-                <Tag color="default" icon={<StopOutlined />}>Pasif</Tag>
-              )}
+    <div className="min-h-screen bg-slate-50">
+      {/* Glass Effect Sticky Header */}
+      <div
+        className="sticky top-0 z-50 px-8 py-4"
+        style={{
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+        }}
+      >
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.back()}
+              type="text"
+              className="!text-slate-500 hover:!text-slate-800"
+            />
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-semibold text-slate-900 m-0">{product.name}</h1>
+                {product.isActive ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-900 text-white">
+                    <CheckCircleOutlined className="text-[10px]" /> Aktif
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-200 text-slate-600">
+                    <StopOutlined className="text-[10px]" /> Pasif
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-400 m-0">{product.code}</p>
             </div>
-            <Text type="secondary">{product.code}</Text>
           </div>
+          <Space size="small">
+            <Button
+              icon={product.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+              onClick={handleToggleActive}
+              loading={activateProduct.isPending || deactivateProduct.isPending}
+              className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
+            >
+              {product.isActive ? 'Pasifleştir' : 'Aktifleştir'}
+            </Button>
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => router.push(`/inventory/products/${productId}/edit`)}
+              className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
+            >
+              Düzenle
+            </Button>
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDelete}
+              loading={deleteProduct.isPending}
+            >
+              Sil
+            </Button>
+          </Space>
         </div>
-        <Space>
-          <Button
-            icon={product.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
-            onClick={handleToggleActive}
-            loading={activateProduct.isPending || deactivateProduct.isPending}
-          >
-            {product.isActive ? 'Pasifleştir' : 'Aktifleştir'}
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/inventory/products/${productId}/edit`)}
-          >
-            Düzenle
-          </Button>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={handleDelete}
-            loading={deleteProduct.isPending}
-          >
-            Sil
-          </Button>
-        </Space>
       </div>
 
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Toplam Stok"
-              value={product.totalStockQuantity}
-              valueStyle={isLowStock ? { color: '#fa8c16' } : undefined}
-              suffix={isLowStock && <WarningOutlined className="text-orange-500 ml-2" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Kullanılabilir Stok"
-              value={product.availableStockQuantity}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Birim Fiyat"
-              value={product.unitPrice || 0}
-              prefix="₺"
-              precision={2}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Stok Değeri"
-              value={(product.unitPrice || 0) * product.totalStockQuantity}
-              prefix="₺"
-              precision={2}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Page Content */}
+      <div className="p-8 max-w-7xl mx-auto">
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-12 gap-6">
 
-      {/* Details */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card title="Ürün Bilgileri">
-            <Descriptions column={{ xs: 1, sm: 2, md: 2 }} bordered>
-              <Descriptions.Item label="Ürün Kodu">{product.code}</Descriptions.Item>
-              <Descriptions.Item label="Ürün Türü">
-                <Tag color={typeConfig.color}>{typeConfig.label}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Barkod">
-                {product.barcode ? (
-                  <Space>
-                    <BarcodeOutlined />
-                    {product.barcode}
-                  </Space>
-                ) : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="SKU">{product.sku || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Kategori">
-                {product.categoryName ? (
-                  <Tag icon={<TagOutlined />}>{product.categoryName}</Tag>
-                ) : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Marka">{product.brandName || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Birim">{product.unitName || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Açıklama" span={2}>
-                {product.description || '-'}
-              </Descriptions.Item>
-            </Descriptions>
+          {/* ─────────────── KPI CARDS (Top Row) ─────────────── */}
+          <div className="col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <BoxPlotOutlined className="text-slate-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Toplam Stok</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className={`text-3xl font-bold ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>
+                  {formatNumber(product.totalStockQuantity)}
+                </span>
+                <span className="text-sm text-slate-400">{product.unitName || 'adet'}</span>
+              </div>
+              {isLowStock && (
+                <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 font-medium">
+                  <WarningOutlined /> Düşük stok seviyesi
+                </div>
+              )}
+            </div>
+          </div>
 
-            <Divider>Stok Ayarları</Divider>
+          <div className="col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CheckCircleOutlined className="text-slate-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kullanılabilir</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">
+                  {formatNumber(product.availableStockQuantity)}
+                </span>
+                <span className="text-sm text-slate-400">{product.unitName || 'adet'}</span>
+              </div>
+            </div>
+          </div>
 
-            <Descriptions column={{ xs: 1, sm: 2, md: 4 }} bordered>
-              <Descriptions.Item label="Min. Stok">{product.minStockLevel}</Descriptions.Item>
-              <Descriptions.Item label="Maks. Stok">{product.maxStockLevel}</Descriptions.Item>
-              <Descriptions.Item label="Yeniden Sipariş">{product.reorderLevel}</Descriptions.Item>
-              <Descriptions.Item label="Sipariş Miktarı">{product.reorderQuantity}</Descriptions.Item>
-              <Descriptions.Item label="Tedarik Süresi">{product.leadTimeDays} gün</Descriptions.Item>
-              <Descriptions.Item label="Seri No Takibi">
-                {product.trackSerialNumbers ? <Tag color="success">Evet</Tag> : <Tag>Hayır</Tag>}
-              </Descriptions.Item>
-              <Descriptions.Item label="Lot Takibi">
-                {product.trackLotNumbers ? <Tag color="success">Evet</Tag> : <Tag>Hayır</Tag>}
-              </Descriptions.Item>
-            </Descriptions>
+          <div className="col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <DollarOutlined className="text-slate-600 text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Birim Fiyat</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">
+                  {formatCurrency(product.unitPrice || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
 
-            {(product.weight || product.length || product.width || product.height) && (
-              <>
-                <Divider>Fiziksel Özellikler</Divider>
-                <Descriptions column={{ xs: 1, sm: 2, md: 4 }} bordered>
+          <div className="col-span-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                  <DollarOutlined className="text-white text-lg" />
+                </div>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stok Değeri</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-bold text-slate-900">
+                  {formatCurrency(stockValue)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── MAIN CONTENT AREA ─────────────── */}
+
+          {/* Product Images - Left Side */}
+          <div className="col-span-5">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <PictureOutlined className="text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Ürün Görselleri</p>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-xs text-slate-600">
+                    {images.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Main Image Display */}
+              <div className="relative aspect-square rounded-xl bg-slate-50 border border-slate-100 overflow-hidden mb-4">
+                {primaryImage ? (
+                  <Image
+                    src={primaryImage.imageUrl}
+                    alt={primaryImage.altText || product.name}
+                    className="w-full h-full object-contain"
+                    style={{ width: '100%', height: '100%' }}
+                    preview={{
+                      mask: (
+                        <div className="flex items-center gap-2 text-white">
+                          <ExpandOutlined /> Büyüt
+                        </div>
+                      ),
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                    <PictureOutlined className="text-6xl mb-3" />
+                    <span className="text-sm">Görsel yok</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail Grid */}
+              {imagesLoading ? (
+                <div className="flex justify-center py-4">
+                  <Spin size="small" />
+                </div>
+              ) : images.length > 0 ? (
+                <div className="grid grid-cols-5 gap-2 mb-4">
+                  {images.map((img) => (
+                    <div
+                      key={img.id}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all hover:shadow-md ${
+                        img.isPrimary ? 'border-slate-900' : 'border-slate-200 hover:border-slate-400'
+                      }`}
+                    >
+                      <Image
+                        src={img.imageUrl}
+                        alt={img.altText || product.name}
+                        className="w-full h-full object-cover"
+                        style={{ width: '100%', height: '100%' }}
+                        preview={{
+                          mask: (
+                            <div className="flex items-center gap-1">
+                              {!img.isPrimary && (
+                                <Tooltip title="Ana görsel yap">
+                                  <Button
+                                    type="text"
+                                    size="small"
+                                    icon={<StarOutlined />}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSetPrimary(img.id);
+                                    }}
+                                    className="!text-white !p-1"
+                                  />
+                                </Tooltip>
+                              )}
+                              <Tooltip title="Sil">
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  icon={<DeleteOutlined />}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteImage(img.id);
+                                  }}
+                                  className="!text-white !p-1"
+                                />
+                              </Tooltip>
+                            </div>
+                          ),
+                        }}
+                      />
+                      {img.isPrimary && (
+                        <div className="absolute top-1 left-1">
+                          <StarFilled className="text-amber-400 text-sm drop-shadow" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Upload Button */}
+              <Upload
+                accept="image/*"
+                showUploadList={false}
+                beforeUpload={handleUpload}
+                disabled={uploadImage.isPending}
+              >
+                <Button
+                  icon={<PlusOutlined />}
+                  loading={uploadImage.isPending}
+                  block
+                  className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
+                >
+                  Görsel Ekle
+                </Button>
+              </Upload>
+            </div>
+          </div>
+
+          {/* Product Info - Right Side */}
+          <div className="col-span-7">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Ürün Bilgileri</p>
+
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-3 gap-6 mb-6">
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Ürün Kodu</label>
+                  <p className="text-sm font-medium text-slate-900 m-0">{product.code}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Ürün Türü</label>
+                  <span
+                    className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+                    style={{ backgroundColor: typeConfig.bgColor, color: typeConfig.color }}
+                  >
+                    {typeConfig.label}
+                  </span>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">SKU</label>
+                  <p className="text-sm font-medium text-slate-900 m-0">{product.sku || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Barkod</label>
+                  <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
+                    {product.barcode ? (
+                      <>
+                        <BarcodeOutlined className="text-slate-400" />
+                        {product.barcode}
+                      </>
+                    ) : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Kategori</label>
+                  <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
+                    {product.categoryName ? (
+                      <>
+                        <AppstoreOutlined className="text-slate-400" />
+                        {product.categoryName}
+                      </>
+                    ) : '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 block mb-1">Marka</label>
+                  <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
+                    {product.brandName ? (
+                      <>
+                        <TagOutlined className="text-slate-400" />
+                        {product.brandName}
+                      </>
+                    ) : '-'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              {product.description && (
+                <div className="mb-6">
+                  <label className="text-xs text-slate-400 block mb-1">Açıklama</label>
+                  <p className="text-sm text-slate-600 m-0">{product.description}</p>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="border-t border-slate-100 my-6" />
+
+              {/* Stock Settings */}
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <SettingOutlined /> Stok Ayarları
+              </p>
+
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <label className="text-xs text-slate-400 block mb-1">Min. Stok</label>
+                  <p className="text-lg font-semibold text-slate-900 m-0">{product.minStockLevel}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <label className="text-xs text-slate-400 block mb-1">Maks. Stok</label>
+                  <p className="text-lg font-semibold text-slate-900 m-0">{product.maxStockLevel}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <label className="text-xs text-slate-400 block mb-1">Yeniden Sipariş</label>
+                  <p className="text-lg font-semibold text-slate-900 m-0">{product.reorderLevel}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <label className="text-xs text-slate-400 block mb-1">Sipariş Miktarı</label>
+                  <p className="text-lg font-semibold text-slate-900 m-0">{product.reorderQuantity}</p>
+                </div>
+              </div>
+
+              {/* Stock Level Progress */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-500">Stok Doluluk Oranı</span>
+                  <span className="text-xs font-medium text-slate-700">{stockPercentage.toFixed(0)}%</span>
+                </div>
+                <Progress
+                  percent={stockPercentage}
+                  showInfo={false}
+                  strokeColor={isLowStock ? '#f59e0b' : '#1e293b'}
+                  trailColor="#e2e8f0"
+                  size="small"
+                />
+              </div>
+
+              {/* Tracking Options */}
+              <div className="flex items-center gap-4">
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${product.trackSerialNumbers ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <ScissorOutlined />
+                  <span className="text-xs font-medium">Seri No Takibi</span>
+                  {product.trackSerialNumbers && <CheckCircleOutlined className="text-xs" />}
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${product.trackLotNumbers ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <BoxPlotOutlined />
+                  <span className="text-xs font-medium">Lot Takibi</span>
+                  {product.trackLotNumbers && <CheckCircleOutlined className="text-xs" />}
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-600">
+                  <ClockCircleOutlined />
+                  <span className="text-xs font-medium">Tedarik: {product.leadTimeDays} gün</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── BOTTOM ROW ─────────────── */}
+
+          {/* Physical Properties */}
+          {(product.weight || product.length || product.width || product.height) && (
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Fiziksel Özellikler</p>
+                <div className="grid grid-cols-4 gap-4">
                   {product.weight && (
-                    <Descriptions.Item label="Ağırlık">
-                      {product.weight} {product.weightUnit || 'kg'}
-                    </Descriptions.Item>
+                    <div className="text-center p-4 bg-slate-50 rounded-xl">
+                      <div className="text-xs text-slate-400 mb-1">Ağırlık</div>
+                      <div className="text-xl font-bold text-slate-900">
+                        {product.weight} <span className="text-sm font-normal text-slate-500">{product.weightUnit || 'kg'}</span>
+                      </div>
+                    </div>
                   )}
                   {product.length && (
-                    <Descriptions.Item label="Uzunluk">
-                      {product.length} {product.dimensionUnit || 'cm'}
-                    </Descriptions.Item>
+                    <div className="text-center p-4 bg-slate-50 rounded-xl">
+                      <div className="text-xs text-slate-400 mb-1">Uzunluk</div>
+                      <div className="text-xl font-bold text-slate-900">
+                        {product.length} <span className="text-sm font-normal text-slate-500">{product.dimensionUnit || 'cm'}</span>
+                      </div>
+                    </div>
                   )}
                   {product.width && (
-                    <Descriptions.Item label="Genişlik">
-                      {product.width} {product.dimensionUnit || 'cm'}
-                    </Descriptions.Item>
+                    <div className="text-center p-4 bg-slate-50 rounded-xl">
+                      <div className="text-xs text-slate-400 mb-1">Genişlik</div>
+                      <div className="text-xl font-bold text-slate-900">
+                        {product.width} <span className="text-sm font-normal text-slate-500">{product.dimensionUnit || 'cm'}</span>
+                      </div>
+                    </div>
                   )}
                   {product.height && (
-                    <Descriptions.Item label="Yükseklik">
-                      {product.height} {product.dimensionUnit || 'cm'}
-                    </Descriptions.Item>
-                  )}
-                </Descriptions>
-              </>
-            )}
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
-          {/* Product Images */}
-          <Card
-            title={
-              <div className="flex items-center gap-2">
-                <PictureOutlined />
-                <span>Ürün Görselleri</span>
-                <Tag>{images.length}</Tag>
-              </div>
-            }
-            className="mb-4"
-          >
-            {imagesLoading ? (
-              <div className="flex justify-center py-8">
-                <Spin />
-              </div>
-            ) : images.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Henüz görsel eklenmedi"
-              />
-            ) : (
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {images.map((img) => (
-                  <div
-                    key={img.id}
-                    className="relative rounded-lg overflow-hidden border"
-                  >
-                    <Image
-                      src={img.imageUrl}
-                      alt={img.altText || product.name}
-                      style={{ width: '100%', height: 96, objectFit: 'cover', cursor: 'pointer' }}
-                      preview={{
-                        mask: (
-                          <div className="flex items-center justify-center gap-2">
-                            {!img.isPrimary && (
-                              <Button
-                                type="text"
-                                size="small"
-                                icon={<StarOutlined />}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetPrimary(img.id);
-                                }}
-                                style={{ color: 'white' }}
-                                title="Ana görsel yap"
-                              />
-                            )}
-                            <Button
-                              type="text"
-                              size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteImage(img.id);
-                              }}
-                              style={{ color: 'white' }}
-                              title="Sil"
-                            />
-                          </div>
-                        ),
-                      }}
-                    />
-                    {img.isPrimary && (
-                      <div className="absolute top-1 left-1 z-10">
-                        <Tag color="gold" icon={<StarFilled />} className="text-xs">
-                          Ana
-                        </Tag>
+                    <div className="text-center p-4 bg-slate-50 rounded-xl">
+                      <div className="text-xs text-slate-400 mb-1">Yükseklik</div>
+                      <div className="text-xl font-bold text-slate-900">
+                        {product.height} <span className="text-sm font-normal text-slate-500">{product.dimensionUnit || 'cm'}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            <Upload
-              accept="image/*"
-              showUploadList={false}
-              beforeUpload={handleUpload}
-              disabled={uploadImage.isPending}
-            >
-              <Button
-                icon={<PlusOutlined />}
-                loading={uploadImage.isPending}
-                block
-              >
-                Görsel Ekle
-              </Button>
-            </Upload>
-          </Card>
+            </div>
+          )}
 
-          <Card title="Fiyatlandırma" className="mb-4">
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="Birim Fiyat">
-                {product.unitPrice ? (
-                  <>₺{product.unitPrice.toLocaleString('tr-TR')} {product.unitPriceCurrency}</>
-                ) : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Maliyet">
-                {product.costPrice ? (
-                  <>₺{product.costPrice.toLocaleString('tr-TR')} {product.costPriceCurrency}</>
-                ) : '-'}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+          {/* Pricing */}
+          <div className={`${(product.weight || product.length || product.width || product.height) ? 'col-span-3' : 'col-span-6'}`}>
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Fiyatlandırma</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Birim Fiyat</span>
+                  <span className="text-lg font-semibold text-slate-900">
+                    {product.unitPrice ? `${formatCurrency(product.unitPrice)} ${product.unitPriceCurrency || ''}` : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Maliyet</span>
+                  <span className="text-lg font-semibold text-slate-900">
+                    {product.costPrice ? `${formatCurrency(product.costPrice)} ${product.costPriceCurrency || ''}` : '-'}
+                  </span>
+                </div>
+                {product.unitPrice && product.costPrice && (
+                  <div className="flex items-center justify-between p-3 bg-slate-900 rounded-lg">
+                    <span className="text-sm text-slate-300">Kar Marjı</span>
+                    <span className="text-lg font-semibold text-white">
+                      {(((product.unitPrice - product.costPrice) / product.costPrice) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-          <Card title="Tarihler">
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="Oluşturulma">
-                {new Date(product.createdAt).toLocaleString('tr-TR')}
-              </Descriptions.Item>
-              {product.updatedAt && (
-                <Descriptions.Item label="Son Güncelleme">
-                  {new Date(product.updatedAt).toLocaleString('tr-TR')}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
-      </Row>
+          {/* Dates */}
+          <div className={`${(product.weight || product.length || product.width || product.height) ? 'col-span-3' : 'col-span-6'}`}>
+            <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Tarihler</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500">Oluşturulma</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {dayjs(product.createdAt).format('DD MMMM YYYY, HH:mm')}
+                  </span>
+                </div>
+                {product.updatedAt && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500">Son Güncelleme</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {dayjs(product.updatedAt).format('DD MMMM YYYY, HH:mm')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
