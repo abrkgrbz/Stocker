@@ -2,7 +2,7 @@
 
 ## Overview
 
-Stocker Backend uses **MinIO** as its primary object storage solution for managing files, documents, and media assets. MinIO is an S3-compatible, high-performance object storage system that provides multi-tenant isolation with quota management.
+Stocker Backend uses **MinIO** as its primary object storage solution for managing files, documents, and media assets. MinIO is an S3-compatible, high-performance object storage system that provides **multi-tenant isolation through tenant-specific buckets** with quota management.
 
 ---
 
@@ -45,6 +45,55 @@ Stocker Backend uses **MinIO** as its primary object storage solution for managi
 
 ---
 
+## Multi-Tenant Bucket Strategy
+
+### Bucket Naming Convention
+
+Each tenant has their own isolated bucket using the following naming convention:
+
+```
+tenant-{first12charsOfGuid}
+```
+
+**Example:**
+- TenantId: `9c29aa66-a2b0-4f8e-9d3c-1234567890ab`
+- Bucket Name: `tenant-9c29aa66a2b0`
+
+### Why Tenant-Specific Buckets?
+
+1. **Complete Isolation**: Data from different tenants is physically separated
+2. **Quota Management**: Per-tenant storage quotas can be enforced at bucket level
+3. **Security**: Access policies can be applied per bucket
+4. **Scalability**: No single bucket bottleneck
+5. **Compliance**: Easier to handle data deletion/retention per tenant
+
+---
+
+## Storage Path Format
+
+### New Format (v2.0+)
+
+Storage paths now include the bucket name for retrieval operations:
+
+```
+{bucketName}:{objectPath}
+```
+
+**Example:**
+```
+tenant-9c29aa66a2b0:inventory/products/123/2024/12/20241219_143022_abc123_product.jpg
+```
+
+### Legacy Format (Fallback Support)
+
+For backward compatibility, paths without the bucket prefix fall back to the default bucket:
+
+```
+inventory/products/123/2024/12/20241219_143022_abc123_product.jpg
+```
+
+---
+
 ## Configuration
 
 ### appsettings.json
@@ -76,7 +125,7 @@ Stocker Backend uses **MinIO** as its primary object storage solution for managi
 | `AccessKey` | MinIO access key for authentication | - |
 | `SecretKey` | MinIO secret key for authentication | - |
 | `UseSSL` | Enable HTTPS connections | `false` |
-| `BucketName` | Default bucket name for shared documents | `stocker-documents` |
+| `BucketName` | Default bucket name (legacy fallback only) | `stocker-documents` |
 | `Region` | AWS region for bucket creation | `us-east-1` |
 | `PresignedUrlExpirationHours` | Presigned URL validity duration | `24` |
 | `DefaultQuotaGB` | Default storage quota for new tenants (GB) | `5` |
@@ -122,15 +171,9 @@ public interface ITenantStorageService
 }
 ```
 
-**Bucket Naming Convention:**
-```
-tenant-{first12charsOfGuid}
-Example: tenant-a1b2c3d4e5f6
-```
-
 ### 2. IProductImageStorageService (Inventory Module)
 
-Specialized service for product image management.
+Specialized service for product image management with tenant-specific buckets.
 
 **Location:** `src/Modules/Stocker.Modules.Inventory/Application/Contracts/IProductImageStorageService.cs`
 
@@ -139,7 +182,7 @@ Specialized service for product image management.
 ```csharp
 public interface IProductImageStorageService
 {
-    // Upload product image
+    // Upload product image to tenant bucket
     Task<Result<ImageStorageResult>> UploadImageAsync(
         byte[] imageData, string fileName, string contentType,
         Guid tenantId, int productId, CancellationToken ct);
@@ -150,27 +193,28 @@ public interface IProductImageStorageService
         Guid tenantId, int productId,
         int thumbnailWidth = 200, int thumbnailHeight = 200, CancellationToken ct);
 
-    // Delete image
+    // Delete image (parses bucket from storage path)
     Task<Result> DeleteImageAsync(string storagePath, CancellationToken ct);
 
-    // Get presigned URL
+    // Get presigned URL (parses bucket from storage path)
     Task<Result<string>> GetImageUrlAsync(string storagePath, TimeSpan expiresIn, CancellationToken ct);
 
-    // Check existence
+    // Check existence (parses bucket from storage path)
     Task<Result<bool>> ImageExistsAsync(string storagePath, CancellationToken ct);
 }
 ```
 
 **Storage Path Structure:**
 ```
-{tenantId}/inventory/products/{productId}/{yyyy}/{MM}/{timestamp}_{guid}_{filename}
+Bucket: tenant-{first12chars}
+Path:   inventory/products/{productId}/{yyyy}/{MM}/{timestamp}_{guid}_{filename}
 
-Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890/inventory/products/123/2024/12/20241219_143022_abc123_product.jpg
+Full StoragePath: tenant-9c29aa66a2b0:inventory/products/123/2024/12/20241219_143022_abc123_product.jpg
 ```
 
 ### 3. IDocumentStorageService (CRM Module)
 
-Service for CRM document and attachment management.
+Service for CRM document and attachment management with tenant-specific buckets.
 
 **Location:** `src/Modules/Stocker.Modules.CRM/Application/Contracts/IDocumentStorageService.cs`
 
@@ -179,31 +223,51 @@ Service for CRM document and attachment management.
 ```csharp
 public interface IDocumentStorageService
 {
-    // Upload file
+    // Upload file to tenant bucket
     Task<Result<DocumentStorageResult>> UploadFileAsync(
         byte[] fileData, string fileName, string contentType,
         Guid tenantId, string entityType, string entityId, CancellationToken ct);
 
-    // Download file
+    // Download file (parses bucket from storage path)
     Task<Result<byte[]>> DownloadFileAsync(string storagePath, CancellationToken ct);
 
-    // Delete file
+    // Delete file (parses bucket from storage path)
     Task<Result> DeleteFileAsync(string storagePath, CancellationToken ct);
 
-    // Get download URL (with inline/attachment option)
+    // Get download URL (parses bucket from storage path)
     Task<Result<string>> GetDownloadUrlAsync(
         string storagePath, TimeSpan expiresIn, bool inline = false, CancellationToken ct);
 
-    // Check existence
+    // Check existence (parses bucket from storage path)
     Task<Result<bool>> FileExistsAsync(string storagePath, CancellationToken ct);
 }
 ```
 
 **Storage Path Structure:**
 ```
-{tenantId}/crm/{entityType}/{entityId}/{yyyy}/{MM}/{timestamp}_{guid}_{filename}
+Bucket: tenant-{first12chars}
+Path:   crm/{entityType}/{entityId}/{yyyy}/{MM}/{timestamp}_{guid}_{filename}
 
-Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890/crm/lead/456/2024/12/20241219_143022_xyz789_contract.pdf
+Full StoragePath: tenant-9c29aa66a2b0:crm/lead/456/2024/12/20241219_143022_xyz789_contract.pdf
+```
+
+---
+
+## Storage Path Parsing
+
+Both services use a common pattern for parsing storage paths:
+
+```csharp
+private (string BucketName, string ObjectName) ParseStoragePath(string storagePath)
+{
+    var parts = storagePath.Split(':', 2);
+    if (parts.Length == 2)
+    {
+        return (parts[0], parts[1]);  // New format: bucket:path
+    }
+    // Fallback for legacy paths without bucket prefix
+    return (_settings.BucketName, storagePath);
+}
 ```
 
 ---
@@ -225,7 +289,7 @@ Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890/crm/lead/456/2024/12/20241219_1430
 {
   "success": true,
   "data": {
-    "bucketName": "tenant-a1b2c3d4e5f6",
+    "bucketName": "tenant-9c29aa66a2b0",
     "quotaGB": 5.0,
     "usedGB": 1.25,
     "availableGB": 3.75,
@@ -255,19 +319,63 @@ Example: a1b2c3d4-e5f6-7890-abcd-ef1234567890/crm/lead/456/2024/12/20241219_1430
   "success": true,
   "data": [
     {
-      "name": "tenant-a1b2c3d4e5f6",
+      "name": "tenant-9c29aa66a2b0",
       "creationDate": "2024-12-01T10:00:00Z",
       "usedBytes": 1342177280,
       "usedMB": 1280.0,
       "usedGB": 1.25,
       "objectCount": 150,
-      "tenantId": null
+      "tenantId": "9c29aa66-a2b0-4f8e-9d3c-1234567890ab"
     }
   ],
   "totalCount": 5,
   "totalUsedBytes": 6710886400,
   "totalUsedGB": 6.25,
   "totalObjects": 750
+}
+```
+
+---
+
+## File Organization
+
+### Folder Structure
+
+Each tenant bucket has the following folder structure:
+
+```
+tenant-{first12chars}/
+├── inventory/
+│   └── products/
+│       └── {productId}/
+│           └── {yyyy}/
+│               └── {MM}/
+│                   └── {timestamp}_{guid}_{filename}
+├── crm/
+│   ├── lead/
+│   │   └── {entityId}/
+│   │       └── {yyyy}/
+│   │           └── {MM}/
+│   │               └── {timestamp}_{guid}_{filename}
+│   ├── contact/
+│   │   └── {entityId}/...
+│   ├── deal/
+│   │   └── {entityId}/...
+│   └── documents/
+│       └── {entityId}/...
+└── sales/
+    └── orders/
+        └── {orderId}/...
+```
+
+### Filename Sanitization
+
+```csharp
+private static string SanitizeFileName(string fileName)
+{
+    var invalidChars = Path.GetInvalidFileNameChars();
+    var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+    return sanitized.Replace(" ", "_").ToLowerInvariant();
 }
 ```
 
@@ -366,7 +474,7 @@ public record TenantStorageUsage(
 
 ```csharp
 public record ImageStorageResult(
-    string StoragePath,
+    string StoragePath,      // Format: bucketName:objectPath
     string Url,
     string? ThumbnailStoragePath = null,
     string? ThumbnailUrl = null,
@@ -379,7 +487,7 @@ public record ImageStorageResult(
 
 ```csharp
 public record DocumentStorageResult(
-    string StoragePath,
+    string StoragePath,      // Format: bucketName:objectPath
     string Provider,
     string Url);
 ```
@@ -410,11 +518,12 @@ public async Task<Result<string>> GetDownloadUrlAsync(
     bool inline = false,
     CancellationToken cancellationToken = default)
 {
+    var (bucketName, objectName) = ParseStoragePath(storagePath);
     var disposition = inline ? "inline" : "attachment";
 
     var presignedGetObjectArgs = new PresignedGetObjectArgs()
-        .WithBucket(_settings.BucketName)
-        .WithObject(storagePath)
+        .WithBucket(bucketName)
+        .WithObject(objectName)
         .WithExpiry((int)expiresIn.TotalSeconds)
         .WithHeaders(new Dictionary<string, string>
         {
@@ -446,95 +555,28 @@ public async Task<Result<string>> GetDownloadUrlAsync(
 
 ---
 
-## Quota Management
+## Bucket Creation (On-Demand)
 
-### Creating Tenant Bucket with Quota
-
-```csharp
-public async Task<Result<string>> CreateTenantBucketAsync(
-    Guid tenantId,
-    long quotaGB,
-    CancellationToken cancellationToken = default)
-{
-    var bucketName = GetTenantBucketName(tenantId);
-
-    // Check if bucket exists
-    var exists = await _minioClient.BucketExistsAsync(
-        new BucketExistsArgs().WithBucket(bucketName), cancellationToken);
-
-    if (!exists)
-    {
-        // Create new bucket
-        await _minioClient.MakeBucketAsync(
-            new MakeBucketArgs()
-                .WithBucket(bucketName)
-                .WithLocation(_settings.Region),
-            cancellationToken);
-    }
-
-    // Set quota via bucket tags (MinIO Admin API workaround)
-    await SetBucketQuotaTagAsync(bucketName, quotaGB, cancellationToken);
-
-    return Result<string>.Success(bucketName);
-}
-```
-
-### Quota Tracking via Tags
-
-Since MinIO .NET SDK doesn't directly support quota operations, quotas are tracked via bucket tags:
+Tenant buckets are created automatically on first upload:
 
 ```csharp
-private async Task SetBucketQuotaTagAsync(string bucketName, long quotaGB, CancellationToken ct)
+private async Task EnsureTenantBucketExistsAsync(string bucketName, CancellationToken cancellationToken)
 {
-    var tags = new Dictionary<string, string>
-    {
-        { "quota-gb", quotaGB.ToString() },
-        { "created-at", DateTime.UtcNow.ToString("O") }
-    };
+    var bucketExistsArgs = new BucketExistsArgs()
+        .WithBucket(bucketName);
 
-    await _minioClient.SetBucketTagsAsync(
-        new SetBucketTagsArgs()
+    bool found = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+    if (!found)
+    {
+        var makeBucketArgs = new MakeBucketArgs()
             .WithBucket(bucketName)
-            .WithTagging(new Tagging(tags, false)),
-        ct);
-}
-```
+            .WithLocation(_settings.Region);
 
----
+        await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
 
-## File Organization
-
-### Folder Structure Best Practices
-
-```
-bucket/
-├── {tenantId}/
-│   ├── inventory/
-│   │   └── products/
-│   │       └── {productId}/
-│   │           └── {yyyy}/
-│   │               └── {MM}/
-│   │                   └── {timestamp}_{guid}_{filename}
-│   ├── crm/
-│   │   ├── lead/
-│   │   │   └── {entityId}/...
-│   │   ├── contact/
-│   │   │   └── {entityId}/...
-│   │   └── deal/
-│   │       └── {entityId}/...
-│   └── sales/
-│       └── orders/
-│           └── {orderId}/...
-```
-
-### Filename Sanitization
-
-```csharp
-private static string SanitizeFileName(string fileName)
-{
-    var invalidChars = Path.GetInvalidFileNameChars();
-    var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
-    return sanitized.Replace(" ", "_").ToLowerInvariant();
+        _logger.LogInformation("Tenant bucket created: {Bucket}", bucketName);
+    }
 }
 ```
 
@@ -553,7 +595,7 @@ services:
       - "9000:9000"      # API
       - "9001:9001"      # Console
     environment:
-      MINIO_ROOT_USER: stoocker-minio
+      MINIO_ROOT_USER: stocker-minio
       MINIO_ROOT_PASSWORD: your-secure-password
     volumes:
       - minio_data:/data
@@ -580,6 +622,24 @@ networks:
 |----------|-------|---------|
 | Internal (`minio:9000`) | Backend API to MinIO (Docker network) | `Endpoint` setting |
 | External (`localhost:9000`) | Browser/client access via presigned URLs | `PublicEndpoint` setting |
+
+---
+
+## Migration from Single Bucket
+
+If you have existing data in the old `stocker-documents` bucket, the system provides backward compatibility:
+
+1. **New uploads**: Go to tenant-specific buckets (`tenant-{guid}`)
+2. **Existing files**: Legacy paths without `:` separator fall back to `stocker-documents`
+3. **Recommended**: Migrate existing files to tenant buckets for full isolation
+
+### Migration Steps
+
+1. List all objects in `stocker-documents`
+2. Parse tenant ID from object path
+3. Copy to appropriate tenant bucket
+4. Update database records with new storage path format
+5. Delete from `stocker-documents` after verification
 
 ---
 
@@ -617,12 +677,13 @@ return Result.Failure(
 
 ## Security Considerations
 
-1. **Access Control**: All storage endpoints require authentication
-2. **Tenant Isolation**: Each tenant has isolated bucket with unique naming
+1. **Tenant Isolation**: Each tenant has a dedicated bucket with unique naming
+2. **Access Control**: All storage endpoints require authentication
 3. **Presigned URLs**: Time-limited access prevents unauthorized long-term access
-4. **Quota Enforcement**: Storage limits prevent resource abuse
+4. **Quota Enforcement**: Storage limits prevent resource abuse per tenant
 5. **Credential Management**: Use Azure Key Vault or environment variables for secrets
 6. **SSL/TLS**: Enable `UseSSL: true` in production environments
+7. **No Cross-Tenant Access**: Storage path parsing ensures bucket isolation
 
 ---
 
@@ -632,8 +693,8 @@ All storage operations are logged with structured logging:
 
 ```csharp
 _logger.LogInformation(
-    "Product image uploaded to MinIO. Tenant: {TenantId}, Product: {ProductId}, Path: {ObjectPath}, Size: {Size} bytes",
-    tenantId, productId, objectName, imageData.Length);
+    "Product image uploaded to MinIO. Tenant: {TenantId}, Bucket: {Bucket}, Product: {ProductId}, Path: {ObjectPath}, Size: {Size} bytes",
+    tenantId, bucketName, productId, objectName, imageData.Length);
 
 _logger.LogError(ex,
     "Failed to upload file to MinIO. FileName: {FileName}",
@@ -642,6 +703,7 @@ _logger.LogError(ex,
 
 ### Key Metrics to Monitor
 
+- Bucket count per tenant
 - Bucket storage usage per tenant
 - Object count per bucket
 - Upload/download operation latency
@@ -658,6 +720,7 @@ _logger.LogError(ex,
 4. **Versioning**: Object versioning for document history
 5. **CDN Integration**: CloudFront or similar for cached content delivery
 6. **Backup/Replication**: Cross-region replication for disaster recovery
+7. **Bucket Policies**: Fine-grained access policies per bucket
 
 ---
 

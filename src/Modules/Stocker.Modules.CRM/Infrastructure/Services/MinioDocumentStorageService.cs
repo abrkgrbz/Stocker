@@ -11,12 +11,16 @@ namespace Stocker.Modules.CRM.Infrastructure.Services;
 
 /// <summary>
 /// MinIO-based implementation of document storage service
+/// Uses tenant-specific buckets for multi-tenant isolation
+/// Each tenant has their own bucket: tenant-{first12charsOfGuid}
 /// </summary>
 public class MinioDocumentStorageService : IDocumentStorageService
 {
     private readonly IMinioClient _minioClient;
     private readonly MinioSettings _settings;
     private readonly ILogger<MinioDocumentStorageService> _logger;
+
+    private const string TenantBucketPrefix = "tenant-";
 
     public MinioDocumentStorageService(
         IMinioClient minioClient,
@@ -26,6 +30,30 @@ public class MinioDocumentStorageService : IDocumentStorageService
         _minioClient = minioClient;
         _settings = settings.Value;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Gets the bucket name for a specific tenant
+    /// Format: tenant-{first12charsOfGuid}
+    /// </summary>
+    private string GetTenantBucketName(Guid tenantId)
+    {
+        return $"{TenantBucketPrefix}{tenantId.ToString("N")[..12]}".ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Parses storage path to extract bucket name and object name
+    /// Storage path format: bucketName:objectPath
+    /// </summary>
+    private (string BucketName, string ObjectName) ParseStoragePath(string storagePath)
+    {
+        var parts = storagePath.Split(':', 2);
+        if (parts.Length == 2)
+        {
+            return (parts[0], parts[1]);
+        }
+        // Fallback for legacy paths without bucket prefix
+        return (_settings.BucketName, storagePath);
     }
 
     public async Task<Result<DocumentStorageResult>> UploadFileAsync(
@@ -39,19 +67,22 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
-            // Ensure bucket exists
-            await EnsureBucketExistsAsync(cancellationToken);
+            // Get tenant-specific bucket name
+            var bucketName = GetTenantBucketName(tenantId);
 
-            // Organize folder structure: tenant/module/entityType/entityId/year/month/timestamp_guid_filename
+            // Ensure tenant bucket exists
+            await EnsureTenantBucketExistsAsync(bucketName, cancellationToken);
+
+            // Organize folder structure: crm/entityType/entityId/year/month/timestamp_guid_filename
             var now = DateTimeOffset.UtcNow;
-            var folderPath = $"{tenantId}/crm/{entityType.ToLowerInvariant()}/{entityId}/{now:yyyy}/{now:MM}";
-            var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{fileName}";
+            var folderPath = $"crm/{entityType.ToLowerInvariant()}/{entityId}/{now:yyyy}/{now:MM}";
+            var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{SanitizeFileName(fileName)}";
             var objectName = $"{folderPath}/{uniqueFileName}";
 
             // Upload file to MinIO
             using var stream = new MemoryStream(fileData);
             var putObjectArgs = new PutObjectArgs()
-                .WithBucket(_settings.BucketName)
+                .WithBucket(bucketName)
                 .WithObject(objectName)
                 .WithStreamData(stream)
                 .WithObjectSize(fileData.Length)
@@ -60,14 +91,27 @@ public class MinioDocumentStorageService : IDocumentStorageService
             await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
             _logger.LogInformation(
-                "File uploaded successfully to MinIO. Tenant: {TenantId}, Entity: {EntityType}/{EntityId}, Path: {ObjectPath}, Size: {Size} bytes",
-                tenantId, entityType, entityId, objectName, fileData.Length);
+                "File uploaded to MinIO. Tenant: {TenantId}, Bucket: {Bucket}, Entity: {EntityType}/{EntityId}, Path: {ObjectPath}, Size: {Size} bytes",
+                tenantId, bucketName, entityType, entityId, objectName, fileData.Length);
 
-            // Generate public URL (or use presigned URL for temporary access)
-            var url = $"{(_settings.UseSSL ? "https" : "http")}://{_settings.Endpoint}/{_settings.BucketName}/{objectName}";
+            // Generate public URL
+            string url;
+            var publicEndpoint = _settings.PublicEndpoint ?? _settings.Endpoint;
+            if (publicEndpoint.StartsWith("http://") || publicEndpoint.StartsWith("https://"))
+            {
+                url = $"{publicEndpoint}/{bucketName}/{objectName}";
+            }
+            else
+            {
+                url = $"{(_settings.UseSSL ? "https" : "http")}://{publicEndpoint}/{bucketName}/{objectName}";
+            }
+
+            // Store bucket name in storage path for retrieval operations
+            // Format: bucketName:objectPath
+            var storagePath = $"{bucketName}:{objectName}";
 
             return Result<DocumentStorageResult>.Success(new DocumentStorageResult(
-                StoragePath: objectName,
+                StoragePath: storagePath,
                 Provider: "MinIO",
                 Url: url));
         }
@@ -85,18 +129,20 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             using var memoryStream = new MemoryStream();
 
             var getObjectArgs = new GetObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath)
+                .WithBucket(bucketName)
+                .WithObject(objectName)
                 .WithCallbackStream(stream => stream.CopyTo(memoryStream));
 
             await _minioClient.GetObjectAsync(getObjectArgs, cancellationToken);
 
             _logger.LogInformation(
-                "File downloaded successfully from MinIO. Bucket: {Bucket}, Object: {Object}",
-                _settings.BucketName, storagePath);
+                "File downloaded from MinIO. Bucket: {Bucket}, Object: {Object}",
+                bucketName, objectName);
 
             return Result<byte[]>.Success(memoryStream.ToArray());
         }
@@ -114,15 +160,17 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             var removeObjectArgs = new RemoveObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath);
+                .WithBucket(bucketName)
+                .WithObject(objectName);
 
             await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
 
             _logger.LogInformation(
-                "File deleted successfully from MinIO. Bucket: {Bucket}, Object: {Object}",
-                _settings.BucketName, storagePath);
+                "File deleted from MinIO. Bucket: {Bucket}, Object: {Object}",
+                bucketName, objectName);
 
             return Result.Success();
         }
@@ -142,8 +190,10 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             // Extract original filename from storage path for Content-Disposition header
-            var fileName = Path.GetFileName(storagePath);
+            var fileName = Path.GetFileName(objectName);
 
             // Extract the original filename (after the timestamp_guid_ prefix)
             var fileNameParts = fileName.Split('_');
@@ -157,8 +207,8 @@ public class MinioDocumentStorageService : IDocumentStorageService
             var disposition = inline ? "inline" : "attachment";
 
             var presignedGetObjectArgs = new PresignedGetObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath)
+                .WithBucket(bucketName)
+                .WithObject(objectName)
                 .WithExpiry((int)expiresIn.TotalSeconds)
                 .WithHeaders(new Dictionary<string, string>
                 {
@@ -184,7 +234,7 @@ public class MinioDocumentStorageService : IDocumentStorageService
 
                 url = await publicMinioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
 
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "Generated presigned URL with public endpoint. Endpoint: {Endpoint}, SSL: {SSL}",
                     publicEndpoint, useSSL);
             }
@@ -194,9 +244,9 @@ public class MinioDocumentStorageService : IDocumentStorageService
                 url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
             }
 
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Presigned URL generated for MinIO object. Bucket: {Bucket}, Object: {Object}, Expires: {Expires}",
-                _settings.BucketName, storagePath, expiresIn);
+                bucketName, objectName, expiresIn);
 
             return Result<string>.Success(url);
         }
@@ -214,9 +264,11 @@ public class MinioDocumentStorageService : IDocumentStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             var statObjectArgs = new StatObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath);
+                .WithBucket(bucketName)
+                .WithObject(objectName);
 
             await _minioClient.StatObjectAsync(statObjectArgs, cancellationToken);
 
@@ -237,31 +289,42 @@ public class MinioDocumentStorageService : IDocumentStorageService
     }
 
     /// <summary>
-    /// Ensures the configured bucket exists, creates it if it doesn't
+    /// Ensures the tenant-specific bucket exists
     /// </summary>
-    private async Task EnsureBucketExistsAsync(CancellationToken cancellationToken)
+    private async Task EnsureTenantBucketExistsAsync(string bucketName, CancellationToken cancellationToken)
     {
         try
         {
             var bucketExistsArgs = new BucketExistsArgs()
-                .WithBucket(_settings.BucketName);
+                .WithBucket(bucketName);
 
             bool found = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
 
             if (!found)
             {
                 var makeBucketArgs = new MakeBucketArgs()
-                    .WithBucket(_settings.BucketName);
+                    .WithBucket(bucketName)
+                    .WithLocation(_settings.Region);
 
                 await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
 
-                _logger.LogInformation("MinIO bucket created: {Bucket}", _settings.BucketName);
+                _logger.LogInformation("Tenant bucket created for documents: {Bucket}", bucketName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to ensure bucket exists: {Bucket}", _settings.BucketName);
+            _logger.LogError(ex, "Failed to ensure tenant bucket exists: {Bucket}", bucketName);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Sanitize filename for safe storage
+    /// </summary>
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+        return sanitized.Replace(" ", "_").ToLowerInvariant();
     }
 }

@@ -10,12 +10,16 @@ namespace Stocker.Modules.Inventory.Infrastructure.Services;
 
 /// <summary>
 /// MinIO-based implementation of product image storage service
+/// Uses tenant-specific buckets for multi-tenant isolation
+/// Each tenant has their own bucket: tenant-{first12charsOfGuid}
 /// </summary>
 public class MinioProductImageStorageService : IProductImageStorageService
 {
     private readonly IMinioClient _minioClient;
     private readonly MinioSettings _settings;
     private readonly ILogger<MinioProductImageStorageService> _logger;
+
+    private const string TenantBucketPrefix = "tenant-";
 
     public MinioProductImageStorageService(
         IMinioClient minioClient,
@@ -25,6 +29,30 @@ public class MinioProductImageStorageService : IProductImageStorageService
         _minioClient = minioClient;
         _settings = settings.Value;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Gets the bucket name for a specific tenant
+    /// Format: tenant-{first12charsOfGuid}
+    /// </summary>
+    private string GetTenantBucketName(Guid tenantId)
+    {
+        return $"{TenantBucketPrefix}{tenantId.ToString("N")[..12]}".ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Parses storage path to extract bucket name and object name
+    /// Storage path format: bucketName:objectPath
+    /// </summary>
+    private (string BucketName, string ObjectName) ParseStoragePath(string storagePath)
+    {
+        var parts = storagePath.Split(':', 2);
+        if (parts.Length == 2)
+        {
+            return (parts[0], parts[1]);
+        }
+        // Fallback for legacy paths without bucket prefix
+        return (_settings.BucketName, storagePath);
     }
 
     public async Task<Result<ImageStorageResult>> UploadImageAsync(
@@ -37,19 +65,22 @@ public class MinioProductImageStorageService : IProductImageStorageService
     {
         try
         {
-            // Ensure bucket exists
-            await EnsureBucketExistsAsync(cancellationToken);
+            // Get tenant-specific bucket name
+            var bucketName = GetTenantBucketName(tenantId);
 
-            // Organize folder structure: tenant/module/products/productId/year/month/timestamp_guid_filename
+            // Ensure tenant bucket exists
+            await EnsureTenantBucketExistsAsync(bucketName, cancellationToken);
+
+            // Organize folder structure: inventory/products/productId/year/month/timestamp_guid_filename
             var now = DateTimeOffset.UtcNow;
-            var folderPath = $"{tenantId}/inventory/products/{productId}/{now:yyyy}/{now:MM}";
+            var folderPath = $"inventory/products/{productId}/{now:yyyy}/{now:MM}";
             var uniqueFileName = $"{now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{SanitizeFileName(fileName)}";
             var objectName = $"{folderPath}/{uniqueFileName}";
 
             // Upload file to MinIO
             using var stream = new MemoryStream(imageData);
             var putObjectArgs = new PutObjectArgs()
-                .WithBucket(_settings.BucketName)
+                .WithBucket(bucketName)
                 .WithObject(objectName)
                 .WithStreamData(stream)
                 .WithObjectSize(imageData.Length)
@@ -58,25 +89,27 @@ public class MinioProductImageStorageService : IProductImageStorageService
             await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
             _logger.LogInformation(
-                "Product image uploaded to MinIO. Tenant: {TenantId}, Product: {ProductId}, Path: {ObjectPath}, Size: {Size} bytes",
-                tenantId, productId, objectName, imageData.Length);
+                "Product image uploaded to MinIO. Tenant: {TenantId}, Bucket: {Bucket}, Product: {ProductId}, Path: {ObjectPath}, Size: {Size} bytes",
+                tenantId, bucketName, productId, objectName, imageData.Length);
 
             // Generate public URL
             string url;
             var publicEndpoint = _settings.PublicEndpoint ?? _settings.Endpoint;
             if (publicEndpoint.StartsWith("http://") || publicEndpoint.StartsWith("https://"))
             {
-                // PublicEndpoint already includes protocol
-                url = $"{publicEndpoint}/{_settings.BucketName}/{objectName}";
+                url = $"{publicEndpoint}/{bucketName}/{objectName}";
             }
             else
             {
-                // Add protocol based on UseSSL setting
-                url = $"{(_settings.UseSSL ? "https" : "http")}://{publicEndpoint}/{_settings.BucketName}/{objectName}";
+                url = $"{(_settings.UseSSL ? "https" : "http")}://{publicEndpoint}/{bucketName}/{objectName}";
             }
 
+            // Store bucket name in storage path for retrieval operations
+            // Format: bucketName:objectPath
+            var storagePath = $"{bucketName}:{objectName}";
+
             return Result<ImageStorageResult>.Success(new ImageStorageResult(
-                StoragePath: objectName,
+                StoragePath: storagePath,
                 Url: url,
                 FileSize: imageData.Length));
         }
@@ -122,15 +155,17 @@ public class MinioProductImageStorageService : IProductImageStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             var removeObjectArgs = new RemoveObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath);
+                .WithBucket(bucketName)
+                .WithObject(objectName);
 
             await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
 
             _logger.LogInformation(
                 "Product image deleted from MinIO. Bucket: {Bucket}, Object: {Object}",
-                _settings.BucketName, storagePath);
+                bucketName, objectName);
 
             return Result.Success();
         }
@@ -149,9 +184,11 @@ public class MinioProductImageStorageService : IProductImageStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             var presignedGetObjectArgs = new PresignedGetObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath)
+                .WithBucket(bucketName)
+                .WithObject(objectName)
                 .WithExpiry((int)expiresIn.TotalSeconds);
 
             string url;
@@ -177,8 +214,8 @@ public class MinioProductImageStorageService : IProductImageStorageService
             }
 
             _logger.LogDebug(
-                "Presigned URL generated for product image. Object: {Object}, Expires: {Expires}",
-                storagePath, expiresIn);
+                "Presigned URL generated for product image. Bucket: {Bucket}, Object: {Object}, Expires: {Expires}",
+                bucketName, objectName, expiresIn);
 
             return Result<string>.Success(url);
         }
@@ -196,9 +233,11 @@ public class MinioProductImageStorageService : IProductImageStorageService
     {
         try
         {
+            var (bucketName, objectName) = ParseStoragePath(storagePath);
+
             var statObjectArgs = new StatObjectArgs()
-                .WithBucket(_settings.BucketName)
-                .WithObject(storagePath);
+                .WithBucket(bucketName)
+                .WithObject(objectName);
 
             await _minioClient.StatObjectAsync(statObjectArgs, cancellationToken);
 
@@ -218,30 +257,31 @@ public class MinioProductImageStorageService : IProductImageStorageService
     }
 
     /// <summary>
-    /// Ensures the configured bucket exists
+    /// Ensures the tenant-specific bucket exists
     /// </summary>
-    private async Task EnsureBucketExistsAsync(CancellationToken cancellationToken)
+    private async Task EnsureTenantBucketExistsAsync(string bucketName, CancellationToken cancellationToken)
     {
         try
         {
             var bucketExistsArgs = new BucketExistsArgs()
-                .WithBucket(_settings.BucketName);
+                .WithBucket(bucketName);
 
             bool found = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
 
             if (!found)
             {
                 var makeBucketArgs = new MakeBucketArgs()
-                    .WithBucket(_settings.BucketName);
+                    .WithBucket(bucketName)
+                    .WithLocation(_settings.Region);
 
                 await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
 
-                _logger.LogInformation("MinIO bucket created for product images: {Bucket}", _settings.BucketName);
+                _logger.LogInformation("Tenant bucket created for product images: {Bucket}", bucketName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to ensure bucket exists: {Bucket}", _settings.BucketName);
+            _logger.LogError(ex, "Failed to ensure tenant bucket exists: {Bucket}", bucketName);
             throw;
         }
     }
