@@ -4,13 +4,15 @@ using System.Security.Cryptography;
 using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 using Microsoft.Extensions.Logging;
+using Stocker.Identity.Logging;
 
 namespace Stocker.Identity.Services;
 
 /// <summary>
-/// Service to handle password operations and bridge between Domain and Identity layers
+/// Service to handle password operations and bridge between Domain and Identity layers.
+/// Implements both Identity and Application layer interfaces for compatibility.
 /// </summary>
-public class PasswordService : IPasswordService
+public class PasswordService : IPasswordService, Application.Common.Interfaces.IPasswordService
 {
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordValidator _passwordValidator;
@@ -95,29 +97,24 @@ public class PasswordService : IPasswordService
                 iterationCount: Iterations,
                 numBytesRequested: KeySize);
 
-            // Debug logging
-            var storedHashStr = Convert.ToBase64String(storedHash);
-            var testHashStr = Convert.ToBase64String(testHash);
-            
-            // Warning level logging for production debug
-            var saltStr = Convert.ToBase64String(salt);
-            _logger.LogWarning("Password verification debug - Salt: {Salt}, StoredHash (first 10): {StoredHashPrefix}, TestHash (first 10): {TestHashPrefix}, Match: {IsMatch}, Iterations: {Iterations}, PasswordLength: {PasswordLength}, InputPassword (first 3): {PasswordPrefix}",
-                saltStr.Substring(0, Math.Min(100, saltStr.Length)),
-                storedHashStr.Substring(0, Math.Min(100, storedHashStr.Length)),
-                testHashStr.Substring(0, Math.Min(100, testHashStr.Length)),
-                storedHashStr == testHashStr,
-                Iterations,
-                plainPassword.Length,
-                plainPassword.Substring(0, Math.Min(100, plainPassword.Length)));
-            
-            // Compare hashes
+            // Compare hashes using constant-time comparison to prevent timing attacks
             var result = CryptographicOperations.FixedTimeEquals(storedHash, testHash);
-            _logger.LogWarning("Password verification result: {Result}", result);
+
+            if (!result)
+            {
+                _logger.LogDebug(
+                    new EventId(IdentityLogEvents.PasswordVerificationFailed, nameof(IdentityLogEvents.PasswordVerificationFailed)),
+                    "Password verification failed for provided credentials");
+            }
+
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "VerifyPassword exception");
+            _logger.LogError(
+                new EventId(IdentityLogEvents.PasswordError, nameof(IdentityLogEvents.PasswordError)),
+                ex,
+                "Error during password verification");
             return false;
         }
     }
@@ -144,19 +141,77 @@ public class PasswordService : IPasswordService
     }
 
     /// <summary>
+    /// Simplified password hashing without username/email context.
+    /// </summary>
+    public HashedPassword HashPassword(string plainPassword)
+    {
+        return CreateHashedPassword(plainPassword);
+    }
+
+    /// <summary>
     /// Calculates the strength of a password
     /// </summary>
     public PasswordStrength CalculatePasswordStrength(string plainPassword)
     {
         return _passwordValidator.CalculateStrength(plainPassword);
     }
+
+    /// <summary>
+    /// Explicit interface implementation for Application layer PasswordStrength enum.
+    /// </summary>
+    Application.Common.Interfaces.PasswordStrength Application.Common.Interfaces.IPasswordService.CalculatePasswordStrength(string plainPassword)
+    {
+        var strength = CalculatePasswordStrength(plainPassword);
+        return (Application.Common.Interfaces.PasswordStrength)(int)strength.Score;
+    }
 }
 
+/// <summary>
+/// Provides password-related operations including hashing, verification, and validation.
+/// Uses PBKDF2-HMAC-SHA256 with OWASP 2023 recommended iteration count.
+/// </summary>
 public interface IPasswordService
 {
+    /// <summary>
+    /// Validates a password against the configured password policy.
+    /// </summary>
+    /// <param name="plainPassword">The plain text password to validate.</param>
+    /// <param name="username">Optional username to check for password containing username.</param>
+    /// <param name="email">Optional email to check for password containing email parts.</param>
+    /// <returns>A result indicating whether the password meets all policy requirements.</returns>
     Result<bool> ValidatePassword(string plainPassword, string? username = null, string? email = null);
+
+    /// <summary>
+    /// Creates a securely hashed password value object.
+    /// </summary>
+    /// <param name="plainPassword">The plain text password to hash.</param>
+    /// <param name="username">Optional username for validation.</param>
+    /// <param name="email">Optional email for validation.</param>
+    /// <returns>A HashedPassword value object containing the hash and salt.</returns>
+    /// <exception cref="ArgumentException">Thrown when password validation fails.</exception>
     HashedPassword CreateHashedPassword(string plainPassword, string? username = null, string? email = null);
+
+    /// <summary>
+    /// Verifies a plain text password against a stored hashed password.
+    /// Uses constant-time comparison to prevent timing attacks.
+    /// </summary>
+    /// <param name="hashedPassword">The stored hashed password value object.</param>
+    /// <param name="plainPassword">The plain text password to verify.</param>
+    /// <returns>True if the password matches; otherwise, false.</returns>
     bool VerifyPassword(HashedPassword hashedPassword, string plainPassword);
+
+    /// <summary>
+    /// Converts a HashedPassword value object to a combined hash string
+    /// compatible with IPasswordHasher storage format.
+    /// </summary>
+    /// <param name="hashedPassword">The hashed password value object.</param>
+    /// <returns>A Base64-encoded string combining salt and hash.</returns>
     string GetCombinedHash(HashedPassword hashedPassword);
+
+    /// <summary>
+    /// Calculates the strength score for a password.
+    /// </summary>
+    /// <param name="plainPassword">The plain text password to analyze.</param>
+    /// <returns>A PasswordStrength object containing the score, entropy, and suggestions.</returns>
     PasswordStrength CalculatePasswordStrength(string plainPassword);
 }

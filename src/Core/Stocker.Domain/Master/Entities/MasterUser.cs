@@ -225,9 +225,19 @@ public sealed class MasterUser : AggregateRoot
         PasswordChangedAt = DateTime.UtcNow;
         PasswordResetToken = null;
         PasswordResetTokenExpiry = null;
-        
+
         // Clear all refresh tokens for security
         RevokeAllRefreshTokens();
+    }
+
+    /// <summary>
+    /// Clears the password reset token without changing the password.
+    /// Used when the password is reset through an external mechanism.
+    /// </summary>
+    public void ClearPasswordResetToken()
+    {
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
     }
 
     public void ChangePassword(string currentPassword, string newPassword)

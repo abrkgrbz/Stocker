@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Stocker.Identity.Logging;
 using Stocker.Identity.Models;
 using Stocker.Identity.Services;
 using System.Text;
@@ -24,20 +26,26 @@ public static class ServiceCollectionExtensions
         configuration.Bind("PasswordPolicy", passwordPolicy);
         services.AddSingleton(passwordPolicy);
 
-        // Add Services
+        // Core Services
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<Application.Common.Interfaces.IPasswordHasher, PasswordHasher>();
-        
-        // Register Identity services
-        services.AddScoped<Identity.Services.IPasswordValidator, PasswordValidator>();
-        services.AddScoped<Identity.Services.IPasswordService, PasswordService>();
-        
-        // Create wrapper implementations for Application interfaces
-        services.AddScoped<Application.Common.Interfaces.IPasswordValidator, ApplicationPasswordValidatorWrapper>();
-        services.AddScoped<Application.Common.Interfaces.IPasswordService, ApplicationPasswordServiceWrapper>();
+
+        // Password Validator - single implementation for both interfaces
+        services.AddScoped<PasswordValidator>();
+        services.AddScoped<Identity.Services.IPasswordValidator>(sp => sp.GetRequiredService<PasswordValidator>());
+        services.AddScoped<Application.Common.Interfaces.IPasswordValidator>(sp => sp.GetRequiredService<PasswordValidator>());
+
+        // Password Service - single implementation for both interfaces
+        services.AddScoped<PasswordService>();
+        services.AddScoped<Identity.Services.IPasswordService>(sp => sp.GetRequiredService<PasswordService>());
+        services.AddScoped<Application.Common.Interfaces.IPasswordService>(sp => sp.GetRequiredService<PasswordService>());
+
+        // User Management and Token Services
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<ITokenGenerationService, TokenGenerationService>();
-        services.AddScoped<IAuthenticationService, RefactoredAuthenticationService>();
+
+        // Authentication Service
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         // Configure JWT Authentication
         services.AddAuthentication(options =>
@@ -62,12 +70,17 @@ public static class ServiceCollectionExtensions
                 ClockSkew = TimeSpan.Zero
             };
 
-            // JWT Events (logging, debugging için)
+            // JWT Events with proper structured logging
             options.Events = new JwtBearerEvents
             {
                 OnAuthenticationFailed = context =>
                 {
-                    Console.WriteLine($"JWT Authentication Failed: {context.Exception.Message}");
+                    var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
+                    logger?.LogWarning(
+                        new EventId(IdentityLogEvents.TokenValidationFailed, nameof(IdentityLogEvents.TokenValidationFailed)),
+                        context.Exception,
+                        "JWT authentication failed");
+
                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                     {
                         context.Response.Headers["Token-Expired"] = "true";
@@ -76,41 +89,70 @@ public static class ServiceCollectionExtensions
                 },
                 OnTokenValidated = context =>
                 {
-                    Console.WriteLine($"JWT Token Validated Successfully for user: {context.Principal?.Identity?.Name}");
-                    // Token doğrulandığında yapılacak işlemler
-                    // Örneğin: User bilgilerini cache'e alma
+                    var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
+                    logger?.LogDebug(
+                        new EventId(IdentityLogEvents.JwtTokenValidated, nameof(IdentityLogEvents.JwtTokenValidated)),
+                        "JWT token validated for user: {UserName}",
+                        context.Principal?.Identity?.Name ?? "unknown");
                     return Task.CompletedTask;
                 },
                 OnMessageReceived = context =>
                 {
-                    Console.WriteLine($"JWT Message Received. Authorization Header: {context.Request.Headers["Authorization"]}");
+                    var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
 
                     // First try to get token from access_token cookie (httpOnly)
                     var token = context.Request.Cookies["access_token"];
+                    var tokenSource = "access_token cookie";
 
                     // If no access_token cookie, try auth-token for backward compatibility
                     if (string.IsNullOrEmpty(token))
                     {
                         token = context.Request.Cookies["auth-token"];
+                        tokenSource = "auth-token cookie";
                     }
 
                     // If no cookies, try query string (for SignalR)
                     if (string.IsNullOrEmpty(token))
                     {
                         token = context.Request.Query["access_token"];
+                        tokenSource = "query string";
                     }
 
                     // If we found a token, use it
                     if (!string.IsNullOrEmpty(token))
                     {
                         context.Token = token;
-                        Console.WriteLine($"Token found and set from {(context.Request.Cookies.ContainsKey("access_token") ? "access_token cookie" : context.Request.Cookies.ContainsKey("auth-token") ? "auth-token cookie" : "query string")}");
+                        logger?.LogDebug(
+                            new EventId(IdentityLogEvents.JwtMessageReceived, nameof(IdentityLogEvents.JwtMessageReceived)),
+                            "JWT token resolved from {TokenSource}",
+                            tokenSource);
                     }
                     else
                     {
-                        Console.WriteLine("No token found in cookie or query string");
+                        logger?.LogDebug(
+                            new EventId(IdentityLogEvents.JwtMessageReceived, nameof(IdentityLogEvents.JwtMessageReceived)),
+                            "No JWT token found in request");
                     }
 
+                    return Task.CompletedTask;
+                },
+                OnChallenge = context =>
+                {
+                    var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
+                    logger?.LogDebug(
+                        new EventId(IdentityLogEvents.JwtChallenge, nameof(IdentityLogEvents.JwtChallenge)),
+                        "JWT challenge issued: {Error} - {ErrorDescription}",
+                        context.Error ?? "none",
+                        context.ErrorDescription ?? "none");
+                    return Task.CompletedTask;
+                },
+                OnForbidden = context =>
+                {
+                    var logger = context.HttpContext.RequestServices.GetService<ILogger<JwtBearerEvents>>();
+                    logger?.LogWarning(
+                        new EventId(IdentityLogEvents.JwtForbidden, nameof(IdentityLogEvents.JwtForbidden)),
+                        "JWT forbidden response for path: {Path}",
+                        context.HttpContext.Request.Path);
                     return Task.CompletedTask;
                 }
             };

@@ -306,6 +306,17 @@ public sealed class TenantUser : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Clears the password reset token without changing the password.
+    /// Used when the password is reset through an external mechanism.
+    /// </summary>
+    public void ClearPasswordResetToken()
+    {
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void UpdatePassword(string newPasswordHash)
     {
         PasswordHash = newPasswordHash;

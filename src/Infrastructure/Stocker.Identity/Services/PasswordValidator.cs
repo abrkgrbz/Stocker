@@ -4,13 +4,32 @@ using Stocker.SharedKernel.Results;
 
 namespace Stocker.Identity.Services;
 
+/// <summary>
+/// Validates passwords against configurable security policies.
+/// Checks length, complexity, common passwords, and calculates strength scores.
+/// </summary>
 public interface IPasswordValidator
 {
+    /// <summary>
+    /// Validates a password against the configured password policy.
+    /// Checks length, character requirements, common passwords, and sequential/repeated characters.
+    /// </summary>
+    /// <param name="password">The password to validate.</param>
+    /// <param name="username">Optional username to prevent password containing username.</param>
+    /// <param name="email">Optional email to prevent password containing email parts.</param>
+    /// <returns>Success with true if valid; Failure with validation errors otherwise.</returns>
     Result<bool> ValidatePassword(string password, string? username = null, string? email = null);
+
+    /// <summary>
+    /// Calculates the strength of a password based on various factors.
+    /// Considers length, character diversity, common patterns, and entropy.
+    /// </summary>
+    /// <param name="password">The password to analyze.</param>
+    /// <returns>A PasswordStrength object with score (0-5), entropy, feedback, and suggestions.</returns>
     PasswordStrength CalculateStrength(string password);
 }
 
-public class PasswordValidator : IPasswordValidator
+public class PasswordValidator : IPasswordValidator, Application.Common.Interfaces.IPasswordValidator
 {
     private readonly PasswordPolicy _policy;
     private readonly HashSet<string> _commonPasswords;
@@ -321,22 +340,66 @@ public class PasswordValidator : IPasswordValidator
             "besiktas", "trabzonspor", "turkey", "turkish", "ottoman"
         };
     }
+
+    /// <summary>
+    /// Explicit interface implementation for Application layer PasswordStrength enum.
+    /// </summary>
+    Application.Common.Interfaces.PasswordStrength Application.Common.Interfaces.IPasswordValidator.CalculateStrength(string plainPassword)
+    {
+        var strength = CalculateStrength(plainPassword);
+        return (Application.Common.Interfaces.PasswordStrength)(int)strength.Score;
+    }
 }
 
+/// <summary>
+/// Represents the calculated strength of a password.
+/// Contains the score, entropy measurement, and improvement suggestions.
+/// </summary>
 public class PasswordStrength
 {
+    /// <summary>
+    /// The overall strength score from VeryWeak (0) to VeryStrong (5).
+    /// </summary>
     public PasswordScore Score { get; set; }
+
+    /// <summary>
+    /// The calculated entropy in bits, measuring password randomness.
+    /// Higher values indicate stronger passwords.
+    /// </summary>
     public double Entropy { get; set; }
+
+    /// <summary>
+    /// Feedback messages about weaknesses found in the password.
+    /// </summary>
     public List<string> Feedback { get; set; } = new();
+
+    /// <summary>
+    /// Suggestions for improving the password strength.
+    /// </summary>
     public List<string> Suggestions { get; set; } = new();
 }
 
+/// <summary>
+/// Enumeration representing password strength levels.
+/// Used for UI display and minimum strength requirements.
+/// </summary>
 public enum PasswordScore
 {
+    /// <summary>Very weak password, easily guessable.</summary>
     VeryWeak = 0,
+
+    /// <summary>Weak password, vulnerable to basic attacks.</summary>
     Weak = 1,
+
+    /// <summary>Fair password, provides minimal protection.</summary>
     Fair = 2,
+
+    /// <summary>Good password, suitable for most applications.</summary>
     Good = 3,
+
+    /// <summary>Strong password, provides robust security.</summary>
     Strong = 4,
+
+    /// <summary>Very strong password, excellent security level.</summary>
     VeryStrong = 5
 }
