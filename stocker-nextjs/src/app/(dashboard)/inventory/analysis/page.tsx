@@ -2,10 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
   Table,
   Tag,
   Button,
@@ -13,30 +9,25 @@ import {
   Select,
   Tabs,
   Progress,
-  Typography,
   Tooltip,
   Badge,
   Alert,
   Spin,
   Empty,
-  Descriptions,
 } from 'antd';
 import {
   BarChartOutlined,
   WarningOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
   BulbOutlined,
   ExclamationCircleOutlined,
   ReloadOutlined,
-  DollarOutlined,
   DatabaseOutlined,
   ThunderboltOutlined,
   AreaChartOutlined,
   PieChartOutlined,
   RiseOutlined,
   FallOutlined,
+  TrendingUpOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -60,41 +51,41 @@ import type {
   AbcXyzClass,
 } from '@/lib/api/services/inventory.types';
 
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// Monochrome color palette for charts
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
-// ABC/XYZ class color helpers
+// ABC/XYZ class color helpers - monochrome slate palette
 const getAbcColor = (abcClass: AbcClass) => {
   switch (abcClass) {
-    case 'A': return '#52c41a';
-    case 'B': return '#faad14';
-    case 'C': return '#ff4d4f';
-    default: return '#8c8c8c';
+    case 'A': return '#1e293b';
+    case 'B': return '#475569';
+    case 'C': return '#94a3b8';
+    default: return '#cbd5e1';
   }
 };
 
 const getXyzColor = (xyzClass: XyzClass) => {
   switch (xyzClass) {
-    case 'X': return '#1890ff';
-    case 'Y': return '#722ed1';
-    case 'Z': return '#eb2f96';
-    default: return '#8c8c8c';
+    case 'X': return '#1e293b';
+    case 'Y': return '#64748b';
+    case 'Z': return '#94a3b8';
+    default: return '#cbd5e1';
   }
 };
 
 const getMatrixCellColor = (combinedClass: AbcXyzClass) => {
   const colorMap: Record<AbcXyzClass, string> = {
-    AX: '#52c41a',
-    AY: '#73d13d',
-    AZ: '#95de64',
-    BX: '#1890ff',
-    BY: '#40a9ff',
-    BZ: '#69c0ff',
-    CX: '#faad14',
-    CY: '#ffc53d',
-    CZ: '#ffd666',
+    AX: '#1e293b',
+    AY: '#334155',
+    AZ: '#475569',
+    BX: '#475569',
+    BY: '#64748b',
+    BZ: '#94a3b8',
+    CX: '#64748b',
+    CY: '#94a3b8',
+    CZ: '#cbd5e1',
   };
-  return colorMap[combinedClass] || '#8c8c8c';
+  return colorMap[combinedClass] || '#e2e8f0';
 };
 
 const getPriorityBadge = (priority: string) => {
@@ -102,36 +93,45 @@ const getPriorityBadge = (priority: string) => {
     case 'critical':
     case 'yüksek':
     case 'high':
-      return <Badge status="error" text={priority} />;
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-900 text-white">{priority}</span>;
     case 'medium':
     case 'orta':
-      return <Badge status="warning" text={priority} />;
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-500 text-white">{priority}</span>;
     case 'low':
     case 'düşük':
-      return <Badge status="success" text={priority} />;
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-300 text-slate-700">{priority}</span>;
     default:
-      return <Badge status="default" text={priority} />;
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-600">{priority}</span>;
   }
 };
 
 const getHealthScoreColor = (score: number) => {
-  if (score >= 80) return '#52c41a';
-  if (score >= 60) return '#faad14';
-  if (score >= 40) return '#fa8c16';
-  return '#ff4d4f';
+  if (score >= 80) return '#1e293b';
+  if (score >= 60) return '#475569';
+  if (score >= 40) return '#64748b';
+  return '#94a3b8';
 };
 
 const getTrendIcon = (trend: string) => {
   switch (trend?.toLowerCase()) {
     case 'improving':
     case 'up':
-      return <RiseOutlined style={{ color: '#52c41a' }} />;
+      return <RiseOutlined className="text-slate-700" />;
     case 'declining':
     case 'down':
-      return <FallOutlined style={{ color: '#ff4d4f' }} />;
+      return <FallOutlined className="text-slate-400" />;
     default:
-      return <span style={{ color: '#8c8c8c' }}>→</span>;
+      return <span className="text-slate-400">→</span>;
   }
+};
+
+// Helper functions
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(value || 0);
+};
+
+const formatNumber = (value: number) => {
+  return new Intl.NumberFormat('tr-TR').format(value || 0);
 };
 
 export default function InventoryAnalysisPage() {
@@ -187,98 +187,81 @@ export default function InventoryAnalysisPage() {
       return (
         <Tooltip
           title={
-            <div>
-              <p><strong>Strateji:</strong> {cell.recommendedStrategy}</p>
-              <p><strong>Öncelik:</strong> {cell.managementPriority}</p>
-              <p><strong>Toplam Gelir:</strong> {cell.totalRevenue?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</p>
-              <p><strong>Stok Değeri:</strong> {cell.totalStockValue?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</p>
+            <div className="text-sm">
+              <p><span className="font-semibold">Strateji:</span> {cell.recommendedStrategy}</p>
+              <p><span className="font-semibold">Öncelik:</span> {cell.managementPriority}</p>
+              <p><span className="font-semibold">Toplam Gelir:</span> {formatCurrency(cell.totalRevenue)}</p>
+              <p><span className="font-semibold">Stok Değeri:</span> {formatCurrency(cell.totalStockValue)}</p>
             </div>
           }
         >
           <div
-            style={{
-              backgroundColor: getMatrixCellColor(combinedClass),
-              padding: '16px',
-              borderRadius: '8px',
-              textAlign: 'center',
-              color: '#fff',
-              cursor: 'pointer',
-              transition: 'transform 0.2s',
-              minHeight: '100px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.02)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
-            }}
+            className="p-4 rounded-lg text-center text-white cursor-pointer transition-transform hover:scale-[1.02] min-h-[100px] flex flex-col justify-center"
+            style={{ backgroundColor: getMatrixCellColor(combinedClass) }}
           >
-            <Text strong style={{ color: '#fff', fontSize: '18px' }}>{combinedClass}</Text>
-            <Text style={{ color: '#fff' }}>{cell.productCount} ürün</Text>
-            <Text style={{ color: '#fff', fontSize: '12px' }}>%{cell.productPercentage?.toFixed(1)}</Text>
+            <span className="font-bold text-lg">{combinedClass}</span>
+            <span className="text-sm">{cell.productCount} ürün</span>
+            <span className="text-xs opacity-80">%{cell.productPercentage?.toFixed(1)}</span>
           </div>
         </Tooltip>
       );
     };
 
     return (
-      <div style={{ padding: '16px' }}>
-        <Row gutter={[8, 8]}>
-          <Col span={6}></Col>
-          <Col span={6} style={{ textAlign: 'center' }}>
-            <Tag color="blue" style={{ margin: 0 }}>X - Stabil</Tag>
-          </Col>
-          <Col span={6} style={{ textAlign: 'center' }}>
-            <Tag color="purple" style={{ margin: 0 }}>Y - Dalgalı</Tag>
-          </Col>
-          <Col span={6} style={{ textAlign: 'center' }}>
-            <Tag color="magenta" style={{ margin: 0 }}>Z - Düzensiz</Tag>
-          </Col>
-        </Row>
-        <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
-          <Col span={6} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag color="green" style={{ margin: 0 }}>A - Yüksek Değer</Tag>
-          </Col>
-          <Col span={6}>{renderCell('A', 'X')}</Col>
-          <Col span={6}>{renderCell('A', 'Y')}</Col>
-          <Col span={6}>{renderCell('A', 'Z')}</Col>
-        </Row>
-        <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
-          <Col span={6} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag color="orange" style={{ margin: 0 }}>B - Orta Değer</Tag>
-          </Col>
-          <Col span={6}>{renderCell('B', 'X')}</Col>
-          <Col span={6}>{renderCell('B', 'Y')}</Col>
-          <Col span={6}>{renderCell('B', 'Z')}</Col>
-        </Row>
-        <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
-          <Col span={6} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag color="red" style={{ margin: 0 }}>C - Düşük Değer</Tag>
-          </Col>
-          <Col span={6}>{renderCell('C', 'X')}</Col>
-          <Col span={6}>{renderCell('C', 'Y')}</Col>
-          <Col span={6}>{renderCell('C', 'Z')}</Col>
-        </Row>
+      <div className="p-4">
+        <div className="grid grid-cols-4 gap-2 mb-2">
+          <div></div>
+          <div className="text-center">
+            <span className="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-medium rounded">X - Stabil</span>
+          </div>
+          <div className="text-center">
+            <span className="inline-block px-3 py-1 bg-slate-600 text-white text-xs font-medium rounded">Y - Dalgalı</span>
+          </div>
+          <div className="text-center">
+            <span className="inline-block px-3 py-1 bg-slate-400 text-white text-xs font-medium rounded">Z - Düzensiz</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="flex items-center justify-center">
+            <span className="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-medium rounded">A - Yüksek Değer</span>
+          </div>
+          <div>{renderCell('A', 'X')}</div>
+          <div>{renderCell('A', 'Y')}</div>
+          <div>{renderCell('A', 'Z')}</div>
+        </div>
+        <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="flex items-center justify-center">
+            <span className="inline-block px-3 py-1 bg-slate-500 text-white text-xs font-medium rounded">B - Orta Değer</span>
+          </div>
+          <div>{renderCell('B', 'X')}</div>
+          <div>{renderCell('B', 'Y')}</div>
+          <div>{renderCell('B', 'Z')}</div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          <div className="flex items-center justify-center">
+            <span className="inline-block px-3 py-1 bg-slate-300 text-slate-700 text-xs font-medium rounded">C - Düşük Değer</span>
+          </div>
+          <div>{renderCell('C', 'X')}</div>
+          <div>{renderCell('C', 'Y')}</div>
+          <div>{renderCell('C', 'Z')}</div>
+        </div>
       </div>
     );
   };
 
   // Health Score Gauge
   const HealthScoreGauge = ({ score, trend }: { score: number; trend: string }) => (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
+    <div className="text-center py-5">
       <Progress
         type="dashboard"
         percent={score}
         strokeColor={getHealthScoreColor(score)}
         format={(percent) => (
           <div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: getHealthScoreColor(score) }}>
+            <div className="text-3xl font-bold" style={{ color: getHealthScoreColor(score) }}>
               {percent}
             </div>
-            <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
+            <div className="text-xs text-slate-500">
               {getTrendIcon(trend)} {trend}
             </div>
           </div>
@@ -296,9 +279,9 @@ export default function InventoryAnalysisPage() {
       width: 250,
       render: (_, record) => (
         <div>
-          <Text strong>{record.productName}</Text>
+          <span className="font-semibold text-slate-900">{record.productName}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>{record.productCode}</Text>
+          <span className="text-xs text-slate-500">{record.productCode}</span>
         </div>
       ),
     },
@@ -312,7 +295,7 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'abcClass',
       width: 60,
       render: (abcClass: AbcClass) => (
-        <Tag color={getAbcColor(abcClass)} style={{ fontWeight: 'bold' }}>
+        <Tag style={{ backgroundColor: getAbcColor(abcClass), color: '#fff', border: 'none', fontWeight: 600 }}>
           {abcClass}
         </Tag>
       ),
@@ -322,7 +305,7 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'xyzClass',
       width: 60,
       render: (xyzClass: XyzClass) => (
-        <Tag color={getXyzColor(xyzClass)} style={{ fontWeight: 'bold' }}>
+        <Tag style={{ backgroundColor: getXyzColor(xyzClass), color: '#fff', border: 'none', fontWeight: 600 }}>
           {xyzClass}
         </Tag>
       ),
@@ -332,7 +315,7 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'combinedClass',
       width: 80,
       render: (combinedClass: AbcXyzClass) => (
-        <Tag style={{ backgroundColor: getMatrixCellColor(combinedClass), color: '#fff', fontWeight: 'bold' }}>
+        <Tag style={{ backgroundColor: getMatrixCellColor(combinedClass), color: '#fff', fontWeight: 600, border: 'none' }}>
           {combinedClass}
         </Tag>
       ),
@@ -341,7 +324,7 @@ export default function InventoryAnalysisPage() {
       title: 'Toplam Gelir',
       dataIndex: 'totalRevenue',
       width: 130,
-      render: (val: number) => val?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
+      render: (val: number) => formatCurrency(val),
       sorter: (a, b) => a.totalRevenue - b.totalRevenue,
     },
     {
@@ -361,14 +344,14 @@ export default function InventoryAnalysisPage() {
       title: 'Stok Değeri',
       dataIndex: 'stockValue',
       width: 130,
-      render: (val: number) => val?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
+      render: (val: number) => formatCurrency(val),
     },
     {
       title: 'Tahmini Gün',
       dataIndex: 'estimatedDaysOfStock',
       width: 100,
       render: (days: number) => (
-        <Tag color={days < 7 ? 'red' : days < 14 ? 'orange' : 'green'}>
+        <Tag className={`border-none font-medium ${days < 7 ? 'bg-slate-900 text-white' : days < 14 ? 'bg-slate-500 text-white' : 'bg-slate-200 text-slate-700'}`}>
           {days?.toFixed(0)} gün
         </Tag>
       ),
@@ -389,9 +372,9 @@ export default function InventoryAnalysisPage() {
       width: 250,
       render: (_, record) => (
         <div>
-          <Text strong>{record.productName}</Text>
+          <span className="font-semibold text-slate-900">{record.productName}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>{record.productCode}</Text>
+          <span className="text-xs text-slate-500">{record.productCode}</span>
         </div>
       ),
     },
@@ -418,23 +401,23 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'turnoverCategory',
       width: 120,
       render: (category: string) => {
-        const colorMap: Record<string, string> = {
-          'Fast': 'green',
-          'Hızlı': 'green',
-          'Normal': 'blue',
-          'Slow': 'orange',
-          'Yavaş': 'orange',
-          'Very Slow': 'red',
-          'Çok Yavaş': 'red',
+        const styleMap: Record<string, string> = {
+          'Fast': 'bg-slate-900 text-white',
+          'Hızlı': 'bg-slate-900 text-white',
+          'Normal': 'bg-slate-500 text-white',
+          'Slow': 'bg-slate-300 text-slate-700',
+          'Yavaş': 'bg-slate-300 text-slate-700',
+          'Very Slow': 'bg-slate-200 text-slate-600',
+          'Çok Yavaş': 'bg-slate-200 text-slate-600',
         };
-        return <Tag color={colorMap[category] || 'default'}>{category}</Tag>;
+        return <Tag className={`border-none font-medium ${styleMap[category] || 'bg-slate-100 text-slate-600'}`}>{category}</Tag>;
       },
     },
     {
       title: 'SMM',
       dataIndex: 'costOfGoodsSold',
       width: 130,
-      render: (val: number) => val?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
+      render: (val: number) => formatCurrency(val),
     },
     {
       title: 'Benchmark',
@@ -447,7 +430,7 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'performanceVsBenchmark',
       width: 120,
       render: (val: number) => (
-        <Tag color={val > 0 ? 'green' : val < 0 ? 'red' : 'default'}>
+        <Tag className={`border-none font-medium ${val > 0 ? 'bg-slate-900 text-white' : val < 0 ? 'bg-slate-300 text-slate-700' : 'bg-slate-100 text-slate-600'}`}>
           {val > 0 ? '+' : ''}{val?.toFixed(1)}%
         </Tag>
       ),
@@ -457,9 +440,9 @@ export default function InventoryAnalysisPage() {
       key: 'status',
       width: 120,
       render: (_, record) => {
-        if (record.isOverstocked) return <Tag color="orange">Fazla Stok</Tag>;
-        if (record.isUnderstocked) return <Tag color="red">Yetersiz Stok</Tag>;
-        return <Tag color="green">Normal</Tag>;
+        if (record.isOverstocked) return <Tag className="bg-slate-400 text-white border-none font-medium">Fazla Stok</Tag>;
+        if (record.isUnderstocked) return <Tag className="bg-slate-900 text-white border-none font-medium">Yetersiz Stok</Tag>;
+        return <Tag className="bg-slate-200 text-slate-700 border-none font-medium">Normal</Tag>;
       },
     },
   ];
@@ -472,9 +455,9 @@ export default function InventoryAnalysisPage() {
       width: 250,
       render: (_, record) => (
         <div>
-          <Text strong>{record.productName}</Text>
+          <span className="font-semibold text-slate-900">{record.productName}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: '12px' }}>{record.productCode}</Text>
+          <span className="text-xs text-slate-500">{record.productCode}</span>
         </div>
       ),
     },
@@ -487,13 +470,13 @@ export default function InventoryAnalysisPage() {
       title: 'Mevcut Stok',
       dataIndex: 'currentStock',
       width: 100,
-      render: (val: number) => val?.toLocaleString('tr-TR'),
+      render: (val: number) => formatNumber(val),
     },
     {
       title: 'Stok Değeri',
       dataIndex: 'stockValue',
       width: 130,
-      render: (val: number) => val?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
+      render: (val: number) => formatCurrency(val),
       sorter: (a, b) => a.stockValue - b.stockValue,
     },
     {
@@ -508,17 +491,17 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'agingCategory',
       width: 120,
       render: (category: string) => {
-        const colorMap: Record<string, string> = {
-          '30-60 days': 'green',
-          '60-90 days': 'orange',
-          '90-180 days': 'volcano',
-          '180+ days': 'red',
-          '30-60 gün': 'green',
-          '60-90 gün': 'orange',
-          '90-180 gün': 'volcano',
-          '180+ gün': 'red',
+        const styleMap: Record<string, string> = {
+          '30-60 days': 'bg-slate-200 text-slate-700',
+          '60-90 days': 'bg-slate-400 text-white',
+          '90-180 days': 'bg-slate-600 text-white',
+          '180+ days': 'bg-slate-900 text-white',
+          '30-60 gün': 'bg-slate-200 text-slate-700',
+          '60-90 gün': 'bg-slate-400 text-white',
+          '90-180 gün': 'bg-slate-600 text-white',
+          '180+ gün': 'bg-slate-900 text-white',
         };
-        return <Tag color={colorMap[category] || 'default'}>{category}</Tag>;
+        return <Tag className={`border-none font-medium ${styleMap[category] || 'bg-slate-100 text-slate-600'}`}>{category}</Tag>;
       },
     },
     {
@@ -526,7 +509,7 @@ export default function InventoryAnalysisPage() {
       dataIndex: 'depreciationRate',
       width: 100,
       render: (val: number) => (
-        <Tag color={val > 0.5 ? 'red' : val > 0.2 ? 'orange' : 'green'}>
+        <Tag className={`border-none font-medium ${val > 0.5 ? 'bg-slate-900 text-white' : val > 0.2 ? 'bg-slate-500 text-white' : 'bg-slate-200 text-slate-700'}`}>
           %{(val * 100)?.toFixed(0)}
         </Tag>
       ),
@@ -535,7 +518,7 @@ export default function InventoryAnalysisPage() {
       title: 'Tahmini Kurtarma',
       dataIndex: 'estimatedRecoveryValue',
       width: 130,
-      render: (val: number) => val?.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
+      render: (val: number) => formatCurrency(val),
     },
     {
       title: 'Seçenekler',
@@ -544,9 +527,9 @@ export default function InventoryAnalysisPage() {
       render: (options: string[]) => (
         <Space wrap>
           {options?.slice(0, 2).map((opt, idx) => (
-            <Tag key={idx} style={{ fontSize: '12px' }}>{opt}</Tag>
+            <Tag key={idx} className="text-xs bg-slate-100 text-slate-600 border-none">{opt}</Tag>
           ))}
-          {options?.length > 2 && <Tag style={{ fontSize: '12px' }}>+{options.length - 2}</Tag>}
+          {options?.length > 2 && <Tag className="text-xs bg-slate-100 text-slate-600 border-none">+{options.length - 2}</Tag>}
         </Space>
       ),
     },
@@ -554,468 +537,545 @@ export default function InventoryAnalysisPage() {
 
   const isLoading = abcXyzLoading || turnoverLoading || deadStockLoading || healthLoading;
 
-  return (
-    <div style={{ padding: '24px' }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={2} style={{ margin: 0 }}>
-            <AreaChartOutlined /> Envanter Analizi
-          </Title>
-          <Text type="secondary">ABC/XYZ Analizi, Devir Hızı ve Ölü Stok</Text>
-        </Col>
-        <Col>
-          <Space>
-            <Select
-              allowClear
-              placeholder="Kategori"
-              style={{ width: 180 }}
-              value={selectedCategoryId}
-              onChange={setSelectedCategoryId}
-              options={categories?.map((c) => ({ value: c.id, label: c.name }))}
-            />
-            <Select
-              allowClear
-              placeholder="Depo"
-              style={{ width: 180 }}
-              value={selectedWarehouseId}
-              onChange={setSelectedWarehouseId}
-              options={warehouses?.map((w) => ({ value: w.id, label: w.name }))}
-            />
-            <Select
-              allowClear
-              placeholder="Marka"
-              style={{ width: 150 }}
-              value={selectedBrandId}
-              onChange={setSelectedBrandId}
-              options={brands?.map((b) => ({ value: b.id, label: b.name }))}
-            />
-            <Select
-              value={analysisPeriodDays}
-              onChange={setAnalysisPeriodDays}
-              style={{ width: 120 }}
-              options={[
-                { value: 90, label: '90 Gün' },
-                { value: 180, label: '180 Gün' },
-                { value: 365, label: '365 Gün' },
-              ]}
-            />
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => {
-                refetchAbcXyz();
-                refetchHealth();
-              }}
-            >
-              Yenile
-            </Button>
-          </Space>
-        </Col>
-      </Row>
-
-      {/* Health Score Summary */}
-      {healthScore && (
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} lg={8}>
-            <Card>
-              <HealthScoreGauge score={healthScore.overallScore} trend={healthScore.healthTrend} />
-              <Title level={5} style={{ textAlign: 'center', marginTop: 8 }}>Envanter Sağlığı</Title>
-            </Card>
-          </Col>
-          <Col xs={24} lg={16}>
-            <Card title="Sağlık Puanları Detayı">
-              <Row gutter={[16, 16]}>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Devir Hızı"
-                    value={healthScore.turnoverScore}
-                    suffix="/100"
-                    valueStyle={{ color: getHealthScoreColor(healthScore.turnoverScore) }}
-                  />
-                </Col>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Stok Kesintisi"
-                    value={healthScore.stockoutScore}
-                    suffix="/100"
-                    valueStyle={{ color: getHealthScoreColor(healthScore.stockoutScore) }}
-                  />
-                </Col>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Ölü Stok"
-                    value={healthScore.deadStockScore}
-                    suffix="/100"
-                    valueStyle={{ color: getHealthScoreColor(healthScore.deadStockScore) }}
-                  />
-                </Col>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Doğruluk"
-                    value={healthScore.accuracyScore}
-                    suffix="/100"
-                    valueStyle={{ color: getHealthScoreColor(healthScore.accuracyScore) }}
-                  />
-                </Col>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Denge"
-                    value={healthScore.balanceScore}
-                    suffix="/100"
-                    valueStyle={{ color: getHealthScoreColor(healthScore.balanceScore) }}
-                  />
-                </Col>
-                <Col xs={12} sm={8}>
-                  <Statistic
-                    title="Hizmet Seviyesi"
-                    value={healthScore.serviceLevel}
-                    suffix="%"
-                    precision={1}
-                    valueStyle={{ color: getHealthScoreColor(healthScore.serviceLevel) }}
-                  />
-                </Col>
-              </Row>
-              {healthScore.improvementAreas?.length > 0 && (
-                <Alert
-                  type="info"
-                  showIcon
-                  icon={<BulbOutlined />}
-                  message="İyileştirme Alanları"
-                  description={
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      {healthScore.improvementAreas.map((area, idx) => (
-                        <li key={idx}>{area}</li>
-                      ))}
-                    </ul>
-                  }
-                  style={{ marginTop: 16 }}
-                />
-              )}
-            </Card>
-          </Col>
-        </Row>
-      )}
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab={<span><PieChartOutlined /> ABC/XYZ Analizi</span>} key="abcxyz">
+  // Tab items configuration
+  const tabItems = [
+    {
+      key: 'abcxyz',
+      label: (
+        <span className="flex items-center gap-2">
+          <PieChartOutlined />
+          ABC/XYZ Analizi
+        </span>
+      ),
+      children: (
+        <>
           {abcXyzLoading ? (
-            <Card><Spin size="large" style={{ display: 'block', margin: '50px auto' }} /></Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-12">
+              <Spin size="large" className="flex justify-center" />
+            </div>
           ) : abcXyzData ? (
             <>
               {/* Summary Stats */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="Toplam Ürün"
-                      value={abcXyzData.totalProductsAnalyzed}
-                      prefix={<DatabaseOutlined />}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="Toplam Gelir"
-                      value={abcXyzData.totalRevenue}
-                      precision={0}
-                      prefix={<DollarOutlined />}
-                      formatter={(value) => `₺${Number(value).toLocaleString('tr-TR')}`}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="Stok Değeri"
-                      value={abcXyzData.totalStockValue}
-                      precision={0}
-                      prefix={<DollarOutlined />}
-                      formatter={(value) => `₺${Number(value).toLocaleString('tr-TR')}`}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="Ort. Devir Hızı"
-                      value={abcXyzData.averageInventoryTurnover}
-                      precision={2}
-                      prefix={<ThunderboltOutlined />}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="A Sınıfı Ürün"
-                      value={abcXyzData.classA?.productCount || 0}
-                      valueStyle={{ color: '#52c41a' }}
-                      suffix={`(${abcXyzData.classA?.productPercentage?.toFixed(1) || 0}%)`}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={8} lg={4}>
-                  <Card>
-                    <Statistic
-                      title="Yüksek Riskli"
-                      value={abcXyzData.highRiskProducts?.length || 0}
-                      valueStyle={{ color: '#ff4d4f' }}
-                      prefix={<WarningOutlined />}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <DatabaseOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatNumber(abcXyzData.totalProductsAnalyzed)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Toplam Ürün</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <TrendingUpOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalRevenue)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Toplam Gelir</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <DatabaseOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalStockValue)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Stok Değeri</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <ThunderboltOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{abcXyzData.averageInventoryTurnover?.toFixed(2)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Ort. Devir Hızı</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                        <span className="text-white font-bold">A</span>
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">
+                      {abcXyzData.classA?.productCount || 0}
+                      <span className="text-sm font-normal text-slate-500 ml-1">({abcXyzData.classA?.productPercentage?.toFixed(1) || 0}%)</span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">A Sınıfı Ürün</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <WarningOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{abcXyzData.highRiskProducts?.length || 0}</div>
+                    <div className="text-xs text-slate-500 mt-1">Yüksek Riskli</div>
+                  </div>
+                </div>
+              </div>
 
               {/* ABC/XYZ Matrix */}
-              <Card title="ABC/XYZ Matrisi" style={{ marginBottom: 24 }}>
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">ABC/XYZ Matrisi</h3>
                 <AbcXyzMatrix matrix={abcXyzData.matrix} />
-              </Card>
+              </div>
 
               {/* ABC and XYZ Class Summaries */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={24} lg={12}>
-                  <Card title="ABC Sınıfları (Değer Bazlı)">
-                    <Descriptions column={1} bordered size="small">
-                      <Descriptions.Item label={<Tag color="green">A Sınıfı</Tag>}>
-                        {abcXyzData.classA?.productCount} ürün - Gelir: %{abcXyzData.classA?.revenuePercentage?.toFixed(1)} -
-                        Stok: ₺{abcXyzData.classA?.totalStockValue?.toLocaleString('tr-TR')}
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<Tag color="orange">B Sınıfı</Tag>}>
-                        {abcXyzData.classB?.productCount} ürün - Gelir: %{abcXyzData.classB?.revenuePercentage?.toFixed(1)} -
-                        Stok: ₺{abcXyzData.classB?.totalStockValue?.toLocaleString('tr-TR')}
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<Tag color="red">C Sınıfı</Tag>}>
-                        {abcXyzData.classC?.productCount} ürün - Gelir: %{abcXyzData.classC?.revenuePercentage?.toFixed(1)} -
-                        Stok: ₺{abcXyzData.classC?.totalStockValue?.toLocaleString('tr-TR')}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </Card>
-                </Col>
-                <Col xs={24} lg={12}>
-                  <Card title="XYZ Sınıfları (Talep Değişkenliği)">
-                    <Descriptions column={1} bordered size="small">
-                      <Descriptions.Item label={<Tag color="blue">X Sınıfı</Tag>}>
-                        {abcXyzData.classX?.productCount} ürün - {abcXyzData.classX?.demandPattern} -
-                        Ort. CV: %{(abcXyzData.classX?.averageCoefficientOfVariation * 100)?.toFixed(1)}
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<Tag color="purple">Y Sınıfı</Tag>}>
-                        {abcXyzData.classY?.productCount} ürün - {abcXyzData.classY?.demandPattern} -
-                        Ort. CV: %{(abcXyzData.classY?.averageCoefficientOfVariation * 100)?.toFixed(1)}
-                      </Descriptions.Item>
-                      <Descriptions.Item label={<Tag color="magenta">Z Sınıfı</Tag>}>
-                        {abcXyzData.classZ?.productCount} ürün - {abcXyzData.classZ?.demandPattern} -
-                        Ort. CV: %{(abcXyzData.classZ?.averageCoefficientOfVariation * 100)?.toFixed(1)}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </Card>
-                </Col>
-              </Row>
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">ABC Sınıfları (Değer Bazlı)</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-medium rounded">A Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classA?.productCount} ürün - Gelir: %{abcXyzData.classA?.revenuePercentage?.toFixed(1)} - Stok: {formatCurrency(abcXyzData.classA?.totalStockValue || 0)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-500 text-white text-xs font-medium rounded">B Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classB?.productCount} ürün - Gelir: %{abcXyzData.classB?.revenuePercentage?.toFixed(1)} - Stok: {formatCurrency(abcXyzData.classB?.totalStockValue || 0)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-300 text-slate-700 text-xs font-medium rounded">C Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classC?.productCount} ürün - Gelir: %{abcXyzData.classC?.revenuePercentage?.toFixed(1)} - Stok: {formatCurrency(abcXyzData.classC?.totalStockValue || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">XYZ Sınıfları (Talep Değişkenliği)</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-900 text-white text-xs font-medium rounded">X Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classX?.productCount} ürün - {abcXyzData.classX?.demandPattern} - Ort. CV: %{(abcXyzData.classX?.averageCoefficientOfVariation * 100)?.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-600 text-white text-xs font-medium rounded">Y Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classY?.productCount} ürün - {abcXyzData.classY?.demandPattern} - Ort. CV: %{(abcXyzData.classY?.averageCoefficientOfVariation * 100)?.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span className="inline-flex items-center px-3 py-1 bg-slate-400 text-white text-xs font-medium rounded">Z Sınıfı</span>
+                        <span className="text-sm text-slate-600">
+                          {abcXyzData.classZ?.productCount} ürün - {abcXyzData.classZ?.demandPattern} - Ort. CV: %{(abcXyzData.classZ?.averageCoefficientOfVariation * 100)?.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Strategic Recommendations */}
               {abcXyzData.strategicRecommendations?.length > 0 && (
-                <Card title="Stratejik Öneriler" style={{ marginBottom: 24 }}>
-                  {abcXyzData.strategicRecommendations.map((rec, idx) => (
-                    <Alert
-                      key={idx}
-                      type={rec.priority === 'High' || rec.priority === 'Yüksek' ? 'warning' : 'info'}
-                      showIcon
-                      message={
-                        <Space>
-                          <Text strong>{rec.category}</Text>
-                          {getPriorityBadge(rec.priority)}
-                        </Space>
-                      }
-                      description={
-                        <div>
-                          <p>{rec.recommendation}</p>
-                          <Text type="secondary">Etki: {rec.impact}</Text>
-                          {rec.estimatedSavings && (
-                            <Tag color="green" style={{ marginLeft: 8 }}>
-                              Tahmini Tasarruf: ₺{rec.estimatedSavings.toLocaleString('tr-TR')}
-                            </Tag>
-                          )}
-                        </div>
-                      }
-                      style={{ marginBottom: 12 }}
-                    />
-                  ))}
-                </Card>
+                <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Stratejik Öneriler</h3>
+                  <div className="space-y-3">
+                    {abcXyzData.strategicRecommendations.map((rec, idx) => (
+                      <Alert
+                        key={idx}
+                        type={rec.priority === 'High' || rec.priority === 'Yüksek' ? 'warning' : 'info'}
+                        showIcon
+                        className="[&_.ant-alert-icon]:text-slate-600"
+                        message={
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900">{rec.category}</span>
+                            {getPriorityBadge(rec.priority)}
+                          </div>
+                        }
+                        description={
+                          <div className="mt-2">
+                            <p className="text-slate-600">{rec.recommendation}</p>
+                            <span className="text-slate-500 text-sm">Etki: {rec.impact}</span>
+                            {rec.estimatedSavings && (
+                              <Tag className="bg-slate-900 text-white border-none font-medium ml-2">
+                                Tahmini Tasarruf: {formatCurrency(rec.estimatedSavings)}
+                              </Tag>
+                            )}
+                          </div>
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Top A Products and High Risk Products */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={24} lg={12}>
-                  <Card title="En Değerli Ürünler (A Sınıfı)" size="small">
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">En Değerli Ürünler (A Sınıfı)</h3>
                     <Table
                       dataSource={abcXyzData.topAProducts}
                       columns={[
                         {
                           title: 'Ürün',
                           key: 'product',
-                          render: (_, r) => <Text>{r.productName}</Text>,
+                          render: (_, r) => <span className="font-medium text-slate-900">{r.productName}</span>,
                         },
                         {
                           title: 'Gelir',
                           dataIndex: 'totalRevenue',
-                          render: (v) => `₺${v?.toLocaleString('tr-TR')}`,
+                          render: (v) => formatCurrency(v),
                         },
                         {
                           title: 'Sınıf',
                           dataIndex: 'combinedClass',
-                          render: (c: AbcXyzClass) => <Tag style={{ backgroundColor: getMatrixCellColor(c), color: '#fff' }}>{c}</Tag>,
+                          render: (c: AbcXyzClass) => <Tag style={{ backgroundColor: getMatrixCellColor(c), color: '#fff', border: 'none', fontWeight: 600 }}>{c}</Tag>,
                         },
                       ]}
                       rowKey="productId"
                       pagination={false}
                       size="small"
+                      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
                     />
-                  </Card>
-                </Col>
-                <Col xs={24} lg={12}>
-                  <Card title={<Text type="danger"><WarningOutlined /> Yüksek Riskli Ürünler</Text>} size="small">
+                  </div>
+                </div>
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
+                      <WarningOutlined className="text-slate-600" />
+                      Yüksek Riskli Ürünler
+                    </h3>
                     <Table
                       dataSource={abcXyzData.highRiskProducts}
                       columns={[
                         {
                           title: 'Ürün',
                           key: 'product',
-                          render: (_, r) => <Text>{r.productName}</Text>,
+                          render: (_, r) => <span className="font-medium text-slate-900">{r.productName}</span>,
                         },
                         {
                           title: 'Stok Günü',
                           dataIndex: 'estimatedDaysOfStock',
-                          render: (d) => <Tag color="red">{d?.toFixed(0)} gün</Tag>,
+                          render: (d) => <Tag className="bg-slate-900 text-white border-none font-medium">{d?.toFixed(0)} gün</Tag>,
                         },
                         {
                           title: 'Sınıf',
                           dataIndex: 'combinedClass',
-                          render: (c: AbcXyzClass) => <Tag style={{ backgroundColor: getMatrixCellColor(c), color: '#fff' }}>{c}</Tag>,
+                          render: (c: AbcXyzClass) => <Tag style={{ backgroundColor: getMatrixCellColor(c), color: '#fff', border: 'none', fontWeight: 600 }}>{c}</Tag>,
                         },
                       ]}
                       rowKey="productId"
                       pagination={false}
                       size="small"
+                      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
                     />
-                  </Card>
-                </Col>
-              </Row>
+                  </div>
+                </div>
+              </div>
 
               {/* Full Product List */}
-              <Card title="Tüm Ürünler - ABC/XYZ Sınıflandırması">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Tüm Ürünler - ABC/XYZ Sınıflandırması</h3>
                 <Table
                   dataSource={[...(abcXyzData.topAProducts || []), ...(abcXyzData.highRiskProducts || [])]}
                   columns={productColumns}
                   rowKey="productId"
                   scroll={{ x: 1500 }}
                   pagination={{ pageSize: 10 }}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
                 />
-              </Card>
+              </div>
             </>
           ) : (
             <Empty description="ABC/XYZ analiz verisi bulunamadı" />
           )}
-        </TabPane>
-
-        <TabPane tab={<span><BarChartOutlined /> Stok Devir Hızı</span>} key="turnover">
+        </>
+      ),
+    },
+    {
+      key: 'turnover',
+      label: (
+        <span className="flex items-center gap-2">
+          <BarChartOutlined />
+          Stok Devir Hızı
+        </span>
+      ),
+      children: (
+        <>
           {turnoverLoading ? (
-            <Card><Spin size="large" style={{ display: 'block', margin: '50px auto' }} /></Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-12">
+              <Spin size="large" className="flex justify-center" />
+            </div>
           ) : turnoverData?.length ? (
-            <Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
               <Table
                 dataSource={turnoverData}
                 columns={turnoverColumns}
                 rowKey="productId"
                 scroll={{ x: 1400 }}
                 pagination={{ pageSize: 15 }}
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
               />
-            </Card>
+            </div>
           ) : (
             <Empty description="Stok devir hızı verisi bulunamadı" />
           )}
-        </TabPane>
-
-        <TabPane tab={<span><ExclamationCircleOutlined /> Ölü Stok</span>} key="deadstock">
+        </>
+      ),
+    },
+    {
+      key: 'deadstock',
+      label: (
+        <span className="flex items-center gap-2">
+          <ExclamationCircleOutlined />
+          Ölü Stok
+        </span>
+      ),
+      children: (
+        <>
           {deadStockLoading ? (
-            <Card><Spin size="large" style={{ display: 'block', margin: '50px auto' }} /></Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-12">
+              <Spin size="large" className="flex justify-center" />
+            </div>
           ) : deadStockData ? (
             <>
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={12} sm={6}>
-                  <Card>
-                    <Statistic
-                      title="Toplam Ölü Stok"
-                      value={deadStockData.totalDeadStockItems}
-                      prefix={<WarningOutlined style={{ color: '#ff4d4f' }} />}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Card>
-                    <Statistic
-                      title="Ölü Stok Değeri"
-                      value={deadStockData.totalDeadStockValue}
-                      precision={0}
-                      prefix="₺"
-                      valueStyle={{ color: '#ff4d4f' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Card>
-                    <Statistic
-                      title="Ölü Stok Oranı"
-                      value={deadStockData.deadStockPercentage}
-                      suffix="%"
-                      precision={1}
-                      valueStyle={{ color: deadStockData.deadStockPercentage > 10 ? '#ff4d4f' : '#faad14' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={12} sm={6}>
-                  <Card>
-                    <Statistic
-                      title="Tahmini Kurtarma"
-                      value={deadStockData.potentialRecoveryValue}
-                      precision={0}
-                      prefix="₺"
-                      valueStyle={{ color: '#52c41a' }}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <WarningOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatNumber(deadStockData.totalDeadStockItems)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Toplam Ölü Stok</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <TrendingUpOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.totalDeadStockValue)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Ölü Stok Değeri</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <PieChartOutlined className="text-slate-600 text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">%{deadStockData.deadStockPercentage?.toFixed(1)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Ölü Stok Oranı</div>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                        <TrendingUpOutlined className="text-white text-lg" />
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.potentialRecoveryValue)}</div>
+                    <div className="text-xs text-slate-500 mt-1">Tahmini Kurtarma</div>
+                  </div>
+                </div>
+              </div>
 
               {deadStockData.recommendations?.length > 0 && (
                 <Alert
                   type="warning"
                   showIcon
-                  icon={<BulbOutlined />}
-                  message="Öneriler"
+                  icon={<BulbOutlined className="text-slate-600" />}
+                  message={<span className="font-semibold text-slate-900">Öneriler</span>}
                   description={
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    <ul className="list-disc pl-5 mt-2 text-slate-600">
                       {deadStockData.recommendations.map((rec, idx) => (
                         <li key={idx}>{rec}</li>
                       ))}
                     </ul>
                   }
-                  style={{ marginBottom: 24 }}
+                  className="mb-6 [&_.ant-alert-message]:text-slate-900"
                 />
               )}
 
-              <Card title="Ölü Stok Listesi">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Ölü Stok Listesi</h3>
                 <Table
                   dataSource={deadStockData.items}
                   columns={deadStockColumns}
                   rowKey="productId"
                   scroll={{ x: 1600 }}
                   pagination={{ pageSize: 15 }}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!border-slate-200 [&_.ant-table-tbody_td]:!border-slate-100"
                 />
-              </Card>
+              </div>
             </>
           ) : (
             <Empty description="Ölü stok verisi bulunamadı" />
           )}
-        </TabPane>
-      </Tabs>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+              <AreaChartOutlined className="text-white text-lg" />
+            </div>
+            Envanter Analizi
+          </h1>
+          <p className="text-slate-500 mt-1">ABC/XYZ Analizi, Devir Hızı ve Ölü Stok</p>
+        </div>
+        <Space>
+          <Select
+            allowClear
+            placeholder="Kategori"
+            className="w-44 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            value={selectedCategoryId}
+            onChange={setSelectedCategoryId}
+            options={categories?.map((c) => ({ value: c.id, label: c.name }))}
+          />
+          <Select
+            allowClear
+            placeholder="Depo"
+            className="w-44 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            value={selectedWarehouseId}
+            onChange={setSelectedWarehouseId}
+            options={warehouses?.map((w) => ({ value: w.id, label: w.name }))}
+          />
+          <Select
+            allowClear
+            placeholder="Marka"
+            className="w-36 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            value={selectedBrandId}
+            onChange={setSelectedBrandId}
+            options={brands?.map((b) => ({ value: b.id, label: b.name }))}
+          />
+          <Select
+            value={analysisPeriodDays}
+            onChange={setAnalysisPeriodDays}
+            className="w-28 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector]:!rounded-lg"
+            options={[
+              { value: 90, label: '90 Gün' },
+              { value: 180, label: '180 Gün' },
+              { value: 365, label: '365 Gün' },
+            ]}
+          />
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              refetchAbcXyz();
+              refetchHealth();
+            }}
+            className="!border-slate-200 !text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
+          >
+            Yenile
+          </Button>
+        </Space>
+      </div>
+
+      {/* Health Score Summary */}
+      {healthScore && (
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 lg:col-span-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <HealthScoreGauge score={healthScore.overallScore} trend={healthScore.healthTrend} />
+              <h4 className="text-center text-sm font-semibold text-slate-900 mt-2">Envanter Sağlığı</h4>
+            </div>
+          </div>
+          <div className="col-span-12 lg:col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Sağlık Puanları Detayı</h3>
+              <div className="grid grid-cols-6 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.turnoverScore) }}>
+                    {healthScore.turnoverScore}<span className="text-sm text-slate-400">/100</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Devir Hızı</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.stockoutScore) }}>
+                    {healthScore.stockoutScore}<span className="text-sm text-slate-400">/100</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Stok Kesintisi</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.deadStockScore) }}>
+                    {healthScore.deadStockScore}<span className="text-sm text-slate-400">/100</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Ölü Stok</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.accuracyScore) }}>
+                    {healthScore.accuracyScore}<span className="text-sm text-slate-400">/100</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Doğruluk</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.balanceScore) }}>
+                    {healthScore.balanceScore}<span className="text-sm text-slate-400">/100</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Denge</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: getHealthScoreColor(healthScore.serviceLevel) }}>
+                    {healthScore.serviceLevel?.toFixed(1)}<span className="text-sm text-slate-400">%</span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Hizmet Seviyesi</div>
+                </div>
+              </div>
+              {healthScore.improvementAreas?.length > 0 && (
+                <Alert
+                  type="info"
+                  showIcon
+                  icon={<BulbOutlined className="text-slate-600" />}
+                  message={<span className="font-semibold text-slate-900">İyileştirme Alanları</span>}
+                  description={
+                    <ul className="list-disc pl-5 mt-2 text-slate-600">
+                      {healthScore.improvementAreas.map((area, idx) => (
+                        <li key={idx}>{area}</li>
+                      ))}
+                    </ul>
+                  }
+                  className="mt-4 [&_.ant-alert-message]:text-slate-900"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabItems}
+        className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900 [&_.ant-tabs-nav]:!mb-6"
+      />
     </div>
   );
 }

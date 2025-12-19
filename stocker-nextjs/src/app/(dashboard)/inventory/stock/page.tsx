@@ -2,10 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Typography,
-  Card,
-  Row,
-  Col,
   Table,
   Select,
   Input,
@@ -14,8 +10,6 @@ import {
   Button,
   Tooltip,
   Progress,
-  Statistic,
-  Badge,
   Dropdown,
   Empty,
   Spin,
@@ -39,19 +33,15 @@ import {
   AppstoreOutlined,
   SwapOutlined,
   PlusOutlined,
-  MinusOutlined,
   EyeOutlined,
   HistoryOutlined,
   MoreOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
   ExportOutlined,
   PrinterOutlined,
   FileExcelOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+import type { ColumnsType } from 'antd/es/table';
 import {
   useStock,
   useWarehouses,
@@ -65,8 +55,10 @@ import {
 } from '@/lib/api/hooks/useInventory';
 import type { StockDto, ProductDto, WarehouseDto } from '@/lib/api/services/inventory.types';
 
-const { Title, Text } = Typography;
 const { Search } = Input;
+
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Utility functions
 const formatNumber = (value: number | undefined | null): string => {
@@ -94,7 +86,7 @@ const getStockStatus = (
     return { status: 'error', label: 'Stok Yok' };
   }
   if (quantity <= minStock) {
-    return { status: 'warning', label: 'Dusuk Stok' };
+    return { status: 'warning', label: 'Düşük Stok' };
   }
   if (maxStock > 0 && quantity >= maxStock) {
     return { status: 'default', label: 'Fazla Stok' };
@@ -109,9 +101,9 @@ const getStockProgress = (quantity: number, minStock: number, maxStock: number):
 };
 
 const getProgressColor = (percent: number, minPercent: number): string => {
-  if (percent <= minPercent) return '#f5222d';
-  if (percent <= minPercent * 1.5) return '#faad14';
-  return '#52c41a';
+  if (percent <= minPercent) return MONOCHROME_COLORS[0];
+  if (percent <= minPercent * 1.5) return MONOCHROME_COLORS[2];
+  return MONOCHROME_COLORS[4];
 };
 
 interface StockTableRow {
@@ -218,7 +210,7 @@ export default function StockListPage() {
         key: `${stock.productId}-${stock.warehouseId}-${stock.locationId || 0}`,
         productId: stock.productId,
         productCode: product?.code || stock.productId.toString(),
-        productName: product?.name || 'Bilinmeyen Urun',
+        productName: product?.name || 'Bilinmeyen Ürün',
         categoryName: product?.categoryName || '-',
         unit: product?.unitName || 'Adet',
         warehouseId: stock.warehouseId,
@@ -302,7 +294,7 @@ export default function StockListPage() {
   // Table columns
   const columns: ColumnsType<StockTableRow> = [
     {
-      title: 'Urun Kodu',
+      title: 'Ürün Kodu',
       dataIndex: 'productCode',
       key: 'productCode',
       width: 120,
@@ -310,12 +302,12 @@ export default function StockListPage() {
       sorter: (a, b) => a.productCode.localeCompare(b.productCode),
       render: (code, record) => (
         <Link href={`/inventory/products/${record.productId}`}>
-          <Text strong style={{ color: '#1890ff' }}>{code}</Text>
+          <span className="font-medium text-slate-900 hover:text-slate-600">{code}</span>
         </Link>
       ),
     },
     {
-      title: 'Urun Adi',
+      title: 'Ürün Adı',
       dataIndex: 'productName',
       key: 'productName',
       width: 200,
@@ -334,10 +326,10 @@ export default function StockListPage() {
       dataIndex: 'warehouseName',
       key: 'warehouseName',
       width: 130,
-      render: (name, record) => (
+      render: (name) => (
         <Space>
-          <ShopOutlined />
-          <Text>{name}</Text>
+          <ShopOutlined className="text-slate-400" />
+          <span className="text-slate-700">{name}</span>
         </Space>
       ),
     },
@@ -346,7 +338,7 @@ export default function StockListPage() {
       dataIndex: 'locationName',
       key: 'locationName',
       width: 100,
-      render: (name) => name || '-',
+      render: (name) => <span className="text-slate-500">{name || '-'}</span>,
     },
     {
       title: 'Miktar',
@@ -357,7 +349,7 @@ export default function StockListPage() {
       sorter: (a, b) => a.quantity - b.quantity,
       render: (qty, record) => (
         <Tooltip title={`Birim: ${record.unit}`}>
-          <Text strong>{formatNumber(qty)}</Text>
+          <span className="font-medium text-slate-900">{formatNumber(qty)}</span>
         </Tooltip>
       ),
     },
@@ -368,22 +360,22 @@ export default function StockListPage() {
       width: 90,
       align: 'right' as const,
       render: (qty) => (
-        <Text type={qty > 0 ? 'warning' : 'secondary'}>
+        <span className={qty > 0 ? 'text-amber-600' : 'text-slate-400'}>
           {formatNumber(qty)}
-        </Text>
+        </span>
       ),
     },
     {
-      title: 'Kullanilabilir',
+      title: 'Kullanılabilir',
       dataIndex: 'availableQuantity',
       key: 'availableQuantity',
       width: 110,
       align: 'right' as const,
       sorter: (a, b) => a.availableQuantity - b.availableQuantity,
       render: (qty, record) => (
-        <Text strong style={{ color: qty <= 0 ? '#f5222d' : qty <= record.minStockLevel ? '#faad14' : '#52c41a' }}>
+        <span className={`font-medium ${qty <= 0 ? 'text-red-600' : qty <= record.minStockLevel ? 'text-amber-600' : 'text-emerald-600'}`}>
           {formatNumber(qty)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -394,7 +386,7 @@ export default function StockListPage() {
         const progress = getStockProgress(record.quantity, record.minStockLevel, record.maxStockLevel);
         const minPercent = record.maxStockLevel > 0 ? (record.minStockLevel / record.maxStockLevel) * 100 : 20;
         return (
-          <Space direction="vertical" size={0} style={{ width: '100%' }}>
+          <div className="space-y-1">
             <Progress
               percent={progress}
               size="small"
@@ -408,13 +400,13 @@ export default function StockListPage() {
                   : record.status === 'warning'
                   ? 'orange'
                   : record.status === 'default'
-                  ? 'blue'
+                  ? 'default'
                   : 'green'
               }
             >
               {record.statusLabel}
             </Tag>
-          </Space>
+          </div>
         );
       },
     },
@@ -424,9 +416,9 @@ export default function StockListPage() {
       width: 100,
       align: 'center' as const,
       render: (_, record) => (
-        <Text type="secondary">
+        <span className="text-slate-500">
           {formatNumber(record.minStockLevel)} / {formatNumber(record.maxStockLevel)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -435,23 +427,23 @@ export default function StockListPage() {
       key: 'unitPrice',
       width: 110,
       align: 'right' as const,
-      render: (price) => formatCurrency(price),
+      render: (price) => <span className="text-slate-700">{formatCurrency(price)}</span>,
     },
     {
-      title: 'Toplam Deger',
+      title: 'Toplam Değer',
       dataIndex: 'totalValue',
       key: 'totalValue',
       width: 130,
       align: 'right' as const,
       sorter: (a, b) => a.totalValue - b.totalValue,
       render: (value) => (
-        <Text strong style={{ color: '#1890ff' }}>
+        <span className="font-medium text-slate-900">
           {formatCurrency(value)}
-        </Text>
+        </span>
       ),
     },
     {
-      title: 'Islemler',
+      title: 'İşlemler',
       key: 'actions',
       width: 100,
       fixed: 'right' as const,
@@ -462,6 +454,7 @@ export default function StockListPage() {
               type="text"
               size="small"
               icon={<EyeOutlined />}
+              className="!text-slate-600 hover:!text-slate-900"
               onClick={() => handleViewDetail(record.productId)}
             />
           </Tooltip>
@@ -471,7 +464,7 @@ export default function StockListPage() {
                 {
                   key: 'history',
                   icon: <HistoryOutlined />,
-                  label: <Link href={`/inventory/stock-movements?productId=${record.productId}`}>Hareket Gecmisi</Link>,
+                  label: <Link href={`/inventory/stock-movements?productId=${record.productId}`}>Hareket Geçmişi</Link>,
                 },
                 {
                   key: 'adjust',
@@ -482,13 +475,13 @@ export default function StockListPage() {
                 {
                   key: 'transfer',
                   icon: <ExportOutlined />,
-                  label: <Link href={`/inventory/stock-transfers/new?productId=${record.productId}&sourceWarehouseId=${record.warehouseId}`}>Transfer Olustur</Link>,
+                  label: <Link href={`/inventory/stock-transfers/new?productId=${record.productId}&sourceWarehouseId=${record.warehouseId}`}>Transfer Oluştur</Link>,
                 },
               ],
             }}
             trigger={['click']}
           >
-            <Button type="text" size="small" icon={<MoreOutlined />} />
+            <Button type="text" size="small" icon={<MoreOutlined />} className="!text-slate-600 hover:!text-slate-900" />
           </Dropdown>
         </Space>
       ),
@@ -496,227 +489,215 @@ export default function StockListPage() {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="min-h-screen bg-slate-50 p-8">
       <Spin spinning={stockLoading}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Space>
-                <InboxOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-                <Title level={3} style={{ margin: 0 }}>
-                  Stok Listesi
-                </Title>
-              </Space>
-            </Col>
-            <Col>
-              <Space>
-                <Dropdown
-                  menu={{
-                    items: [
-                      {
-                        key: 'export-stock',
-                        icon: <DownloadOutlined />,
-                        label: 'Stok Verisini İndir',
-                        onClick: () => exportStockMutation.mutate({ warehouseId: selectedWarehouseId }),
-                      },
-                      {
-                        key: 'export-summary',
-                        icon: <FileExcelOutlined />,
-                        label: 'Stok Özeti İndir',
-                        onClick: () => exportStockSummaryMutation.mutate(),
-                      },
-                      { type: 'divider' },
-                      {
-                        key: 'download-template',
-                        icon: <FileExcelOutlined />,
-                        label: 'İçe Aktarma Şablonu',
-                        onClick: () => downloadTemplateMutation.mutate(),
-                      },
-                    ],
-                  }}
-                  trigger={['click']}
-                >
-                  <Button
-                    icon={<DownloadOutlined />}
-                    loading={exportStockMutation.isPending || exportStockSummaryMutation.isPending || downloadTemplateMutation.isPending}
-                  >
-                    Excel İndir
-                  </Button>
-                </Dropdown>
-                <Button
-                  icon={<UploadOutlined />}
-                  onClick={() => setImportModalVisible(true)}
-                  loading={importStockMutation.isPending}
-                >
-                  Excel İçe Aktar
-                </Button>
-                <Button icon={<PrinterOutlined />}>Yazdır</Button>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => message.info('Stok girişi sayfasına yönlendiriliyorsunuz')}
-                >
-                  Stok Girişi
-                </Button>
-              </Space>
-            </Col>
-          </Row>
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <InboxOutlined />
+              Stok Listesi
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Tüm depolardaki stok durumunu görüntüleyin ve yönetin
+            </p>
+          </div>
+          <Space size="middle">
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'export-stock',
+                    icon: <DownloadOutlined />,
+                    label: 'Stok Verisini İndir',
+                    onClick: () => exportStockMutation.mutate({ warehouseId: selectedWarehouseId }),
+                  },
+                  {
+                    key: 'export-summary',
+                    icon: <FileExcelOutlined />,
+                    label: 'Stok Özeti İndir',
+                    onClick: () => exportStockSummaryMutation.mutate(),
+                  },
+                  { type: 'divider' },
+                  {
+                    key: 'download-template',
+                    icon: <FileExcelOutlined />,
+                    label: 'İçe Aktarma Şablonu',
+                    onClick: () => downloadTemplateMutation.mutate(),
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <Button
+                icon={<DownloadOutlined />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                loading={exportStockMutation.isPending || exportStockSummaryMutation.isPending || downloadTemplateMutation.isPending}
+              >
+                Excel İndir
+              </Button>
+            </Dropdown>
+            <Button
+              icon={<UploadOutlined />}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+              onClick={() => setImportModalVisible(true)}
+              loading={importStockMutation.isPending}
+            >
+              Excel İçe Aktar
+            </Button>
+            <Button
+              icon={<PrinterOutlined />}
+              className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            >
+              Yazdır
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => message.info('Stok girişi sayfasına yönlendiriliyorsunuz')}
+            >
+              Stok Girişi
+            </Button>
+          </Space>
         </div>
 
         {/* Summary Cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Deger"
-                value={summaryStats.totalValue}
-                prefix={<span style={{ fontSize: 14 }}>₺</span>}
-                valueStyle={{ fontSize: 18, color: '#1890ff' }}
-                formatter={(value) => formatNumber(Number(value))}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Miktar"
-                value={summaryStats.totalQuantity}
-                valueStyle={{ fontSize: 18 }}
-                formatter={(value) => formatNumber(Number(value))}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Urun Cesidi"
-                value={summaryStats.uniqueProducts}
-                prefix={<AppstoreOutlined style={{ fontSize: 14 }} />}
-                valueStyle={{ fontSize: 18, color: '#722ed1' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Dusuk Stok"
-                value={summaryStats.lowStockCount}
-                prefix={<WarningOutlined style={{ fontSize: 14, color: '#faad14' }} />}
-                valueStyle={{ fontSize: 18, color: '#faad14' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Stok Bitti"
-                value={summaryStats.outOfStockCount}
-                prefix={<ExclamationCircleOutlined style={{ fontSize: 14, color: '#f5222d' }} />}
-                valueStyle={{ fontSize: 18, color: '#f5222d' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <Card size="small">
-              <Statistic
-                title="Kayit Sayisi"
-                value={filteredData.length}
-                prefix={<InboxOutlined style={{ fontSize: 14 }} />}
-                valueStyle={{ fontSize: 18 }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <div className="grid grid-cols-12 gap-6 mb-6">
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs text-slate-500 mb-1">Toplam Değer</p>
+              <p className="text-2xl font-bold text-slate-900">{formatCurrency(summaryStats.totalValue)}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs text-slate-500 mb-1">Toplam Miktar</p>
+              <p className="text-2xl font-bold text-slate-900">{formatNumber(summaryStats.totalQuantity)}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <AppstoreOutlined className="text-slate-400" />
+                <p className="text-xs text-slate-500">Ürün Çeşidi</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{summaryStats.uniqueProducts}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <WarningOutlined className="text-amber-500" />
+                <p className="text-xs text-slate-500">Düşük Stok</p>
+              </div>
+              <p className="text-2xl font-bold text-amber-600">{summaryStats.lowStockCount}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <ExclamationCircleOutlined className="text-red-500" />
+                <p className="text-xs text-slate-500">Stok Bitti</p>
+              </div>
+              <p className="text-2xl font-bold text-red-600">{summaryStats.outOfStockCount}</p>
+            </div>
+          </div>
+          <div className="col-span-12 sm:col-span-6 lg:col-span-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <InboxOutlined className="text-slate-400" />
+                <p className="text-xs text-slate-500">Kayıt Sayısı</p>
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{filteredData.length}</p>
+            </div>
+          </div>
+        </div>
 
         {/* Filters */}
-        <Card size="small" style={{ marginBottom: 16 }}>
-          <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} sm={12} md={6}>
-              <Search
-                placeholder="Urun kodu, adi veya depo ara..."
-                allowClear
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                prefix={<SearchOutlined />}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Search
+              placeholder="Ürün kodu, adı veya depo ara..."
+              allowClear
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              prefix={<SearchOutlined className="text-slate-400" />}
+              style={{ width: 280 }}
+            />
+            <Select
+              placeholder="Depo Seç"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedWarehouseId}
+              onChange={setSelectedWarehouseId}
+              options={warehouses.map((w: WarehouseDto) => ({
+                label: w.name,
+                value: w.id,
+              }))}
+            />
+            <Select
+              placeholder="Kategori Seç"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedCategoryId}
+              onChange={setSelectedCategoryId}
+              options={categories.map((c: any) => ({
+                label: c.name,
+                value: c.id,
+              }))}
+            />
+            <Select
+              placeholder="Stok Durumu"
+              allowClear
+              style={{ width: 160 }}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { label: 'Normal', value: 'normal' },
+                { label: 'Düşük Stok', value: 'low' },
+                { label: 'Stok Bitti', value: 'out' },
+                { label: 'Fazla Stok', value: 'over' },
+              ]}
+            />
+            <div className="flex-1" />
+            <Tooltip title="Filtreleri Temizle">
+              <Button
+                icon={<FilterOutlined />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => {
+                  setSearchText('');
+                  setSelectedWarehouseId(undefined);
+                  setSelectedCategoryId(undefined);
+                  setStatusFilter(undefined);
+                }}
+              >
+                Temizle
+              </Button>
+            </Tooltip>
+            <Tooltip title="Yenile">
+              <Button
+                icon={<ReloadOutlined />}
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => refetchStock()}
               />
-            </Col>
-            <Col xs={24} sm={12} md={4}>
-              <Select
-                placeholder="Depo Sec"
-                allowClear
-                style={{ width: '100%' }}
-                value={selectedWarehouseId}
-                onChange={setSelectedWarehouseId}
-                options={warehouses.map((w: WarehouseDto) => ({
-                  label: w.name,
-                  value: w.id,
-                }))}
-              />
-            </Col>
-            <Col xs={24} sm={12} md={4}>
-              <Select
-                placeholder="Kategori Sec"
-                allowClear
-                style={{ width: '100%' }}
-                value={selectedCategoryId}
-                onChange={setSelectedCategoryId}
-                options={categories.map((c: any) => ({
-                  label: c.name,
-                  value: c.id,
-                }))}
-              />
-            </Col>
-            <Col xs={24} sm={12} md={4}>
-              <Select
-                placeholder="Stok Durumu"
-                allowClear
-                style={{ width: '100%' }}
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { label: 'Normal', value: 'normal' },
-                  { label: 'Dusuk Stok', value: 'low' },
-                  { label: 'Stok Bitti', value: 'out' },
-                  { label: 'Fazla Stok', value: 'over' },
-                ]}
-              />
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Space>
-                <Tooltip title="Filtreleri Temizle">
-                  <Button
-                    icon={<FilterOutlined />}
-                    onClick={() => {
-                      setSearchText('');
-                      setSelectedWarehouseId(undefined);
-                      setSelectedCategoryId(undefined);
-                      setStatusFilter(undefined);
-                    }}
-                  >
-                    Temizle
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Yenile">
-                  <Button icon={<ReloadOutlined />} onClick={() => refetchStock()} />
-                </Tooltip>
-              </Space>
-            </Col>
-          </Row>
-        </Card>
+            </Tooltip>
+          </div>
+        </div>
 
         {/* Stock Table */}
-        <Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={filteredData}
             rowKey="key"
             size="small"
             scroll={{ x: 1600, y: 600 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
             pagination={{
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayit`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} kayıt`,
               pageSizeOptions: ['20', '50', '100', '200'],
               defaultPageSize: 50,
             }}
@@ -729,18 +710,18 @@ export default function StockListPage() {
                 <Table.Summary fixed>
                   <Table.Summary.Row>
                     <Table.Summary.Cell index={0} colSpan={5}>
-                      <Text strong>Sayfa Toplami</Text>
+                      <span className="font-medium text-slate-900">Sayfa Toplamı</span>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={5} align="right">
-                      <Text strong>{formatNumber(totalQty)}</Text>
+                      <span className="font-medium text-slate-900">{formatNumber(totalQty)}</span>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={6} />
                     <Table.Summary.Cell index={7} align="right">
-                      <Text strong>{formatNumber(totalAvailable)}</Text>
+                      <span className="font-medium text-slate-900">{formatNumber(totalAvailable)}</span>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={8} colSpan={3} />
                     <Table.Summary.Cell index={11} align="right">
-                      <Text strong style={{ color: '#1890ff' }}>{formatCurrency(totalValue)}</Text>
+                      <span className="font-medium text-slate-900">{formatCurrency(totalValue)}</span>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={12} />
                   </Table.Summary.Row>
@@ -748,16 +729,16 @@ export default function StockListPage() {
               );
             }}
           />
-        </Card>
+        </div>
       </Spin>
 
       {/* Stock Detail Modal */}
       <Modal
         title={
-          <Space>
+          <span className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <InboxOutlined />
-            <span>Urun Stok Detayi</span>
-          </Space>
+            Ürün Stok Detayı
+          </span>
         }
         open={detailModalVisible}
         onCancel={() => {
@@ -768,100 +749,89 @@ export default function StockListPage() {
         width={700}
       >
         {summaryLoading ? (
-          <div style={{ textAlign: 'center', padding: 40 }}>
+          <div className="flex items-center justify-center py-12">
             <Spin />
           </div>
         ) : stockSummary ? (
           <div>
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Statistic
-                  title="Toplam Stok"
-                  value={stockSummary.totalQuantity || 0}
-                  valueStyle={{ color: '#1890ff' }}
-                  suffix="adet"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Toplam Rezerve"
-                  value={stockSummary.totalReserved || 0}
-                  valueStyle={{ color: '#faad14' }}
-                  suffix="adet"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Kullanilabilir"
-                  value={stockSummary.totalAvailable || 0}
-                  valueStyle={{ color: '#52c41a' }}
-                  suffix="adet"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Depo Sayisi"
-                  value={stockSummary.warehouseCount || 0}
-                  prefix={<ShopOutlined />}
-                />
-              </Col>
-            </Row>
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">Toplam Stok</p>
+                <p className="text-2xl font-bold text-slate-900">{stockSummary.totalQuantity || 0} <span className="text-sm font-normal text-slate-500">adet</span></p>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-xs text-amber-700 mb-1">Toplam Rezerve</p>
+                <p className="text-2xl font-bold text-amber-600">{stockSummary.totalReserved || 0} <span className="text-sm font-normal text-amber-500">adet</span></p>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="text-xs text-emerald-700 mb-1">Kullanılabilir</p>
+                <p className="text-2xl font-bold text-emerald-600">{stockSummary.totalAvailable || 0} <span className="text-sm font-normal text-emerald-500">adet</span></p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShopOutlined className="text-slate-400" />
+                  <p className="text-xs text-slate-500">Depo Sayısı</p>
+                </div>
+                <p className="text-2xl font-bold text-slate-900">{stockSummary.warehouseCount || 0}</p>
+              </div>
+            </div>
 
-            <Divider>Stok Seviyeleri</Divider>
+            <Divider className="!my-4">Stok Seviyeleri</Divider>
 
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Statistic
-                  title="Min. Stok Seviyesi"
-                  value={stockSummary.minStockLevel || 0}
-                  suffix="adet"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="Yeniden Siparis Seviyesi"
-                  value={stockSummary.reorderLevel || 0}
-                  suffix="adet"
-                />
-              </Col>
-              <Col span={12}>
-                <Text type={stockSummary.isBelowMinimum ? 'danger' : 'success'}>
-                  {stockSummary.isBelowMinimum ? '⚠️ Minimum seviyenin altinda' : '✓ Stok seviyesi yeterli'}
-                </Text>
-              </Col>
-              <Col span={12}>
-                <Text type={stockSummary.needsReorder ? 'warning' : 'success'}>
-                  {stockSummary.needsReorder ? '📦 Yeniden siparis gerekli' : '✓ Siparis gerekmiyor'}
-                </Text>
-              </Col>
-            </Row>
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">Min. Stok Seviyesi</p>
+                <p className="text-xl font-bold text-slate-900">{stockSummary.minStockLevel || 0} <span className="text-sm font-normal text-slate-500">adet</span></p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">Yeniden Sipariş Seviyesi</p>
+                <p className="text-xl font-bold text-slate-900">{stockSummary.reorderLevel || 0} <span className="text-sm font-normal text-slate-500">adet</span></p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`p-3 rounded-lg ${stockSummary.isBelowMinimum ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                {stockSummary.isBelowMinimum ? '⚠️ Minimum seviyenin altında' : '✓ Stok seviyesi yeterli'}
+              </div>
+              <div className={`p-3 rounded-lg ${stockSummary.needsReorder ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                {stockSummary.needsReorder ? '📦 Yeniden sipariş gerekli' : '✓ Sipariş gerekmiyor'}
+              </div>
+            </div>
           </div>
         ) : (
-          <Empty description="Stok bilgisi bulunamadi" />
+          <Empty description="Stok bilgisi bulunamadı" />
         )}
       </Modal>
 
       {/* Excel Import Modal */}
       <Modal
         title={
-          <Space>
+          <span className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <UploadOutlined />
-            <span>Excel'den Stok Ayarlaması İçe Aktar</span>
-          </Space>
+            Excel'den Stok Ayarlaması İçe Aktar
+          </span>
         }
         open={importModalVisible}
         onCancel={() => setImportModalVisible(false)}
         footer={[
-          <Button key="template" onClick={() => downloadTemplateMutation.mutate()}>
+          <Button
+            key="template"
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            onClick={() => downloadTemplateMutation.mutate()}
+          >
             Şablonu İndir
           </Button>,
-          <Button key="cancel" onClick={() => setImportModalVisible(false)}>
+          <Button
+            key="cancel"
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            onClick={() => setImportModalVisible(false)}
+          >
             İptal
           </Button>,
         ]}
         width={500}
       >
-        <div style={{ padding: '20px 0' }}>
+        <div className="py-5">
           <Upload.Dragger
             name="file"
             accept=".xlsx,.xls"
@@ -870,63 +840,54 @@ export default function StockListPage() {
             disabled={importStockMutation.isPending}
           >
             <p className="ant-upload-drag-icon">
-              <InboxOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+              <InboxOutlined className="text-5xl text-slate-400" />
             </p>
-            <p className="ant-upload-text">
+            <p className="ant-upload-text text-slate-700">
               Excel dosyasını buraya sürükleyin veya tıklayarak seçin
             </p>
-            <p className="ant-upload-hint">
+            <p className="ant-upload-hint text-slate-500">
               Sadece .xlsx veya .xls dosyaları kabul edilir.
               Doğru format için önce şablonu indirin.
             </p>
           </Upload.Dragger>
 
           {importStockMutation.isPending && (
-            <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <div className="text-center mt-5">
               <Spin tip="İçe aktarılıyor..." />
             </div>
           )}
 
           {importStockMutation.data && (
-            <div style={{ marginTop: 20 }}>
-              <Row gutter={[16, 8]}>
-                <Col span={8}>
-                  <Statistic
-                    title="Başarılı"
-                    value={importStockMutation.data.successCount}
-                    valueStyle={{ color: '#52c41a', fontSize: 18 }}
-                    prefix={<CheckCircleOutlined />}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title="Hata"
-                    value={importStockMutation.data.errorCount}
-                    valueStyle={{ color: '#f5222d', fontSize: 18 }}
-                    prefix={<ExclamationCircleOutlined />}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title="Toplam"
-                    value={importStockMutation.data.totalRows}
-                    valueStyle={{ fontSize: 18 }}
-                  />
-                </Col>
-              </Row>
+            <div className="mt-5">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+                  <CheckCircleOutlined className="text-emerald-600 text-lg mb-1" />
+                  <p className="text-xs text-emerald-700">Başarılı</p>
+                  <p className="text-xl font-bold text-emerald-600">{importStockMutation.data.successCount}</p>
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                  <ExclamationCircleOutlined className="text-red-600 text-lg mb-1" />
+                  <p className="text-xs text-red-700">Hata</p>
+                  <p className="text-xl font-bold text-red-600">{importStockMutation.data.errorCount}</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                  <p className="text-xs text-slate-500">Toplam</p>
+                  <p className="text-xl font-bold text-slate-900">{importStockMutation.data.totalRows}</p>
+                </div>
+              </div>
 
               {importStockMutation.data.errors && importStockMutation.data.errors.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <Text type="danger">Hatalar:</Text>
-                  <ul style={{ maxHeight: 150, overflow: 'auto', marginTop: 8 }}>
+                <div className="mt-4">
+                  <p className="text-sm text-red-600 font-medium mb-2">Hatalar:</p>
+                  <ul className="max-h-36 overflow-auto text-sm">
                     {importStockMutation.data.errors.slice(0, 10).map((err, idx) => (
-                      <li key={idx}>
-                        <Text type="secondary">Satır {err.rowNumber}:</Text> {err.errorMessage}
+                      <li key={idx} className="text-slate-600">
+                        <span className="text-slate-400">Satır {err.rowNumber}:</span> {err.errorMessage}
                       </li>
                     ))}
                     {importStockMutation.data.errors.length > 10 && (
-                      <li>
-                        <Text type="secondary">...ve {importStockMutation.data.errors.length - 10} hata daha</Text>
+                      <li className="text-slate-400">
+                        ...ve {importStockMutation.data.errors.length - 10} hata daha
                       </li>
                     )}
                   </ul>

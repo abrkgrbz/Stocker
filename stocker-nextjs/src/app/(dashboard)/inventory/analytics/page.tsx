@@ -2,11 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Typography,
-  Card,
-  Row,
-  Col,
-  Statistic,
   Select,
   Spin,
   DatePicker,
@@ -18,8 +13,6 @@ import {
   Button,
   Tooltip,
   Empty,
-  Divider,
-  Segmented,
 } from 'antd';
 import {
   DashboardOutlined,
@@ -32,7 +25,6 @@ import {
   SyncOutlined,
   DownloadOutlined,
   WarningOutlined,
-  CheckCircleOutlined,
   ExclamationCircleOutlined,
   InfoCircleOutlined,
   ArrowUpOutlined,
@@ -41,7 +33,6 @@ import {
   ShopOutlined,
   InboxOutlined,
   SwapOutlined,
-  FilterOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
@@ -58,11 +49,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   AreaChart,
   Area,
   ComposedChart,
+  Line,
   Treemap,
 } from 'recharts';
 import {
@@ -73,12 +63,10 @@ import {
   useCategories,
 } from '@/lib/api/hooks/useInventory';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-// Color palette
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-const CATEGORY_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#eb2f96', '#13c2c2', '#fa8c16'];
+// Monochrome color palette (matching dashboard)
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Utility functions
 const formatCurrency = (value: number | undefined | null): string => {
@@ -110,12 +98,28 @@ const formatCompactNumber = (value: number): string => {
   return value.toString();
 };
 
+// Custom tooltip
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm">
+        <p className="font-medium text-slate-900 mb-1">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm text-slate-600">
+            {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString('tr-TR') : entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function InventoryAnalyticsPage() {
   // State
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | undefined>(undefined);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
   const [trendDays, setTrendDays] = useState<number>(30);
-  const [activeTab, setActiveTab] = useState<string>('overview');
   const [kpiDateRange, setKpiDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
     dayjs().subtract(30, 'day'),
     dayjs(),
@@ -182,7 +186,7 @@ export default function InventoryAnalyticsPage() {
         quantity: c.totalQuantity,
         productCount: c.productCount,
         percentage: c.percentageOfTotal,
-        fill: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+        fill: MONOCHROME_COLORS[index % MONOCHROME_COLORS.length],
       }));
     }
     return byCategory.map((c, index) => ({
@@ -191,7 +195,7 @@ export default function InventoryAnalyticsPage() {
       quantity: c.totalQuantity,
       productCount: c.productCount,
       percentage: 0,
-      fill: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+      fill: MONOCHROME_COLORS[index % MONOCHROME_COLORS.length],
     }));
   }, [valuationByCategory, byCategory]);
 
@@ -205,7 +209,7 @@ export default function InventoryAnalyticsPage() {
         quantity: w.totalQuantity,
         productCount: w.productCount,
         percentage: w.percentageOfTotal,
-        fill: COLORS[index % COLORS.length],
+        fill: MONOCHROME_COLORS[index % MONOCHROME_COLORS.length],
       }));
     }
     return byWarehouse.map((w, index) => ({
@@ -215,7 +219,7 @@ export default function InventoryAnalyticsPage() {
       quantity: w.totalQuantity,
       productCount: w.productCount,
       percentage: 0,
-      fill: COLORS[index % COLORS.length],
+      fill: MONOCHROME_COLORS[index % MONOCHROME_COLORS.length],
     }));
   }, [valuationByWarehouse, byWarehouse]);
 
@@ -256,771 +260,735 @@ export default function InventoryAnalyticsPage() {
 
   // Render Overview Tab
   const renderOverview = () => (
-    <Row gutter={[16, 16]}>
+    <div className="space-y-6">
       {/* KPI Cards */}
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" hoverable>
-          <Statistic
-            title="Toplam Stok Degeri"
-            value={valuationData?.totalValue || kpis?.totalStockValue || 0}
-            precision={0}
-            prefix={<DollarOutlined style={{ color: '#1890ff' }} />}
-            valueStyle={{ color: '#1890ff' }}
-            formatter={(value) => formatCurrency(Number(value))}
-          />
-          {valuationSummary?.valueChangePercent !== undefined && (
-            <div style={{ marginTop: 8 }}>
-              <Tag color={valuationSummary.valueChangePercent >= 0 ? 'green' : 'red'}>
-                {valuationSummary.valueChangePercent >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                {formatPercentage(Math.abs(valuationSummary.valueChangePercent))} onceki aya gore
-              </Tag>
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <DollarOutlined className="mr-2" />
+              Toplam Stok Değeri
+            </p>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatCurrency(valuationData?.totalValue || kpis?.totalStockValue || 0)}
             </div>
-          )}
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" hoverable>
-          <Statistic
-            title="Toplam Urun Sayisi"
-            value={valuationData?.totalProducts || kpis?.totalProducts || 0}
-            prefix={<AppstoreOutlined style={{ color: '#52c41a' }} />}
-            valueStyle={{ color: '#52c41a' }}
-          />
-          <div style={{ marginTop: 8 }}>
-            <Text type="secondary">{valuationData?.totalSKUs || 0} farkli SKU</Text>
-          </div>
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" hoverable>
-          <Statistic
-            title="Toplam Miktar"
-            value={valuationData?.totalQuantity || kpis?.totalStockQuantity || 0}
-            precision={0}
-            prefix={<InboxOutlined style={{ color: '#722ed1' }} />}
-            valueStyle={{ color: '#722ed1' }}
-            formatter={(value) => formatNumber(Number(value))}
-            suffix="adet"
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small" hoverable>
-          <Statistic
-            title="Ortalama Birim Maliyet"
-            value={valuationSummary?.averageUnitCost || 0}
-            precision={2}
-            prefix={<BarChartOutlined style={{ color: '#fa8c16' }} />}
-            valueStyle={{ color: '#fa8c16' }}
-            formatter={(value) => formatCurrency(Number(value))}
-          />
-        </Card>
-      </Col>
-
-      {/* Stock Movement Trend */}
-      <Col xs={24} lg={16}>
-        <Card
-          title={
-            <Space>
-              <LineChartOutlined />
-              <span>Stok Hareket Trendi</span>
-            </Space>
-          }
-          extra={
-            <Select
-              value={trendDays}
-              onChange={setTrendDays}
-              style={{ width: 120 }}
-              options={[
-                { label: 'Son 7 Gun', value: 7 },
-                { label: 'Son 14 Gun', value: 14 },
-                { label: 'Son 30 Gun', value: 30 },
-                { label: 'Son 90 Gun', value: 90 },
-              ]}
-            />
-          }
-        >
-          {movementTrendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={movementTrendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <RechartsTooltip
-                  formatter={(value: number, name: string) => {
-                    if (name === 'Giren Deger' || name === 'Cikan Deger') {
-                      return formatCurrency(value);
-                    }
-                    return formatNumber(value);
-                  }}
-                />
-                <Legend />
-                <Bar yAxisId="left" dataKey="giren" name="Giren" fill="#52c41a" />
-                <Bar yAxisId="left" dataKey="cikan" name="Cikan" fill="#f5222d" />
-                <Line yAxisId="right" type="monotone" dataKey="net" name="Net Degisim" stroke="#1890ff" strokeWidth={2} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri bulunamadi" />
-          )}
-        </Card>
-      </Col>
-
-      {/* Alert Summary */}
-      <Col xs={24} lg={8}>
-        <Card
-          title={
-            <Space>
-              <WarningOutlined />
-              <span>Uyarilar</span>
-            </Space>
-          }
-          extra={<Link href="/inventory/stock-alerts">Tumu</Link>}
-        >
-          <div style={{ height: 300, overflow: 'auto' }}>
-            {alerts.length > 0 ? (
-              <Space direction="vertical" style={{ width: '100%' }}>
-                {alerts.slice(0, 8).map((alert, index) => (
-                  <div key={index} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <Space align="start">
-                      {alert.severity === 'Critical' ? (
-                        <ExclamationCircleOutlined style={{ color: '#f5222d' }} />
-                      ) : alert.severity === 'High' ? (
-                        <WarningOutlined style={{ color: '#fa8c16' }} />
-                      ) : (
-                        <InfoCircleOutlined style={{ color: '#1890ff' }} />
-                      )}
-                      <div>
-                        <Text strong>{alert.productName || alert.alertType}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {alert.message}
-                        </Text>
-                      </div>
-                    </Space>
-                  </div>
-                ))}
-              </Space>
-            ) : (
-              <Empty description="Aktif uyari yok" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            {valuationSummary?.valueChangePercent !== undefined && (
+              <div className="mt-2">
+                <Tag className={valuationSummary.valueChangePercent >= 0 ? '!bg-slate-900 !text-white !border-slate-900' : '!bg-slate-400 !text-white !border-slate-400'}>
+                  {valuationSummary.valueChangePercent >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                  {formatPercentage(Math.abs(valuationSummary.valueChangePercent))} önceki aya göre
+                </Tag>
+              </div>
             )}
           </div>
-        </Card>
-      </Col>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <AppstoreOutlined className="mr-2" />
+              Toplam Ürün Sayısı
+            </p>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatNumber(valuationData?.totalProducts || kpis?.totalProducts || 0)}
+            </div>
+            <p className="text-sm text-slate-500 mt-2">{valuationData?.totalSKUs || 0} farklı SKU</p>
+          </div>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <InboxOutlined className="mr-2" />
+              Toplam Miktar
+            </p>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatNumber(valuationData?.totalQuantity || kpis?.totalStockQuantity || 0)}
+            </div>
+            <p className="text-sm text-slate-500 mt-2">adet</p>
+          </div>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <BarChartOutlined className="mr-2" />
+              Ortalama Birim Maliyet
+            </p>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatCurrency(valuationSummary?.averageUnitCost || 0)}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Category Distribution */}
-      <Col xs={24} lg={12}>
-        <Card
-          title={
-            <Space>
-              <PieChartOutlined />
-              <span>Kategorilere Gore Dagilim</span>
-            </Space>
-          }
-        >
-          {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={(props: any) => `${props.name} (${formatPercentage((props.percent || 0) * 100)})`}
-                  labelLine={false}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+      {/* Charts Row */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Stock Movement Trend */}
+        <div className="col-span-8">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <LineChartOutlined className="mr-2" />
+                Stok Hareket Trendi
+              </p>
+              <Select
+                value={trendDays}
+                onChange={setTrendDays}
+                style={{ width: 120 }}
+                className="[&_.ant-select-selector]:!border-slate-300"
+                options={[
+                  { label: 'Son 7 Gün', value: 7 },
+                  { label: 'Son 14 Gün', value: 14 },
+                  { label: 'Son 30 Gün', value: 30 },
+                  { label: 'Son 90 Gün', value: 90 },
+                ]}
+              />
+            </div>
+            {movementTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={movementTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={12} />
+                  <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={12} />
+                  <RechartsTooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="giren" name="Giren" fill="#1e293b" radius={[4, 4, 0, 0]} />
+                  <Bar yAxisId="left" dataKey="cikan" name="Çıkan" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="net" name="Net Değişim" stroke="#475569" strokeWidth={2} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <Empty description="Veri bulunamadı" />
+            )}
+          </div>
+        </div>
+
+        {/* Alert Summary */}
+        <div className="col-span-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <WarningOutlined className="mr-2" />
+                Uyarılar
+              </p>
+              <Link href="/inventory/stock-alerts" className="text-xs text-slate-500 hover:text-slate-900">
+                Tümü →
+              </Link>
+            </div>
+            <div className="h-[280px] overflow-auto">
+              {alerts.length > 0 ? (
+                <div className="space-y-3">
+                  {alerts.slice(0, 8).map((alert, index) => (
+                    <div key={index} className="p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        {alert.severity === 'Critical' ? (
+                          <ExclamationCircleOutlined className="text-slate-900" />
+                        ) : alert.severity === 'High' ? (
+                          <WarningOutlined className="text-slate-600" />
+                        ) : (
+                          <InfoCircleOutlined className="text-slate-400" />
+                        )}
+                        <div>
+                          <p className="font-medium text-slate-900 text-sm">{alert.productName || alert.alertType}</p>
+                          <p className="text-xs text-slate-500">{alert.message}</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </Pie>
-                <RechartsTooltip
-                  formatter={(value: number) => formatCurrency(value)}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri bulunamadi" />
-          )}
-        </Card>
-      </Col>
+                </div>
+              ) : (
+                <Empty description="Aktif uyarı yok" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Warehouse Distribution */}
-      <Col xs={24} lg={12}>
-        <Card
-          title={
-            <Space>
-              <ShopOutlined />
-              <span>Depolara Gore Dagilim</span>
-            </Space>
-          }
-        >
-          {warehouseData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={warehouseData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" tickFormatter={(value) => formatCompactNumber(value)} />
-                <YAxis type="category" dataKey="name" width={100} />
-                <RechartsTooltip
-                  formatter={(value: number, name: string) => {
-                    if (name === 'value') return formatCurrency(value);
-                    return formatNumber(value);
-                  }}
-                />
-                <Bar dataKey="value" name="Deger" fill="#1890ff">
-                  {warehouseData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri bulunamadi" />
-          )}
-        </Card>
-      </Col>
+      {/* Distribution Charts */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Category Distribution */}
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+              <PieChartOutlined className="mr-2" />
+              Kategorilere Göre Dağılım
+            </p>
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} (${formatPercentage((percent || 0) * 100)})`}
+                    labelLine={false}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <Empty description="Veri bulunamadı" />
+            )}
+          </div>
+        </div>
 
-      {/* Top Products by Value */}
-      <Col xs={24}>
-        <Card
-          title={
-            <Space>
-              <DollarOutlined />
-              <span>En Degerli Urunler (Top 15)</span>
-            </Space>
-          }
-        >
-          <Table
-            dataSource={topProductsData}
-            columns={[
-              {
-                title: 'Urun Kodu',
-                dataIndex: 'code',
-                key: 'code',
-                width: 120,
-              },
-              {
-                title: 'Urun Adi',
-                dataIndex: 'fullName',
-                key: 'fullName',
-                ellipsis: true,
-              },
-              {
-                title: 'Kategori',
-                dataIndex: 'category',
-                key: 'category',
-                width: 150,
-                render: (text) => text || '-',
-              },
-              {
-                title: 'Miktar',
-                dataIndex: 'quantity',
-                key: 'quantity',
-                width: 100,
-                align: 'right' as const,
-                render: (value) => formatNumber(value),
-              },
-              {
-                title: 'Birim Maliyet',
-                dataIndex: 'unitCost',
-                key: 'unitCost',
-                width: 130,
-                align: 'right' as const,
-                render: (value) => formatCurrency(value),
-              },
-              {
-                title: 'Toplam Deger',
-                dataIndex: 'value',
-                key: 'value',
-                width: 150,
-                align: 'right' as const,
-                render: (value) => (
-                  <Text strong style={{ color: '#1890ff' }}>
-                    {formatCurrency(value)}
-                  </Text>
-                ),
-              },
-              {
-                title: 'Oran',
-                dataIndex: 'percentage',
-                key: 'percentage',
-                width: 100,
-                render: (value) => (
-                  <Progress
-                    percent={value}
-                    size="small"
-                    format={() => formatPercentage(value)}
-                    strokeColor="#1890ff"
-                  />
-                ),
-              },
-            ]}
-            rowKey="code"
-            pagination={false}
-            size="small"
-            scroll={{ x: 900 }}
-          />
-        </Card>
-      </Col>
-    </Row>
+        {/* Warehouse Distribution */}
+        <div className="col-span-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+              <ShopOutlined className="mr-2" />
+              Depolara Göre Dağılım
+            </p>
+            {warehouseData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={warehouseData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis type="number" tickFormatter={(value) => formatCompactNumber(value)} stroke="#94a3b8" fontSize={12} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#64748b' }} />
+                  <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Bar dataKey="value" name="Değer" radius={[0, 4, 4, 0]}>
+                    {warehouseData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Empty description="Veri bulunamadı" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Products Table */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+          <DollarOutlined className="mr-2" />
+          En Değerli Ürünler (Top 15)
+        </p>
+        <Table
+          dataSource={topProductsData}
+          columns={[
+            {
+              title: 'Ürün Kodu',
+              dataIndex: 'code',
+              key: 'code',
+              width: 120,
+            },
+            {
+              title: 'Ürün Adı',
+              dataIndex: 'fullName',
+              key: 'fullName',
+              ellipsis: true,
+            },
+            {
+              title: 'Kategori',
+              dataIndex: 'category',
+              key: 'category',
+              width: 150,
+              render: (text) => text || '-',
+            },
+            {
+              title: 'Miktar',
+              dataIndex: 'quantity',
+              key: 'quantity',
+              width: 100,
+              align: 'right' as const,
+              render: (value) => formatNumber(value),
+            },
+            {
+              title: 'Birim Maliyet',
+              dataIndex: 'unitCost',
+              key: 'unitCost',
+              width: 130,
+              align: 'right' as const,
+              render: (value) => formatCurrency(value),
+            },
+            {
+              title: 'Toplam Değer',
+              dataIndex: 'value',
+              key: 'value',
+              width: 150,
+              align: 'right' as const,
+              render: (value) => (
+                <span className="font-bold text-slate-900">{formatCurrency(value)}</span>
+              ),
+            },
+            {
+              title: 'Oran',
+              dataIndex: 'percentage',
+              key: 'percentage',
+              width: 100,
+              render: (value) => (
+                <Progress
+                  percent={value}
+                  size="small"
+                  format={() => formatPercentage(value)}
+                  strokeColor="#1e293b"
+                />
+              ),
+            },
+          ]}
+          rowKey="code"
+          pagination={false}
+          size="small"
+          scroll={{ x: 900 }}
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+        />
+      </div>
+    </div>
   );
 
   // Render Valuation Tab
   const renderValuation = () => (
-    <Row gutter={[16, 16]}>
+    <div className="space-y-6">
       {/* Valuation Summary Cards */}
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small">
-          <Statistic
-            title="En Yuksek Degerli Urun"
-            value={valuationSummary?.highestValueProduct || 0}
-            prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
-            formatter={(value) => formatCurrency(Number(value))}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small">
-          <Statistic
-            title="En Dusuk Degerli Urun"
-            value={valuationSummary?.lowestValueProduct || 0}
-            prefix={<FallOutlined style={{ color: '#f5222d' }} />}
-            formatter={(value) => formatCurrency(Number(value))}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small">
-          <Statistic
-            title="Medyan Urun Degeri"
-            value={valuationSummary?.medianProductValue || 0}
-            prefix={<BarChartOutlined style={{ color: '#722ed1' }} />}
-            formatter={(value) => formatCurrency(Number(value))}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card size="small">
-          <Statistic
-            title="Tarih"
-            value={valuationData?.asOfDate ? dayjs(valuationData.asOfDate).format('DD/MM/YYYY') : '-'}
-            prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />}
-          />
-        </Card>
-      </Col>
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <RiseOutlined className="mr-2" />
+              En Yüksek Değerli Ürün
+            </p>
+            <div className="text-2xl font-bold text-slate-900">
+              {formatCurrency(valuationSummary?.highestValueProduct || 0)}
+            </div>
+          </div>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <FallOutlined className="mr-2" />
+              En Düşük Değerli Ürün
+            </p>
+            <div className="text-2xl font-bold text-slate-900">
+              {formatCurrency(valuationSummary?.lowestValueProduct || 0)}
+            </div>
+          </div>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <BarChartOutlined className="mr-2" />
+              Medyan Ürün Değeri
+            </p>
+            <div className="text-2xl font-bold text-slate-900">
+              {formatCurrency(valuationSummary?.medianProductValue || 0)}
+            </div>
+          </div>
+        </div>
+        <div className="col-span-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+              <ClockCircleOutlined className="mr-2" />
+              Tarih
+            </p>
+            <div className="text-2xl font-bold text-slate-900">
+              {valuationData?.asOfDate ? dayjs(valuationData.asOfDate).format('DD/MM/YYYY') : '-'}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Treemap */}
-      <Col xs={24}>
-        <Card
-          title={
-            <Space>
-              <AppstoreOutlined />
-              <span>Kategori Bazli Stok Degeri (Treemap)</span>
-            </Space>
-          }
-        >
-          {treemapData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <Treemap
-                data={treemapData}
-                dataKey="size"
-                aspectRatio={4 / 3}
-                stroke="#fff"
-                fill="#1890ff"
-                content={({ x, y, width, height, name, size, productCount }) => (
-                  <g>
-                    <rect
-                      x={x}
-                      y={y}
-                      width={width}
-                      height={height}
-                      style={{
-                        fill: CATEGORY_COLORS[treemapData.findIndex(d => d.name === name) % CATEGORY_COLORS.length],
-                        stroke: '#fff',
-                        strokeWidth: 2,
-                      }}
-                    />
-                    {width > 80 && height > 40 && (
-                      <>
-                        <text
-                          x={x + width / 2}
-                          y={y + height / 2 - 8}
-                          textAnchor="middle"
-                          fill="#fff"
-                          fontSize={12}
-                          fontWeight="bold"
-                        >
-                          {name}
-                        </text>
-                        <text
-                          x={x + width / 2}
-                          y={y + height / 2 + 8}
-                          textAnchor="middle"
-                          fill="#fff"
-                          fontSize={10}
-                        >
-                          {formatCurrency(size as number)}
-                        </text>
-                      </>
-                    )}
-                  </g>
-                )}
-              />
-            </ResponsiveContainer>
-          ) : (
-            <Empty description="Veri bulunamadi" />
-          )}
-        </Card>
-      </Col>
-
-      {/* Category Table */}
-      <Col xs={24}>
-        <Card
-          title={
-            <Space>
-              <PieChartOutlined />
-              <span>Kategori Bazli Detayli Rapor</span>
-            </Space>
-          }
-        >
-          <Table
-            dataSource={categoryData}
-            columns={[
-              {
-                title: 'Kategori',
-                dataIndex: 'name',
-                key: 'name',
-              },
-              {
-                title: 'Urun Sayisi',
-                dataIndex: 'productCount',
-                key: 'productCount',
-                align: 'right' as const,
-                render: (value) => formatNumber(value),
-              },
-              {
-                title: 'Toplam Miktar',
-                dataIndex: 'quantity',
-                key: 'quantity',
-                align: 'right' as const,
-                render: (value) => formatNumber(value),
-              },
-              {
-                title: 'Toplam Deger',
-                dataIndex: 'value',
-                key: 'value',
-                align: 'right' as const,
-                render: (value) => (
-                  <Text strong style={{ color: '#1890ff' }}>
-                    {formatCurrency(value)}
-                  </Text>
-                ),
-                sorter: (a, b) => a.value - b.value,
-                defaultSortOrder: 'descend' as const,
-              },
-              {
-                title: 'Oran',
-                dataIndex: 'percentage',
-                key: 'percentage',
-                width: 150,
-                render: (value) => (
-                  <Progress
-                    percent={value}
-                    size="small"
-                    format={() => formatPercentage(value)}
-                    strokeColor={{
-                      from: '#108ee9',
-                      to: '#87d068',
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+          <AppstoreOutlined className="mr-2" />
+          Kategori Bazlı Stok Değeri (Treemap)
+        </p>
+        {treemapData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <Treemap
+              data={treemapData}
+              dataKey="size"
+              aspectRatio={4 / 3}
+              stroke="#fff"
+              fill="#1e293b"
+              content={({ x, y, width, height, name, size }: any) => (
+                <g>
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    style={{
+                      fill: MONOCHROME_COLORS[treemapData.findIndex(d => d.name === name) % MONOCHROME_COLORS.length],
+                      stroke: '#fff',
+                      strokeWidth: 2,
                     }}
                   />
-                ),
-              },
-            ]}
-            rowKey="name"
-            pagination={false}
-            size="small"
-            summary={(pageData) => {
-              const totalValue = pageData.reduce((sum, row) => sum + row.value, 0);
-              const totalQuantity = pageData.reduce((sum, row) => sum + row.quantity, 0);
-              const totalProducts = pageData.reduce((sum, row) => sum + row.productCount, 0);
-              return (
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0}>
-                    <Text strong>TOPLAM</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
-                    <Text strong>{formatNumber(totalProducts)}</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <Text strong>{formatNumber(totalQuantity)}</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="right">
-                    <Text strong style={{ color: '#1890ff' }}>{formatCurrency(totalValue)}</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4}>
-                    <Text strong>%100</Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              );
-            }}
-          />
-        </Card>
-      </Col>
-    </Row>
+                  {width > 80 && height > 40 && (
+                    <>
+                      <text
+                        x={x + width / 2}
+                        y={y + height / 2 - 8}
+                        textAnchor="middle"
+                        fill="#fff"
+                        fontSize={12}
+                        fontWeight="bold"
+                      >
+                        {name}
+                      </text>
+                      <text
+                        x={x + width / 2}
+                        y={y + height / 2 + 8}
+                        textAnchor="middle"
+                        fill="#fff"
+                        fontSize={10}
+                      >
+                        {formatCurrency(size as number)}
+                      </text>
+                    </>
+                  )}
+                </g>
+              )}
+            />
+          </ResponsiveContainer>
+        ) : (
+          <Empty description="Veri bulunamadı" />
+        )}
+      </div>
+
+      {/* Category Table */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+          <PieChartOutlined className="mr-2" />
+          Kategori Bazlı Detaylı Rapor
+        </p>
+        <Table
+          dataSource={categoryData}
+          columns={[
+            {
+              title: 'Kategori',
+              dataIndex: 'name',
+              key: 'name',
+            },
+            {
+              title: 'Ürün Sayısı',
+              dataIndex: 'productCount',
+              key: 'productCount',
+              align: 'right' as const,
+              render: (value) => formatNumber(value),
+            },
+            {
+              title: 'Toplam Miktar',
+              dataIndex: 'quantity',
+              key: 'quantity',
+              align: 'right' as const,
+              render: (value) => formatNumber(value),
+            },
+            {
+              title: 'Toplam Değer',
+              dataIndex: 'value',
+              key: 'value',
+              align: 'right' as const,
+              render: (value) => (
+                <span className="font-bold text-slate-900">{formatCurrency(value)}</span>
+              ),
+              sorter: (a, b) => a.value - b.value,
+              defaultSortOrder: 'descend' as const,
+            },
+            {
+              title: 'Oran',
+              dataIndex: 'percentage',
+              key: 'percentage',
+              width: 150,
+              render: (value) => (
+                <Progress
+                  percent={value}
+                  size="small"
+                  format={() => formatPercentage(value)}
+                  strokeColor="#1e293b"
+                />
+              ),
+            },
+          ]}
+          rowKey="name"
+          pagination={false}
+          size="small"
+          className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+          summary={(pageData) => {
+            const totalValue = pageData.reduce((sum, row) => sum + row.value, 0);
+            const totalQuantity = pageData.reduce((sum, row) => sum + row.quantity, 0);
+            const totalProducts = pageData.reduce((sum, row) => sum + row.productCount, 0);
+            return (
+              <Table.Summary.Row className="bg-slate-50">
+                <Table.Summary.Cell index={0}>
+                  <span className="font-bold text-slate-900">TOPLAM</span>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">
+                  <span className="font-bold text-slate-900">{formatNumber(totalProducts)}</span>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">
+                  <span className="font-bold text-slate-900">{formatNumber(totalQuantity)}</span>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">
+                  <span className="font-bold text-slate-900">{formatCurrency(totalValue)}</span>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={4}>
+                  <span className="font-bold text-slate-900">%100</span>
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            );
+          }}
+        />
+      </div>
+    </div>
   );
 
   // Render KPIs Tab
   const renderKPIs = () => (
-    <Row gutter={[16, 16]}>
+    <div className="space-y-6">
       {/* Date Range Selector */}
-      <Col xs={24}>
-        <Card size="small">
-          <Space>
-            <Text strong>Rapor Dönemi:</Text>
-            <RangePicker
-              value={kpiDateRange}
-              onChange={(dates) => {
-                if (dates && dates[0] && dates[1]) {
-                  setKpiDateRange([dates[0], dates[1]]);
-                }
-              }}
-              format="DD/MM/YYYY"
-            />
-          </Space>
-        </Card>
-      </Col>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <div className="flex items-center gap-4">
+          <p className="text-sm font-medium text-slate-700">Rapor Dönemi:</p>
+          <RangePicker
+            value={kpiDateRange}
+            onChange={(dates) => {
+              if (dates && dates[0] && dates[1]) {
+                setKpiDateRange([dates[0], dates[1]]);
+              }
+            }}
+            format="DD/MM/YYYY"
+            className="[&_.ant-picker-input_input]:!text-slate-700"
+          />
+        </div>
+      </div>
 
       {/* KPI Cards */}
       {kpisData && (
-        <>
-          <Col xs={24} sm={12} md={6}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Giris"
-                value={kpisData.totalInboundQuantity || 0}
-                prefix={<ArrowDownOutlined style={{ color: '#52c41a' }} />}
-                valueStyle={{ color: '#52c41a' }}
-                formatter={(value) => formatNumber(Number(value))}
-                suffix="adet"
-              />
-              <Divider style={{ margin: '8px 0' }} />
-              <Text type="secondary">{kpisData.totalInboundMovements || 0} hareket</Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Cikis"
-                value={kpisData.totalOutboundQuantity || 0}
-                prefix={<ArrowUpOutlined style={{ color: '#f5222d' }} />}
-                valueStyle={{ color: '#f5222d' }}
-                formatter={(value) => formatNumber(Number(value))}
-                suffix="adet"
-              />
-              <Divider style={{ margin: '8px 0' }} />
-              <Text type="secondary">{kpisData.totalOutboundMovements || 0} hareket</Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card size="small">
-              <Statistic
-                title="Stok Devir Orani"
-                value={kpisData.inventoryTurnoverRatio || 0}
-                precision={2}
-                prefix={<SyncOutlined style={{ color: '#722ed1' }} />}
-                valueStyle={{ color: '#722ed1' }}
-                suffix="x"
-              />
-              <Divider style={{ margin: '8px 0' }} />
-              <Text type="secondary">~{kpisData.daysOfInventory || 0} gun stok</Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card size="small">
-              <Statistic
-                title="Gunluk Ort Hareket"
-                value={kpisData.averageMovementsPerDay || 0}
-                precision={1}
-                prefix={<SwapOutlined style={{ color: '#1890ff' }} />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-              <Divider style={{ margin: '8px 0' }} />
-              <Text type="secondary">Stoksuzluk: %{(kpisData.stockoutRate || 0).toFixed(1)}</Text>
-            </Card>
-          </Col>
-        </>
-      )}
-
-      {/* Turnover by Category */}
-      {kpisData?.turnoverByCategory && kpisData.turnoverByCategory.length > 0 && (
-        <Col xs={24} lg={12}>
-          <Card
-            title={
-              <Space>
-                <BarChartOutlined />
-                <span>Kategorilere Gore Devir Hizi</span>
-              </Space>
-            }
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={kpisData.turnoverByCategory.map((c) => ({
-                  name: c.categoryName,
-                  turnover: c.turnoverRatio,
-                  days: c.daysOfInventory,
-                }))}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <RechartsTooltip />
-                <Bar dataKey="turnover" name="Devir Orani" fill="#1890ff">
-                  {kpisData.turnoverByCategory.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      )}
-
-      {/* Turnover Rate Dashboard */}
-      {kpisData?.inventoryTurnoverRatio !== undefined && (
-        <Col xs={24} lg={12}>
-          <Card
-            title={
-              <Space>
-                <SyncOutlined />
-                <span>Stok Devir Performansi</span>
-              </Space>
-            }
-          >
-            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <Progress
-                type="dashboard"
-                percent={Math.min(kpisData.inventoryTurnoverRatio * 10, 100)}
-                format={() => (
-                  <div>
-                    <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-                      {kpisData.inventoryTurnoverRatio?.toFixed(2)}x
-                    </div>
-                    <div style={{ fontSize: 12, color: '#999' }}>Devir Hizi</div>
-                  </div>
-                )}
-                strokeColor={{
-                  '0%': '#108ee9',
-                  '100%': '#87d068',
-                }}
-              />
-              <div style={{ marginTop: 16 }}>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Text type="secondary">Doluluk Orani: %{((kpisData.fillRate || 0) * 100).toFixed(1)}</Text>
-                  </Col>
-                  <Col span={12}>
-                    <Text type="secondary">Fire Orani: %{((kpisData.shrinkageRate || 0) * 100).toFixed(1)}</Text>
-                  </Col>
-                </Row>
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-3">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-white">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                <ArrowDownOutlined className="mr-2" />
+                Toplam Giriş
+              </p>
+              <div className="text-3xl font-bold">
+                {formatNumber(kpisData.totalInboundQuantity || 0)}
+              </div>
+              <div className="text-sm text-slate-400 mt-2">
+                {kpisData.totalInboundMovements || 0} hareket
               </div>
             </div>
-          </Card>
-        </Col>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-700 border border-slate-600 rounded-xl p-5 text-white">
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+                <ArrowUpOutlined className="mr-2" />
+                Toplam Çıkış
+              </p>
+              <div className="text-3xl font-bold">
+                {formatNumber(kpisData.totalOutboundQuantity || 0)}
+              </div>
+              <div className="text-sm text-slate-400 mt-2">
+                {kpisData.totalOutboundMovements || 0} hareket
+              </div>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-500 border border-slate-400 rounded-xl p-5 text-white">
+              <p className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3">
+                <SyncOutlined className="mr-2" />
+                Stok Devir Oranı
+              </p>
+              <div className="text-3xl font-bold">
+                {(kpisData.inventoryTurnoverRatio || 0).toFixed(2)}x
+              </div>
+              <div className="text-sm text-slate-300 mt-2">
+                ~{kpisData.daysOfInventory || 0} gün stok
+              </div>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-300 border border-slate-200 rounded-xl p-5">
+              <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">
+                <SwapOutlined className="mr-2" />
+                Günlük Ort. Hareket
+              </p>
+              <div className="text-3xl font-bold text-slate-900">
+                {(kpisData.averageMovementsPerDay || 0).toFixed(1)}
+              </div>
+              <div className="text-sm text-slate-600 mt-2">
+                Stoksuzluk: %{(kpisData.stockoutRate || 0).toFixed(1)}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </Row>
+
+      {/* Charts */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Turnover by Category */}
+        {kpisData?.turnoverByCategory && kpisData.turnoverByCategory.length > 0 && (
+          <div className="col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                <BarChartOutlined className="mr-2" />
+                Kategorilere Göre Devir Hızı
+              </p>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={kpisData.turnoverByCategory.map((c) => ({
+                    name: c.categoryName,
+                    turnover: c.turnoverRatio,
+                    days: c.daysOfInventory,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
+                  <YAxis stroke="#94a3b8" fontSize={12} />
+                  <RechartsTooltip />
+                  <Bar dataKey="turnover" name="Devir Oranı" radius={[4, 4, 0, 0]}>
+                    {kpisData.turnoverByCategory.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Turnover Rate Dashboard */}
+        {kpisData?.inventoryTurnoverRatio !== undefined && (
+          <div className="col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                <SyncOutlined className="mr-2" />
+                Stok Devir Performansı
+              </p>
+              <div className="text-center py-8">
+                <Progress
+                  type="dashboard"
+                  percent={Math.min(kpisData.inventoryTurnoverRatio * 10, 100)}
+                  format={() => (
+                    <div>
+                      <div className="text-2xl font-bold text-slate-900">
+                        {kpisData.inventoryTurnoverRatio?.toFixed(2)}x
+                      </div>
+                      <div className="text-xs text-slate-500">Devir Hızı</div>
+                    </div>
+                  )}
+                  strokeColor="#1e293b"
+                  trailColor="#e2e8f0"
+                />
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-slate-50 rounded-xl">
+                    <div className="text-sm text-slate-500">Doluluk Oranı</div>
+                    <div className="text-lg font-bold text-slate-900">
+                      %{((kpisData.fillRate || 0) * 100).toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl">
+                    <div className="text-sm text-slate-500">Fire Oranı</div>
+                    <div className="text-lg font-bold text-slate-900">
+                      %{((kpisData.shrinkageRate || 0) * 100).toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 
+  const tabItems = [
+    {
+      key: 'overview',
+      label: (
+        <span>
+          <DashboardOutlined /> Genel Bakış
+        </span>
+      ),
+      children: renderOverview(),
+    },
+    {
+      key: 'valuation',
+      label: (
+        <span>
+          <DollarOutlined /> Stok Değerleme
+        </span>
+      ),
+      children: renderValuation(),
+    },
+    {
+      key: 'kpis',
+      label: (
+        <span>
+          <BarChartOutlined /> KPI Raporu
+        </span>
+      ),
+      children: renderKPIs(),
+    },
+  ];
+
   return (
-    <div style={{ padding: '24px' }}>
+    <div className="min-h-screen bg-slate-50 p-8">
       <Spin spinning={isLoading}>
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Space>
-                <DashboardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-                <Title level={3} style={{ margin: 0 }}>
-                  Envanter Analitikleri
-                </Title>
-              </Space>
-            </Col>
-            <Col>
-              <Space>
-                <Select
-                  placeholder="Tum Depolar"
-                  allowClear
-                  style={{ width: 180 }}
-                  value={selectedWarehouseId}
-                  onChange={setSelectedWarehouseId}
-                  options={warehouses.map((w: any) => ({
-                    label: w.name,
-                    value: w.id,
-                  }))}
-                />
-                <Select
-                  placeholder="Tum Kategoriler"
-                  allowClear
-                  style={{ width: 180 }}
-                  value={selectedCategoryId}
-                  onChange={setSelectedCategoryId}
-                  options={categories.map((c: any) => ({
-                    label: c.name,
-                    value: c.id,
-                  }))}
-                />
-                <Tooltip title="Yenile">
-                  <Button
-                    icon={<SyncOutlined spin={isLoading} />}
-                    onClick={() => refetchDashboard()}
-                  />
-                </Tooltip>
-                <Button icon={<DownloadOutlined />}>Rapor Indir</Button>
-              </Space>
-            </Col>
-          </Row>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Envanter Analitikleri</h1>
+            <p className="text-sm text-slate-500 mt-1">Stok değerleme, hareket analizi ve performans metrikleri</p>
+          </div>
+          <Space>
+            <Select
+              placeholder="Tüm Depolar"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedWarehouseId}
+              onChange={setSelectedWarehouseId}
+              options={warehouses.map((w: any) => ({
+                label: w.name,
+                value: w.id,
+              }))}
+              className="[&_.ant-select-selector]:!border-slate-300"
+            />
+            <Select
+              placeholder="Tüm Kategoriler"
+              allowClear
+              style={{ width: 180 }}
+              value={selectedCategoryId}
+              onChange={setSelectedCategoryId}
+              options={categories.map((c: any) => ({
+                label: c.name,
+                value: c.id,
+              }))}
+              className="[&_.ant-select-selector]:!border-slate-300"
+            />
+            <Tooltip title="Yenile">
+              <Button
+                icon={<SyncOutlined spin={isLoading} />}
+                onClick={() => refetchDashboard()}
+                className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
+              />
+            </Tooltip>
+            <Button icon={<DownloadOutlined />} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+              Rapor İndir
+            </Button>
+          </Space>
         </div>
 
         {/* Tabs */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'overview',
-              label: (
-                <span>
-                  <DashboardOutlined />
-                  Genel Bakis
-                </span>
-              ),
-              children: renderOverview(),
-            },
-            {
-              key: 'valuation',
-              label: (
-                <span>
-                  <DollarOutlined />
-                  Stok Degerleme
-                </span>
-              ),
-              children: renderValuation(),
-            },
-            {
-              key: 'kpis',
-              label: (
-                <span>
-                  <BarChartOutlined />
-                  KPI Raporu
-                </span>
-              ),
-              children: renderKPIs(),
-            },
-          ]}
-        />
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <Tabs
+            items={tabItems}
+            size="large"
+            className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+          />
+        </div>
       </Spin>
     </div>
   );

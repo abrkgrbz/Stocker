@@ -2,17 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
   Table,
   Tag,
   Button,
   Space,
   Select,
   Tabs,
-  Typography,
   Tooltip,
   Modal,
   Descriptions,
@@ -31,7 +26,6 @@ import {
   LineChartOutlined,
   CalculatorOutlined,
   SwapOutlined,
-  FileTextOutlined,
   ExclamationCircleOutlined,
   CheckCircleOutlined,
   WarningOutlined,
@@ -58,9 +52,6 @@ import type {
   ProductCostingSummaryDto,
   CostVarianceAnalysisDto,
   CostLayerDto,
-  ProductValuationDto,
-  CategoryValuationDto,
-  MonthlyCOGSDto,
   CostingMethod,
   CostCalculationRequestDto,
   InventoryValuationFilterDto,
@@ -68,8 +59,10 @@ import type {
 } from '@/lib/api/services/inventory.types';
 import { CostingMethod as CostingMethodEnum } from '@/lib/api/services/inventory.types';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Helper functions
 const formatCurrency = (value: number, currency: string = 'TRY') => {
@@ -242,7 +235,7 @@ export default function CostingPage() {
       align: 'right',
       sorter: (a, b) => a.totalValue - b.totalValue,
       render: (value, record) => (
-        <Text strong>{formatCurrency(value, record.currency)}</Text>
+        <span className="font-medium text-slate-900">{formatCurrency(value, record.currency)}</span>
       ),
     },
     {
@@ -252,7 +245,7 @@ export default function CostingPage() {
       width: 80,
       align: 'center',
       render: (value) => (
-        <Tag color={value > 3 ? 'orange' : 'blue'}>{value}</Tag>
+        <Tag color={value > 3 ? 'orange' : 'default'}>{value}</Tag>
       ),
     },
     {
@@ -264,6 +257,7 @@ export default function CostingPage() {
         <Button
           type="link"
           icon={<InfoCircleOutlined />}
+          className="!text-slate-600 hover:!text-slate-900"
           onClick={() => setProductDetailModal(record)}
         >
           Detay
@@ -309,9 +303,9 @@ export default function CostingPage() {
       align: 'right',
       sorter: (a, b) => Math.abs(a.varianceAmount) - Math.abs(b.varianceAmount),
       render: (value, record) => (
-        <Text type={value < 0 ? 'success' : value > 0 ? 'danger' : undefined}>
+        <span className={value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}>
           {formatCurrency(value, record.currency)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -321,9 +315,9 @@ export default function CostingPage() {
       width: 100,
       align: 'right',
       render: (value) => (
-        <Text type={value < 0 ? 'success' : value > 0 ? 'danger' : undefined}>
+        <span className={value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}>
           {formatNumber(value, 1)}%
-        </Text>
+        </span>
       ),
     },
     {
@@ -346,9 +340,9 @@ export default function CostingPage() {
       align: 'right',
       sorter: (a, b) => Math.abs(a.totalVarianceImpact) - Math.abs(b.totalVarianceImpact),
       render: (value, record) => (
-        <Text strong type={value < 0 ? 'success' : value > 0 ? 'danger' : undefined}>
+        <span className={`font-medium ${value < 0 ? 'text-emerald-600' : value > 0 ? 'text-red-600' : 'text-slate-700'}`}>
           {formatCurrency(value, record.currency)}
-        </Text>
+        </span>
       ),
     },
   ];
@@ -366,9 +360,9 @@ export default function CostingPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <Text strong>{record.productCode}</Text>
+          <span className="font-medium text-slate-900">{record.productCode}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+          <span className="text-xs text-slate-500">{record.productName}</span>
         </div>
       ),
     },
@@ -398,10 +392,10 @@ export default function CostingPage() {
       key: 'remainingQuantity',
       width: 120,
       align: 'right',
-      render: (value, record) => (
-        <Text type={value === 0 ? 'secondary' : undefined}>
+      render: (value) => (
+        <span className={value === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {formatNumber(value)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -419,7 +413,7 @@ export default function CostingPage() {
       width: 150,
       align: 'right',
       render: (value, record) => (
-        <Text strong>{formatCurrency(value, record.currency)}</Text>
+        <span className="font-medium text-slate-900">{formatCurrency(value, record.currency)}</span>
       ),
     },
     {
@@ -432,437 +426,22 @@ export default function CostingPage() {
     },
   ];
 
-  // Render stats cards
-  const renderStatsCards = () => (
-    <Row gutter={[16, 16]}>
-      <Col xs={24} sm={12} lg={6}>
-        <Card loading={totalValueLoading}>
-          <Statistic
-            title="Toplam Envanter Değeri"
-            value={totalValue?.totalValue || 0}
-            precision={2}
-            prefix={<DollarOutlined />}
-            suffix="TRY"
-            valueStyle={{ color: '#1890ff' }}
-          />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {getCostingMethodLabel(selectedMethod)}
-          </Text>
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} lg={6}>
-        <Card loading={valuationLoading}>
-          <Statistic
-            title="Toplam Ürün Sayısı"
-            value={valuation?.productCount || 0}
-            prefix={<PieChartOutlined />}
-            valueStyle={{ color: '#52c41a' }}
-          />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            Stokta olan ürünler
-          </Text>
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} lg={6}>
-        <Card loading={cogsLoading}>
-          <Statistic
-            title="Dönem SMM"
-            value={cogsReport?.totalCOGS || 0}
-            precision={2}
-            prefix={<BarChartOutlined />}
-            suffix="TRY"
-            valueStyle={{ color: '#fa8c16' }}
-          />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {dayjs(dateRange[0]).format('DD.MM')} - {dayjs(dateRange[1]).format('DD.MM.YYYY')}
-          </Text>
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} lg={6}>
-        <Card loading={varianceLoading}>
-          <Statistic
-            title="Maliyet Sapması"
-            value={varianceAnalysis?.reduce((sum, v) => sum + v.totalVarianceImpact, 0) || 0}
-            precision={2}
-            prefix={varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
-              ? <CheckCircleOutlined />
-              : <ExclamationCircleOutlined />}
-            suffix="TRY"
-            valueStyle={{
-              color: varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
-                ? '#52c41a'
-                : '#f5222d'
-            }}
-          />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            Standart vs Gerçek
-          </Text>
-        </Card>
-      </Col>
-    </Row>
-  );
-
-  // Render filters
-  const renderFilters = () => (
-    <Card style={{ marginTop: 16, marginBottom: 16 }}>
-      <Space wrap size="middle">
-        <Space>
-          <FilterOutlined />
-          <Text strong>Filtreler:</Text>
-        </Space>
-        <Select
-          placeholder="Kategori"
-          allowClear
-          style={{ width: 180 }}
-          value={selectedCategoryId}
-          onChange={setSelectedCategoryId}
-          options={categories?.map((c) => ({ label: c.name, value: c.id }))}
-        />
-        <Select
-          placeholder="Depo"
-          allowClear
-          style={{ width: 180 }}
-          value={selectedWarehouseId}
-          onChange={setSelectedWarehouseId}
-          options={warehouses?.map((w) => ({ label: w.name, value: w.id }))}
-        />
-        <Select
-          placeholder="Maliyetlendirme Yöntemi"
-          style={{ width: 240 }}
-          value={selectedMethod}
-          onChange={setSelectedMethod}
-          options={[
-            { label: 'FIFO (İlk Giren İlk Çıkar)', value: CostingMethodEnum.FIFO },
-            { label: 'LIFO (Son Giren İlk Çıkar)', value: CostingMethodEnum.LIFO },
-            { label: 'Ağırlıklı Ortalama Maliyet', value: CostingMethodEnum.WeightedAverageCost },
-            { label: 'Standart Maliyet', value: CostingMethodEnum.StandardCost },
-          ]}
-        />
-        <RangePicker
-          value={dateRange}
-          onChange={(dates) => dates && setDateRange([dates[0]!, dates[1]!])}
-          format="DD.MM.YYYY"
-        />
-        <Button icon={<ReloadOutlined />} onClick={() => refetchValuation()}>
-          Yenile
-        </Button>
-      </Space>
-    </Card>
-  );
-
-  // Render category distribution
-  const renderCategoryDistribution = () => {
-    if (!valuation?.byCategory?.length) return null;
-
-    const total = valuation.byCategory.reduce((sum, c) => sum + c.totalValue, 0);
-
-    return (
-      <Card title="Kategori Dağılımı" style={{ marginTop: 16 }}>
-        <Row gutter={[16, 16]}>
-          {valuation.byCategory.slice(0, 6).map((category) => (
-            <Col xs={24} sm={12} lg={8} key={category.categoryId}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text>{category.categoryName}</Text>
-                  <Text strong>{formatCurrency(category.totalValue)}</Text>
-                </div>
-                <Progress
-                  percent={Math.round((category.totalValue / total) * 100)}
-                  strokeColor="#1890ff"
-                  size="small"
-                />
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {category.productCount} ürün, {formatNumber(category.totalQuantity)} adet
-                </Text>
-              </div>
-            </Col>
-          ))}
-        </Row>
-      </Card>
-    );
-  };
-
-  // Render COGS monthly breakdown
-  const renderCOGSBreakdown = () => {
-    if (!cogsReport?.monthlyBreakdown?.length) return null;
-
-    return (
-      <Card title="Aylık SMM Dağılımı" style={{ marginTop: 16 }}>
-        <Table
-          dataSource={cogsReport.monthlyBreakdown}
-          rowKey={(record) => `${record.year}-${record.month}`}
-          pagination={false}
-          size="small"
-          columns={[
-            {
-              title: 'Dönem',
-              dataIndex: 'monthName',
-              key: 'monthName',
-            },
-            {
-              title: 'SMM',
-              dataIndex: 'cogs',
-              key: 'cogs',
-              align: 'right',
-              render: (value) => formatCurrency(value),
-            },
-            {
-              title: 'Satılan Miktar',
-              dataIndex: 'quantitySold',
-              key: 'quantitySold',
-              align: 'right',
-              render: (value) => formatNumber(value),
-            },
-            {
-              title: 'Ort. Birim Maliyet',
-              dataIndex: 'averageUnitCost',
-              key: 'averageUnitCost',
-              align: 'right',
-              render: (value) => formatCurrency(value),
-            },
-          ]}
-        />
-      </Card>
-    );
-  };
-
-  // Render product detail modal
-  const renderProductDetailModal = () => (
-    <Modal
-      title={`Ürün Maliyet Detayı - ${productDetailModal?.productCode}`}
-      open={!!productDetailModal}
-      onCancel={() => setProductDetailModal(null)}
-      footer={null}
-      width={700}
-    >
-      {productDetailModal && (
-        <div>
-          <Descriptions bordered size="small" column={2}>
-            <Descriptions.Item label="Ürün Kodu">{productDetailModal.productCode}</Descriptions.Item>
-            <Descriptions.Item label="Ürün Adı">{productDetailModal.productName}</Descriptions.Item>
-            <Descriptions.Item label="Kategori">{productDetailModal.categoryName || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Maliyetlendirme Yöntemi">
-              <Tag color={getCostingMethodColor(productDetailModal.costingMethod)}>
-                {getCostingMethodLabel(productDetailModal.costingMethod)}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Toplam Miktar">
-              <Text strong>{formatNumber(productDetailModal.totalQuantity)}</Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="Toplam Değer">
-              <Text strong type="success">{formatCurrency(productDetailModal.totalValue, productDetailModal.currency)}</Text>
-            </Descriptions.Item>
-          </Descriptions>
-
-          <Divider>Maliyet Karşılaştırması</Divider>
-
-          <Row gutter={[16, 16]}>
-            <Col span={8}>
-              <Card size="small">
-                <Statistic
-                  title="FIFO Maliyet"
-                  value={productDetailModal.fifoUnitCost || 0}
-                  precision={2}
-                  suffix={productDetailModal.currency}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card size="small">
-                <Statistic
-                  title="LIFO Maliyet"
-                  value={productDetailModal.lifoUnitCost || 0}
-                  precision={2}
-                  suffix={productDetailModal.currency}
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card size="small">
-                <Statistic
-                  title="Ağırlıklı Ortalama"
-                  value={productDetailModal.weightedAverageCost}
-                  precision={2}
-                  suffix={productDetailModal.currency}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {productDetailModal.standardCost && (
-            <>
-              <Divider>Standart Maliyet Karşılaştırması</Divider>
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Card size="small">
-                    <Statistic
-                      title="Standart Maliyet"
-                      value={productDetailModal.standardCost}
-                      precision={2}
-                      suffix={productDetailModal.currency}
-                      valueStyle={{ color: '#fa8c16' }}
-                    />
-                  </Card>
-                </Col>
-                <Col span={12}>
-                  <Card size="small">
-                    <Statistic
-                      title="Fark (Gerçek - Standart)"
-                      value={productDetailModal.weightedAverageCost - productDetailModal.standardCost}
-                      precision={2}
-                      suffix={productDetailModal.currency}
-                      valueStyle={{
-                        color: productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                          ? '#52c41a'
-                          : '#f5222d'
-                      }}
-                      prefix={productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                        ? <CheckCircleOutlined />
-                        : <WarningOutlined />}
-                    />
-                  </Card>
-                </Col>
-              </Row>
-            </>
-          )}
-
-          <Divider>Katman Bilgileri</Divider>
-          <Descriptions bordered size="small" column={2}>
-            <Descriptions.Item label="Aktif Katman Sayısı">
-              <Tag color="blue">{productDetailModal.activeLayerCount}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Son Hesaplama">
-              {productDetailModal.lastCalculatedAt
-                ? dayjs(productDetailModal.lastCalculatedAt).format('DD.MM.YYYY HH:mm')
-                : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="En Eski Katman">
-              {productDetailModal.oldestLayerDate
-                ? dayjs(productDetailModal.oldestLayerDate).format('DD.MM.YYYY')
-                : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="En Yeni Katman">
-              {productDetailModal.newestLayerDate
-                ? dayjs(productDetailModal.newestLayerDate).format('DD.MM.YYYY')
-                : '-'}
-            </Descriptions.Item>
-          </Descriptions>
-        </div>
-      )}
-    </Modal>
-  );
-
-  // Render COGS calculation modal
-  const renderCOGSModal = () => (
-    <Modal
-      title="SMM Hesapla"
-      open={cogsModalVisible}
-      onCancel={() => {
-        setCogsModalVisible(false);
-        cogsForm.resetFields();
-      }}
-      footer={null}
-    >
-      <Form
-        form={cogsForm}
-        layout="vertical"
-        onFinish={handleCalculateCOGS}
-      >
-        <Form.Item
-          name="productId"
-          label="Ürün"
-          rules={[{ required: true, message: 'Ürün seçiniz' }]}
-        >
-          <Select
-            showSearch
-            placeholder="Ürün seçiniz"
-            optionFilterProp="children"
-            options={productSummaries?.map((p) => ({
-              label: `${p.productCode} - ${p.productName}`,
-              value: p.productId,
-            }))}
-          />
-        </Form.Item>
-        <Form.Item
-          name="quantity"
-          label="Miktar"
-          rules={[{ required: true, message: 'Miktar giriniz' }]}
-        >
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0.01}
-            precision={2}
-            placeholder="Miktar"
-          />
-        </Form.Item>
-        <Form.Item
-          name="method"
-          label="Maliyetlendirme Yöntemi"
-          initialValue={CostingMethodEnum.WeightedAverageCost}
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[
-              { label: 'FIFO (İlk Giren İlk Çıkar)', value: CostingMethodEnum.FIFO },
-              { label: 'LIFO (Son Giren İlk Çıkar)', value: CostingMethodEnum.LIFO },
-              { label: 'Ağırlıklı Ortalama Maliyet', value: CostingMethodEnum.WeightedAverageCost },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={calculateCOGS.isPending}>
-              Hesapla
-            </Button>
-            <Button onClick={() => {
-              setCogsModalVisible(false);
-              cogsForm.resetFields();
-            }}>
-              İptal
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-
-  return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={2} style={{ margin: 0 }}>
-            <DollarOutlined /> Envanter Maliyetlendirme
-          </Title>
-          <Text type="secondary">
-            FIFO, LIFO, Ağırlıklı Ortalama Maliyet yöntemleri ile envanter değerleme
-          </Text>
-        </div>
-        <Space>
-          <Button
-            icon={<CalculatorOutlined />}
-            onClick={() => setCogsModalVisible(true)}
-          >
-            SMM Hesapla
-          </Button>
-          <Button icon={<SettingOutlined />}>
-            Ayarlar
-          </Button>
-        </Space>
-      </div>
-
-      {renderStatsCards()}
-      {renderFilters()}
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <Tabs.TabPane
-          tab={<span><PieChartOutlined /> Envanter Değerleme</span>}
-          key="valuation"
-        >
+  // Tab items
+  const tabItems = [
+    {
+      key: 'valuation',
+      label: (
+        <span className="flex items-center gap-2">
+          <PieChartOutlined />
+          Envanter Değerleme
+        </span>
+      ),
+      children: (
+        <>
           {valuationLoading ? (
-            <Spin tip="Yükleniyor..." />
+            <div className="flex items-center justify-center py-12">
+              <Spin size="large" />
+            </div>
           ) : productSummaries?.length ? (
             <>
               <Table
@@ -872,77 +451,148 @@ export default function CostingPage() {
                 pagination={{ pageSize: 20 }}
                 scroll={{ x: 1000 }}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
-              {renderCategoryDistribution()}
+              {/* Category Distribution */}
+              {valuation?.byCategory?.length ? (
+                <div className="bg-white border border-slate-200 rounded-xl p-6 mt-6">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Kategori Dağılımı</h3>
+                  <div className="grid grid-cols-12 gap-6">
+                    {valuation.byCategory.slice(0, 6).map((category) => {
+                      const total = valuation.byCategory!.reduce((sum, c) => sum + c.totalValue, 0);
+                      return (
+                        <div key={category.categoryId} className="col-span-12 sm:col-span-6 lg:col-span-4">
+                          <div className="flex justify-between mb-2">
+                            <span className="text-sm text-slate-700">{category.categoryName}</span>
+                            <span className="font-medium text-slate-900">{formatCurrency(category.totalValue)}</span>
+                          </div>
+                          <Progress
+                            percent={Math.round((category.totalValue / total) * 100)}
+                            strokeColor={MONOCHROME_COLORS[0]}
+                            size="small"
+                            showInfo={false}
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            {category.productCount} ürün, {formatNumber(category.totalQuantity)} adet
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <Empty description="Veri bulunamadı" />
           )}
-        </Tabs.TabPane>
-
-        <Tabs.TabPane
-          tab={<span><BarChartOutlined /> SMM Raporu</span>}
-          key="cogs"
-        >
+        </>
+      ),
+    },
+    {
+      key: 'cogs',
+      label: (
+        <span className="flex items-center gap-2">
+          <BarChartOutlined />
+          SMM Raporu
+        </span>
+      ),
+      children: (
+        <>
           {cogsLoading ? (
-            <Spin tip="Yükleniyor..." />
+            <div className="flex items-center justify-center py-12">
+              <Spin size="large" />
+            </div>
           ) : cogsReport ? (
             <>
-              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={6}>
-                  <Card>
-                    <Statistic
-                      title="Toplam SMM"
-                      value={cogsReport.totalCOGS}
-                      precision={2}
-                      suffix="TRY"
-                      valueStyle={{ color: '#1890ff' }}
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card>
-                    <Statistic
-                      title="Satılan Miktar"
-                      value={cogsReport.totalQuantitySold}
-                      precision={0}
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card>
-                    <Statistic
-                      title="Başlangıç Envanter"
-                      value={cogsReport.beginningInventoryValue}
-                      precision={2}
-                      suffix="TRY"
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card>
-                    <Statistic
-                      title="Bitiş Envanter"
-                      value={cogsReport.endingInventoryValue}
-                      precision={2}
-                      suffix="TRY"
-                    />
-                  </Card>
-                </Col>
-              </Row>
-              {renderCOGSBreakdown()}
+              {/* COGS Summary Cards */}
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Toplam SMM</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatCurrency(cogsReport.totalCOGS)}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Satılan Miktar</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatNumber(cogsReport.totalQuantitySold, 0)}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Başlangıç Envanter</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatCurrency(cogsReport.beginningInventoryValue)}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Bitiş Envanter</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatCurrency(cogsReport.endingInventoryValue)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Monthly COGS Breakdown */}
+              {cogsReport.monthlyBreakdown?.length ? (
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Aylık SMM Dağılımı</h3>
+                  <Table
+                    dataSource={cogsReport.monthlyBreakdown}
+                    rowKey={(record) => `${record.year}-${record.month}`}
+                    pagination={false}
+                    size="small"
+                    className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+                    columns={[
+                      {
+                        title: 'Dönem',
+                        dataIndex: 'monthName',
+                        key: 'monthName',
+                      },
+                      {
+                        title: 'SMM',
+                        dataIndex: 'cogs',
+                        key: 'cogs',
+                        align: 'right',
+                        render: (value) => formatCurrency(value),
+                      },
+                      {
+                        title: 'Satılan Miktar',
+                        dataIndex: 'quantitySold',
+                        key: 'quantitySold',
+                        align: 'right',
+                        render: (value) => formatNumber(value),
+                      },
+                      {
+                        title: 'Ort. Birim Maliyet',
+                        dataIndex: 'averageUnitCost',
+                        key: 'averageUnitCost',
+                        align: 'right',
+                        render: (value) => formatCurrency(value),
+                      },
+                    ]}
+                  />
+                </div>
+              ) : null}
             </>
           ) : (
             <Empty description="Veri bulunamadı" />
           )}
-        </Tabs.TabPane>
-
-        <Tabs.TabPane
-          tab={<span><SwapOutlined /> Maliyet Sapması</span>}
-          key="variance"
-        >
+        </>
+      ),
+    },
+    {
+      key: 'variance',
+      label: (
+        <span className="flex items-center gap-2">
+          <SwapOutlined />
+          Maliyet Sapması
+        </span>
+      ),
+      children: (
+        <>
           {varianceLoading ? (
-            <Spin tip="Yükleniyor..." />
+            <div className="flex items-center justify-center py-12">
+              <Spin size="large" />
+            </div>
           ) : varianceAnalysis?.length ? (
             <Table
               dataSource={varianceAnalysis}
@@ -951,63 +601,57 @@ export default function CostingPage() {
               pagination={{ pageSize: 20 }}
               scroll={{ x: 1200 }}
               size="small"
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
             />
           ) : (
             <Empty description="Standart maliyeti tanımlı ürün bulunamadı" />
           )}
-        </Tabs.TabPane>
-
-        <Tabs.TabPane
-          tab={<span><LineChartOutlined /> Maliyet Katmanları</span>}
-          key="layers"
-        >
+        </>
+      ),
+    },
+    {
+      key: 'layers',
+      label: (
+        <span className="flex items-center gap-2">
+          <LineChartOutlined />
+          Maliyet Katmanları
+        </span>
+      ),
+      children: (
+        <>
           {layersLoading ? (
-            <Spin tip="Yükleniyor..." />
+            <div className="flex items-center justify-center py-12">
+              <Spin size="large" />
+            </div>
           ) : costLayers?.items?.length ? (
             <>
-              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                <Col span={6}>
-                  <Card size="small">
-                    <Statistic
-                      title="Toplam Katman"
-                      value={costLayers.totalCount}
-                      valueStyle={{ fontSize: 20 }}
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card size="small">
-                    <Statistic
-                      title="Toplam Miktar"
-                      value={costLayers.totalQuantity}
-                      precision={2}
-                      valueStyle={{ fontSize: 20 }}
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card size="small">
-                    <Statistic
-                      title="Toplam Değer"
-                      value={costLayers.totalValue}
-                      precision={2}
-                      suffix="TRY"
-                      valueStyle={{ fontSize: 20 }}
-                    />
-                  </Card>
-                </Col>
-                <Col span={6}>
-                  <Card size="small">
-                    <Statistic
-                      title="Ağırlıklı Ort. Maliyet"
-                      value={costLayers.weightedAverageCost}
-                      precision={2}
-                      suffix="TRY"
-                      valueStyle={{ fontSize: 20 }}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+              {/* Layer Summary Cards */}
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Toplam Katman</p>
+                    <p className="text-2xl font-bold text-slate-900">{costLayers.totalCount}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Toplam Miktar</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatNumber(costLayers.totalQuantity)}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Toplam Değer</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatCurrency(costLayers.totalValue)}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <p className="text-xs text-slate-500 mb-1">Ağırlıklı Ort. Maliyet</p>
+                    <p className="text-2xl font-bold text-slate-900">{formatCurrency(costLayers.weightedAverageCost)}</p>
+                  </div>
+                </div>
+              </div>
               <Table
                 dataSource={costLayers.items}
                 columns={layerColumns}
@@ -1020,16 +664,388 @@ export default function CostingPage() {
                 }}
                 scroll={{ x: 1200 }}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
             </>
           ) : (
             <Empty description="Maliyet katmanı bulunamadı" />
           )}
-        </Tabs.TabPane>
-      </Tabs>
+        </>
+      ),
+    },
+  ];
 
-      {renderProductDetailModal()}
-      {renderCOGSModal()}
+  return (
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <DollarOutlined />
+            Envanter Maliyetlendirme
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            FIFO, LIFO, Ağırlıklı Ortalama Maliyet yöntemleri ile envanter değerleme
+          </p>
+        </div>
+        <Space size="middle">
+          <Button
+            icon={<CalculatorOutlined />}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            onClick={() => setCogsModalVisible(true)}
+          >
+            SMM Hesapla
+          </Button>
+          <Button
+            icon={<SettingOutlined />}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+          >
+            Ayarlar
+          </Button>
+        </Space>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-12 gap-6 mb-6">
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <DollarOutlined className="text-lg text-slate-600" />
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mb-1">Toplam Envanter Değeri</p>
+            {totalValueLoading ? (
+              <Spin size="small" />
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalValue?.totalValue || 0)}</p>
+                <p className="text-xs text-slate-400 mt-1">{getCostingMethodLabel(selectedMethod)}</p>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <PieChartOutlined className="text-lg text-emerald-600" />
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mb-1">Toplam Ürün Sayısı</p>
+            {valuationLoading ? (
+              <Spin size="small" />
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-slate-900">{valuation?.productCount || 0}</p>
+                <p className="text-xs text-slate-400 mt-1">Stokta olan ürünler</p>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                <BarChartOutlined className="text-lg text-amber-600" />
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mb-1">Dönem SMM</p>
+            {cogsLoading ? (
+              <Spin size="small" />
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-slate-900">{formatCurrency(cogsReport?.totalCOGS || 0)}</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {dayjs(dateRange[0]).format('DD.MM')} - {dayjs(dateRange[1]).format('DD.MM.YYYY')}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
+                  ? 'bg-emerald-50'
+                  : 'bg-red-50'
+              }`}>
+                {varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0 ? (
+                  <CheckCircleOutlined className="text-lg text-emerald-600" />
+                ) : (
+                  <ExclamationCircleOutlined className="text-lg text-red-600" />
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mb-1">Maliyet Sapması</p>
+            {varianceLoading ? (
+              <Spin size="small" />
+            ) : (
+              <>
+                <p className={`text-2xl font-bold ${
+                  varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0
+                    ? 'text-emerald-600'
+                    : 'text-red-600'
+                }`}>
+                  {formatCurrency(varianceAnalysis?.reduce((sum, v) => sum + v.totalVarianceImpact, 0) || 0)}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">Standart vs Gerçek</p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <FilterOutlined className="text-slate-400" />
+            <span className="font-medium text-slate-700">Filtreler:</span>
+          </div>
+          <Select
+            placeholder="Kategori"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedCategoryId}
+            onChange={setSelectedCategoryId}
+            options={categories?.map((c) => ({ label: c.name, value: c.id }))}
+          />
+          <Select
+            placeholder="Depo"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedWarehouseId}
+            onChange={setSelectedWarehouseId}
+            options={warehouses?.map((w) => ({ label: w.name, value: w.id }))}
+          />
+          <Select
+            placeholder="Maliyetlendirme Yöntemi"
+            style={{ width: 240 }}
+            value={selectedMethod}
+            onChange={setSelectedMethod}
+            options={[
+              { label: 'FIFO (İlk Giren İlk Çıkar)', value: CostingMethodEnum.FIFO },
+              { label: 'LIFO (Son Giren İlk Çıkar)', value: CostingMethodEnum.LIFO },
+              { label: 'Ağırlıklı Ortalama Maliyet', value: CostingMethodEnum.WeightedAverageCost },
+              { label: 'Standart Maliyet', value: CostingMethodEnum.StandardCost },
+            ]}
+          />
+          <RangePicker
+            value={dateRange}
+            onChange={(dates) => dates && setDateRange([dates[0]!, dates[1]!])}
+            format="DD.MM.YYYY"
+          />
+          <Button
+            icon={<ReloadOutlined />}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            onClick={() => refetchValuation()}
+          >
+            Yenile
+          </Button>
+        </div>
+      </div>
+
+      {/* Tabs Content */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
+      </div>
+
+      {/* Product Detail Modal */}
+      <Modal
+        title={
+          <span className="text-lg font-semibold text-slate-900">
+            Ürün Maliyet Detayı - {productDetailModal?.productCode}
+          </span>
+        }
+        open={!!productDetailModal}
+        onCancel={() => setProductDetailModal(null)}
+        footer={null}
+        width={700}
+      >
+        {productDetailModal && (
+          <div>
+            <Descriptions bordered size="small" column={2} className="mb-4">
+              <Descriptions.Item label="Ürün Kodu">{productDetailModal.productCode}</Descriptions.Item>
+              <Descriptions.Item label="Ürün Adı">{productDetailModal.productName}</Descriptions.Item>
+              <Descriptions.Item label="Kategori">{productDetailModal.categoryName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Maliyetlendirme Yöntemi">
+                <Tag color={getCostingMethodColor(productDetailModal.costingMethod)}>
+                  {getCostingMethodLabel(productDetailModal.costingMethod)}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Toplam Miktar">
+                <span className="font-medium">{formatNumber(productDetailModal.totalQuantity)}</span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Toplam Değer">
+                <span className="font-medium text-emerald-600">{formatCurrency(productDetailModal.totalValue, productDetailModal.currency)}</span>
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Divider className="!my-4">Maliyet Karşılaştırması</Divider>
+
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">FIFO Maliyet</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(productDetailModal.fifoUnitCost || 0, productDetailModal.currency)}</p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">LIFO Maliyet</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(productDetailModal.lifoUnitCost || 0, productDetailModal.currency)}</p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">Ağırlıklı Ortalama</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(productDetailModal.weightedAverageCost, productDetailModal.currency)}</p>
+              </div>
+            </div>
+
+            {productDetailModal.standardCost && (
+              <>
+                <Divider className="!my-4">Standart Maliyet Karşılaştırması</Divider>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-xs text-amber-700 mb-1">Standart Maliyet</p>
+                    <p className="text-xl font-bold text-amber-900">{formatCurrency(productDetailModal.standardCost, productDetailModal.currency)}</p>
+                  </div>
+                  <div className={`rounded-xl p-4 ${
+                    productDetailModal.weightedAverageCost < productDetailModal.standardCost
+                      ? 'bg-emerald-50 border border-emerald-200'
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <p className={`text-xs mb-1 ${
+                      productDetailModal.weightedAverageCost < productDetailModal.standardCost
+                        ? 'text-emerald-700'
+                        : 'text-red-700'
+                    }`}>
+                      Fark (Gerçek - Standart)
+                    </p>
+                    <p className={`text-xl font-bold flex items-center gap-2 ${
+                      productDetailModal.weightedAverageCost < productDetailModal.standardCost
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}>
+                      {productDetailModal.weightedAverageCost < productDetailModal.standardCost
+                        ? <CheckCircleOutlined />
+                        : <WarningOutlined />}
+                      {formatCurrency(productDetailModal.weightedAverageCost - productDetailModal.standardCost, productDetailModal.currency)}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Divider className="!my-4">Katman Bilgileri</Divider>
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label="Aktif Katman Sayısı">
+                <Tag>{productDetailModal.activeLayerCount}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Son Hesaplama">
+                {productDetailModal.lastCalculatedAt
+                  ? dayjs(productDetailModal.lastCalculatedAt).format('DD.MM.YYYY HH:mm')
+                  : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="En Eski Katman">
+                {productDetailModal.oldestLayerDate
+                  ? dayjs(productDetailModal.oldestLayerDate).format('DD.MM.YYYY')
+                  : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="En Yeni Katman">
+                {productDetailModal.newestLayerDate
+                  ? dayjs(productDetailModal.newestLayerDate).format('DD.MM.YYYY')
+                  : '-'}
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
+      </Modal>
+
+      {/* COGS Calculation Modal */}
+      <Modal
+        title={
+          <span className="text-lg font-semibold text-slate-900">SMM Hesapla</span>
+        }
+        open={cogsModalVisible}
+        onCancel={() => {
+          setCogsModalVisible(false);
+          cogsForm.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={cogsForm}
+          layout="vertical"
+          onFinish={handleCalculateCOGS}
+        >
+          <Form.Item
+            name="productId"
+            label="Ürün"
+            rules={[{ required: true, message: 'Ürün seçiniz' }]}
+          >
+            <Select
+              showSearch
+              placeholder="Ürün seçiniz"
+              optionFilterProp="children"
+              options={productSummaries?.map((p) => ({
+                label: `${p.productCode} - ${p.productName}`,
+                value: p.productId,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="quantity"
+            label="Miktar"
+            rules={[{ required: true, message: 'Miktar giriniz' }]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              min={0.01}
+              precision={2}
+              placeholder="Miktar"
+            />
+          </Form.Item>
+          <Form.Item
+            name="method"
+            label="Maliyetlendirme Yöntemi"
+            initialValue={CostingMethodEnum.WeightedAverageCost}
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={[
+                { label: 'FIFO (İlk Giren İlk Çıkar)', value: CostingMethodEnum.FIFO },
+                { label: 'LIFO (Son Giren İlk Çıkar)', value: CostingMethodEnum.LIFO },
+                { label: 'Ağırlıklı Ortalama Maliyet', value: CostingMethodEnum.WeightedAverageCost },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+                loading={calculateCOGS.isPending}
+              >
+                Hesapla
+              </Button>
+              <Button
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+                onClick={() => {
+                  setCogsModalVisible(false);
+                  cogsForm.resetFields();
+                }}
+              >
+                İptal
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

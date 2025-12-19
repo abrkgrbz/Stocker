@@ -2,18 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Typography,
-  Card,
-  Row,
-  Col,
   Button,
   Space,
   Select,
   DatePicker,
   Tabs,
   Table,
-  Statistic,
-  Progress,
   Tag,
   Empty,
   Dropdown,
@@ -32,6 +26,7 @@ import {
   WarningOutlined,
   FileTextOutlined,
   ThunderboltOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import {
   BarChart,
@@ -44,12 +39,9 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Legend,
   AreaChart,
   Area,
-  ComposedChart,
 } from 'recharts';
 import {
   useProducts,
@@ -63,20 +55,19 @@ import type { ProductDto, StockMovementDto, CategoryDto } from '@/lib/api/servic
 import dayjs from 'dayjs';
 import { exportToPDF, exportToExcel } from '@/lib/utils/export-utils';
 
-const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-// Colors
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+// Monochrome color palette (matching dashboard)
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Custom tooltip
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border rounded shadow-lg">
-        <p className="font-medium">{label}</p>
+      <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm">
+        <p className="font-medium text-slate-900 mb-1">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }}>
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString('tr-TR') : entry.value}
           </p>
         ))}
@@ -96,7 +87,7 @@ export default function InventoryReportsPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
 
   // Data hooks
-  const { data: products = [] } = useProducts(true);
+  const { data: products = [], refetch: refetchProducts, isLoading: productsLoading } = useProducts(true);
   const { data: warehouses = [] } = useWarehouses();
   const { data: categories = [] } = useCategories();
   const { data: movements = [] } = useStockMovements(
@@ -137,15 +128,6 @@ export default function InventoryReportsPage() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
   }, [products, categories]);
-
-  const stockValueByWarehouse = useMemo(() => {
-    // This would require warehouse stock data - simplified version
-    return warehouses.slice(0, 8).map((w: any, index: number) => ({
-      name: w.name,
-      value: Math.floor(Math.random() * 500000) + 100000, // Placeholder
-      products: Math.floor(Math.random() * 100) + 20,
-    }));
-  }, [warehouses]);
 
   const totalStockValue = useMemo(() => {
     return products.reduce(
@@ -239,26 +221,6 @@ export default function InventoryReportsPage() {
     };
   }, [products]);
 
-  // ============= TURNOVER ANALYSIS =============
-  const turnoverData = useMemo(() => {
-    // Simplified turnover calculation
-    return products.slice(0, 10).map((p: ProductDto) => {
-      const salesMovements = movements.filter(
-        (m: StockMovementDto) => m.productId === p.id && m.movementType === 'Sales'
-      );
-      const totalSold = salesMovements.reduce((sum, m) => sum + m.quantity, 0);
-      const avgStock = p.totalStockQuantity || 1;
-      const turnover = totalSold / avgStock;
-
-      return {
-        name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
-        turnover: Number(turnover.toFixed(2)),
-        quantity: p.totalStockQuantity,
-        sold: totalSold,
-      };
-    });
-  }, [products, movements]);
-
   // ============= EXPORT HANDLERS =============
   const handleExport = (format: 'pdf' | 'excel', reportType: string) => {
     let data: any[] = [];
@@ -333,95 +295,110 @@ export default function InventoryReportsPage() {
         </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
+        <div className="space-y-6">
           {/* Summary Cards */}
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Toplam Stok Değeri"
-                value={totalStockValue}
-                prefix={<DollarOutlined />}
-                suffix="₺"
-                precision={0}
-                valueStyle={{ color: '#3b82f6' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Toplam Stok Miktarı"
-                value={totalStockQuantity}
-                prefix={<InboxOutlined />}
-                valueStyle={{ color: '#10b981' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Ortalama Ürün Değeri"
-                value={products.length > 0 ? totalStockValue / products.length : 0}
-                prefix={<BarChartOutlined />}
-                suffix="₺"
-                precision={0}
-                valueStyle={{ color: '#8b5cf6' }}
-              />
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <DollarOutlined className="mr-2" />
+                  Toplam Stok Değeri
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  ₺{totalStockValue.toLocaleString('tr-TR')}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <InboxOutlined className="mr-2" />
+                  Toplam Stok Miktarı
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {totalStockQuantity.toLocaleString('tr-TR')}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <BarChartOutlined className="mr-2" />
+                  Ortalama Ürün Değeri
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  ₺{products.length > 0 ? Math.round(totalStockValue / products.length).toLocaleString('tr-TR') : 0}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Charts */}
-          <Col xs={24} lg={12}>
-            <Card
-              title="Kategoriye Göre Stok Değeri"
-              extra={
-                <Space>
-                  <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'stock-value')}>
-                    PDF
-                  </Button>
-                  <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'stock-value')}>
-                    Excel
-                  </Button>
-                </Space>
-              }
-            >
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={stockValueByCategory} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
-                  <RechartsTooltip
-                    formatter={(value: number) => [`₺${value.toLocaleString('tr-TR')}`, 'Değer']}
-                  />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Kategoriye Göre Stok Değeri
+                  </p>
+                  <Space>
+                    <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                      PDF
+                    </Button>
+                    <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                      Excel
+                    </Button>
+                  </Space>
+                </div>
+                {stockValueByCategory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={stockValueByCategory} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} stroke="#94a3b8" fontSize={12} />
+                      <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: '#64748b' }} />
+                      <RechartsTooltip
+                        formatter={(value: number) => [`₺${value.toLocaleString('tr-TR')}`, 'Değer']}
+                      />
+                      <Bar dataKey="value" fill="#1e293b" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="Veri bulunamadı" />
+                )}
+              </div>
+            </div>
 
-          <Col xs={24} lg={12}>
-            <Card title="Kategoriye Göre Dağılım">
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
-                  <Pie
-                    data={stockValueByCategory}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={120}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
-                  >
-                    {stockValueByCategory.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
-        </Row>
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                  Kategoriye Göre Dağılım
+                </p>
+                {stockValueByCategory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie
+                        data={stockValueByCategory}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={120}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
+                      >
+                        {stockValueByCategory.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="Veri bulunamadı" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       ),
     },
     {
@@ -432,63 +409,69 @@ export default function InventoryReportsPage() {
         </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
+        <div className="space-y-6">
           {/* Movement Summary */}
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Toplam Hareket"
-                value={movements.length}
-                prefix={<SwapOutlined />}
-                valueStyle={{ color: '#3b82f6' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Giriş Hareketleri"
-                value={movements.filter((m: StockMovementDto) =>
-                  ['Purchase', 'SalesReturn', 'AdjustmentIncrease'].includes(m.movementType)
-                ).length}
-                prefix={<ArrowUpOutlined />}
-                valueStyle={{ color: '#10b981' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="Çıkış Hareketleri"
-                value={movements.filter((m: StockMovementDto) =>
-                  ['Sales', 'PurchaseReturn', 'AdjustmentDecrease'].includes(m.movementType)
-                ).length}
-                prefix={<ArrowDownOutlined />}
-                valueStyle={{ color: '#ef4444' }}
-              />
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <SwapOutlined className="mr-2" />
+                  Toplam Hareket
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {movements.length}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <ArrowUpOutlined className="mr-2" />
+                  Giriş Hareketleri
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {movements.filter((m: StockMovementDto) =>
+                    ['Purchase', 'SalesReturn', 'AdjustmentIncrease'].includes(m.movementType)
+                  ).length}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <ArrowDownOutlined className="mr-2" />
+                  Çıkış Hareketleri
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {movements.filter((m: StockMovementDto) =>
+                    ['Sales', 'PurchaseReturn', 'AdjustmentDecrease'].includes(m.movementType)
+                  ).length}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Movement Trend */}
-          <Col xs={24}>
-            <Card
-              title="Hareket Trendi (Son 30 Gün)"
-              extra={
-                <Space>
-                  <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'movements')}>
-                    PDF
-                  </Button>
-                  <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'movements')}>
-                    Excel
-                  </Button>
-                </Space>
-              }
-            >
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Hareket Trendi (Son 30 Gün)
+              </p>
+              <Space>
+                <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                  PDF
+                </Button>
+                <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                  Excel
+                </Button>
+              </Space>
+            </div>
+            {movementTrend.some(d => d.giren > 0 || d.cikan > 0) ? (
               <ResponsiveContainer width="100%" height={350}>
                 <AreaChart data={movementTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+                  <YAxis stroke="#94a3b8" fontSize={12} />
                   <RechartsTooltip content={<CustomTooltip />} />
                   <Legend />
                   <Area
@@ -496,84 +479,92 @@ export default function InventoryReportsPage() {
                     dataKey="giren"
                     name="Giren"
                     stackId="1"
-                    stroke="#10b981"
-                    fill="#10b981"
-                    fillOpacity={0.6}
+                    stroke="#1e293b"
+                    fill="#1e293b"
+                    fillOpacity={0.7}
                   />
                   <Area
                     type="monotone"
                     dataKey="cikan"
                     name="Çıkan"
                     stackId="2"
-                    stroke="#ef4444"
-                    fill="#ef4444"
-                    fillOpacity={0.6}
+                    stroke="#94a3b8"
+                    fill="#94a3b8"
+                    fillOpacity={0.5}
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            </Card>
-          </Col>
+            ) : (
+              <Empty description="Henüz hareket verisi oluşmadı" />
+            )}
+          </div>
 
-          {/* Movement by Type */}
-          <Col xs={24} lg={12}>
-            <Card title="Hareket Türlerine Göre Dağılım">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={movementsByType}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label
-                  >
-                    {movementsByType.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            {/* Movement by Type */}
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                  Hareket Türlerine Göre Dağılım
+                </p>
+                {movementsByType.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={movementsByType}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label
+                      >
+                        {movementsByType.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="Veri bulunamadı" />
+                )}
+              </div>
+            </div>
 
-          {/* Transfer Summary */}
-          <Col xs={24} lg={12}>
-            <Card title="Transfer Özeti">
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Statistic
-                    title="Toplam Transfer"
-                    value={transfers.length}
-                    prefix={<SwapOutlined />}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="Tamamlanan"
-                    value={transfers.filter((t: any) => t.status === 'Completed').length}
-                    valueStyle={{ color: '#10b981' }}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="Bekleyen"
-                    value={transfers.filter((t: any) => t.status === 'Pending').length}
-                    valueStyle={{ color: '#f59e0b' }}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="Yolda"
-                    value={transfers.filter((t: any) => t.status === 'InTransit').length}
-                    valueStyle={{ color: '#3b82f6' }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-          </Col>
-        </Row>
+            {/* Transfer Summary */}
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                  Transfer Özeti
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-sm text-slate-500 mb-1">Toplam Transfer</div>
+                    <div className="text-2xl font-bold text-slate-900">{transfers.length}</div>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-sm text-slate-500 mb-1">Tamamlanan</div>
+                    <div className="text-2xl font-bold text-slate-900">
+                      {transfers.filter((t: any) => t.status === 'Completed').length}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-sm text-slate-500 mb-1">Bekleyen</div>
+                    <div className="text-2xl font-bold text-slate-600">
+                      {transfers.filter((t: any) => t.status === 'Pending').length}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-sm text-slate-500 mb-1">Yolda</div>
+                    <div className="text-2xl font-bold text-slate-600">
+                      {transfers.filter((t: any) => t.status === 'InTransit').length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       ),
     },
     {
@@ -584,116 +575,128 @@ export default function InventoryReportsPage() {
         </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
+        <div className="space-y-6">
           {/* ABC Summary */}
-          <Col xs={24} sm={8}>
-            <Card className="border-l-4 border-l-red-500">
-              <Statistic
-                title="A Sınıfı Ürünler"
-                value={abcAnalysis.summary.A}
-                suffix={`/ ${products.length}`}
-                valueStyle={{ color: '#ef4444' }}
-              />
-              <Text type="secondary">%80 değer, yüksek öncelik</Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="border-l-4 border-l-yellow-500">
-              <Statistic
-                title="B Sınıfı Ürünler"
-                value={abcAnalysis.summary.B}
-                suffix={`/ ${products.length}`}
-                valueStyle={{ color: '#f59e0b' }}
-              />
-              <Text type="secondary">%15 değer, orta öncelik</Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="border-l-4 border-l-green-500">
-              <Statistic
-                title="C Sınıfı Ürünler"
-                value={abcAnalysis.summary.C}
-                suffix={`/ ${products.length}`}
-                valueStyle={{ color: '#10b981' }}
-              />
-              <Text type="secondary">%5 değer, düşük öncelik</Text>
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  A Sınıfı Ürünler
+                </p>
+                <div className="text-3xl font-bold text-white">
+                  {abcAnalysis.summary.A}
+                  <span className="text-lg text-slate-400 ml-2">/ {products.length}</span>
+                </div>
+                <p className="text-sm text-slate-500 mt-2">%80 değer, yüksek öncelik</p>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-600 border border-slate-500 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+                  B Sınıfı Ürünler
+                </p>
+                <div className="text-3xl font-bold text-white">
+                  {abcAnalysis.summary.B}
+                  <span className="text-lg text-slate-400 ml-2">/ {products.length}</span>
+                </div>
+                <p className="text-sm text-slate-400 mt-2">%15 değer, orta öncelik</p>
+              </div>
+            </div>
+            <div className="col-span-4">
+              <div className="bg-slate-300 border border-slate-200 rounded-xl p-5 h-full">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">
+                  C Sınıfı Ürünler
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {abcAnalysis.summary.C}
+                  <span className="text-lg text-slate-600 ml-2">/ {products.length}</span>
+                </div>
+                <p className="text-sm text-slate-600 mt-2">%5 değer, düşük öncelik</p>
+              </div>
+            </div>
+          </div>
 
-          {/* ABC Distribution */}
-          <Col xs={24} lg={12}>
-            <Card title="ABC Sınıfı Dağılımı">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'A Sınıfı', value: abcAnalysis.summary.A, color: '#ef4444' },
-                      { name: 'B Sınıfı', value: abcAnalysis.summary.B, color: '#f59e0b' },
-                      { name: 'C Sınıfı', value: abcAnalysis.summary.C, color: '#10b981' },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    dataKey="value"
-                    label
-                  >
-                    <Cell fill="#ef4444" />
-                    <Cell fill="#f59e0b" />
-                    <Cell fill="#10b981" />
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            {/* ABC Distribution */}
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+                  ABC Sınıfı Dağılımı
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'A Sınıfı', value: abcAnalysis.summary.A, color: '#1e293b' },
+                        { name: 'B Sınıfı', value: abcAnalysis.summary.B, color: '#64748b' },
+                        { name: 'C Sınıfı', value: abcAnalysis.summary.C, color: '#cbd5e1' },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      dataKey="value"
+                      label
+                    >
+                      <Cell fill="#1e293b" />
+                      <Cell fill="#64748b" />
+                      <Cell fill="#cbd5e1" />
+                    </Pie>
+                    <RechartsTooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-          {/* Top A Class Products */}
-          <Col xs={24} lg={12}>
-            <Card
-              title="En Değerli A Sınıfı Ürünler"
-              extra={
-                <Space>
-                  <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'abc')}>
-                    PDF
-                  </Button>
-                  <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'abc')}>
-                    Excel
-                  </Button>
-                </Space>
-              }
-            >
-              <Table
-                dataSource={abcAnalysis.products.filter((p) => p.category === 'A').slice(0, 10)}
-                rowKey="id"
-                pagination={false}
-                size="small"
-                columns={[
-                  { title: 'Ürün', dataIndex: 'name', key: 'name', ellipsis: true },
-                  { title: 'Kod', dataIndex: 'code', key: 'code', width: 100 },
-                  {
-                    title: 'Stok Değeri',
-                    dataIndex: 'stockValue',
-                    key: 'stockValue',
-                    width: 120,
-                    align: 'right' as const,
-                    render: (v: number) => `₺${v.toLocaleString('tr-TR')}`,
-                  },
-                  {
-                    title: 'Sınıf',
-                    dataIndex: 'category',
-                    key: 'category',
-                    width: 60,
-                    render: (c: string) => (
-                      <Tag color={c === 'A' ? 'red' : c === 'B' ? 'orange' : 'green'}>{c}</Tag>
-                    ),
-                  },
-                ]}
-              />
-            </Card>
-          </Col>
-        </Row>
+            {/* Top A Class Products */}
+            <div className="col-span-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    En Değerli A Sınıfı Ürünler
+                  </p>
+                  <Space>
+                    <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                      PDF
+                    </Button>
+                    <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                      Excel
+                    </Button>
+                  </Space>
+                </div>
+                <Table
+                  dataSource={abcAnalysis.products.filter((p) => p.category === 'A').slice(0, 10)}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+                  columns={[
+                    { title: 'Ürün', dataIndex: 'name', key: 'name', ellipsis: true },
+                    { title: 'Kod', dataIndex: 'code', key: 'code', width: 100 },
+                    {
+                      title: 'Stok Değeri',
+                      dataIndex: 'stockValue',
+                      key: 'stockValue',
+                      width: 120,
+                      align: 'right' as const,
+                      render: (v: number) => `₺${v.toLocaleString('tr-TR')}`,
+                    },
+                    {
+                      title: 'Sınıf',
+                      dataIndex: 'category',
+                      key: 'category',
+                      width: 60,
+                      render: (c: string) => (
+                        <Tag className={c === 'A' ? '!bg-slate-900 !text-white !border-slate-900' : c === 'B' ? '!bg-slate-500 !text-white !border-slate-500' : '!bg-slate-200 !text-slate-700 !border-slate-200'}>{c}</Tag>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       ),
     },
     {
@@ -704,90 +707,95 @@ export default function InventoryReportsPage() {
         </span>
       ),
       children: (
-        <Row gutter={[16, 16]}>
+        <div className="space-y-6">
           {/* Low Stock Summary */}
-          <Col xs={24} sm={12}>
-            <Card>
-              <Statistic
-                title="Düşük Stoklu Ürünler"
-                value={lowStockProducts.length}
-                prefix={<WarningOutlined className="text-red-500" />}
-                valueStyle={{ color: '#ef4444' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Card>
-              <Statistic
-                title="Stokta Olmayan Ürünler"
-                value={products.filter((p: ProductDto) => p.totalStockQuantity === 0 && p.isActive).length}
-                prefix={<InboxOutlined className="text-orange-500" />}
-                valueStyle={{ color: '#f59e0b' }}
-              />
-            </Card>
-          </Col>
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <WarningOutlined className="mr-2" />
+                  Düşük Stoklu Ürünler
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {lowStockProducts.length}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <InboxOutlined className="mr-2" />
+                  Stokta Olmayan Ürünler
+                </p>
+                <div className="text-3xl font-bold text-slate-900">
+                  {products.filter((p: ProductDto) => p.totalStockQuantity === 0 && p.isActive).length}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Low Stock Products Table */}
-          <Col xs={24}>
-            <Card title="Düşük Stoklu Ürünler Listesi">
-              {lowStockProducts.length > 0 ? (
-                <Table
-                  dataSource={lowStockProducts}
-                  rowKey="productId"
-                  pagination={{ pageSize: 10 }}
-                  columns={[
-                    { title: 'Ürün', dataIndex: 'productName', key: 'productName', ellipsis: true },
-                    { title: 'Kod', dataIndex: 'productCode', key: 'productCode', width: 100 },
-                    { title: 'Depo', dataIndex: 'warehouseName', key: 'warehouseName', width: 120 },
-                    {
-                      title: 'Mevcut Stok',
-                      dataIndex: 'currentQuantity',
-                      key: 'currentQuantity',
-                      width: 100,
-                      align: 'right' as const,
-                      render: (v: number, record: any) => (
-                        <span className={v <= record.minimumQuantity / 2 ? 'text-red-500 font-bold' : 'text-orange-500'}>
-                          {v}
-                        </span>
-                      ),
-                    },
-                    {
-                      title: 'Minimum',
-                      dataIndex: 'minimumQuantity',
-                      key: 'minimumQuantity',
-                      width: 100,
-                      align: 'right' as const,
-                    },
-                    {
-                      title: 'Eksik',
-                      key: 'shortage',
-                      width: 100,
-                      align: 'right' as const,
-                      render: (_: any, record: any) => (
-                        <Tag color="red">{record.minimumQuantity - record.currentQuantity}</Tag>
-                      ),
-                    },
-                  ]}
-                />
-              ) : (
-                <Empty description="Düşük stoklu ürün yok" />
-              )}
-            </Card>
-          </Col>
-        </Row>
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+              Düşük Stoklu Ürünler Listesi
+            </p>
+            {lowStockProducts.length > 0 ? (
+              <Table
+                dataSource={lowStockProducts}
+                rowKey="productId"
+                pagination={{ pageSize: 10 }}
+                size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+                columns={[
+                  { title: 'Ürün', dataIndex: 'productName', key: 'productName', ellipsis: true },
+                  { title: 'Kod', dataIndex: 'productCode', key: 'productCode', width: 100 },
+                  { title: 'Depo', dataIndex: 'warehouseName', key: 'warehouseName', width: 120 },
+                  {
+                    title: 'Mevcut Stok',
+                    dataIndex: 'currentQuantity',
+                    key: 'currentQuantity',
+                    width: 100,
+                    align: 'right' as const,
+                    render: (v: number, record: any) => (
+                      <span className={v <= record.minimumQuantity / 2 ? 'text-slate-900 font-bold' : 'text-slate-600'}>
+                        {v}
+                      </span>
+                    ),
+                  },
+                  {
+                    title: 'Minimum',
+                    dataIndex: 'minimumQuantity',
+                    key: 'minimumQuantity',
+                    width: 100,
+                    align: 'right' as const,
+                  },
+                  {
+                    title: 'Eksik',
+                    key: 'shortage',
+                    width: 100,
+                    align: 'right' as const,
+                    render: (_: any, record: any) => (
+                      <Tag className="!bg-slate-900 !text-white !border-slate-900">{record.minimumQuantity - record.currentQuantity}</Tag>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <Empty description="Düşük stoklu ürün yok" />
+            )}
+          </div>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-slate-50 p-8">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <Title level={2} style={{ margin: 0 }}>
-            Envanter Raporları
-          </Title>
-          <Text type="secondary">Stok analizi, hareket raporları ve performans metrikleri</Text>
+          <h1 className="text-2xl font-bold text-slate-900">Envanter Raporları</h1>
+          <p className="text-sm text-slate-500 mt-1">Stok analizi, hareket raporları ve performans metrikleri</p>
         </div>
         <Space>
           <Dropdown
@@ -845,7 +853,7 @@ export default function InventoryReportsPage() {
             }}
             placement="bottomRight"
           >
-            <Button type="primary" icon={<ThunderboltOutlined />}>
+            <Button type="primary" icon={<ThunderboltOutlined />} className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900">
               Hızlı Rapor Şablonları
             </Button>
           </Dropdown>
@@ -853,19 +861,20 @@ export default function InventoryReportsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={8}>
-            <Text strong className="block mb-1">Tarih Aralığı</Text>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+        <div className="grid grid-cols-12 gap-6 items-end">
+          <div className="col-span-4">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tarih Aralığı</p>
             <RangePicker
               value={dateRange}
               onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs])}
               style={{ width: '100%' }}
               placeholder={['Başlangıç', 'Bitiş']}
+              className="[&_.ant-picker-input_input]:!text-slate-700"
             />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text strong className="block mb-1">Depo</Text>
+          </div>
+          <div className="col-span-3">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Depo</p>
             <Select
               placeholder="Tüm Depolar"
               value={selectedWarehouse}
@@ -873,10 +882,11 @@ export default function InventoryReportsPage() {
               allowClear
               style={{ width: '100%' }}
               options={warehouses.map((w: any) => ({ value: w.id, label: w.name }))}
+              className="[&_.ant-select-selector]:!border-slate-300"
             />
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Text strong className="block mb-1">Kategori</Text>
+          </div>
+          <div className="col-span-3">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori</p>
             <Select
               placeholder="Tüm Kategoriler"
               value={selectedCategory}
@@ -884,27 +894,39 @@ export default function InventoryReportsPage() {
               allowClear
               style={{ width: '100%' }}
               options={categories.map((c: CategoryDto) => ({ value: c.id, label: c.name }))}
+              className="[&_.ant-select-selector]:!border-slate-300"
             />
-          </Col>
-          <Col xs={24} sm={12} lg={4}>
-            <Text strong className="block mb-1">&nbsp;</Text>
-            <Button
-              onClick={() => {
-                setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
-                setSelectedWarehouse(undefined);
-                setSelectedCategory(undefined);
-              }}
-            >
-              Sıfırla
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+          <div className="col-span-2">
+            <Space>
+              <Button
+                onClick={() => {
+                  setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
+                  setSelectedWarehouse(undefined);
+                  setSelectedCategory(undefined);
+                }}
+                className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
+              >
+                Sıfırla
+              </Button>
+              <Button
+                icon={<SyncOutlined spin={productsLoading} />}
+                onClick={() => refetchProducts()}
+                className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
+              />
+            </Space>
+          </div>
+        </div>
+      </div>
 
       {/* Report Tabs */}
-      <Card>
-        <Tabs items={tabItems} size="large" />
-      </Card>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Tabs
+          items={tabItems}
+          size="large"
+          className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
+      </div>
     </div>
   );
 }

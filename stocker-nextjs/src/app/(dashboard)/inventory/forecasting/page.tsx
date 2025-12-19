@@ -2,10 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
   Table,
   Tag,
   Button,
@@ -13,7 +9,6 @@ import {
   Select,
   Tabs,
   Progress,
-  Typography,
   Tooltip,
   Badge,
   Alert,
@@ -30,7 +25,6 @@ import {
   SyncOutlined,
   ShoppingCartOutlined,
   BarChartOutlined,
-  SafetyCertificateOutlined,
   BulbOutlined,
   ExclamationCircleOutlined,
   ArrowUpOutlined,
@@ -57,14 +51,13 @@ import type {
   ProductForecastDto,
   ReorderSuggestionDto,
   StockOptimizationDto,
-  ForecastSummaryDto,
   StockForecastFilterDto,
   ReorderSuggestionStatus,
 } from '@/lib/api/services/inventory.types';
 import { ForecastingMethod } from '@/lib/api/services/inventory.types';
 
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
 // Risk level helpers
 const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
@@ -75,9 +68,9 @@ const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
 };
 
 const getTrendIcon = (trend: number) => {
-  if (trend > 0.05) return <ArrowUpOutlined style={{ color: '#52c41a' }} />;
-  if (trend < -0.05) return <ArrowDownOutlined style={{ color: '#f5222d' }} />;
-  return <MinusOutlined style={{ color: '#8c8c8c' }} />;
+  if (trend > 0.05) return <ArrowUpOutlined style={{ color: '#334155' }} />;
+  if (trend < -0.05) return <ArrowDownOutlined style={{ color: '#64748b' }} />;
+  return <MinusOutlined style={{ color: '#94a3b8' }} />;
 };
 
 const getStatusColor = (status: ReorderSuggestionStatus) => {
@@ -148,9 +141,9 @@ export default function ForecastingPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <Text strong>{record.productCode}</Text>
+          <span className="font-medium text-slate-900">{record.productCode}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+          <span className="text-xs text-slate-500">{record.productName}</span>
         </div>
       ),
     },
@@ -164,11 +157,11 @@ export default function ForecastingPage() {
       key: 'stock',
       render: (_, record) => (
         <div>
-          <Text>{record.availableStock.toFixed(0)}</Text>
+          <span className="text-slate-700">{record.availableStock.toFixed(0)}</span>
           {record.reservedStock > 0 && (
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              {' '}({record.reservedStock.toFixed(0)} rezerve)
-            </Text>
+            <span className="text-xs text-slate-400 ml-1">
+              ({record.reservedStock.toFixed(0)} rezerve)
+            </span>
           )}
         </div>
       ),
@@ -206,11 +199,11 @@ export default function ForecastingPage() {
       key: 'suggestion',
       render: (_, record) => (
         <div>
-          <Text strong style={{ color: '#1890ff' }}>{record.suggestedReorderQuantity.toFixed(0)}</Text>
+          <span className="font-medium text-slate-900">{record.suggestedReorderQuantity.toFixed(0)}</span>
           {record.suggestedOrderDate && (
-            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>
+            <span className="text-xs text-slate-500 block">
               {new Date(record.suggestedOrderDate).toLocaleDateString('tr-TR')}
-            </Text>
+            </span>
           )}
         </div>
       ),
@@ -222,6 +215,7 @@ export default function ForecastingPage() {
         <Button
           type="link"
           size="small"
+          className="!text-slate-600 hover:!text-slate-900"
           onClick={() => {
             setSelectedProductId(record.productId);
             setDetailModalVisible(true);
@@ -240,9 +234,9 @@ export default function ForecastingPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <Text strong>{record.productCode}</Text>
+          <span className="font-medium text-slate-900">{record.productCode}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+          <span className="text-xs text-slate-500">{record.productName}</span>
         </div>
       ),
     },
@@ -256,13 +250,13 @@ export default function ForecastingPage() {
       title: 'Önerilen Miktar',
       dataIndex: 'suggestedQuantity',
       key: 'suggestedQuantity',
-      render: (value: number) => <Text strong style={{ color: '#1890ff' }}>{value.toFixed(0)}</Text>,
+      render: (value: number) => <span className="font-medium text-slate-900">{value.toFixed(0)}</span>,
     },
     {
       title: 'Tahmini Maliyet',
       key: 'cost',
       render: (_, record) => (
-        <Text>{record.estimatedCost.toLocaleString('tr-TR')} {record.currency}</Text>
+        <span className="text-slate-700">{record.estimatedCost.toLocaleString('tr-TR')} {record.currency}</span>
       ),
     },
     {
@@ -293,6 +287,7 @@ export default function ForecastingPage() {
             <Button
               type="primary"
               size="small"
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               onClick={() => processSuggestion.mutate({
                 id: record.id,
                 dto: { newStatus: 'Approved' as ReorderSuggestionStatus }
@@ -325,9 +320,9 @@ export default function ForecastingPage() {
       key: 'product',
       render: (_, record) => (
         <div>
-          <Text strong>{record.productCode}</Text>
+          <span className="font-medium text-slate-900">{record.productCode}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.productName}</Text>
+          <span className="text-xs text-slate-500">{record.productName}</span>
         </div>
       ),
     },
@@ -342,9 +337,9 @@ export default function ForecastingPage() {
       dataIndex: 'recommendedMinStock',
       key: 'recommendedMinStock',
       render: (value: number, record) => (
-        <Text type={value !== record.currentMinStock ? 'warning' : undefined}>
+        <span className={value !== record.currentMinStock ? 'text-amber-600' : 'text-slate-700'}>
           {value.toFixed(0)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -358,9 +353,9 @@ export default function ForecastingPage() {
       dataIndex: 'recommendedReorderLevel',
       key: 'recommendedReorderLevel',
       render: (value: number, record) => (
-        <Text type={value !== record.currentReorderLevel ? 'warning' : undefined}>
+        <span className={value !== record.currentReorderLevel ? 'text-amber-600' : 'text-slate-700'}>
           {value.toFixed(0)}
-        </Text>
+        </span>
       ),
     },
     {
@@ -380,204 +375,162 @@ export default function ForecastingPage() {
       key: 'estimatedAnnualSavings',
       render: (value: number) => (
         value > 0 ? (
-          <Text type="success">{value.toLocaleString('tr-TR')} TRY</Text>
+          <span className="text-emerald-600 font-medium">{value.toLocaleString('tr-TR')} TRY</span>
         ) : '-'
       ),
     },
   ];
 
-  return (
-    <div style={{ padding: 24 }}>
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col flex="auto">
-          <Title level={4} style={{ margin: 0 }}>
-            <LineChartOutlined /> Stok Tahminleme & Otomatik Yeniden Sipariş
-          </Title>
-        </Col>
-        <Col>
-          <Space>
-            <Select
-              placeholder="Kategori"
-              allowClear
-              style={{ width: 180 }}
-              value={selectedCategoryId}
-              onChange={setSelectedCategoryId}
-            >
-              {categories?.map((cat) => (
-                <Select.Option key={cat.id} value={cat.id}>{cat.name}</Select.Option>
-              ))}
-            </Select>
-            <Select
-              placeholder="Depo"
-              allowClear
-              style={{ width: 180 }}
-              value={selectedWarehouseId}
-              onChange={setSelectedWarehouseId}
-            >
-              {warehouses?.map((wh) => (
-                <Select.Option key={wh.id} value={wh.id}>{wh.name}</Select.Option>
-              ))}
-            </Select>
-            <Select
-              value={forecastDays}
-              onChange={setForecastDays}
-              style={{ width: 140 }}
-            >
-              <Select.Option value={7}>7 Gün</Select.Option>
-              <Select.Option value={14}>14 Gün</Select.Option>
-              <Select.Option value={30}>30 Gün</Select.Option>
-              <Select.Option value={60}>60 Gün</Select.Option>
-              <Select.Option value={90}>90 Gün</Select.Option>
-            </Select>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => {
-                refetchSummary();
-                refetchSuggestions();
-              }}
-            >
-              Yenile
-            </Button>
-          </Space>
-        </Col>
-      </Row>
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane
-          tab={<span><BarChartOutlined /> Özet</span>}
-          key="summary"
-        >
+  // Tab items
+  const tabItems = [
+    {
+      key: 'summary',
+      label: (
+        <span className="flex items-center gap-2">
+          <BarChartOutlined />
+          Özet
+        </span>
+      ),
+      children: (
+        <>
           {summaryLoading ? (
-            <div style={{ textAlign: 'center', padding: 50 }}>
+            <div className="flex items-center justify-center py-12">
               <Spin size="large" />
             </div>
           ) : forecastSummary ? (
             <>
               {/* KPI Cards */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card>
-                    <Statistic
-                      title="Analiz Edilen Ürün"
-                      value={forecastSummary.totalProductsAnalyzed}
-                      prefix={<BarChartOutlined />}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card>
-                    <Statistic
-                      title="Sipariş Gerekli"
-                      value={forecastSummary.productsNeedingReorder}
-                      prefix={<ShoppingCartOutlined />}
-                      valueStyle={{ color: forecastSummary.productsNeedingReorder > 0 ? '#faad14' : '#52c41a' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card>
-                    <Statistic
-                      title="Risk Altında"
-                      value={forecastSummary.productsAtRisk}
-                      prefix={<WarningOutlined />}
-                      valueStyle={{ color: forecastSummary.productsAtRisk > 0 ? '#f5222d' : '#52c41a' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card>
-                    <Statistic
-                      title="Stokta Yok"
-                      value={forecastSummary.productsInStockout}
-                      prefix={<ExclamationCircleOutlined />}
-                      valueStyle={{ color: forecastSummary.productsInStockout > 0 ? '#f5222d' : '#52c41a' }}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <BarChartOutlined className="text-lg text-slate-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-1">Analiz Edilen Ürün</p>
+                    <p className="text-2xl font-bold text-slate-900">{forecastSummary.totalProductsAnalyzed}</p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <ShoppingCartOutlined className="text-lg text-amber-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-1">Sipariş Gerekli</p>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsNeedingReorder > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                      {forecastSummary.productsNeedingReorder}
+                    </p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                        <WarningOutlined className="text-lg text-red-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-1">Risk Altında</p>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsAtRisk > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                      {forecastSummary.productsAtRisk}
+                    </p>
+                  </div>
+                </div>
+                <div className="col-span-12 sm:col-span-6 lg:col-span-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                        <ExclamationCircleOutlined className="text-lg text-red-600" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-1">Stokta Yok</p>
+                    <p className={`text-2xl font-bold ${forecastSummary.productsInStockout > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                      {forecastSummary.productsInStockout}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-              {/* Risk Distribution */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                <Col xs={24} lg={12}>
-                  <Card title="Risk Dağılımı">
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Statistic
-                          title="Yüksek Risk"
-                          value={forecastSummary.highRiskProducts}
-                          valueStyle={{ color: '#f5222d' }}
-                        />
+              {/* Risk Distribution & Forecast Values */}
+              <div className="grid grid-cols-12 gap-6 mb-6">
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Risk Dağılımı</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Yüksek Risk</p>
+                        <p className="text-xl font-bold text-red-600 mb-2">{forecastSummary.highRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.highRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
                             : 0}
-                          strokeColor="#f5222d"
+                          strokeColor={MONOCHROME_COLORS[0]}
                           size="small"
+                          showInfo={false}
                         />
-                      </Col>
-                      <Col span={8}>
-                        <Statistic
-                          title="Orta Risk"
-                          value={forecastSummary.mediumRiskProducts}
-                          valueStyle={{ color: '#faad14' }}
-                        />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Orta Risk</p>
+                        <p className="text-xl font-bold text-amber-600 mb-2">{forecastSummary.mediumRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.mediumRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
                             : 0}
-                          strokeColor="#faad14"
+                          strokeColor={MONOCHROME_COLORS[2]}
                           size="small"
+                          showInfo={false}
                         />
-                      </Col>
-                      <Col span={8}>
-                        <Statistic
-                          title="Düşük Risk"
-                          value={forecastSummary.lowRiskProducts}
-                          valueStyle={{ color: '#52c41a' }}
-                        />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Düşük Risk</p>
+                        <p className="text-xl font-bold text-emerald-600 mb-2">{forecastSummary.lowRiskProducts}</p>
                         <Progress
                           percent={forecastSummary.totalProductsAnalyzed > 0
                             ? Math.round((forecastSummary.lowRiskProducts / forecastSummary.totalProductsAnalyzed) * 100)
                             : 0}
-                          strokeColor="#52c41a"
+                          strokeColor={MONOCHROME_COLORS[4]}
                           size="small"
+                          showInfo={false}
                         />
-                      </Col>
-                    </Row>
-                  </Card>
-                </Col>
-                <Col xs={24} lg={12}>
-                  <Card title="Tahmin Değerleri">
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Statistic
-                          title={`${forecastDays} Günlük Talep Tahmini`}
-                          value={forecastSummary.totalForecastedDemandValue}
-                          precision={0}
-                          suffix="adet"
-                        />
-                      </Col>
-                      <Col span={12}>
-                        <Statistic
-                          title="Önerilen Sipariş Değeri"
-                          value={forecastSummary.totalSuggestedReorderValue}
-                          precision={0}
-                          suffix="adet"
-                        />
-                      </Col>
-                    </Row>
-                  </Card>
-                </Col>
-              </Row>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Tahmin Değerleri</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">{forecastDays} Günlük Talep Tahmini</p>
+                        <p className="text-2xl font-bold text-slate-900">
+                          {forecastSummary.totalForecastedDemandValue.toFixed(0)}
+                          <span className="text-sm font-normal text-slate-500 ml-1">adet</span>
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Önerilen Sipariş Değeri</p>
+                        <p className="text-2xl font-bold text-slate-900">
+                          {forecastSummary.totalSuggestedReorderValue.toFixed(0)}
+                          <span className="text-sm font-normal text-slate-500 ml-1">adet</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Category Breakdown */}
               {forecastSummary.byCategory && forecastSummary.byCategory.length > 0 && (
-                <Card title="Kategori Bazında Analiz" style={{ marginBottom: 24 }}>
+                <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Kategori Bazında Analiz</h3>
                   <Table
                     dataSource={forecastSummary.byCategory}
                     rowKey="categoryName"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                     columns={[
                       { title: 'Kategori', dataIndex: 'categoryName', key: 'categoryName' },
                       { title: 'Ürün Sayısı', dataIndex: 'productCount', key: 'productCount' },
@@ -597,39 +550,43 @@ export default function ForecastingPage() {
                       },
                     ]}
                   />
-                </Card>
+                </div>
               )}
 
               {/* Top Reorder Products */}
               {forecastSummary.topReorderProducts && forecastSummary.topReorderProducts.length > 0 && (
-                <Card title="En Acil Siparişler">
+                <div className="bg-white border border-slate-200 rounded-xl p-6">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">En Acil Siparişler</h3>
                   <Table
                     dataSource={forecastSummary.topReorderProducts}
                     columns={riskColumns}
                     rowKey="productId"
                     pagination={false}
                     size="small"
+                    className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                   />
-                </Card>
+                </div>
               )}
             </>
           ) : (
             <Empty description="Tahmin verisi bulunamadı" />
           )}
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <WarningOutlined />
-              Stok Tükenme Riski
-              {riskProducts && riskProducts.length > 0 && (
-                <Badge count={riskProducts.length} style={{ marginLeft: 8 }} />
-              )}
-            </span>
-          }
-          key="risk"
-        >
+        </>
+      ),
+    },
+    {
+      key: 'risk',
+      label: (
+        <span className="flex items-center gap-2">
+          <WarningOutlined />
+          Stok Tükenme Riski
+          {riskProducts && riskProducts.length > 0 && (
+            <Badge count={riskProducts.length} className="ml-2" />
+          )}
+        </span>
+      ),
+      children: (
+        <>
           {riskProducts && riskProducts.length > 0 ? (
             <>
               <Alert
@@ -637,7 +594,7 @@ export default function ForecastingPage() {
                 description={`${riskProducts.length} ürün önümüzdeki 7 gün içinde stok tükenme riski altında.`}
                 type="warning"
                 showIcon
-                style={{ marginBottom: 16 }}
+                className="mb-4"
               />
               <Table
                 dataSource={riskProducts}
@@ -645,49 +602,51 @@ export default function ForecastingPage() {
                 rowKey="productId"
                 loading={riskLoading}
                 pagination={{ pageSize: 20 }}
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
             </>
           ) : (
             <Empty description="Stok tükenme riski olan ürün bulunmamaktadır" />
           )}
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <ShoppingCartOutlined />
-              Sipariş Önerileri
-              {suggestions?.pendingCount && suggestions.pendingCount > 0 && (
-                <Badge count={suggestions.pendingCount} style={{ marginLeft: 8 }} />
-              )}
-            </span>
-          }
-          key="suggestions"
-        >
-          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            <Col>
-              <Button
-                type="primary"
-                icon={<SyncOutlined />}
-                onClick={() => generateSuggestions.mutate({
-                  categoryId: selectedCategoryId,
-                  warehouseId: selectedWarehouseId,
-                })}
-                loading={generateSuggestions.isPending}
-              >
-                Önerileri Yeniden Oluştur
-              </Button>
-            </Col>
+        </>
+      ),
+    },
+    {
+      key: 'suggestions',
+      label: (
+        <span className="flex items-center gap-2">
+          <ShoppingCartOutlined />
+          Sipariş Önerileri
+          {suggestions?.pendingCount && suggestions.pendingCount > 0 && (
+            <Badge count={suggestions.pendingCount} className="ml-2" />
+          )}
+        </span>
+      ),
+      children: (
+        <>
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              type="primary"
+              icon={<SyncOutlined />}
+              className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
+              onClick={() => generateSuggestions.mutate({
+                categoryId: selectedCategoryId,
+                warehouseId: selectedWarehouseId,
+              })}
+              loading={generateSuggestions.isPending}
+            >
+              Önerileri Yeniden Oluştur
+            </Button>
             {suggestions && (
-              <Col flex="auto">
+              <div className="flex-1">
                 <Space>
                   <Tag color="blue">Bekleyen: {suggestions.pendingCount}</Tag>
                   <Tag color="green">Onaylanan: {suggestions.approvedCount}</Tag>
                   <Tag>Toplam Değer: {suggestions.totalPendingValue.toLocaleString('tr-TR')} TRY</Tag>
                 </Space>
-              </Col>
+              </div>
             )}
-          </Row>
+          </div>
 
           <Table
             dataSource={suggestions?.items || []}
@@ -699,15 +658,23 @@ export default function ForecastingPage() {
               pageSize: suggestions?.pageSize || 20,
               showTotal: (total) => `Toplam ${total} öneri`,
             }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
           />
-        </TabPane>
-
-        <TabPane
-          tab={<span><BulbOutlined /> Optimizasyon Önerileri</span>}
-          key="optimization"
-        >
+        </>
+      ),
+    },
+    {
+      key: 'optimization',
+      label: (
+        <span className="flex items-center gap-2">
+          <BulbOutlined />
+          Optimizasyon Önerileri
+        </span>
+      ),
+      children: (
+        <>
           {optimizationsLoading ? (
-            <div style={{ textAlign: 'center', padding: 50 }}>
+            <div className="flex items-center justify-center py-12">
               <Spin size="large" />
             </div>
           ) : optimizations && optimizations.length > 0 ? (
@@ -717,18 +684,19 @@ export default function ForecastingPage() {
                 description="Aşağıdaki tabloda ürünleriniz için önerilen stok seviyesi optimizasyonları gösterilmektedir."
                 type="info"
                 showIcon
-                style={{ marginBottom: 16 }}
+                className="mb-4"
               />
               <Table
                 dataSource={optimizations}
                 columns={optimizationColumns}
                 rowKey="productId"
                 pagination={{ pageSize: 20 }}
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                 expandable={{
                   expandedRowRender: (record) => (
-                    <div style={{ padding: 16 }}>
-                      <Title level={5}>Öneriler</Title>
-                      <ul>
+                    <div className="p-4">
+                      <h5 className="text-sm font-medium text-slate-900 mb-2">Öneriler</h5>
+                      <ul className="list-disc pl-5 text-sm text-slate-600">
                         {record.recommendations.map((rec, index) => (
                           <li key={index}>{rec}</li>
                         ))}
@@ -741,12 +709,86 @@ export default function ForecastingPage() {
           ) : (
             <Empty description="Optimizasyon önerisi bulunamadı" />
           )}
-        </TabPane>
-      </Tabs>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+            <LineChartOutlined />
+            Stok Tahminleme & Otomatik Yeniden Sipariş
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Stok tükenme tahminleri ve otomatik sipariş önerilerini yönetin
+          </p>
+        </div>
+        <Space size="middle">
+          <Select
+            placeholder="Kategori"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedCategoryId}
+            onChange={setSelectedCategoryId}
+          >
+            {categories?.map((cat) => (
+              <Select.Option key={cat.id} value={cat.id}>{cat.name}</Select.Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Depo"
+            allowClear
+            style={{ width: 180 }}
+            value={selectedWarehouseId}
+            onChange={setSelectedWarehouseId}
+          >
+            {warehouses?.map((wh) => (
+              <Select.Option key={wh.id} value={wh.id}>{wh.name}</Select.Option>
+            ))}
+          </Select>
+          <Select
+            value={forecastDays}
+            onChange={setForecastDays}
+            style={{ width: 140 }}
+          >
+            <Select.Option value={7}>7 Gün</Select.Option>
+            <Select.Option value={14}>14 Gün</Select.Option>
+            <Select.Option value={30}>30 Gün</Select.Option>
+            <Select.Option value={60}>60 Gün</Select.Option>
+            <Select.Option value={90}>90 Gün</Select.Option>
+          </Select>
+          <Button
+            icon={<ReloadOutlined />}
+            className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
+            onClick={() => {
+              refetchSummary();
+              refetchSuggestions();
+            }}
+          >
+            Yenile
+          </Button>
+        </Space>
+      </div>
+
+      {/* Tabs Content */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
+      </div>
 
       {/* Product Detail Modal */}
       <Modal
-        title="Ürün Tahmin Detayı"
+        title={
+          <span className="text-lg font-semibold text-slate-900">Ürün Tahmin Detayı</span>
+        }
         open={detailModalVisible}
         onCancel={() => {
           setDetailModalVisible(false);
@@ -757,7 +799,7 @@ export default function ForecastingPage() {
       >
         {selectedProductId && productForecast ? (
           <>
-            <Descriptions bordered size="small" column={2} style={{ marginBottom: 16 }}>
+            <Descriptions bordered size="small" column={2} className="mb-4">
               <Descriptions.Item label="Ürün Kodu">{productForecast.productCode}</Descriptions.Item>
               <Descriptions.Item label="Ürün Adı">{productForecast.productName}</Descriptions.Item>
               <Descriptions.Item label="Mevcut Stok">{productForecast.currentStock.toFixed(0)}</Descriptions.Item>
@@ -771,14 +813,16 @@ export default function ForecastingPage() {
               </Descriptions.Item>
               <Descriptions.Item label="Trend">
                 {getTrendIcon(productForecast.trendDirection)}
-                {' '}
-                {productForecast.trendDirection > 0.05 ? 'Artıyor' :
-                  productForecast.trendDirection < -0.05 ? 'Azalıyor' : 'Sabit'}
+                <span className="ml-2">
+                  {productForecast.trendDirection > 0.05 ? 'Artıyor' :
+                    productForecast.trendDirection < -0.05 ? 'Azalıyor' : 'Sabit'}
+                </span>
               </Descriptions.Item>
               <Descriptions.Item label="Tahmin Doğruluğu">
                 <Progress
                   percent={Math.round(productForecast.forecastAccuracy * 100)}
                   size="small"
+                  strokeColor={MONOCHROME_COLORS[0]}
                   status={productForecast.forecastAccuracy > 0.8 ? 'success' : 'normal'}
                 />
               </Descriptions.Item>
@@ -789,7 +833,7 @@ export default function ForecastingPage() {
               <Alert
                 message="Sipariş Önerisi"
                 description={
-                  <div>
+                  <div className="text-sm">
                     <p><strong>Önerilen Miktar:</strong> {productForecast.suggestedReorderQuantity.toFixed(0)}</p>
                     {productForecast.suggestedOrderDate && (
                       <p><strong>Önerilen Sipariş Tarihi:</strong> {new Date(productForecast.suggestedOrderDate).toLocaleDateString('tr-TR')}</p>
@@ -799,49 +843,42 @@ export default function ForecastingPage() {
                 }
                 type="warning"
                 showIcon
-                style={{ marginBottom: 16 }}
+                className="mb-4"
               />
             )}
 
             {safetyStock && (
-              <Card title="Emniyet Stoğu Hesabı" size="small" style={{ marginBottom: 16 }}>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Statistic
-                      title="Mevcut Emniyet Stoğu"
-                      value={safetyStock.currentSafetyStock}
-                      precision={0}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="Önerilen Emniyet Stoğu"
-                      value={safetyStock.recommendedSafetyStock}
-                      precision={0}
-                      valueStyle={{
-                        color: safetyStock.recommendedSafetyStock !== safetyStock.currentSafetyStock ? '#faad14' : '#52c41a'
-                      }}
-                    />
-                  </Col>
-                </Row>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-                  {safetyStock.formula}
-                </Text>
-              </Card>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+                <h4 className="text-sm font-medium text-slate-900 mb-3">Emniyet Stoğu Hesabı</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Mevcut Emniyet Stoğu</p>
+                    <p className="text-xl font-bold text-slate-900">{safetyStock.currentSafetyStock.toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Önerilen Emniyet Stoğu</p>
+                    <p className={`text-xl font-bold ${safetyStock.recommendedSafetyStock !== safetyStock.currentSafetyStock ? 'text-amber-600' : 'text-slate-900'}`}>
+                      {safetyStock.recommendedSafetyStock.toFixed(0)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">{safetyStock.formula}</p>
+              </div>
             )}
 
             {optimization && optimization.recommendations.length > 0 && (
-              <Card title="Optimizasyon Önerileri" size="small">
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <h4 className="text-sm font-medium text-slate-900 mb-3">Optimizasyon Önerileri</h4>
+                <ul className="list-disc pl-5 text-sm text-slate-600">
                   {optimization.recommendations.map((rec, index) => (
                     <li key={index}>{rec}</li>
                   ))}
                 </ul>
-              </Card>
+              </div>
             )}
           </>
         ) : (
-          <div style={{ textAlign: 'center', padding: 50 }}>
+          <div className="flex items-center justify-center py-12">
             <Spin />
           </div>
         )}

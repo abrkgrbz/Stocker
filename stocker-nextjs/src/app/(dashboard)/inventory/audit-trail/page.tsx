@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
-  Typography,
-  Card,
-  Row,
-  Col,
   Table,
   Space,
   Tag,
   Select,
   DatePicker,
   Input,
-  Statistic,
   Empty,
   Spin,
   Tooltip,
@@ -23,18 +18,17 @@ import {
   Tabs,
   List,
   Avatar,
+  Button,
 } from 'antd';
 import {
   AuditOutlined,
   UserOutlined,
-  ClockCircleOutlined,
   SearchOutlined,
   FilterOutlined,
   HistoryOutlined,
   PlusCircleOutlined,
   EditOutlined,
   DeleteOutlined,
-  InfoCircleOutlined,
   WarningOutlined,
   CheckCircleOutlined,
   GlobalOutlined,
@@ -42,6 +36,7 @@ import {
   BarChartOutlined,
   CalendarOutlined,
   EyeOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import {
   useAuditLogs,
@@ -53,10 +48,7 @@ import {
 import type {
   InventoryAuditFilterDto,
   InventoryAuditLogDto,
-  FieldChangeDto,
-  AuditSummaryByEntityDto,
   AuditSummaryByUserDto,
-  AuditActivityByDateDto,
 } from '@/lib/api/services/inventory.types';
 import {
   InventoryEntityTypeLabels,
@@ -70,27 +62,26 @@ import 'dayjs/locale/tr';
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
 
-// Action colors for tags
+// Action colors for tags (monochrome)
 const actionColors: Record<string, string> = {
-  Created: 'green',
-  Updated: 'blue',
-  Deleted: 'red',
-  Activated: 'cyan',
-  Deactivated: 'orange',
-  StatusChanged: 'purple',
-  QuantityAdjusted: 'geekblue',
-  PriceChanged: 'gold',
-  Transferred: 'lime',
-  Reserved: 'volcano',
-  Released: 'magenta',
+  Created: 'default',
+  Updated: 'processing',
+  Deleted: 'error',
+  Activated: 'success',
+  Deactivated: 'warning',
+  StatusChanged: 'processing',
+  QuantityAdjusted: 'processing',
+  PriceChanged: 'warning',
+  Transferred: 'processing',
+  Reserved: 'warning',
+  Released: 'success',
   Counted: 'processing',
   Approved: 'success',
   Rejected: 'error',
-  Received: 'green',
-  Shipped: 'blue',
+  Received: 'success',
+  Shipped: 'processing',
   Completed: 'success',
   Cancelled: 'default',
 };
@@ -117,8 +108,8 @@ export default function AuditTrailPage() {
   const [dashboardDays, setDashboardDays] = useState(30);
 
   // Queries
-  const { data: auditLogsData, isLoading: logsLoading } = useAuditLogs(filter);
-  const { data: dashboardData, isLoading: dashboardLoading } = useAuditDashboard(dashboardDays);
+  const { data: auditLogsData, isLoading: logsLoading, refetch: refetchLogs } = useAuditLogs(filter);
+  const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useAuditDashboard(dashboardDays);
   const { data: entityTypes } = useAuditEntityTypes();
   const { data: actionTypes } = useAuditActionTypes();
   const { data: entityHistoryData, isLoading: historyLoading } = useEntityHistory(
@@ -131,7 +122,7 @@ export default function AuditTrailPage() {
     setFilter((prev) => ({
       ...prev,
       [key]: value,
-      pageNumber: 1, // Reset to first page on filter change
+      pageNumber: 1,
     }));
   };
 
@@ -167,10 +158,8 @@ export default function AuditTrailPage() {
       render: (timestamp: string) => (
         <Tooltip title={dayjs(timestamp).format('DD.MM.YYYY HH:mm:ss')}>
           <Space direction="vertical" size={0}>
-            <Text strong>{dayjs(timestamp).format('DD.MM.YYYY')}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {dayjs(timestamp).format('HH:mm:ss')}
-            </Text>
+            <span className="font-medium text-slate-900">{dayjs(timestamp).format('DD.MM.YYYY')}</span>
+            <span className="text-xs text-slate-500">{dayjs(timestamp).format('HH:mm:ss')}</span>
           </Space>
         </Tooltip>
       ),
@@ -181,10 +170,10 @@ export default function AuditTrailPage() {
       width: 200,
       render: (_, record) => (
         <Space direction="vertical" size={0}>
-          <Tag color="blue">
+          <Tag className="!bg-slate-100 !text-slate-700 !border-slate-200">
             {InventoryEntityTypeLabels[record.entityType as keyof typeof InventoryEntityTypeLabels] || record.entityType}
           </Tag>
-          <Text style={{ fontSize: 13 }}>{record.entityName}</Text>
+          <span className="text-sm text-slate-600">{record.entityName}</span>
         </Space>
       ),
     },
@@ -203,61 +192,57 @@ export default function AuditTrailPage() {
       ),
     },
     {
-      title: 'Kullanici',
+      title: 'Kullanıcı',
       key: 'user',
       width: 160,
       render: (_, record) => (
         <Space>
-          <Avatar size="small" icon={<UserOutlined />} />
+          <Avatar size="small" icon={<UserOutlined />} className="!bg-slate-200" />
           <Space direction="vertical" size={0}>
-            <Text>{record.userName}</Text>
+            <span className="text-slate-900">{record.userName}</span>
             {record.userEmail && (
-              <Text type="secondary" style={{ fontSize: 11 }}>
-                {record.userEmail}
-              </Text>
+              <span className="text-xs text-slate-500">{record.userEmail}</span>
             )}
           </Space>
         </Space>
       ),
     },
     {
-      title: 'Degisiklikler',
+      title: 'Değişiklikler',
       key: 'changes',
       width: 200,
       render: (_, record) => {
         if (!record.changes || record.changes.length === 0) {
-          return <Text type="secondary">-</Text>;
+          return <span className="text-slate-400">-</span>;
         }
         return (
           <Space direction="vertical" size={0}>
             {record.changes.slice(0, 2).map((change, idx) => (
-              <Text key={idx} style={{ fontSize: 12 }}>
+              <span key={idx} className="text-xs text-slate-600">
                 <strong>{change.fieldLabel}</strong>: {change.oldValue || '-'} → {change.newValue || '-'}
-              </Text>
+              </span>
             ))}
             {record.changes.length > 2 && (
-              <Text type="secondary" style={{ fontSize: 11 }}>
-                +{record.changes.length - 2} daha...
-              </Text>
+              <span className="text-xs text-slate-400">+{record.changes.length - 2} daha...</span>
             )}
           </Space>
         );
       },
     },
     {
-      title: 'Islemler',
+      title: 'İşlemler',
       key: 'actions',
       width: 100,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Detay">
-            <a onClick={() => openDetailModal(record)}>
+            <a onClick={() => openDetailModal(record)} className="text-slate-600 hover:text-slate-900">
               <EyeOutlined />
             </a>
           </Tooltip>
-          <Tooltip title="Gecmis">
-            <a onClick={() => openHistoryModal(record.entityType, record.entityId)}>
+          <Tooltip title="Geçmiş">
+            <a onClick={() => openHistoryModal(record.entityType, record.entityId)} className="text-slate-600 hover:text-slate-900">
               <HistoryOutlined />
             </a>
           </Tooltip>
@@ -270,89 +255,101 @@ export default function AuditTrailPage() {
   const renderDashboard = () => {
     if (dashboardLoading) {
       return (
-        <div style={{ textAlign: 'center', padding: 100 }}>
+        <div className="flex justify-center items-center py-20">
           <Spin size="large" />
         </div>
       );
     }
 
     if (!dashboardData) {
-      return <Empty description="Veri bulunamadi" />;
+      return <Empty description="Veri bulunamadı" />;
     }
 
     return (
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <div className="space-y-6">
         {/* Period selector */}
-        <Card size="small">
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
           <Space>
-            <Text>Zaman Araligi:</Text>
+            <span className="text-sm text-slate-600">Zaman Aralığı:</span>
             <Select
               value={dashboardDays}
               onChange={setDashboardDays}
               style={{ width: 150 }}
+              className="[&_.ant-select-selector]:!border-slate-300"
               options={[
-                { value: 7, label: 'Son 7 Gun' },
-                { value: 14, label: 'Son 14 Gun' },
-                { value: 30, label: 'Son 30 Gun' },
-                { value: 60, label: 'Son 60 Gun' },
-                { value: 90, label: 'Son 90 Gun' },
+                { value: 7, label: 'Son 7 Gün' },
+                { value: 14, label: 'Son 14 Gün' },
+                { value: 30, label: 'Son 30 Gün' },
+                { value: 60, label: 'Son 60 Gün' },
+                { value: 90, label: 'Son 90 Gün' },
               ]}
             />
           </Space>
-        </Card>
+        </div>
 
         {/* KPI Cards */}
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
-            <Card>
-              <Statistic
-                title="Toplam Log"
-                value={dashboardData.totalAuditLogs}
-                prefix={<AuditOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card>
-              <Statistic
-                title="Bugun"
-                value={dashboardData.todayCount}
-                prefix={<CalendarOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card>
-              <Statistic
-                title="Bu Hafta"
-                value={dashboardData.thisWeekCount}
-                prefix={<BarChartOutlined />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card>
-              <Statistic
-                title="Bu Ay"
-                value={dashboardData.thisMonthCount}
-                prefix={<GlobalOutlined />}
-                valueStyle={{ color: '#722ed1' }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                <AuditOutlined className="mr-2" />
+                Toplam Log
+              </p>
+              <div className="text-3xl font-bold text-slate-900">
+                {dashboardData.totalAuditLogs.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                <CalendarOutlined className="mr-2" />
+                Bugün
+              </p>
+              <div className="text-3xl font-bold text-slate-900">
+                {dashboardData.todayCount.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                <BarChartOutlined className="mr-2" />
+                Bu Hafta
+              </p>
+              <div className="text-3xl font-bold text-slate-900">
+                {dashboardData.thisWeekCount.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          </div>
+          <div className="col-span-3">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                <GlobalOutlined className="mr-2" />
+                Bu Ay
+              </p>
+              <div className="text-3xl font-bold text-slate-900">
+                {dashboardData.thisMonthCount.toLocaleString('tr-TR')}
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <Row gutter={[16, 16]}>
+        <div className="grid grid-cols-12 gap-6">
           {/* By Entity Type */}
-          <Col xs={24} lg={12}>
-            <Card title={<Space><FilterOutlined /> Varlik Tipine Gore</Space>} size="small">
+          <div className="col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <FilterOutlined className="text-slate-500" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Varlık Tipine Göre
+                </p>
+              </div>
               <Table
                 dataSource={dashboardData.byEntityType}
                 columns={[
                   {
-                    title: 'Varlik Tipi',
+                    title: 'Varlık Tipi',
                     dataIndex: 'entityTypeLabel',
                     key: 'entityTypeLabel',
                   },
@@ -360,63 +357,68 @@ export default function AuditTrailPage() {
                     title: 'Toplam',
                     dataIndex: 'totalCount',
                     key: 'totalCount',
-                    align: 'center',
+                    align: 'center' as const,
                   },
                   {
-                    title: 'Olusturma',
+                    title: 'Oluşturma',
                     dataIndex: 'createdCount',
                     key: 'createdCount',
-                    align: 'center',
-                    render: (v) => <Tag color="green">{v}</Tag>,
+                    align: 'center' as const,
+                    render: (v: number) => <Tag className="!bg-slate-100 !text-slate-700 !border-slate-200">{v}</Tag>,
                   },
                   {
-                    title: 'Guncelleme',
+                    title: 'Güncelleme',
                     dataIndex: 'updatedCount',
                     key: 'updatedCount',
-                    align: 'center',
-                    render: (v) => <Tag color="blue">{v}</Tag>,
+                    align: 'center' as const,
+                    render: (v: number) => <Tag className="!bg-slate-200 !text-slate-800 !border-slate-300">{v}</Tag>,
                   },
                   {
                     title: 'Silme',
                     dataIndex: 'deletedCount',
                     key: 'deletedCount',
-                    align: 'center',
-                    render: (v) => <Tag color="red">{v}</Tag>,
+                    align: 'center' as const,
+                    render: (v: number) => <Tag className="!bg-slate-900 !text-white !border-slate-900">{v}</Tag>,
                   },
                 ]}
                 rowKey="entityType"
                 pagination={false}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
-            </Card>
-          </Col>
+            </div>
+          </div>
 
           {/* Top Users */}
-          <Col xs={24} lg={12}>
-            <Card title={<Space><TeamOutlined /> En Aktif Kullanicilar</Space>} size="small">
+          <div className="col-span-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <TeamOutlined className="text-slate-500" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  En Aktif Kullanıcılar
+                </p>
+              </div>
               <List
                 dataSource={dashboardData.topUsers}
                 renderItem={(user: AuditSummaryByUserDto, index) => (
-                  <List.Item>
+                  <List.Item className="!border-slate-100">
                     <List.Item.Meta
                       avatar={
                         <Avatar
-                          style={{
-                            backgroundColor: index < 3 ? '#1890ff' : '#d9d9d9',
-                          }}
+                          className={index < 3 ? '!bg-slate-900' : '!bg-slate-300'}
                         >
                           {index + 1}
                         </Avatar>
                       }
-                      title={user.userName}
+                      title={<span className="text-slate-900">{user.userName}</span>}
                       description={
                         <Space>
-                          <Badge count={user.totalActions} showZero style={{ backgroundColor: '#52c41a' }} />
-                          <Text type="secondary">islem</Text>
+                          <Badge count={user.totalActions} showZero className="[&_.ant-badge-count]:!bg-slate-900" />
+                          <span className="text-slate-500">işlem</span>
                           {user.lastActivityDate && (
-                            <Text type="secondary" style={{ fontSize: 11 }}>
+                            <span className="text-xs text-slate-400">
                               - Son: {dayjs(user.lastActivityDate).fromNow()}
-                            </Text>
+                            </span>
                           )}
                         </Space>
                       }
@@ -424,17 +426,23 @@ export default function AuditTrailPage() {
                   </List.Item>
                 )}
               />
-            </Card>
-          </Col>
-        </Row>
+            </div>
+          </div>
+        </div>
 
         {/* Recent Activities */}
-        <Card title={<Space><HistoryOutlined /> Son Aktiviteler</Space>} size="small">
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <HistoryOutlined className="text-slate-500" />
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Son Aktiviteler
+            </p>
+          </div>
           <Timeline
             items={dashboardData.recentActivities.slice(0, 10).map((activity) => ({
-              color: actionColors[activity.action] === 'red' ? 'red' :
-                     actionColors[activity.action] === 'green' ? 'green' :
-                     actionColors[activity.action] === 'blue' ? 'blue' : 'gray',
+              color: actionColors[activity.action] === 'error' ? 'red' :
+                     actionColors[activity.action] === 'success' ? 'green' :
+                     actionColors[activity.action] === 'processing' ? 'blue' : 'gray',
               children: (
                 <Space direction="vertical" size={0}>
                   <Space>
@@ -444,33 +452,33 @@ export default function AuditTrailPage() {
                     >
                       {activity.actionLabel}
                     </Tag>
-                    <Text strong>
+                    <span className="font-medium text-slate-900">
                       {InventoryEntityTypeLabels[activity.entityType as keyof typeof InventoryEntityTypeLabels] || activity.entityType}
-                    </Text>
-                    <Text>- {activity.entityName}</Text>
+                    </span>
+                    <span className="text-slate-600">- {activity.entityName}</span>
                   </Space>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
+                  <span className="text-xs text-slate-500">
                     {activity.userName} - {dayjs(activity.timestamp).fromNow()}
-                  </Text>
+                  </span>
                 </Space>
               ),
             }))}
           />
-        </Card>
-      </Space>
+        </div>
+      </div>
     );
   };
 
   // Render logs tab
   const renderLogs = () => {
     return (
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <div className="space-y-6">
         {/* Filters */}
-        <Card size="small">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={6}>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-3">
               <Select
-                placeholder="Varlik Tipi"
+                placeholder="Varlık Tipi"
                 allowClear
                 style={{ width: '100%' }}
                 value={filter.entityType}
@@ -479,9 +487,10 @@ export default function AuditTrailPage() {
                   value: key,
                   label: label,
                 }))}
+                className="[&_.ant-select-selector]:!border-slate-300"
               />
-            </Col>
-            <Col xs={24} sm={12} md={6}>
+            </div>
+            <div className="col-span-3">
               <Select
                 placeholder="Eylem"
                 allowClear
@@ -492,30 +501,33 @@ export default function AuditTrailPage() {
                   value: key,
                   label: label,
                 }))}
+                className="[&_.ant-select-selector]:!border-slate-300"
               />
-            </Col>
-            <Col xs={24} sm={12} md={6}>
+            </div>
+            <div className="col-span-3">
               <Input
-                placeholder="Varlik ID"
+                placeholder="Varlık ID"
                 allowClear
                 value={filter.entityId}
                 onChange={(e) => handleFilterChange('entityId', e.target.value)}
-                prefix={<SearchOutlined />}
+                prefix={<SearchOutlined className="text-slate-400" />}
+                className="[&_.ant-input]:!border-slate-300"
               />
-            </Col>
-            <Col xs={24} sm={12} md={6}>
+            </div>
+            <div className="col-span-3">
               <RangePicker
                 style={{ width: '100%' }}
-                placeholder={['Baslangic', 'Bitis']}
+                placeholder={['Başlangıç', 'Bitiş']}
                 onChange={handleDateRangeChange}
                 format="DD.MM.YYYY"
+                className="[&_.ant-picker-input_input]:!text-slate-700"
               />
-            </Col>
-          </Row>
-        </Card>
+            </div>
+          </div>
+        </div>
 
         {/* Table */}
-        <Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
           <Table
             columns={columns}
             dataSource={auditLogsData?.items || []}
@@ -526,7 +538,7 @@ export default function AuditTrailPage() {
               pageSize: filter.pageSize,
               total: auditLogsData?.totalCount || 0,
               showSizeChanger: true,
-              showTotal: (total) => `Toplam ${total} kayit`,
+              showTotal: (total) => `Toplam ${total} kayıt`,
               onChange: (page, pageSize) => {
                 setFilter((prev) => ({
                   ...prev,
@@ -537,9 +549,10 @@ export default function AuditTrailPage() {
             }}
             scroll={{ x: 1100 }}
             size="small"
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
           />
-        </Card>
-      </Space>
+        </div>
+      </div>
     );
   };
 
@@ -552,7 +565,7 @@ export default function AuditTrailPage() {
         title={
           <Space>
             <AuditOutlined />
-            Log Detayi
+            Log Detayı
           </Space>
         }
         open={detailModalVisible}
@@ -566,21 +579,21 @@ export default function AuditTrailPage() {
             <Descriptions.Item label="Tarih">
               {dayjs(selectedLog.timestamp).format('DD.MM.YYYY HH:mm:ss')}
             </Descriptions.Item>
-            <Descriptions.Item label="Varlik Tipi">
-              <Tag color="blue">
+            <Descriptions.Item label="Varlık Tipi">
+              <Tag className="!bg-slate-100 !text-slate-700 !border-slate-200">
                 {InventoryEntityTypeLabels[selectedLog.entityType as keyof typeof InventoryEntityTypeLabels] || selectedLog.entityType}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Varlik ID">{selectedLog.entityId}</Descriptions.Item>
-            <Descriptions.Item label="Varlik Adi" span={2}>{selectedLog.entityName}</Descriptions.Item>
+            <Descriptions.Item label="Varlık ID">{selectedLog.entityId}</Descriptions.Item>
+            <Descriptions.Item label="Varlık Adı" span={2}>{selectedLog.entityName}</Descriptions.Item>
             <Descriptions.Item label="Eylem">
               <Tag color={actionColors[selectedLog.action] || 'default'}>
                 {selectedLog.actionLabel || selectedLog.action}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Kullanici">
+            <Descriptions.Item label="Kullanıcı">
               <Space>
-                <Avatar size="small" icon={<UserOutlined />} />
+                <Avatar size="small" icon={<UserOutlined />} className="!bg-slate-200" />
                 {selectedLog.userName}
               </Space>
             </Descriptions.Item>
@@ -593,7 +606,8 @@ export default function AuditTrailPage() {
           </Descriptions>
 
           {selectedLog.changes && selectedLog.changes.length > 0 && (
-            <Card title="Degisiklikler" size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Değişiklikler</p>
               <Table
                 dataSource={selectedLog.changes}
                 columns={[
@@ -604,39 +618,42 @@ export default function AuditTrailPage() {
                     width: 150,
                   },
                   {
-                    title: 'Eski Deger',
+                    title: 'Eski Değer',
                     dataIndex: 'oldValue',
                     key: 'oldValue',
-                    render: (v) => v || <Text type="secondary">-</Text>,
+                    render: (v) => v || <span className="text-slate-400">-</span>,
                   },
                   {
-                    title: 'Yeni Deger',
+                    title: 'Yeni Değer',
                     dataIndex: 'newValue',
                     key: 'newValue',
-                    render: (v) => v || <Text type="secondary">-</Text>,
+                    render: (v) => v || <span className="text-slate-400">-</span>,
                   },
                 ]}
                 rowKey="fieldName"
                 pagination={false}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
-            </Card>
+            </div>
           )}
 
           {selectedLog.oldValues && (
-            <Card title="Eski Degerler (JSON)" size="small">
-              <pre style={{ fontSize: 11, maxHeight: 200, overflow: 'auto' }}>
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Eski Değerler (JSON)</p>
+              <pre className="text-xs max-h-48 overflow-auto bg-slate-50 p-3 rounded-lg">
                 {JSON.stringify(JSON.parse(selectedLog.oldValues), null, 2)}
               </pre>
-            </Card>
+            </div>
           )}
 
           {selectedLog.newValues && (
-            <Card title="Yeni Degerler (JSON)" size="small">
-              <pre style={{ fontSize: 11, maxHeight: 200, overflow: 'auto' }}>
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Yeni Değerler (JSON)</p>
+              <pre className="text-xs max-h-48 overflow-auto bg-slate-50 p-3 rounded-lg">
                 {JSON.stringify(JSON.parse(selectedLog.newValues), null, 2)}
               </pre>
-            </Card>
+            </div>
           )}
         </Space>
       </Modal>
@@ -650,7 +667,7 @@ export default function AuditTrailPage() {
         title={
           <Space>
             <HistoryOutlined />
-            Varlik Gecmisi
+            Varlık Geçmişi
           </Space>
         }
         open={historyModalVisible}
@@ -662,56 +679,57 @@ export default function AuditTrailPage() {
         width={800}
       >
         {historyLoading ? (
-          <div style={{ textAlign: 'center', padding: 50 }}>
+          <div className="flex justify-center items-center py-12">
             <Spin size="large" />
           </div>
         ) : entityHistoryData ? (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Varlik Tipi">
-                <Tag color="blue">
+              <Descriptions.Item label="Varlık Tipi">
+                <Tag className="!bg-slate-100 !text-slate-700 !border-slate-200">
                   {InventoryEntityTypeLabels[entityHistoryData.entityType as keyof typeof InventoryEntityTypeLabels] || entityHistoryData.entityType}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Varlik ID">{entityHistoryData.entityId}</Descriptions.Item>
-              <Descriptions.Item label="Varlik Adi" span={2}>{entityHistoryData.entityName}</Descriptions.Item>
-              <Descriptions.Item label="Olusturulma">
+              <Descriptions.Item label="Varlık ID">{entityHistoryData.entityId}</Descriptions.Item>
+              <Descriptions.Item label="Varlık Adı" span={2}>{entityHistoryData.entityName}</Descriptions.Item>
+              <Descriptions.Item label="Oluşturulma">
                 {dayjs(entityHistoryData.createdAt).format('DD.MM.YYYY HH:mm')} - {entityHistoryData.createdBy}
               </Descriptions.Item>
-              <Descriptions.Item label="Son Guncelleme">
+              <Descriptions.Item label="Son Güncelleme">
                 {entityHistoryData.lastModifiedAt
                   ? `${dayjs(entityHistoryData.lastModifiedAt).format('DD.MM.YYYY HH:mm')} - ${entityHistoryData.lastModifiedBy}`
                   : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Toplam Degisiklik" span={2}>
-                <Badge count={entityHistoryData.totalChanges} showZero style={{ backgroundColor: '#1890ff' }} />
+              <Descriptions.Item label="Toplam Değişiklik" span={2}>
+                <Badge count={entityHistoryData.totalChanges} showZero className="[&_.ant-badge-count]:!bg-slate-900" />
               </Descriptions.Item>
             </Descriptions>
 
-            <Card title="Degisiklik Gecmisi" size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Değişiklik Geçmişi</p>
               <Timeline
                 items={entityHistoryData.changes.map((change) => ({
-                  color: actionColors[change.action] === 'red' ? 'red' :
-                         actionColors[change.action] === 'green' ? 'green' :
-                         actionColors[change.action] === 'blue' ? 'blue' : 'gray',
+                  color: actionColors[change.action] === 'error' ? 'red' :
+                         actionColors[change.action] === 'success' ? 'green' :
+                         actionColors[change.action] === 'processing' ? 'blue' : 'gray',
                   children: (
                     <Space direction="vertical" size={0}>
                       <Space>
                         <Tag color={actionColors[change.action] || 'default'}>
                           {change.actionLabel}
                         </Tag>
-                        <Text type="secondary">
+                        <span className="text-slate-500">
                           {dayjs(change.timestamp).format('DD.MM.YYYY HH:mm:ss')}
-                        </Text>
+                        </span>
                       </Space>
-                      <Text>{change.userName}</Text>
+                      <span className="text-slate-900">{change.userName}</span>
                       {change.changes && change.changes.length > 0 && (
-                        <div style={{ marginTop: 4 }}>
+                        <div className="mt-1">
                           {change.changes.map((c, idx) => (
-                            <div key={idx} style={{ fontSize: 12 }}>
-                              <Text type="secondary">{c.fieldLabel}:</Text>{' '}
-                              <Text delete>{c.oldValue || '-'}</Text>{' '}
-                              → <Text strong>{c.newValue || '-'}</Text>
+                            <div key={idx} className="text-xs">
+                              <span className="text-slate-500">{c.fieldLabel}:</span>{' '}
+                              <span className="line-through text-slate-400">{c.oldValue || '-'}</span>{' '}
+                              → <span className="font-medium text-slate-900">{c.newValue || '-'}</span>
                             </div>
                           ))}
                         </div>
@@ -720,10 +738,10 @@ export default function AuditTrailPage() {
                   ),
                 }))}
               />
-            </Card>
+            </div>
           </Space>
         ) : (
-          <Empty description="Gecmis bulunamadi" />
+          <Empty description="Geçmiş bulunamadı" />
         )}
       </Modal>
     );
@@ -733,48 +751,60 @@ export default function AuditTrailPage() {
     {
       key: 'dashboard',
       label: (
-        <Space>
-          <BarChartOutlined />
-          Dashboard
-        </Space>
+        <span>
+          <BarChartOutlined /> Dashboard
+        </span>
       ),
       children: renderDashboard(),
     },
     {
       key: 'logs',
       label: (
-        <Space>
-          <AuditOutlined />
-          Log Kayitlari
-        </Space>
+        <span>
+          <AuditOutlined /> Log Kayıtları
+        </span>
       ),
       children: renderLogs(),
     },
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Header */}
+    <div className="min-h-screen bg-slate-50 p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <Title level={2} style={{ marginBottom: 4 }}>
-            <AuditOutlined /> Envanter Denetim Izi
-          </Title>
-          <Paragraph type="secondary">
-            Envanter sistemindeki tum degisiklikleri, kullanici aktivitelerini ve gecmis kayitlari goruntuleyebilirsiniz.
-          </Paragraph>
+          <h1 className="text-2xl font-bold text-slate-900">
+            <AuditOutlined className="mr-3" />
+            Envanter Denetim İzi
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Envanter sistemindeki tüm değişiklikleri, kullanıcı aktivitelerini ve geçmiş kayıtları görüntüleyebilirsiniz.
+          </p>
         </div>
+        <Space>
+          <Button
+            icon={<SyncOutlined spin={logsLoading || dashboardLoading} />}
+            onClick={() => {
+              refetchLogs();
+              refetchDashboard();
+            }}
+            className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
+          >
+            Yenile
+          </Button>
+        </Space>
+      </div>
 
-        {/* Tabs */}
-        <Card>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={tabItems}
-            size="large"
-          />
-        </Card>
-      </Space>
+      {/* Tabs */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          size="large"
+          className="[&_.ant-tabs-tab]:!text-slate-600 [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-slate-900 [&_.ant-tabs-ink-bar]:!bg-slate-900"
+        />
+      </div>
 
       {/* Modals */}
       {renderDetailModal()}
