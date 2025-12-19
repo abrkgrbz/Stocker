@@ -29,6 +29,7 @@ import {
   UnorderedListOutlined,
   TagOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   usePriceList,
@@ -261,16 +262,26 @@ export default function PriceListDetailPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 80,
+      width: 100,
       align: 'center',
       render: (_, record) => (
-        <Button
-          type="text"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => openEditModal(record)}
-          className="text-slate-500 hover:text-slate-700"
-        />
+        <Space size="small">
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/inventory/products/${record.productId}`)}
+            className="text-slate-500 hover:text-blue-600"
+            title="Ürün Detayı"
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEditModal(record)}
+            className="text-slate-500 hover:text-slate-700"
+          />
+        </Space>
       ),
     },
   ];

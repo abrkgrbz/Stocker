@@ -24,6 +24,7 @@ import {
   CalendarOutlined,
   DollarOutlined,
   AppstoreOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   useProductBundle,
@@ -198,15 +199,26 @@ export default function ProductBundleDetailPage() {
     {
       title: '',
       key: 'actions',
-      width: 50,
+      width: 100,
+      align: 'center',
       render: (_, record) => (
-        <Button
-          type="text"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleRemoveItem(record.id)}
-          size="small"
-        />
+        <Space size="small">
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/inventory/products/${record.productId}`)}
+            className="text-slate-500 hover:text-blue-600"
+            title="Ürün Detayı"
+          />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleRemoveItem(record.id)}
+            size="small"
+          />
+        </Space>
       ),
     },
   ];

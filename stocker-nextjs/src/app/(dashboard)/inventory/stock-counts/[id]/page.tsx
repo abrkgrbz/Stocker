@@ -30,6 +30,7 @@ import {
   CalendarOutlined,
   EnvironmentOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   useStockCount,
@@ -346,18 +347,30 @@ export default function StockCountDetailPage() {
     {
       title: '',
       key: 'actions',
-      width: 80,
-      render: (_, record) =>
-        stockCount.status === 'InProgress' && (
+      width: 120,
+      align: 'center',
+      render: (_, record) => (
+        <Space size="small">
           <Button
-            type="primary"
+            type="text"
             size="small"
-            onClick={() => openCountModal(record)}
-            style={{ background: '#1e293b', borderColor: '#1e293b' }}
-          >
-            {record.isCounted ? 'Düzenle' : 'Say'}
-          </Button>
-        ),
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/inventory/products/${record.productId}`)}
+            className="text-slate-500 hover:text-blue-600"
+            title="Ürün Detayı"
+          />
+          {stockCount.status === 'InProgress' && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => openCountModal(record)}
+              style={{ background: '#1e293b', borderColor: '#1e293b' }}
+            >
+              {record.isCounted ? 'Düzenle' : 'Say'}
+            </Button>
+          )}
+        </Space>
+      ),
     },
   ];
 

@@ -18,6 +18,7 @@ import {
   CalendarOutlined,
   FileTextOutlined,
   ExclamationCircleOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import {
   useStockTransfer,
@@ -345,6 +346,22 @@ export default function StockTransferDetailPage() {
       key: 'serialNumber',
       width: 100,
       render: (serial) => serial || <span className="text-slate-400">-</span>,
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 50,
+      align: 'center',
+      render: (_, record) => (
+        <Button
+          type="text"
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => router.push(`/inventory/products/${record.productId}`)}
+          className="text-slate-500 hover:text-blue-600"
+          title="Ürün Detayı"
+        />
+      ),
     },
   ];
 
