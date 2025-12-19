@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.CMS.Domain.Repositories;
 using Stocker.Modules.CMS.Infrastructure.Persistence;
 using Stocker.Modules.CMS.Infrastructure.Repositories;
+using Stocker.Modules.CMS.Interfaces;
+using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.CMS.Infrastructure;
 
@@ -21,6 +23,11 @@ public static class DependencyInjection
             {
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", CMSDbContext.Schema);
             }));
+
+        // Register CMSUnitOfWork following Pattern A (direct implementation)
+        services.AddScoped<CMSUnitOfWork>();
+        services.AddScoped<ICMSUnitOfWork>(sp => sp.GetRequiredService<CMSUnitOfWork>());
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CMSUnitOfWork>());
 
         // Core Repositories
         services.AddScoped<ICMSPageRepository, CMSPageRepository>();

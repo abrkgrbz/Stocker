@@ -7,12 +7,12 @@ using AuditLog = Stocker.Domain.Tenant.Entities.AuditLog;
 namespace Stocker.Modules.HR.Infrastructure.Persistence;
 
 /// <summary>
-/// Database context for the HR module
+/// Database context for the HR module.
+/// Transaction management is handled by HRUnitOfWork (Pattern A).
 /// </summary>
-public class HRDbContext : DbContext, IUnitOfWork
+public class HRDbContext : DbContext
 {
     private readonly ITenantService _tenantService;
-    private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _currentTransaction;
 
     // Core Employee Management
     public DbSet<Employee> Employees { get; set; } = null!;
@@ -210,66 +210,4 @@ public class HRDbContext : DbContext, IUnitOfWork
 
         return await base.SaveChangesAsync(cancellationToken);
     }
-
-    #region IUnitOfWork Implementation
-
-    /// <inheritdoc />
-    public bool HasActiveTransaction => _currentTransaction != null;
-
-    /// <inheritdoc />
-    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        if (_currentTransaction != null)
-        {
-            throw new InvalidOperationException("A transaction is already in progress.");
-        }
-
-        _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        if (_currentTransaction == null)
-        {
-            throw new InvalidOperationException("No transaction is in progress.");
-        }
-
-        try
-        {
-            await SaveChangesAsync(cancellationToken);
-            await _currentTransaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await RollbackTransactionAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await _currentTransaction.DisposeAsync();
-            _currentTransaction = null;
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
-    {
-        if (_currentTransaction == null)
-        {
-            return;
-        }
-
-        try
-        {
-            await _currentTransaction.RollbackAsync(cancellationToken);
-        }
-        finally
-        {
-            await _currentTransaction.DisposeAsync();
-            _currentTransaction = null;
-        }
-    }
-
-    #endregion
 }

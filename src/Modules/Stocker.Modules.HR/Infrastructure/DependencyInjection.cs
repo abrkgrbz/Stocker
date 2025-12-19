@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.HR.Domain.Repositories;
 using Stocker.Modules.HR.Infrastructure.Persistence;
 using Stocker.Modules.HR.Infrastructure.Repositories;
+using Stocker.Modules.HR.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.HR.Infrastructure;
@@ -47,8 +48,10 @@ public static class DependencyInjection
             return new HRDbContext(optionsBuilder.Options, tenantService);
         });
 
-        // Register IUnitOfWork for HR module (resolves to HRDbContext)
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<HRDbContext>());
+        // Register HRUnitOfWork (Pattern A - separate UnitOfWork class)
+        services.AddScoped<HRUnitOfWork>();
+        services.AddScoped<IHRUnitOfWork>(sp => sp.GetRequiredService<HRUnitOfWork>());
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<HRUnitOfWork>());
 
         // Register Core Repositories
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();

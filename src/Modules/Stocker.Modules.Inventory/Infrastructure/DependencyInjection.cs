@@ -11,6 +11,7 @@ using Stocker.Modules.Inventory.Infrastructure.EventConsumers;
 using Stocker.Modules.Inventory.Infrastructure.Persistence;
 using Stocker.Modules.Inventory.Infrastructure.Repositories;
 using Stocker.Modules.Inventory.Infrastructure.Services;
+using Stocker.Modules.Inventory.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure;
@@ -52,10 +53,18 @@ public static class DependencyInjection
             });
         }, ServiceLifetime.Scoped);
 
-        // Register IUnitOfWork for Inventory module (resolves to the SAME InventoryDbContext instance)
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
+        // Register InventoryUnitOfWork following Pattern A (BaseUnitOfWork)
+        // REPLACES: services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
+        // Pattern C (DbContext as UoW) has been eliminated per Report Issue #4
+        services.AddScoped<InventoryUnitOfWork>();
+        services.AddScoped<IInventoryUnitOfWork>(sp => sp.GetRequiredService<InventoryUnitOfWork>());
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryUnitOfWork>());
 
-        // Register specific repositories
+        // NOTE: Individual repository registrations are kept for backward compatibility.
+        // Handlers can use either:
+        //   - IInventoryUnitOfWork.Products (recommended for new code)
+        //   - IProductRepository (legacy, still supported)
+        // Both resolve to the same cached instance within the UoW scope.
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBrandRepository, BrandRepository>();
@@ -74,8 +83,6 @@ public static class DependencyInjection
         services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
         services.AddScoped<IProductBundleRepository, ProductBundleRepository>();
-
-        // Register new entity repositories
         services.AddScoped<IBarcodeDefinitionRepository, BarcodeDefinitionRepository>();
         services.AddScoped<IPackagingTypeRepository, PackagingTypeRepository>();
         services.AddScoped<IWarehouseZoneRepository, WarehouseZoneRepository>();

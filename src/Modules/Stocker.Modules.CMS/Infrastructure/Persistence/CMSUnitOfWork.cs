@@ -1,48 +1,49 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Persistence.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
-using Stocker.Modules.CRM.Interfaces;
+using Stocker.Modules.CMS.Domain.Repositories;
+using Stocker.Modules.CMS.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.CMS.Infrastructure.Repositories;
+using Stocker.Modules.CMS.Interfaces;
 using Stocker.SharedKernel.Interfaces;
-using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Primitives;
 using System.Collections.Concurrent;
 
-namespace Stocker.Modules.CRM.Infrastructure.Persistence;
+namespace Stocker.Modules.CMS.Infrastructure.Persistence;
 
 /// <summary>
-/// Unit of Work implementation for the CRM (Customer Relationship Management) module.
+/// Unit of Work implementation for the CMS (Content Management System) module.
 /// Implements IUnitOfWork directly to avoid circular dependency with Stocker.Persistence.
 ///
 /// This class provides:
 /// - Transaction management with strict mode
 /// - Repository access with caching
 /// - Domain-specific repository properties for type-safe dependency injection
-/// - Multi-tenancy support via TenantId property
 /// - IAsyncDisposable for proper async cleanup
 /// </summary>
 /// <remarks>
+/// NOTE: CMS module is stored in master database (not tenant-specific)
+/// So there's no TenantId property unlike other module UnitOfWorks.
+///
 /// Key features:
 /// - Thread-safe repository caching using ConcurrentDictionary
 /// - Strict transaction management (throws on duplicate begin, instead of silent return)
 /// - Correlation ID logging for transaction lifecycle
-/// - Exposes ALL CRM repositories
+/// - Exposes ALL CMS repositories
 ///
 /// Usage in handlers:
 /// <code>
-/// public class CreateCustomerHandler
+/// public class CreatePageHandler
 /// {
-///     private readonly ICRMUnitOfWork _unitOfWork;
+///     private readonly ICMSUnitOfWork _unitOfWork;
 ///
-///     public async Task Handle(CreateCustomerCommand command)
+///     public async Task Handle(CreatePageCommand command)
 ///     {
 ///         await _unitOfWork.BeginTransactionAsync();
 ///         try
 ///         {
-///             var customer = new Customer(...);
-///             await _unitOfWork.Customers.AddAsync(customer);
+///             var page = new CMSPage(...);
+///             await _unitOfWork.Pages.AddAsync(page);
 ///             await _unitOfWork.CommitTransactionAsync();
 ///         }
 ///         catch
@@ -54,13 +55,12 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence;
 /// }
 /// </code>
 /// </remarks>
-public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
+public sealed class CMSUnitOfWork : ICMSUnitOfWork, IAsyncDisposable
 {
     #region Fields
 
-    private readonly CRMDbContext _context;
-    private readonly ITenantService _tenantService;
-    private readonly ILogger<CRMUnitOfWork>? _logger;
+    private readonly CMSDbContext _context;
+    private readonly ILogger<CMSUnitOfWork>? _logger;
 
     private IDbContextTransaction? _transaction;
     private bool _disposed;
@@ -71,70 +71,51 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
     /// </summary>
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
 
-    // Core Customer Management repositories
-    private ICustomerRepository? _customers;
-    private IContactRepository? _contacts;
-    private ILeadRepository? _leads;
-    private IDealRepository? _deals;
+    // Core CMS repositories
+    private ICMSPageRepository? _pages;
+    private IBlogRepository? _blog;
+    private IFAQRepository? _faq;
+    private ICMSSettingRepository? _settings;
 
-    // Customer Segmentation repositories
-    private ICustomerSegmentRepository? _customerSegments;
-    private ICustomerTagRepository? _customerTags;
+    // Landing Page repositories
+    private ITestimonialRepository? _testimonials;
+    private IPricingPlanRepository? _pricingPlans;
+    private IPricingFeatureRepository? _pricingFeatures;
+    private IFeatureRepository? _features;
+    private IIndustryRepository? _industries;
+    private IIntegrationRepository? _integrations;
+    private IIntegrationItemRepository? _integrationItems;
+    private IStatRepository? _stats;
+    private IPartnerRepository? _partners;
+    private IAchievementRepository? _achievements;
 
-    // Document and Workflow repositories
-    private IDocumentRepository? _documents;
-    private IWorkflowRepository? _workflows;
-    private IWorkflowExecutionRepository? _workflowExecutions;
+    // Company Page repositories
+    private ITeamMemberRepository? _teamMembers;
+    private ICompanyValueRepository? _companyValues;
+    private IContactInfoRepository? _contactInfo;
+    private ISocialLinkRepository? _socialLinks;
 
-    // Communication repositories
-    private INotificationRepository? _notifications;
-    private IReminderRepository? _reminders;
-    private ICallLogRepository? _callLogs;
-    private IMeetingRepository? _meetings;
-
-    // Sales and Competition repositories
-    private ICompetitorRepository? _competitors;
-    private IProductInterestRepository? _productInterests;
-    private ISalesTeamRepository? _salesTeams;
-    private ITerritoryRepository? _territories;
-
-    // Social and Referral repositories
-    private ISocialMediaProfileRepository? _socialMediaProfiles;
-    private IReferralRepository? _referrals;
-    private ISurveyResponseRepository? _surveyResponses;
-
-    // Loyalty repositories
-    private ILoyaltyProgramRepository? _loyaltyPrograms;
-    private ILoyaltyMembershipRepository? _loyaltyMemberships;
+    // Documentation repositories
+    private IDocCategoryRepository? _docCategories;
+    private IDocArticleRepository? _docArticles;
 
     #endregion
 
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CRMUnitOfWork"/> class.
+    /// Initializes a new instance of the <see cref="CMSUnitOfWork"/> class.
     /// </summary>
-    /// <param name="context">The CRM database context.</param>
-    /// <param name="tenantService">The tenant service for multi-tenancy support.</param>
+    /// <param name="context">The CMS database context.</param>
     /// <param name="logger">Optional logger for transaction lifecycle events.</param>
-    /// <exception cref="ArgumentNullException">Thrown when context or tenantService is null.</exception>
-    public CRMUnitOfWork(
-        CRMDbContext context,
-        ITenantService tenantService,
-        ILogger<CRMUnitOfWork>? logger = null)
+    /// <exception cref="ArgumentNullException">Thrown when context is null.</exception>
+    public CMSUnitOfWork(
+        CMSDbContext context,
+        ILogger<CMSUnitOfWork>? logger = null)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
-        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         _logger = logger;
     }
-
-    #endregion
-
-    #region ICRMUnitOfWork Implementation
-
-    /// <inheritdoc />
-    public Guid TenantId => _tenantService.GetCurrentTenantId()
-        ?? throw new InvalidOperationException("No tenant context available. Ensure tenant middleware is configured.");
 
     #endregion
 
@@ -183,7 +164,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
         _logger?.LogDebug(
-            "Transaction started. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+            "Transaction started. CorrelationId: {CorrelationId}, Context: CMSDbContext",
             _transactionCorrelationId);
     }
 
@@ -205,14 +186,14 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
             await _transaction.CommitAsync(cancellationToken);
 
             _logger?.LogInformation(
-                "Transaction committed successfully. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction committed successfully. CorrelationId: {CorrelationId}, Context: CMSDbContext",
                 _transactionCorrelationId);
         }
         catch (Exception ex)
         {
             _logger?.LogError(
                 ex,
-                "Transaction commit failed. Rolling back. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction commit failed. Rolling back. CorrelationId: {CorrelationId}, Context: CMSDbContext",
                 _transactionCorrelationId);
 
             await RollbackTransactionInternalAsync(cancellationToken);
@@ -251,14 +232,14 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         {
             await _transaction.RollbackAsync(cancellationToken);
             _logger?.LogWarning(
-                "Transaction rolled back. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction rolled back. CorrelationId: {CorrelationId}, Context: CMSDbContext",
                 _transactionCorrelationId);
         }
         catch (Exception ex)
         {
             _logger?.LogError(
                 ex,
-                "Transaction rollback failed. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction rollback failed. CorrelationId: {CorrelationId}, Context: CMSDbContext",
                 _transactionCorrelationId);
             throw;
         }
@@ -291,21 +272,21 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         return GetOrAddReadRepository<TEntity>();
     }
 
-    private IReadRepository<TEntity> GetOrAddReadRepository<TEntity>() where TEntity : Entity<Guid>
-    {
-        var entityType = typeof(TEntity);
-        // Use same cache key but cast to IReadRepository - CRMGenericRepository implements both
-        return (IReadRepository<TEntity>)_repositories.GetOrAdd(
-            entityType,
-            _ => new CRMGenericRepository<TEntity>(_context));
-    }
-
     private IRepository<TEntity> GetOrAddRepository<TEntity>() where TEntity : Entity<Guid>
     {
         var entityType = typeof(TEntity);
         return (IRepository<TEntity>)_repositories.GetOrAdd(
             entityType,
-            _ => new CRMGenericRepository<TEntity>(_context));
+            _ => new CMSGenericRepository<TEntity>(_context));
+    }
+
+    private IReadRepository<TEntity> GetOrAddReadRepository<TEntity>() where TEntity : Entity<Guid>
+    {
+        var entityType = typeof(TEntity);
+        // Use same cache key but cast to IReadRepository - CMSGenericRepository implements both
+        return (IReadRepository<TEntity>)_repositories.GetOrAdd(
+            entityType,
+            _ => new CMSGenericRepository<TEntity>(_context));
     }
 
     /// <summary>
@@ -325,119 +306,99 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
 
     #endregion
 
-    #region Core Customer Management Repositories
+    #region Core CMS Repositories
 
     /// <inheritdoc />
-    public ICustomerRepository Customers =>
-        _customers ??= GetOrAddSpecificRepository<ICustomerRepository, CustomerRepository>();
+    public ICMSPageRepository Pages =>
+        _pages ??= GetOrAddSpecificRepository<ICMSPageRepository, CMSPageRepository>();
 
     /// <inheritdoc />
-    public IContactRepository Contacts =>
-        _contacts ??= GetOrAddSpecificRepository<IContactRepository, ContactRepository>();
+    public IBlogRepository Blog =>
+        _blog ??= GetOrAddSpecificRepository<IBlogRepository, BlogRepository>();
 
     /// <inheritdoc />
-    public ILeadRepository Leads =>
-        _leads ??= GetOrAddSpecificRepository<ILeadRepository, LeadRepository>();
+    public IFAQRepository FAQ =>
+        _faq ??= GetOrAddSpecificRepository<IFAQRepository, FAQRepository>();
 
     /// <inheritdoc />
-    public IDealRepository Deals =>
-        _deals ??= GetOrAddSpecificRepository<IDealRepository, DealRepository>();
+    public ICMSSettingRepository Settings =>
+        _settings ??= GetOrAddSpecificRepository<ICMSSettingRepository, CMSSettingRepository>();
 
     #endregion
 
-    #region Customer Segmentation Repositories
+    #region Landing Page Repositories
 
     /// <inheritdoc />
-    public ICustomerSegmentRepository CustomerSegments =>
-        _customerSegments ??= GetOrAddSpecificRepository<ICustomerSegmentRepository, CustomerSegmentRepository>();
+    public ITestimonialRepository Testimonials =>
+        _testimonials ??= GetOrAddSpecificRepository<ITestimonialRepository, TestimonialRepository>();
 
     /// <inheritdoc />
-    public ICustomerTagRepository CustomerTags =>
-        _customerTags ??= GetOrAddSpecificRepository<ICustomerTagRepository, CustomerTagRepository>();
+    public IPricingPlanRepository PricingPlans =>
+        _pricingPlans ??= GetOrAddSpecificRepository<IPricingPlanRepository, PricingPlanRepository>();
+
+    /// <inheritdoc />
+    public IPricingFeatureRepository PricingFeatures =>
+        _pricingFeatures ??= GetOrAddSpecificRepository<IPricingFeatureRepository, PricingFeatureRepository>();
+
+    /// <inheritdoc />
+    public IFeatureRepository Features =>
+        _features ??= GetOrAddSpecificRepository<IFeatureRepository, FeatureRepository>();
+
+    /// <inheritdoc />
+    public IIndustryRepository Industries =>
+        _industries ??= GetOrAddSpecificRepository<IIndustryRepository, IndustryRepository>();
+
+    /// <inheritdoc />
+    public IIntegrationRepository Integrations =>
+        _integrations ??= GetOrAddSpecificRepository<IIntegrationRepository, IntegrationRepository>();
+
+    /// <inheritdoc />
+    public IIntegrationItemRepository IntegrationItems =>
+        _integrationItems ??= GetOrAddSpecificRepository<IIntegrationItemRepository, IntegrationItemRepository>();
+
+    /// <inheritdoc />
+    public IStatRepository Stats =>
+        _stats ??= GetOrAddSpecificRepository<IStatRepository, StatRepository>();
+
+    /// <inheritdoc />
+    public IPartnerRepository Partners =>
+        _partners ??= GetOrAddSpecificRepository<IPartnerRepository, PartnerRepository>();
+
+    /// <inheritdoc />
+    public IAchievementRepository Achievements =>
+        _achievements ??= GetOrAddSpecificRepository<IAchievementRepository, AchievementRepository>();
 
     #endregion
 
-    #region Document and Workflow Repositories
+    #region Company Page Repositories
 
     /// <inheritdoc />
-    public IDocumentRepository Documents =>
-        _documents ??= GetOrAddSpecificRepository<IDocumentRepository, DocumentRepository>();
+    public ITeamMemberRepository TeamMembers =>
+        _teamMembers ??= GetOrAddSpecificRepository<ITeamMemberRepository, TeamMemberRepository>();
 
     /// <inheritdoc />
-    public IWorkflowRepository Workflows =>
-        _workflows ??= GetOrAddSpecificRepository<IWorkflowRepository, WorkflowRepository>();
+    public ICompanyValueRepository CompanyValues =>
+        _companyValues ??= GetOrAddSpecificRepository<ICompanyValueRepository, CompanyValueRepository>();
 
     /// <inheritdoc />
-    public IWorkflowExecutionRepository WorkflowExecutions =>
-        _workflowExecutions ??= GetOrAddSpecificRepository<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
+    public IContactInfoRepository ContactInfo =>
+        _contactInfo ??= GetOrAddSpecificRepository<IContactInfoRepository, ContactInfoRepository>();
+
+    /// <inheritdoc />
+    public ISocialLinkRepository SocialLinks =>
+        _socialLinks ??= GetOrAddSpecificRepository<ISocialLinkRepository, SocialLinkRepository>();
 
     #endregion
 
-    #region Communication Repositories
+    #region Documentation Repositories
 
     /// <inheritdoc />
-    public INotificationRepository Notifications =>
-        _notifications ??= GetOrAddSpecificRepository<INotificationRepository, NotificationRepository>();
+    public IDocCategoryRepository DocCategories =>
+        _docCategories ??= GetOrAddSpecificRepository<IDocCategoryRepository, DocCategoryRepository>();
 
     /// <inheritdoc />
-    public IReminderRepository Reminders =>
-        _reminders ??= GetOrAddSpecificRepository<IReminderRepository, ReminderRepository>();
-
-    /// <inheritdoc />
-    public ICallLogRepository CallLogs =>
-        _callLogs ??= GetOrAddSpecificRepository<ICallLogRepository, CallLogRepository>();
-
-    /// <inheritdoc />
-    public IMeetingRepository Meetings =>
-        _meetings ??= GetOrAddSpecificRepository<IMeetingRepository, MeetingRepository>();
-
-    #endregion
-
-    #region Sales and Competition Repositories
-
-    /// <inheritdoc />
-    public ICompetitorRepository Competitors =>
-        _competitors ??= GetOrAddSpecificRepository<ICompetitorRepository, CompetitorRepository>();
-
-    /// <inheritdoc />
-    public IProductInterestRepository ProductInterests =>
-        _productInterests ??= GetOrAddSpecificRepository<IProductInterestRepository, ProductInterestRepository>();
-
-    /// <inheritdoc />
-    public ISalesTeamRepository SalesTeams =>
-        _salesTeams ??= GetOrAddSpecificRepository<ISalesTeamRepository, SalesTeamRepository>();
-
-    /// <inheritdoc />
-    public ITerritoryRepository Territories =>
-        _territories ??= GetOrAddSpecificRepository<ITerritoryRepository, TerritoryRepository>();
-
-    #endregion
-
-    #region Social and Referral Repositories
-
-    /// <inheritdoc />
-    public ISocialMediaProfileRepository SocialMediaProfiles =>
-        _socialMediaProfiles ??= GetOrAddSpecificRepository<ISocialMediaProfileRepository, SocialMediaProfileRepository>();
-
-    /// <inheritdoc />
-    public IReferralRepository Referrals =>
-        _referrals ??= GetOrAddSpecificRepository<IReferralRepository, ReferralRepository>();
-
-    /// <inheritdoc />
-    public ISurveyResponseRepository SurveyResponses =>
-        _surveyResponses ??= GetOrAddSpecificRepository<ISurveyResponseRepository, SurveyResponseRepository>();
-
-    #endregion
-
-    #region Loyalty Repositories
-
-    /// <inheritdoc />
-    public ILoyaltyProgramRepository LoyaltyPrograms =>
-        _loyaltyPrograms ??= GetOrAddSpecificRepository<ILoyaltyProgramRepository, LoyaltyProgramRepository>();
-
-    /// <inheritdoc />
-    public ILoyaltyMembershipRepository LoyaltyMemberships =>
-        _loyaltyMemberships ??= GetOrAddSpecificRepository<ILoyaltyMembershipRepository, LoyaltyMembershipRepository>();
+    public IDocArticleRepository DocArticles =>
+        _docArticles ??= GetOrAddSpecificRepository<IDocArticleRepository, DocArticleRepository>();
 
     #endregion
 
@@ -466,7 +427,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         {
             _logger?.LogError(
                 "UnitOfWork disposed with uncommitted transaction! " +
-                "CorrelationId: {CorrelationId}, Context: CRMDbContext. " +
+                "CorrelationId: {CorrelationId}, Context: CMSDbContext. " +
                 "This may indicate a bug - transactions should be explicitly committed or rolled back.",
                 _transactionCorrelationId);
 
@@ -488,7 +449,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
             {
                 _logger?.LogError(
                     "UnitOfWork disposed with uncommitted transaction! " +
-                    "CorrelationId: {CorrelationId}, Context: CRMDbContext. " +
+                    "CorrelationId: {CorrelationId}, Context: CMSDbContext. " +
                     "This may indicate a bug - transactions should be explicitly committed or rolled back.",
                     _transactionCorrelationId);
 

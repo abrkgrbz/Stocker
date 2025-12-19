@@ -1,25 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Stocker.Modules.CRM.Domain.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Persistence.Repositories;
-using Stocker.Modules.CRM.Infrastructure.Repositories;
-using Stocker.Modules.CRM.Interfaces;
+using Stocker.Modules.Purchase.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Primitives;
 using System.Collections.Concurrent;
 
-namespace Stocker.Modules.CRM.Infrastructure.Persistence;
+namespace Stocker.Modules.Purchase.Infrastructure.Persistence;
 
 /// <summary>
-/// Unit of Work implementation for the CRM (Customer Relationship Management) module.
+/// Unit of Work implementation for the Purchase module.
 /// Implements IUnitOfWork directly to avoid circular dependency with Stocker.Persistence.
 ///
 /// This class provides:
 /// - Transaction management with strict mode
 /// - Repository access with caching
-/// - Domain-specific repository properties for type-safe dependency injection
 /// - Multi-tenancy support via TenantId property
 /// - IAsyncDisposable for proper async cleanup
 /// </summary>
@@ -28,21 +25,23 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence;
 /// - Thread-safe repository caching using ConcurrentDictionary
 /// - Strict transaction management (throws on duplicate begin, instead of silent return)
 /// - Correlation ID logging for transaction lifecycle
-/// - Exposes ALL CRM repositories
+///
+/// NOTE: Domain-specific repository properties will be added as the Purchase module repositories
+/// are created. Currently the Purchase module uses generic Repository&lt;T&gt;() access.
 ///
 /// Usage in handlers:
 /// <code>
-/// public class CreateCustomerHandler
+/// public class CreatePurchaseOrderHandler
 /// {
-///     private readonly ICRMUnitOfWork _unitOfWork;
+///     private readonly IPurchaseUnitOfWork _unitOfWork;
 ///
-///     public async Task Handle(CreateCustomerCommand command)
+///     public async Task Handle(CreatePurchaseOrderCommand command)
 ///     {
 ///         await _unitOfWork.BeginTransactionAsync();
 ///         try
 ///         {
-///             var customer = new Customer(...);
-///             await _unitOfWork.Customers.AddAsync(customer);
+///             var order = new PurchaseOrder(...);
+///             _unitOfWork.Repository&lt;PurchaseOrder&gt;().Add(order);
 ///             await _unitOfWork.CommitTransactionAsync();
 ///         }
 ///         catch
@@ -54,13 +53,13 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence;
 /// }
 /// </code>
 /// </remarks>
-public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
+public sealed class PurchaseUnitOfWork : IPurchaseUnitOfWork, IAsyncDisposable
 {
     #region Fields
 
-    private readonly CRMDbContext _context;
+    private readonly PurchaseDbContext _context;
     private readonly ITenantService _tenantService;
-    private readonly ILogger<CRMUnitOfWork>? _logger;
+    private readonly ILogger<PurchaseUnitOfWork>? _logger;
 
     private IDbContextTransaction? _transaction;
     private bool _disposed;
@@ -71,57 +70,21 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
     /// </summary>
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
 
-    // Core Customer Management repositories
-    private ICustomerRepository? _customers;
-    private IContactRepository? _contacts;
-    private ILeadRepository? _leads;
-    private IDealRepository? _deals;
-
-    // Customer Segmentation repositories
-    private ICustomerSegmentRepository? _customerSegments;
-    private ICustomerTagRepository? _customerTags;
-
-    // Document and Workflow repositories
-    private IDocumentRepository? _documents;
-    private IWorkflowRepository? _workflows;
-    private IWorkflowExecutionRepository? _workflowExecutions;
-
-    // Communication repositories
-    private INotificationRepository? _notifications;
-    private IReminderRepository? _reminders;
-    private ICallLogRepository? _callLogs;
-    private IMeetingRepository? _meetings;
-
-    // Sales and Competition repositories
-    private ICompetitorRepository? _competitors;
-    private IProductInterestRepository? _productInterests;
-    private ISalesTeamRepository? _salesTeams;
-    private ITerritoryRepository? _territories;
-
-    // Social and Referral repositories
-    private ISocialMediaProfileRepository? _socialMediaProfiles;
-    private IReferralRepository? _referrals;
-    private ISurveyResponseRepository? _surveyResponses;
-
-    // Loyalty repositories
-    private ILoyaltyProgramRepository? _loyaltyPrograms;
-    private ILoyaltyMembershipRepository? _loyaltyMemberships;
-
     #endregion
 
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CRMUnitOfWork"/> class.
+    /// Initializes a new instance of the <see cref="PurchaseUnitOfWork"/> class.
     /// </summary>
-    /// <param name="context">The CRM database context.</param>
+    /// <param name="context">The Purchase database context.</param>
     /// <param name="tenantService">The tenant service for multi-tenancy support.</param>
     /// <param name="logger">Optional logger for transaction lifecycle events.</param>
     /// <exception cref="ArgumentNullException">Thrown when context or tenantService is null.</exception>
-    public CRMUnitOfWork(
-        CRMDbContext context,
+    public PurchaseUnitOfWork(
+        PurchaseDbContext context,
         ITenantService tenantService,
-        ILogger<CRMUnitOfWork>? logger = null)
+        ILogger<PurchaseUnitOfWork>? logger = null)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
@@ -130,7 +93,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
 
     #endregion
 
-    #region ICRMUnitOfWork Implementation
+    #region IPurchaseUnitOfWork Implementation
 
     /// <inheritdoc />
     public Guid TenantId => _tenantService.GetCurrentTenantId()
@@ -183,7 +146,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
         _logger?.LogDebug(
-            "Transaction started. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+            "Transaction started. CorrelationId: {CorrelationId}, Context: PurchaseDbContext",
             _transactionCorrelationId);
     }
 
@@ -205,14 +168,14 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
             await _transaction.CommitAsync(cancellationToken);
 
             _logger?.LogInformation(
-                "Transaction committed successfully. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction committed successfully. CorrelationId: {CorrelationId}, Context: PurchaseDbContext",
                 _transactionCorrelationId);
         }
         catch (Exception ex)
         {
             _logger?.LogError(
                 ex,
-                "Transaction commit failed. Rolling back. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction commit failed. Rolling back. CorrelationId: {CorrelationId}, Context: PurchaseDbContext",
                 _transactionCorrelationId);
 
             await RollbackTransactionInternalAsync(cancellationToken);
@@ -251,14 +214,14 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         {
             await _transaction.RollbackAsync(cancellationToken);
             _logger?.LogWarning(
-                "Transaction rolled back. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction rolled back. CorrelationId: {CorrelationId}, Context: PurchaseDbContext",
                 _transactionCorrelationId);
         }
         catch (Exception ex)
         {
             _logger?.LogError(
                 ex,
-                "Transaction rollback failed. CorrelationId: {CorrelationId}, Context: CRMDbContext",
+                "Transaction rollback failed. CorrelationId: {CorrelationId}, Context: PurchaseDbContext",
                 _transactionCorrelationId);
             throw;
         }
@@ -291,21 +254,21 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         return GetOrAddReadRepository<TEntity>();
     }
 
-    private IReadRepository<TEntity> GetOrAddReadRepository<TEntity>() where TEntity : Entity<Guid>
-    {
-        var entityType = typeof(TEntity);
-        // Use same cache key but cast to IReadRepository - CRMGenericRepository implements both
-        return (IReadRepository<TEntity>)_repositories.GetOrAdd(
-            entityType,
-            _ => new CRMGenericRepository<TEntity>(_context));
-    }
-
     private IRepository<TEntity> GetOrAddRepository<TEntity>() where TEntity : Entity<Guid>
     {
         var entityType = typeof(TEntity);
         return (IRepository<TEntity>)_repositories.GetOrAdd(
             entityType,
-            _ => new CRMGenericRepository<TEntity>(_context));
+            _ => new PurchaseGenericRepository<TEntity>(_context));
+    }
+
+    private IReadRepository<TEntity> GetOrAddReadRepository<TEntity>() where TEntity : Entity<Guid>
+    {
+        var entityType = typeof(TEntity);
+        // Use same cache key but cast to IReadRepository - PurchaseGenericRepository implements both
+        return (IReadRepository<TEntity>)_repositories.GetOrAdd(
+            entityType,
+            _ => new PurchaseGenericRepository<TEntity>(_context));
     }
 
     /// <summary>
@@ -322,122 +285,6 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
                  ?? throw new InvalidOperationException(
                      $"Failed to create repository instance of type {typeof(TImplementation).Name}"));
     }
-
-    #endregion
-
-    #region Core Customer Management Repositories
-
-    /// <inheritdoc />
-    public ICustomerRepository Customers =>
-        _customers ??= GetOrAddSpecificRepository<ICustomerRepository, CustomerRepository>();
-
-    /// <inheritdoc />
-    public IContactRepository Contacts =>
-        _contacts ??= GetOrAddSpecificRepository<IContactRepository, ContactRepository>();
-
-    /// <inheritdoc />
-    public ILeadRepository Leads =>
-        _leads ??= GetOrAddSpecificRepository<ILeadRepository, LeadRepository>();
-
-    /// <inheritdoc />
-    public IDealRepository Deals =>
-        _deals ??= GetOrAddSpecificRepository<IDealRepository, DealRepository>();
-
-    #endregion
-
-    #region Customer Segmentation Repositories
-
-    /// <inheritdoc />
-    public ICustomerSegmentRepository CustomerSegments =>
-        _customerSegments ??= GetOrAddSpecificRepository<ICustomerSegmentRepository, CustomerSegmentRepository>();
-
-    /// <inheritdoc />
-    public ICustomerTagRepository CustomerTags =>
-        _customerTags ??= GetOrAddSpecificRepository<ICustomerTagRepository, CustomerTagRepository>();
-
-    #endregion
-
-    #region Document and Workflow Repositories
-
-    /// <inheritdoc />
-    public IDocumentRepository Documents =>
-        _documents ??= GetOrAddSpecificRepository<IDocumentRepository, DocumentRepository>();
-
-    /// <inheritdoc />
-    public IWorkflowRepository Workflows =>
-        _workflows ??= GetOrAddSpecificRepository<IWorkflowRepository, WorkflowRepository>();
-
-    /// <inheritdoc />
-    public IWorkflowExecutionRepository WorkflowExecutions =>
-        _workflowExecutions ??= GetOrAddSpecificRepository<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
-
-    #endregion
-
-    #region Communication Repositories
-
-    /// <inheritdoc />
-    public INotificationRepository Notifications =>
-        _notifications ??= GetOrAddSpecificRepository<INotificationRepository, NotificationRepository>();
-
-    /// <inheritdoc />
-    public IReminderRepository Reminders =>
-        _reminders ??= GetOrAddSpecificRepository<IReminderRepository, ReminderRepository>();
-
-    /// <inheritdoc />
-    public ICallLogRepository CallLogs =>
-        _callLogs ??= GetOrAddSpecificRepository<ICallLogRepository, CallLogRepository>();
-
-    /// <inheritdoc />
-    public IMeetingRepository Meetings =>
-        _meetings ??= GetOrAddSpecificRepository<IMeetingRepository, MeetingRepository>();
-
-    #endregion
-
-    #region Sales and Competition Repositories
-
-    /// <inheritdoc />
-    public ICompetitorRepository Competitors =>
-        _competitors ??= GetOrAddSpecificRepository<ICompetitorRepository, CompetitorRepository>();
-
-    /// <inheritdoc />
-    public IProductInterestRepository ProductInterests =>
-        _productInterests ??= GetOrAddSpecificRepository<IProductInterestRepository, ProductInterestRepository>();
-
-    /// <inheritdoc />
-    public ISalesTeamRepository SalesTeams =>
-        _salesTeams ??= GetOrAddSpecificRepository<ISalesTeamRepository, SalesTeamRepository>();
-
-    /// <inheritdoc />
-    public ITerritoryRepository Territories =>
-        _territories ??= GetOrAddSpecificRepository<ITerritoryRepository, TerritoryRepository>();
-
-    #endregion
-
-    #region Social and Referral Repositories
-
-    /// <inheritdoc />
-    public ISocialMediaProfileRepository SocialMediaProfiles =>
-        _socialMediaProfiles ??= GetOrAddSpecificRepository<ISocialMediaProfileRepository, SocialMediaProfileRepository>();
-
-    /// <inheritdoc />
-    public IReferralRepository Referrals =>
-        _referrals ??= GetOrAddSpecificRepository<IReferralRepository, ReferralRepository>();
-
-    /// <inheritdoc />
-    public ISurveyResponseRepository SurveyResponses =>
-        _surveyResponses ??= GetOrAddSpecificRepository<ISurveyResponseRepository, SurveyResponseRepository>();
-
-    #endregion
-
-    #region Loyalty Repositories
-
-    /// <inheritdoc />
-    public ILoyaltyProgramRepository LoyaltyPrograms =>
-        _loyaltyPrograms ??= GetOrAddSpecificRepository<ILoyaltyProgramRepository, LoyaltyProgramRepository>();
-
-    /// <inheritdoc />
-    public ILoyaltyMembershipRepository LoyaltyMemberships =>
-        _loyaltyMemberships ??= GetOrAddSpecificRepository<ILoyaltyMembershipRepository, LoyaltyMembershipRepository>();
 
     #endregion
 
@@ -466,7 +313,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
         {
             _logger?.LogError(
                 "UnitOfWork disposed with uncommitted transaction! " +
-                "CorrelationId: {CorrelationId}, Context: CRMDbContext. " +
+                "CorrelationId: {CorrelationId}, Context: PurchaseDbContext. " +
                 "This may indicate a bug - transactions should be explicitly committed or rolled back.",
                 _transactionCorrelationId);
 
@@ -488,7 +335,7 @@ public sealed class CRMUnitOfWork : ICRMUnitOfWork, IAsyncDisposable
             {
                 _logger?.LogError(
                     "UnitOfWork disposed with uncommitted transaction! " +
-                    "CorrelationId: {CorrelationId}, Context: CRMDbContext. " +
+                    "CorrelationId: {CorrelationId}, Context: PurchaseDbContext. " +
                     "This may indicate a bug - transactions should be explicitly committed or rolled back.",
                     _transactionCorrelationId);
 

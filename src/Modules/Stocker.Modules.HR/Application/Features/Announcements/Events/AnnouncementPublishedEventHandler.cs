@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Tenant.Entities;
 using Stocker.Shared.Events.HR;
-using Stocker.SignalR.Services;
+using Stocker.SignalR.Services.Interfaces;
 
 namespace Stocker.Modules.HR.Application.Features.Announcements.Events;
 

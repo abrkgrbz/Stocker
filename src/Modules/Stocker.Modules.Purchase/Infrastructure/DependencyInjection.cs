@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Modules.Purchase.Infrastructure.Persistence;
+using Stocker.Modules.Purchase.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
 namespace Stocker.Modules.Purchase.Infrastructure;
@@ -20,7 +21,8 @@ public static class DependencyInjection
     {
         // PurchaseDbContext is registered dynamically per request based on tenant
         // using ITenantService to get the current tenant's connection string
-        services.AddScoped<PurchaseDbContext>(serviceProvider =>
+        // IMPORTANT: Using AddDbContext ensures single instance per scope
+        services.AddDbContext<PurchaseDbContext>((serviceProvider, optionsBuilder) =>
         {
             var tenantService = serviceProvider.GetRequiredService<ITenantService>();
             var connectionString = tenantService.GetConnectionString();
@@ -31,7 +33,6 @@ public static class DependencyInjection
                     "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<PurchaseDbContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(PurchaseDbContext).Assembly.FullName);
@@ -42,9 +43,16 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
             });
+        }, ServiceLifetime.Scoped);
 
-            return new PurchaseDbContext(optionsBuilder.Options, tenantService);
-        });
+        // Register PurchaseUnitOfWork following Pattern A (BaseUnitOfWork)
+        // This fixes Report Issue #6 (missing IPurchaseUnitOfWork/IUnitOfWork registration)
+        services.AddScoped<PurchaseUnitOfWork>();
+        services.AddScoped<IPurchaseUnitOfWork>(sp => sp.GetRequiredService<PurchaseUnitOfWork>());
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<PurchaseUnitOfWork>());
+
+        // NOTE: Domain-specific repository registrations will be added here as they are created.
+        // Currently the Purchase module uses generic Repository<T>() access from IUnitOfWork base.
 
         return services;
     }

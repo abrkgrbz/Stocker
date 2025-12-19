@@ -6,6 +6,7 @@ using Stocker.Modules.Sales.Domain.Repositories;
 using Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.Modules.Sales.Infrastructure.Persistence;
 using Stocker.Modules.Sales.Infrastructure.Persistence.Repositories;
+using Stocker.Modules.Sales.Interfaces;
 using Stocker.Modules.Stocker.Modules.Sales.Infrastructure.EventConsumers;
 using Stocker.SharedKernel.Interfaces;
 
@@ -25,7 +26,8 @@ public static class DependencyInjection
     {
         // SalesDbContext is registered dynamically per request based on tenant
         // using ITenantService to get the current tenant's connection string
-        services.AddScoped<SalesDbContext>(serviceProvider =>
+        // IMPORTANT: Using AddDbContext ensures single instance per scope
+        services.AddDbContext<SalesDbContext>((serviceProvider, optionsBuilder) =>
         {
             var tenantService = serviceProvider.GetRequiredService<ITenantService>();
             var connectionString = tenantService.GetConnectionString();
@@ -36,7 +38,6 @@ public static class DependencyInjection
                     "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
             }
 
-            var optionsBuilder = new DbContextOptionsBuilder<SalesDbContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
@@ -47,17 +48,23 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
             });
+        }, ServiceLifetime.Scoped);
 
-            return new SalesDbContext(optionsBuilder.Options, tenantService);
-        });
+        // Register SalesUnitOfWork following Pattern A (BaseUnitOfWork)
+        // MIGRATION: Changed from services.AddScoped<IUnitOfWork, SalesUnitOfWork>()
+        // Now exposes ISalesUnitOfWork for strongly-typed access
+        services.AddScoped<SalesUnitOfWork>();
+        services.AddScoped<ISalesUnitOfWork>(sp => sp.GetRequiredService<SalesUnitOfWork>());
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<SalesUnitOfWork>());
 
-        // Register repositories
+        // NOTE: Individual repository registrations are kept for backward compatibility.
+        // Handlers can use either:
+        //   - ISalesUnitOfWork.SalesOrders (recommended for new code)
+        //   - ISalesOrderRepository (legacy, still supported)
+        // Both resolve to the same cached instance within the UoW scope.
         services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
-
-        // Register UnitOfWork
-        services.AddScoped<IUnitOfWork, SalesUnitOfWork>();
 
         return services;
     }

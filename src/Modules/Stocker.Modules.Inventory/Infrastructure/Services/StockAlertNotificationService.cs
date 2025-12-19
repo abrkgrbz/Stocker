@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.Inventory.Application.Services;
 using Stocker.SignalR.Hubs;
-using Stocker.SignalR.Services;
+using Stocker.SignalR.Models.Notifications;
+using Stocker.SignalR.Services.Interfaces;
 
 namespace Stocker.Modules.Inventory.Infrastructure.Services;
 

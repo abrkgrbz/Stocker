@@ -1,20 +1,18 @@
 using Stocker.SharedKernel.Interfaces;
-using Stocker.SharedKernel.Primitives;
 
 namespace Stocker.SharedKernel.Repositories;
 
 /// <summary>
-/// Unit of Work for Master database context
+/// Unit of Work interface for Master database context.
+/// Used for tenant-agnostic operations (tenant management, system configuration, etc.)
+///
+/// Inherits all repository access and transaction management from IUnitOfWork.
 /// </summary>
+/// <remarks>
+/// Implementation: <see cref="Stocker.Persistence.UnitOfWork.MasterUnitOfWork"/>
+/// </remarks>
 public interface IMasterUnitOfWork : IUnitOfWork
 {
-    /// <summary>
-    /// Gets a repository for the specified entity type
-    /// </summary>
-    IRepository<T> Repository<T>() where T : Entity<Guid>;
-
-    /// <summary>
-    /// Gets a read-only repository for the specified entity type
-    /// </summary>
-    IReadRepository<T> ReadRepository<T>() where T : Entity<Guid>;
+    // Repository<T>() and ReadRepository<T>() are inherited from IUnitOfWork
+    // No additional members required for Master context
 }
