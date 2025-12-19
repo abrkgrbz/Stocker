@@ -8,6 +8,7 @@ export interface ThemeColors {
     background: string;
     surface: string;
     surfaceLight: string;
+    border: string;
 
     // Text
     textPrimary: string;
@@ -28,25 +29,26 @@ export interface ThemeColors {
 
 export const darkColors: ThemeColors = {
     // Brand Colors
-    primary: '#1890ff',
-    secondary: '#722ed1',
-    accent: '#00ff88',
+    primary: '#f8fafc', // Slate 50 (Text/Icon primary)
+    secondary: '#1e293b', // Slate 800
+    accent: '#00ff88', // Neon Green
 
     // Backgrounds
     background: '#0a0a0a',
     surface: '#171717',
-    surfaceLight: '#1f1f1f',
+    surfaceLight: '#262626',
+    border: 'rgba(255,255,255,0.1)',
 
     // Text
     textPrimary: '#ededed',
-    textSecondary: '#a0aec0',
-    textMuted: '#718096',
+    textSecondary: '#a3a3a3',
+    textMuted: '#525252',
 
     // Status
-    success: '#52c41a',
-    error: '#ff4d4f',
-    warning: '#faad14',
-    info: '#1890ff',
+    success: '#22c55e',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    info: '#3b82f6',
 
     // Gradients
     gradientViolet: ['#7c3aed', '#c026d3'],
@@ -56,25 +58,26 @@ export const darkColors: ThemeColors = {
 
 export const lightColors: ThemeColors = {
     // Brand Colors
-    primary: '#1890ff', // Keep brand blue
-    secondary: '#722ed1', // Keep brand violet
-    accent: '#00b96b', // Darker green for light mode visibility
+    primary: '#0f172a', // Slate 900
+    secondary: '#f1f5f9', // Slate 100
+    accent: '#00ff88', // Neon Green
 
     // Backgrounds
-    background: '#f0f2f5', // Light gray background
-    surface: '#ffffff', // White surface
-    surfaceLight: '#fafafa', // Very light gray
+    background: '#ffffff',
+    surface: '#ffffff',
+    surfaceLight: '#f8fafc', // Slate 50
+    border: '#e2e8f0', // Slate 200
 
     // Text
-    textPrimary: '#1f1f1f', // Almost black
-    textSecondary: '#595959', // Dark gray
-    textMuted: '#8c8c8c', // Light gray
+    textPrimary: '#0f172a', // Slate 900
+    textSecondary: '#64748b', // Slate 500
+    textMuted: '#94a3b8', // Slate 400
 
     // Status
-    success: '#52c41a',
-    error: '#ff4d4f',
-    warning: '#faad14',
-    info: '#1890ff',
+    success: '#22c55e',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    info: '#3b82f6',
 
     // Gradients
     gradientViolet: ['#7c3aed', '#c026d3'],

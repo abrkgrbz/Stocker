@@ -1,7 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, TouchableOpacityProps, ViewStyle, TextStyle } from 'react-native';
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '../../src/context/ThemeContext'; // Using relative path since alias might be tricky in components
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface ButtonProps extends TouchableOpacityProps {
     title: string;
@@ -22,8 +23,11 @@ export function Button({
     disabled,
     ...props
 }: ButtonProps) {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const { theme: activeTheme } = useTheme();
+    // Use activeTheme ('light' or 'dark') to determine colors. 
+    // We can map this to colorScheme variable name to minimize changes
+    const colorScheme = activeTheme;
+    const theme = Colors[activeTheme ?? 'light'];
 
     const getBackgroundColor = () => {
         if (disabled) return theme.muted + '40'; // 25% opacity
@@ -40,7 +44,10 @@ export function Button({
     const getTextColor = () => {
         if (disabled) return theme.muted;
         switch (variant) {
-            case 'primary': return theme.background; // Usually white or black depending on theme
+            case 'primary':
+                // If Light Mode (Light Gray Button), we need Dark Text
+                // If Dark Mode (Dark Gray Button), we need Light Text
+                return colorScheme === 'dark' ? '#F9FAFB' : '#1F2937';
             case 'neon': return '#0f172a'; // Always dark for neon
             case 'secondary': return theme.primary;
             case 'outline': return theme.primary;
@@ -53,6 +60,47 @@ export function Button({
         if (variant === 'outline') return theme.border;
         return 'transparent';
     };
+
+
+
+    const renderContent = () => (
+        <>
+            {loading ? (
+                <ActivityIndicator color={getTextColor()} />
+            ) : (
+                <>
+                    {icon}
+                    <Text style={[
+                        styles.text,
+                        { color: getTextColor(), marginLeft: icon ? 8 : 0 },
+                        textStyle
+                    ]}>
+                        {title}
+                    </Text>
+                </>
+            )}
+        </>
+    );
+
+    if (variant === 'primary' && !disabled) {
+        return (
+            <TouchableOpacity
+                style={[
+                    styles.container,
+                    {
+                        backgroundColor: colorScheme === 'dark' ? '#374151' : '#E5E7EB', // Dark Gray 700 / Light Gray 200
+                        borderWidth: 0,
+                    },
+                    style
+                ]}
+                activeOpacity={0.8}
+                disabled={loading}
+                {...props}
+            >
+                {renderContent()}
+            </TouchableOpacity>
+        );
+    }
 
     return (
         <TouchableOpacity
@@ -69,20 +117,7 @@ export function Button({
             activeOpacity={0.7}
             {...props}
         >
-            {loading ? (
-                <ActivityIndicator color={getTextColor()} />
-            ) : (
-                <>
-                    {icon}
-                    <Text style={[
-                        styles.text,
-                        { color: getTextColor(), marginLeft: icon ? 8 : 0 },
-                        textStyle
-                    ]}>
-                        {title}
-                    </Text>
-                </>
-            )}
+            {renderContent()}
         </TouchableOpacity>
     );
 }
@@ -90,14 +125,19 @@ export function Button({
 const styles = StyleSheet.create({
     container: {
         height: 48,
-        borderRadius: 8,
+        borderRadius: 12, // Increased radius for softer look
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 16,
+        width: '100%',
+    },
+    wrapper: {
+        width: '100%',
+        borderRadius: 12,
     },
     text: {
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: '600',
     },
 });

@@ -21,11 +21,15 @@ import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DotBackground } from '../../components/ui/DotBackground';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Image } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function ForgotPasswordScreen({ navigation }: any) {
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     const [email, setEmail] = useState('');
     const [isTenantUser, setIsTenantUser] = useState(false);
     const [tenantCode, setTenantCode] = useState('');
@@ -114,6 +118,16 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             <Loading visible={isLoading} text="Gönderiliyor..." />
             <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />
 
+            {/* Background Pattern */}
+            <View style={StyleSheet.absoluteFill}>
+                <DotBackground />
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', colors.background]}
+                    locations={[0, 0.6, 1]}
+                    style={StyleSheet.absoluteFill}
+                />
+            </View>
+
             <SafeAreaView style={styles.safeArea}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboardView}>
                     <TouchableOpacity style={styles.backButtonHeader} onPress={() => navigation.goBack()}>
@@ -124,6 +138,17 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                         {emailSent ? renderSuccessState() : (
                             <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.formContainer}>
                                 <View style={styles.header}>
+                                    <View style={styles.logoContainer}>
+                                        <Image
+                                            source={
+                                                theme === 'dark'
+                                                    ? require('../../assets/images/stoocker_white.png')
+                                                    : require('../../assets/images/stoocker_black.png')
+                                            }
+                                            style={styles.logo}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
                                     <Text style={[styles.title, { color: colors.textPrimary }]}>Şifrenizi mi unuttunuz?</Text>
                                     <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                                         Endişelenmeyin, size şifre sıfırlama bağlantısı göndereceğiz.
@@ -131,64 +156,53 @@ export default function ForgotPasswordScreen({ navigation }: any) {
                                 </View>
 
                                 {/* User Type Selector */}
-                                <View style={[styles.toggleContainer, { backgroundColor: colors.surface }]}>
+                                <View style={[styles.toggleContainer, { backgroundColor: theme === 'dark' ? '#374151' : '#E5E7EB' }]}>
                                     <TouchableOpacity
-                                        style={[styles.toggleButton, !isTenantUser && { backgroundColor: colors.surfaceLight }]}
+                                        style={[styles.toggleButton, !isTenantUser && { backgroundColor: theme === 'dark' ? '#4B5563' : '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2 }]}
                                         onPress={() => setIsTenantUser(false)}
                                     >
-                                        <Text style={[styles.toggleText, { color: !isTenantUser ? colors.textPrimary : colors.textSecondary }]}>
+                                        <Text style={[styles.toggleText, { color: !isTenantUser ? (theme === 'dark' ? '#F3F4F6' : '#1F2937') : (theme === 'dark' ? '#9CA3AF' : '#6B7280') }]}>
                                             Firma Yöneticisi
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
-                                        style={[styles.toggleButton, isTenantUser && { backgroundColor: colors.surfaceLight }]}
+                                        style={[styles.toggleButton, isTenantUser && { backgroundColor: theme === 'dark' ? '#4B5563' : '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 2 }]}
                                         onPress={() => setIsTenantUser(true)}
                                     >
-                                        <Text style={[styles.toggleText, { color: isTenantUser ? colors.textPrimary : colors.textSecondary }]}>
+                                        <Text style={[styles.toggleText, { color: isTenantUser ? (theme === 'dark' ? '#F3F4F6' : '#1F2937') : (theme === 'dark' ? '#9CA3AF' : '#6B7280') }]}>
                                             Çalışan
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
 
                                 {isTenantUser && (
-                                    <View style={styles.inputContainer}>
-                                        <Text style={[styles.label, { color: colors.textPrimary }]}>Çalışma Alanı Kodu</Text>
-                                        <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
-                                            <Ionicons name="business-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                            <TextInput
-                                                style={[styles.input, { color: colors.textPrimary }]}
-                                                placeholder="ABC123"
-                                                placeholderTextColor={colors.textMuted}
-                                                value={tenantCode}
-                                                onChangeText={(text) => setTenantCode(text.toUpperCase())}
-                                                autoCapitalize="characters"
-                                            />
-                                        </View>
-                                    </View>
+                                    <Input
+                                        label="Çalışma Alanı Kodu"
+                                        placeholder="ABC123"
+                                        value={tenantCode}
+                                        onChangeText={(text) => setTenantCode(text.toUpperCase())}
+                                        autoCapitalize="characters"
+                                        containerStyle={{ marginBottom: 16 }}
+                                    />
                                 )}
 
-                                <View style={styles.inputContainer}>
-                                    <Text style={[styles.label, { color: colors.textPrimary }]}>E-posta Adresi</Text>
-                                    <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
-                                        <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                                        <TextInput
-                                            style={[styles.input, { color: colors.textPrimary }]}
-                                            placeholder="ornek@sirket.com"
-                                            placeholderTextColor={colors.textMuted}
-                                            value={email}
-                                            onChangeText={setEmail}
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                        />
-                                    </View>
-                                </View>
+                                <Input
+                                    label="E-posta Adresi"
+                                    placeholder="ornek@sirket.com"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    containerStyle={{ marginBottom: 24 }}
+                                />
 
-                                <TouchableOpacity
-                                    style={[styles.button, { backgroundColor: colors.accent }]}
+                                <Button
+                                    title="Sıfırlama Bağlantısı Gönder"
                                     onPress={handleSubmit}
-                                >
-                                    <Text style={styles.buttonText}>Sıfırlama Bağlantısı Gönder</Text>
-                                </TouchableOpacity>
+                                    loading={isLoading}
+                                    variant="primary"
+                                    style={{ marginTop: 8 }}
+                                />
 
                                 <View style={[styles.securityTip, { backgroundColor: colors.warning + '10', borderColor: colors.warning + '30' }]}>
                                     <Ionicons name="shield-checkmark-outline" size={20} color={colors.warning} />
@@ -211,9 +225,20 @@ const styles = StyleSheet.create({
     keyboardView: { flex: 1 },
     backButtonHeader: { padding: 20 },
     content: { flex: 1, padding: 20, justifyContent: 'center' },
-    header: { marginBottom: 30 },
-    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 10 },
-    subtitle: { fontSize: 16, lineHeight: 24 },
+    header: { marginBottom: 30, alignItems: 'center' },
+    logoContainer: {
+        width: 180,
+        height: 60,
+        marginBottom: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    logo: {
+        width: '100%',
+        height: '100%',
+    },
+    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+    subtitle: { fontSize: 16, lineHeight: 24, textAlign: 'center' },
     formContainer: { width: '100%' },
     toggleContainer: { flexDirection: 'row', padding: 5, borderRadius: 12, marginBottom: 20 },
     toggleButton: { flex: 1, padding: 10, alignItems: 'center', borderRadius: 8 },

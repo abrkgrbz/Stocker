@@ -2,37 +2,39 @@ import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
-    TextInput,
-    TouchableOpacity,
     StyleSheet,
-    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     Dimensions,
-    SafeAreaView,
+    TouchableOpacity,
+    Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from '../components/Toast';
 import { apiService } from '../services/api';
-import { colors, spacing } from '../theme/colors';
+import { Colors } from '@/constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
     FadeInRight,
     FadeOutLeft,
-    useSharedValue,
-    useAnimatedStyle,
-    withRepeat,
-    withTiming,
-    withSequence,
-    Easing
+    FadeIn,
+    FadeInDown
 } from 'react-native-reanimated';
 import { useSignalRValidation } from '../hooks/useSignalRValidation';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Card } from '../../components/ui/Card';
+import { LinearGradient } from 'expo-linear-gradient';
+import { DotBackground } from '../../components/ui/DotBackground';
 
 const { width } = Dimensions.get('window');
 
 type Step = 'email' | 'password' | 'teamName' | 'fullName' | 'complete';
 
 export default function RegisterScreen({ navigation }: any) {
+    const { colors, theme } = useTheme();
     const [currentStep, setCurrentStep] = useState<Step>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -70,37 +72,6 @@ export default function RegisterScreen({ navigation }: any) {
     const hideToast = () => {
         setToast({ ...toast, visible: false });
     };
-
-    // Background Animation
-    const blob1TranslateY = useSharedValue(0);
-    const blob2TranslateY = useSharedValue(0);
-
-    useEffect(() => {
-        blob1TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(-20, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
-        blob2TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(30, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 4000, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
-    }, []);
-
-    const blob1Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob1TranslateY.value }],
-    }));
-
-    const blob2Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob2TranslateY.value }],
-    }));
 
     // Email Validation
     useEffect(() => {
@@ -223,32 +194,31 @@ export default function RegisterScreen({ navigation }: any) {
             case 'email':
                 return (
                     <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
-                        <Text style={styles.title}>İş e-postanızı girin</Text>
-                        <Text style={styles.subtitle}>Hesabınız bu e-posta ile oluşturulacak</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>İş e-postanızı girin</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Hesabınız bu e-posta ile oluşturulacak</Text>
 
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="mail-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="ornek@sirket.com"
-                                placeholderTextColor={colors.textSecondary}
-                                value={email}
-                                onChangeText={(text) => setEmail(text.toLowerCase())}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                            />
-                        </View>
-                        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-                        {emailValid ? <Text style={styles.successText}>✓ E-posta geçerli</Text> : null}
+                        <Input
+                            label="Email"
+                            value={email}
+                            onChangeText={(text) => setEmail(text.toLowerCase())}
+                            placeholder="ornek@sirket.com"
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                            error={emailError}
+                            autoFocus
+                            containerStyle={{ marginBottom: 24 }}
+                        />
 
-                        <TouchableOpacity
-                            style={[styles.button, !emailValid && styles.buttonDisabled]}
+                        {emailValid ? <Text style={[styles.successText, { color: colors.success }]}>✓ E-posta geçerli</Text> : null}
+
+                        <Button
+                            title="Devam Et"
                             onPress={() => setCurrentStep('password')}
                             disabled={!emailValid}
-                        >
-                            <Text style={styles.buttonText}>Devam Et</Text>
-                            <Ionicons name="arrow-forward" size={20} color="#fff" />
-                        </TouchableOpacity>
+                            variant={emailValid ? 'primary' : 'secondary'}
+                            style={{ marginTop: 8 }}
+                            icon={<Ionicons name="arrow-forward" size={20} color={emailValid ? Colors.dark.text : colors.textSecondary} style={{ marginRight: 8 }} />}
+                        />
                     </Animated.View>
                 );
 
@@ -256,37 +226,38 @@ export default function RegisterScreen({ navigation }: any) {
                 return (
                     <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
                         <TouchableOpacity onPress={() => setCurrentStep('email')} style={styles.backLink}>
-                            <Text style={styles.backLinkText}>← Geri</Text>
+                            <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>← Geri</Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.title}>Şifrenizi belirleyin</Text>
-                        <Text style={styles.subtitle}>Güçlü bir şifre oluşturun</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Şifrenizi belirleyin</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Güçlü bir şifre oluşturun</Text>
 
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="En az 8 karakter"
-                                placeholderTextColor={colors.textSecondary}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={!showPassword}
-                            />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
-                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-                        {passwordValid ? <Text style={styles.successText}>✓ Şifre güçlü</Text> : null}
-
+                        <Input
+                            label="Şifre"
+                            value={password}
+                            onChangeText={setPassword}
+                            placeholder="En az 8 karakter"
+                            secureTextEntry={!showPassword}
+                            error={passwordError}
+                            containerStyle={{ marginBottom: 24 }}
+                        />
                         <TouchableOpacity
-                            style={[styles.button, !passwordValid && styles.buttonDisabled]}
+                            onPress={() => setShowPassword(!showPassword)}
+                            style={{ position: 'absolute', right: 10, top: 120, zIndex: 10 }} // Adjusted roughly for input height
+                        >
+                            <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textSecondary} />
+                        </TouchableOpacity>
+
+                        {passwordValid ? <Text style={[styles.successText, { color: colors.success }]}>✓ Şifre güçlü</Text> : null}
+
+                        <Button
+                            title="Şifreyi Onayla"
                             onPress={() => setCurrentStep('teamName')}
                             disabled={!passwordValid}
-                        >
-                            <Text style={styles.buttonText}>Şifreyi Onayla</Text>
-                            <Ionicons name="arrow-forward" size={20} color="#fff" />
-                        </TouchableOpacity>
+                            variant={passwordValid ? 'primary' : 'secondary'}
+                            style={{ marginTop: 8 }}
+                            icon={<Ionicons name="arrow-forward" size={20} color={passwordValid ? Colors.dark.text : colors.textSecondary} style={{ marginRight: 8 }} />}
+                        />
                     </Animated.View>
                 );
 
@@ -294,35 +265,33 @@ export default function RegisterScreen({ navigation }: any) {
                 return (
                     <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
                         <TouchableOpacity onPress={() => setCurrentStep('password')} style={styles.backLink}>
-                            <Text style={styles.backLinkText}>← Geri</Text>
+                            <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>← Geri</Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.title}>Takım adınızı seçin</Text>
-                        <Text style={styles.subtitle}>Bu, sizin Stoocker adresiniz olacak</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Takım adınızı seçin</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Bu, sizin Stoocker adresiniz olacak</Text>
 
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="people-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="sirketiniz"
-                                placeholderTextColor={colors.textSecondary}
-                                value={teamName}
-                                onChangeText={(text) => setTeamName(text.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                autoCapitalize="none"
-                            />
-                            <Text style={styles.suffix}>.stoocker.app</Text>
-                        </View>
-                        {teamNameError ? <Text style={styles.errorText}>{teamNameError}</Text> : null}
-                        {teamNameValid ? <Text style={styles.successText}>✓ Takım adı kullanılabilir</Text> : null}
+                        <Input
+                            label="Takım Adı"
+                            value={teamName}
+                            onChangeText={(text) => setTeamName(text.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                            placeholder="sirketiniz"
+                            autoCapitalize="none"
+                            error={teamNameError}
+                            containerStyle={{ marginBottom: 8 }}
+                        />
+                        <Text style={[styles.suffix, { color: colors.textSecondary, marginBottom: 24, textAlign: 'right' }]}>.stoocker.app</Text>
 
-                        <TouchableOpacity
-                            style={[styles.button, !teamNameValid && styles.buttonDisabled]}
+                        {teamNameValid ? <Text style={[styles.successText, { color: colors.success }]}>✓ Takım adı kullanılabilir</Text> : null}
+
+                        <Button
+                            title="Takım Adını Onayla"
                             onPress={() => setCurrentStep('fullName')}
                             disabled={!teamNameValid}
-                        >
-                            <Text style={styles.buttonText}>Takım Adını Onayla</Text>
-                            <Ionicons name="arrow-forward" size={20} color="#fff" />
-                        </TouchableOpacity>
+                            variant={teamNameValid ? 'primary' : 'secondary'}
+                            style={{ marginTop: 8 }}
+                            icon={<Ionicons name="arrow-forward" size={20} color={teamNameValid ? Colors.dark.text : colors.textSecondary} style={{ marginRight: 8 }} />}
+                        />
                     </Animated.View>
                 );
 
@@ -330,68 +299,57 @@ export default function RegisterScreen({ navigation }: any) {
                 return (
                     <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.stepContainer}>
                         <TouchableOpacity onPress={() => setCurrentStep('teamName')} style={styles.backLink}>
-                            <Text style={styles.backLinkText}>← Geri</Text>
+                            <Text style={[styles.backLinkText, { color: colors.textSecondary }]}>← Geri</Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.title}>Adınız ve soyadınız</Text>
-                        <Text style={styles.subtitle}>Son adım! Hemen tamamlayın</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Adınız ve soyadınız</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Son adım! Hemen tamamlayın</Text>
 
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Adınız"
-                                placeholderTextColor={colors.textSecondary}
-                                value={firstName}
-                                onChangeText={setFirstName}
-                            />
-                        </View>
+                        <Input
+                            label="Ad"
+                            value={firstName}
+                            onChangeText={setFirstName}
+                            placeholder="Adınız"
+                            containerStyle={{ marginBottom: 16 }}
+                        />
 
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Soyadınız"
-                                placeholderTextColor={colors.textSecondary}
-                                value={lastName}
-                                onChangeText={setLastName}
-                            />
-                        </View>
+                        <Input
+                            label="Soyad"
+                            value={lastName}
+                            onChangeText={setLastName}
+                            placeholder="Soyadınız"
+                            containerStyle={{ marginBottom: 24 }}
+                        />
 
                         <TouchableOpacity
                             style={styles.checkboxContainer}
                             onPress={() => setAcceptTerms(!acceptTerms)}
                         >
-                            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                            <View style={[styles.checkbox, { borderColor: colors.primary }, acceptTerms && { backgroundColor: colors.primary }]}>
                                 {acceptTerms && <Ionicons name="checkmark" size={14} color="#fff" />}
                             </View>
-                            <Text style={styles.checkboxLabel}>Kullanım koşullarını kabul ediyorum</Text>
+                            <Text style={[styles.checkboxLabel, { color: colors.textSecondary }]}>Kullanım koşullarını kabul ediyorum</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
                             style={styles.checkboxContainer}
                             onPress={() => setAcceptPrivacy(!acceptPrivacy)}
                         >
-                            <View style={[styles.checkbox, acceptPrivacy && styles.checkboxChecked]}>
+                            <View style={[styles.checkbox, { borderColor: colors.primary }, acceptPrivacy && { backgroundColor: colors.primary }]}>
                                 {acceptPrivacy && <Ionicons name="checkmark" size={14} color="#fff" />}
                             </View>
-                            <Text style={styles.checkboxLabel}>Gizlilik politikasını kabul ediyorum</Text>
+                            <Text style={[styles.checkboxLabel, { color: colors.textSecondary }]}>Gizlilik politikasını kabul ediyorum</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.button, (!firstName || !lastName || !acceptTerms || !acceptPrivacy) && styles.buttonDisabled]}
+                        <Button
+                            title="Tamamla ve Başla"
                             onPress={handleComplete}
-                            disabled={!firstName || !lastName || !acceptTerms || !acceptPrivacy || isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <>
-                                    <Text style={styles.buttonText}>Tamamla ve Başla</Text>
-                                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                                </>
-                            )}
-                        </TouchableOpacity>
+                            loading={isLoading}
+                            disabled={!firstName || !lastName || !acceptTerms || !acceptPrivacy}
+                            variant="primary"
+                            style={{ marginTop: 16 }}
+                            icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.dark.text} style={{ marginRight: 8 }} />}
+                        />
                     </Animated.View>
                 );
 
@@ -401,249 +359,214 @@ export default function RegisterScreen({ navigation }: any) {
                         <View style={styles.successIconContainer}>
                             <Ionicons name="checkmark-circle" size={80} color={colors.success} />
                         </View>
-                        <Text style={styles.title}>Hoş Geldiniz, {firstName}!</Text>
-                        <Text style={styles.subtitle}>Hesabınız başarıyla oluşturuldu.</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Hoş Geldiniz, {firstName}!</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Hesabınız başarıyla oluşturuldu.</Text>
                         <Text style={[styles.subtitle, { color: colors.primary, marginTop: 8 }]}>
                             {teamName}.stoocker.app
                         </Text>
 
-                        <TouchableOpacity
-                            style={styles.button}
+                        <Button
+                            title="Giriş Yap"
                             onPress={() => navigation.navigate('Login')}
-                        >
-                            <Text style={styles.buttonText}>Giriş Yap</Text>
-                        </TouchableOpacity>
+                            variant="primary"
+                            style={{ marginTop: 24 }}
+                        />
                     </Animated.View>
                 );
         }
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.background}>
-                <Animated.View style={[styles.blob, styles.blob1, blob1Style]} />
-                <Animated.View style={[styles.blob, styles.blob2, blob2Style]} />
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+            {/* Background Gradient */}
+            <View style={StyleSheet.absoluteFill}>
+                <DotBackground />
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', colors.background]}
+                    locations={[0, 0.6, 1]}
+                    style={StyleSheet.absoluteFill}
+                />
             </View>
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.content}
-            >
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <View style={styles.header}>
-                        <Text style={styles.appName}>Stocker</Text>
-                    </View>
+            <SafeAreaView style={styles.container}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.content}
+                >
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
+                            <View style={styles.logoContainer}>
+                                <Image
+                                    source={
+                                        theme === 'dark'
+                                            ? require('../../assets/images/stoocker_white.png')
+                                            : require('../../assets/images/stoocker_black.png')
+                                    }
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                            <Text style={[styles.appName, { color: colors.textPrimary }]}>Stoocker</Text>
+                        </Animated.View>
 
-                    {currentStep !== 'complete' && (
-                        <View style={styles.progressContainer}>
-                            {['email', 'password', 'teamName', 'fullName'].map((step, index) => {
-                                const steps: Step[] = ['email', 'password', 'teamName', 'fullName'];
-                                const currentIndex = steps.indexOf(currentStep);
-                                const isActive = index <= currentIndex;
-                                return (
-                                    <View key={step} style={[styles.progressDot, isActive && styles.progressDotActive]} />
-                                );
-                            })}
-                        </View>
-                    )}
+                        {currentStep !== 'complete' && (
+                            <View style={styles.progressContainer}>
+                                {['email', 'password', 'teamName', 'fullName'].map((step, index) => {
+                                    const steps: Step[] = ['email', 'password', 'teamName', 'fullName'];
+                                    const currentIndex = steps.indexOf(currentStep);
+                                    const isActive = index <= currentIndex;
+                                    return (
+                                        <View
+                                            key={step}
+                                            style={[
+                                                styles.progressDot,
+                                                isActive && styles.progressDotActive,
+                                                { backgroundColor: isActive ? colors.primary : (theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') }
+                                            ]}
+                                        />
+                                    );
+                                })}
+                            </View>
+                        )}
 
-                    {renderStepContent()}
+                        <Card variant="outlined" style={[styles.card, { backgroundColor: theme === 'dark' ? 'rgba(30, 41, 59, 0.8)' : '#ffffff', borderColor: colors.border }]}>
+                            {renderStepContent()}
+                        </Card>
 
-                    {currentStep === 'email' && (
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>Zaten hesabınız var mı? </Text>
-                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                                <Text style={styles.link}>Giriş Yapın</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </ScrollView>
-            </KeyboardAvoidingView>
+                        {currentStep === 'email' && (
+                            <Animated.View entering={FadeIn.delay(500)} style={styles.footer}>
+                                <Text style={[styles.footerText, { color: colors.textSecondary }]}>Zaten hesabınız var mı? </Text>
+                                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                    <Text style={[styles.link, { color: colors.primary }]}>Giriş Yapın</Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        )}
+                    </ScrollView>
+                </KeyboardAvoidingView>
 
-            <Toast
-                visible={toast.visible}
-                message={toast.message}
-                type={toast.type}
-                onHide={hideToast}
-            />
-        </SafeAreaView>
+                <Toast
+                    visible={toast.visible}
+                    message={toast.message}
+                    type={toast.type}
+                    onHide={hideToast}
+                />
+            </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0a0e27',
-    },
-    background: {
-        ...StyleSheet.absoluteFillObject,
-        overflow: 'hidden',
-    },
-    blob: {
-        position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        opacity: 0.3,
-    },
-    blob1: {
-        top: -100,
-        right: -100,
-        backgroundColor: '#667eea',
-    },
-    blob2: {
-        bottom: -100,
-        left: -100,
-        backgroundColor: '#764ba2',
     },
     content: {
         flex: 1,
     },
     scrollContent: {
         flexGrow: 1,
-        padding: spacing.l,
+        padding: 24,
         justifyContent: 'center',
     },
     header: {
         alignItems: 'center',
-        marginBottom: spacing.xl,
+        marginBottom: 32,
+    },
+    logoContainer: {
+        width: 160,
+        height: 160,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    logo: {
+        width: '70%',
+        height: '70%',
     },
     appName: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#fff',
-        letterSpacing: 1,
+        letterSpacing: -1,
     },
     progressContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginBottom: spacing.xl,
+        marginBottom: 32,
         gap: 8,
     },
     progressDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.2)',
     },
     progressDotActive: {
-        backgroundColor: colors.primary,
         width: 24,
     },
     stepContainer: {
         width: '100%',
     },
+    card: {
+        padding: 24,
+        borderRadius: 24,
+        width: '100%',
+        maxWidth: 400,
+        alignSelf: 'center',
+    },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: spacing.s,
+        marginBottom: 8,
         textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
-        color: colors.textSecondary,
-        marginBottom: spacing.xl,
+        marginBottom: 32,
         textAlign: 'center',
     },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12,
-        paddingHorizontal: spacing.m,
-        marginBottom: spacing.m,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.1)',
-        height: 56,
-    },
-    inputIcon: {
-        marginRight: spacing.s,
-    },
-    input: {
-        flex: 1,
-        color: '#fff',
-        fontSize: 16,
-    },
     suffix: {
-        color: colors.textSecondary,
         fontSize: 14,
-    },
-    button: {
-        backgroundColor: colors.primary,
-        borderRadius: 12,
-        height: 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: spacing.m,
-        gap: 8,
-    },
-    buttonDisabled: {
-        opacity: 0.5,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
     backLink: {
-        marginBottom: spacing.m,
+        marginBottom: 16,
     },
     backLinkText: {
-        color: colors.textSecondary,
         fontSize: 14,
-    },
-    errorText: {
-        color: colors.error,
-        fontSize: 14,
-        marginBottom: spacing.m,
-        marginLeft: spacing.xs,
     },
     successText: {
-        color: colors.success,
         fontSize: 14,
-        marginBottom: spacing.m,
-        marginLeft: spacing.xs,
+        marginBottom: 16,
+        marginLeft: 4,
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: spacing.m,
+        marginBottom: 16,
     },
     checkbox: {
         width: 20,
         height: 20,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: colors.primary,
-        marginRight: spacing.s,
+        marginRight: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    checkboxChecked: {
-        backgroundColor: colors.primary,
-    },
     checkboxLabel: {
-        color: colors.textSecondary,
         fontSize: 14,
         flex: 1,
     },
     successIconContainer: {
         alignItems: 'center',
-        marginBottom: spacing.l,
+        marginBottom: 24,
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: spacing.xl,
+        marginTop: 32,
     },
     footerText: {
-        color: colors.textSecondary,
         fontSize: 14,
     },
     link: {
-        color: colors.primary,
         fontWeight: 'bold',
         fontSize: 14,
     },

@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
-    TextInput,
-    TouchableOpacity,
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
     Dimensions,
     Image,
-    ViewStyle,
-    TextStyle,
-    ImageStyle,
-    Alert,
     ScrollView,
+    TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
@@ -26,17 +21,16 @@ import Animated, {
     FadeInUp,
     FadeInRight,
     FadeOutLeft,
-    useSharedValue,
-    useAnimatedStyle,
-    withRepeat,
-    withTiming,
-    withSequence,
-    Easing
 } from 'react-native-reanimated';
 import { Loading } from '../components/Loading';
 import { Toast } from '../components/Toast';
 import { biometricService } from '../services/biometric';
 import { hapticService } from '../services/haptic';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Card } from '../../components/ui/Card';
+import { LinearGradient } from 'expo-linear-gradient';
+import { DotBackground } from '../../components/ui/DotBackground';
 
 const { width } = Dimensions.get('window');
 
@@ -51,14 +45,13 @@ interface TenantInfo {
 }
 
 export default function LoginScreen({ navigation }: any) {
-    const { colors } = useTheme();
+    const { colors, theme, toggleTheme } = useTheme();
     const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [tenants, setTenants] = useState<TenantInfo[]>([]);
     const [selectedTenant, setSelectedTenant] = useState<TenantInfo | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'success' | 'error' | 'info' });
     const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
@@ -70,53 +63,9 @@ export default function LoginScreen({ navigation }: any) {
         setToast({ ...toast, visible: false });
     };
 
-    // Animation values for background blobs
-    const blob1TranslateY = useSharedValue(0);
-    const blob2TranslateY = useSharedValue(0);
-    const blob3TranslateY = useSharedValue(0);
-
-    React.useEffect(() => {
-        blob1TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(-20, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
-        blob2TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(30, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 4000, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
-        blob3TranslateY.value = withRepeat(
-            withSequence(
-                withTiming(-25, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
-                withTiming(0, { duration: 3500, easing: Easing.inOut(Easing.ease) })
-            ),
-            -1,
-            true
-        );
-    }, []);
-
-    const blob1Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob1TranslateY.value }],
-    }));
-
-    const blob2Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob2TranslateY.value }],
-    }));
-
-    const blob3Style = useAnimatedStyle(() => ({
-        transform: [{ translateY: blob3TranslateY.value }],
-    }));
-
     const { login, biometricEnabled } = useAuthStore();
 
-    React.useEffect(() => {
+    useEffect(() => {
         checkBiometric();
     }, []);
 
@@ -184,37 +133,16 @@ export default function LoginScreen({ navigation }: any) {
                 tenantSignature: selectedTenant.signature,
                 tenantTimestamp: selectedTenant.timestamp,
             });
-            // Login success is handled in authStore (sets user, etc.)
-            // Navigation is handled by AppNavigator based on auth state
         } catch (error: any) {
-            // Error alert is already shown in authStore (removed now)
             console.error('Login failed:', error);
-
             let errorMessage = 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.';
 
-            // Handle specific error messages from backend or status codes
             if (error.response) {
                 const status = error.response.status;
                 if (status === 401) {
                     errorMessage = 'E-posta veya şifre hatalı.';
-                } else if (status === 400) {
-                    errorMessage = 'Giriş bilgileri hatalı. Lütfen kontrol edin.';
-                } else if (status === 403) {
-                    errorMessage = 'Giriş yetkiniz yok.';
-                } else if (status === 429) {
-                    errorMessage = 'Çok fazla deneme yaptınız. Lütfen bekleyin.';
-                } else if (status >= 500) {
-                    errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
-                } else if (error.response.data?.message) {
-                    errorMessage = error.response.data.message;
-                }
-            } else if (error.message) {
-                // Fallback for other errors
-                if (error.message.includes('Network Error')) {
-                    errorMessage = 'İnternet bağlantınızı kontrol edin.';
                 }
             }
-
             showToast(errorMessage, 'error');
         } finally {
             setIsLoading(false);
@@ -234,39 +162,33 @@ export default function LoginScreen({ navigation }: any) {
 
     const renderEmailStep = () => (
         <Animated.View entering={FadeInRight.springify().delay(300)} exiting={FadeOutLeft}>
-            <View style={styles.inputContainer}>
-                <Text style={[styles.label, { color: colors.textPrimary }]}>E-posta</Text>
-                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
-                    <Ionicons name="mail-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                        style={[styles.input, { color: colors.textPrimary }]}
-                        placeholder="ornek@sirket.com"
-                        placeholderTextColor={colors.textMuted}
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        autoFocus
-                    />
-                </View>
-            </View>
+            <Input
+                label="E-posta"
+                placeholder="ornek@sirket.com"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoFocus
+                containerStyle={{ marginBottom: 24 }}
+            />
 
-            <TouchableOpacity
-                style={[styles.button, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
+            <Button
+                title="Devam Et"
                 onPress={handleCheckEmail}
-                disabled={isLoading}
-            >
-                <Text style={styles.buttonText}>Devam Et</Text>
-            </TouchableOpacity>
+                loading={isLoading}
+                variant="primary"
+                style={styles.mainButton}
+            />
 
             {isBiometricAvailable && (
-                <TouchableOpacity
-                    style={[styles.biometricButton, { borderColor: colors.primary }]}
+                <Button
+                    title="Biyometrik Giriş"
                     onPress={handleBiometricLogin}
-                >
-                    <Ionicons name="finger-print" size={24} color={colors.primary} style={{ marginRight: 8 }} />
-                    <Text style={[styles.biometricButtonText, { color: colors.primary }]}>Biyometrik Giriş</Text>
-                </TouchableOpacity>
+                    variant="ghost"
+                    icon={<Ionicons name="finger-print" size={20} color={colors.primary} />}
+                    style={{ marginTop: 12 }}
+                />
             )}
         </Animated.View>
     );
@@ -278,89 +200,86 @@ export default function LoginScreen({ navigation }: any) {
 
             <ScrollView style={{ maxHeight: 300 }}>
                 {tenants.map((tenant) => (
-                    <TouchableOpacity
+                    <Card
                         key={tenant.code}
-                        style={[styles.tenantCard, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}
-                        onPress={() => handleTenantSelect(tenant)}
+                        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+                        // @ts-ignore
+                        onTouchEnd={() => handleTenantSelect(tenant)}
                     >
-                        <View style={styles.tenantIcon}>
-                            <Text style={[styles.tenantIconText, { color: colors.primary }]}>
+                        <View style={[styles.tenantIcon, { backgroundColor: theme === 'dark' ? '#4B5563' : '#E5E7EB' }]}>
+                            <Text style={[styles.tenantIconText, { color: theme === 'dark' ? '#F3F4F6' : '#1F2937' }]}>
                                 {tenant.name?.[0]?.toUpperCase() || tenant.code?.[0]?.toUpperCase()}
                             </Text>
                         </View>
-                        <View style={styles.tenantInfo}>
-                            <Text style={[styles.tenantName, { color: colors.textPrimary }]}>{tenant.name || tenant.code}</Text>
-                            <Text style={[styles.tenantDomain, { color: colors.textSecondary }]}>{tenant.code}.stoocker.app</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.tenantName, { color: theme === 'dark' ? '#F3F4F6' : '#1F2937' }]}>{tenant.name || tenant.code}</Text>
+                            <Text style={[styles.tenantDomain, { color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }]}>{tenant.code}.stoocker.app</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                    </TouchableOpacity>
+                        <Ionicons name="chevron-forward" size={20} color={theme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+                    </Card>
                 ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Farklı bir e-posta kullan</Text>
-            </TouchableOpacity>
+            <Button
+                title="Farklı bir e-posta kullan"
+                onPress={handleBack}
+                variant="ghost"
+                style={{ marginTop: 16 }}
+            />
         </Animated.View>
     );
 
     const renderPasswordStep = () => (
         <Animated.View entering={FadeInRight.springify().delay(300)} exiting={FadeOutLeft}>
-            <View style={[styles.selectedTenantContainer, { backgroundColor: colors.surfaceLight + '20', borderColor: colors.primary + '40' }]}>
-                <View style={[styles.tenantIconSmall, { backgroundColor: colors.primary + '20' }]}>
-                    <Text style={[styles.tenantIconTextSmall, { color: colors.primary }]}>
+            <View style={[styles.selectedTenantContainer, {
+                backgroundColor: theme === 'dark' ? '#374151' : '#F9FAFB', // Dark: Gray 700, Light: Light Gray 50
+                borderColor: theme === 'dark' ? '#4B5563' : '#E5E7EB' // Dark: Gray 600, Light: Gray 200
+            }]}>
+                <View style={[styles.tenantIconSmall, { backgroundColor: theme === 'dark' ? '#4B5563' : '#E5E7EB' }]}>
+                    <Text style={[styles.tenantIconTextSmall, { color: theme === 'dark' ? '#F3F4F6' : '#1F2937' }]}>
                         {selectedTenant?.name?.[0]?.toUpperCase() || selectedTenant?.code?.[0]?.toUpperCase()}
                     </Text>
                 </View>
                 <View>
-                    <Text style={[styles.selectedTenantName, { color: colors.textPrimary }]}>{selectedTenant?.name || selectedTenant?.code}</Text>
-                    <Text style={[styles.selectedTenantDomain, { color: colors.textSecondary }]}>{selectedTenant?.code}.stoocker.app</Text>
+                    <Text style={[styles.selectedTenantName, { color: theme === 'dark' ? '#F3F4F6' : '#1F2937' }]}>{selectedTenant?.name || selectedTenant?.code}</Text>
+                    <Text style={[styles.selectedTenantDomain, { color: theme === 'dark' ? '#9CA3AF' : '#6B7280' }]}>{selectedTenant?.code}.stoocker.app</Text>
                 </View>
                 <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => setStep('tenant-selection')}>
-                    <Text style={{ color: colors.primary, fontSize: 12 }}>Değiştir</Text>
+                    <Text style={{ color: theme === 'dark' ? '#60A5FA' : '#2563EB', fontSize: 13, fontWeight: '600' }}>Değiştir</Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={[styles.label, { color: colors.textPrimary }]}>Şifre</Text>
-                <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.surfaceLight }]}>
-                    <Ionicons name="lock-closed-outline" size={20} color={colors.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                        key={showPassword ? 'text' : 'password'}
-                        style={[styles.input, { color: colors.textPrimary }]}
-                        placeholder="******"
-                        placeholderTextColor={colors.textMuted}
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        textContentType="password"
-                        keyboardType="default"
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.passwordToggle}>
-                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <Input
+                label="Şifre"
+                placeholder="******"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                containerStyle={{ marginBottom: 24 }}
+            />
 
-            <TouchableOpacity
-                style={[styles.button, { backgroundColor: colors.accent, shadowColor: colors.accent }]}
+            <Button
+                title="Giriş Yap"
                 onPress={handleLogin}
-                disabled={isLoading}
-            >
-                <Text style={styles.buttonText}>Giriş Yap</Text>
-            </TouchableOpacity>
+                loading={isLoading}
+                variant="primary"
+                style={styles.mainButton}
+            />
 
-            <TouchableOpacity
-                style={{ marginTop: 15, alignSelf: 'center' }}
+            <Button
+                title="Şifremi Unuttum"
                 onPress={() => navigation.navigate('ForgotPassword')}
-            >
-                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Şifremi Unuttum</Text>
-            </TouchableOpacity>
+                variant="ghost"
+                style={{ marginTop: 12 }}
+            />
 
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Geri Dön</Text>
-            </TouchableOpacity>
+            <Button
+                title="Geri Dön"
+                onPress={handleBack}
+                variant="ghost"
+                style={{ marginTop: 4 }}
+            />
         </Animated.View>
     );
 
@@ -373,43 +292,66 @@ export default function LoginScreen({ navigation }: any) {
                 type={toast.type}
                 onHide={hideToast}
             />
-            {/* Background Elements */}
-            <Animated.View style={[styles.bgGradientTop, blob1Style, { backgroundColor: colors.primary }]} />
-            <Animated.View style={[styles.bgGradientBottom, blob2Style, { backgroundColor: colors.secondary }]} />
-            <Animated.View style={[styles.bgGradientCenter, blob3Style, { backgroundColor: colors.accent }]} />
+
+            {/* Background Pattern similar to Web Landing */}
+            <View style={StyleSheet.absoluteFill}>
+                <DotBackground />
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.8)', colors.background]}
+                    locations={[0, 0.6, 1]}
+                    style={StyleSheet.absoluteFill}
+                />
+            </View>
 
             <SafeAreaView style={styles.safeArea}>
+                {/* Theme Toggle Button */}
+                <TouchableOpacity
+                    style={styles.themeToggle}
+                    onPress={toggleTheme}
+                >
+                    <Ionicons
+                        name={theme === 'dark' ? 'moon' : 'sunny'}
+                        size={24}
+                        color={colors.textSecondary}
+                    />
+                </TouchableOpacity>
+
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.keyboardView}
                 >
-                    <View style={styles.content}>
+                    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                         <View style={styles.header}>
                             <Animated.View
                                 entering={FadeInUp.delay(200).duration(1000).springify()}
                                 style={styles.logoContainer}
                             >
                                 <Image
-                                    source={require('../../assets/images/stoocker.png')}
+                                    source={
+                                        theme === 'dark'
+                                            ? require('../../assets/images/stoocker_white.png')
+                                            : require('../../assets/images/stoocker_black.png')
+                                    }
                                     style={styles.logo}
                                     resizeMode="contain"
                                 />
                             </Animated.View>
-                            <Animated.Text
-                                entering={FadeInDown.delay(400).duration(1000).springify()}
-                                style={[styles.title, { color: colors.textPrimary }]}
-                            >
-                                Stocker
-                            </Animated.Text>
+                            {/* Removed redundant "Stoocker" text */}
                             <Animated.Text
                                 entering={FadeInDown.delay(600).duration(1000).springify()}
-                                style={[styles.subtitle, { color: colors.textSecondary }]}
+                                style={[
+                                    styles.subtitle,
+                                    {
+                                        color: theme === 'dark' ? '#F3F4F6' : colors.textSecondary, // Ensure visibility in dark mode
+                                        marginTop: 12
+                                    }
+                                ]}
                             >
                                 Modern İşletme Yönetimi
                             </Animated.Text>
                         </View>
 
-                        <View style={styles.form}>
+                        <View style={styles.formCard}>
                             {step === 'email' && renderEmailStep()}
                             {step === 'tenant-selection' && renderTenantSelectionStep()}
                             {step === 'password' && renderPasswordStep()}
@@ -423,7 +365,7 @@ export default function LoginScreen({ navigation }: any) {
                                 </View>
                             )}
                         </View>
-                    </View>
+                    </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
         </View>
@@ -433,214 +375,128 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    } as ViewStyle,
-    bgGradientTop: {
-        position: 'absolute',
-        top: -100,
-        left: -100,
-        width: width * 1.2,
-        height: width * 1.2,
-        borderRadius: width * 0.6,
-        opacity: 0.08,
-        transform: [{ scale: 1.2 }],
-    } as ViewStyle,
-    bgGradientBottom: {
-        position: 'absolute',
-        bottom: -100,
-        right: -100,
-        width: width,
-        height: width,
-        borderRadius: width * 0.5,
-        opacity: 0.08,
-        transform: [{ scale: 1.2 }],
-    } as ViewStyle,
-    bgGradientCenter: {
-        position: 'absolute',
-        top: '40%',
-        left: -50,
-        width: 200,
-        height: 200,
-        borderRadius: 100,
-        opacity: 0.05,
-        transform: [{ scale: 1.5 }],
-    } as ViewStyle,
+    },
     safeArea: {
         flex: 1,
-    } as ViewStyle,
+    },
+    themeToggle: {
+        position: 'absolute',
+        top: 50, // Adjust based on SafeArea
+        right: 24,
+        zIndex: 10,
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    },
     keyboardView: {
         flex: 1,
-    } as ViewStyle,
-    content: {
-        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         padding: spacing.l,
-    } as ViewStyle,
+    },
     header: {
         alignItems: 'center',
-        marginBottom: spacing.xxl,
-    } as ViewStyle,
+        marginBottom: spacing.xl,
+    },
     logoContainer: {
-        width: 160,
-        height: 160,
+        width: '100%', // Allow full width
+        height: 300, // Increased to 300 to allow square/tall logos to grow significantly (2.5x of previous 120)
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.m,
-    } as ViewStyle,
+    },
     logo: {
         width: '100%',
         height: '100%',
-    } as ImageStyle,
+    },
     title: {
-        ...typography.h1,
-        marginBottom: spacing.xs,
-    } as TextStyle,
+        fontSize: 32,
+        fontWeight: '700',
+        letterSpacing: -0.5,
+        marginBottom: 8,
+    },
     subtitle: {
-        ...typography.body,
-    } as TextStyle,
-    form: {
+        fontSize: 16,
+        fontWeight: '400',
+    },
+    formCard: {
         width: '100%',
-        minHeight: 200, // Prevent layout jump
-    } as ViewStyle,
-    inputContainer: {
-        marginBottom: spacing.l,
-    } as ViewStyle,
-    label: {
-        marginBottom: spacing.s,
-        fontSize: 14,
-        fontWeight: '500',
-    } as TextStyle,
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 12,
-        borderWidth: 1,
-    } as ViewStyle,
-    inputIcon: {
-        marginLeft: spacing.m,
-        marginRight: spacing.s,
-    } as TextStyle,
-    input: {
-        flex: 1,
-        padding: spacing.m,
-        fontSize: 16,
-    } as TextStyle,
-    passwordToggle: {
-        padding: spacing.s,
-        marginRight: spacing.xs,
-    } as ViewStyle,
-    button: {
-        borderRadius: 12,
-        padding: spacing.m,
-        alignItems: 'center',
-        marginTop: spacing.s,
+    },
+    mainButton: {
+        shadowColor: '#0f172a',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
-        elevation: 5,
-    } as ViewStyle,
-    buttonText: {
-        color: '#0a1f2e',
+        elevation: 4,
+    },
+    stepTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    stepSubtitle: {
+        fontSize: 14,
+        marginBottom: 24,
+    },
+    tenantIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    tenantIconText: {
         fontSize: 16,
         fontWeight: 'bold',
-    } as TextStyle,
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: spacing.xl,
-    } as ViewStyle,
-    footerText: {
-        fontSize: 14,
-    } as TextStyle,
-    linkText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-    } as TextStyle,
-    stepTitle: {
-        ...typography.h3,
-        marginBottom: spacing.xs,
-    } as TextStyle,
-    stepSubtitle: {
-        ...typography.body,
-        marginBottom: spacing.l,
-    } as TextStyle,
-    tenantCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: spacing.m,
-        borderRadius: 12,
-        marginBottom: spacing.m,
-        borderWidth: 1,
-    } as ViewStyle,
-    tenantIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
-        backgroundColor: 'rgba(24, 144, 255, 0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: spacing.m,
-    } as ViewStyle,
-    tenantIconText: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    } as TextStyle,
-    tenantInfo: {
-        flex: 1,
-    } as ViewStyle,
+    },
     tenantName: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
         marginBottom: 2,
-    } as TextStyle,
+    },
     tenantDomain: {
         fontSize: 12,
-    } as TextStyle,
-    backButton: {
-        alignItems: 'center',
-        padding: spacing.m,
-        marginTop: spacing.s,
-    } as ViewStyle,
-    backButtonText: {
-        fontSize: 14,
-    } as TextStyle,
+    },
     selectedTenantContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: spacing.m,
+        padding: 12,
         borderRadius: 12,
-        marginBottom: spacing.l,
+        marginBottom: 24,
         borderWidth: 1,
-    } as ViewStyle,
+    },
     tenantIconSmall: {
-        width: 32,
-        height: 32,
+        width: 36,
+        height: 36,
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: spacing.m,
-    } as ViewStyle,
+        marginRight: 12,
+    },
     tenantIconTextSmall: {
         fontSize: 14,
         fontWeight: 'bold',
-    } as TextStyle,
+    },
     selectedTenantName: {
         fontSize: 14,
-        fontWeight: 'bold',
-    } as TextStyle,
+        fontWeight: '600',
+    },
     selectedTenantDomain: {
         fontSize: 12,
-    } as TextStyle,
-    biometricButton: {
+    },
+    footer: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'center',
-        padding: spacing.m,
-        borderRadius: 12,
-        borderWidth: 1,
-        marginTop: spacing.m,
-    } as ViewStyle,
-    biometricButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    } as TextStyle,
+        marginTop: 32,
+    },
+    footerText: {
+        fontSize: 14,
+    },
+    linkText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
 });
