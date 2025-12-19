@@ -27,7 +27,7 @@ import {
   PieChartOutlined,
   RiseOutlined,
   FallOutlined,
-  TrendingUpOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -572,7 +572,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <TrendingUpOutlined className="text-slate-600 text-lg" />
+                        <DollarOutlined className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalRevenue)}</div>
@@ -869,7 +869,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <TrendingUpOutlined className="text-slate-600 text-lg" />
+                        <DollarOutlined className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.totalDeadStockValue)}</div>
@@ -891,7 +891,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                        <TrendingUpOutlined className="text-white text-lg" />
+                        <DollarOutlined className="text-white text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.potentialRecoveryValue)}</div>
