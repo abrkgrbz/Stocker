@@ -410,35 +410,48 @@ export default function CustomerDetailPage() {
 
           {/* Tabs Section - Full Width */}
           <div className="col-span-12">
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              {/* Tab Header */}
+              <div className="px-6 pt-4 border-b border-slate-100">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  Detaylar
+                </p>
+              </div>
               <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTab}
+                className="customer-detail-tabs"
+                tabBarStyle={{
+                  margin: 0,
+                  padding: '0 24px',
+                  borderBottom: '1px solid #e2e8f0'
+                }}
                 items={[
                   {
                     key: 'activities',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 py-1">
                         <ClockCircleOutlined />
                         Aktiviteler
                       </span>
                     ),
                     children: (
-                      <div className="py-4">
+                      <div className="p-6">
                         {activitiesLoading ? (
                           <div className="space-y-4">
                             <Skeleton active />
                             <Skeleton active />
                           </div>
                         ) : timelineData.length === 0 ? (
-                          <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="Henüz aktivite bulunmuyor"
-                          >
+                          <div className="py-12 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                              <ClockCircleOutlined className="text-2xl text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 mb-4">Henüz aktivite bulunmuyor</p>
                             <Button type="dashed" icon={<ClockCircleOutlined />}>
                               Yeni Aktivite Oluştur
                             </Button>
-                          </Empty>
+                          </div>
                         ) : (
                           <Timeline
                             items={timelineData.map((item: any) => ({
@@ -463,34 +476,35 @@ export default function CustomerDetailPage() {
                   {
                     key: 'orders',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 py-1">
                         <ShoppingOutlined />
                         Siparişler
                       </span>
                     ),
                     children: (
-                      <div className="py-8">
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Henüz sipariş bulunmuyor"
-                        >
+                      <div className="p-6">
+                        <div className="py-12 text-center">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                            <ShoppingOutlined className="text-2xl text-slate-400" />
+                          </div>
+                          <p className="text-slate-500 mb-4">Henüz sipariş bulunmuyor</p>
                           <Button type="primary" icon={<ShoppingOutlined />}>
                             Yeni Sipariş Oluştur
                           </Button>
-                        </Empty>
+                        </div>
                       </div>
                     ),
                   },
                   {
                     key: 'documents',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 py-1">
                         <FileOutlined />
                         Dokümanlar
                       </span>
                     ),
                     children: (
-                      <div className="py-4">
+                      <div className="p-6">
                         <DocumentUpload
                           entityId={customer.id}
                           entityType="Customer"
@@ -503,21 +517,22 @@ export default function CustomerDetailPage() {
                   {
                     key: 'contacts',
                     label: (
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 py-1">
                         <UserOutlined />
                         Kişiler
                       </span>
                     ),
                     children: (
-                      <div className="py-8">
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Henüz kişi bulunmuyor"
-                        >
+                      <div className="p-6">
+                        <div className="py-12 text-center">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                            <UserOutlined className="text-2xl text-slate-400" />
+                          </div>
+                          <p className="text-slate-500 mb-4">Henüz kişi bulunmuyor</p>
                           <Button type="dashed" icon={<UserOutlined />}>
                             Yeni Kişi Ekle
                           </Button>
-                        </Empty>
+                        </div>
                       </div>
                     ),
                   },
