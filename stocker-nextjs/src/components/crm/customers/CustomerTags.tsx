@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Tag, Input, Button, Space, Tooltip, Modal, Form, ColorPicker, message } from 'antd';
-import { PlusOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Tag, Input, Button, Modal, Form, Popover } from 'antd';
+import { PlusOutlined, CheckOutlined } from '@ant-design/icons';
 import {
   useCustomerTags,
   useAddCustomerTag,
@@ -19,13 +18,22 @@ interface CustomerTagsProps {
 }
 
 const predefinedColors = [
-  '#f50', '#2db7f5', '#87d068', '#108ee9', '#ff6b6b',
-  '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe',
-  '#fd79a8', '#fdcb6e', '#e17055', '#00b894', '#0984e3'
+  { name: 'Kırmızı', value: '#ef4444' },
+  { name: 'Turuncu', value: '#f97316' },
+  { name: 'Amber', value: '#f59e0b' },
+  { name: 'Yeşil', value: '#22c55e' },
+  { name: 'Teal', value: '#14b8a6' },
+  { name: 'Mavi', value: '#3b82f6' },
+  { name: 'Indigo', value: '#6366f1' },
+  { name: 'Mor', value: '#a855f7' },
+  { name: 'Pembe', value: '#ec4899' },
+  { name: 'Gri', value: '#6b7280' },
 ];
 
 export function CustomerTags({ customerId, editable = false, size = 'default' }: CustomerTagsProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [tagName, setTagName] = useState('');
+  const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [form] = Form.useForm();
 
   const { data: tags, isLoading } = useCustomerTags(customerId);
@@ -34,15 +42,17 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
   const removeTagMutation = useRemoveCustomerTag();
 
   const handleAddTag = async () => {
+    if (!tagName.trim()) return;
+
     try {
-      const values = await form.validateFields();
       await addTagMutation.mutateAsync({
         customerId,
-        tagName: values.tagName,
-        color: values.color?.toHexString?.() || values.color || '#108ee9',
+        tagName: tagName.trim(),
+        color: selectedColor,
       });
       setIsModalVisible(false);
-      form.resetFields();
+      setTagName('');
+      setSelectedColor('#3b82f6');
     } catch (error) {
       console.error('Error adding tag:', error);
     }
@@ -50,131 +60,207 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
 
   const handleRemoveTag = async (tagId: Guid) => {
     Modal.confirm({
-      title: 'Etiketi kaldır',
+      title: 'Etiketi Kaldır',
       content: 'Bu etiketi müşteriden kaldırmak istediğinizden emin misiniz?',
       okText: 'Kaldır',
       cancelText: 'İptal',
       okButtonProps: { danger: true },
+      centered: true,
       onOk: async () => {
         await removeTagMutation.mutateAsync({ id: tagId, customerId });
       },
     });
   };
 
+  const handleQuickAdd = async (existingTagName: string) => {
+    try {
+      await addTagMutation.mutateAsync({
+        customerId,
+        tagName: existingTagName,
+        color: '#3b82f6',
+      });
+    } catch (error) {
+      console.error('Error adding tag:', error);
+    }
+  };
+
   if (isLoading) {
-    return <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>;
+    return (
+      <div className="flex gap-2">
+        <div className="animate-pulse bg-slate-200 h-6 w-16 rounded-md"></div>
+        <div className="animate-pulse bg-slate-200 h-6 w-20 rounded-md"></div>
+      </div>
+    );
   }
 
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <AnimatePresence mode="popLayout">
-        {tags?.map((tag, index) => (
-          <motion.div
-            key={tag.id}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <Tag
-              color={tag.color || 'blue'}
-              closable={editable}
-              onClose={() => handleRemoveTag(tag.id)}
-              style={{
-                fontSize: size === 'small' ? '12px' : size === 'large' ? '16px' : '14px',
-                padding: size === 'small' ? '2px 8px' : size === 'large' ? '6px 12px' : '4px 10px',
-              }}
-            >
-              {tag.tagName}
-            </Tag>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+  // Filter out already added tags from suggestions
+  const existingTagNames = tags?.map(t => t.tagName) || [];
+  const suggestedTags = allTags?.filter(t => !existingTagNames.includes(t)).slice(0, 5) || [];
 
-      {editable && (
-        <Tooltip title="Etiket ekle">
+  return (
+    <div className="space-y-3">
+      {/* Tags Display */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {tags?.length === 0 && !editable && (
+          <span className="text-sm text-slate-400">Etiket yok</span>
+        )}
+
+        {tags?.map((tag) => (
+          <Tag
+            key={tag.id}
+            color={tag.color || 'blue'}
+            closable={editable}
+            onClose={(e) => {
+              e.preventDefault();
+              handleRemoveTag(tag.id);
+            }}
+            className="m-0 px-3 py-1 text-sm rounded-md border-0"
+            style={{
+              backgroundColor: tag.color ? `${tag.color}20` : undefined,
+              color: tag.color || undefined,
+            }}
+          >
+            {tag.tagName}
+          </Tag>
+        ))}
+
+        {editable && (
           <Button
-            type="dashed"
-            size={size as any}
+            type="text"
+            size="small"
             icon={<PlusOutlined />}
             onClick={() => setIsModalVisible(true)}
+            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md px-3 h-7"
           >
-            Etiket Ekle
+            Ekle
           </Button>
-        </Tooltip>
+        )}
+      </div>
+
+      {/* Quick Add from Existing Tags */}
+      {editable && suggestedTags.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-slate-400">Önerilen:</span>
+          {suggestedTags.map((tagName) => (
+            <button
+              key={tagName}
+              onClick={() => handleQuickAdd(tagName)}
+              className="text-xs px-2 py-1 rounded-md bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+            >
+              + {tagName}
+            </button>
+          ))}
+        </div>
       )}
 
+      {/* Add Tag Modal */}
       <Modal
-        title="Yeni Etiket Ekle"
+        title={
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+              <PlusOutlined className="text-slate-600" />
+            </div>
+            <span>Yeni Etiket Ekle</span>
+          </div>
+        }
         open={isModalVisible}
         onOk={handleAddTag}
         onCancel={() => {
           setIsModalVisible(false);
-          form.resetFields();
+          setTagName('');
+          setSelectedColor('#3b82f6');
         }}
         confirmLoading={addTagMutation.isPending}
         okText="Ekle"
         cancelText="İptal"
+        centered
+        width={400}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{
-            color: '#108ee9',
-          }}
-        >
-          <Form.Item
-            name="tagName"
-            label="Etiket Adı"
-            rules={[
-              { required: true, message: 'Etiket adı gerekli' },
-              { min: 2, message: 'En az 2 karakter olmalı' },
-              { max: 50, message: 'En fazla 50 karakter olabilir' },
-            ]}
-          >
+        <div className="py-4 space-y-4">
+          {/* Tag Name Input */}
+          <div>
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+              Etiket Adı
+            </label>
             <Input
-              placeholder="Örn: VIP Müşteri, Yeni, Potansiyel"
+              value={tagName}
+              onChange={(e) => setTagName(e.target.value)}
+              placeholder="Örn: VIP Müşteri"
+              size="large"
+              className="rounded-lg"
+              onPressEnter={handleAddTag}
               autoFocus
-              list="existing-tags"
             />
-            {allTags && allTags.length > 0 && (
-              <datalist id="existing-tags">
-                {allTags.map((tag) => (
-                  <option key={tag} value={tag} />
-                ))}
-              </datalist>
-            )}
-          </Form.Item>
+          </div>
 
-          <Form.Item name="color" label="Renk">
-            <ColorPicker
-              presets={[
-                {
-                  label: 'Önerilenler',
-                  colors: predefinedColors,
-                },
-              ]}
-              showText
-            />
-          </Form.Item>
+          {/* Color Selection */}
+          <div>
+            <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+              Renk
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {predefinedColors.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => setSelectedColor(color.value)}
+                  className={`w-8 h-8 rounded-lg transition-all ${
+                    selectedColor === color.value
+                      ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
+                      : 'hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                >
+                  {selectedColor === color.value && (
+                    <CheckOutlined className="text-white text-xs" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {allTags && allTags.length > 0 && (
-            <div className="mb-4">
-              <div className="text-sm text-gray-600 mb-2">Mevcut etiketler:</div>
-              <Space wrap>
-                {allTags.slice(0, 10).map((tag) => (
-                  <Tag
-                    key={tag}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => form.setFieldsValue({ tagName: tag })}
-                  >
-                    {tag}
-                  </Tag>
-                ))}
-              </Space>
+          {/* Preview */}
+          {tagName && (
+            <div>
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+                Önizleme
+              </label>
+              <Tag
+                className="m-0 px-3 py-1 text-sm rounded-md border-0"
+                style={{
+                  backgroundColor: `${selectedColor}20`,
+                  color: selectedColor,
+                }}
+              >
+                {tagName}
+              </Tag>
             </div>
           )}
-        </Form>
+
+          {/* Existing Tags Suggestions */}
+          {allTags && allTags.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block">
+                Mevcut Etiketler
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {allTags.slice(0, 8).map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setTagName(tag)}
+                    className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                      tagName === tag
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );
@@ -185,20 +271,30 @@ export function CustomerTagList({ customerId }: { customerId: Guid }) {
   const { data: tags, isLoading } = useCustomerTags(customerId);
 
   if (isLoading) {
-    return <div className="animate-pulse bg-gray-200 h-6 w-24 rounded"></div>;
+    return <div className="animate-pulse bg-slate-200 h-5 w-20 rounded"></div>;
   }
 
   if (!tags || tags.length === 0) {
-    return <span className="text-gray-400 text-sm">-</span>;
+    return <span className="text-slate-400 text-sm">-</span>;
   }
 
   return (
-    <Space wrap size={4}>
-      {tags.map((tag) => (
-        <Tag key={tag.id} color={tag.color || 'blue'} style={{ margin: 0 }}>
+    <div className="flex flex-wrap gap-1">
+      {tags.slice(0, 3).map((tag) => (
+        <Tag
+          key={tag.id}
+          className="m-0 px-2 py-0.5 text-xs rounded border-0"
+          style={{
+            backgroundColor: tag.color ? `${tag.color}20` : '#e2e8f0',
+            color: tag.color || '#64748b',
+          }}
+        >
           {tag.tagName}
         </Tag>
       ))}
-    </Space>
+      {tags.length > 3 && (
+        <span className="text-xs text-slate-400">+{tags.length - 3}</span>
+      )}
+    </div>
   );
 }

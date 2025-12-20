@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Stocker.SharedKernel.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,16 @@ using Stocker.Modules.CRM.Application.Features.CustomerTags.Queries;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.CRM.API.Controllers;
+
+/// <summary>
+/// DTO for adding a customer tag from frontend
+/// </summary>
+public class AddCustomerTagDto
+{
+    public Guid CustomerId { get; set; }
+    public string TagName { get; set; } = string.Empty;
+    public string? Color { get; set; }
+}
 
 [ApiController]
 [Authorize]
@@ -21,6 +32,13 @@ public class CustomerTagsController : ControllerBase
     public CustomerTagsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
     }
 
     /// <summary>
@@ -68,8 +86,20 @@ public class CustomerTagsController : ControllerBase
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
     [ProducesResponseType(409)]
-    public async Task<ActionResult<CustomerTagDto>> AddTag(AddCustomerTagCommand command)
+    public async Task<ActionResult<CustomerTagDto>> AddTag([FromBody] AddCustomerTagDto dto)
     {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return BadRequest(new Error("Auth.InvalidUser", "User ID could not be determined", ErrorType.Unauthorized));
+
+        var command = new AddCustomerTagCommand
+        {
+            CustomerId = dto.CustomerId,
+            Tag = dto.TagName,
+            Color = dto.Color,
+            CreatedBy = userId
+        };
+
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
