@@ -3,7 +3,7 @@ using MassTransit;
 using MediatR;
 using Stocker.Modules.CRM.Application.DTOs;
 using Stocker.Modules.CRM.Domain.Entities;
-using Stocker.Modules.CRM.Domain.Repositories;
+using Stocker.Modules.CRM.Interfaces;
 using Stocker.Shared.Events.CRM;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
@@ -68,16 +68,13 @@ public class CreateCustomerCommandValidator : AbstractValidator<CreateCustomerCo
 /// </summary>
 public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerCommand, Result<CustomerDto>>
 {
-    private readonly ICustomerRepository _customerRepository;
-    private readonly SharedKernel.Interfaces.IUnitOfWork _unitOfWork;
+    private readonly ICRMUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
 
     public CreateCustomerCommandHandler(
-        ICustomerRepository customerRepository,
-        SharedKernel.Interfaces.IUnitOfWork unitOfWork,
+        ICRMUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint)
     {
-        _customerRepository = customerRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
     }
@@ -85,9 +82,9 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
     public async Task<Result<CustomerDto>> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         // Check if customer with same email already exists
-        var emailExists = await _customerRepository.ExistsWithEmailAsync(
-            request.CustomerData.Email, 
-            null, 
+        var emailExists = await _unitOfWork.Customers.ExistsWithEmailAsync(
+            request.CustomerData.Email,
+            null,
             cancellationToken);
 
         if (emailExists)
@@ -155,7 +152,7 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
         }
 
         // Save to repository
-        await _customerRepository.AddAsync(customer, cancellationToken);
+        await _unitOfWork.Customers.AddAsync(customer, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish integration event
