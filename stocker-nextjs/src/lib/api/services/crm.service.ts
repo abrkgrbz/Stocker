@@ -461,64 +461,58 @@ export class CRMService {
   }
 
   /**
-   * Create new customer using CRM module's CreateCustomerCommand
+   * Create new customer using CRM module's CreateCustomerDto
    */
   static async createCustomer(data: CreateCustomerDto): Promise<Customer> {
-    // CRM module expects: CreateCustomerCommand { CustomerData: CreateCustomerDto }
-    // CreateCustomerDto matches our frontend DTO structure
-    const command = {
-      CustomerData: {
-        CompanyName: data.companyName,
-        Email: data.email,
-        Phone: this.formatPhoneNumber(data.phone),
-        Website: data.website || null,
-        Industry: null, // Not collected in frontend yet
-        Address: data.address || null,
-        City: data.city || null,
-        State: data.state || null,
-        Country: data.country || null,
-        PostalCode: data.postalCode || null,
-        AnnualRevenue: null, // Not collected in frontend yet
-        NumberOfEmployees: null, // Not collected in frontend yet
-        Description: data.notes || null,
-      }
+    // CRM module expects: CreateCustomerDto directly (controller wraps in command)
+    const dto = {
+      companyName: data.companyName,
+      email: data.email,
+      phone: this.formatPhoneNumber(data.phone),
+      website: data.website || null,
+      industry: null, // Not collected in frontend yet
+      address: data.address || null,
+      city: data.city || null,
+      state: data.state || null,
+      country: data.country || null,
+      postalCode: data.postalCode || null,
+      annualRevenue: null, // Not collected in frontend yet
+      numberOfEmployees: null, // Not collected in frontend yet
+      description: data.notes || null,
     };
 
-    logger.info('📤 Sending CreateCustomerCommand to CRM module', { metadata: { command } });
-    return ApiService.post<Customer>(this.getPath('customers'), command);
+    logger.info('📤 Sending CreateCustomerDto to CRM module', { metadata: { dto } });
+    return ApiService.post<Customer>(this.getPath('customers'), dto);
   }
 
   /**
-   * Update existing customer using CRM module's UpdateCustomerCommand
+   * Update existing customer using CRM module's UpdateCustomerDto
    */
   static async updateCustomer(
     id: string,
     data: UpdateCustomerDto
   ): Promise<Customer> {
-    // CRM module expects: UpdateCustomerCommand { CustomerId, CustomerData }
-    const command = {
-      CustomerId: id,
-      CustomerData: {
-        CompanyName: data.companyName,
-        Email: data.email,
-        Phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
-        Website: data.website,
-        Industry: null,
-        Address: data.address,
-        City: data.city,
-        State: data.state,
-        Country: data.country,
-        PostalCode: data.postalCode,
-        AnnualRevenue: null,
-        NumberOfEmployees: null,
-        Description: data.notes,
-      }
+    // CRM module expects: UpdateCustomerDto directly (controller wraps in command)
+    const dto = {
+      companyName: data.companyName,
+      email: data.email,
+      phone: data.phone ? this.formatPhoneNumber(data.phone) : undefined,
+      website: data.website,
+      industry: null,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      country: data.country,
+      postalCode: data.postalCode,
+      annualRevenue: null,
+      numberOfEmployees: null,
+      description: data.notes,
     };
 
-    logger.info('📤 Sending UpdateCustomerCommand to CRM module', { metadata: { command } });
+    logger.info('📤 Sending UpdateCustomerDto to CRM module', { metadata: { dto } });
     return ApiService.put<Customer>(
       this.getPath(`customers/${id}`),
-      command
+      dto
     );
   }
 
