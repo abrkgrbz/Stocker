@@ -35,16 +35,16 @@ public class SurveyResponseConfiguration : IEntityTypeConfiguration<SurveyRespon
             .HasPrecision(3, 2);
 
         builder.Property(s => s.OverallComment)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(s => s.ImprovementSuggestion)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(s => s.Praise)
             .HasMaxLength(2000);
 
         builder.Property(s => s.Complaint)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(s => s.FollowUpNote)
             .HasMaxLength(2000);
@@ -118,7 +118,7 @@ public class SurveyAnswerConfiguration : IEntityTypeConfiguration<SurveyAnswer>
             .HasMaxLength(500);
 
         builder.Property(a => a.Answer)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(a => a.AnswerType)
             .HasMaxLength(50);

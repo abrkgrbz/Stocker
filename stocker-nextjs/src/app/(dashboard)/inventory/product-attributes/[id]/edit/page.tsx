@@ -20,8 +20,11 @@ import {
   SaveOutlined,
   PlusOutlined,
   DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
+  TagsOutlined,
+  SettingOutlined,
+  UnorderedListOutlined,
+  NumberOutlined,
+  FontSizeOutlined,
 } from '@ant-design/icons';
 import {
   useProductAttribute,
@@ -32,6 +35,7 @@ import {
   type UpdateProductAttributeDto,
 } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
+import { showSuccess } from '@/lib/utils/sweetalert';
 
 const { TextArea } = Input;
 
@@ -138,6 +142,7 @@ export default function EditProductAttributePage() {
       };
 
       await updateAttribute.mutateAsync({ id: attributeId, data });
+      showSuccess('Başarılı', 'Özellik güncellendi');
       router.push(`/inventory/product-attributes/${attributeId}`);
     } catch {
       // Validation error
@@ -154,6 +159,7 @@ export default function EditProductAttributePage() {
           value={record.value}
           onChange={(e) => handleOptionChange(record.key, 'value', e.target.value)}
           placeholder="Seçenek değeri"
+          variant="filled"
         />
       ),
     },
@@ -169,10 +175,11 @@ export default function EditProductAttributePage() {
                 value={record.colorCode}
                 onChange={(e) => handleOptionChange(record.key, 'colorCode', e.target.value)}
                 placeholder="#FFFFFF"
+                variant="filled"
                 prefix={
                   record.colorCode && (
                     <div
-                      className="w-4 h-4 rounded border"
+                      className="w-4 h-4 rounded border border-slate-300"
                       style={{ backgroundColor: record.colorCode }}
                     />
                   )
@@ -193,6 +200,7 @@ export default function EditProductAttributePage() {
           onChange={(value) => handleOptionChange(record.key, 'displayOrder', value || 0)}
           min={0}
           style={{ width: '100%' }}
+          variant="filled"
         />
       ),
     },
@@ -227,7 +235,7 @@ export default function EditProductAttributePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center items-center">
+      <div className="min-h-screen bg-slate-50 flex justify-center items-center">
         <Spin size="large" />
       </div>
     );
@@ -252,38 +260,41 @@ export default function EditProductAttributePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Glass Effect Sticky Header */}
       <div
         className="sticky top-0 z-50 px-8 py-4"
         style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+          background: 'rgba(248, 250, 252, 0.85)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
         }}
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
+            <button
               onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ArrowLeftOutlined />
+            </button>
             <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: '#8b5cf615' }}
+              >
+                <TagsOutlined style={{ color: '#8b5cf6' }} />
+              </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-gray-900 m-0">
+                  <h1 className="text-lg font-semibold text-slate-800 m-0">
                     {attribute.name}
                   </h1>
-                  <Tag
-                    icon={attribute.isVisible ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
-                    color={attribute.isVisible ? 'success' : 'default'}
-                  >
-                    {attribute.isVisible ? 'Görünür' : 'Gizli'}
+                  <Tag color={attribute.isActive ? 'green' : 'default'}>
+                    {attribute.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
                 </div>
-                <p className="text-sm text-gray-400 m-0">{attribute.code}</p>
+                <p className="text-sm text-slate-500 m-0">Kod: {attribute.code}</p>
               </div>
             </div>
           </div>
@@ -296,11 +307,7 @@ export default function EditProductAttributePage() {
               icon={<SaveOutlined />}
               loading={updateAttribute.isPending}
               onClick={handleSubmit}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-                color: 'white',
-              }}
+              style={{ background: '#0f172a', borderColor: '#0f172a' }}
             >
               Kaydet
             </Button>
@@ -311,48 +318,68 @@ export default function EditProductAttributePage() {
       {/* Page Content */}
       <div className="px-8 py-8 max-w-7xl mx-auto">
         <Form form={form} layout="vertical">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Main Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Info */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">Temel Bilgiler</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <TagsOutlined className="text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Temel Bilgiler
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item
-                    name="code"
-                    label="Özellik Kodu"
-                    rules={[{ required: true, message: 'Kod gerekli' }]}
-                  >
-                    <Input placeholder="SIZE" disabled />
-                  </Form.Item>
-                  <Form.Item
-                    name="name"
-                    label="Özellik Adı"
-                    rules={[{ required: true, message: 'Ad gerekli' }]}
-                  >
-                    <Input placeholder="Beden" />
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Özellik Kodu</div>
+                    <Form.Item
+                      name="code"
+                      rules={[{ required: true, message: 'Kod gerekli' }]}
+                      className="mb-0"
+                    >
+                      <Input placeholder="SIZE" disabled variant="filled" />
+                    </Form.Item>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Özellik Adı *</div>
+                    <Form.Item
+                      name="name"
+                      rules={[{ required: true, message: 'Ad gerekli' }]}
+                      className="mb-0"
+                    >
+                      <Input placeholder="Beden" variant="filled" />
+                    </Form.Item>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs text-slate-500 mb-1">Açıklama</div>
+                  <Form.Item name="description" className="mb-0">
+                    <TextArea rows={2} placeholder="Özellik açıklaması..." variant="filled" />
                   </Form.Item>
                 </div>
 
-                <Form.Item name="description" label="Açıklama">
-                  <TextArea rows={2} placeholder="Özellik açıklaması..." />
-                </Form.Item>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item
-                    name="attributeType"
-                    label="Tip"
-                    rules={[{ required: true, message: 'Tip seçin' }]}
-                  >
-                    <Select
-                      options={attributeTypes.map((t) => ({ value: t.value, label: t.label }))}
-                      onChange={(value) => setAttributeType(value)}
-                      disabled
-                    />
-                  </Form.Item>
-                  <Form.Item name="groupName" label="Grup">
-                    <Input placeholder="Fiziksel Özellikler" />
-                  </Form.Item>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Tip</div>
+                    <Form.Item
+                      name="attributeType"
+                      rules={[{ required: true, message: 'Tip seçin' }]}
+                      className="mb-0"
+                    >
+                      <Select
+                        options={attributeTypes.map((t) => ({ value: t.value, label: t.label }))}
+                        onChange={(value) => setAttributeType(value)}
+                        disabled
+                      />
+                    </Form.Item>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Grup</div>
+                    <Form.Item name="groupName" className="mb-0">
+                      <Input placeholder="Fiziksel Özellikler" variant="filled" />
+                    </Form.Item>
+                  </div>
                 </div>
               </div>
 
@@ -360,8 +387,22 @@ export default function EditProductAttributePage() {
               {hasOptions && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-base font-semibold text-gray-900 m-0">Seçenekler</h3>
-                    <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddOption}>
+                    <div className="flex items-center gap-2">
+                      <UnorderedListOutlined className="text-slate-400" />
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        Seçenekler
+                        {options.length > 0 && (
+                          <span className="ml-2 text-slate-400">({options.length})</span>
+                        )}
+                      </span>
+                    </div>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      onClick={handleAddOption}
+                      className="text-violet-600"
+                    >
                       Seçenek Ekle
                     </Button>
                   </div>
@@ -381,46 +422,98 @@ export default function EditProductAttributePage() {
             <div className="space-y-6">
               {/* Settings */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <h3 className="text-base font-semibold text-gray-900 mb-4">Ayarlar</h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <SettingOutlined className="text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Ayarlar
+                  </span>
+                </div>
                 <div className="space-y-4">
-                  <Form.Item name="isRequired" label="Zorunlu" valuePropName="checked" className="mb-2">
-                    <Switch />
-                  </Form.Item>
-                  <Form.Item name="isFilterable" label="Filtrelenebilir" valuePropName="checked" className="mb-2">
-                    <Switch />
-                  </Form.Item>
-                  <Form.Item name="isVisible" label="Görünür" valuePropName="checked" className="mb-2">
-                    <Switch />
-                  </Form.Item>
-                  <Form.Item name="displayOrder" label="Sıralama" className="mb-0">
-                    <InputNumber style={{ width: '100%' }} min={0} />
-                  </Form.Item>
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                    <div>
+                      <div className="text-sm font-medium text-slate-700">Zorunlu</div>
+                      <div className="text-xs text-slate-500">Doldurulmak zorunda</div>
+                    </div>
+                    <Form.Item name="isRequired" valuePropName="checked" className="mb-0">
+                      <Switch size="small" />
+                    </Form.Item>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <div>
+                      <div className="text-sm font-medium text-slate-700">Filtrelenebilir</div>
+                      <div className="text-xs text-slate-500">Ürün listesinde filtre</div>
+                    </div>
+                    <Form.Item name="isFilterable" valuePropName="checked" className="mb-0">
+                      <Switch size="small" />
+                    </Form.Item>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div>
+                      <div className="text-sm font-medium text-slate-700">Görünür</div>
+                      <div className="text-xs text-slate-500">Müşterilere gösterilir</div>
+                    </div>
+                    <Form.Item name="isVisible" valuePropName="checked" className="mb-0">
+                      <Switch size="small" />
+                    </Form.Item>
+                  </div>
+                  <div className="pt-2">
+                    <div className="text-xs text-slate-500 mb-1">Görüntüleme Sırası</div>
+                    <Form.Item name="displayOrder" className="mb-0">
+                      <InputNumber style={{ width: '100%' }} min={0} variant="filled" />
+                    </Form.Item>
+                  </div>
                 </div>
               </div>
 
               {/* Number Constraints */}
               {attributeType === AttributeType.Number && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
-                  <h3 className="text-base font-semibold text-gray-900 mb-4">Sayısal Kısıtlamalar</h3>
-                  <Form.Item name="minValue" label="Minimum Değer">
-                    <InputNumber style={{ width: '100%' }} />
-                  </Form.Item>
-                  <Form.Item name="maxValue" label="Maximum Değer" className="mb-0">
-                    <InputNumber style={{ width: '100%' }} />
-                  </Form.Item>
+                  <div className="flex items-center gap-2 mb-4">
+                    <NumberOutlined className="text-slate-400" />
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Sayısal Kısıtlamalar
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Minimum Değer</div>
+                      <Form.Item name="minValue" className="mb-0">
+                        <InputNumber style={{ width: '100%' }} variant="filled" />
+                      </Form.Item>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Maximum Değer</div>
+                      <Form.Item name="maxValue" className="mb-0">
+                        <InputNumber style={{ width: '100%' }} variant="filled" />
+                      </Form.Item>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Text Constraints */}
               {attributeType === AttributeType.Text && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
-                  <h3 className="text-base font-semibold text-gray-900 mb-4">Metin Kısıtlamaları</h3>
-                  <Form.Item name="validationPattern" label="Regex Deseni">
-                    <Input placeholder="^[A-Z]+$" />
-                  </Form.Item>
-                  <Form.Item name="defaultValue" label="Varsayılan Değer" className="mb-0">
-                    <Input placeholder="Varsayılan değer" />
-                  </Form.Item>
+                  <div className="flex items-center gap-2 mb-4">
+                    <FontSizeOutlined className="text-slate-400" />
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Metin Kısıtlamaları
+                    </span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Regex Deseni</div>
+                      <Form.Item name="validationPattern" className="mb-0">
+                        <Input placeholder="^[A-Z]+$" variant="filled" />
+                      </Form.Item>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Varsayılan Değer</div>
+                      <Form.Item name="defaultValue" className="mb-0">
+                        <Input placeholder="Varsayılan değer" variant="filled" />
+                      </Form.Item>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

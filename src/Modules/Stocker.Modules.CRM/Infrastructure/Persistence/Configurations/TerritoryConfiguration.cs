@@ -51,7 +51,7 @@ public class TerritoryConfiguration : IEntityTypeConfiguration<Territory>
             .HasMaxLength(200);
 
         builder.Property(t => t.GeoCoordinates)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(t => t.SalesTarget)
             .HasPrecision(18, 2);

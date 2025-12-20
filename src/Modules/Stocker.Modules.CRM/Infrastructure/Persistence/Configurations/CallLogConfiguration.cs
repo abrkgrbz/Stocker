@@ -52,7 +52,7 @@ public class CallLogConfiguration : IEntityTypeConfiguration<CallLog>
             .HasMaxLength(500);
 
         builder.Property(c => c.Transcript)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(c => c.QualityNotes)
             .HasMaxLength(2000);

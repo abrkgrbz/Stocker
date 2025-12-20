@@ -102,16 +102,17 @@ public class CRMDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CRMDbContext).Assembly);
-
         // Set default schema for CRM module
         modelBuilder.HasDefaultSchema("crm");
 
-        // Configure Address as owned entity (Value Object) for entities that use it
+        // IMPORTANT: Configure Account entity BEFORE ApplyConfigurationsFromAssembly
+        // to prevent EF Core from inferring foreign keys from navigation properties
         // Account entity with BillingAddress and ShippingAddress
         modelBuilder.Entity<Account>(entity =>
         {
+            // Explicitly set table name with lowercase schema
+            entity.ToTable("Accounts", "crm");
+
             entity.OwnsOne(a => a.BillingAddress, address =>
             {
                 address.Property(a => a.Street).HasColumnName("BillingStreet").HasMaxLength(500);
@@ -132,7 +133,19 @@ public class CRMDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(a => a.ParentAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Ignore navigation properties that would cause EF Core to infer foreign keys
+            // These collections are for domain logic only, not for database relationships
+            // Contacts are associated with Customer, not Account
+            entity.Ignore(a => a.Contacts);
+            entity.Ignore(a => a.Opportunities);
+            entity.Ignore(a => a.Deals);
+            entity.Ignore(a => a.Activities);
+            entity.Ignore(a => a.Notes);
         });
+
+        // Apply configurations from assembly AFTER Account is configured
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CRMDbContext).Assembly);
 
         // Contract entity with BillingAddress
         modelBuilder.Entity<Contract>(entity =>

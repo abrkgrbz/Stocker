@@ -83,13 +83,13 @@ public class CompetitorConfiguration : IEntityTypeConfiguration<Competitor>
             .HasMaxLength(50);
 
         builder.Property(c => c.SwotSummary)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(c => c.CompetitiveStrategy)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(c => c.WinStrategy)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(c => c.LossReasons)
             .HasMaxLength(2000);
@@ -98,7 +98,7 @@ public class CompetitorConfiguration : IEntityTypeConfiguration<Competitor>
             .HasMaxLength(200);
 
         builder.Property(c => c.Notes)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(c => c.Tags)
             .HasMaxLength(500);
@@ -152,7 +152,7 @@ public class CompetitorProductConfiguration : IEntityTypeConfiguration<Competito
             .HasMaxLength(100);
 
         builder.Property(p => p.Features)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(p => p.Differentiators)
             .HasMaxLength(2000);

@@ -53,16 +53,16 @@ public class MeetingConfiguration : IEntityTypeConfiguration<Meeting>
             .HasMaxLength(255);
 
         builder.Property(m => m.Agenda)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(m => m.Notes)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(m => m.Outcome)
             .HasMaxLength(2000);
 
         builder.Property(m => m.ActionItems)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(m => m.RecurrencePattern)
             .HasMaxLength(500);

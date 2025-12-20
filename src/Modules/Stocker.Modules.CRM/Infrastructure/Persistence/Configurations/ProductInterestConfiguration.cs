@@ -44,7 +44,7 @@ public class ProductInterestConfiguration : IEntityTypeConfiguration<ProductInte
             .HasMaxLength(1000);
 
         builder.Property(p => p.Requirements)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(p => p.Notes)
             .HasMaxLength(2000);

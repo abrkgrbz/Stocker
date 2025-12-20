@@ -48,10 +48,10 @@ public class LoyaltyProgramConfiguration : IEntityTypeConfiguration<LoyaltyProgr
             .HasPrecision(5, 2);
 
         builder.Property(l => l.TermsAndConditions)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(l => l.PrivacyPolicy)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         // Relationships
         builder.HasMany(l => l.Tiers)
@@ -96,7 +96,7 @@ public class LoyaltyTierConfiguration : IEntityTypeConfiguration<LoyaltyTier>
             .HasPrecision(5, 2);
 
         builder.Property(t => t.Benefits)
-            .HasColumnType("nvarchar(max)");
+            .HasColumnType("text");
 
         builder.Property(t => t.IconUrl)
             .HasMaxLength(500);
