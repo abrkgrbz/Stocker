@@ -123,7 +123,7 @@ public class CustomersController : ControllerBase
     [ProducesResponseType(typeof(CustomerDto), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
-    public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerCommand command)
+    public async Task<ActionResult<CustomerDto>> CreateCustomer([FromBody] CreateCustomerDto dto)
     {
         // Set TenantId from TenantResolutionMiddleware context
         var tenantId = HttpContext.Items["TenantId"] as Guid?;
@@ -132,7 +132,11 @@ public class CustomersController : ControllerBase
             return BadRequest(new Error("Tenant.Required", "Tenant ID is required", ErrorType.Validation));
         }
 
-        command.TenantId = tenantId.Value;
+        var command = new CreateCustomerCommand
+        {
+            TenantId = tenantId.Value,
+            CustomerData = dto
+        };
 
         var result = await _mediator.Send(command);
         if (result.IsFailure)
