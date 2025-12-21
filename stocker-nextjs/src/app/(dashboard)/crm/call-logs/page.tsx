@@ -134,8 +134,9 @@ export default function CallLogsPage() {
   });
   const deleteCallLog = useDeleteCallLog();
 
-  const callLogs = data || [];
-  const totalCount = callLogs.length;
+  // Backend returns { callLogs: CallLogDto[], totalCount: number }
+  const callLogs = data?.callLogs || [];
+  const totalCount = data?.totalCount || 0;
 
   // Debounce search input
   useEffect(() => {

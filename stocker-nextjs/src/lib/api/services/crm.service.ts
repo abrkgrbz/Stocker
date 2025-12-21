@@ -1690,8 +1690,8 @@ export class CRMService {
   /**
    * Get all call logs with filters
    */
-  static async getCallLogs(filters?: CallLogFilters): Promise<CallLogDto[]> {
-    return ApiService.get<CallLogDto[]>(this.getPath('call-logs'), { params: filters });
+  static async getCallLogs(filters?: CallLogFilters): Promise<{ callLogs: CallLogDto[]; totalCount: number }> {
+    return ApiService.get<{ callLogs: CallLogDto[]; totalCount: number }>(this.getPath('call-logs'), { params: filters });
   }
 
   /**
