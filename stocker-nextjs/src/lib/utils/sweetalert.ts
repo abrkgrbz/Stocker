@@ -110,19 +110,35 @@ export const confirmDelete = async (
 
 /**
  * Confirmation dialog for any operation
+ * @param variant - 'success' | 'warning' | 'danger' | 'info' - determines button color and icon
  */
 export const confirmAction = async (
   title: string,
   message: string,
   confirmText: string = 'Evet',
+  variant: 'success' | 'warning' | 'danger' | 'info' = 'info',
   cancelText: string = 'İptal'
 ): Promise<boolean> => {
+  const variantColors = {
+    success: '#10b981', // green
+    warning: '#f59e0b', // amber
+    danger: '#ef4444',  // red
+    info: BRAND_COLOR,  // brand blue
+  };
+
+  const variantIcons = {
+    success: 'question' as const,
+    warning: 'warning' as const,
+    danger: 'warning' as const,
+    info: 'question' as const,
+  };
+
   const result = await Swal.fire({
     title,
     text: message,
-    icon: 'question',
+    icon: variantIcons[variant],
     showCancelButton: true,
-    confirmButtonColor: BRAND_COLOR,
+    confirmButtonColor: variantColors[variant],
     cancelButtonColor: '#d9d9d9',
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,

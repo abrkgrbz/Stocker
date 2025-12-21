@@ -7,8 +7,11 @@ import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined, CheckCi
 import {
   showDeleteSuccess,
   showError,
+  showSuccess,
   confirmDelete,
+  confirmAction,
 } from '@/lib/utils/sweetalert';
+import { RowActions, createAction } from '@/components/ui/RowActions';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingStatus, MeetingType, MeetingPriority } from '@/lib/api/services/crm.types';
 import { useMeetings, useDeleteMeeting } from '@/lib/api/hooks/useCRM';
@@ -174,6 +177,50 @@ export default function MeetingsPage() {
     router.push('/crm/meetings/new');
   };
 
+  const handleEdit = (id: string) => {
+    router.push(`/crm/meetings/${id}/edit`);
+  };
+
+  const handleComplete = async (id: string, meeting: MeetingDto) => {
+    const confirmed = await confirmAction(
+      'Toplantıyı Tamamla',
+      `"${meeting.title}" toplantısını tamamlandı olarak işaretlemek istediğinize emin misiniz?`,
+      'Evet, Tamamla',
+      'success'
+    );
+
+    if (confirmed) {
+      try {
+        // TODO: API call for completing meeting
+        // await completeMeeting.mutateAsync(id);
+        showSuccess('Toplantı başarıyla tamamlandı');
+        refetch();
+      } catch (error) {
+        showError('İşlem başarısız');
+      }
+    }
+  };
+
+  const handleCancel = async (id: string, meeting: MeetingDto) => {
+    const confirmed = await confirmAction(
+      'Toplantıyı İptal Et',
+      `"${meeting.title}" toplantısını iptal etmek istediğinize emin misiniz?`,
+      'Evet, İptal Et',
+      'warning'
+    );
+
+    if (confirmed) {
+      try {
+        // TODO: API call for cancelling meeting
+        // await cancelMeeting.mutateAsync(id);
+        showSuccess('Toplantı başarıyla iptal edildi');
+        refetch();
+      } catch (error) {
+        showError('İşlem başarısız');
+      }
+    }
+  };
+
   const handleDelete = async (id: string, meeting: MeetingDto) => {
     const confirmed = await confirmDelete(
       'Toplantı',
@@ -261,19 +308,43 @@ export default function MeetingsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
-      render: (_: unknown, record: MeetingDto) => (
-        <Space>
-          <Button
-            type="text"
-            danger
-            size="small"
-            onClick={() => handleDelete(record.id, record)}
-          >
-            Sil
-          </Button>
-        </Space>
-      ),
+      width: 120,
+      fixed: 'right',
+      render: (_: unknown, record: MeetingDto) => {
+        // Durum bazlı eylem görünürlüğü
+        const isCompleted = record.status === MeetingStatus.Completed;
+        const isCancelled = record.status === MeetingStatus.Cancelled;
+        const canComplete = !isCompleted && !isCancelled;
+        const canCancel = !isCompleted && !isCancelled;
+
+        return (
+          <RowActions
+            id={record.id}
+            quickActions={[
+              createAction.edit(() => handleEdit(record.id)),
+            ]}
+            menuActions={[
+              createAction.complete(
+                () => handleComplete(record.id, record),
+                {
+                  visible: canComplete,
+                  disabled: isCompleted,
+                  disabledReason: 'Bu toplantı zaten tamamlandı',
+                }
+              ),
+              createAction.cancel(
+                () => handleCancel(record.id, record),
+                {
+                  visible: canCancel,
+                  disabled: isCancelled,
+                  disabledReason: 'Bu toplantı zaten iptal edildi',
+                }
+              ),
+              createAction.delete(() => handleDelete(record.id, record)),
+            ]}
+          />
+        );
+      },
     },
   ];
 
