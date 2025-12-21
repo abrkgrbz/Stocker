@@ -214,9 +214,8 @@ export async function getRoles(): Promise<Role[]> {
   const response = await apiClient.get<{ success: boolean; data: Role[]; message: string }>(
     '/api/tenant/roles'
   );
-  // Backend returns: { success, data: Role[], message }
-  // We need response.data.data (not response.data)
-  return (response.data as any).data || [];
+  // apiClient returns the backend response directly: { success, data: Role[], message }
+  return (response as any).data || [];
 }
 
 /**
@@ -226,7 +225,7 @@ export async function getRole(roleId: string): Promise<Role> {
   const response = await apiClient.get<{ success: boolean; data: Role; message: string }>(
     `/api/tenant/roles/${roleId}`
   );
-  return (response.data as any).data as Role;
+  return (response as any).data as Role;
 }
 
 /**
@@ -247,7 +246,7 @@ export async function createRole(data: CreateRoleRequest): Promise<Role> {
     '/api/tenant/roles',
     requestData
   );
-  return (response.data as any).data as Role;
+  return (response as any).data as Role;
 }
 
 /**
