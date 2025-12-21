@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space, Spin } from 'antd';
-import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, SendOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getRoles, type Role } from '@/lib/api/roles';
 import { getDepartments, type Department } from '@/lib/api/departments';
@@ -24,7 +24,6 @@ interface User {
   isActive: boolean;
   phoneNumber?: string;
   department?: string;
-  password?: string;
 }
 
 interface UserModalProps {
@@ -119,7 +118,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           }}>
             <UserOutlined style={{ fontSize: 20, color: '#0f172a' }} />
           </div>
-          <span>{isEditMode ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Oluştur'}</span>
+          <span>{isEditMode ? 'Kullanıcı Düzenle' : 'Kullanıcı Davet Et'}</span>
         </div>
       }
       open={open}
@@ -170,7 +169,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             }}
             className="hover:!bg-slate-800"
           >
-            {isEditMode ? 'Güncelle' : 'Oluştur'}
+            {isEditMode ? 'Güncelle' : 'Davet Gönder'}
           </Button>
         </div>
       }
@@ -242,33 +241,30 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           </Form.Item>
         </div>
 
-        {/* Security Section */}
+        {/* Invitation Notice for New Users */}
         {!isEditMode && (
-          <div style={{ marginBottom: 24 }}>
-            <Form.Item
-              name="password"
-              label={<span style={{ fontWeight: 500 }}>Şifre</span>}
-              rules={[
-                { required: true, message: 'Şifre gerekli' },
-                { min: 8, message: 'En az 8 karakter olmalı' },
-                {
-                  pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
-                  message: 'Şifre en az 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir'
-                },
-              ]}
-              extra={
-                <span style={{ fontSize: 12, color: '#8c8c8c', marginTop: 4, display: 'block' }}>
-                  Şifre en az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir
-                </span>
-              }
-            >
-              <Input.Password
-                size="large"
-                prefix={<LockOutlined style={{ color: '#64748b' }} />}
-                placeholder="••••••••"
-                style={{ borderRadius: 8 }}
-              />
-            </Form.Item>
+          <div
+            style={{
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: 12,
+              padding: '16px 20px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+            }}
+          >
+            <SendOutlined style={{ color: '#0284c7', fontSize: 18, marginTop: 2 }} />
+            <div>
+              <div style={{ fontWeight: 500, color: '#0c4a6e', marginBottom: 4 }}>
+                Davet E-postası Gönderilecek
+              </div>
+              <div style={{ fontSize: 13, color: '#0369a1' }}>
+                Kullanıcı oluşturulduktan sonra, belirtilen e-posta adresine bir davet e-postası gönderilecektir.
+                Kullanıcı bu e-postadaki bağlantıya tıklayarak kendi şifresini belirleyebilecek ve hesabını aktifleştirebilecektir.
+              </div>
+            </div>
           </div>
         )}
 

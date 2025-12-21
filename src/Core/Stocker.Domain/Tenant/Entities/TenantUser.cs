@@ -122,6 +122,95 @@ public sealed class TenantUser : TenantAggregateRoot
             hireDate);
     }
 
+    /// <summary>
+    /// Creates a new user for invitation flow (without password).
+    /// The user will be in PendingActivation status until they set their password.
+    /// </summary>
+    public static TenantUser CreateForInvitation(
+        Guid tenantId,
+        string username,
+        Email email,
+        string firstName,
+        string lastName,
+        string? employeeCode = null,
+        PhoneNumber? phone = null,
+        PhoneNumber? mobile = null,
+        string? title = null,
+        Guid? departmentId = null,
+        Guid? branchId = null,
+        DateTime? hireDate = null)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            throw new ArgumentException("Username cannot be empty.", nameof(username));
+        }
+
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            throw new ArgumentException("First name cannot be empty.", nameof(firstName));
+        }
+
+        if (string.IsNullOrWhiteSpace(lastName))
+        {
+            throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
+        }
+
+        // Create with a placeholder password hash - will be set during activation
+        var user = new TenantUser(
+            tenantId,
+            Guid.Empty, // No master user association for invited users
+            username,
+            "PENDING_ACTIVATION", // Placeholder - cannot be used for login
+            email,
+            firstName,
+            lastName,
+            employeeCode,
+            phone,
+            mobile,
+            title,
+            departmentId,
+            branchId,
+            hireDate);
+
+        // Set status to PendingActivation
+        user.Status = TenantUserStatus.PendingActivation;
+
+        // Generate activation token immediately
+        user.GeneratePasswordResetToken();
+        // Extend token validity to 7 days for invitation flow
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        return user;
+    }
+
+    /// <summary>
+    /// Activates a pending user account by setting their password.
+    /// Only works for users in PendingActivation status.
+    /// </summary>
+    public void ActivateWithPassword(string passwordHash, string activationToken)
+    {
+        if (Status != TenantUserStatus.PendingActivation)
+        {
+            throw new InvalidOperationException("User account is already activated.");
+        }
+
+        if (!ValidatePasswordResetToken(activationToken))
+        {
+            throw new InvalidOperationException("Invalid or expired activation token.");
+        }
+
+        PasswordHash = passwordHash;
+        Status = TenantUserStatus.Active;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Checks if this user is pending activation (invited but not yet set password).
+    /// </summary>
+    public bool IsPendingActivation() => Status == TenantUserStatus.PendingActivation;
+
     public void UpdateProfile(
         string firstName,
         string lastName,

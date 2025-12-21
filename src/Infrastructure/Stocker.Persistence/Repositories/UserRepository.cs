@@ -173,6 +173,19 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<TenantUser?> GetTenantUserEntityByIdAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _tenantContext.TenantUsers
+            .FirstOrDefaultAsync(u => u.Id == userId && u.TenantId == tenantId, cancellationToken);
+    }
+
+    public async Task<TenantUser?> UpdateTenantUserAsync(TenantUser user, CancellationToken cancellationToken = default)
+    {
+        _tenantContext.TenantUsers.Update(user);
+        await _tenantContext.SaveChangesAsync(cancellationToken);
+        return user;
+    }
+
     public async Task<TenantUser?> UpdateTenantUserAsync(Guid tenantId, Guid userId, TenantUser user, CancellationToken cancellationToken = default)
     {
         var existingUser = await _tenantContext.TenantUsers

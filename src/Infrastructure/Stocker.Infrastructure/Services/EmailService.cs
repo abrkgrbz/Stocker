@@ -506,9 +506,9 @@ public class EmailService : IEmailService
         subject = subject
             .Replace("{{inviterName}}", inviterName)
             .Replace("{{companyName}}", companyName);
-            
+
         var inviteUrl = $"https://stoocker.app/accept-invite?token={inviteToken}";
-        
+
         var body = $@"
             <h2>Davetlisiniz!</h2>
             <p>{inviterName} sizi {companyName} şirketine davet ediyor.</p>
@@ -522,6 +522,92 @@ public class EmailService : IEmailService
             Body = body,
             IsHtml = true
         }, cancellationToken);
+    }
+
+    public async Task SendUserInvitationEmailAsync(
+        string email,
+        string userName,
+        string inviterName,
+        string companyName,
+        string activationToken,
+        Guid userId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var subject = $"Stocker'a Davet Edildiniz - {companyName}";
+
+        // URL-encode the token for safety
+        var encodedToken = Uri.EscapeDataString(activationToken);
+        var activationUrl = $"{_emailSettings.BaseUrl}/setup-password?userId={userId}&tenantId={tenantId}&token={encodedToken}";
+
+        var body = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .button {{ display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }}
+                    .button:hover {{ opacity: 0.9; }}
+                    .info-box {{ background: #e8f4fd; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }}
+                    .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 12px; }}
+                    .company-name {{ color: #667eea; font-weight: bold; }}
+                    .inviter-name {{ color: #764ba2; font-weight: bold; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h1>🎉 Stocker'a Hoşgeldiniz!</h1>
+                        <p style='margin: 0; opacity: 0.9;'>Hesap Aktivasyon Daveti</p>
+                    </div>
+                    <div class='content'>
+                        <p>Merhaba <strong>{userName}</strong>,</p>
+
+                        <p><span class='inviter-name'>{inviterName}</span> sizi <span class='company-name'>{companyName}</span> şirketinin Stocker hesabına davet etti!</p>
+
+                        <div class='info-box'>
+                            <strong>📋 Hesap Bilgileriniz:</strong>
+                            <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
+                                <li>E-posta: <strong>{email}</strong></li>
+                                <li>Şirket: <strong>{companyName}</strong></li>
+                            </ul>
+                        </div>
+
+                        <p>Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:</p>
+
+                        <div style='text-align: center;'>
+                            <a href='{activationUrl}' class='button'>Şifremi Belirle ve Hesabımı Aktifleştir</a>
+                        </div>
+
+                        <p style='font-size: 14px; color: #666;'>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+                        <p style='word-break: break-all; color: #667eea; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px;'>{activationUrl}</p>
+
+                        <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;'>
+                            <strong>⏰ Önemli:</strong> Bu link <strong>7 gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
+                        </div>
+
+                        <p style='font-size: 14px; color: #666;'>Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.</p>
+                    </div>
+                    <div class='footer'>
+                        <p>© {DateTime.Now.Year} Stocker. Tüm hakları saklıdır.</p>
+                        <p style='color: #999;'>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+        await SendAsync(new EmailMessage
+        {
+            To = email,
+            Subject = subject,
+            Body = body,
+            IsHtml = true
+        }, cancellationToken);
+
+        _logger.LogInformation("User invitation email sent to {Email} for tenant {TenantId}", email, tenantId);
     }
 
     public async Task<bool> IsEmailServiceAvailable()
@@ -634,6 +720,34 @@ public class DevelopmentEmailService : IEmailService
             To = email,
             Subject = "Invitation",
             Body = $"<p>{inviterName} invites you to {companyName}. Token: {inviteToken}</p>",
+            IsHtml = true
+        };
+        await SendAsync(message, cancellationToken);
+    }
+
+    public async Task SendUserInvitationEmailAsync(
+        string email,
+        string userName,
+        string inviterName,
+        string companyName,
+        string activationToken,
+        Guid userId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var activationUrl = $"https://stoocker.app/setup-password?userId={userId}&tenantId={tenantId}&token={Uri.EscapeDataString(activationToken)}";
+        var message = new EmailMessage
+        {
+            To = email,
+            Subject = $"User Invitation - {companyName}",
+            Body = $@"
+                <h2>Welcome {userName}!</h2>
+                <p>{inviterName} has invited you to join {companyName} on Stocker.</p>
+                <p>Please click below to set your password and activate your account:</p>
+                <p><a href='{activationUrl}'>Activate Account</a></p>
+                <p>Link: {activationUrl}</p>
+                <p>This link expires in 7 days.</p>
+            ",
             IsHtml = true
         };
         await SendAsync(message, cancellationToken);

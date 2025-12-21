@@ -1,28 +1,37 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Application.DTOs.Tenant.Users;
 using Stocker.Application.Features.Tenant.Users.Commands;
 using Stocker.Application.Interfaces.Repositories;
 using Stocker.Domain.Tenant.Entities;
-using Stocker.SharedKernel.Results;
+using Stocker.Domain.Tenant.Enums;
 
 namespace Stocker.Application.Features.Tenant.Users.Handlers;
 
+/// <summary>
+/// Handles user creation with invitation flow.
+/// Creates user in PendingActivation status and sends invitation email.
+/// User must click the activation link to set their password.
+/// </summary>
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly IUserRepository _userRepository;
     private readonly IMasterDbContext _masterDbContext;
-    private readonly IPasswordService _passwordService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<CreateUserCommandHandler> _logger;
 
     public CreateUserCommandHandler(
         IUserRepository userRepository,
         IMasterDbContext masterDbContext,
-        IPasswordService passwordService)
+        IEmailService emailService,
+        ILogger<CreateUserCommandHandler> logger)
     {
         _userRepository = userRepository;
         _masterDbContext = masterDbContext;
-        _passwordService = passwordService;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -48,25 +57,11 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
-        // Validate and hash password
-        var passwordValidation = _passwordService.ValidatePassword(request.Password, request.Username, request.Email);
-        if (passwordValidation.IsFailure)
-        {
-            var errorMessage = passwordValidation.Error?.Description ?? "Şifre gereksinimlerini karşılamıyor";
-            throw new InvalidOperationException($"Şifre geçersiz: {errorMessage}. Şifre en az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir.");
-        }
-
-        var hashedPassword = _passwordService.HashPassword(request.Password);
-        var passwordHash = _passwordService.GetCombinedHash(hashedPassword);
-
-        // Note: MasterUserId is kept for legacy compatibility but tenant users have independent login
-        var masterUserId = Guid.Empty;
-
         // Create value objects
         var emailResult = Stocker.Domain.Common.ValueObjects.Email.Create(request.Email);
         if (emailResult.IsFailure)
         {
-            return new UserDto(); // Should handle error properly
+            throw new InvalidOperationException($"Geçersiz e-posta adresi: {request.Email}");
         }
 
         Stocker.Domain.Common.ValueObjects.PhoneNumber? phone = null;
@@ -79,12 +74,10 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
-        // Use factory method to create TenantUser with password hash
-        var user = TenantUser.Create(
+        // Use invitation factory method - creates user in PendingActivation status
+        var user = TenantUser.CreateForInvitation(
             request.TenantId,
-            masterUserId,
             request.Username,
-            passwordHash,
             emailResult.Value,
             request.FirstName,
             request.LastName,
@@ -116,6 +109,50 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             assignedRoleNames.Add(request.Role);
         }
 
+        // 5. Get tenant info for email
+        var tenant = await _masterDbContext.Tenants
+            .Where(t => t.Id == request.TenantId)
+            .Select(t => new { t.Name })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var companyName = request.CompanyName ?? tenant?.Name ?? "Stocker";
+        var inviterName = request.InviterName ?? request.CreatedBy ?? "Yönetici";
+
+        // 6. Send invitation email with activation token
+        // The activation token was already generated in CreateForInvitation
+        if (!string.IsNullOrEmpty(createdUser.PasswordResetToken))
+        {
+            try
+            {
+                await _emailService.SendUserInvitationEmailAsync(
+                    email: createdUser.Email.Value,
+                    userName: createdUser.GetFullName(),
+                    inviterName: inviterName,
+                    companyName: companyName,
+                    activationToken: createdUser.PasswordResetToken,
+                    userId: createdUser.Id,
+                    tenantId: request.TenantId,
+                    cancellationToken: cancellationToken
+                );
+
+                _logger.LogInformation(
+                    "Invitation email sent to {Email} for user {UserId} in tenant {TenantId}",
+                    createdUser.Email.Value,
+                    createdUser.Id,
+                    request.TenantId);
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't fail the user creation
+                // The admin can resend the invitation later
+                _logger.LogWarning(
+                    ex,
+                    "Failed to send invitation email to {Email} for user {UserId}. User was created but email was not sent.",
+                    createdUser.Email.Value,
+                    createdUser.Id);
+            }
+        }
+
         return new UserDto
         {
             Id = createdUser.Id,
@@ -126,8 +163,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             Phone = createdUser.Phone?.Value,
             Department = request.Department ?? "Default",
             Branch = request.Branch ?? "Merkez",
-            Roles = assignedRoleNames, // Return actual assigned role names
-            IsActive = createdUser.Status == Stocker.Domain.Tenant.Enums.TenantUserStatus.Active,
+            Roles = assignedRoleNames,
+            IsActive = createdUser.Status == TenantUserStatus.Active,
             CreatedDate = createdUser.CreatedAt
         };
     }

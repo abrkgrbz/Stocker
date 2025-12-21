@@ -9,6 +9,8 @@ public interface IUserRepository
     Task<UsersListDto> GetTenantUsersAsync(Guid tenantId, int page = 1, int pageSize = 10, string? searchTerm = null, CancellationToken cancellationToken = default);
     Task<UserDetailDto?> GetTenantUserByIdAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
     Task<TenantUser> CreateTenantUserAsync(TenantUser user, CancellationToken cancellationToken = default);
+    Task<TenantUser?> GetTenantUserEntityByIdAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
+    Task<TenantUser?> UpdateTenantUserAsync(TenantUser user, CancellationToken cancellationToken = default);
     Task<TenantUser?> UpdateTenantUserAsync(Guid tenantId, Guid userId, TenantUser user, CancellationToken cancellationToken = default);
     Task<bool> DeleteTenantUserAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
     Task<bool> ToggleUserStatusAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);

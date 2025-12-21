@@ -98,12 +98,14 @@ public class UsersController : ApiController
         if (tenantId == Guid.Empty)
             throw new UnauthorizedException("Tenant bulunamadı");
 
+        // Get current user info for invitation email
+        var currentUserName = _currentUserService.UserName ?? User.Identity?.Name ?? "Yönetici";
+
         var command = new CreateUserCommand
         {
             TenantId = tenantId,
             Username = dto.Username,
             Email = dto.Email,
-            Password = dto.Password,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Phone = dto.PhoneNumber,
@@ -111,7 +113,9 @@ public class UsersController : ApiController
             RoleIds = dto.RoleIds, // Multiple roles support
             Department = dto.Department,
             Branch = dto.Branch,
-            CreatedBy = User.Identity?.Name
+            CreatedBy = User.Identity?.Name,
+            InviterName = currentUserName,
+            CompanyName = dto.CompanyName
         };
 
         var result = await _mediator.Send(command);
@@ -324,7 +328,7 @@ public class UsersController : ApiController
         };
 
         var result = await _mediator.Send(command);
-        
+
         if (!result)
         {
             return NotFound(new ApiResponse<bool>
@@ -333,12 +337,94 @@ public class UsersController : ApiController
                 Message = "Kullanıcı veya rol bulunamadı"
             });
         }
-        
+
         return Ok(new ApiResponse<bool>
         {
             Success = true,
             Data = true,
             Message = "Rol başarıyla atandı"
+        });
+    }
+
+    /// <summary>
+    /// Setup password for an invited user (account activation).
+    /// This endpoint is used when a user clicks the activation link from their invitation email.
+    /// </summary>
+    [HttpPost("setup-password")]
+    [AllowAnonymous] // This endpoint must be accessible without authentication
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> SetupPassword([FromBody] SetupPasswordDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException("Model", string.Join(", ", errors));
+        }
+
+        var command = new SetupPasswordCommand
+        {
+            TenantId = dto.TenantId,
+            UserId = dto.UserId,
+            Token = dto.Token,
+            Password = dto.Password,
+            ConfirmPassword = dto.ConfirmPassword
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = result.Error?.Description ?? "Hesap aktifleştirilemedi"
+            });
+        }
+
+        return Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Data = true,
+            Message = "Hesabınız başarıyla aktifleştirildi. Artık giriş yapabilirsiniz."
+        });
+    }
+
+    /// <summary>
+    /// Resend invitation email to a pending user.
+    /// </summary>
+    [HttpPost("{id}/resend-invitation")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> ResendInvitation(Guid id)
+    {
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+            throw new UnauthorizedException("Tenant bulunamadı");
+
+        var command = new ResendInvitationCommand
+        {
+            TenantId = tenantId,
+            UserId = id,
+            InviterName = _currentUserService.UserName ?? User.Identity?.Name ?? "Yönetici"
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new ApiResponse<object>
+            {
+                Success = false,
+                Message = result.Error?.Description ?? "Davet e-postası gönderilemedi"
+            });
+        }
+
+        return Ok(new ApiResponse<bool>
+        {
+            Success = true,
+            Data = true,
+            Message = "Davet e-postası başarıyla gönderildi"
         });
     }
 }
@@ -348,7 +434,6 @@ public class CreateUserDto
 {
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
@@ -357,6 +442,11 @@ public class CreateUserDto
     public List<Guid>? RoleIds { get; set; } // Multiple roles support
     public string? Department { get; set; }
     public string? Branch { get; set; }
+    /// <summary>
+    /// Optional company name to display in invitation email.
+    /// If not provided, tenant name will be used.
+    /// </summary>
+    public string? CompanyName { get; set; }
 }
 
 public class UpdateUserDto
@@ -380,4 +470,16 @@ public class ResetPasswordDto
 public class AssignRoleDto
 {
     public Guid RoleId { get; set; }
+}
+
+/// <summary>
+/// DTO for setting up password during account activation.
+/// </summary>
+public class SetupPasswordDto
+{
+    public Guid TenantId { get; set; }
+    public Guid UserId { get; set; }
+    public string Token { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
 }

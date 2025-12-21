@@ -36,6 +36,8 @@ import {
   SafetyOutlined,
   EyeOutlined,
   CrownOutlined,
+  SendOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
@@ -49,6 +51,7 @@ import {
   updateUser,
   deleteUser,
   toggleUserStatus,
+  resendInvitation,
   getRoleLabel,
   type UserListItem,
   type CreateUserRequest,
@@ -121,6 +124,17 @@ export default function UsersPage() {
     },
   });
 
+  const resendInvitationMutation = useMutation({
+    mutationFn: resendInvitation,
+    onSuccess: (result) => {
+      showCreateSuccess('davet e-postası');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error: any) => {
+      showError(error?.message || 'Davet e-postası gönderilemedi');
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: createUser,
     onSuccess: () => {
@@ -168,10 +182,10 @@ export default function UsersPage() {
       };
       await updateMutation.mutateAsync({ userId: editingUser.id, data: updateData });
     } else {
+      // No password needed - user will set their own password via invitation email
       const createData: CreateUserRequest = {
         username: values.username,
         email: values.email,
-        password: values.password,
         firstName: values.firstName,
         lastName: values.lastName,
         phoneNumber: values.phoneNumber,
@@ -179,6 +193,17 @@ export default function UsersPage() {
         department: values.department,
       };
       await createMutation.mutateAsync(createData);
+    }
+  };
+
+  const handleResendInvitation = async (user: UserListItem) => {
+    const confirmed = await confirmAction(
+      'Daveti Tekrar Gönder',
+      `${user.firstName} ${user.lastName} kullanıcısına davet e-postasını tekrar göndermek istediğinizden emin misiniz?`,
+      'Gönder'
+    );
+    if (confirmed) {
+      resendInvitationMutation.mutate(user.id);
     }
   };
 
@@ -211,37 +236,57 @@ export default function UsersPage() {
     }
   };
 
-  const getUserMenu = (user: UserListItem) => ({
-    items: [
-      {
-        key: 'view',
-        label: 'Detayları Görüntüle',
-        icon: <EyeOutlined />,
-        onClick: () => handleViewDetails(user.id),
-      },
-      {
-        key: 'edit',
-        label: 'Düzenle',
-        icon: <EditOutlined />,
-        onClick: () => handleEditUser(user),
-      },
-      {
-        key: 'toggle',
-        label: user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et',
-        icon: user.isActive ? <LockOutlined /> : <UnlockOutlined />,
-        onClick: () => handleToggleStatus(user),
-      },
-      { type: 'divider' as const },
-      {
-        key: 'delete',
-        label: 'Sil',
-        icon: <DeleteOutlined />,
-        danger: true,
-        disabled: user.roles.includes('FirmaYöneticisi') || user.roles.includes('Admin'),
-        onClick: () => handleDeleteUser(user),
-      },
-    ],
-  });
+  const getUserMenu = (user: UserListItem) => {
+    const isPendingActivation = user.status === 'PendingActivation';
+
+    return {
+      items: [
+        {
+          key: 'view',
+          label: 'Detayları Görüntüle',
+          icon: <EyeOutlined />,
+          onClick: () => handleViewDetails(user.id),
+        },
+        {
+          key: 'edit',
+          label: 'Düzenle',
+          icon: <EditOutlined />,
+          onClick: () => handleEditUser(user),
+        },
+        // Show "Resend Invitation" for pending users
+        ...(isPendingActivation
+          ? [
+              {
+                key: 'resend',
+                label: 'Daveti Tekrar Gönder',
+                icon: <SendOutlined />,
+                onClick: () => handleResendInvitation(user),
+              },
+            ]
+          : []),
+        // Only show toggle status for non-pending users
+        ...(!isPendingActivation
+          ? [
+              {
+                key: 'toggle',
+                label: user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et',
+                icon: user.isActive ? <LockOutlined /> : <UnlockOutlined />,
+                onClick: () => handleToggleStatus(user),
+              },
+            ]
+          : []),
+        { type: 'divider' as const },
+        {
+          key: 'delete',
+          label: 'Sil',
+          icon: <DeleteOutlined />,
+          danger: true,
+          disabled: user.roles.includes('FirmaYöneticisi') || user.roles.includes('Admin'),
+          onClick: () => handleDeleteUser(user),
+        },
+      ],
+    };
+  };
 
   const users = usersData?.items || [];
 
@@ -251,15 +296,17 @@ export default function UsersPage() {
       user.roles.some((r) => r === filterRole || getRoleLabel(r).toLowerCase() === filterRole.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
-      (filterStatus === 'active' && user.isActive) ||
-      (filterStatus === 'inactive' && !user.isActive);
+      (filterStatus === 'active' && user.isActive && user.status !== 'PendingActivation') ||
+      (filterStatus === 'inactive' && !user.isActive && user.status !== 'PendingActivation') ||
+      (filterStatus === 'pending' && user.status === 'PendingActivation');
     return matchesRole && matchesStatus;
   });
 
   const stats = {
     total: users.length,
-    active: users.filter((u) => u.isActive).length,
-    inactive: users.filter((u) => !u.isActive).length,
+    active: users.filter((u) => u.isActive && u.status !== 'PendingActivation').length,
+    inactive: users.filter((u) => !u.isActive && u.status !== 'PendingActivation').length,
+    pending: users.filter((u) => u.status === 'PendingActivation').length,
     admins: users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length,
   };
 
@@ -329,14 +376,23 @@ export default function UsersPage() {
     },
     {
       title: 'Durum',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      width: 100,
-      render: (isActive: boolean) => (
-        <Badge variant={isActive ? 'success' : 'default'}>
-          {isActive ? 'Aktif' : 'Pasif'}
-        </Badge>
-      ),
+      key: 'status',
+      width: 130,
+      render: (_, record: UserListItem) => {
+        if (record.status === 'PendingActivation') {
+          return (
+            <Badge variant="warning">
+              <ClockCircleOutlined className="mr-1" />
+              Davet Bekleniyor
+            </Badge>
+          );
+        }
+        return (
+          <Badge variant={record.isActive ? 'success' : 'default'}>
+            {record.isActive ? 'Aktif' : 'Pasif'}
+          </Badge>
+        );
+      },
     },
     {
       title: '',
@@ -413,11 +469,11 @@ export default function UsersPage() {
         <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500 uppercase tracking-wide">Pasif</span>
-              <div className="text-2xl font-semibold text-slate-900">{stats.inactive}</div>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Bekleyen</span>
+              <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <CloseCircleOutlined style={{ color: '#ef4444' }} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
+              <ClockCircleOutlined style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -427,8 +483,8 @@ export default function UsersPage() {
               <span className="text-xs text-slate-500 uppercase tracking-wide">Yönetici</span>
               <div className="text-2xl font-semibold text-slate-900">{stats.admins}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <SafetyOutlined style={{ color: '#f59e0b' }} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#0284c715' }}>
+              <SafetyOutlined style={{ color: '#0284c7' }} />
             </div>
           </div>
         </div>
@@ -444,9 +500,9 @@ export default function UsersPage() {
         primaryAction={
           isAdmin
             ? {
-                label: 'Yeni Kullanıcı',
+                label: 'Kullanıcı Davet Et',
                 onClick: handleCreateUser,
-                icon: <PlusOutlined />,
+                icon: <SendOutlined />,
               }
             : undefined
         }
@@ -478,11 +534,12 @@ export default function UsersPage() {
           <Select
             value={filterStatus}
             onChange={setFilterStatus}
-            className="w-40 h-10"
+            className="w-48 h-10"
           >
             <Select.Option value="all">Tüm Durumlar</Select.Option>
             <Select.Option value="active">Aktif</Select.Option>
             <Select.Option value="inactive">Pasif</Select.Option>
+            <Select.Option value="pending">Davet Bekleniyor</Select.Option>
           </Select>
         </div>
       </div>

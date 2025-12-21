@@ -80,6 +80,7 @@ export interface UserListItem {
   firstName: string;
   lastName: string;
   isActive: boolean;
+  status?: 'Active' | 'Inactive' | 'PendingActivation' | 'Suspended' | 'OnLeave' | 'Terminated';
   roles: string[];
   department?: string;
   branch?: string;
@@ -90,13 +91,13 @@ export interface UserListItem {
 export interface CreateUserRequest {
   username: string;
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
   phoneNumber?: string;
   roleIds?: string[]; // Multiple roles support
   department?: string;
   branch?: string;
+  companyName?: string; // Optional: company name for invitation email
 }
 
 export interface UpdateUserRequest {
@@ -186,6 +187,19 @@ export async function toggleUserStatus(userId: string): Promise<ToggleUserStatus
     `/api/tenant/users/${userId}/toggle-status`
   );
   return (response.data as any).data || response.data;
+}
+
+/**
+ * Resend invitation email to a pending user
+ */
+export async function resendInvitation(userId: string): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.post<{ success: boolean; data: boolean; message: string }>(
+    `/api/tenant/users/${userId}/resend-invitation`
+  );
+  return {
+    success: (response.data as any).success || response.success || false,
+    message: (response.data as any).message || response.message || 'Davet e-postası gönderildi',
+  };
 }
 
 /**
