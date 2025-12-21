@@ -3,7 +3,7 @@ import type { ApiResponse, ApiError, ApiRequestOptions } from './types';
 /**
  * API Client Configuration
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
 /**

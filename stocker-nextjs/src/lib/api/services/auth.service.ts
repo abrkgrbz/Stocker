@@ -185,7 +185,7 @@ export class AuthService {
    * Returns registrationId for SignalR progress subscription
    */
   async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean; registrationId: string; message?: string }>> {
-    return apiClient.post('/public/tenant-registration/verify-email', { email, code });
+    return apiClient.post('/api/public/tenant-registration/verify-email', { email, code });
   }
 
   /**
@@ -193,14 +193,14 @@ export class AuthService {
    * Note: Backend endpoint doesn't exist yet - needs to be implemented
    */
   async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/public/tenant-registration/resend-verification-email', { email });
+    return apiClient.post('/api/public/tenant-registration/resend-verification-email', { email });
   }
 
   /**
    * Register new tenant and admin user
    */
   async register(data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
-    return apiClient.post('/public/tenant-registration/register', data);
+    return apiClient.post('/api/public/tenant-registration/register', data);
   }
 }
 
