@@ -70,7 +70,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Bildirim Ayarları</h2>
         <p className="text-sm text-slate-500 mt-1">

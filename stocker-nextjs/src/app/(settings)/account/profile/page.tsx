@@ -2,8 +2,8 @@
 
 /**
  * Profile Settings Page
- * Single-Column Professional Settings Layout
- * Clean Corporate Design - Light Mode Only
+ * Focused on personal information only
+ * Clean Corporate Design - Light Mode
  */
 
 import React, { useState } from 'react';
@@ -12,30 +12,25 @@ import {
   User,
   Mail,
   Phone,
-  Lock,
-  Shield,
-  Bell,
-  Globe,
-  Monitor,
   Camera,
   Check,
   AlertCircle,
-  ChevronRight,
   Clock,
   MapPin,
+  Building,
+  Briefcase,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { useProfile, useUpdateProfile, useChangePassword, useActivityLog, useUploadProfileImage, useUpdatePreferences } from './hooks';
+import { useProfile, useUpdateProfile, useActivityLog, useUploadProfileImage } from './hooks';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [activityPage] = useState(1);
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
-  const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword();
   const { data: activityLog, isLoading: activityLoading } = useActivityLog(activityPage, 5);
   const { mutate: uploadImage, isPending: isUploading } = useUploadProfileImage();
-  const { mutate: updatePreferences, isPending: isUpdatingPrefs } = useUpdatePreferences();
 
   // Form states
   const [profileData, setProfileData] = useState({
@@ -43,13 +38,7 @@ export default function ProfilePage() {
     lastName: '',
     phone: '',
   });
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
   const [hasChanges, setHasChanges] = useState(false);
-  const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -72,15 +61,9 @@ export default function ProfilePage() {
     role: user?.role,
     phone: '',
     profileImage: null,
-    twoFactorEnabled: false,
     emailConfirmed: false,
     createdDate: new Date().toISOString(),
     lastLoginDate: new Date().toISOString(),
-    preferences: {
-      language: 'tr',
-      theme: 'light',
-      notifications: true,
-    },
   };
 
   // Handle profile input changes
@@ -100,27 +83,6 @@ export default function ProfilePage() {
       },
       onError: (error: Error) => {
         setErrorMessage(error?.message || 'Kayıt sırasında hata oluştu');
-        setTimeout(() => setErrorMessage(''), 3000);
-      },
-    });
-  };
-
-  // Handle password change
-  const handlePasswordChange = () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setErrorMessage('Şifreler eşleşmiyor');
-      setTimeout(() => setErrorMessage(''), 3000);
-      return;
-    }
-    changePassword(passwordData, {
-      onSuccess: () => {
-        setSuccessMessage('Şifre başarıyla değiştirildi');
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setShowPasswordSection(false);
-        setTimeout(() => setSuccessMessage(''), 3000);
-      },
-      onError: (error: Error) => {
-        setErrorMessage(error?.message || 'Şifre değiştirilirken hata oluştu');
         setTimeout(() => setErrorMessage(''), 3000);
       },
     });
@@ -155,21 +117,6 @@ export default function ProfilePage() {
     });
   };
 
-  // Handle preference change
-  const handlePreferenceChange = (key: string, value: string | boolean) => {
-    updatePreferences({ [key]: value }, {
-      onSuccess: () => {
-        setSuccessMessage('Tercih güncellendi');
-        refetchProfile();
-        setTimeout(() => setSuccessMessage(''), 3000);
-      },
-      onError: (error: Error) => {
-        setErrorMessage(error?.message || 'Tercih güncellenirken hata oluştu');
-        setTimeout(() => setErrorMessage(''), 3000);
-      },
-    });
-  };
-
   // Loading state
   if (profileLoading) {
     return (
@@ -183,21 +130,29 @@ export default function ProfilePage() {
   }
 
   return (
-    <div>
+    <div className="max-w-3xl">
+      {/* Page Header */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-slate-900">Profilim</h2>
+        <p className="text-sm text-slate-500 mt-1">
+          Kişisel bilgilerinizi görüntüleyin ve düzenleyin
+        </p>
+      </div>
+
       {/* Save Button Bar */}
       {hasChanges && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg"
+          className="mb-6 flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg"
         >
-          <span className="text-sm text-slate-700">
+          <span className="text-sm text-blue-700">
             Kaydedilmemiş değişiklikleriniz var
           </span>
           <button
             onClick={handleSaveProfile}
             disabled={isUpdating}
-            className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isUpdating ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
           </button>
@@ -229,10 +184,9 @@ export default function ProfilePage() {
       )}
 
       {/* Main Content */}
-      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 shadow-sm">
-
-        {/* Profile Header Section */}
-        <div className="p-6">
+      <div className="space-y-6">
+        {/* Profile Header Card */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className="relative">
@@ -261,12 +215,13 @@ export default function ProfilePage() {
 
             {/* User Info */}
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-lg font-semibold text-slate-900">
                 {profileInfo.firstName} {profileInfo.lastName}
-              </h2>
+              </h3>
               <p className="text-sm text-slate-500 mt-0.5">{profileInfo.email}</p>
               <div className="flex items-center gap-3 mt-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-md">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 rounded-md">
+                  <Briefcase className="w-3 h-3" />
                   {profileInfo.role || 'Kullanıcı'}
                 </span>
                 {profileInfo.emailConfirmed && (
@@ -280,8 +235,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Personal Information Section */}
-        <div className="p-6">
+        {/* Personal Information Form */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
           <h3 className="text-sm font-medium text-slate-900 mb-4">Kişisel Bilgiler</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -293,7 +248,7 @@ export default function ProfilePage() {
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                     placeholder="Adınız"
                   />
                 </div>
@@ -306,7 +261,7 @@ export default function ProfilePage() {
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                     placeholder="Soyadınız"
                   />
                 </div>
@@ -327,6 +282,7 @@ export default function ProfilePage() {
                   <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
                 )}
               </div>
+              <p className="text-xs text-slate-400 mt-1">E-posta adresi değiştirilemez</p>
             </div>
 
             <div>
@@ -337,7 +293,7 @@ export default function ProfilePage() {
                   type="tel"
                   value={profileData.phone}
                   onChange={(e) => handleProfileChange('phone', e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   placeholder="+90 5XX XXX XX XX"
                 />
               </div>
@@ -345,231 +301,90 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Security Section */}
-        <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 mb-4">Güvenlik</h3>
-          <div className="space-y-3">
-            {/* Password Change */}
-            <div>
-              <button
-                onClick={() => setShowPasswordSection(!showPasswordSection)}
-                className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Lock className="w-5 h-5 text-slate-500" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-slate-900">Şifre Değiştir</p>
-                    <p className="text-xs text-slate-500">Hesap şifrenizi güncelleyin</p>
-                  </div>
-                </div>
-                <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${showPasswordSection ? 'rotate-90' : ''}`} />
-              </button>
-
-              {showPasswordSection && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 p-4 border border-slate-200 rounded-lg space-y-3 bg-white"
-                >
-                  <div>
-                    <label className="block text-sm text-slate-600 mb-1.5">Mevcut Şifre</label>
-                    <input
-                      type="password"
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1.5">Yeni Şifre</label>
-                      <input
-                        type="password"
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1.5">Şifre Tekrar</label>
-                      <input
-                        type="password"
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handlePasswordChange}
-                    disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword}
-                    className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isChangingPassword ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
-                  </button>
-                </motion.div>
-              )}
-            </div>
-
-            {/* 2FA Toggle */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-slate-500" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">İki Faktörlü Doğrulama</p>
-                  <p className="text-xs text-slate-500">Ekstra güvenlik katmanı</p>
-                </div>
-              </div>
-              <button
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  profileInfo.twoFactorEnabled ? 'bg-slate-900' : 'bg-slate-200'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    profileInfo.twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Preferences Section */}
-        <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 mb-4">Tercihler</h3>
-          <div className="space-y-3">
-            {/* Language */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-slate-500" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Dil</p>
-                  <p className="text-xs text-slate-500">Arayüz dili</p>
-                </div>
-              </div>
-              <select
-                value={profileInfo.preferences?.language || 'tr'}
-                onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                disabled={isUpdatingPrefs}
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
-              >
-                <option value="tr">Türkçe</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-
-            {/* Theme */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Monitor className="w-5 h-5 text-slate-500" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Tema</p>
-                  <p className="text-xs text-slate-500">Görünüm tercihi</p>
-                </div>
-              </div>
-              <select
-                value={profileInfo.preferences?.theme || 'light'}
-                onChange={(e) => handlePreferenceChange('theme', e.target.value)}
-                disabled={isUpdatingPrefs}
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
-              >
-                <option value="light">Açık</option>
-                <option value="dark">Koyu</option>
-                <option value="system">Sistem</option>
-              </select>
-            </div>
-
-            {/* Notifications */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-slate-500" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Bildirimler</p>
-                  <p className="text-xs text-slate-500">E-posta ve anlık bildirimler</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handlePreferenceChange('notifications', !profileInfo.preferences?.notifications)}
-                disabled={isUpdatingPrefs}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  profileInfo.preferences?.notifications ? 'bg-slate-900' : 'bg-slate-200'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    profileInfo.preferences?.notifications ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Activity Log Section */}
-        <div className="p-6">
-          <h3 className="text-sm font-medium text-slate-900 mb-4">Son Aktiviteler</h3>
-          {activityLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
-            </div>
-          ) : activityLog?.data?.items && activityLog.data.items.length > 0 ? (
-            <div className="space-y-2">
-              {activityLog.data.items.slice(0, 5).map((item: {
-                id: string;
-                description: string;
-                status: string;
-                timestamp: string;
-                ipAddress?: string;
-              }) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                    item.status === 'Success' ? 'bg-emerald-500' : 'bg-red-500'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-900">{item.description}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {item.timestamp
-                          ? new Date(item.timestamp).toLocaleString('tr-TR')
-                          : '-'}
-                      </span>
-                      {item.ipAddress && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="p-6 border-b border-slate-100">
+            <h3 className="text-sm font-medium text-slate-900">Son Aktiviteler</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Hesabınızdaki son işlemler</p>
+          </div>
+          <div className="p-6">
+            {activityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+              </div>
+            ) : activityLog?.data?.items && activityLog.data.items.length > 0 ? (
+              <div className="space-y-3">
+                {activityLog.data.items.slice(0, 5).map((item: {
+                  id: string;
+                  description: string;
+                  status: string;
+                  timestamp: string;
+                  ipAddress?: string;
+                }) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                      item.status === 'Success' ? 'bg-emerald-500' : 'bg-red-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-900">{item.description}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {item.ipAddress}
+                          <Clock className="w-3 h-3" />
+                          {item.timestamp
+                            ? new Date(item.timestamp).toLocaleString('tr-TR')
+                            : '-'}
                         </span>
-                      )}
+                        {item.ipAddress && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {item.ipAddress}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 text-center py-8">
-              Henüz aktivite kaydı yok
-            </p>
-          )}
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-8">
+                Henüz aktivite kaydı yok
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Account Info Footer */}
-        <div className="p-6 bg-slate-50">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
-            <div className="flex items-center gap-4">
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+          <div className="flex flex-wrap items-center gap-6 text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5" />
               <span>Kayıt: {profileInfo.createdDate ? new Date(profileInfo.createdDate).toLocaleDateString('tr-TR') : '-'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Building className="w-3.5 h-3.5" />
               <span>Son Giriş: {profileInfo.lastLoginDate ? new Date(profileInfo.lastLoginDate).toLocaleDateString('tr-TR') : '-'}</span>
             </div>
-            <button className="text-red-500 hover:text-red-600 font-medium transition-colors">
-              Hesabı Sil
-            </button>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-red-50 rounded-xl border border-red-200 p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-700">Tehlikeli Bölge</h3>
+              <p className="text-sm text-slate-600 mt-1">
+                Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz.
+              </p>
+              <button className="mt-3 px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                Hesabı Sil
+              </button>
+            </div>
           </div>
         </div>
       </div>

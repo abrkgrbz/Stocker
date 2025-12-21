@@ -77,16 +77,16 @@ export default function SettingsLayout({
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-white text-slate-900 border-l-4 border-slate-900 -ml-1 pl-5 shadow-sm'
+                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 shadow-sm'
                       : 'text-slate-600 hover:bg-white hover:text-slate-900'
                   }`}
                 >
                   <Icon className={`w-5 h-5 ${
-                    isActive ? 'text-slate-900' : 'text-slate-400'
+                    isActive ? 'text-blue-600' : 'text-slate-400'
                   }`} />
                   <div>
                     <div className={`font-medium ${
-                      isActive ? 'text-slate-900' : 'text-slate-700'
+                      isActive ? 'text-blue-700' : 'text-slate-700'
                     }`}>
                       {item.label}
                     </div>
@@ -101,10 +101,8 @@ export default function SettingsLayout({
         </aside>
 
         {/* Content Area - Right Side */}
-        <main className="flex-1 p-6 overflow-auto bg-white">
-          <div className="max-w-4xl">
-            {children}
-          </div>
+        <main className="flex-1 p-8 overflow-auto bg-slate-50/50">
+          {children}
         </main>
       </div>
     </div>

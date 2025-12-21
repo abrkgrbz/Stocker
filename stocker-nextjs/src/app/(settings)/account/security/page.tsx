@@ -5,7 +5,7 @@ import { Lock, Smartphone, Key, History, AlertTriangle } from 'lucide-react';
 
 export default function SecurityPage() {
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Hesap Güvenliği</h2>
         <p className="text-sm text-slate-500 mt-1">
