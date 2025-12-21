@@ -80,6 +80,10 @@ export default function LeadsPage() {
     router.push('/crm/leads/new');
   };
 
+  const handleView = (lead: Lead) => {
+    router.push(`/crm/leads/${lead.id}`);
+  };
+
   const handleEdit = (lead: Lead) => {
     router.push(`/crm/leads/${lead.id}/edit`);
   };
@@ -306,6 +310,7 @@ export default function LeadsPage() {
               setCurrentPage(page);
               setPageSize(size);
             }}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onConvert={handleConvert}

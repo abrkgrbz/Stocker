@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, ShareAltOutlined, SearchOutlined, DollarOutlined, FileTextOutlined, CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, ShareAltOutlined, SearchOutlined, DollarOutlined, FileTextOutlined, CheckCircleOutlined, SyncOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -243,9 +243,18 @@ export default function ReferralsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 150,
       render: (_: unknown, record: ReferralDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/crm/referrals/${record.id}`)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             danger

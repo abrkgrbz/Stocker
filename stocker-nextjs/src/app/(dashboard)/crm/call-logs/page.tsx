@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, PhoneOutlined, SearchOutlined, ArrowDownOutlined, ArrowUpOutlined, CheckCircleOutlined, PhoneFilled } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, PhoneOutlined, SearchOutlined, ArrowDownOutlined, ArrowUpOutlined, CheckCircleOutlined, PhoneFilled, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -235,9 +235,18 @@ export default function CallLogsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 150,
       render: (_: unknown, record: CallLogDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/crm/call-logs/${record.id}`)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             danger

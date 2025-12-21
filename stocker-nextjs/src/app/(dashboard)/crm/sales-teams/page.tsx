@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, TeamOutlined, SearchOutlined, UserOutlined, CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, TeamOutlined, SearchOutlined, UserOutlined, CheckCircleOutlined, TrophyOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -195,9 +195,18 @@ export default function SalesTeamsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 100,
+      width: 150,
       render: (_: unknown, record: SalesTeamDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => router.push(`/crm/sales-teams/${record.id}`)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             danger

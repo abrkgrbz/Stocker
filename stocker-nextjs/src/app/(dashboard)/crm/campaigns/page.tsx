@@ -32,6 +32,7 @@ import {
   ArrowDownOutlined,
   CopyOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -315,6 +316,13 @@ export default function CampaignsPage() {
       fixed: 'right' as const,
       render: (_, record) => {
         const menuItems = [];
+
+        menuItems.push({
+          key: 'view',
+          label: 'Görüntüle',
+          icon: <EyeOutlined />,
+          onClick: () => router.push(`/crm/campaigns/${record.id}`),
+        });
 
         if (record.status === 'Planned') {
           menuItems.push({

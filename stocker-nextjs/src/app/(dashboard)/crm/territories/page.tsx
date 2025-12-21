@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, GlobalOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, GlobalOutlined, SearchOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -129,6 +129,10 @@ export default function TerritoriesPage() {
     router.push('/crm/territories/new');
   };
 
+  const handleView = (territory: TerritoryDto) => {
+    router.push(`/crm/territories/${territory.id}`);
+  };
+
   const handleEdit = (territory: TerritoryDto) => {
     router.push(`/crm/territories/${territory.id}/edit`);
   };
@@ -221,9 +225,18 @@ export default function TerritoriesPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
+      width: 180,
       render: (_: unknown, record: TerritoryDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             size="small"

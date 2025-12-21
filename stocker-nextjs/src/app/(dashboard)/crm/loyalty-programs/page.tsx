@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, GiftOutlined, SearchOutlined, EditOutlined, TrophyOutlined, UserOutlined, StarOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, GiftOutlined, SearchOutlined, EditOutlined, TrophyOutlined, UserOutlined, StarOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -136,6 +136,10 @@ export default function LoyaltyProgramsPage() {
     router.push('/crm/loyalty-programs/new');
   };
 
+  const handleView = (program: LoyaltyProgramDto) => {
+    router.push(`/crm/loyalty-programs/${program.id}`);
+  };
+
   const handleEdit = (program: LoyaltyProgramDto) => {
     router.push(`/crm/loyalty-programs/${program.id}/edit`);
   };
@@ -228,9 +232,18 @@ export default function LoyaltyProgramsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
+      width: 180,
       render: (_: unknown, record: LoyaltyProgramDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             size="small"

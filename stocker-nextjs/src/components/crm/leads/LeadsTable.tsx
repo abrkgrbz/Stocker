@@ -13,6 +13,7 @@ import {
   UserOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { Lead } from '@/lib/api/services/crm.service';
@@ -26,6 +27,7 @@ interface LeadsTableProps {
   pageSize: number;
   totalCount: number;
   onPageChange: (page: number, size: number) => void;
+  onView?: (lead: Lead) => void;
   onEdit: (lead: Lead) => void;
   onDelete: (id: string, lead: Lead) => void;
   onConvert: (lead: Lead) => void;
@@ -62,6 +64,7 @@ export function LeadsTable({
   pageSize,
   totalCount,
   onPageChange,
+  onView,
   onEdit,
   onDelete,
   onConvert,
@@ -217,6 +220,16 @@ export function LeadsTable({
           trigger={['click']}
           menu={{
             items: [
+              ...(onView
+                ? [
+                    {
+                      key: 'view',
+                      label: 'Görüntüle',
+                      icon: <EyeOutlined />,
+                      onClick: () => onView(record),
+                    },
+                  ]
+                : []),
               {
                 key: 'edit',
                 label: 'Düzenle',

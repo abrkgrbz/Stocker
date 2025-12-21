@@ -86,6 +86,10 @@ export default function PipelinesPage() {
     router.push('/crm/pipelines/new');
   };
 
+  const handleView = (pipeline: Pipeline) => {
+    router.push(`/crm/pipelines/${pipeline.id}`);
+  };
+
   const handleViewStages = (pipeline: Pipeline) => {
     setViewingPipeline(pipeline);
     setStagesModalOpen(true);
@@ -237,6 +241,12 @@ export default function PipelinesPage() {
         <Dropdown
           menu={{
             items: [
+              {
+                key: 'view',
+                label: 'Görüntüle',
+                icon: <EyeOutlined />,
+                onClick: () => handleView(record),
+              },
               {
                 key: 'toggle',
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',

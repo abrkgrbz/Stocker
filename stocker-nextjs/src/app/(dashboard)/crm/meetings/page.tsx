@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -177,6 +177,10 @@ export default function MeetingsPage() {
     router.push('/crm/meetings/new');
   };
 
+  const handleView = (id: string) => {
+    router.push(`/crm/meetings/${id}`);
+  };
+
   const handleEdit = (id: string) => {
     router.push(`/crm/meetings/${id}/edit`);
   };
@@ -321,6 +325,7 @@ export default function MeetingsPage() {
           <RowActions
             id={record.id}
             quickActions={[
+              createAction.view(() => handleView(record.id)),
               createAction.edit(() => handleEdit(record.id)),
             ]}
             menuActions={[

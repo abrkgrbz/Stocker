@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Progress, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, AimOutlined, SearchOutlined, EditOutlined, TrophyOutlined, WarningOutlined, GlobalOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, AimOutlined, SearchOutlined, EditOutlined, TrophyOutlined, WarningOutlined, GlobalOutlined, EyeOutlined } from '@ant-design/icons';
 import {
   showDeleteSuccess,
   showError,
@@ -141,6 +141,10 @@ export default function CompetitorsPage() {
     router.push('/crm/competitors/new');
   };
 
+  const handleView = (competitor: CompetitorDto) => {
+    router.push(`/crm/competitors/${competitor.id}`);
+  };
+
   const handleEdit = (competitor: CompetitorDto) => {
     router.push(`/crm/competitors/${competitor.id}/edit`);
   };
@@ -235,9 +239,18 @@ export default function CompetitorsPage() {
     {
       title: 'İşlemler',
       key: 'actions',
-      width: 120,
+      width: 180,
       render: (_: unknown, record: CompetitorDto) => (
         <Space>
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Görüntüle
+          </Button>
           <Button
             type="text"
             size="small"

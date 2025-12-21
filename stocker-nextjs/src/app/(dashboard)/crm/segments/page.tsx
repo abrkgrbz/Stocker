@@ -18,6 +18,7 @@ import {
   MailOutlined,
   DownloadOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
@@ -232,6 +233,12 @@ export default function CustomerSegmentsPage() {
         <Dropdown
           menu={{
             items: [
+              {
+                key: 'view',
+                label: 'Görüntüle',
+                icon: <EyeOutlined />,
+                onClick: () => router.push(`/crm/segments/${record.id}`),
+              },
               {
                 key: 'edit',
                 label: 'Düzenle',
