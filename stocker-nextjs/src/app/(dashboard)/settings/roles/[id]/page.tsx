@@ -4,7 +4,7 @@
  * Role Detail Page
  * Enterprise-grade design following Linear/Stripe/Vercel design principles
  * - Bento grid layout for role information
- * - Responsive permissions grid with search filter
+ * - Categorized accordion layout for permissions (reduces visual noise)
  * - Clean white cards with subtle borders
  */
 
@@ -20,82 +20,231 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   SearchOutlined,
+  DownOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  InboxOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useRole } from '@/hooks/useRoles';
 import {
   parsePermission,
   PERMISSION_TYPE_LABELS,
   AVAILABLE_RESOURCES,
+  MODULE_RESOURCES,
   type Permission,
   type PermissionType,
+  type ModuleResourceCategory,
 } from '@/lib/api/roles';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
 dayjs.locale('tr');
 
+// Interface for categorized permissions
+interface CategoryPermissions {
+  categoryCode: string;
+  categoryName: string;
+  resources: {
+    resource: string;
+    resourceLabel: string;
+    permissions: Permission[];
+  }[];
+  totalPermissions: number;
+}
+
+// Get icon component for category
+const getCategoryIcon = (categoryCode: string) => {
+  const iconMap: Record<string, React.ReactNode> = {
+    CORE: <SettingOutlined className="text-indigo-500 text-lg" />,
+    INVENTORY: <InboxOutlined className="text-indigo-500 text-lg" />,
+    SALES: <ShoppingOutlined className="text-indigo-500 text-lg" />,
+    PURCHASE: <ShoppingCartOutlined className="text-indigo-500 text-lg" />,
+    CRM: <UserOutlined className="text-indigo-500 text-lg" />,
+    HR: <TeamOutlined className="text-indigo-500 text-lg" />,
+    FINANCE: <DollarOutlined className="text-indigo-500 text-lg" />,
+    CMS: <FileTextOutlined className="text-indigo-500 text-lg" />,
+  };
+  return iconMap[categoryCode] || <AppstoreOutlined className="text-indigo-500 text-lg" />;
+};
+
+/**
+ * Helper function to group permissions by module/category
+ */
+function groupPermissionsByCategory(permissions: Permission[]): CategoryPermissions[] {
+  const categories: CategoryPermissions[] = [];
+
+  // Create a map for quick resource lookup
+  const resourceToModule = new Map<string, ModuleResourceCategory>();
+  MODULE_RESOURCES.forEach((module) => {
+    module.resources.forEach((res) => {
+      resourceToModule.set(res.value, module);
+    });
+  });
+
+  // Group permissions by category
+  const categoryMap = new Map<string, CategoryPermissions>();
+
+  // Initialize Core category
+  categoryMap.set('CORE', {
+    categoryCode: 'CORE',
+    categoryName: 'Sistem & Güvenlik',
+    resources: [],
+    totalPermissions: 0,
+  });
+
+  // Initialize module categories
+  MODULE_RESOURCES.forEach((module) => {
+    categoryMap.set(module.moduleCode, {
+      categoryCode: module.moduleCode,
+      categoryName: module.moduleName,
+      resources: [],
+      totalPermissions: 0,
+    });
+  });
+
+  // Group permissions
+  permissions.forEach((perm) => {
+    const moduleInfo = resourceToModule.get(perm.resource);
+    const categoryCode = moduleInfo?.moduleCode || 'CORE';
+    const category = categoryMap.get(categoryCode);
+
+    if (category) {
+      // Find or create resource group
+      let resourceGroup = category.resources.find((r) => r.resource === perm.resource);
+      if (!resourceGroup) {
+        const resourceDef = AVAILABLE_RESOURCES.find((r) => r.value === perm.resource);
+        resourceGroup = {
+          resource: perm.resource,
+          resourceLabel: resourceDef?.label || perm.resource,
+          permissions: [],
+        };
+        category.resources.push(resourceGroup);
+      }
+      resourceGroup.permissions.push(perm);
+      category.totalPermissions++;
+    }
+  });
+
+  // Convert map to array and filter out empty categories
+  categoryMap.forEach((category) => {
+    if (category.totalPermissions > 0) {
+      categories.push(category);
+    }
+  });
+
+  // Sort: CORE first, then by total permissions descending
+  categories.sort((a, b) => {
+    if (a.categoryCode === 'CORE') return -1;
+    if (b.categoryCode === 'CORE') return 1;
+    return b.totalPermissions - a.totalPermissions;
+  });
+
+  return categories;
+}
+
 export default function RoleDetailPage() {
   const router = useRouter();
   const params = useParams();
   const roleId = params.id as string;
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
   const { data: role, isLoading, error } = useRole(roleId);
 
-  // Parse and group permissions
-  const { permissions, groupedPermissions, filteredGroupedPermissions, totalFilteredCount } = useMemo(() => {
-    if (!role) return { permissions: [], groupedPermissions: {}, filteredGroupedPermissions: {}, totalFilteredCount: 0 };
+  // Parse and categorize permissions
+  const { permissions, categorizedPermissions, filteredCategories, totalFilteredCount } =
+    useMemo(() => {
+      if (!role)
+        return {
+          permissions: [],
+          categorizedPermissions: [],
+          filteredCategories: [],
+          totalFilteredCount: 0,
+        };
 
-    const perms = role.permissions.map(parsePermission);
+      const perms = role.permissions.map(parsePermission);
+      const categories = groupPermissionsByCategory(perms);
 
-    // Group all permissions by resource
-    const grouped = perms.reduce((acc, perm) => {
-      if (!acc[perm.resource]) {
-        acc[perm.resource] = [];
+      // Filter based on search query
+      const searchLower = searchQuery.toLowerCase().trim();
+      if (!searchLower) {
+        return {
+          permissions: perms,
+          categorizedPermissions: categories,
+          filteredCategories: categories,
+          totalFilteredCount: perms.length,
+        };
       }
-      acc[perm.resource].push(perm);
-      return acc;
-    }, {} as Record<string, Permission[]>);
 
-    // Filter based on search query
-    const searchLower = searchQuery.toLowerCase().trim();
-    if (!searchLower) {
-      return {
-        permissions: perms,
-        groupedPermissions: grouped,
-        filteredGroupedPermissions: grouped,
-        totalFilteredCount: perms.length
-      };
-    }
+      // Filter categories and resources
+      const filtered: CategoryPermissions[] = [];
+      let count = 0;
 
-    const filtered: Record<string, Permission[]> = {};
-    let count = 0;
+      categories.forEach((category) => {
+        const categoryMatches =
+          category.categoryName.toLowerCase().includes(searchLower) ||
+          category.categoryCode.toLowerCase().includes(searchLower);
 
-    Object.entries(grouped).forEach(([resource, resourcePerms]) => {
-      const resourceLabel = AVAILABLE_RESOURCES.find((r) => r.value === resource)?.label || resource;
+        const filteredResources = category.resources
+          .map((res) => {
+            const resourceMatches =
+              categoryMatches || res.resourceLabel.toLowerCase().includes(searchLower);
 
-      // Check if resource name matches
-      const resourceMatches = resourceLabel.toLowerCase().includes(searchLower);
+            const matchingPerms = res.permissions.filter((perm) => {
+              const permLabel = PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType] || '';
+              return resourceMatches || permLabel.toLowerCase().includes(searchLower);
+            });
 
-      // Filter permissions within resource
-      const matchingPerms = resourcePerms.filter(perm => {
-        const permLabel = PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType] || '';
-        return resourceMatches || permLabel.toLowerCase().includes(searchLower);
+            if (matchingPerms.length > 0) {
+              return {
+                ...res,
+                permissions: matchingPerms,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as CategoryPermissions['resources'];
+
+        if (filteredResources.length > 0) {
+          const totalPerms = filteredResources.reduce((sum, r) => sum + r.permissions.length, 0);
+          filtered.push({
+            ...category,
+            resources: filteredResources,
+            totalPermissions: totalPerms,
+          });
+          count += totalPerms;
+        }
       });
 
-      if (matchingPerms.length > 0) {
-        filtered[resource] = matchingPerms;
-        count += matchingPerms.length;
-      }
-    });
+      return {
+        permissions: perms,
+        categorizedPermissions: categories,
+        filteredCategories: filtered,
+        totalFilteredCount: count,
+      };
+    }, [role, searchQuery]);
 
-    return {
-      permissions: perms,
-      groupedPermissions: grouped,
-      filteredGroupedPermissions: filtered,
-      totalFilteredCount: count
-    };
-  }, [role, searchQuery]);
+  // Expand/Collapse all
+  const handleExpandAll = () => {
+    setExpandedCategories(filteredCategories.map((c) => c.categoryCode));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedCategories([]);
+  };
+
+  const toggleCategory = (categoryCode: string) => {
+    setExpandedCategories((prev) =>
+      prev.includes(categoryCode)
+        ? prev.filter((c) => c !== categoryCode)
+        : [...prev, categoryCode]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -118,11 +267,6 @@ export default function RoleDetailPage() {
     if (role.permissions.length > 50) return '👑';
     if (role.permissions.length > 20) return '⚡';
     return '👤';
-  };
-
-  const getResourceLabel = (resource: string) => {
-    const found = AVAILABLE_RESOURCES.find((r) => r.value === resource);
-    return found?.label || resource;
   };
 
   return (
@@ -203,7 +347,9 @@ export default function RoleDetailPage() {
                       Sistem Rolü
                     </Tag>
                   ) : (
-                    <Tag color="blue" className="m-0">Özel Rol</Tag>
+                    <Tag color="blue" className="m-0">
+                      Özel Rol
+                    </Tag>
                   )}
                 </div>
                 <div>
@@ -217,7 +363,9 @@ export default function RoleDetailPage() {
                   <p className="text-xs text-slate-400 mb-1">Yetki Sayısı</p>
                   <div className="flex items-center gap-1">
                     <SafetyOutlined className="text-slate-400" />
-                    <span className="text-sm font-medium text-slate-900">{role.permissions.length}</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {role.permissions.length}
+                    </span>
                   </div>
                 </div>
                 <div>
@@ -226,6 +374,15 @@ export default function RoleDetailPage() {
                     <CalendarOutlined className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(role.createdDate).format('DD/MM/YYYY')}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Modül Sayısı</p>
+                  <div className="flex items-center gap-1">
+                    <AppstoreOutlined className="text-slate-400" />
+                    <span className="text-sm font-medium text-slate-900">
+                      {categorizedPermissions.length}
                     </span>
                   </div>
                 </div>
@@ -269,76 +426,152 @@ export default function RoleDetailPage() {
                   <span className="font-medium text-slate-900">{role.permissions.length}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Kaynak Sayısı</span>
-                  <span className="font-medium text-slate-900">{Object.keys(groupedPermissions).length}</span>
+                  <span className="text-slate-500">Modül Sayısı</span>
+                  <span className="font-medium text-slate-900">
+                    {categorizedPermissions.length}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Permissions Section - Full Width */}
+          {/* Permissions Section - Full Width with Accordion */}
           <div className="col-span-12">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
-              {/* Header with Search */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <SafetyOutlined className="text-slate-400" />
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
-                    Yetkiler ({role.permissions.length})
-                  </p>
-                  {searchQuery && totalFilteredCount !== role.permissions.length && (
-                    <span className="text-xs text-slate-400">
-                      • {totalFilteredCount} sonuç
-                    </span>
-                  )}
+              {/* Sticky Header with Search and Controls */}
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <SafetyOutlined className="text-slate-400" />
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
+                      Yetkiler ({role.permissions.length})
+                    </p>
+                    {searchQuery && totalFilteredCount !== role.permissions.length && (
+                      <span className="text-xs text-slate-400">• {totalFilteredCount} sonuç</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {/* Expand/Collapse All */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={handleExpandAll}
+                        className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                      >
+                        Tümünü Aç
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        onClick={handleCollapseAll}
+                        className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                      >
+                        Tümünü Kapat
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Yetki veya modül ara..."
+                      prefix={<SearchOutlined className="text-slate-400" />}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      allowClear
+                      className="w-full sm:w-64"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </div>
                 </div>
-                <Input
-                  placeholder="Yetki veya kaynak ara..."
-                  prefix={<SearchOutlined className="text-slate-400" />}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  allowClear
-                  className="w-full sm:w-64"
-                  style={{ borderRadius: 8 }}
-                />
               </div>
 
-              {Object.keys(filteredGroupedPermissions).length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                  {Object.entries(filteredGroupedPermissions).map(([resource, perms]) => (
-                    <div
-                      key={resource}
-                      className="group p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 hover:shadow-sm transition-all duration-200"
-                    >
-                      {/* Resource Header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                            <LockOutlined className="text-indigo-500 text-sm" />
-                          </div>
-                          <p className="text-sm font-medium text-slate-900 m-0 truncate">
-                            {getResourceLabel(resource)}
-                          </p>
-                        </div>
-                        <span className="text-xs text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
-                          {perms.length}
-                        </span>
-                      </div>
+              {/* Categorized Accordion Layout */}
+              {filteredCategories.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredCategories.map((category) => {
+                    const isExpanded = expandedCategories.includes(category.categoryCode);
 
-                      {/* Permission Tags */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {perms.map((perm, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-white border border-slate-200 text-slate-700 group-hover:border-indigo-200 group-hover:text-indigo-700 transition-colors"
-                          >
-                            <CheckCircleOutlined className="text-emerald-500 text-[10px]" />
-                            {PERMISSION_TYPE_LABELS[perm.permissionType as PermissionType]}
-                          </span>
-                        ))}
+                    return (
+                      <div
+                        key={category.categoryCode}
+                        className="border border-slate-200 rounded-xl overflow-hidden"
+                      >
+                        {/* Accordion Header */}
+                        <button
+                          onClick={() => toggleCategory(category.categoryCode)}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                              {getCategoryIcon(category.categoryCode)}
+                            </div>
+                            <div className="text-left">
+                              <p className="text-sm font-semibold text-slate-900 m-0">
+                                {category.categoryName}
+                              </p>
+                              <p className="text-xs text-slate-500 m-0">
+                                {category.resources.length} kaynak •{' '}
+                                {category.totalPermissions} yetki
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-1 bg-white border border-slate-200 rounded-full text-xs font-medium text-slate-600">
+                              {category.totalPermissions}
+                            </span>
+                            <div
+                              className={`w-6 h-6 rounded-md flex items-center justify-center text-slate-400 transition-transform ${
+                                isExpanded ? 'rotate-180' : ''
+                              }`}
+                            >
+                              <DownOutlined className="text-xs" />
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Accordion Body */}
+                        {isExpanded && (
+                          <div className="p-4 bg-white border-t border-slate-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                              {category.resources.map((res) => (
+                                <div
+                                  key={res.resource}
+                                  className="group p-4 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 hover:shadow-sm transition-all duration-200"
+                                >
+                                  {/* Resource Header */}
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center">
+                                        <LockOutlined className="text-indigo-500 text-xs" />
+                                      </div>
+                                      <p className="text-sm font-medium text-slate-900 m-0 truncate">
+                                        {res.resourceLabel}
+                                      </p>
+                                    </div>
+                                    <span className="text-xs text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
+                                      {res.permissions.length}
+                                    </span>
+                                  </div>
+
+                                  {/* Permission Tags */}
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {res.permissions.map((perm, index) => (
+                                      <span
+                                        key={index}
+                                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-white border border-slate-200 text-slate-700 group-hover:border-indigo-200 group-hover:text-indigo-700 transition-colors"
+                                      >
+                                        <CheckCircleOutlined className="text-emerald-500 text-[10px]" />
+                                        {
+                                          PERMISSION_TYPE_LABELS[
+                                            perm.permissionType as PermissionType
+                                          ]
+                                        }
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : searchQuery ? (
                 <div className="py-12 text-center">
