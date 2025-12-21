@@ -23,30 +23,30 @@ export const remindersApi = {
       queryParams.append('assignedToUserId', params.assignedToUserId);
 
     const query = queryParams.toString();
-    const url = query ? `/api/crm/Reminders?${query}` : '/api/crm/Reminders';
+    const url = query ? `/crm/Reminders?${query}` : '/crm/Reminders';
 
     const response = await apiClient.get<ApiResponse<GetRemindersResponse>>(url);
     return (response.data as any).data || response.data;
   },
 
   createReminder: async (data: CreateReminderRequest): Promise<number> => {
-    const response = await apiClient.post<ApiResponse<number>>('/api/crm/Reminders', data);
+    const response = await apiClient.post<ApiResponse<number>>('/crm/Reminders', data);
     return (response.data as any).data || response.data;
   },
 
   updateReminder: async (id: number, data: UpdateReminderRequest): Promise<void> => {
-    await apiClient.put(`/api/crm/Reminders/${id}`, data);
+    await apiClient.put(`/crm/Reminders/${id}`, data);
   },
 
   snoozeReminder: async (id: number, minutes: number): Promise<void> => {
-    await apiClient.post(`/api/crm/Reminders/${id}/snooze`, { minutes } as SnoozeReminderRequest);
+    await apiClient.post(`/crm/Reminders/${id}/snooze`, { minutes } as SnoozeReminderRequest);
   },
 
   completeReminder: async (id: number): Promise<void> => {
-    await apiClient.post(`/api/crm/Reminders/${id}/complete`);
+    await apiClient.post(`/crm/Reminders/${id}/complete`);
   },
 
   deleteReminder: async (id: number): Promise<void> => {
-    await apiClient.delete(`/api/crm/Reminders/${id}`);
+    await apiClient.delete(`/crm/Reminders/${id}`);
   },
 };

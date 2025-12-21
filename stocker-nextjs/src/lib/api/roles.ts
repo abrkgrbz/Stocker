@@ -212,7 +212,7 @@ export function getAvailableResourcesForModules(activeModuleCodes: string[]): {
  */
 export async function getRoles(): Promise<Role[]> {
   const response = await apiClient.get<{ success: boolean; data: Role[]; message: string }>(
-    '/api/tenant/roles'
+    '/tenant/roles'
   );
   // Backend returns: { success, data: Role[], message }
   // We need response.data.data (not response.data)
@@ -224,7 +224,7 @@ export async function getRoles(): Promise<Role[]> {
  */
 export async function getRole(roleId: string): Promise<Role> {
   const response = await apiClient.get<{ success: boolean; data: Role; message: string }>(
-    `/api/tenant/roles/${roleId}`
+    `/tenant/roles/${roleId}`
   );
   return (response.data as any).data as Role;
 }
@@ -244,7 +244,7 @@ export async function createRole(data: CreateRoleRequest): Promise<Role> {
   };
 
   const response = await apiClient.post<{ success: boolean; data: Role; message: string }>(
-    '/api/tenant/roles',
+    '/tenant/roles',
     requestData
   );
   return (response.data as any).data as Role;
@@ -264,14 +264,14 @@ export async function updateRole(roleId: string, data: UpdateRoleRequest): Promi
     })),
   };
 
-  await apiClient.put(`/api/tenant/roles/${roleId}`, requestData);
+  await apiClient.put(`/tenant/roles/${roleId}`, requestData);
 }
 
 /**
  * Delete a role
  */
 export async function deleteRole(roleId: string): Promise<void> {
-  await apiClient.delete(`/api/tenant/roles/${roleId}`);
+  await apiClient.delete(`/tenant/roles/${roleId}`);
 }
 
 /**
