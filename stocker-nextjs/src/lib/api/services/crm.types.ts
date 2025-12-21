@@ -10,15 +10,320 @@ export type DateTime = string; // ISO 8601 format
 // STATISTICS & ANALYTICS
 // =====================================
 
+/**
+ * Backend: ActivityStatisticsDto (ActivityDto.cs:44-58)
+ * Synchronized with C# DTO
+ */
 export interface ActivityStatisticsDto {
-  total: number;
-  scheduled: number;
-  inProgress: number;
-  completed: number;
-  cancelled: number;
-  overdue: number;
+  totalActivities: number;
+  todayActivities: number;
+  overdueActivities: number;
+  thisWeekActivities: number;
+  completedTodayActivities: number;
+  completedActivities: number;
+  pendingActivities: number;
   completionRate: number;
-  averageCompletionTime: number; // in hours
+  activitiesByType: { [type: string]: number };
+  activitiesByStatus: { [status: string]: number };
+  userActivities: UserActivityDto[];
+  dailyActivities: DailyActivityDto[];
+}
+
+export interface UserActivityDto {
+  userId: string;
+  userName: string;
+  totalActivities: number;
+  completedActivities: number;
+  overdueActivities: number;
+  completionRate: number;
+}
+
+export interface DailyActivityDto {
+  date: DateTime;
+  createdCount: number;
+  completedCount: number;
+  overdueCount: number;
+}
+
+// =====================================
+// CORE ENTITIES
+// =====================================
+
+/**
+ * Backend: CustomerDto (CustomerDto.cs:8-34)
+ * Synchronized with C# DTO
+ */
+export interface CustomerDto {
+  id: Guid;
+  companyName: string;
+  email: string;
+  phone?: string;
+  website?: string;
+  industry?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  annualRevenue?: number;
+  numberOfEmployees?: number;
+  description?: string;
+  customerType: CustomerType;
+  status: CustomerStatus;
+  creditLimit: number;
+  taxId?: string;
+  paymentTerms?: string;
+  contactPerson?: string;
+  isActive: boolean;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  contacts: ContactDto[];
+}
+
+export enum CustomerType {
+  Individual = 'Individual',
+  Corporate = 'Corporate'
+}
+
+export enum CustomerStatus {
+  Active = 'Active',
+  Inactive = 'Inactive',
+  Prospect = 'Prospect',
+  Suspended = 'Suspended'
+}
+
+export interface CreateCustomerDto {
+  companyName: string;
+  email: string;
+  phone?: string;
+  website?: string;
+  industry?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  annualRevenue?: number;
+  numberOfEmployees?: number;
+  description?: string;
+  customerType?: CustomerType;
+  status?: CustomerStatus;
+  creditLimit?: number;
+  taxId?: string;
+  paymentTerms?: string;
+  contactPerson?: string;
+}
+
+export interface UpdateCustomerDto extends CreateCustomerDto {}
+
+/**
+ * Backend: ContactDto (ContactDto.cs:6-23)
+ * Synchronized with C# DTO
+ */
+export interface ContactDto {
+  id: Guid;
+  customerId: Guid;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  department?: string;
+  isPrimary: boolean;
+  isActive: boolean;
+  notes?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+}
+
+export interface CreateContactDto {
+  customerId: Guid;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  department?: string;
+  isPrimary: boolean;
+  notes?: string;
+}
+
+export interface UpdateContactDto {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  department?: string;
+  isPrimary: boolean;
+  notes?: string;
+}
+
+/**
+ * Backend: LeadDto (LeadDto.cs:8-42)
+ * Synchronized with C# DTO
+ */
+export interface LeadDto {
+  id: Guid;
+  companyName?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  industry?: string;
+  source?: string;
+  status: LeadStatus;
+  rating: LeadRating;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  website?: string;
+  annualRevenue?: number;
+  numberOfEmployees?: number;
+  description?: string;
+  assignedToUserId?: Guid;
+  assignedToName?: string;
+  convertedDate?: DateTime;
+  convertedToCustomerId?: Guid;
+  isConverted: boolean;
+  score: number;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  activities?: ActivityDto[];
+  notes?: NoteDto[];
+}
+
+export enum LeadStatus {
+  New = 'New',
+  Contacted = 'Contacted',
+  Qualified = 'Qualified',
+  Unqualified = 'Unqualified',
+  Converted = 'Converted',
+  Lost = 'Lost'
+}
+
+export enum LeadRating {
+  Unrated = 'Unrated',
+  Cold = 'Cold',
+  Warm = 'Warm',
+  Hot = 'Hot'
+}
+
+export interface CreateLeadDto {
+  firstName: string;
+  lastName: string;
+  email: string;
+  companyName?: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  industry?: string;
+  source?: string;
+  status?: LeadStatus;
+  rating?: LeadRating;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  website?: string;
+  annualRevenue?: number;
+  numberOfEmployees?: number;
+  description?: string;
+  assignedToUserId?: Guid;
+}
+
+export interface UpdateLeadDto extends CreateLeadDto {}
+
+/**
+ * Backend: ActivityDto (ActivityDto.cs:5-42)
+ * Synchronized with C# DTO
+ */
+export interface ActivityDto {
+  id: Guid;
+  subject: string;
+  description?: string;
+  type: ActivityType;
+  status: ActivityStatus;
+  priority: ActivityPriority;
+  scheduledAt?: DateTime;
+  dueAt?: DateTime;
+  completedAt?: DateTime;
+  duration?: string; // TimeSpan as ISO 8601 duration
+  location?: string;
+  leadId?: Guid;
+  leadName?: string;
+  customerId?: Guid;
+  customerName?: string;
+  contactId?: Guid;
+  contactName?: string;
+  opportunityId?: Guid;
+  opportunityName?: string;
+  dealId?: Guid;
+  dealTitle?: string;
+  ownerId: number;
+  ownerName?: string;
+  assignedToUserId?: Guid;
+  assignedToName?: string;
+  outcome?: string;
+  notes?: string;
+  isOverdue: boolean;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
+  // Frontend compatibility aliases (computed in backend)
+  title: string;
+  startTime?: DateTime;
+  endTime?: DateTime;
+}
+
+export enum ActivityType {
+  Call = 'Call',
+  Email = 'Email',
+  Meeting = 'Meeting',
+  Task = 'Task',
+  Note = 'Note'
+}
+
+export enum ActivityStatus {
+  Scheduled = 'Scheduled',
+  InProgress = 'InProgress',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled'
+}
+
+export enum ActivityPriority {
+  Low = 'Low',
+  Normal = 'Normal',
+  High = 'High',
+  Urgent = 'Urgent'
+}
+
+/**
+ * Backend: NoteDto (NoteDto.cs:3-17)
+ * Synchronized with C# DTO
+ */
+export interface NoteDto {
+  id: Guid;
+  content: string;
+  leadId?: Guid;
+  customerId?: Guid;
+  contactId?: Guid;
+  opportunityId?: Guid;
+  dealId?: Guid;
+  isPinned: boolean;
+  createdById?: string;
+  createdByName?: string;
+  createdAt: DateTime;
+  updatedAt?: DateTime;
 }
 
 export interface LeadStatisticsDto {
@@ -248,17 +553,27 @@ export interface DownloadUrlResponse {
 // CUSTOMER TAGS
 // =====================================
 
+/**
+ * Backend: CustomerTagDto (CustomerSegmentDto.cs:33-42)
+ * Synchronized with C# DTO
+ */
 export interface CustomerTagDto {
   id: Guid;
+  tenantId: Guid;
   customerId: Guid;
-  tagName: string;
+  tag: string; // C#: Tag (backend field name)
   color?: string;
+  createdBy: Guid;
   createdAt: DateTime;
 }
 
+/**
+ * Frontend sends tagName, controller maps to Tag
+ * See: CustomerTagsController.cs AddCustomerTagDto
+ */
 export interface AddCustomerTagCommand {
   customerId: Guid;
-  tagName: string;
+  tagName: string; // Controller expects tagName, maps to command.Tag
   color?: string;
 }
 

@@ -1474,15 +1474,20 @@ export enum AttributeType {
   Size = 'Size'
 }
 
+/**
+ * Backend: ProductAttributeOptionDto (ProductAttributeDto.cs:32-42)
+ * Synchronized with C# DTO
+ */
 export interface ProductAttributeOptionDto {
   id: number;
   productAttributeId: number;
   value: string;
+  label: string; // Added: C# has Label field
   displayOrder: number;
   colorCode?: string;
   imageUrl?: string;
-  isDefault: boolean;
   isActive: boolean;
+  // Note: isDefault removed - not in C# DTO
 }
 
 export interface ProductAttributeDetailDto {
@@ -1566,6 +1571,10 @@ export interface ProductAttributeValueDto {
 // PRODUCT VARIANTS
 // =====================================
 
+/**
+ * Backend: ProductVariantOptionDto (ProductVariantDto.cs:39-49)
+ * Synchronized with C# DTO
+ */
 export interface ProductVariantOptionDto {
   id: number;
   productVariantId: number;
@@ -1574,28 +1583,40 @@ export interface ProductVariantOptionDto {
   attributeName: string;
   productAttributeOptionId?: number;
   value: string;
+  displayOrder: number; // Added: C# has DisplayOrder
 }
 
+/**
+ * Backend: ProductVariantDto (ProductVariantDto.cs:6-34)
+ * Synchronized with C# DTO
+ */
 export interface ProductVariantDto {
   id: number;
   productId: number;
-  productCode?: string;
-  productName?: string;
+  productName: string; // C#: required field
   sku: string;
   barcode?: string;
-  name: string;
+  variantName: string; // C#: VariantName (renamed from 'name')
   price?: number;
   priceCurrency?: string;
   costPrice?: number;
   costPriceCurrency?: string;
+  compareAtPrice?: number; // Added from C#
+  compareAtPriceCurrency?: string; // Added from C#
   weight?: number;
+  weightUnit?: string; // Added from C#
+  dimensions?: string; // Added from C#
   imageUrl?: string;
   isDefault: boolean;
   isActive: boolean;
+  trackInventory: boolean; // Added from C#
+  allowBackorder: boolean; // Added from C#
+  lowStockThreshold: number; // Added from C#
+  displayOrder: number; // Added from C#
   createdAt: DateTime;
   updatedAt?: DateTime;
-  stockQuantity: number;
   options: ProductVariantOptionDto[];
+  totalStock: number; // C#: TotalStock (renamed from 'stockQuantity')
 }
 
 export interface CreateProductVariantDto {

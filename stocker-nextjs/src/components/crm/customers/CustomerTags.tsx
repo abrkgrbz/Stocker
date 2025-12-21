@@ -94,7 +94,8 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
   }
 
   // Filter out already added tags from suggestions
-  const existingTagNames = tags?.map(t => t.tagName) || [];
+  // Backend returns 'tag' field (C# Tag property serialized as camelCase)
+  const existingTagNames = tags?.map(t => t.tag) || [];
   const suggestedTags = allTags?.filter(t => !existingTagNames.includes(t)).slice(0, 5) || [];
 
   return (
@@ -120,7 +121,7 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
               color: tag.color || undefined,
             }}
           >
-            {tag.tagName}
+            {tag.tag}
           </Tag>
         ))}
 
@@ -289,7 +290,7 @@ export function CustomerTagList({ customerId }: { customerId: Guid }) {
             color: tag.color || '#64748b',
           }}
         >
-          {tag.tagName}
+          {tag.tag}
         </Tag>
       ))}
       {tags.length > 3 && (

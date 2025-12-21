@@ -2,6 +2,7 @@ import { ApiService } from '../api-service';
 
 // =====================================
 // TYPES - Based on Backend API
+// Synchronized with C# DTOs: 2025-12-21
 // =====================================
 
 // =====================================
@@ -25,11 +26,29 @@ export type DiscountType =
   | 'BuyXGetY'
   | 'Tiered';
 
+// C#: DiscountValueType enum
+export type DiscountValueType =
+  | 'Percentage'
+  | 'FixedAmount';
+
+// C#: DiscountApplicability enum
+export type DiscountApplicability =
+  | 'All'
+  | 'SpecificProducts'
+  | 'SpecificCategories'
+  | 'SpecificCustomers';
+
 export type CommissionType =
   | 'Percentage'
   | 'FixedAmount'
   | 'Tiered'
   | 'Target';
+
+// C#: CommissionCalculationType enum
+export type CommissionCalculationType =
+  | 'Percentage'
+  | 'FixedAmount'
+  | 'Tiered';
 
 export type SalesCommissionStatus =
   | 'Pending'
@@ -56,77 +75,180 @@ export type SalesReturnReason =
   | 'ChangedMind'
   | 'Other';
 
+// C#: SalesReturnType enum
+export type SalesReturnType =
+  | 'Full'
+  | 'Partial';
+
+// C#: RefundMethod enum
+export type RefundMethod =
+  | 'Original'
+  | 'Cash'
+  | 'BankTransfer'
+  | 'Credit'
+  | 'Replacement';
+
+// C#: SalesReturnItemCondition enum
+export type SalesReturnItemCondition =
+  | 'Good'
+  | 'Damaged'
+  | 'Defective'
+  | 'Opened'
+  | 'UsedButWorking';
+
+// C#: InvoiceStatus enum
+export type InvoiceStatus =
+  | 'Draft'
+  | 'Issued'
+  | 'Sent'
+  | 'Paid'
+  | 'PartiallyPaid'
+  | 'Overdue'
+  | 'Cancelled'
+  | 'Voided';
+
+// C#: InvoiceType enum
+export type InvoiceType =
+  | 'Standard'
+  | 'Proforma'
+  | 'Credit'
+  | 'Debit';
+
+// C#: PaymentMethod enum
+export type PaymentMethod =
+  | 'Cash'
+  | 'CreditCard'
+  | 'DebitCard'
+  | 'BankTransfer'
+  | 'Check'
+  | 'OnlinePayment'
+  | 'Other';
+
+// C#: PaymentStatus enum
+export type PaymentStatus =
+  | 'Pending'
+  | 'Completed'
+  | 'Failed'
+  | 'Refunded'
+  | 'Cancelled';
+
+// C#: PromotionType enum
+export type PromotionType =
+  | 'Percentage'
+  | 'FixedAmount'
+  | 'BuyXGetY'
+  | 'FreeShipping'
+  | 'Bundle';
+
+// C#: PromotionStatus enum
+export type PromotionStatus =
+  | 'Draft'
+  | 'Active'
+  | 'Paused'
+  | 'Expired'
+  | 'Cancelled';
+
+// C#: PromotionRuleType enum
+export type PromotionRuleType =
+  | 'MinimumPurchase'
+  | 'ProductQuantity'
+  | 'CategoryDiscount'
+  | 'BuyXGetY'
+  | 'FreeProduct';
+
 // =====================================
 // QUOTATIONS
+// C#: QuotationDto.cs
 // =====================================
 
+/**
+ * Backend: QuotationItemDto (QuotationDto.cs:53-70)
+ */
 export interface QuotationItem {
   id: string;
   quotationId: string;
-  lineNumber: number;
-  productId: string | null;
-  productCode: string;
+  productId: string; // C#: Guid ProductId (required)
   productName: string;
-  description: string | null;
-  unit: string;
+  productCode?: string; // C#: nullable
+  description?: string; // C#: nullable
   quantity: number;
+  unit: string;
   unitPrice: number;
   discountRate: number;
   discountAmount: number;
   vatRate: number;
   vatAmount: number;
   lineTotal: number;
-  lineTotalWithVat: number;
+  sortOrder: number; // C#: SortOrder (added)
 }
 
+/**
+ * Backend: QuotationDto (QuotationDto.cs:5-51)
+ */
 export interface Quotation {
   id: string;
-  tenantId: string;
   quotationNumber: string;
+  name?: string; // C#: Name (added)
   quotationDate: string;
-  validUntil: string;
-  customerId: string | null;
-  customerName: string;
-  customerEmail: string | null;
-  contactName?: string | null;
-  contactEmail?: string | null;
-  contactPhone?: string | null;
-  status: QuotationStatus;
-  currency: string;
+  expirationDate?: string; // C#: ExpirationDate (renamed from validUntil)
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string; // C#: CustomerPhone (added)
+  customerTaxNumber?: string; // C#: CustomerTaxNumber (added)
+  contactId?: string; // C#: ContactId (added)
+  contactName?: string;
+  opportunityId?: string; // C#: OpportunityId (added)
+  salesPersonId?: string;
+  salesPersonName?: string;
   subTotal: number;
   discountAmount: number;
   discountRate: number;
-  taxTotal: number;
-  taxAmount?: number;
-  grandTotal: number;
-  shippingAddress: string | null;
-  billingAddress: string | null;
-  notes: string | null;
-  termsAndConditions: string | null;
-  salesPersonId: string | null;
-  salesPersonName: string | null;
+  vatAmount: number; // C#: VatAmount (renamed from taxTotal)
+  shippingAmount: number; // C#: ShippingAmount (added)
+  totalAmount: number; // C#: TotalAmount (renamed from grandTotal)
+  currency: string;
+  exchangeRate: number; // C#: ExchangeRate (added)
+  status: string; // C#: returns string from enum
+  shippingAddress?: string;
+  billingAddress?: string;
+  paymentTerms?: string; // C#: PaymentTerms (added)
+  deliveryTerms?: string; // C#: DeliveryTerms (added)
+  validityDays: number; // C#: ValidityDays (added)
+  notes?: string;
+  termsAndConditions?: string;
+  approvedBy?: string; // C#: Guid? ApprovedBy
+  approvedDate?: string;
+  sentDate?: string; // C#: SentDate (added)
+  acceptedDate?: string; // C#: AcceptedDate (added)
+  rejectedDate?: string; // C#: RejectedDate (added)
+  rejectionReason?: string; // C#: RejectionReason (added)
+  convertedToOrderId?: string; // C#: ConvertedToOrderId
+  convertedDate?: string; // C#: ConvertedDate (added)
   revisionNumber: number;
-  parentQuotationId: string | null;
-  convertedOrderId: string | null;
-  items: QuotationItem[];
-  approvedAt?: string | null;
-  sentAt?: string | null;
+  parentQuotationId?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  items: QuotationItem[];
 }
 
+/**
+ * Backend: QuotationListDto (QuotationDto.cs:72-87)
+ */
 export interface QuotationListItem {
   id: string;
   quotationNumber: string;
+  name?: string; // C#: Name (added)
   quotationDate: string;
-  validUntil: string;
-  customerName: string;
-  status: QuotationStatus;
-  grandTotal: number;
+  expirationDate?: string; // C#: ExpirationDate (renamed from validUntil)
+  customerName?: string;
+  salesPersonName?: string;
+  totalAmount: number; // C#: TotalAmount (renamed from grandTotal)
   currency: string;
+  status: string;
   itemCount: number;
-  salesPersonName: string | null;
   revisionNumber: number;
+  createdAt: string; // C#: CreatedAt (added)
 }
 
 export interface QuotationStatistics {
@@ -202,112 +324,256 @@ export interface GetQuotationsParams {
 }
 
 // =====================================
-// DISCOUNTS
+// INVOICES
+// C#: InvoiceDto.cs
 // =====================================
 
-export interface Discount {
+/**
+ * Backend: InvoiceItemDto (InvoiceDto.cs:72-92)
+ */
+export interface InvoiceItem {
   id: string;
-  tenantId: string;
-  code: string;
-  name: string;
-  description: string | null;
-  type: DiscountType;
-  value: number;
-  percentage?: number;
-  amount?: number;
-  minOrderAmount: number | null;
-  maxDiscountAmount: number | null;
-  minimumAmount?: number | null;
-  maximumDiscount?: number | null;
-  minQuantity: number | null;
-  maxUsageCount: number | null;
-  maxUsagePerCustomer?: number | null;
-  usageCount: number;
-  totalDiscountGiven?: number;
-  validFrom: string | null;
-  validUntil: string | null;
-  startDate?: string;
-  endDate?: string | null;
-  firstOrderOnly?: boolean;
-  canCombine?: boolean;
-  isActive: boolean;
+  invoiceId: string;
+  salesOrderItemId?: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  description?: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountAmount: number;
+  vatRate: number;
+  vatAmount: number;
+  lineTotal: number;
+  lineNumber: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
+/**
+ * Backend: InvoiceDto (InvoiceDto.cs:5-70)
+ */
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  salesOrderId?: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerTaxNumber?: string;
+  customerAddress?: string;
+  subTotal: number;
+  discountAmount: number;
+  discountRate: number;
+  vatAmount: number;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  currency: string;
+  exchangeRate: number;
+  status: string;
+  type: string;
+  notes?: string;
+  eInvoiceId?: string;
+  isEInvoice: boolean;
+  eInvoiceDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+  items: InvoiceItem[];
+}
+
+/**
+ * Backend: InvoiceListDto (InvoiceDto.cs:119-156)
+ */
+export interface InvoiceListItem {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  customerName?: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  currency: string;
+  status: string;
+  type: string;
+  isEInvoice: boolean;
+  itemCount: number;
+  createdAt: string;
+}
+
+// =====================================
+// PAYMENTS
+// C#: PaymentDto.cs
+// =====================================
+
+/**
+ * Backend: PaymentDto (PaymentDto.cs:5-62)
+ */
+export interface Payment {
+  id: string;
+  paymentNumber: string;
+  paymentDate: string;
+  invoiceId?: string;
+  customerId?: string;
+  customerName?: string;
+  amount: number;
+  currency: string;
+  exchangeRate: number;
+  method: string;
+  status: string;
+  referenceNumber?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  checkNumber?: string;
+  checkDueDate?: string;
+  cardLastFourDigits?: string;
+  cardType?: string;
+  transactionId?: string;
+  notes?: string;
+  receivedBy?: string;
+  receivedByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/**
+ * Backend: PaymentListDto (PaymentDto.cs:64-93)
+ */
+export interface PaymentListItem {
+  id: string;
+  paymentNumber: string;
+  paymentDate: string;
+  customerName?: string;
+  amount: number;
+  currency: string;
+  method: string;
+  status: string;
+  referenceNumber?: string;
+  createdAt: string;
+}
+
+// =====================================
+// DISCOUNTS
+// C#: DiscountDto.cs
+// =====================================
+
+/**
+ * Backend: DiscountDto (DiscountDto.cs:5-35)
+ */
+export interface Discount {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  type: string; // C#: returns string from enum
+  valueType: string; // C#: ValueType (added)
+  value: number;
+  minimumOrderAmount?: number; // C#: MinimumOrderAmount
+  maximumDiscountAmount?: number; // C#: MaximumDiscountAmount
+  minimumQuantity?: number; // C#: MinimumQuantity
+  startDate?: string;
+  endDate?: string;
+  isActive: boolean;
+  usageLimit?: number; // C#: UsageLimit
+  usageCount: number;
+  isStackable: boolean; // C#: IsStackable (added)
+  priority: number; // C#: Priority (added)
+  applicability: string; // C#: Applicability (added)
+  applicableProductIds?: string; // C#: string (JSON array)
+  applicableCategoryIds?: string;
+  applicableCustomerIds?: string;
+  applicableCustomerGroupIds?: string;
+  excludedProductIds?: string;
+  excludedCategoryIds?: string;
+  requiresCouponCode: boolean; // C#: RequiresCouponCode (added)
+  createdAt: string;
+  updatedAt?: string;
+  isValid: boolean; // C#: IsValid (added)
+}
+
+/**
+ * Backend: DiscountListDto (DiscountDto.cs:37-51)
+ */
 export interface DiscountListItem {
   id: string;
   code: string;
   name: string;
-  type: DiscountType;
+  type: string;
+  valueType: string; // C#: ValueType (added)
   value: number;
-  percentage?: number;
-  amount?: number;
+  startDate?: string;
+  endDate?: string;
   isActive: boolean;
-  validFrom: string | null;
-  validUntil: string | null;
   usageCount: number;
-  maxUsageCount: number | null;
+  usageLimit?: number;
+  isValid: boolean; // C#: IsValid (added)
 }
 
+/**
+ * Backend: CreateDiscountDto (DiscountDto.cs:53-76)
+ */
 export interface CreateDiscountDto {
   code: string;
   name: string;
   description?: string;
   type: DiscountType;
-  value?: number;
-  percentage?: number;
-  amount?: number;
-  minOrderAmount?: number;
-  maxDiscountAmount?: number;
-  minimumAmount?: number;
-  maximumDiscount?: number;
-  minQuantity?: number;
-  maxUsageCount?: number;
-  maxUsagePerCustomer?: number;
+  valueType: DiscountValueType;
+  value: number;
+  minimumOrderAmount?: number;
+  maximumDiscountAmount?: number;
+  minimumQuantity?: number;
   startDate?: string;
   endDate?: string;
-  validFrom?: string;
-  validUntil?: string;
-  firstOrderOnly?: boolean;
-  canCombine?: boolean;
-  isActive?: boolean;
+  usageLimit?: number;
+  isStackable?: boolean;
+  priority?: number;
+  applicability: DiscountApplicability;
+  applicableProductIds?: string[];
+  applicableCategoryIds?: string[];
+  applicableCustomerIds?: string[];
+  applicableCustomerGroupIds?: string[];
+  excludedProductIds?: string[];
+  excludedCategoryIds?: string[];
 }
 
+/**
+ * Backend: UpdateDiscountDto (DiscountDto.cs:78-91)
+ */
 export interface UpdateDiscountDto {
-  code?: string;
-  name?: string;
+  name: string;
   description?: string;
-  type?: DiscountType;
-  value?: number;
-  percentage?: number;
-  amount?: number;
-  minOrderAmount?: number;
-  maxDiscountAmount?: number;
-  minimumAmount?: number;
-  maximumDiscount?: number;
-  minQuantity?: number;
-  maxUsageCount?: number;
-  maxUsagePerCustomer?: number;
+  value: number;
+  minimumOrderAmount?: number;
+  maximumDiscountAmount?: number;
+  minimumQuantity?: number;
   startDate?: string;
   endDate?: string;
-  validFrom?: string;
-  validUntil?: string;
-  firstOrderOnly?: boolean;
-  canCombine?: boolean;
-  isActive?: boolean;
+  usageLimit?: number;
+  isStackable?: boolean;
+  priority?: number;
 }
 
+/**
+ * Backend: ApplyDiscountDto (DiscountDto.cs:93-98)
+ */
 export interface ApplyDiscountDto {
   code: string;
   orderAmount: number;
   quantity?: number;
 }
 
+/**
+ * Backend: DiscountCalculationResultDto (DiscountDto.cs:100-105)
+ */
 export interface DiscountValidationResult {
   isValid: boolean;
   discountAmount: number;
-  errorMessage: string | null;
+  errorMessage?: string;
 }
 
 export interface GetDiscountsParams {
@@ -321,143 +587,301 @@ export interface GetDiscountsParams {
 }
 
 // =====================================
-// COMMISSIONS
+// PROMOTIONS
+// C#: PromotionDto.cs
 // =====================================
 
+/**
+ * Backend: PromotionRuleDto (PromotionDto.cs:37-51)
+ */
+export interface PromotionRule {
+  id: string;
+  ruleType: string;
+  condition?: string;
+  discountType: string;
+  discountValue: number;
+  applicableProducts?: string;
+  applicableCategories?: string;
+  minimumQuantity?: number;
+  maximumQuantity?: number;
+  freeProductId?: string;
+  freeProductQuantity?: number;
+  sortOrder: number;
+}
+
+/**
+ * Backend: PromotionDto (PromotionDto.cs:5-35)
+ */
+export interface Promotion {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  isActive: boolean;
+  priority: number;
+  isStackable: boolean;
+  isExclusive: boolean;
+  usageLimit?: number;
+  usageLimitPerCustomer?: number;
+  totalUsageCount: number;
+  minimumOrderAmount?: number;
+  maximumDiscountAmount?: number;
+  applicableChannels?: string;
+  targetCustomerSegments?: string;
+  targetProductCategories?: string;
+  excludedProducts?: string;
+  imageUrl?: string;
+  bannerUrl?: string;
+  termsAndConditions?: string;
+  createdAt: string;
+  updatedAt?: string;
+  isValid: boolean;
+  rules: PromotionRule[];
+}
+
+/**
+ * Backend: PromotionListDto (PromotionDto.cs:53-66)
+ */
+export interface PromotionListItem {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  isActive: boolean;
+  totalUsageCount: number;
+  ruleCount: number;
+  isValid: boolean;
+}
+
+/**
+ * Backend: CreatePromotionDto (PromotionDto.cs:68-91)
+ */
+export interface CreatePromotionDto {
+  code: string;
+  name: string;
+  description?: string;
+  type: PromotionType;
+  startDate: string;
+  endDate: string;
+  priority?: number;
+  isStackable?: boolean;
+  isExclusive?: boolean;
+  usageLimit?: number;
+  usageLimitPerCustomer?: number;
+  minimumOrderAmount?: number;
+  maximumDiscountAmount?: number;
+  applicableChannels?: string;
+  targetCustomerSegments?: string;
+  targetProductCategories?: string;
+  excludedProducts?: string;
+  imageUrl?: string;
+  bannerUrl?: string;
+  termsAndConditions?: string;
+  rules?: CreatePromotionRuleDto[];
+}
+
+/**
+ * Backend: CreatePromotionRuleDto (PromotionDto.cs:93-105)
+ */
+export interface CreatePromotionRuleDto {
+  ruleType: PromotionRuleType;
+  condition?: string;
+  discountType: DiscountValueType;
+  discountValue: number;
+  applicableProducts?: string[];
+  applicableCategories?: string[];
+  minimumQuantity?: number;
+  maximumQuantity?: number;
+  freeProductId?: string;
+  freeProductQuantity?: number;
+}
+
+/**
+ * Backend: UpdatePromotionDto (PromotionDto.cs:107-123)
+ */
+export interface UpdatePromotionDto {
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  priority?: number;
+  isStackable?: boolean;
+  isExclusive?: boolean;
+  usageLimit?: number;
+  usageLimitPerCustomer?: number;
+  minimumOrderAmount?: number;
+  maximumDiscountAmount?: number;
+  imageUrl?: string;
+  bannerUrl?: string;
+  termsAndConditions?: string;
+}
+
+// =====================================
+// COMMISSIONS
+// C#: CommissionDto.cs
+// =====================================
+
+/**
+ * Backend: CommissionTierDto (CommissionDto.cs:32-42)
+ */
 export interface CommissionTier {
   id: string;
-  commissionPlanId: string;
+  name?: string; // C#: Name (added)
   fromAmount: number;
-  toAmount: number | null;
+  toAmount?: number;
+  calculationType: string; // C#: CalculationType (added)
   rate: number;
+  fixedAmount?: number; // C#: FixedAmount (added)
+  sortOrder: number; // C#: SortOrder (added)
 }
 
+/**
+ * Backend: CommissionPlanDto (CommissionDto.cs:5-30)
+ */
 export interface CommissionPlan {
   id: string;
-  tenantId: string;
   name: string;
-  description: string | null;
-  type: CommissionType;
-  baseRate: number;
-  fixedAmount?: number | null;
-  minimumSalesAmount?: number | null;
-  maximumCommission?: number | null;
-  targetAmount: number | null;
-  bonusRate: number | null;
+  description?: string;
+  type: string;
+  calculationType: string; // C#: CalculationType (added)
+  baseRate?: number;
+  baseAmount?: number; // C#: BaseAmount (added)
   isActive: boolean;
-  validFrom: string | null;
-  validUntil: string | null;
-  tiers: CommissionTier[];
+  isTiered: boolean; // C#: IsTiered (added)
+  startDate?: string;
+  endDate?: string;
+  applicableProductCategories?: string;
+  applicableProducts?: string;
+  excludedProducts?: string;
+  applicableSalesPersons?: string;
+  applicableRoles?: string;
+  includeVat: boolean; // C#: IncludeVat (added)
+  calculateOnProfit: boolean; // C#: CalculateOnProfit (added)
+  minimumSaleAmount?: number;
+  maximumCommissionAmount?: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  tiers: CommissionTier[];
 }
 
+/**
+ * Backend: CommissionPlanListDto (CommissionDto.cs:44-56)
+ */
 export interface CommissionPlanListItem {
   id: string;
   name: string;
-  type: CommissionType;
-  baseRate: number;
+  type: string;
+  calculationType: string;
+  baseRate?: number;
+  baseAmount?: number;
   isActive: boolean;
-  validFrom: string | null;
-  validUntil: string | null;
+  isTiered: boolean;
+  tierCount: number;
+  createdAt: string;
 }
 
+/**
+ * Backend: CreateCommissionPlanDto (CommissionDto.cs:58-78)
+ */
 export interface CreateCommissionPlanDto {
   name: string;
   description?: string;
   type: CommissionType;
-  baseRate: number;
-  fixedAmount?: number;
-  minimumSalesAmount?: number;
-  maximumCommission?: number;
-  targetAmount?: number;
-  bonusRate?: number;
-  validFrom?: string;
-  validUntil?: string;
-  isActive?: boolean;
-}
-
-export interface UpdateCommissionPlanDto {
-  name?: string;
-  description?: string;
-  type?: CommissionType;
+  calculationType: CommissionCalculationType;
   baseRate?: number;
-  fixedAmount?: number;
-  minimumSalesAmount?: number;
-  maximumCommission?: number;
-  targetAmount?: number;
-  bonusRate?: number;
-  validFrom?: string;
-  validUntil?: string;
-  isActive?: boolean;
+  baseAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  applicableProductCategories?: string[];
+  applicableProducts?: string[];
+  excludedProducts?: string[];
+  applicableSalesPersons?: string[];
+  applicableRoles?: string[];
+  includeVat?: boolean;
+  calculateOnProfit?: boolean;
+  minimumSaleAmount?: number;
+  maximumCommissionAmount?: number;
+  tiers?: CreateCommissionTierDto[];
 }
 
+/**
+ * Backend: CreateCommissionTierDto (CommissionDto.cs:80-88)
+ */
 export interface CreateCommissionTierDto {
+  name?: string;
   fromAmount: number;
   toAmount?: number;
+  calculationType: CommissionCalculationType;
   rate: number;
+  fixedAmount?: number;
 }
 
+/**
+ * Backend: UpdateCommissionPlanDto (CommissionDto.cs:90-102)
+ */
+export interface UpdateCommissionPlanDto {
+  name: string;
+  description?: string;
+  baseRate?: number;
+  baseAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  includeVat?: boolean;
+  calculateOnProfit?: boolean;
+  minimumSaleAmount?: number;
+  maximumCommissionAmount?: number;
+}
+
+/**
+ * Backend: SalesCommissionDto (CommissionDto.cs:104-124)
+ */
 export interface SalesCommission {
   id: string;
-  tenantId: string;
-  referenceNumber?: string;
+  salesOrderId: string;
+  invoiceId?: string;
   salesPersonId: string;
   salesPersonName: string;
-  salesOrderId: string;
-  salesOrderNumber: string;
-  orderId?: string;
-  orderNumber?: string;
-  orderDate?: string;
-  customerName?: string;
   commissionPlanId: string;
   commissionPlanName: string;
-  planName?: string;
-  orderAmount: number;
+  saleAmount: number;
   commissionAmount: number;
-  rate: number;
-  commissionRate?: number;
-  status: SalesCommissionStatus;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  rejectedAt?: string | null;
-  paidAt: string | null;
-  paymentReference: string | null;
-  rejectionReason: string | null;
-  cancellationReason: string | null;
+  commissionRate: number;
+  status: string;
+  calculatedDate: string;
+  approvedDate?: string;
+  approvedBy?: string;
+  paidDate?: string;
+  paymentReference?: string;
+  notes?: string;
   createdAt: string;
-  updatedAt: string;
 }
 
+/**
+ * Backend: SalesCommissionListDto (CommissionDto.cs:126-137)
+ */
 export interface SalesCommissionListItem {
   id: string;
-  referenceNumber?: string;
+  salesOrderId: string;
   salesPersonName: string;
-  salesOrderNumber: string;
-  orderId?: string;
-  orderNumber?: string;
-  orderAmount: number;
+  commissionPlanName: string;
+  saleAmount: number;
   commissionAmount: number;
-  rate: number;
-  status: SalesCommissionStatus;
-  createdAt: string;
+  status: string;
+  calculatedDate: string;
+  paidDate?: string;
 }
 
+/**
+ * Backend: CommissionSummaryDto (CommissionDto.cs:149-160)
+ */
 export interface CommissionSummary {
-  totalCommission?: number;
-  totalCommissions: number;
-  pendingCount?: number;
-  pendingCommissions: number;
-  approvedCount?: number;
-  approvedCommissions: number;
-  paidCommissions: number;
-  paidAmount?: number;
-  totalPendingAmount: number;
-  totalApprovedAmount: number;
-  totalPaidAmount: number;
-}
-
-export interface SalesPersonCommissionSummary {
   salesPersonId: string;
   salesPersonName: string;
   totalSales: number;
@@ -466,12 +890,19 @@ export interface SalesPersonCommissionSummary {
   approvedCommission: number;
   paidCommission: number;
   orderCount: number;
+  lastSaleDate?: string;
 }
 
+/**
+ * Backend: CalculateCommissionDto (CommissionDto.cs:139-147)
+ */
 export interface CalculateCommissionDto {
-  salesPersonId: string;
   salesOrderId: string;
-  commissionPlanId?: string;
+  salesPersonId: string;
+  salesPersonName: string;
+  commissionPlanId: string;
+  saleAmount: number;
+  profitAmount?: number;
 }
 
 export interface GetCommissionPlansParams {
@@ -497,86 +928,102 @@ export interface GetSalesCommissionsParams {
 
 // =====================================
 // SALES RETURNS
+// C#: SalesReturnDto.cs
 // =====================================
 
+/**
+ * Backend: SalesReturnItemDto (SalesReturnDto.cs:43-62)
+ */
 export interface SalesReturnItem {
   id: string;
   salesReturnId: string;
-  lineNumber: number;
-  salesOrderItemId: string | null;
-  productId: string | null;
-  productCode: string;
+  salesOrderItemId: string;
+  productId: string;
   productName: string;
+  productCode?: string;
+  quantityOrdered: number; // C#: QuantityOrdered (added)
+  quantityReturned: number; // C#: QuantityReturned (renamed from quantity)
   unit: string;
-  quantity: number;
   unitPrice: number;
-  reason: SalesReturnReason;
-  condition: string | null;
-  notes: string | null;
-  isRestocked: boolean;
-  restockedAt: string | null;
+  vatRate: number;
+  vatAmount: number;
   lineTotal: number;
+  condition: string; // C#: Condition (enum as string)
+  conditionNotes?: string; // C#: ConditionNotes (added)
+  isRestockable: boolean; // C#: IsRestockable (added)
+  isRestocked: boolean;
 }
 
+/**
+ * Backend: SalesReturnDto (SalesReturnDto.cs:5-41)
+ */
 export interface SalesReturn {
   id: string;
-  tenantId: string;
   returnNumber: string;
   returnDate: string;
   salesOrderId: string;
   salesOrderNumber: string;
-  orderId?: string;
-  orderNumber?: string;
-  customerId: string | null;
-  customerName: string;
-  customerEmail: string | null;
-  status: SalesReturnStatus;
-  reason: SalesReturnReason;
-  reasonDetails: string | null;
+  invoiceId?: string; // C#: InvoiceId (added)
+  invoiceNumber?: string; // C#: InvoiceNumber (added)
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  type: string; // C#: Type (added - SalesReturnType)
+  reason: string; // C#: Reason (enum as string)
+  reasonDetails?: string;
+  status: string; // C#: Status (enum as string)
   subTotal: number;
-  totalAmount?: number;
+  vatAmount: number;
+  totalAmount: number;
   refundAmount: number;
-  currency?: string;
-  refundMethod: string | null;
-  refundReference: string | null;
-  refundedAt: string | null;
-  notes: string | null;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  submittedAt?: string | null;
-  receivedBy: string | null;
-  receivedAt: string | null;
-  completedAt: string | null;
-  cancellationReason: string | null;
-  cancelledAt: string | null;
-  items: SalesReturnItem[];
+  refundMethod: string; // C#: RefundMethod (added)
+  refundReference?: string;
+  refundDate?: string; // C#: RefundDate (added)
+  restockItems: boolean; // C#: RestockItems (added)
+  restockWarehouseId?: string; // C#: RestockWarehouseId (added)
+  isRestocked: boolean; // C#: IsRestocked (added)
+  restockedDate?: string; // C#: RestockedDate (added)
+  processedBy?: string; // C#: ProcessedBy (added)
+  processedDate?: string; // C#: ProcessedDate (added)
+  approvedBy?: string;
+  approvedDate?: string;
+  notes?: string;
+  creditNoteId?: string; // C#: CreditNoteId (added)
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  items: SalesReturnItem[];
 }
 
+/**
+ * Backend: SalesReturnListDto (SalesReturnDto.cs:64-78)
+ */
 export interface SalesReturnListItem {
   id: string;
   returnNumber: string;
   returnDate: string;
   salesOrderNumber: string;
-  orderId?: string;
-  customerName: string;
-  status: SalesReturnStatus;
-  reason: SalesReturnReason;
+  customerName?: string;
+  type: string;
+  reason: string;
+  status: string;
+  totalAmount: number;
   refundAmount: number;
-  currency?: string;
   itemCount: number;
+  createdAt: string;
 }
 
+/**
+ * Backend: SalesReturnSummaryDto (SalesReturnDto.cs:123-133)
+ */
 export interface SalesReturnSummary {
   totalReturns: number;
   pendingReturns: number;
   approvedReturns: number;
   completedReturns: number;
-  cancelledReturns: number;
   totalRefundAmount: number;
-  averageRefundAmount: number;
-  returnRate: number;
+  pendingRefundAmount: number;
+  returnsByReason: Record<string, number>; // C#: Dictionary<string, int>
+  refundsByMethod: Record<string, number>; // C#: Dictionary<string, decimal>
 }
 
 export interface ReturnableItem {
@@ -592,48 +1039,55 @@ export interface ReturnableItem {
   unitPrice: number;
 }
 
+/**
+ * Backend: CreateSalesReturnDto (SalesReturnDto.cs:80-91)
+ */
 export interface CreateSalesReturnDto {
-  returnDate: string;
   salesOrderId: string;
+  type: SalesReturnType;
   reason: SalesReturnReason;
   reasonDetails?: string;
+  refundMethod?: RefundMethod;
+  restockItems?: boolean;
+  restockWarehouseId?: string;
   notes?: string;
   items: CreateSalesReturnItemDto[];
 }
 
+/**
+ * Backend: CreateSalesReturnItemDto (SalesReturnDto.cs:93-106)
+ */
 export interface CreateSalesReturnItemDto {
-  salesOrderItemId?: string;
-  productId?: string;
-  productCode: string;
+  salesOrderItemId: string;
+  productId: string;
   productName: string;
-  unit: string;
-  quantity: number;
+  productCode?: string;
+  quantityOrdered: number;
+  quantityReturned: number;
   unitPrice: number;
-  reason: SalesReturnReason;
-  condition?: string;
-  notes?: string;
+  vatRate: number;
+  condition?: SalesReturnItemCondition;
+  conditionNotes?: string;
+  unit?: string;
 }
 
+/**
+ * Backend: UpdateSalesReturnDto (SalesReturnDto.cs:108-114)
+ */
 export interface UpdateSalesReturnDto {
-  returnDate?: string;
-  reason?: SalesReturnReason;
   reasonDetails?: string;
+  refundMethod?: RefundMethod;
+  restockItems?: boolean;
+  restockWarehouseId?: string;
   notes?: string;
-  items?: UpdateSalesReturnItemDto[];
 }
 
-export interface UpdateSalesReturnItemDto {
-  id?: string;
-  orderItemId?: string;
-  productId?: string;
-  quantity: number;
-  unitPrice: number;
-}
-
+/**
+ * Backend: ProcessRefundDto (SalesReturnDto.cs:117-121)
+ */
 export interface ProcessRefundDto {
-  refundMethod: string;
-  refundReference?: string;
-  refundAmount?: number;
+  refundReference: string;
+  overrideAmount?: number;
 }
 
 export interface GetSalesReturnsParams {
@@ -650,17 +1104,20 @@ export interface GetSalesReturnsParams {
 }
 
 // =====================================
-// SALES ORDERS (existing)
+// SALES ORDERS
+// C#: SalesOrderDto.cs
 // =====================================
 
+/**
+ * Backend: SalesOrderItemDto (SalesOrderDto.cs:78-98)
+ */
 export interface SalesOrderItem {
   id: string;
   salesOrderId: string;
-  lineNumber: number;
-  productId: string | null;
+  productId?: string;
   productCode: string;
   productName: string;
-  description: string | null;
+  description?: string;
   unit: string;
   quantity: number;
   unitPrice: number;
@@ -669,52 +1126,65 @@ export interface SalesOrderItem {
   vatRate: number;
   vatAmount: number;
   lineTotal: number;
-  lineTotalWithVat: number;
+  lineNumber: number; // C#: LineNumber (added)
+  deliveredQuantity: number; // C#: DeliveredQuantity (added)
+  isDelivered: boolean; // C#: IsDelivered (added)
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
+/**
+ * Backend: SalesOrderDto (SalesOrderDto.cs:5-76)
+ */
 export interface SalesOrder {
   id: string;
-  tenantId: string;
   orderNumber: string;
   orderDate: string;
-  customerId: string | null;
-  customerName: string;
-  customerEmail: string | null;
-  status: SalesOrderStatus;
-  currency: string;
+  deliveryDate?: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  branchId?: string; // C#: BranchId (added)
+  warehouseId?: string; // C#: WarehouseId (added)
+  customerOrderNumber?: string; // C#: CustomerOrderNumber (added)
   subTotal: number;
   discountAmount: number;
   discountRate: number;
-  taxTotal: number;
-  grandTotal: number;
-  shippingAddress: string | null;
-  billingAddress: string | null;
-  notes: string | null;
-  deliveryDate: string | null;
-  salesPersonId: string | null;
-  salesPersonName: string | null;
-  approvedBy: string | null;
-  approvedAt: string | null;
-  cancelledReason: string | null;
-  cancelledAt: string | null;
-  items: SalesOrderItem[];
+  vatAmount: number; // C#: VatAmount (renamed from taxTotal)
+  totalAmount: number; // C#: TotalAmount (renamed from grandTotal)
+  currency: string;
+  exchangeRate: number; // C#: ExchangeRate (added)
+  status: string;
+  shippingAddress?: string;
+  billingAddress?: string;
+  notes?: string;
+  salesPersonId?: string;
+  salesPersonName?: string;
+  isApproved: boolean; // C#: IsApproved (added)
+  approvedBy?: string;
+  approvedDate?: string;
+  isCancelled: boolean; // C#: IsCancelled (added)
+  cancellationReason?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  items: SalesOrderItem[];
 }
 
+/**
+ * Backend: SalesOrderListDto (SalesOrderDto.cs:127-158)
+ */
 export interface SalesOrderListItem {
   id: string;
   orderNumber: string;
   orderDate: string;
-  customerName: string;
-  status: SalesOrderStatus;
-  grandTotal: number;
+  customerName?: string;
+  totalAmount: number; // C#: TotalAmount (renamed from grandTotal)
   currency: string;
+  status: string;
+  isApproved: boolean; // C#: IsApproved (added)
+  isCancelled: boolean; // C#: IsCancelled (added)
   itemCount: number;
-  salesPersonName: string | null;
-  deliveryDate: string | null;
+  createdAt: string; // C#: CreatedAt (added)
 }
 
 export type SalesOrderStatus =

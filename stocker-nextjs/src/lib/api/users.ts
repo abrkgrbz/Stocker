@@ -82,6 +82,7 @@ export interface UserListItem {
   isActive: boolean;
   roles: string[];
   department?: string;
+  branch?: string;
   lastLoginDate?: string;
   createdDate: string;
 }

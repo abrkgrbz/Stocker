@@ -18,7 +18,7 @@ export interface Role {
   permissions: string[]; // Format: "resource:permissionType"
   userCount: number;
   isSystemRole: boolean;
-  createdDate: string;
+  createdDate: string; // DateTime from backend
 }
 
 export interface CreateRoleRequest {
