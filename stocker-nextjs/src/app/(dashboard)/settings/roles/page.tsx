@@ -8,7 +8,7 @@
  * - Action buttons only in designated areas
  */
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Tooltip, Dropdown, Spin } from 'antd';
 import {
@@ -23,7 +23,6 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';
-import { RoleDetailsDrawer } from '@/features/roles/components/RoleDetailsDrawer';
 import { type Role } from '@/lib/api/roles';
 import { confirmDelete } from '@/lib/utils/sweetalert';
 import {
@@ -37,8 +36,6 @@ import {
 
 export default function RolesPage() {
   const router = useRouter();
-  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: roles, isLoading } = useRoles();
@@ -58,8 +55,7 @@ export default function RolesPage() {
   }, [roles, searchQuery]);
 
   const handleViewDetails = (role: Role) => {
-    setSelectedRole(role);
-    setDetailsDrawerOpen(true);
+    router.push(`/settings/roles/${role.id}`);
   };
 
   const handleCreate = () => {
@@ -310,14 +306,6 @@ export default function RolesPage() {
         </ListContainer>
       )}
 
-      <RoleDetailsDrawer
-        role={selectedRole}
-        open={detailsDrawerOpen}
-        onClose={() => {
-          setDetailsDrawerOpen(false);
-          setSelectedRole(null);
-        }}
-      />
     </PageContainer>
   );
 }
