@@ -2,8 +2,8 @@
 
 /**
  * Profile Settings Page
- * Dense Full-Width Layout - Maximum Information Density
- * Stripe/Vercel Dashboard Inspired
+ * Polished Full-Width Layout - Final Version
+ * Clean inputs, integrated completion, subtle danger zone
  */
 
 import React, { useState, useMemo } from 'react';
@@ -15,15 +15,10 @@ import {
   AlertCircle,
   Shield,
   Key,
-  Calendar,
   Smartphone,
   AlertTriangle,
   Mail,
   Phone,
-  Building2,
-  Globe,
-  Clock,
-  Activity,
   CreditCard,
   Bell,
   ChevronRight,
@@ -83,12 +78,13 @@ export default function ProfilePage() {
 
   const completedCount = completionItems.filter(i => i.done).length;
   const completionPct = Math.round((completedCount / completionItems.length) * 100);
+  const incompleteItems = completionItems.filter(i => !i.done);
 
   const lastLogin = profileInfo.lastLoginDate
-    ? new Date(profileInfo.lastLoginDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    ? new Date(profileInfo.lastLoginDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     : '-';
   const memberSince = profileInfo.createdDate
-    ? new Date(profileInfo.createdDate).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
+    ? new Date(profileInfo.createdDate).toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })
     : '-';
 
   const handleProfileChange = (field: string, value: string) => {
@@ -159,21 +155,21 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
-      {/* Header with Profile Summary */}
+      {/* Header with Profile Summary + Integrated Completion */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden flex items-center justify-center">
                 {profileInfo.profileImage ? (
                   <img src={profileInfo.profileImage} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-10 h-10 text-slate-400" />
+                  <User className="w-8 h-8 text-slate-400" />
                 )}
               </div>
-              <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-800 transition-colors shadow-lg">
-                <Camera className="w-4 h-4 text-white" />
+              <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-800 transition-colors shadow-lg">
+                <Camera className="w-3.5 h-3.5 text-white" />
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={isUploading} />
               </label>
             </div>
@@ -197,22 +193,45 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Completion Ring */}
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900">{completionPct}%</p>
-              <p className="text-xs text-slate-500">Profil</p>
+          {/* Completion Ring with Tooltip */}
+          <div className="relative group">
+            <div className="flex items-center gap-3 cursor-pointer">
+              <div className="text-right">
+                <p className="text-2xl font-bold text-slate-900">{completionPct}%</p>
+                <p className="text-xs text-slate-500">Tamamlandı</p>
+              </div>
+              <div className="relative w-14 h-14">
+                <svg className="w-14 h-14 -rotate-90">
+                  <circle cx="28" cy="28" r="24" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                  <circle
+                    cx="28" cy="28" r="24" fill="none"
+                    stroke={completionPct === 100 ? '#10b981' : '#3b82f6'}
+                    strokeWidth="4"
+                    strokeDasharray={`${completionPct * 1.508} 151`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {completionPct === 100 && (
+                  <Check className="absolute inset-0 m-auto w-5 h-5 text-emerald-500" />
+                )}
+              </div>
             </div>
-            <div className="relative w-12 h-12">
-              <svg className="w-12 h-12 -rotate-90">
-                <circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" strokeWidth="4" />
-                <circle
-                  cx="24" cy="24" r="20" fill="none" stroke="#0f172a" strokeWidth="4"
-                  strokeDasharray={`${completionPct * 1.256} 126`}
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
+
+            {/* Tooltip - Missing Items */}
+            {incompleteItems.length > 0 && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 text-white rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl">
+                <p className="text-xs font-medium text-slate-400 mb-2">Eksik adımlar:</p>
+                <div className="space-y-1.5">
+                  {incompleteItems.map(item => (
+                    <div key={item.key} className="flex items-center gap-2 text-sm">
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-500 flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="absolute -top-1.5 right-6 w-3 h-3 bg-slate-900 rotate-45" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -227,11 +246,13 @@ export default function ProfilePage() {
             <p className="text-xs text-slate-500">Üyelik</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-slate-900">{profileInfo.twoFactorEnabled ? 'Aktif' : 'Kapalı'}</p>
+            <p className={`text-lg font-semibold ${profileInfo.twoFactorEnabled ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {profileInfo.twoFactorEnabled ? 'Aktif' : 'Kapalı'}
+            </p>
             <p className="text-xs text-slate-500">2FA Durumu</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-slate-900 truncate">{lastLogin}</p>
+            <p className="text-lg font-semibold text-slate-900">{lastLogin}</p>
             <p className="text-xs text-slate-500">Son Giriş</p>
           </div>
         </div>
@@ -246,66 +267,71 @@ export default function ProfilePage() {
               <h2 className="text-sm font-semibold text-slate-900">Kişisel Bilgiler</h2>
               <p className="text-xs text-slate-500 mt-0.5">Ad, soyad ve iletişim bilgileri</p>
             </div>
-            {hasChanges && (
-              <button
-                onClick={handleSaveProfile}
-                disabled={isUpdating}
-                className="px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50"
-              >
-                {isUpdating ? '...' : 'Kaydet'}
-              </button>
-            )}
+            <button
+              onClick={handleSaveProfile}
+              disabled={isUpdating || !hasChanges}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                hasChanges
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              {isUpdating ? 'Kaydediliyor...' : 'Kaydet'}
+            </button>
           </div>
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">Ad</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Ad</label>
                 <input
                   type="text"
                   value={profileData.firstName}
                   onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  placeholder="Adınız"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">Soyad</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Soyad</label>
                 <input
                   type="text"
                   value={profileData.lastName}
                   onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  placeholder="Soyadınız"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1.5">E-posta</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">E-posta</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
                   value={profileInfo.email}
                   disabled
-                  className="w-full pl-10 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed"
                 />
               </div>
+              <p className="text-xs text-slate-400 mt-1">E-posta adresi değiştirilemez</p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1.5">Telefon</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Telefon</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="tel"
                   value={profileData.phone}
                   onChange={(e) => handleProfileChange('phone', e.target.value)}
                   placeholder="+90 5XX XXX XX XX"
-                  className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Security & Account */}
+        {/* Right: Security & Quick Links */}
         <div className="space-y-6">
           {/* Security Card */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -313,9 +339,9 @@ export default function ProfilePage() {
               <h2 className="text-sm font-semibold text-slate-900">Güvenlik</h2>
             </div>
             <div className="divide-y divide-slate-100">
-              <Link href="/account/security" className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <Link href="/account/security" className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-slate-100 rounded-lg">
+                  <div className="p-2 bg-slate-100 rounded-lg">
                     <Shield className="w-4 h-4 text-slate-600" />
                   </div>
                   <div>
@@ -330,9 +356,9 @@ export default function ProfilePage() {
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </div>
               </Link>
-              <Link href="/account/security" className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <Link href="/account/security" className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-slate-100 rounded-lg">
+                  <div className="p-2 bg-slate-100 rounded-lg">
                     <Key className="w-4 h-4 text-slate-600" />
                   </div>
                   <div>
@@ -342,9 +368,9 @@ export default function ProfilePage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </Link>
-              <Link href="/account/security" className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <Link href="/account/security" className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-slate-100 rounded-lg">
+                  <div className="p-2 bg-slate-100 rounded-lg">
                     <Smartphone className="w-4 h-4 text-slate-600" />
                   </div>
                   <div>
@@ -354,6 +380,22 @@ export default function ProfilePage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </Link>
+
+              {/* Danger Zone - Inside Security Card */}
+              <div className="px-6 py-3.5 flex items-center justify-between bg-red-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-red-700">Hesabı Sil</p>
+                    <p className="text-xs text-red-600/70">Bu işlem geri alınamaz</p>
+                  </div>
+                </div>
+                <button className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
+                  Sil →
+                </button>
+              </div>
             </div>
           </div>
 
@@ -363,18 +405,18 @@ export default function ProfilePage() {
               <h2 className="text-sm font-semibold text-slate-900">Hızlı Erişim</h2>
             </div>
             <div className="divide-y divide-slate-100">
-              <Link href="/account/notifications" className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <Link href="/account/notifications" className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-blue-50 rounded-lg">
+                  <div className="p-2 bg-blue-50 rounded-lg">
                     <Bell className="w-4 h-4 text-blue-600" />
                   </div>
                   <span className="text-sm font-medium text-slate-900">Bildirim Ayarları</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </Link>
-              <Link href="/account/billing" className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <Link href="/account/billing" className="px-6 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-emerald-50 rounded-lg">
+                  <div className="p-2 bg-emerald-50 rounded-lg">
                     <CreditCard className="w-4 h-4 text-emerald-600" />
                   </div>
                   <span className="text-sm font-medium text-slate-900">Faturalandırma</span>
@@ -383,55 +425,6 @@ export default function ProfilePage() {
               </Link>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Profile Completion Tasks - Full Width */}
-      {completionPct < 100 && (
-        <div className="bg-slate-900 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-semibold">Profilinizi Tamamlayın</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{completedCount}/{completionItems.length} adım tamamlandı</p>
-            </div>
-            <span className="text-2xl font-bold">{completionPct}%</span>
-          </div>
-          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-white rounded-full transition-all" style={{ width: `${completionPct}%` }} />
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {completionItems.map((item) => (
-              <div
-                key={item.key}
-                className={`p-3 rounded-lg text-center ${item.done ? 'bg-slate-800' : 'bg-slate-800/50 border border-dashed border-slate-600'}`}
-              >
-                {item.done ? (
-                  <Check className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-slate-500 mx-auto mb-1" />
-                )}
-                <span className={`text-xs ${item.done ? 'text-slate-400' : 'text-white'}`}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Danger Zone - Compact */}
-      <div className="bg-white rounded-xl border border-red-200 shadow-sm">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-50 rounded-lg">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-900">Hesabı Sil</p>
-              <p className="text-xs text-slate-500">Tüm veriler kalıcı olarak silinir</p>
-            </div>
-          </div>
-          <button className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
-            Hesabı Sil
-          </button>
         </div>
       </div>
     </div>
