@@ -282,6 +282,34 @@ public class UserRepository : IUserRepository
         }).ToList();
     }
 
+    public async Task<RoleDto?> GetRoleByIdAsync(Guid tenantId, Guid roleId, CancellationToken cancellationToken = default)
+    {
+        var role = await _tenantContext.Roles
+            .FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
+
+        if (role == null)
+            return null;
+
+        var permissions = await _tenantContext.RolePermissions
+            .Where(rp => rp.RoleId == roleId)
+            .Select(rp => $"{rp.Resource}:{rp.PermissionType}")
+            .ToListAsync(cancellationToken);
+
+        var userCount = await _tenantContext.UserRoles
+            .CountAsync(ur => ur.RoleId == roleId, cancellationToken);
+
+        return new RoleDto
+        {
+            Id = role.Id,
+            Name = role.Name,
+            Description = role.Description ?? "",
+            Permissions = permissions,
+            UserCount = userCount,
+            IsSystemRole = role.IsSystemRole,
+            CreatedDate = role.CreatedDate
+        };
+    }
+
     private async Task<List<RoleDto>> GetRolesAsyncOriginal(Guid tenantId, CancellationToken cancellationToken = default)
     {
         // Database-per-tenant: TenantId filtrelemeye gerek yok

@@ -16,6 +16,7 @@ public interface IUserRepository
     Task<bool> ToggleUserStatusAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
     Task<bool> ResetUserPasswordAsync(Guid tenantId, Guid userId, string newPassword, CancellationToken cancellationToken = default);
     Task<List<RoleDto>> GetRolesAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<RoleDto?> GetRoleByIdAsync(Guid tenantId, Guid roleId, CancellationToken cancellationToken = default);
     Task<bool> AssignRoleAsync(Guid tenantId, Guid userId, Guid roleId, CancellationToken cancellationToken = default);
     Task<int> GetTenantUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> UsernameExistsAsync(Guid tenantId, string username, CancellationToken cancellationToken = default);

@@ -47,6 +47,34 @@ public class RolesController : ApiController
         });
     }
 
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<RoleDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> GetRole(Guid id)
+    {
+        var tenantId = _currentUserService.TenantId ?? Guid.Empty;
+        if (tenantId == Guid.Empty)
+            throw new UnauthorizedException("Tenant bulunamadı");
+
+        var query = new GetRoleByIdQuery
+        {
+            TenantId = tenantId,
+            RoleId = id
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+            throw new NotFoundException("Role", id);
+
+        return Ok(new ApiResponse<RoleDto>
+        {
+            Success = true,
+            Data = result,
+            Message = "Rol başarıyla getirildi"
+        });
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]

@@ -8,7 +8,8 @@
  * - Action buttons only in designated areas
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   showCreateSuccess,
@@ -41,12 +42,10 @@ import {
 } from '@ant-design/icons';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
-import { UserDetailsDrawer } from '@/features/users/components/UserDetailsDrawer';
 import { useAuth } from '@/lib/auth';
 import { useRole } from '@/hooks/useRole';
 import {
   getUsers,
-  getUserById,
   createUser,
   updateUser,
   deleteUser,
@@ -68,14 +67,13 @@ import {
 } from '@/components/ui/enterprise-page';
 
 export default function UsersPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
-  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { role, isAdmin } = useRole();
@@ -93,12 +91,6 @@ export default function UsersPage() {
     queryKey: ['subscription-info'],
     queryFn: getSubscriptionInfo,
     staleTime: 60 * 1000,
-  });
-
-  const { data: selectedUserDetails } = useQuery({
-    queryKey: ['user', selectedUserId],
-    queryFn: () => getUserById(selectedUserId!),
-    enabled: !!selectedUserId && detailsDrawerOpen,
   });
 
   const deleteMutation = useMutation({
@@ -208,8 +200,7 @@ export default function UsersPage() {
   };
 
   const handleViewDetails = (userId: string) => {
-    setSelectedUserId(userId);
-    setDetailsDrawerOpen(true);
+    router.push(`/settings/users/${userId}`);
   };
 
   const handleToggleStatus = async (user: UserListItem) => {
@@ -598,15 +589,6 @@ export default function UsersPage() {
           setEditingUser(null);
         }}
         onSubmit={handleSubmitUser}
-      />
-
-      <UserDetailsDrawer
-        user={selectedUserDetails || null}
-        open={detailsDrawerOpen}
-        onClose={() => {
-          setDetailsDrawerOpen(false);
-          setSelectedUserId(null);
-        }}
       />
     </PageContainer>
   );
