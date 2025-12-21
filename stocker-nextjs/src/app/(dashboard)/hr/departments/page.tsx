@@ -15,6 +15,7 @@ import {
   Dropdown,
   Modal,
   Spin,
+  Segmented,
 } from 'antd';
 import {
   PlusOutlined,
@@ -28,6 +29,8 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   TeamOutlined,
+  UnorderedListOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons';
 import {
   useDepartments,
@@ -43,9 +46,15 @@ import {
   Card,
   DataTableWrapper,
 } from '@/components/ui/enterprise-page';
+import { DepartmentTree } from '@/components/hr/departments/DepartmentTree';
+
+type ViewMode = 'table' | 'tree';
 
 export default function DepartmentsPage() {
   const router = useRouter();
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   // Filter state
   const [searchText, setSearchText] = useState('');
@@ -297,41 +306,73 @@ export default function DepartmentsPage() {
 
       {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-1 flex-wrap">
             <Input
               placeholder="Departman adı, kod veya açıklama ara..."
               prefix={<SearchOutlined className="text-slate-400" />}
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="h-10"
+              className="h-10 max-w-xs"
             />
+            <Select
+              className="h-10 w-40"
+              value={includeInactive}
+              onChange={setIncludeInactive}
+              options={[
+                { value: false, label: 'Sadece Aktifler' },
+                { value: true, label: 'Tümü' },
+              ]}
+            />
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
+            >
+              Temizle
+            </button>
           </div>
-          <Select
-            className="h-10"
-            value={includeInactive}
-            onChange={setIncludeInactive}
+          <Segmented
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ViewMode)}
             options={[
-              { value: false, label: 'Sadece Aktifler' },
-              { value: true, label: 'Tümü' },
+              {
+                label: (
+                  <div className="flex items-center gap-2 px-1">
+                    <UnorderedListOutlined />
+                    <span>Liste</span>
+                  </div>
+                ),
+                value: 'table',
+              },
+              {
+                label: (
+                  <div className="flex items-center gap-2 px-1">
+                    <PartitionOutlined />
+                    <span>Ağaç</span>
+                  </div>
+                ),
+                value: 'tree',
+              },
             ]}
           />
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors"
-          >
-            Temizle
-          </button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
+        </Card>
+      ) : viewMode === 'tree' ? (
+        <Card>
+          <DepartmentTree
+            departments={filteredDepartments}
+            loading={isLoading}
+            onView={handleView}
+          />
         </Card>
       ) : (
         <DataTableWrapper>
