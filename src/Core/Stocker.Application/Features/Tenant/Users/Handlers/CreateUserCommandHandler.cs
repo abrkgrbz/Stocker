@@ -57,6 +57,20 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             }
         }
 
+        // Check if username already exists in this tenant
+        var usernameExists = await _userRepository.UsernameExistsAsync(request.TenantId, request.Username, cancellationToken);
+        if (usernameExists)
+        {
+            throw new InvalidOperationException($"Bu kullanıcı adı zaten kullanılıyor: {request.Username}");
+        }
+
+        // Check if email already exists in this tenant
+        var emailExists = await _userRepository.EmailExistsAsync(request.TenantId, request.Email, cancellationToken);
+        if (emailExists)
+        {
+            throw new InvalidOperationException($"Bu e-posta adresi zaten kullanılıyor: {request.Email}");
+        }
+
         // Create value objects
         var emailResult = Stocker.Domain.Common.ValueObjects.Email.Create(request.Email);
         if (emailResult.IsFailure)

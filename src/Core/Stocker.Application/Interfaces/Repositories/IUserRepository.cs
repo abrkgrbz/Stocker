@@ -18,7 +18,9 @@ public interface IUserRepository
     Task<List<RoleDto>> GetRolesAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> AssignRoleAsync(Guid tenantId, Guid userId, Guid roleId, CancellationToken cancellationToken = default);
     Task<int> GetTenantUserCountAsync(Guid tenantId, CancellationToken cancellationToken = default);
-    
+    Task<bool> UsernameExistsAsync(Guid tenantId, string username, CancellationToken cancellationToken = default);
+    Task<bool> EmailExistsAsync(Guid tenantId, string email, CancellationToken cancellationToken = default);
+
     // Master Users (Admin Panel)
     Task<object> GetMasterUsersAsync(int page = 1, int pageSize = 10, string? searchTerm = null, CancellationToken cancellationToken = default);
     Task<object?> GetMasterUserByIdAsync(string userId, CancellationToken cancellationToken = default);

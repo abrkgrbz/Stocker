@@ -308,6 +308,18 @@ public class UserRepository : IUserRepository
             .CountAsync(cancellationToken);
     }
 
+    public async Task<bool> UsernameExistsAsync(Guid tenantId, string username, CancellationToken cancellationToken = default)
+    {
+        return await _tenantContext.TenantUsers
+            .AnyAsync(u => u.TenantId == tenantId && u.Username.ToLower() == username.ToLower(), cancellationToken);
+    }
+
+    public async Task<bool> EmailExistsAsync(Guid tenantId, string email, CancellationToken cancellationToken = default)
+    {
+        return await _tenantContext.TenantUsers
+            .AnyAsync(u => u.TenantId == tenantId && u.Email.Value.ToLower() == email.ToLower(), cancellationToken);
+    }
+
     public async Task<bool> AssignRoleAsync(Guid tenantId, Guid userId, Guid roleId, CancellationToken cancellationToken = default)
     {
         var user = await _tenantContext.TenantUsers
