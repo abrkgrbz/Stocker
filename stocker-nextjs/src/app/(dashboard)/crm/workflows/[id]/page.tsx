@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, use } from 'react';
-import {
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Empty,
-  Spin,
-  Divider,
-  message,
-  Modal,
-  Statistic,
-} from 'antd';
+import { Empty, Spin, Modal, message } from 'antd';
 import {
   ThunderboltOutlined,
   ArrowLeftOutlined,
@@ -23,6 +9,9 @@ import {
   PauseCircleOutlined,
   PlusOutlined,
   SaveOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
@@ -43,7 +32,6 @@ import { useRouter } from 'next/navigation';
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
-const { Title, Text } = Typography;
 const { confirm } = Modal;
 
 interface WorkflowDetailPageProps {
@@ -150,8 +138,8 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
         name: action.name,
         description: action.description || '',
         actionType: action.type,
-        actionConfiguration: JSON.stringify(action.parameters), // Backend expects this field name
-        conditions: '', // Backend expects this field
+        actionConfiguration: JSON.stringify(action.parameters),
+        conditions: '',
         stepOrder: index + 1,
         delayMinutes: action.delayMinutes || 0,
         isEnabled: action.isEnabled !== false,
@@ -164,7 +152,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
         triggerType: workflow.triggerType,
         entityType: workflow.entityType,
         triggerConditions: triggerConfig ? JSON.stringify(triggerConfig.config) : workflow.triggerConditions || '{}',
-        isActive: workflow.isActive, // Backend expects this
+        isActive: workflow.isActive,
         steps: steps as any,
       });
 
@@ -185,7 +173,6 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
 
   const handleSaveAction = (actionData: Partial<WorkflowActionConfig>) => {
     if (editingActionIndex !== null) {
-      // Update existing action
       const updatedActions = [...actions];
       updatedActions[editingActionIndex] = {
         ...updatedActions[editingActionIndex],
@@ -194,7 +181,6 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
       setActions(updatedActions);
       message.success('Aksiyon güncellendi');
     } else {
-      // Add new action
       const newAction: WorkflowActionConfig = {
         ...actionData,
         type: actionData.type!,
@@ -226,7 +212,6 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
       cancelText: 'İptal',
       onOk() {
         const updatedActions = actions.filter((_, i) => i !== index);
-        // Reorder
         updatedActions.forEach((action, i) => {
           action.stepOrder = i + 1;
         });
@@ -260,7 +245,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
 
   if (loading && !workflow) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -268,17 +253,19 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
 
   if (!workflow) {
     return (
-      <div style={{ padding: '24px' }}>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Empty description="Workflow bulunamadı">
-          <Button type="primary" onClick={() => router.push('/crm/workflows')}>
+          <button
+            onClick={() => router.push('/crm/workflows')}
+            className="mt-4 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800"
+          >
             Workflows'a Dön
-          </Button>
+          </button>
         </Empty>
       </div>
     );
   }
 
-  // Dummy step1Data for trigger config drawer
   const step1Data: Step1FormData = {
     name: workflow.name,
     description: workflow.description,
@@ -288,126 +275,253 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
-      <Row gutter={[24, 24]}>
-        {/* Header */}
-        <Col span={24}>
-          <Card>
-            <Row justify="space-between" align="middle">
-              <Col>
-                <Space direction="vertical" size={0}>
-                  <Space>
-                    <Button
-                      type="text"
-                      icon={<ArrowLeftOutlined />}
-                      onClick={() => router.push('/crm/workflows')}
-                    />
-                    <Title level={4} style={{ margin: 0 }}>
-                      <ThunderboltOutlined /> {workflow.name}
-                    </Title>
-                    <Tag color={workflow.isActive ? 'success' : 'default'}>
-                      {workflow.isActive ? 'Aktif' : 'Pasif'}
-                    </Tag>
-                  </Space>
-                  {workflow.description && (
-                    <Text type="secondary" style={{ marginLeft: 40 }}>
-                      {workflow.description}
-                    </Text>
-                  )}
-                </Space>
-              </Col>
-              <Col>
-                <Space>
-                  <Button icon={<SaveOutlined />} onClick={handleSave} loading={saving} type="primary">
-                    Kaydet
-                  </Button>
-                  <Button
-                    icon={workflow.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-                    onClick={handleToggleActive}
-                  >
-                    {workflow.isActive ? 'Deaktif Et' : 'Aktif Et'}
-                  </Button>
-                </Space>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-
-        {/* Workflow Builder */}
-        <Col span={18}>
-          <Card title="Workflow Builder" style={{ minHeight: 600 }}>
-            <div style={{ maxWidth: 800, margin: '0 auto' }}>
-              {/* Trigger Block */}
-              {triggerConfig && <TriggerBlock trigger={triggerConfig} onEdit={handleEditTrigger} />}
-
-              <Divider style={{ margin: '24px 0' }}>
-                <Text type="secondary">↓</Text>
-              </Divider>
-
-              {/* Action Blocks */}
-              {actions.map((action, index) => (
-                <React.Fragment key={index}>
-                  <ActionBlock
-                    action={action}
-                    index={index}
-                    onEdit={() => handleEditAction(index)}
-                    onDelete={() => handleDeleteAction(index)}
-                    onDuplicate={() => handleDuplicateAction(index)}
-                  />
-
-                  <Divider style={{ margin: '24px 0' }}>
-                    <Text type="secondary">↓</Text>
-                  </Divider>
-                </React.Fragment>
-              ))}
-
-              {/* Add Action Button */}
-              <Button
-                type="dashed"
-                block
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={() => setActionSelectorOpen(true)}
-                style={{ height: 80 }}
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Back + Title */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/crm/workflows')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                Aksiyon Ekle
-              </Button>
-
-              {actions.length === 0 && (
-                <Empty
-                  description="Henüz aksiyon eklenmedi"
-                  style={{ marginTop: 40 }}
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-              )}
+                <ArrowLeftOutlined />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
+                  <ThunderboltOutlined className="text-white text-lg" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">{workflow.name}</h1>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                        workflow.isActive
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {workflow.isActive ? (
+                        <>
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                          Aktif
+                        </>
+                      ) : (
+                        'Pasif'
+                      )}
+                    </span>
+                    <span className="text-xs text-slate-400">•</span>
+                    <span className="text-xs text-slate-500">{workflow.entityType}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </Card>
-        </Col>
 
-        {/* Sidebar: Stats */}
-        <Col span={6}>
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Card title="İstatistikler" size="small">
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Statistic title="Toplam Adım" value={actions.length} />
-                <Statistic
-                  title="Aktif Adım"
-                  value={actions.filter((a) => a.isEnabled !== false).length}
-                />
-                <Statistic title="Çalıştırma" value={workflow.executionCount} />
-              </Space>
-            </Card>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleToggleActive}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  workflow.isActive
+                    ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                    : 'text-green-600 bg-green-50 hover:bg-green-100'
+                }`}
+              >
+                {workflow.isActive ? (
+                  <>
+                    <PauseCircleOutlined />
+                    Deaktif Et
+                  </>
+                ) : (
+                  <>
+                    <PlayCircleOutlined />
+                    Aktif Et
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
+              >
+                <SaveOutlined className={saving ? 'animate-spin' : ''} />
+                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <Card title="Son Çalıştırma" size="small">
-              <Text type="secondary">
-                {workflow.lastExecutedAt
-                  ? dayjs(workflow.lastExecutedAt).format('DD.MM.YYYY HH:mm')
-                  : 'Hiç çalıştırılmadı'}
-              </Text>
-            </Card>
-          </Space>
-        </Col>
-      </Row>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-12 gap-8">
+          {/* Workflow Builder - Main Area */}
+          <div className="col-span-8">
+            <div className="bg-white border border-slate-200 rounded-xl">
+              {/* Builder Header */}
+              <div className="px-6 py-4 border-b border-slate-200">
+                <h2 className="text-sm font-semibold text-slate-900">Workflow Builder</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tetikleyiciyi yapılandırın ve aksiyonları ekleyin
+                </p>
+              </div>
+
+              {/* Builder Content */}
+              <div className="p-6">
+                <div className="max-w-2xl mx-auto">
+                  {/* Trigger Block */}
+                  {triggerConfig && (
+                    <TriggerBlock trigger={triggerConfig} onEdit={handleEditTrigger} />
+                  )}
+
+                  {/* Connection Line */}
+                  <div className="flex justify-center py-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-px h-8 bg-slate-200"></div>
+                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </div>
+                      <div className="w-px h-8 bg-slate-200"></div>
+                    </div>
+                  </div>
+
+                  {/* Action Blocks */}
+                  {actions.map((action, index) => (
+                    <React.Fragment key={index}>
+                      <ActionBlock
+                        action={action}
+                        index={index}
+                        onEdit={() => handleEditAction(index)}
+                        onDelete={() => handleDeleteAction(index)}
+                        onDuplicate={() => handleDuplicateAction(index)}
+                      />
+
+                      {/* Connection Line */}
+                      <div className="flex justify-center py-4">
+                        <div className="flex flex-col items-center">
+                          <div className="w-px h-8 bg-slate-200"></div>
+                          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                            <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                          </div>
+                          <div className="w-px h-8 bg-slate-200"></div>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  ))}
+
+                  {/* Add Action Button */}
+                  <button
+                    onClick={() => setActionSelectorOpen(true)}
+                    className="w-full py-6 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 hover:border-slate-300 hover:text-slate-600 hover:bg-slate-50 transition-all group"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <PlusOutlined className="text-lg" />
+                      </div>
+                      <span className="text-sm font-medium">Aksiyon Ekle</span>
+                    </div>
+                  </button>
+
+                  {/* Empty State */}
+                  {actions.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-slate-400">
+                        Henüz aksiyon eklenmedi. Yukarıdaki butona tıklayarak aksiyon ekleyin.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar - Stats & Info */}
+          <div className="col-span-4 space-y-6">
+            {/* Stats Card */}
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-5 py-4 border-b border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-900">İstatistikler</h3>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
+                      <BarChartOutlined className="text-blue-600" />
+                    </div>
+                    <span className="text-sm text-slate-600">Toplam Adım</span>
+                  </div>
+                  <span className="text-lg font-semibold text-slate-900">{actions.length}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
+                      <CheckCircleOutlined className="text-green-600" />
+                    </div>
+                    <span className="text-sm text-slate-600">Aktif Adım</span>
+                  </div>
+                  <span className="text-lg font-semibold text-slate-900">
+                    {actions.filter((a) => a.isEnabled !== false).length}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
+                      <ThunderboltOutlined className="text-purple-600" />
+                    </div>
+                    <span className="text-sm text-slate-600">Çalıştırma</span>
+                  </div>
+                  <span className="text-lg font-semibold text-slate-900">{workflow.executionCount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Last Execution Card */}
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-5 py-4 border-b border-slate-200">
+                <h3 className="text-sm font-semibold text-slate-900">Son Çalıştırma</h3>
+              </div>
+              <div className="p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <ClockCircleOutlined className="text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      {workflow.lastExecutedAt
+                        ? dayjs(workflow.lastExecutedAt).format('DD.MM.YYYY HH:mm')
+                        : 'Hiç çalıştırılmadı'}
+                    </p>
+                    {workflow.lastExecutedAt && (
+                      <p className="text-xs text-slate-500">
+                        {dayjs(workflow.lastExecutedAt).fromNow()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Description Card */}
+            {workflow.description && (
+              <div className="bg-white border border-slate-200 rounded-xl">
+                <div className="px-5 py-4 border-b border-slate-200">
+                  <h3 className="text-sm font-semibold text-slate-900">Açıklama</h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-slate-600">{workflow.description}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Drawers */}
       <ActionSelectorDrawer

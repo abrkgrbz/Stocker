@@ -6,15 +6,8 @@ import {
   Form,
   Input,
   Select,
-  Radio,
-  Button,
-  Space,
-  Card,
-  Alert,
-  Typography,
   DatePicker,
   TimePicker,
-  Checkbox,
   InputNumber,
 } from 'antd';
 import {
@@ -22,6 +15,16 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   ClockCircleOutlined,
+  CloseOutlined,
+  InfoCircleOutlined,
+  CalendarOutlined,
+  PlusCircleOutlined,
+  FormOutlined,
+  SwapOutlined,
+  RocketOutlined,
+  FilterOutlined,
+  DollarOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 import type { Step1FormData } from './CreateWorkflowDrawer';
@@ -30,9 +33,6 @@ import ConditionBuilder, {
   type FieldDefinition
 } from '@/components/common/ConditionBuilder';
 import dayjs from 'dayjs';
-
-const { Text } = Typography;
-const { Option } = Select;
 
 interface ConfigureTriggerDrawerProps {
   open: boolean;
@@ -51,11 +51,7 @@ export interface TriggerConfiguration {
 export interface ScheduledConfig {
   type: 'scheduled';
   scheduleType: 'once' | 'recurring' | 'cron';
-
-  // For 'once'
   executeAt?: string;
-
-  // For 'recurring'
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
     interval: number;
@@ -66,8 +62,6 @@ export interface ScheduledConfig {
     startDate?: string;
     endDate?: string;
   };
-
-  // For 'cron'
   cronExpression?: string;
 }
 
@@ -79,6 +73,76 @@ export interface EventConfig {
 export interface ManualConfig {
   type: 'manual';
 }
+
+// Trigger type configurations - synced with backend WorkflowTriggerType enum
+const triggerTypeConfig: Record<
+  WorkflowTriggerType,
+  { label: string; icon: React.ReactNode; color: string; bgColor: string; description: string }
+> = {
+  Manual: {
+    label: 'Manuel Tetikleyici',
+    icon: <ThunderboltOutlined />,
+    color: '#64748b',
+    bgColor: 'bg-slate-100',
+    description: 'Kullanıcı tarafından manuel olarak başlatılır',
+  },
+  Scheduled: {
+    label: 'Zamanlanmış',
+    icon: <ClockCircleOutlined />,
+    color: '#f97316',
+    bgColor: 'bg-orange-100',
+    description: 'Belirli zamanlarda otomatik çalışır',
+  },
+  EntityCreated: {
+    label: 'Kayıt Oluşturulduğunda',
+    icon: <PlusCircleOutlined />,
+    color: '#22c55e',
+    bgColor: 'bg-green-100',
+    description: 'Yeni kayıt oluşturulduğunda tetiklenir',
+  },
+  EntityUpdated: {
+    label: 'Kayıt Güncellendiğinde',
+    icon: <FormOutlined />,
+    color: '#3b82f6',
+    bgColor: 'bg-blue-100',
+    description: 'Kayıt güncellendiğinde tetiklenir',
+  },
+  StatusChanged: {
+    label: 'Durum Değiştiğinde',
+    icon: <SwapOutlined />,
+    color: '#8b5cf6',
+    bgColor: 'bg-violet-100',
+    description: 'Status alanı değiştiğinde tetiklenir',
+  },
+  DealStageChanged: {
+    label: 'Anlaşma Aşaması Değiştiğinde',
+    icon: <RocketOutlined />,
+    color: '#6366f1',
+    bgColor: 'bg-indigo-100',
+    description: 'Anlaşma aşaması değiştiğinde tetiklenir',
+  },
+  FieldCondition: {
+    label: 'Alan Koşulu Sağlandığında',
+    icon: <FilterOutlined />,
+    color: '#ef4444',
+    bgColor: 'bg-red-100',
+    description: 'Belirli alan koşulu sağlandığında tetiklenir',
+  },
+  AmountThreshold: {
+    label: 'Tutar Eşiği Aşıldığında',
+    icon: <DollarOutlined />,
+    color: '#eab308',
+    bgColor: 'bg-yellow-100',
+    description: 'Belirli tutar eşiği aşıldığında tetiklenir',
+  },
+  DueDateEvent: {
+    label: 'Vade Tarihi Yaklaştığında',
+    icon: <FieldTimeOutlined />,
+    color: '#ec4899',
+    bgColor: 'bg-pink-100',
+    description: 'Vade tarihi yaklaştığında veya geçtiğinde tetiklenir',
+  },
+};
 
 // Entity fields for different types with proper typing
 const entityFieldDefinitions: Record<string, FieldDefinition[]> = {
@@ -124,8 +188,18 @@ const entityFieldDefinitions: Record<string, FieldDefinition[]> = {
     { value: 'Probability', label: 'Olasılık', type: 'number' },
     { value: 'CloseDate', label: 'Kapanış Tarihi', type: 'date' },
   ],
-  // Add more as needed
 };
+
+// Days of week for checkbox group
+const daysOfWeek = [
+  { value: 1, label: 'Pzt' },
+  { value: 2, label: 'Sal' },
+  { value: 3, label: 'Çar' },
+  { value: 4, label: 'Per' },
+  { value: 5, label: 'Cum' },
+  { value: 6, label: 'Cmt' },
+  { value: 0, label: 'Paz' },
+];
 
 export default function ConfigureTriggerDrawer({
   open,
@@ -136,12 +210,15 @@ export default function ConfigureTriggerDrawer({
 }: ConfigureTriggerDrawerProps) {
   const [form] = Form.useForm();
   const [scheduleType, setScheduleType] = useState<'once' | 'recurring' | 'cron'>('recurring');
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [selectedDays, setSelectedDays] = useState<number[]>([1]);
   const [conditionGroup, setConditionGroup] = useState<ConditionGroup>({
     logicalOperator: 'AND',
     conditions: [],
     groups: [],
   });
+
+  const config = step1Data.triggerType ? triggerTypeConfig[step1Data.triggerType] : null;
 
   const handleFinish = (values: any) => {
     const triggerConfig: TriggerConfiguration = {
@@ -160,35 +237,34 @@ export default function ConfigureTriggerDrawer({
     if (step1Data.triggerType === 'Scheduled') {
       const config: ScheduledConfig = {
         type: 'scheduled',
-        scheduleType: values.scheduleType,
+        scheduleType: scheduleType,
       };
 
-      if (values.scheduleType === 'once') {
+      if (scheduleType === 'once') {
         config.executeAt = values.executeAt?.toISOString();
-      } else if (values.scheduleType === 'recurring') {
+      } else if (scheduleType === 'recurring') {
         config.recurrence = {
-          frequency: values.frequency,
+          frequency: frequency,
           interval: values.interval || 1,
-          daysOfWeek: values.daysOfWeek,
+          daysOfWeek: frequency === 'weekly' ? selectedDays : undefined,
           dayOfMonth: values.dayOfMonth,
           time: values.time?.format('HH:mm') || '09:00',
           timezone: values.timezone || 'Europe/Istanbul',
           startDate: values.startDate?.toISOString(),
           endDate: values.endDate?.toISOString(),
         };
-      } else if (values.scheduleType === 'cron') {
+      } else if (scheduleType === 'cron') {
         config.cronExpression = values.cronExpression;
       }
 
       return config;
     }
 
-    // Event-based triggers (OnCreate, OnUpdate, OnStatusChange)
+    // Event-based triggers
     const eventConfig: EventConfig = {
       type: 'event',
     };
 
-    // Use conditionGroup state instead of form values
     if (conditionGroup.conditions.length > 0 || (conditionGroup.groups && conditionGroup.groups.length > 0)) {
       eventConfig.conditions = conditionGroup;
     }
@@ -196,171 +272,241 @@ export default function ConfigureTriggerDrawer({
     return eventConfig;
   };
 
-  const renderScheduledConfig = () => (
-    <Card size="small" title="Zamanlama Ayarları">
-      <Form.Item
-        name="scheduleType"
-        label="Zamanlama Tipi"
-        initialValue="recurring"
-        rules={[{ required: true }]}
-      >
-        <Radio.Group onChange={(e) => setScheduleType(e.target.value)}>
-          <Radio value="once">Bir Kez Çalıştır</Radio>
-          <Radio value="recurring">Tekrar Eden</Radio>
-          <Radio value="cron">Gelişmiş (Cron Expression)</Radio>
-        </Radio.Group>
-      </Form.Item>
+  const isEventBasedTrigger = () => {
+    return ['EntityCreated', 'EntityUpdated', 'StatusChanged', 'DealStageChanged', 'FieldCondition', 'AmountThreshold', 'DueDateEvent'].includes(step1Data.triggerType);
+  };
 
+  const inputClassName = "!bg-slate-50 !border-slate-200 hover:!border-slate-300 focus:!border-slate-900 focus:!bg-white";
+  const selectClassName = "[&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-200 [&_.ant-select-selector:hover]:!border-slate-300 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white";
+
+  const renderScheduledConfig = () => (
+    <div className="space-y-6">
+      {/* Schedule Type Selection */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-3">Zamanlama Tipi</label>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { value: 'once', label: 'Bir Kez', icon: <CalendarOutlined /> },
+            { value: 'recurring', label: 'Tekrar Eden', icon: <ClockCircleOutlined /> },
+            { value: 'cron', label: 'Gelişmiş (Cron)', icon: <ThunderboltOutlined /> },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setScheduleType(option.value as any)}
+              className={`
+                flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
+                ${scheduleType === option.value
+                  ? 'border-slate-900 bg-slate-50'
+                  : 'border-slate-200 hover:border-slate-300 bg-white'
+                }
+              `}
+            >
+              <span className={`text-lg ${scheduleType === option.value ? 'text-slate-900' : 'text-slate-400'}`}>
+                {option.icon}
+              </span>
+              <span className={`text-sm font-medium ${scheduleType === option.value ? 'text-slate-900' : 'text-slate-600'}`}>
+                {option.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Once - Date/Time Picker */}
       {scheduleType === 'once' && (
         <Form.Item
           name="executeAt"
-          label="Çalışma Tarihi ve Saati"
+          label={<span className="text-sm font-medium text-slate-700">Çalışma Tarihi ve Saati</span>}
           rules={[{ required: true, message: 'Tarih ve saat seçmelisiniz' }]}
         >
           <DatePicker
             showTime
             format="DD.MM.YYYY HH:mm"
-            style={{ width: '100%' }}
+            className={`w-full ${inputClassName}`}
             placeholder="Tarih ve saat seçin"
           />
         </Form.Item>
       )}
 
+      {/* Recurring */}
       {scheduleType === 'recurring' && (
-        <>
-          <Form.Item
-            name="frequency"
-            label="Frekans"
-            initialValue="weekly"
-            rules={[{ required: true }]}
-          >
-            <Select onChange={(value) => setFrequency(value as any)}>
-              <Option value="daily">Günlük</Option>
-              <Option value="weekly">Haftalık</Option>
-              <Option value="monthly">Aylık</Option>
-              <Option value="yearly">Yıllık</Option>
-            </Select>
-          </Form.Item>
+        <div className="space-y-4">
+          {/* Frequency */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Frekans</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { value: 'daily', label: 'Günlük' },
+                { value: 'weekly', label: 'Haftalık' },
+                { value: 'monthly', label: 'Aylık' },
+                { value: 'yearly', label: 'Yıllık' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFrequency(option.value as any)}
+                  className={`
+                    px-3 py-2 rounded-lg border text-sm font-medium transition-all
+                    ${frequency === option.value
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                    }
+                  `}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
+          {/* Interval */}
           <Form.Item
             name="interval"
-            label="Aralık"
+            label={<span className="text-sm font-medium text-slate-700">Aralık</span>}
             initialValue={1}
-            rules={[{ required: true }]}
           >
             <InputNumber
               min={1}
-              style={{ width: '100%' }}
+              className={`w-full ${inputClassName}`}
               addonAfter={
-                frequency === 'daily'
-                  ? 'gün'
-                  : frequency === 'weekly'
-                  ? 'hafta'
-                  : frequency === 'monthly'
-                  ? 'ay'
-                  : 'yıl'
+                frequency === 'daily' ? 'gün' :
+                frequency === 'weekly' ? 'hafta' :
+                frequency === 'monthly' ? 'ay' : 'yıl'
               }
             />
           </Form.Item>
 
+          {/* Days of Week - for weekly */}
           {frequency === 'weekly' && (
-            <Form.Item name="daysOfWeek" label="Günler">
-              <Checkbox.Group>
-                <Checkbox value={1}>Pazartesi</Checkbox>
-                <Checkbox value={2}>Salı</Checkbox>
-                <Checkbox value={3}>Çarşamba</Checkbox>
-                <Checkbox value={4}>Perşembe</Checkbox>
-                <Checkbox value={5}>Cuma</Checkbox>
-                <Checkbox value={6}>Cumartesi</Checkbox>
-                <Checkbox value={0}>Pazar</Checkbox>
-              </Checkbox.Group>
-            </Form.Item>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Günler</label>
+              <div className="flex gap-2">
+                {daysOfWeek.map((day) => (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => {
+                      if (selectedDays.includes(day.value)) {
+                        setSelectedDays(selectedDays.filter(d => d !== day.value));
+                      } else {
+                        setSelectedDays([...selectedDays, day.value]);
+                      }
+                    }}
+                    className={`
+                      w-10 h-10 rounded-lg text-sm font-medium transition-all
+                      ${selectedDays.includes(day.value)
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }
+                    `}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
+          {/* Day of Month - for monthly */}
           {frequency === 'monthly' && (
             <Form.Item
               name="dayOfMonth"
-              label="Ayın Günü"
+              label={<span className="text-sm font-medium text-slate-700">Ayın Günü</span>}
               rules={[{ required: true }]}
             >
-              <InputNumber min={1} max={31} placeholder="Örn: 15" />
+              <InputNumber min={1} max={31} placeholder="Örn: 15" className={inputClassName} />
             </Form.Item>
           )}
 
+          {/* Time */}
           <Form.Item
             name="time"
-            label="Saat"
+            label={<span className="text-sm font-medium text-slate-700">Saat</span>}
             initialValue={dayjs('09:00', 'HH:mm')}
-            rules={[{ required: true }]}
           >
-            <TimePicker format="HH:mm" style={{ width: '100%' }} />
+            <TimePicker format="HH:mm" className={`w-full ${inputClassName}`} />
           </Form.Item>
 
-          <Form.Item name="timezone" label="Saat Dilimi" initialValue="Europe/Istanbul">
-            <Select>
-              <Option value="Europe/Istanbul">İstanbul (GMT+3)</Option>
-              <Option value="UTC">UTC (GMT+0)</Option>
-              <Option value="Europe/London">Londra (GMT+0)</Option>
+          {/* Timezone */}
+          <Form.Item
+            name="timezone"
+            label={<span className="text-sm font-medium text-slate-700">Saat Dilimi</span>}
+            initialValue="Europe/Istanbul"
+          >
+            <Select className={selectClassName}>
+              <Select.Option value="Europe/Istanbul">İstanbul (GMT+3)</Select.Option>
+              <Select.Option value="UTC">UTC (GMT+0)</Select.Option>
+              <Select.Option value="Europe/London">Londra (GMT+0)</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name="startDate" label="Başlangıç Tarihi (Opsiyonel)">
-            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item name="endDate" label="Bitiş Tarihi (Opsiyonel)">
-            <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
-          </Form.Item>
-        </>
+          {/* Date Range */}
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="startDate"
+              label={<span className="text-sm font-medium text-slate-700">Başlangıç (Opsiyonel)</span>}
+            >
+              <DatePicker format="DD.MM.YYYY" className={`w-full ${inputClassName}`} />
+            </Form.Item>
+            <Form.Item
+              name="endDate"
+              label={<span className="text-sm font-medium text-slate-700">Bitiş (Opsiyonel)</span>}
+            >
+              <DatePicker format="DD.MM.YYYY" className={`w-full ${inputClassName}`} />
+            </Form.Item>
+          </div>
+        </div>
       )}
 
+      {/* Cron */}
       {scheduleType === 'cron' && (
-        <>
+        <div className="space-y-4">
           <Form.Item
             name="cronExpression"
-            label="Cron Expression"
-            rules={[
-              { required: true, message: 'Cron expression gerekli' },
-              {
-                pattern: /^(\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\*\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\*|([0-9]|1[0-9]|2[0-3])|\*\/([0-9]|1[0-9]|2[0-3])) (\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\*\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\*|([1-9]|1[0-2])|\*\/([1-9]|1[0-2])) (\*|([0-6])|\*\/([0-6]))$/,
-                message: 'Geçersiz cron expression formatı',
-              },
-            ]}
+            label={<span className="text-sm font-medium text-slate-700">Cron Expression</span>}
+            rules={[{ required: true, message: 'Cron expression gerekli' }]}
           >
-            <Input placeholder="0 9 * * 1" />
+            <Input placeholder="0 9 * * 1" className={inputClassName} />
           </Form.Item>
 
-          <Alert
-            type="info"
-            message="Cron Expression Örnekleri"
-            description={
-              <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
-                <li><code>0 9 * * 1</code> - Her Pazartesi 09:00</li>
-                <li><code>0 */6 * * *</code> - Her 6 saatte bir</li>
-                <li><code>0 0 1 * *</code> - Her ayın 1'inde gece yarısı</li>
-                <li><code>*/30 * * * *</code> - Her 30 dakikada bir</li>
-              </ul>
-            }
-          />
-        </>
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <InfoCircleOutlined className="text-slate-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-slate-700">Cron Expression Örnekleri</p>
+                <ul className="text-xs text-slate-500 mt-2 space-y-1">
+                  <li><code className="bg-white px-1.5 py-0.5 rounded">0 9 * * 1</code> - Her Pazartesi 09:00</li>
+                  <li><code className="bg-white px-1.5 py-0.5 rounded">0 */6 * * *</code> - Her 6 saatte bir</li>
+                  <li><code className="bg-white px-1.5 py-0.5 rounded">0 0 1 * *</code> - Her ayın 1'inde gece yarısı</li>
+                  <li><code className="bg-white px-1.5 py-0.5 rounded">*/30 * * * *</code> - Her 30 dakikada bir</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </Card>
+    </div>
   );
 
   const renderEventConfig = () => {
-    // Get field definitions for the selected entity type
     const fields = step1Data.entityType
       ? (entityFieldDefinitions[step1Data.entityType] || [])
       : [];
 
     return (
-      <Card size="small" title="Koşullar (Opsiyonel)">
-        <Alert
-          type="info"
-          message="Gelişmiş Koşul Oluşturucu"
-          description="Karmaşık koşullar oluşturabilir, gruplar ekleyebilir ve AND/OR mantığı kullanabilirsiniz. Örneğin: 'Amount > 1000 AND (Status = Qualified OR Source IN [Website, Referral])'"
-          style={{ marginBottom: 16 }}
-        />
+      <div className="space-y-4">
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+          <div className="flex items-start gap-2">
+            <InfoCircleOutlined className="text-blue-500 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-blue-700">Gelişmiş Koşul Oluşturucu</p>
+              <p className="text-xs text-blue-600 mt-1">
+                Karmaşık koşullar oluşturabilir, gruplar ekleyebilir ve AND/OR mantığı kullanabilirsiniz.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <ConditionBuilder
           value={conditionGroup}
@@ -368,73 +514,111 @@ export default function ConfigureTriggerDrawer({
           fields={fields}
           maxDepth={3}
         />
-      </Card>
+      </div>
     );
   };
 
   const renderManualConfig = () => (
-    <Alert
-      type="info"
-      message="Manuel Tetikleyici"
-      description="Manuel workflow'lar için ek yapılandırma gerekmez. Bu workflow kullanıcı tarafından manuel olarak başlatılacaktır."
-      icon={<ClockCircleOutlined />}
-    />
+    <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center">
+      <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+        <ThunderboltOutlined className="text-2xl text-slate-400" />
+      </div>
+      <h3 className="text-lg font-medium text-slate-900 mb-2">Manuel Tetikleyici</h3>
+      <p className="text-sm text-slate-500">
+        Manuel workflow'lar için ek yapılandırma gerekmez.<br />
+        Bu workflow kullanıcı tarafından manuel olarak başlatılacaktır.
+      </p>
+    </div>
   );
 
   return (
     <Drawer
-      title={
-        <Space>
-          <ThunderboltOutlined />
-          <span>Tetikleyiciyi Yapılandır - Adım 2/3</span>
-        </Space>
-      }
-      width={720}
+      title={null}
+      width={640}
       open={open}
       onClose={onClose}
+      closable={false}
       styles={{
-        body: { paddingBottom: 80 },
+        header: { display: 'none' },
+        body: { padding: 0 },
       }}
-      footer={
-        <div
-          style={{
-            textAlign: 'right',
-            padding: '16px',
-            borderTop: '1px solid #f0f0f0',
-          }}
-        >
-          <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={onBack}>
-              Geri
-            </Button>
-            <Button onClick={onClose}>İptal</Button>
-            <Button
-              type="primary"
+    >
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            {config && (
+              <div className={`w-10 h-10 ${config.bgColor} rounded-lg flex items-center justify-center`}>
+                <span style={{ color: config.color }} className="text-lg">
+                  {config.icon}
+                </span>
+              </div>
+            )}
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Tetikleyiciyi Yapılandır</h2>
+              <p className="text-sm text-slate-500">Adım 2/3</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <CloseOutlined />
+          </button>
+        </div>
+
+        {/* Trigger Info Bar */}
+        <div className="px-6 pb-4">
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+            <div className="flex-1">
+              <p className="text-xs text-slate-500">Tetikleyici</p>
+              <p className="text-sm font-medium text-slate-900">{config?.label}</p>
+            </div>
+            <div className="h-8 w-px bg-slate-200" />
+            <div className="flex-1">
+              <p className="text-xs text-slate-500">Workflow</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{step1Data.name}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <Form form={form} layout="vertical" onFinish={handleFinish}>
+          {step1Data.triggerType === 'Scheduled' && renderScheduledConfig()}
+          {step1Data.triggerType === 'Manual' && renderManualConfig()}
+          {isEventBasedTrigger() && renderEventConfig()}
+        </Form>
+      </div>
+
+      {/* Sticky Footer */}
+      <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeftOutlined className="text-xs" />
+            Geri
+          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              İptal
+            </button>
+            <button
               onClick={() => form.submit()}
-              icon={<ArrowRightOutlined />}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
             >
               İleri: Aksiyonları Ekle
-            </Button>
-          </Space>
+              <ArrowRightOutlined className="text-xs" />
+            </button>
+          </div>
         </div>
-      }
-    >
-      <Alert
-        message={`Tetikleyici: ${step1Data.triggerType === 'Manual' ? 'Manuel' : step1Data.triggerType === 'Scheduled' ? 'Zamanlanmış' : 'Olay Bazlı'}`}
-        description={`Workflow: ${step1Data.name}`}
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
-      />
-
-      <Form form={form} layout="vertical" onFinish={handleFinish}>
-        {step1Data.triggerType === 'Scheduled' && renderScheduledConfig()}
-        {step1Data.triggerType === 'Manual' && renderManualConfig()}
-        {(step1Data.triggerType === 'OnCreate' ||
-          step1Data.triggerType === 'OnUpdate' ||
-          step1Data.triggerType === 'OnStatusChange') &&
-          renderEventConfig()}
-      </Form>
+      </div>
     </Drawer>
   );
 }

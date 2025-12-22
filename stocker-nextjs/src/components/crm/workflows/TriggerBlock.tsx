@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Card, Space, Tag, Button, Typography, Alert } from 'antd';
 import {
   EditOutlined,
   ClockCircleOutlined,
@@ -9,59 +8,87 @@ import {
   CalendarOutlined,
   PlusCircleOutlined,
   FormOutlined,
-  DeleteOutlined,
   SwapOutlined,
+  DollarOutlined,
+  FieldTimeOutlined,
+  FilterOutlined,
+  RocketOutlined,
 } from '@ant-design/icons';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 import type { TriggerConfiguration } from './ConfigureTriggerDrawer';
-
-const { Text, Title } = Typography;
 
 interface TriggerBlockProps {
   trigger: TriggerConfiguration;
   onEdit: () => void;
 }
 
-// Trigger type configurations
+// Trigger type configurations - synced with backend WorkflowTriggerType enum
 const triggerTypeConfig: Record<
   WorkflowTriggerType,
-  { label: string; icon: React.ReactNode; color: string; description: string }
+  { label: string; icon: React.ReactNode; color: string; bgColor: string; description: string }
 > = {
   Manual: {
     label: 'Manuel Tetikleyici',
     icon: <ThunderboltOutlined />,
-    color: 'default',
+    color: '#64748b',
+    bgColor: 'bg-slate-100',
     description: 'Kullanıcı tarafından manuel olarak başlatılır',
   },
   Scheduled: {
     label: 'Zamanlanmış',
     icon: <ClockCircleOutlined />,
-    color: 'orange',
+    color: '#f97316',
+    bgColor: 'bg-orange-100',
     description: 'Belirli zamanlarda otomatik çalışır',
   },
-  OnCreate: {
+  EntityCreated: {
     label: 'Kayıt Oluşturulduğunda',
     icon: <PlusCircleOutlined />,
-    color: 'blue',
+    color: '#22c55e',
+    bgColor: 'bg-green-100',
     description: 'Yeni kayıt oluşturulduğunda tetiklenir',
   },
-  OnUpdate: {
+  EntityUpdated: {
     label: 'Kayıt Güncellendiğinde',
     icon: <FormOutlined />,
-    color: 'cyan',
+    color: '#3b82f6',
+    bgColor: 'bg-blue-100',
     description: 'Kayıt güncellendiğinde tetiklenir',
   },
-  OnDelete: {
-    label: 'Kayıt Silindiğinde',
-    icon: <DeleteOutlined />,
-    color: 'red',
-    description: 'Kayıt silindiğinde tetiklenir',
-  },
-  OnStatusChange: {
+  StatusChanged: {
     label: 'Durum Değiştiğinde',
     icon: <SwapOutlined />,
-    color: 'purple',
+    color: '#8b5cf6',
+    bgColor: 'bg-violet-100',
     description: 'Status alanı değiştiğinde tetiklenir',
+  },
+  DealStageChanged: {
+    label: 'Anlaşma Aşaması Değiştiğinde',
+    icon: <RocketOutlined />,
+    color: '#6366f1',
+    bgColor: 'bg-indigo-100',
+    description: 'Anlaşma aşaması değiştiğinde tetiklenir',
+  },
+  FieldCondition: {
+    label: 'Alan Koşulu Sağlandığında',
+    icon: <FilterOutlined />,
+    color: '#ef4444',
+    bgColor: 'bg-red-100',
+    description: 'Belirli alan koşulu sağlandığında tetiklenir',
+  },
+  AmountThreshold: {
+    label: 'Tutar Eşiği Aşıldığında',
+    icon: <DollarOutlined />,
+    color: '#eab308',
+    bgColor: 'bg-yellow-100',
+    description: 'Belirli tutar eşiği aşıldığında tetiklenir',
+  },
+  DueDateEvent: {
+    label: 'Vade Tarihi Yaklaştığında',
+    icon: <FieldTimeOutlined />,
+    color: '#ec4899',
+    bgColor: 'bg-pink-100',
+    description: 'Vade tarihi yaklaştığında veya geçtiğinde tetiklenir',
   },
 };
 
@@ -69,7 +96,8 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
   const config = triggerTypeConfig[trigger.type] || {
     label: trigger.type,
     icon: <ThunderboltOutlined />,
-    color: 'default',
+    color: '#64748b',
+    bgColor: 'bg-slate-100',
     description: 'Workflow tetikleyicisi',
   };
 
@@ -79,9 +107,12 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
 
       if (scheduledConfig.scheduleType === 'once' && scheduledConfig.executeAt) {
         return (
-          <Tag icon={<CalendarOutlined />} color="orange">
-            {new Date(scheduledConfig.executeAt).toLocaleString('tr-TR')}
-          </Tag>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
+              <CalendarOutlined className="text-[10px]" />
+              {new Date(scheduledConfig.executeAt).toLocaleString('tr-TR')}
+            </div>
+          </div>
         );
       }
 
@@ -102,24 +133,28 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
         }
 
         return (
-          <Space direction="vertical" size={0}>
-            <Tag icon={<ClockCircleOutlined />} color="orange">
+          <div className="mt-3 space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
+              <ClockCircleOutlined className="text-[10px]" />
               {scheduleText} - {time}
-            </Tag>
+            </div>
             {scheduledConfig.recurrence.timezone && (
-              <Text type="secondary" style={{ fontSize: 11 }}>
+              <p className="text-[11px] text-slate-400">
                 Saat Dilimi: {scheduledConfig.recurrence.timezone}
-              </Text>
+              </p>
             )}
-          </Space>
+          </div>
         );
       }
 
       if (scheduledConfig.scheduleType === 'cron' && scheduledConfig.cronExpression) {
         return (
-          <Tag icon={<ClockCircleOutlined />} color="orange">
-            Cron: {scheduledConfig.cronExpression}
-          </Tag>
+          <div className="flex items-center gap-2 mt-3">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
+              <ClockCircleOutlined className="text-[10px]" />
+              Cron: {scheduledConfig.cronExpression}
+            </div>
+          </div>
         );
       }
     }
@@ -129,21 +164,23 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
       const groupsCount = trigger.config.conditions.groups?.length || 0;
 
       return (
-        <Alert
-          type="info"
-          message="Koşullu Tetikleme"
-          description={`${conditionsCount} koşul${groupsCount > 0 ? ` ve ${groupsCount} grup` : ''} tanımlı`}
-          showIcon
-          style={{ marginTop: 8 }}
-        />
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+          <div className="flex items-center gap-2">
+            <FilterOutlined className="text-blue-500 text-sm" />
+            <span className="text-sm font-medium text-blue-700">Koşullu Tetikleme</span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            {conditionsCount} koşul{groupsCount > 0 ? ` ve ${groupsCount} grup` : ''} tanımlı
+          </p>
+        </div>
       );
     }
 
     if (trigger.config.type === 'manual') {
       return (
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <p className="text-xs text-slate-400 mt-3">
           Bu workflow manuel olarak çalıştırılmalıdır
-        </Text>
+        </p>
       );
     }
 
@@ -151,52 +188,49 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
   };
 
   return (
-    <Card
-      className="trigger-block"
-      style={{
-        marginBottom: 16,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        border: 'none',
-      }}
-      size="small"
-    >
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-5 text-white shadow-lg">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <Space>
-          <Tag color="purple" icon={config.icon} style={{ margin: 0 }}>
-            TETİKLEYİCİ
-          </Tag>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/20 text-violet-300 rounded-md text-xs font-semibold uppercase tracking-wide">
+            <ThunderboltOutlined className="text-[10px]" />
+            Tetikleyici
+          </span>
           {trigger.entityType && (
-            <Tag color="blue" style={{ margin: 0 }}>
+            <span className="inline-flex items-center px-2.5 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium">
               {trigger.entityType}
-            </Tag>
+            </span>
           )}
-        </Space>
+        </div>
 
-        <Button
-          type="text"
-          size="small"
-          icon={<EditOutlined />}
+        <button
           onClick={onEdit}
-          style={{ color: 'white' }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
         >
+          <EditOutlined className="text-[11px]" />
           Düzenle
-        </Button>
+        </button>
       </div>
 
-      {/* Title */}
-      <Title level={5} style={{ color: 'white', margin: 0, marginBottom: 8 }}>
-        {config.label}
-      </Title>
+      {/* Icon & Title */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className={`w-10 h-10 ${config.bgColor} rounded-lg flex items-center justify-center`}>
+          <span style={{ color: config.color }} className="text-lg">
+            {config.icon}
+          </span>
+        </div>
+        <h3 className="text-lg font-semibold text-white">
+          {config.label}
+        </h3>
+      </div>
 
       {/* Description */}
-      <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, display: 'block', marginBottom: 8 }}>
+      <p className="text-sm text-white/70 mb-1">
         {config.description}
-      </Text>
+      </p>
 
       {/* Trigger Details */}
       <div>{renderTriggerDetails()}</div>
-    </Card>
+    </div>
   );
 }
