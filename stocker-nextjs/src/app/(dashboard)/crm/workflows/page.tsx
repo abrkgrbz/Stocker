@@ -42,14 +42,17 @@ dayjs.locale('tr');
 
 const { confirm } = Modal;
 
-// Trigger type labels
+// Trigger type labels - Synced with backend WorkflowTriggerType enum
 const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
   Manual: { label: 'Manuel', color: 'default' },
-  OnCreate: { label: 'Oluşturulduğunda', color: 'blue' },
-  OnUpdate: { label: 'Güncellendiğinde', color: 'cyan' },
-  OnDelete: { label: 'Silindiğinde', color: 'red' },
-  OnStatusChange: { label: 'Durum Değiştiğinde', color: 'purple' },
+  EntityCreated: { label: 'Kayıt Oluşturulduğunda', color: 'blue' },
+  EntityUpdated: { label: 'Kayıt Güncellendiğinde', color: 'cyan' },
+  StatusChanged: { label: 'Durum Değiştiğinde', color: 'purple' },
+  DealStageChanged: { label: 'Anlaşma Aşaması Değiştiğinde', color: 'geekblue' },
   Scheduled: { label: 'Zamanlanmış', color: 'orange' },
+  FieldCondition: { label: 'Alan Koşulu', color: 'volcano' },
+  AmountThreshold: { label: 'Tutar Eşiği', color: 'gold' },
+  DueDateEvent: { label: 'Vade Tarihi', color: 'magenta' },
 };
 
 // Action type labels
@@ -245,10 +248,10 @@ export default function WorkflowsPage() {
       title: 'Trigger',
       dataIndex: 'triggerType',
       key: 'triggerType',
-      width: 160,
+      width: 180,
       render: (triggerType: WorkflowTriggerType) => {
-        const { label, color } = triggerTypeLabels[triggerType] || { label: triggerType, color: 'default' };
-        return <Tag color={color}>{label}</Tag>;
+        const config = triggerTypeLabels[triggerType] || { label: triggerType, color: 'default' };
+        return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
     {
