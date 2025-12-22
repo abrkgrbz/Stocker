@@ -139,7 +139,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
               {scheduleText} - {time}
             </div>
             {scheduledConfig.recurrence.timezone && (
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 Saat Dilimi: {scheduledConfig.recurrence.timezone}
               </p>
             )}
@@ -188,16 +188,16 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-5 text-white shadow-lg">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/20 text-violet-300 rounded-md text-xs font-semibold uppercase tracking-wide">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-violet-100 text-violet-700 rounded-md text-xs font-semibold uppercase tracking-wide">
             <ThunderboltOutlined className="text-[10px]" />
             Tetikleyici
           </span>
           {trigger.entityType && (
-            <span className="inline-flex items-center px-2.5 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs font-medium">
+            <span className="inline-flex items-center px-2.5 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
               {trigger.entityType}
             </span>
           )}
@@ -205,7 +205,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
 
         <button
           onClick={onEdit}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
         >
           <EditOutlined className="text-[11px]" />
           Düzenle
@@ -219,13 +219,13 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
             {config.icon}
           </span>
         </div>
-        <h3 className="text-lg font-semibold text-white">
+        <h3 className="text-lg font-semibold text-slate-900">
           {config.label}
         </h3>
       </div>
 
       {/* Description */}
-      <p className="text-sm text-white/70 mb-1">
+      <p className="text-sm text-slate-500 mb-1">
         {config.description}
       </p>
 

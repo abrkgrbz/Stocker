@@ -67,19 +67,38 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
       const data = await CRMService.getWorkflow(workflowId);
       setWorkflow(data);
 
-      // Parse trigger configuration
+      // Parse trigger configuration - always create a default config
+      let parsedConfig: any = { type: 'manual' };
       if (data.triggerConditions) {
         try {
-          const config = JSON.parse(data.triggerConditions);
-          setTriggerConfig({
-            type: data.triggerType,
-            entityType: data.entityType,
-            config: config,
-          });
+          parsedConfig = JSON.parse(data.triggerConditions);
+          // Ensure config has a type
+          if (!parsedConfig.type) {
+            parsedConfig = {
+              type: data.triggerType === 'Manual' ? 'manual' :
+                    data.triggerType === 'Scheduled' ? 'scheduled' : 'event'
+            };
+          }
         } catch (e) {
           console.error('Failed to parse trigger config', e);
+          parsedConfig = {
+            type: data.triggerType === 'Manual' ? 'manual' :
+                  data.triggerType === 'Scheduled' ? 'scheduled' : 'event'
+          };
         }
+      } else {
+        // No trigger conditions - create default based on trigger type
+        parsedConfig = {
+          type: data.triggerType === 'Manual' ? 'manual' :
+                data.triggerType === 'Scheduled' ? 'scheduled' : 'event'
+        };
       }
+
+      setTriggerConfig({
+        type: data.triggerType,
+        entityType: data.entityType,
+        config: parsedConfig,
+      });
 
       // Convert steps to actions
       if (data.steps && data.steps.length > 0) {
