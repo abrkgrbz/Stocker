@@ -11,6 +11,7 @@ namespace Stocker.Modules.CRM.Infrastructure.Persistence;
 public class CRMDbContext : DbContext
 {
     private readonly ITenantService _tenantService;
+    private readonly IBackgroundTenantService? _backgroundTenantService;
 
     // Core CRM Entities
     public DbSet<Customer> Customers { get; set; } = null!;
@@ -92,10 +93,12 @@ public class CRMDbContext : DbContext
 
     public CRMDbContext(
         DbContextOptions<CRMDbContext> options,
-        ITenantService tenantService)
+        ITenantService tenantService,
+        IBackgroundTenantService? backgroundTenantService = null)
         : base(options)
     {
         _tenantService = tenantService;
+        _backgroundTenantService = backgroundTenantService;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -283,7 +286,8 @@ public class CRMDbContext : DbContext
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // Set TenantId for new entities
-        var tenantId = _tenantService.GetCurrentTenantId();
+        // Try BackgroundTenantService first (for MassTransit consumers), then ITenantService (for HTTP requests)
+        var tenantId = _backgroundTenantService?.GetCurrentTenantId() ?? _tenantService.GetCurrentTenantId();
 
         foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
         {
