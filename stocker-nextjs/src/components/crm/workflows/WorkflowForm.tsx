@@ -62,11 +62,9 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
 
   const handleTriggerTypeChange = (value: string) => {
     setSelectedTriggerType(value);
-    if (value === 'Manual' || value === 'Scheduled') {
-      form.setFieldsValue({ entityType: undefined });
-    }
   };
 
+  // Helper to indicate if entity type is critical for this trigger
   const requiresEntityType = (triggerType: string) => {
     return !['Manual', 'Scheduled'].includes(triggerType);
   };
@@ -175,25 +173,27 @@ export default function WorkflowForm({ form, initialValues, onFinish, loading }:
                   />
                 </Form.Item>
               </div>
-              {requiresEntityType(selectedTriggerType) && (
-                <div className="col-span-6">
-                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Entity Tipi <span className="text-red-500">*</span></label>
-                  <Form.Item
-                    name="entityType"
-                    rules={[{ required: true, message: 'Entity tipi seçimi zorunludur' }]}
-                    className="mb-0"
-                  >
-                    <Select
-                      placeholder="Entity tipi seçin"
-                      options={entityTypes}
-                      allowClear
-                      showSearch
-                      optionFilterProp="label"
-                      className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                    />
-                  </Form.Item>
-                </div>
-              )}
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">
+                  Entity Tipi <span className="text-red-500">*</span>
+                  {!requiresEntityType(selectedTriggerType) && (
+                    <span className="text-xs text-slate-400 ml-2">(Opsiyonel filtre için)</span>
+                  )}
+                </label>
+                <Form.Item
+                  name="entityType"
+                  rules={[{ required: true, message: 'Entity tipi seçimi zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Select
+                    placeholder="Entity tipi seçin"
+                    options={entityTypes}
+                    showSearch
+                    optionFilterProp="label"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
             </div>
           </div>
 

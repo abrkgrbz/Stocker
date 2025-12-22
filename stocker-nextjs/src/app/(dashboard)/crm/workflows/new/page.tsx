@@ -19,14 +19,11 @@ export default function NewWorkflowPage() {
     try {
       const command: CreateWorkflowCommand = {
         name: values.name,
-        description: values.description,
-        trigger: {
-          type: values.triggerType,
-          entityType: values.entityType || 'Lead',
-          conditions: '{}',
-        } as any,
-        actions: [],
-        isActive: values.isActive || false,
+        description: values.description || '',
+        triggerType: values.triggerType || 'Manual',
+        entityType: values.entityType || 'Lead',
+        triggerConditions: JSON.stringify(values.triggerConditions || {}),
+        steps: [], // Start with empty steps, user can add them in the detail page
       };
 
       const workflowId = await CRMService.createWorkflow(command);

@@ -791,12 +791,28 @@ export interface NotificationFilterParams {
   take?: number;
 }
 
+/**
+ * Backend: CreateWorkflowCommand (CreateWorkflowCommand.cs)
+ * Synchronized with C# record
+ */
 export interface CreateWorkflowCommand {
   name: string;
-  description?: string;
-  trigger: WorkflowTrigger;
-  actions: WorkflowAction[];
-  isActive: boolean;
+  description: string;
+  triggerType: WorkflowTriggerType;
+  entityType: string;
+  triggerConditions: string; // JSON string
+  steps: CreateWorkflowStepDto[];
+}
+
+export interface CreateWorkflowStepDto {
+  name: string;
+  description: string;
+  actionType: WorkflowActionType;
+  stepOrder: number;
+  actionConfiguration: string; // JSON string
+  conditions: string; // JSON string
+  delayMinutes?: number;
+  continueOnError?: boolean;
 }
 
 export interface ExecuteWorkflowCommand {
