@@ -12,7 +12,7 @@ public interface IWorkflowExecutionRepository
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     Task<IEnumerable<WorkflowExecution>> GetExecutionsByWorkflowIdAsync(int workflowId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<WorkflowExecution>> GetExecutionsByEntityAsync(int entityId, string entityType, CancellationToken cancellationToken = default);
+    Task<IEnumerable<WorkflowExecution>> GetExecutionsByEntityAsync(string entityId, string entityType, CancellationToken cancellationToken = default);
     Task<IEnumerable<WorkflowExecution>> GetExecutionsByStatusAsync(WorkflowExecutionStatus status, CancellationToken cancellationToken = default);
     Task<IEnumerable<WorkflowExecution>> GetPendingExecutionsAsync(CancellationToken cancellationToken = default);
 }

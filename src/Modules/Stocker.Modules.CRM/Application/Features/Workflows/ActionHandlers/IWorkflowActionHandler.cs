@@ -32,7 +32,7 @@ public record WorkflowActionContext(
     int StepId,
     string ActionType,
     string ActionConfiguration,
-    int EntityId,
+    string EntityId,
     string EntityType,
     Dictionary<string, object>? TriggerData = null
 );

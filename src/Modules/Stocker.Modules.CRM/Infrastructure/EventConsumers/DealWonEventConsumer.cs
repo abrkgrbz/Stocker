@@ -1,19 +1,25 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.CRM.Application.Services.Workflows;
+using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.Shared.Events.CRM;
 
 namespace Stocker.Modules.CRM.Infrastructure.EventConsumers;
 
 /// <summary>
-/// Sample consumer for DealWonEvent
-/// Demonstrates event consumption pattern for deal completion workflows
+/// Consumer for DealWonEvent
+/// Triggers matching workflows when a deal is won
 /// </summary>
 public class DealWonEventConsumer : IConsumer<DealWonEvent>
 {
+    private readonly IWorkflowTriggerService _workflowTriggerService;
     private readonly ILogger<DealWonEventConsumer> _logger;
 
-    public DealWonEventConsumer(ILogger<DealWonEventConsumer> logger)
+    public DealWonEventConsumer(
+        IWorkflowTriggerService workflowTriggerService,
+        ILogger<DealWonEventConsumer> logger)
     {
+        _workflowTriggerService = workflowTriggerService;
         _logger = logger;
     }
 
@@ -36,31 +42,43 @@ public class DealWonEventConsumer : IConsumer<DealWonEvent>
             _logger.LogInformation(
                 "Deal contains {ProductCount} products",
                 @event.Products.Count);
-
-            foreach (var product in @event.Products)
-            {
-                _logger.LogInformation(
-                    "  - {ProductName}: {Quantity} x {UnitPrice} (Discount: {DiscountAmount})",
-                    product.ProductName,
-                    product.Quantity,
-                    product.UnitPrice,
-                    product.DiscountAmount);
-            }
         }
 
-        // TODO: Implement actual business logic
-        // Examples:
-        // - Trigger invoice generation in Finance module
-        // - Reserve inventory in Inventory module
-        // - Create sales order in Sales module
-        // - Update sales forecasts and analytics
-        // - Send congratulations email to sales rep
-        // - Update customer lifetime value calculations
-        // - Trigger commission calculations
-        // - Create fulfillment workflow
-        // - Update CRM dashboards and metrics
-        // - Send notifications to relevant stakeholders
+        // Build trigger data from the event for workflow context
+        var triggerData = new Dictionary<string, object>
+        {
+            ["DealId"] = @event.DealId,
+            ["CustomerId"] = @event.CustomerId,
+            ["Amount"] = @event.Amount,
+            ["Currency"] = @event.Currency ?? "",
+            ["ProductCount"] = @event.Products.Count,
+            ["ClosedDate"] = @event.ClosedDate,
+            ["WonBy"] = @event.WonBy,
+            ["TenantId"] = @event.TenantId
+        };
 
-        await Task.CompletedTask;
+        // Trigger workflows for Deal StatusChanged (Won) event
+        var result = await _workflowTriggerService.TriggerWorkflowsAsync(
+            entityType: "Deal",
+            entityId: @event.DealId.ToString(),
+            tenantId: @event.TenantId,
+            triggerType: WorkflowTriggerType.StatusChanged,
+            triggerData: triggerData,
+            cancellationToken: context.CancellationToken);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation(
+                "Triggered {WorkflowCount} workflow(s) for deal won. DealId: {DealId}",
+                result.Value,
+                @event.DealId);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Failed to trigger workflows for deal won. DealId: {DealId}, Error: {Error}",
+                @event.DealId,
+                result.Error?.Description);
+        }
     }
 }

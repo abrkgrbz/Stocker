@@ -139,9 +139,14 @@ public static class DependencyInjection
 
         // Register Workflow Execution Services
         services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
+        services.AddScoped<IWorkflowTriggerService, WorkflowTriggerService>();
 
         // Register Workflow Action Handlers
         services.AddScoped<IWorkflowActionHandler, SendEmailActionHandler>();
+        services.AddScoped<IWorkflowActionHandler, SendNotificationActionHandler>();
+        services.AddScoped<IWorkflowActionHandler, CreateTaskActionHandler>();
+        services.AddScoped<IWorkflowActionHandler, UpdateFieldActionHandler>();
+        services.AddScoped<IWorkflowActionHandler, WebhookActionHandler>();
 
         // Register Reminder Service
         services.AddScoped<IReminderService, ReminderService>();

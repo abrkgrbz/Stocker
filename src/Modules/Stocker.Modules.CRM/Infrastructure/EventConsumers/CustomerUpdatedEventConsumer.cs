@@ -1,19 +1,25 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Stocker.Modules.CRM.Application.Services.Workflows;
+using Stocker.Modules.CRM.Domain.Enums;
 using Stocker.Shared.Events.CRM;
 
 namespace Stocker.Modules.CRM.Infrastructure.EventConsumers;
 
 /// <summary>
-/// Sample consumer for CustomerUpdatedEvent
-/// Demonstrates event consumption pattern for tracking customer changes
+/// Consumer for CustomerUpdatedEvent
+/// Triggers matching workflows when a customer is updated
 /// </summary>
 public class CustomerUpdatedEventConsumer : IConsumer<CustomerUpdatedEvent>
 {
+    private readonly IWorkflowTriggerService _workflowTriggerService;
     private readonly ILogger<CustomerUpdatedEventConsumer> _logger;
 
-    public CustomerUpdatedEventConsumer(ILogger<CustomerUpdatedEventConsumer> logger)
+    public CustomerUpdatedEventConsumer(
+        IWorkflowTriggerService workflowTriggerService,
+        ILogger<CustomerUpdatedEventConsumer> logger)
     {
+        _workflowTriggerService = workflowTriggerService;
         _logger = logger;
     }
 
@@ -28,14 +34,44 @@ public class CustomerUpdatedEventConsumer : IConsumer<CustomerUpdatedEvent>
             @event.TenantId,
             @event.EventId);
 
-        // TODO: Implement actual business logic
-        // Examples:
-        // - Sync updated customer data to external systems
-        // - Update search indexes
-        // - Trigger re-calculation of customer scores/segments
-        // - Send change notifications to stakeholders
-        // - Update cached data
+        // Build trigger data from the event for workflow context
+        var triggerData = new Dictionary<string, object>
+        {
+            ["CustomerId"] = @event.CustomerId,
+            ["CompanyName"] = @event.CompanyName ?? "",
+            ["Email"] = @event.Email ?? "",
+            ["Phone"] = @event.Phone ?? "",
+            ["Website"] = @event.Website ?? "",
+            ["Industry"] = @event.Industry ?? "",
+            ["AnnualRevenue"] = @event.AnnualRevenue ?? 0m,
+            ["NumberOfEmployees"] = @event.NumberOfEmployees ?? 0,
+            ["UpdatedAt"] = @event.UpdatedAt,
+            ["UpdatedBy"] = @event.UpdatedBy,
+            ["TenantId"] = @event.TenantId
+        };
 
-        await Task.CompletedTask;
+        // Trigger workflows for Customer EntityUpdated event
+        var result = await _workflowTriggerService.TriggerWorkflowsAsync(
+            entityType: "Customer",
+            entityId: @event.CustomerId.ToString(),
+            tenantId: @event.TenantId,
+            triggerType: WorkflowTriggerType.EntityUpdated,
+            triggerData: triggerData,
+            cancellationToken: context.CancellationToken);
+
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation(
+                "Triggered {WorkflowCount} workflow(s) for customer update. CustomerId: {CustomerId}",
+                result.Value,
+                @event.CustomerId);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Failed to trigger workflows for customer update. CustomerId: {CustomerId}, Error: {Error}",
+                @event.CustomerId,
+                result.Error?.Description);
+        }
     }
 }

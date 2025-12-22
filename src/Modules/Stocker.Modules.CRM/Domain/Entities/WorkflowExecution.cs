@@ -11,7 +11,7 @@ public class WorkflowExecution : BaseEntity
 {
     public int WorkflowId { get; private set; }
     public Guid TenantId { get; private set; }
-    public int EntityId { get; private set; }
+    public string EntityId { get; private set; } = string.Empty; // Supports both int and Guid entity IDs as string
     public string EntityType { get; private set; } = string.Empty;
     public WorkflowExecutionStatus Status { get; private set; }
     public DateTime StartedAt { get; private set; }
@@ -36,7 +36,7 @@ public class WorkflowExecution : BaseEntity
     private WorkflowExecution(
         int workflowId,
         Guid tenantId,
-        int entityId,
+        string entityId,
         string entityType,
         int totalSteps,
         Guid? triggeredBy,
@@ -59,7 +59,7 @@ public class WorkflowExecution : BaseEntity
     public static Result<WorkflowExecution> Create(
         int workflowId,
         Guid tenantId,
-        int entityId,
+        string entityId,
         string entityType,
         int totalSteps,
         Guid? triggeredBy,
@@ -71,8 +71,8 @@ public class WorkflowExecution : BaseEntity
         if (tenantId == Guid.Empty)
             return Result<WorkflowExecution>.Failure(Error.Validation("WorkflowExecution", "Tenant ID is required"));
 
-        if (entityId <= 0)
-            return Result<WorkflowExecution>.Failure(Error.Validation("WorkflowExecution", "Valid entity ID is required"));
+        if (string.IsNullOrWhiteSpace(entityId))
+            return Result<WorkflowExecution>.Failure(Error.Validation("WorkflowExecution", "Entity ID is required"));
 
         if (string.IsNullOrWhiteSpace(entityType))
             return Result<WorkflowExecution>.Failure(Error.Validation("WorkflowExecution", "Entity type is required"));

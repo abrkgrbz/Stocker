@@ -57,7 +57,7 @@ public class WorkflowExecutionRepository : IWorkflowExecutionRepository
     }
 
     public async Task<IEnumerable<WorkflowExecution>> GetExecutionsByEntityAsync(
-        int entityId,
+        string entityId,
         string entityType,
         CancellationToken cancellationToken = default)
     {

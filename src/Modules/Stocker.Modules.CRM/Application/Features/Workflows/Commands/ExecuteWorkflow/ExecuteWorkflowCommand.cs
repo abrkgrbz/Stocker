@@ -5,7 +5,7 @@ namespace Stocker.Modules.CRM.Application.Features.Workflows.Commands.ExecuteWor
 
 public record ExecuteWorkflowCommand(
     int WorkflowId,
-    int EntityId,
+    string EntityId,
     string EntityType,
     string TriggerData
 ) : IRequest<Result<int>>;

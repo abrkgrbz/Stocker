@@ -34,7 +34,8 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .IsRequired();
 
         builder.Property(e => e.EntityId)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(50); // Supports both int (max 10 chars) and Guid (36 chars)
 
         builder.Property(e => e.CurrentStepOrder)
             .IsRequired();
