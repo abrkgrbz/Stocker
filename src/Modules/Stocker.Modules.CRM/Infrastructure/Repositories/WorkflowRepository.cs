@@ -41,7 +41,10 @@ public class WorkflowRepository : IWorkflowRepository
 
     public System.Threading.Tasks.Task DeleteAsync(Workflow entity, CancellationToken cancellationToken = default)
     {
-        _dbSet.Remove(entity);
+        // Use soft delete instead of physical delete to avoid FK constraint issues
+        // and maintain audit trail
+        entity.Delete(string.Empty);
+        _dbSet.Update(entity);
         return System.Threading.Tasks.Task.CompletedTask;
     }
 
