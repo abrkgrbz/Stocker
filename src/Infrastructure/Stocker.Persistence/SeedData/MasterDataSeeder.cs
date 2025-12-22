@@ -40,6 +40,7 @@ public class MasterDataSeeder
         await SeedAddOnsAsync();
         await SeedIndustriesAsync();
         await SeedSystemAdminAsync();
+        await SeedEmailTemplatesAsync();
 
         // Only seed test admin in Development environment
         if (_environment.IsDevelopment())
@@ -915,4 +916,325 @@ public class MasterDataSeeder
         await _context.Industries.AddRangeAsync(industries);
         _logger.LogInformation("Seeded {Count} industries.", industries.Count);
     }
+
+    private async Task SeedEmailTemplatesAsync()
+    {
+        if (await _context.EmailTemplates.AnyAsync())
+        {
+            _logger.LogInformation("Email templates already seeded.");
+            return;
+        }
+
+        var templates = new List<EmailTemplate>();
+
+        // Email Verification Template (Turkish)
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "email-verification",
+            name: "Email Doğrulama",
+            subject: "{{ appName }} - Email Adresinizi Doğrulayın",
+            htmlBody: GetEmailVerificationTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.Authentication,
+            variables: "[\"userName\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
+            description: "Yeni kayıt sonrası email doğrulama maili",
+            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+
+        // Tenant Email Verification with Code (Turkish)
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "tenant-email-verification",
+            name: "Tenant Email Doğrulama",
+            subject: "{{ appName }} - Email Doğrulama Kodunuz",
+            htmlBody: GetTenantEmailVerificationTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.Authentication,
+            variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
+            description: "Tenant kayıt sonrası 6 haneli doğrulama kodu ile email doğrulama",
+            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+
+        // Password Reset Template (Turkish)
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "password-reset",
+            name: "Şifre Sıfırlama",
+            subject: "{{ appName }} - Şifre Sıfırlama Talebi",
+            htmlBody: GetPasswordResetTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.Authentication,
+            variables: "[\"userName\", \"resetUrl\", \"appName\", \"email\", \"year\"]",
+            description: "Şifre sıfırlama talebi için gönderilen mail",
+            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+
+        // Welcome Email Template (Turkish)
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "welcome",
+            name: "Hoşgeldiniz",
+            subject: "{{ appName }} - Hoşgeldiniz!",
+            htmlBody: GetWelcomeTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.UserManagement,
+            variables: "[\"userName\", \"companyName\", \"loginUrl\", \"appName\", \"email\", \"year\"]",
+            description: "Kayıt tamamlandıktan sonra gönderilen hoşgeldiniz maili",
+            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+
+        // Invitation Template (Turkish)
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "invitation",
+            name: "Davet",
+            subject: "{{ inviterName }} sizi {{ companyName }} şirketine davet ediyor",
+            htmlBody: GetInvitationTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.UserManagement,
+            variables: "[\"inviterName\", \"companyName\", \"inviteUrl\", \"appName\", \"email\", \"year\"]",
+            description: "Şirkete davet maili",
+            sampleData: "{\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"inviteUrl\":\"https://stoocker.app/invite\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+
+        // User Invitation Template (Turkish) - Most detailed
+        templates.Add(EmailTemplate.CreateSystem(
+            templateKey: "user-invitation",
+            name: "Kullanıcı Daveti",
+            subject: "Stocker'a Davet Edildiniz - {{ companyName }}",
+            htmlBody: GetUserInvitationTemplate(),
+            language: "tr",
+            category: EmailTemplateCategory.UserManagement,
+            variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"userId\", \"tenantId\", \"appName\", \"expirationDays\", \"year\"]",
+            description: "Admin tarafından oluşturulan kullanıcı için aktivasyon daveti",
+            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"userId\":\"guid-here\",\"tenantId\":\"guid-here\",\"appName\":\"Stocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
+
+        await _context.EmailTemplates.AddRangeAsync(templates);
+        _logger.LogInformation("Seeded {Count} email templates.", templates.Count);
+    }
+
+    private static string GetEmailVerificationTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Email Doğrulama</h1>
+        </div>
+        <div class='content'>
+            <p>Merhaba {{ userName }},</p>
+            <p>{{ appName }}'a hoşgeldiniz! Hesabınızı aktifleştirmek için lütfen aşağıdaki butona tıklayın:</p>
+            <div style='text-align: center;'>
+                <a href='{{ verificationUrl }}' class='button'>Email Adresimi Doğrula</a>
+            </div>
+            <p>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+            <p style='word-break: break-all; color: #667eea;'>{{ verificationUrl }}</p>
+            <p>Bu link 24 saat geçerlidir.</p>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+    private static string GetTenantEmailVerificationTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .code-box { background: white; border: 2px dashed #667eea; padding: 20px; margin: 20px 0; text-align: center; border-radius: 8px; }
+        .code { font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; font-family: monospace; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Email Doğrulama</h1>
+        </div>
+        <div class='content'>
+            <p>Merhaba {{ userName }},</p>
+            <p>{{ appName }}'a hoşgeldiniz! Hesabınızı aktifleştirmek için aşağıdaki <strong>6 haneli doğrulama kodunu</strong> girin:</p>
+            <div class='code-box'>
+                <div class='code'>{{ verificationCode }}</div>
+            </div>
+            <p style='text-align: center; color: #666;'>Bu kod <strong>24 saat</strong> geçerlidir.</p>
+            <div class='note'>
+                <strong>💡 İpucu:</strong> Kodu kayıt sayfasında açılan popup'a girebilirsiniz.
+            </div>
+            <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+            <p style='font-size: 14px; color: #666;'><strong>Alternatif:</strong> Doğrudan link ile de doğrulayabilirsiniz:</p>
+            <div style='text-align: center;'>
+                <a href='{{ verificationUrl }}' class='button'>Email Adresimi Doğrula</a>
+            </div>
+            <p style='font-size: 12px; color: #999; text-align: center;'>{{ verificationUrl }}</p>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+    private static string GetPasswordResetTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Şifre Sıfırlama</h1>
+        </div>
+        <div class='content'>
+            <p>Merhaba {{ userName }},</p>
+            <p>Şifrenizi sıfırlamak için bir talepte bulundunuz. Aşağıdaki butona tıklayarak yeni şifrenizi oluşturabilirsiniz:</p>
+            <div style='text-align: center;'>
+                <a href='{{ resetUrl }}' class='button'>Şifremi Sıfırla</a>
+            </div>
+            <p>Bu link 1 saat geçerlidir.</p>
+            <p>Eğer bu talebi siz yapmadıysanız, bu emaili görmezden gelebilirsiniz.</p>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+    private static string GetWelcomeTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .features { margin: 20px 0; }
+        .feature { padding: 10px; background: white; margin: 10px 0; border-left: 3px solid #667eea; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>{{ appName }}'a Hoşgeldiniz!</h1>
+        </div>
+        <div class='content'>
+            <p>Merhaba {{ userName }},</p>
+            <p><strong>{{ companyName }}</strong> hesabınız başarıyla oluşturuldu!</p>
+            <div class='features'>
+                <div class='feature'>✅ CRM - Müşteri ilişkilerini yönetin</div>
+                <div class='feature'>✅ Stok Takibi - Envanterinizi kontrol edin</div>
+                <div class='feature'>✅ Raporlama - Detaylı analizler alın</div>
+                <div class='feature'>✅ 7/24 Destek - Her zaman yanınızdayız</div>
+            </div>
+            <div style='text-align: center;'>
+                <a href='{{ loginUrl }}' class='button'>Hemen Başla</a>
+            </div>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+    private static string GetInvitationTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Davetlisiniz!</h1>
+        </div>
+        <div class='content'>
+            <p>Merhaba,</p>
+            <p><strong>{{ inviterName }}</strong> sizi <strong>{{ companyName }}</strong> şirketine davet ediyor.</p>
+            <p>Daveti kabul etmek için aşağıdaki butona tıklayın:</p>
+            <div style='text-align: center;'>
+                <a href='{{ inviteUrl }}' class='button'>Daveti Kabul Et</a>
+            </div>
+            <p>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+            <p style='word-break: break-all; color: #667eea;'>{{ inviteUrl }}</p>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+    private static string GetUserInvitationTemplate() => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }
+        .info-box { background: #e8f4fd; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .company-name { color: #667eea; font-weight: bold; }
+        .inviter-name { color: #764ba2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>🎉 {{ appName }}'a Hoşgeldiniz!</h1>
+            <p style='margin: 0; opacity: 0.9;'>Hesap Aktivasyon Daveti</p>
+        </div>
+        <div class='content'>
+            <p>Merhaba <strong>{{ userName }}</strong>,</p>
+            <p><span class='inviter-name'>{{ inviterName }}</span> sizi <span class='company-name'>{{ companyName }}</span> şirketinin {{ appName }} hesabına davet etti!</p>
+            <div class='info-box'>
+                <strong>📋 Hesap Bilgileriniz:</strong>
+                <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
+                    <li>E-posta: <strong>{{ email }}</strong></li>
+                    <li>Şirket: <strong>{{ companyName }}</strong></li>
+                </ul>
+            </div>
+            <p>Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:</p>
+            <div style='text-align: center;'>
+                <a href='{{ activationUrl }}' class='button'>Şifremi Belirle ve Hesabımı Aktifleştir</a>
+            </div>
+            <p style='font-size: 14px; color: #666;'>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+            <p style='word-break: break-all; color: #667eea; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px;'>{{ activationUrl }}</p>
+            <div class='warning-box'>
+                <strong>⏰ Önemli:</strong> Bu link <strong>{{ expirationDays }} gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
+            </div>
+            <p style='font-size: 14px; color: #666;'>Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.</p>
+        </div>
+        <div class='footer'>
+            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
+            <p style='color: #999;'>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.</p>
+        </div>
+    </div>
+</body>
+</html>";
 }

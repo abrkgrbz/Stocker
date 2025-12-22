@@ -8,6 +8,7 @@ using MimeKit.Text;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Interfaces.Repositories;
 using Stocker.SharedKernel.Settings;
 using Stocker.Application.Common.Exceptions;
 using Stocker.SharedKernel.Exceptions;
@@ -20,18 +21,24 @@ public class EmailService : IEmailService
     private readonly ILogger<EmailService> _logger;
     private readonly IEncryptionService _encryptionService;
     private readonly IMasterDbContext _masterContext;
+    private readonly IEmailTemplateRepository _templateRepository;
+    private readonly ILiquidTemplateService _liquidTemplateService;
     private readonly string _templatesPath;
 
     public EmailService(
         IOptions<EmailSettings> emailSettings,
         ILogger<EmailService> logger,
         IEncryptionService encryptionService,
-        IMasterDbContext masterContext)
+        IMasterDbContext masterContext,
+        IEmailTemplateRepository templateRepository,
+        ILiquidTemplateService liquidTemplateService)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
         _encryptionService = encryptionService;
         _masterContext = masterContext;
+        _templateRepository = templateRepository;
+        _liquidTemplateService = liquidTemplateService;
         _templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _emailSettings.TemplatesPath);
     }
 
@@ -124,7 +131,7 @@ public class EmailService : IEmailService
     {
         return templateName switch
         {
-            "EmailVerification" => @"
+            "email-verification" or "EmailVerification" => @"
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -158,7 +165,7 @@ public class EmailService : IEmailService
                     </div>
                 </body>
                 </html>",
-            "TenantEmailVerification" => @"
+            "tenant-email-verification" or "TenantEmailVerification" => @"
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -202,7 +209,7 @@ public class EmailService : IEmailService
                     </div>
                 </body>
                 </html>",
-            "PasswordReset" => @"
+            "password-reset" or "PasswordReset" => @"
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -235,7 +242,7 @@ public class EmailService : IEmailService
                     </div>
                 </body>
                 </html>",
-            "Welcome" => @"
+            "welcome" or "Welcome" => @"
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -274,6 +281,91 @@ public class EmailService : IEmailService
                     </div>
                 </body>
                 </html>",
+            "invitation" or "Invitation" => @"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>Davetlisiniz!</h1>
+                        </div>
+                        <div class='content'>
+                            <p>Merhaba,</p>
+                            <p><strong>{{inviterName}}</strong> sizi <strong>{{companyName}}</strong> şirketine davet ediyor.</p>
+                            <p>Daveti kabul etmek için aşağıdaki butona tıklayın:</p>
+                            <div style='text-align: center;'>
+                                <a href='{{inviteUrl}}' class='button'>Daveti Kabul Et</a>
+                            </div>
+                            <p>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+                            <p style='word-break: break-all; color: #667eea;'>{{inviteUrl}}</p>
+                        </div>
+                        <div class='footer'>
+                            <p>© {{year}} Stocker. Tüm hakları saklıdır.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>",
+            "user-invitation" or "UserInvitation" => @"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .button { display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }
+                        .info-box { background: #e8f4fd; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+                        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+                        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+                        .company-name { color: #667eea; font-weight: bold; }
+                        .inviter-name { color: #764ba2; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>🎉 Stocker'a Hoşgeldiniz!</h1>
+                            <p style='margin: 0; opacity: 0.9;'>Hesap Aktivasyon Daveti</p>
+                        </div>
+                        <div class='content'>
+                            <p>Merhaba <strong>{{userName}}</strong>,</p>
+                            <p><span class='inviter-name'>{{inviterName}}</span> sizi <span class='company-name'>{{companyName}}</span> şirketinin Stocker hesabına davet etti!</p>
+                            <div class='info-box'>
+                                <strong>📋 Hesap Bilgileriniz:</strong>
+                                <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
+                                    <li>E-posta: <strong>{{email}}</strong></li>
+                                    <li>Şirket: <strong>{{companyName}}</strong></li>
+                                </ul>
+                            </div>
+                            <p>Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:</p>
+                            <div style='text-align: center;'>
+                                <a href='{{activationUrl}}' class='button'>Şifremi Belirle ve Hesabımı Aktifleştir</a>
+                            </div>
+                            <p style='font-size: 14px; color: #666;'>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+                            <p style='word-break: break-all; color: #667eea; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px;'>{{activationUrl}}</p>
+                            <div class='warning-box'>
+                                <strong>⏰ Önemli:</strong> Bu link <strong>{{expirationDays}} gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
+                            </div>
+                            <p style='font-size: 14px; color: #666;'>Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.</p>
+                        </div>
+                        <div class='footer'>
+                            <p>© {{year}} Stocker. Tüm hakları saklıdır.</p>
+                            <p style='color: #999;'>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>",
             _ => "<p>{{content}}</p>"
         };
     }
@@ -282,13 +374,98 @@ public class EmailService : IEmailService
     {
         return templateName switch
         {
-            "EmailVerification" => "{{appName}} - Email Adresinizi Doğrulayın",
-            "TenantEmailVerification" => "{{appName}} - Email Doğrulama Kodunuz",
-            "PasswordReset" => "{{appName}} - Şifre Sıfırlama Talebi",
-            "Welcome" => "{{appName}} - Hoşgeldiniz!",
-            "Invitation" => "{{inviterName}} sizi {{companyName}} şirketine davet ediyor",
+            "email-verification" or "EmailVerification" => "{{appName}} - Email Adresinizi Doğrulayın",
+            "tenant-email-verification" or "TenantEmailVerification" => "{{appName}} - Email Doğrulama Kodunuz",
+            "password-reset" or "PasswordReset" => "{{appName}} - Şifre Sıfırlama Talebi",
+            "welcome" or "Welcome" => "{{appName}} - Hoşgeldiniz!",
+            "invitation" or "Invitation" => "{{inviterName}} sizi {{companyName}} şirketine davet ediyor",
+            "user-invitation" or "UserInvitation" => "Stocker'a Davet Edildiniz - {{companyName}}",
             _ => "{{appName}} Bildirimi"
         };
+    }
+
+    /// <summary>
+    /// Renders an email template from database using Liquid engine.
+    /// Falls back to hardcoded templates if database template is not found.
+    /// </summary>
+    private async Task<(string Subject, string Body)> RenderTemplateAsync(
+        string templateKey,
+        object data,
+        string language = "tr",
+        Guid? tenantId = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Try to get template from database
+            var template = await _templateRepository.GetByKeyAsync(templateKey, language, tenantId, cancellationToken);
+
+            if (template != null)
+            {
+                _logger.LogDebug("Using database template: {TemplateKey} (Language: {Language}, TenantId: {TenantId})",
+                    templateKey, language, tenantId);
+
+                // Render subject with Liquid
+                var subjectResult = await _liquidTemplateService.RenderAsync(template.Subject, data, cancellationToken);
+                if (!subjectResult.IsSuccess)
+                {
+                    _logger.LogWarning("Failed to render subject for template {TemplateKey}: {Error}",
+                        templateKey, subjectResult.ErrorMessage);
+                    // Fall through to default template
+                }
+                else
+                {
+                    // Render body with Liquid
+                    var bodyResult = await _liquidTemplateService.RenderAsync(template.HtmlBody, data, cancellationToken);
+                    if (bodyResult.IsSuccess)
+                    {
+                        return (subjectResult.RenderedContent!, bodyResult.RenderedContent!);
+                    }
+
+                    _logger.LogWarning("Failed to render body for template {TemplateKey}: {Error}",
+                        templateKey, bodyResult.ErrorMessage);
+                }
+            }
+            else
+            {
+                _logger.LogDebug("No database template found for {TemplateKey}, using hardcoded fallback", templateKey);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching/rendering database template {TemplateKey}, using fallback", templateKey);
+        }
+
+        // Fallback to hardcoded templates with simple string replacement
+        var defaultSubject = GetDefaultSubject(templateKey);
+        var defaultBody = GetDefaultTemplate(templateKey);
+
+        // Apply simple string replacement for fallback templates
+        var renderedSubject = ApplySimpleReplacements(defaultSubject, data);
+        var renderedBody = ApplySimpleReplacements(defaultBody, data);
+
+        return (renderedSubject, renderedBody);
+    }
+
+    /// <summary>
+    /// Applies simple {{variable}} replacement for fallback templates
+    /// </summary>
+    private string ApplySimpleReplacements(string template, object data)
+    {
+        if (string.IsNullOrEmpty(template) || data == null)
+            return template;
+
+        var result = template;
+        var properties = data.GetType().GetProperties();
+
+        foreach (var prop in properties)
+        {
+            var value = prop.GetValue(data)?.ToString() ?? string.Empty;
+            var placeholder = $"{{{{{prop.Name}}}}}";
+            result = result.Replace(placeholder, value);
+        }
+
+        return result;
     }
 
     private async Task<EmailSettings> GetEmailSettingsFromDatabaseAsync(CancellationToken cancellationToken)
@@ -408,112 +585,117 @@ public class EmailService : IEmailService
 
     public async Task SendEmailVerificationAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
     {
-        var templateBody = GetDefaultTemplate("EmailVerification");
-        var subject = GetDefaultSubject("EmailVerification");
-
         var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
 
-        // Replace placeholders
-        templateBody = templateBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{verificationUrl}}", verificationUrl);
+        var templateData = new
+        {
+            userName,
+            verificationUrl,
+            appName = "Stoocker",
+            email,
+            year = DateTime.UtcNow.Year
+        };
 
-        subject = subject.Replace("{{appName}}", "Stoocker");
+        var (subject, body) = await RenderTemplateAsync("email-verification", templateData, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {
             To = email,
             Subject = subject,
-            Body = templateBody,
+            Body = body,
             IsHtml = true
         }, cancellationToken);
     }
 
     public async Task SendTenantEmailVerificationAsync(string email, string code, string token, string userName, CancellationToken cancellationToken = default)
     {
-        var templateBody = GetDefaultTemplate("TenantEmailVerification");
-        var subject = GetDefaultSubject("TenantEmailVerification");
-
         var verificationUrl = $"{_emailSettings.BaseUrl}/register/verify-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
 
-        // Replace placeholders - includes both code and link
-        templateBody = templateBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{verificationCode}}", code)
-            .Replace("{{verificationUrl}}", verificationUrl);
+        var templateData = new
+        {
+            userName,
+            verificationCode = code,
+            verificationUrl,
+            appName = "Stocker",
+            email,
+            year = DateTime.UtcNow.Year
+        };
 
-        subject = subject.Replace("{{appName}}", "Stocker");
+        var (subject, body) = await RenderTemplateAsync("tenant-email-verification", templateData, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {
             To = email,
             Subject = subject,
-            Body = templateBody,
+            Body = body,
             IsHtml = true
         }, cancellationToken);
     }
 
     public async Task SendPasswordResetAsync(string email, string token, string userName, CancellationToken cancellationToken = default)
     {
-        var templateBody = GetDefaultTemplate("PasswordReset");
-        var subject = GetDefaultSubject("PasswordReset");
-        
-        var resetUrl = $"https://stoocker.app/reset-password?token={token}";
-        
-        // Replace placeholders
-        templateBody = templateBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{resetUrl}}", resetUrl);
-            
-        subject = subject.Replace("{{appName}}", "Stoocker");
+        var resetUrl = $"{_emailSettings.BaseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+
+        var templateData = new
+        {
+            userName,
+            resetUrl,
+            appName = "Stoocker",
+            email,
+            year = DateTime.UtcNow.Year
+        };
+
+        var (subject, body) = await RenderTemplateAsync("password-reset", templateData, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {
             To = email,
             Subject = subject,
-            Body = templateBody,
+            Body = body,
             IsHtml = true
         }, cancellationToken);
     }
 
     public async Task SendWelcomeEmailAsync(string email, string userName, string companyName, CancellationToken cancellationToken = default)
     {
-        var templateBody = GetDefaultTemplate("Welcome");
-        var subject = GetDefaultSubject("Welcome");
-        
-        var loginUrl = "https://stoocker.app/login";
-        
-        // Replace placeholders
-        templateBody = templateBody
-            .Replace("{{userName}}", userName)
-            .Replace("{{companyName}}", companyName)
-            .Replace("{{loginUrl}}", loginUrl);
-            
-        subject = subject.Replace("{{appName}}", "Stoocker");
+        var loginUrl = $"{_emailSettings.BaseUrl}/login";
+
+        var templateData = new
+        {
+            userName,
+            companyName,
+            loginUrl,
+            appName = "Stoocker",
+            email,
+            year = DateTime.UtcNow.Year
+        };
+
+        var (subject, body) = await RenderTemplateAsync("welcome", templateData, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {
             To = email,
             Subject = subject,
-            Body = templateBody,
+            Body = body,
             IsHtml = true
         }, cancellationToken);
     }
 
     public async Task SendInvitationEmailAsync(string email, string inviterName, string companyName, string inviteToken, CancellationToken cancellationToken = default)
     {
-        var subject = GetDefaultSubject("Invitation");
-        subject = subject
-            .Replace("{{inviterName}}", inviterName)
-            .Replace("{{companyName}}", companyName);
+        var inviteUrl = $"{_emailSettings.BaseUrl}/accept-invite?token={Uri.EscapeDataString(inviteToken)}";
 
-        var inviteUrl = $"https://stoocker.app/accept-invite?token={inviteToken}";
+        var templateData = new
+        {
+            inviterName,
+            companyName,
+            inviteUrl,
+            appName = "Stoocker",
+            email,
+            year = DateTime.UtcNow.Year
+        };
 
-        var body = $@"
-            <h2>Davetlisiniz!</h2>
-            <p>{inviterName} sizi {companyName} şirketine davet ediyor.</p>
-            <p>Daveti kabul etmek için <a href='{inviteUrl}'>buraya tıklayın</a>.</p>
-        ";
+        var (subject, body) = await RenderTemplateAsync("invitation", templateData, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {
@@ -534,70 +716,24 @@ public class EmailService : IEmailService
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var subject = $"Stocker'a Davet Edildiniz - {companyName}";
-
-        // URL-encode the token for safety
         var encodedToken = Uri.EscapeDataString(activationToken);
         var activationUrl = $"{_emailSettings.BaseUrl}/setup-password?userId={userId}&tenantId={tenantId}&token={encodedToken}";
 
-        var body = $@"
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-                    .button {{ display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }}
-                    .button:hover {{ opacity: 0.9; }}
-                    .info-box {{ background: #e8f4fd; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }}
-                    .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 12px; }}
-                    .company-name {{ color: #667eea; font-weight: bold; }}
-                    .inviter-name {{ color: #764ba2; font-weight: bold; }}
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h1>🎉 Stocker'a Hoşgeldiniz!</h1>
-                        <p style='margin: 0; opacity: 0.9;'>Hesap Aktivasyon Daveti</p>
-                    </div>
-                    <div class='content'>
-                        <p>Merhaba <strong>{userName}</strong>,</p>
+        var templateData = new
+        {
+            userName,
+            inviterName,
+            companyName,
+            activationUrl,
+            email,
+            userId,
+            tenantId,
+            appName = "Stocker",
+            expirationDays = 7,
+            year = DateTime.UtcNow.Year
+        };
 
-                        <p><span class='inviter-name'>{inviterName}</span> sizi <span class='company-name'>{companyName}</span> şirketinin Stocker hesabına davet etti!</p>
-
-                        <div class='info-box'>
-                            <strong>📋 Hesap Bilgileriniz:</strong>
-                            <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
-                                <li>E-posta: <strong>{email}</strong></li>
-                                <li>Şirket: <strong>{companyName}</strong></li>
-                            </ul>
-                        </div>
-
-                        <p>Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:</p>
-
-                        <div style='text-align: center;'>
-                            <a href='{activationUrl}' class='button'>Şifremi Belirle ve Hesabımı Aktifleştir</a>
-                        </div>
-
-                        <p style='font-size: 14px; color: #666;'>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
-                        <p style='word-break: break-all; color: #667eea; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px;'>{activationUrl}</p>
-
-                        <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;'>
-                            <strong>⏰ Önemli:</strong> Bu link <strong>7 gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
-                        </div>
-
-                        <p style='font-size: 14px; color: #666;'>Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.</p>
-                    </div>
-                    <div class='footer'>
-                        <p>© {DateTime.Now.Year} Stocker. Tüm hakları saklıdır.</p>
-                        <p style='color: #999;'>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.</p>
-                    </div>
-                </div>
-            </body>
-            </html>";
+        var (subject, body) = await RenderTemplateAsync("user-invitation", templateData, tenantId: tenantId, cancellationToken: cancellationToken);
 
         await SendAsync(new EmailMessage
         {

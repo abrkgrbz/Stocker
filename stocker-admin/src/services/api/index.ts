@@ -16,6 +16,7 @@ export { settingsService } from './settingsService';
 export { subscriptionService } from './subscriptionService';
 export { storageService } from './storageService';
 export { cmsService } from './cmsService';
+export { emailTemplateService } from './emailTemplateService';
 
 // Re-export types
 export type {
@@ -138,3 +139,13 @@ export type {
   BucketDeleteResult,
   DeleteMultipleBucketsResponse,
 } from './storageService';
+
+export type {
+  EmailTemplate,
+  EmailTemplateListDto,
+  CreateEmailTemplateDto,
+  UpdateEmailTemplateDto,
+  EmailTemplatePreviewDto,
+  EmailTemplateValidationDto,
+  GetEmailTemplatesQuery,
+} from './emailTemplateService';

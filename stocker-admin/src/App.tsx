@@ -64,6 +64,7 @@ const ApiStatusPage = lazy(() => import('./pages/ApiStatus'));
 const HangfireDashboard = lazy(() => import('./pages/Hangfire/HangfireDashboard'));
 const StoragePage = lazy(() => import('./pages/Storage'));
 const SecretsPage = lazy(() => import('./pages/Secrets'));
+const EmailTemplatesPage = lazy(() => import('./pages/EmailTemplates'));
 
 // CMS Pages
 const CMSDashboard = lazy(() => import('./pages/CMS/Dashboard'));
@@ -389,6 +390,11 @@ function App() {
           <Route path="secrets" element={
             <Suspense fallback={<PageLoader />}>
               <SecretsPage />
+            </Suspense>
+          } />
+          <Route path="email-templates" element={
+            <Suspense fallback={<PageLoader />}>
+              <EmailTemplatesPage />
             </Suspense>
           } />
         </Route>

@@ -6,7 +6,7 @@ using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
 
-public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbContext 
+public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbContext
 {
     public MasterDbContext(DbContextOptions<MasterDbContext> options) : base(options)
     {
@@ -14,6 +14,9 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // Tenant Management (Core - Stays in Master)
     public DbSet<Tenant> Tenants => Set<Tenant>();
+
+    // Email Templates (System-wide templates with Liquid support)
+    public DbSet<Domain.Master.Entities.EmailTemplate> EmailTemplates => Set<Domain.Master.Entities.EmailTemplate>();
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
     public DbSet<TenantHealthCheck> TenantHealthChecks => Set<TenantHealthCheck>();
     public DbSet<TenantBackup> TenantBackups => Set<TenantBackup>();

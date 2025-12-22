@@ -67,6 +67,9 @@ public static class ServiceCollectionExtensions
         // Add Security Audit Service
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
+        // Add Liquid Template Service (for database-driven email templates)
+        services.AddScoped<ILiquidTemplateService, LiquidTemplateService>();
+
         // Add Email Service
         // Use DevelopmentEmailService in Development, EmailService in Production
         var isDevelopment = environment?.IsDevelopment() ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";

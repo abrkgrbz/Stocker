@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Stocker.Application.Common.Interfaces;
+using Stocker.Application.Interfaces.Repositories;
 using Stocker.Persistence.Contexts;
 using Stocker.Persistence.Factories;
 using Stocker.Persistence.Monitoring;
@@ -50,6 +51,9 @@ public static class DependencyInjection
 
         // Register tenant health check service
         services.AddScoped<ITenantHealthCheckService, TenantHealthCheckService>();
+
+        // Register Email Template Repository
+        services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
 
         // Note: MigrationService is not registered as HostedService
         // Migrations should be handled explicitly or through a separate hosted service

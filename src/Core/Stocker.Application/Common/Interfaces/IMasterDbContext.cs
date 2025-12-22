@@ -16,6 +16,9 @@ public interface IMasterDbContext
     ChangeTracker ChangeTracker { get; }
     // Core Master entities (Stay in Master DB)
     DbSet<Tenant> Tenants { get; }
+
+    // Email Templates (System-wide templates with Liquid support)
+    DbSet<Domain.Master.Entities.EmailTemplate> EmailTemplates { get; }
     DbSet<MasterUser> MasterUsers { get; }
     DbSet<Package> Packages { get; }
     DbSet<PackageModule> PackageModules { get; }

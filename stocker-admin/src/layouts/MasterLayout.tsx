@@ -27,6 +27,7 @@ import {
   SecurityScanOutlined,
   CheckCircleOutlined,
   KeyOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import {
   Dropdown,
@@ -230,6 +231,14 @@ const MasterLayout: React.FC = () => {
       path: '/secrets',
       icon: <KeyOutlined />,
       keywords: ['secrets', 'key', 'vault', 'azure', 'keyvault', 'gizli', 'anahtar', 'şifre', 'password', 'connection', 'string']
+    },
+    {
+      type: 'page',
+      title: locale === 'tr' ? 'Email Şablonları' : 'Email Templates',
+      description: locale === 'tr' ? 'Email şablon yönetimi ve önizleme' : 'Email template management and preview',
+      path: '/email-templates',
+      icon: <MailOutlined />,
+      keywords: ['email', 'template', 'şablon', 'mail', 'eposta', 'notification', 'bildirim', 'liquid', 'smtp']
     },
     // Quick Actions
     // Common Terms
@@ -437,6 +446,11 @@ const MasterLayout: React.FC = () => {
           path: '/secrets',
           name: locale === 'tr' ? 'Secret Yönetimi' : 'Secrets',
           icon: <KeyOutlined />,
+        },
+        {
+          path: '/email-templates',
+          name: locale === 'tr' ? 'Email Şablonları' : 'Email Templates',
+          icon: <MailOutlined />,
         },
       ],
     },
