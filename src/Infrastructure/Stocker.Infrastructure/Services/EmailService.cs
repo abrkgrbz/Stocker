@@ -21,8 +21,8 @@ public class EmailService : IEmailService
     private readonly ILogger<EmailService> _logger;
     private readonly IEncryptionService _encryptionService;
     private readonly IMasterDbContext _masterContext;
-    private readonly IEmailTemplateRepository _templateRepository;
-    private readonly ILiquidTemplateService _liquidTemplateService;
+    private readonly IEmailTemplateRepository? _templateRepository;
+    private readonly ILiquidTemplateService? _liquidTemplateService;
     private readonly string _templatesPath;
 
     public EmailService(
@@ -30,8 +30,8 @@ public class EmailService : IEmailService
         ILogger<EmailService> logger,
         IEncryptionService encryptionService,
         IMasterDbContext masterContext,
-        IEmailTemplateRepository templateRepository,
-        ILiquidTemplateService liquidTemplateService)
+        IEmailTemplateRepository? templateRepository = null,
+        ILiquidTemplateService? liquidTemplateService = null)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
@@ -395,45 +395,53 @@ public class EmailService : IEmailService
         Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        try
+        // Only try database templates if repository and liquid service are available
+        if (_templateRepository != null && _liquidTemplateService != null)
         {
-            // Try to get template from database
-            var template = await _templateRepository.GetByKeyAsync(templateKey, language, tenantId, cancellationToken);
-
-            if (template != null)
+            try
             {
-                _logger.LogDebug("Using database template: {TemplateKey} (Language: {Language}, TenantId: {TenantId})",
-                    templateKey, language, tenantId);
+                // Try to get template from database
+                var template = await _templateRepository.GetByKeyAsync(templateKey, language, tenantId, cancellationToken);
 
-                // Render subject with Liquid
-                var subjectResult = await _liquidTemplateService.RenderAsync(template.Subject, data, cancellationToken);
-                if (!subjectResult.IsSuccess)
+                if (template != null)
                 {
-                    _logger.LogWarning("Failed to render subject for template {TemplateKey}: {Error}",
-                        templateKey, subjectResult.ErrorMessage);
-                    // Fall through to default template
+                    _logger.LogDebug("Using database template: {TemplateKey} (Language: {Language}, TenantId: {TenantId})",
+                        templateKey, language, tenantId);
+
+                    // Render subject with Liquid
+                    var subjectResult = await _liquidTemplateService.RenderAsync(template.Subject, data, cancellationToken);
+                    if (!subjectResult.IsSuccess)
+                    {
+                        _logger.LogWarning("Failed to render subject for template {TemplateKey}: {Error}",
+                            templateKey, subjectResult.ErrorMessage);
+                        // Fall through to default template
+                    }
+                    else
+                    {
+                        // Render body with Liquid
+                        var bodyResult = await _liquidTemplateService.RenderAsync(template.HtmlBody, data, cancellationToken);
+                        if (bodyResult.IsSuccess)
+                        {
+                            return (subjectResult.RenderedContent!, bodyResult.RenderedContent!);
+                        }
+
+                        _logger.LogWarning("Failed to render body for template {TemplateKey}: {Error}",
+                            templateKey, bodyResult.ErrorMessage);
+                    }
                 }
                 else
                 {
-                    // Render body with Liquid
-                    var bodyResult = await _liquidTemplateService.RenderAsync(template.HtmlBody, data, cancellationToken);
-                    if (bodyResult.IsSuccess)
-                    {
-                        return (subjectResult.RenderedContent!, bodyResult.RenderedContent!);
-                    }
-
-                    _logger.LogWarning("Failed to render body for template {TemplateKey}: {Error}",
-                        templateKey, bodyResult.ErrorMessage);
+                    _logger.LogDebug("No database template found for {TemplateKey}, using hardcoded fallback", templateKey);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogDebug("No database template found for {TemplateKey}, using hardcoded fallback", templateKey);
+                _logger.LogError(ex, "Error fetching/rendering database template {TemplateKey}, using fallback", templateKey);
             }
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error fetching/rendering database template {TemplateKey}, using fallback", templateKey);
+            _logger.LogDebug("Template repository or liquid service not available, using hardcoded fallback for {TemplateKey}", templateKey);
         }
 
         // Fallback to hardcoded templates with simple string replacement
