@@ -10,7 +10,6 @@ import {
   Tooltip,
   Modal,
   Spin,
-  App,
 } from 'antd';
 import {
   ThunderboltOutlined,
@@ -40,6 +39,8 @@ import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/compone
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
+
+const { confirm } = Modal;
 
 // Trigger type labels - Synced with backend WorkflowTriggerType enum
 const triggerTypeLabels: Record<WorkflowTriggerType, { label: string; color: string }> = {
@@ -146,7 +147,6 @@ function WorkflowsStats({ workflows, loading }: WorkflowsStatsProps) {
 
 export default function WorkflowsPage() {
   const router = useRouter();
-  const { modal } = App.useApp();
   const [workflows, setWorkflows] = useState<WorkflowDto[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -192,7 +192,7 @@ export default function WorkflowsPage() {
 
   // Handle delete workflow
   const handleDelete = (id: number) => {
-    modal.confirm({
+    confirm({
       title: 'Workflow Sil',
       content: 'Bu workflow\'u silmek istediğinize emin misiniz?',
       okText: 'Sil',
