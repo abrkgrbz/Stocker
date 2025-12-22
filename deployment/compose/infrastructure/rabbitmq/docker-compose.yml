@@ -5,11 +5,9 @@ version: '3.8'
 
 services:
   rabbitmq:
-    # Build custom image with delayed message exchange plugin
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: stocker/rabbitmq:3.13-management-delayed
+    # Use pre-built image with delayed message exchange plugin
+    # https://github.com/heidiks/rabbitmq-delayed-message-exchange
+    image: heidiks/rabbitmq-delayed-message-exchange:3.13.0-management
     container_name: rabbitmq
     restart: unless-stopped
     hostname: rabbitmq-host
