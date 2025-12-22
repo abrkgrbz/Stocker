@@ -26,6 +26,8 @@ export default function NewWorkflowPage() {
         steps: [], // Start with empty steps, user can add them in the detail page
       };
 
+      console.log('🔥 Workflow Command:', JSON.stringify(command, null, 2));
+
       const workflowId = await CRMService.createWorkflow(command);
       showSuccess('Workflow olusturuldu. Simdi aksiyonlari ekleyebilirsiniz.');
       router.push(`/crm/workflows/${workflowId}`);
