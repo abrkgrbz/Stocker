@@ -83,10 +83,10 @@ public class WorkflowsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateWorkflow(int id, [FromBody] UpdateWorkflowCommand command)
     {
-        if (id != command.WorkflowId)
-            return BadRequest("Workflow ID mismatch");
+        // Use URL id - more RESTful approach (body id is ignored)
+        var commandWithId = command with { WorkflowId = id };
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(commandWithId);
 
         if (!result.IsSuccess)
             return BadRequest(result.Error);
