@@ -214,17 +214,17 @@ export default function CreateWorkflowDrawer({
                   ⏰ <strong>Zamanlanmış</strong> - Belirli zamanlarda otomatik çalışır
                 </Space>
               </Option>
-              <Option value="OnCreate">
+              <Option value="EntityCreated">
                 <Space>
                   ➕ <strong>Kayıt Oluşturulduğunda</strong> - Yeni kayıt eklendiğinde
                 </Space>
               </Option>
-              <Option value="OnUpdate">
+              <Option value="EntityUpdated">
                 <Space>
                   ✏️ <strong>Kayıt Güncellendiğinde</strong> - Mevcut kayıt güncellendiğinde
                 </Space>
               </Option>
-              <Option value="OnStatusChange">
+              <Option value="StatusChanged">
                 <Space>
                   🔄 <strong>Durum Değiştiğinde</strong> - Status alanı değiştiğinde
                 </Space>
@@ -273,7 +273,7 @@ export default function CreateWorkflowDrawer({
             />
           )}
 
-          {selectedTriggerType === 'OnCreate' && (
+          {selectedTriggerType === 'EntityCreated' && (
             <Alert
               type="info"
               message="Kayıt Oluşturma Tetikleyicisi"
@@ -282,7 +282,7 @@ export default function CreateWorkflowDrawer({
             />
           )}
 
-          {selectedTriggerType === 'OnUpdate' && (
+          {selectedTriggerType === 'EntityUpdated' && (
             <Alert
               type="info"
               message="Kayıt Güncelleme Tetikleyicisi"
@@ -291,7 +291,7 @@ export default function CreateWorkflowDrawer({
             />
           )}
 
-          {selectedTriggerType === 'OnStatusChange' && (
+          {selectedTriggerType === 'StatusChanged' && (
             <Alert
               type="info"
               message="Durum Değişimi Tetikleyicisi"

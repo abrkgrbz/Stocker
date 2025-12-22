@@ -21,13 +21,17 @@ const entityTypes = [
   { value: 'Campaign', label: 'Kampanya' },
 ];
 
-// Trigger type options
+// Trigger type options - Synced with backend WorkflowTriggerType enum
 const triggerTypeOptions = [
   { value: 'Manual', label: 'Manuel' },
   { value: 'Scheduled', label: 'Zamanlanmış' },
-  { value: 'OnCreate', label: 'Kayıt Oluşturulduğunda' },
-  { value: 'OnUpdate', label: 'Kayıt Güncellendiğinde' },
-  { value: 'OnStatusChange', label: 'Durum Değiştiğinde' },
+  { value: 'EntityCreated', label: 'Kayıt Oluşturulduğunda' },
+  { value: 'EntityUpdated', label: 'Kayıt Güncellendiğinde' },
+  { value: 'StatusChanged', label: 'Durum Değiştiğinde' },
+  { value: 'DealStageChanged', label: 'Anlaşma Aşaması Değiştiğinde' },
+  { value: 'FieldCondition', label: 'Alan Koşulu Sağlandığında' },
+  { value: 'AmountThreshold', label: 'Tutar Eşiği Aşıldığında' },
+  { value: 'DueDateEvent', label: 'Vade Tarihi Yaklaştığında' },
 ];
 
 interface WorkflowFormProps {

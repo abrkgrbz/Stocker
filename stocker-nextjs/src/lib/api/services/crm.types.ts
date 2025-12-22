@@ -703,13 +703,20 @@ export interface AddDealProductCommand {
 // WORKFLOW
 // =====================================
 
+/**
+ * Backend: WorkflowTriggerType (WorkflowTriggerType.cs)
+ * Synchronized with C# enum
+ */
 export type WorkflowTriggerType =
   | 'Manual'
-  | 'OnCreate'
-  | 'OnUpdate'
-  | 'OnDelete'
-  | 'OnStatusChange'
-  | 'Scheduled';
+  | 'EntityCreated'
+  | 'EntityUpdated'
+  | 'StatusChanged'
+  | 'DealStageChanged'
+  | 'Scheduled'
+  | 'FieldCondition'
+  | 'AmountThreshold'
+  | 'DueDateEvent';
 
 export type WorkflowActionType =
   | 'SendEmail'
