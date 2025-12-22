@@ -93,7 +93,7 @@ export const confirmDelete = async (
   const result = await Swal.fire({
     title: `${entityName} Sil`,
     html: `
-      <p><strong>${itemName}</strong> ${entityName.toLowerCase()}ünü silmek istediğinizden emin misiniz?</p>
+      <p><strong>${itemName}</strong> adlı ${entityName.toLowerCase()}yı silmek istediğinizden emin misiniz?</p>
       ${additionalWarning ? `<p style="color: #ff4d4f; margin-top: 12px;">⚠️ ${additionalWarning}</p>` : ''}
     `,
     icon: 'warning',
