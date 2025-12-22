@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  /* Slate 900 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Fix for Electron black screen issue */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dashboard Sidebar Styling - Matches stocker-nextjs */
+.dashboard-sider .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-sider .ant-menu-item-selected {
+  background-color: #f1f5f9 !important;
+  /* bg-slate-100 */
+  color: #0f172a !important;
+  /* text-slate-900 */
+  border-left: 4px solid #0f172a !important;
+  font-weight: 500;
+}
+
+.dashboard-sider .ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background-color: #f8fafc !important;
+  /* bg-slate-50 */
+  color: #334155 !important;
+  /* text-slate-700 */
+}
+
+/* CRM/Enterprise Table Styling */
+.ant-table-thead>tr>th {
+  text-transform: uppercase !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  /* text-slate-500 */
+  letter-spacing: 0.05em !important;
+  background: #f8fafc !important;
+  /* bg-slate-50 */
+  border-bottom: 1px solid #e2e8f0 !important;
+  /* border-slate-200 */
+}
+
+.ant-table-tbody>tr>td {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* Base Ant Design Overrides */
+.ant-btn-primary {
+  background-color: #0f172a !important;
+  border-color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #334155 !important;
+  border-color: #334155 !important;
+}
+
+.ant-card {
+  border-radius: 8px !important;
+}

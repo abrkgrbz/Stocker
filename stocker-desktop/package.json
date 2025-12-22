@@ -1,0 +1,155 @@
+{
+  "name": "stocker-desktop",
+  "version": "1.0.0",
+  "description": "Stocker ERP - Desktop Application",
+  "main": "./out/main/index.js",
+  "author": "Stocker Team",
+  "license": "MIT",
+  "homepage": "https://stocker.app",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "postinstall": "electron-builder install-app-deps",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "typecheck": "tsc --noEmit",
+    "typecheck:main": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:preload": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:renderer": "tsc --noEmit -p tsconfig.web.json",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "package": "electron-builder --dir",
+    "package:win": "electron-builder --win",
+    "package:mac": "electron-builder --mac",
+    "package:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "electron-log": "^5.0.0",
+    "electron-store": "^10.0.0",
+    "multicast-dns": "^7.2.5",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@electron-toolkit/eslint-config-ts": "^2.0.0",
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-query": "^5.90.2",
+    "@types/multicast-dns": "^7.2.4",
+    "@types/node": "^22.19.3",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "antd": "^5.27.4",
+    "autoprefixer": "^10.4.21",
+    "dayjs": "^1.11.10",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^3.0.0",
+    "eslint": "^8.57.0",
+    "i18next": "^24.0.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.5.3",
+    "prisma": "^6.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.65.0",
+    "react-i18next": "^15.0.0",
+    "react-router-dom": "^7.0.0",
+    "recharts": "^2.13.0",
+    "sonner": "^2.0.0",
+    "sweetalert2": "^11.15.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0",
+    "vite": "^6.0.0",
+    "zod": "^3.24.0",
+    "zustand": "^5.0.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "build": {
+    "appId": "com.stocker.desktop",
+    "productName": "Stocker",
+    "copyright": "Copyright © 2024 Stocker",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "!out/**/*.map",
+      "node_modules/.prisma/**/*",
+      "node_modules/@prisma/client/**/*",
+      "node_modules/@prisma/engines/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "prisma/schema.prisma",
+        "to": "prisma/schema.prisma"
+      },
+      {
+        "from": "node_modules/.prisma",
+        "to": "node_modules/.prisma"
+      },
+      {
+        "from": "node_modules/@prisma/client",
+        "to": "node_modules/@prisma/client"
+      },
+      {
+        "from": "node_modules/@prisma/engines",
+        "to": "node_modules/@prisma/engines"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/.prisma/**/*",
+      "node_modules/@prisma/client/**/*",
+      "node_modules/@prisma/engines/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "resources/icon.png",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.54.0",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.1.18",
+    "lightningcss-win32-x64-msvc": "^1.28.0"
+  }
+}

@@ -71,7 +71,7 @@ public class GetEmailTemplatesListQueryHandler : IRequestHandler<GetEmailTemplat
         });
     }
 
-    private static EmailTemplateDto MapToDto(EmailTemplate template)
+    private static EmailTemplateDto MapToDto(Domain.Master.Entities.EmailTemplate template)
     {
         var variables = new List<string>();
         try

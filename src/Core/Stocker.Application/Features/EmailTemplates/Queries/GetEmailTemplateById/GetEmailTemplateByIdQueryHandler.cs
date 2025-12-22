@@ -31,7 +31,7 @@ public class GetEmailTemplateByIdQueryHandler : IRequestHandler<GetEmailTemplate
         return Result<EmailTemplateDto>.Success(MapToDto(template));
     }
 
-    private static EmailTemplateDto MapToDto(EmailTemplate template)
+    private static EmailTemplateDto MapToDto(Domain.Master.Entities.EmailTemplate template)
     {
         var variables = new List<string>();
         try

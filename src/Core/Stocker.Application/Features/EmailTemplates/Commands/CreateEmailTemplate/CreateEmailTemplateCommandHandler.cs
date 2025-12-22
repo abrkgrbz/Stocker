@@ -49,7 +49,7 @@ public class CreateEmailTemplateCommandHandler : IRequestHandler<CreateEmailTemp
             var variablesJson = JsonSerializer.Serialize(request.Variables);
 
             // Create system template using factory method
-            var template = EmailTemplate.CreateSystem(
+            var template = Domain.Master.Entities.EmailTemplate.CreateSystem(
                 templateKey: request.TemplateKey,
                 name: request.Name,
                 subject: request.Subject,
@@ -79,7 +79,7 @@ public class CreateEmailTemplateCommandHandler : IRequestHandler<CreateEmailTemp
         }
     }
 
-    private static EmailTemplateDto MapToDto(EmailTemplate template)
+    private static EmailTemplateDto MapToDto(Domain.Master.Entities.EmailTemplate template)
     {
         var variables = new List<string>();
         try

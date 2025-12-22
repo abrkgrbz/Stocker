@@ -1,0 +1,1682 @@
+// Stocker Desktop - Prisma Schema for SQLite
+// Migrated from .NET EF Core entities
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// COMMON / SHARED
+// ============================================
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  role           String    @default("User") // Admin, Manager, User
+  isActive       Boolean   @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+
+  // Relations
+  salesOrders    SalesOrder[]
+  approvedOrders SalesOrder[] @relation("ApprovedBy")
+  stockMovements StockMovement[]
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  entityType   String
+  entityId     String
+  action       String   // Create, Update, Delete
+  oldValues    String?  // JSON
+  newValues    String?  // JSON
+  userId       String
+  ipAddress    String?
+  userAgent    String?
+  signature    String?  // Hash chain signature for tamper detection
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Settings {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  category  String   @default("General")
+  createdAt DateTime @default(now())
+  updatedAt DateTime?
+}
+
+model Company {
+  id                String    @id @default(uuid())
+  name              String
+  legalName         String?
+  taxId             String?
+  address           String?
+  city              String?
+  state             String?
+  country           String?
+  postalCode        String?
+  phone             String?
+  email             String?
+  website           String?
+  logoUrl           String?
+  currency          String    @default("TRY")
+  locale            String    @default("tr-TR")
+  timezone          String    @default("Europe/Istanbul")
+  fiscalYearStart   Int       @default(1) // Month 1-12
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+}
+
+// ============================================
+// INVENTORY MODULE
+// ============================================
+
+model Category {
+  id               Int       @id @default(autoincrement())
+  code             String    @unique
+  name             String
+  description      String?
+  parentCategoryId Int?
+  isActive         Boolean   @default(true)
+  imageUrl         String?
+  displayOrder     Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?
+  createdBy        String?
+  updatedBy        String?
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime?
+
+  parentCategory Category?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  subCategories  Category[] @relation("CategoryHierarchy")
+  products       Product[]
+
+  @@index([parentCategoryId])
+  @@index([isActive])
+}
+
+model Brand {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  name        String
+  description String?
+  logoUrl     String?
+  website     String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  products Product[]
+}
+
+model Unit {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  name         String
+  symbol       String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+
+  products Product[]
+}
+
+model Warehouse {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  name        String
+  description String?
+  address     String?
+  city        String?
+  isActive    Boolean   @default(true)
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  stocks         Stock[]
+  stockMovements StockMovement[]
+  locations      Location[]
+  salesOrders    SalesOrder[]
+}
+
+model Location {
+  id            Int       @id @default(autoincrement())
+  code          String
+  name          String
+  warehouseId   Int
+  zone          String?
+  aisle         String?
+  rack          String?
+  shelf         String?
+  bin           String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+
+  warehouse             Warehouse       @relation(fields: [warehouseId], references: [id])
+  stocks                Stock[]
+  stockMovementsFrom    StockMovement[] @relation("FromLocation")
+  stockMovementsTo      StockMovement[] @relation("ToLocation")
+
+  @@unique([warehouseId, code])
+  @@index([warehouseId])
+}
+
+model Product {
+  id              Int       @id @default(autoincrement())
+  code            String    @unique
+  name            String
+  description     String?
+  barcode         String?
+  sku             String?
+  productType     ProductType @default(FINISHED)
+  categoryId      Int
+  brandId         Int?
+  supplierId      Int?
+  unit            String    @default("Adet")
+  unitId          Int?
+
+  // Money value object - UnitPrice
+  unitPriceAmount   Decimal   @default(0)
+  unitPriceCurrency String    @default("TRY")
+
+  // Money value object - CostPrice
+  costPriceAmount   Decimal?
+  costPriceCurrency String?
+
+  vatRate           Decimal   @default(18)
+  minimumStock      Decimal   @default(0)
+  maximumStock      Decimal   @default(0)
+  reorderPoint      Decimal   @default(0)
+  reorderQuantity   Decimal   @default(0)
+  leadTimeDays      Int       @default(0)
+
+  // Physical properties
+  weight            Decimal?
+  weightUnit        String?
+  length            Decimal?
+  width             Decimal?
+  height            Decimal?
+  dimensionUnit     String?
+
+  isActive          Boolean   @default(true)
+  isStockTracked    Boolean   @default(true)
+  isSerialTracked   Boolean   @default(false)
+  isLotTracked      Boolean   @default(false)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+
+  // Relations
+  category          Category          @relation(fields: [categoryId], references: [id])
+  brand             Brand?            @relation(fields: [brandId], references: [id])
+  supplier          Supplier?         @relation(fields: [supplierId], references: [id])
+  unitEntity        Unit?             @relation(fields: [unitId], references: [id])
+
+  stocks            Stock[]
+  stockMovements    StockMovement[]
+  images            ProductImage[]
+  variants          ProductVariant[]
+  supplierProducts  SupplierProduct[]
+  attributeValues   ProductAttributeValue[]
+  serialNumbers     SerialNumber[]
+  lotBatches        LotBatch[]
+  salesOrderItems   SalesOrderItem[]
+  invoiceItems      InvoiceItem[]
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([supplierId])
+  @@index([isActive])
+  @@index([barcode])
+  @@index([sku])
+}
+
+enum ProductType {
+  RAW
+  SEMI_FINISHED
+  FINISHED
+  SERVICE
+  CONSUMABLE
+  FIXED_ASSET
+}
+
+model ProductImage {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  url         String
+  altText     String?
+  isPrimary   Boolean   @default(false)
+  displayOrder Int      @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  sku         String    @unique
+  name        String
+  barcode     String?
+  priceAmount Decimal   @default(0)
+  priceCurrency String  @default("TRY")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductAttribute {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  type        AttributeType @default(TEXT)
+  isRequired  Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  values ProductAttributeValue[]
+}
+
+enum AttributeType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  DATE
+  SELECT
+  MULTI_SELECT
+}
+
+model ProductAttributeValue {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  attributeId  Int
+  value        String
+  createdAt    DateTime  @default(now())
+
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute ProductAttribute @relation(fields: [attributeId], references: [id])
+
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@index([attributeId])
+}
+
+model Supplier {
+  id              Int       @id @default(autoincrement())
+  code            String    @unique
+  name            String
+  contactPerson   String?
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  country         String?
+  taxId           String?
+  paymentTerms    String?
+  rating          Int?      // 1-5
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  products         Product[]
+  supplierProducts SupplierProduct[]
+}
+
+model SupplierProduct {
+  id              Int       @id @default(autoincrement())
+  supplierId      Int
+  productId       Int
+  supplierCode    String?
+  supplierName    String?
+  unitPriceAmount Decimal   @default(0)
+  unitPriceCurrency String  @default("TRY")
+  leadTimeDays    Int       @default(0)
+  minOrderQty     Decimal   @default(1)
+  isPreferred     Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@unique([supplierId, productId])
+  @@index([supplierId])
+  @@index([productId])
+}
+
+model Stock {
+  id                Int       @id @default(autoincrement())
+  productId         Int
+  warehouseId       Int
+  locationId        Int?
+  quantity          Decimal   @default(0)
+  reservedQuantity  Decimal   @default(0)
+  serialNumber      String?
+  lotNumber         String?
+  expiryDate        DateTime?
+  lastMovementDate  DateTime  @default(now())
+  lastCountDate     DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+
+  product   Product   @relation(fields: [productId], references: [id])
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  location  Location? @relation(fields: [locationId], references: [id])
+
+  @@unique([productId, warehouseId, locationId, lotNumber, serialNumber])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([locationId])
+}
+
+model StockMovement {
+  id                      Int       @id @default(autoincrement())
+  documentNumber          String
+  movementDate            DateTime  @default(now())
+  productId               Int
+  warehouseId             Int
+  fromLocationId          Int?
+  toLocationId            Int?
+  movementType            StockMovementType
+  quantity                Decimal
+  unitCost                Decimal   @default(0)
+  serialNumber            String?
+  lotNumber               String?
+  referenceDocumentType   String?
+  referenceDocumentNumber String?
+  referenceDocumentId     Int?
+  description             String?
+  userId                  String
+  isReversed              Boolean   @default(false)
+  reversedMovementId      Int?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime?
+  createdBy               String?
+  updatedBy               String?
+  isDeleted               Boolean   @default(false)
+  deletedAt               DateTime?
+
+  product          Product         @relation(fields: [productId], references: [id])
+  warehouse        Warehouse       @relation(fields: [warehouseId], references: [id])
+  fromLocation     Location?       @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocation       Location?       @relation("ToLocation", fields: [toLocationId], references: [id])
+  user             User            @relation(fields: [userId], references: [id])
+  reversedMovement StockMovement?  @relation("ReversedMovement", fields: [reversedMovementId], references: [id])
+  reversals        StockMovement[] @relation("ReversedMovement")
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([movementDate])
+  @@index([movementType])
+  @@index([documentNumber])
+}
+
+enum StockMovementType {
+  PURCHASE
+  SALES
+  PURCHASE_RETURN
+  SALES_RETURN
+  TRANSFER
+  PRODUCTION
+  CONSUMPTION
+  ADJUSTMENT_INCREASE
+  ADJUSTMENT_DECREASE
+  OPENING
+  COUNTING
+  DAMAGE
+  LOSS
+  FOUND
+}
+
+model SerialNumber {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  serialNumber String    @unique
+  status       SerialNumberStatus @default(AVAILABLE)
+  purchaseDate DateTime?
+  soldDate     DateTime?
+  warrantyEnd  DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([status])
+}
+
+enum SerialNumberStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RETURNED
+  DEFECTIVE
+  SCRAPPED
+}
+
+model LotBatch {
+  id              Int       @id @default(autoincrement())
+  productId       Int
+  lotNumber       String
+  batchNumber     String?
+  manufactureDate DateTime?
+  expiryDate      DateTime?
+  quantity        Decimal   @default(0)
+  status          LotBatchStatus @default(AVAILABLE)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([productId, lotNumber])
+  @@index([productId])
+  @@index([expiryDate])
+  @@index([status])
+}
+
+enum LotBatchStatus {
+  AVAILABLE
+  RESERVED
+  EXPIRED
+  QUARANTINE
+  CONSUMED
+}
+
+model StockCount {
+  id              Int       @id @default(autoincrement())
+  countNumber     String    @unique
+  warehouseId     Int
+  countDate       DateTime  @default(now())
+  status          StockCountStatus @default(DRAFT)
+  countType       StockCountType @default(FULL)
+  notes           String?
+  completedAt     DateTime?
+  completedBy     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  items StockCountItem[]
+
+  @@index([warehouseId])
+  @@index([status])
+}
+
+enum StockCountStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum StockCountType {
+  FULL
+  PARTIAL
+  CYCLE
+}
+
+model StockCountItem {
+  id              Int       @id @default(autoincrement())
+  stockCountId    Int
+  productId       Int
+  locationId      Int?
+  systemQuantity  Decimal
+  countedQuantity Decimal?
+  variance        Decimal?
+  notes           String?
+  countedAt       DateTime?
+  countedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  stockCount StockCount @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+
+  @@index([stockCountId])
+  @@index([productId])
+}
+
+model StockTransfer {
+  id                  Int       @id @default(autoincrement())
+  transferNumber      String    @unique
+  fromWarehouseId     Int
+  toWarehouseId       Int
+  transferDate        DateTime  @default(now())
+  expectedArrivalDate DateTime?
+  actualArrivalDate   DateTime?
+  status              TransferStatus @default(DRAFT)
+  transferType        TransferType @default(INTERNAL)
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime?
+  createdBy           String?
+  updatedBy           String?
+  isDeleted           Boolean   @default(false)
+  deletedAt           DateTime?
+
+  items StockTransferItem[]
+
+  @@index([fromWarehouseId])
+  @@index([toWarehouseId])
+  @@index([status])
+}
+
+enum TransferStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  IN_TRANSIT
+  RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum TransferType {
+  INTERNAL
+  INTER_COMPANY
+  RETURN_TO_VENDOR
+}
+
+model StockTransferItem {
+  id                Int       @id @default(autoincrement())
+  stockTransferId   Int
+  productId         Int
+  requestedQuantity Decimal
+  sentQuantity      Decimal?
+  receivedQuantity  Decimal?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+
+  stockTransfer StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
+
+  @@index([stockTransferId])
+  @@index([productId])
+}
+
+model ReorderRule {
+  id              Int       @id @default(autoincrement())
+  productId       Int       @unique
+  warehouseId     Int?
+  reorderPoint    Decimal
+  reorderQuantity Decimal
+  minQuantity     Decimal   @default(0)
+  maxQuantity     Decimal?
+  leadTimeDays    Int       @default(0)
+  isActive        Boolean   @default(true)
+  status          ReorderRuleStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  suggestions ReorderSuggestion[]
+
+  @@index([warehouseId])
+  @@index([isActive])
+}
+
+enum ReorderRuleStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model ReorderSuggestion {
+  id              Int       @id @default(autoincrement())
+  reorderRuleId   Int
+  productId       Int
+  warehouseId     Int?
+  currentStock    Decimal
+  suggestedQty    Decimal
+  estimatedCost   Decimal?
+  status          ReorderSuggestionStatus @default(PENDING)
+  processedAt     DateTime?
+  processedBy     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  reorderRule ReorderRule @relation(fields: [reorderRuleId], references: [id])
+
+  @@index([reorderRuleId])
+  @@index([productId])
+  @@index([status])
+}
+
+enum ReorderSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ORDERED
+  CANCELLED
+}
+
+model PriceList {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  name        String
+  description String?
+  currency    String    @default("TRY")
+  startDate   DateTime?
+  endDate     DateTime?
+  isDefault   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  items PriceListItem[]
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+}
+
+model PriceListItem {
+  id            Int       @id @default(autoincrement())
+  priceListId   Int
+  productId     Int
+  priceAmount   Decimal
+  priceCurrency String    @default("TRY")
+  minQuantity   Decimal   @default(1)
+  maxQuantity   Decimal?
+  discountRate  Decimal   @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+
+  priceList PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+
+  @@unique([priceListId, productId, minQuantity])
+  @@index([priceListId])
+  @@index([productId])
+}
+
+// ============================================
+// SALES MODULE
+// ============================================
+
+model SalesOrder {
+  id                  String    @id @default(uuid())
+  orderNumber         String    @unique
+  orderDate           DateTime  @default(now())
+  deliveryDate        DateTime?
+  customerId          String?
+  customerName        String?
+  customerEmail       String?
+  branchId            String?
+  warehouseId         Int?
+  customerOrderNumber String?
+  subTotal            Decimal   @default(0)
+  discountAmount      Decimal   @default(0)
+  discountRate        Decimal   @default(0)
+  vatAmount           Decimal   @default(0)
+  totalAmount         Decimal   @default(0)
+  currency            String    @default("TRY")
+  exchangeRate        Decimal   @default(1)
+  status              SalesOrderStatus @default(DRAFT)
+  shippingAddress     String?
+  billingAddress      String?
+  notes               String?
+  salesPersonId       String?
+  salesPersonName     String?
+  isApproved          Boolean   @default(false)
+  approvedBy          String?
+  approvedDate        DateTime?
+  isCancelled         Boolean   @default(false)
+  cancellationReason  String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime?
+  createdBy           String?
+  updatedBy           String?
+  isDeleted           Boolean   @default(false)
+  deletedAt           DateTime?
+
+  // Relations
+  customer            Customer? @relation(fields: [customerId], references: [id])
+  warehouse           Warehouse? @relation(fields: [warehouseId], references: [id])
+  salesPerson         User?     @relation(fields: [salesPersonId], references: [id])
+  approver            User?     @relation("ApprovedBy", fields: [approvedBy], references: [id])
+  items               SalesOrderItem[]
+  invoices            Invoice[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([salesPersonId])
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  APPROVED
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model SalesOrderItem {
+  id                String    @id @default(uuid())
+  salesOrderId      String
+  productId         Int?
+  productCode       String
+  productName       String
+  description       String?
+  unit              String    @default("Adet")
+  quantity          Decimal
+  unitPrice         Decimal
+  discountRate      Decimal   @default(0)
+  discountAmount    Decimal   @default(0)
+  vatRate           Decimal   @default(18)
+  vatAmount         Decimal   @default(0)
+  lineTotal         Decimal   @default(0)
+  lineNumber        Int
+  deliveredQuantity Decimal   @default(0)
+  isDelivered       Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product?   @relation(fields: [productId], references: [id])
+
+  @@index([salesOrderId])
+  @@index([productId])
+}
+
+model Invoice {
+  id                String    @id @default(uuid())
+  invoiceNumber     String    @unique
+  invoiceDate       DateTime  @default(now())
+  dueDate           DateTime?
+  salesOrderId      String?
+  customerId        String?
+  customerName      String?
+  customerEmail     String?
+  customerTaxNumber String?
+  customerAddress   String?
+  subTotal          Decimal   @default(0)
+  discountAmount    Decimal   @default(0)
+  discountRate      Decimal   @default(0)
+  vatAmount         Decimal   @default(0)
+  totalAmount       Decimal   @default(0)
+  paidAmount        Decimal   @default(0)
+  remainingAmount   Decimal   @default(0)
+  currency          String    @default("TRY")
+  exchangeRate      Decimal   @default(1)
+  status            InvoiceStatus @default(DRAFT)
+  type              InvoiceType @default(SALES)
+  notes             String?
+  eInvoiceId        String?
+  isEInvoice        Boolean   @default(false)
+  eInvoiceDate      DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+
+  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id])
+  customer   Customer?   @relation(fields: [customerId], references: [id])
+  items      InvoiceItem[]
+  payments   Payment[]
+
+  @@index([salesOrderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([invoiceDate])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoiceType {
+  SALES
+  RETURN
+  CREDIT
+  DEBIT
+}
+
+model InvoiceItem {
+  id             String    @id @default(uuid())
+  invoiceId      String
+  productId      Int?
+  productCode    String
+  productName    String
+  description    String?
+  unit           String    @default("Adet")
+  quantity       Decimal
+  unitPrice      Decimal
+  discountRate   Decimal   @default(0)
+  discountAmount Decimal   @default(0)
+  vatRate        Decimal   @default(18)
+  vatAmount      Decimal   @default(0)
+  lineTotal      Decimal   @default(0)
+  lineNumber     Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@index([invoiceId])
+  @@index([productId])
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  paymentNumber   String    @unique
+  invoiceId       String?
+  customerId      String?
+  paymentDate     DateTime  @default(now())
+  amount          Decimal
+  currency        String    @default("TRY")
+  exchangeRate    Decimal   @default(1)
+  paymentMethod   PaymentMethod @default(CASH)
+  status          PaymentStatus @default(PENDING)
+  reference       String?
+  notes           String?
+  isRefund        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  invoice  Invoice?  @relation(fields: [invoiceId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([paymentDate])
+  @@index([status])
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  CHECK
+  ONLINE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+model Quotation {
+  id              String    @id @default(uuid())
+  quotationNumber String    @unique
+  quotationDate   DateTime  @default(now())
+  validUntil      DateTime?
+  customerId      String?
+  customerName    String?
+  customerEmail   String?
+  subTotal        Decimal   @default(0)
+  discountAmount  Decimal   @default(0)
+  vatAmount       Decimal   @default(0)
+  totalAmount     Decimal   @default(0)
+  currency        String    @default("TRY")
+  status          QuotationStatus @default(DRAFT)
+  notes           String?
+  terms           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  customer Customer?       @relation(fields: [customerId], references: [id])
+  items    QuotationItem[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+model QuotationItem {
+  id             String    @id @default(uuid())
+  quotationId    String
+  productId      Int?
+  productCode    String
+  productName    String
+  description    String?
+  unit           String    @default("Adet")
+  quantity       Decimal
+  unitPrice      Decimal
+  discountRate   Decimal   @default(0)
+  vatRate        Decimal   @default(18)
+  lineTotal      Decimal   @default(0)
+  lineNumber     Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+
+  @@index([quotationId])
+  @@index([productId])
+}
+
+// ============================================
+// CRM MODULE
+// ============================================
+
+model Customer {
+  id                String    @id @default(uuid())
+  companyName       String
+  email             String    @unique
+  phone             String?
+  website           String?
+  industry          String?
+  address           String?
+  city              String?
+  state             String?
+  country           String?
+  postalCode        String?
+  annualRevenue     Decimal?
+  numberOfEmployees Int?
+  description       String?
+  customerType      CustomerType @default(CORPORATE)
+  status            CustomerStatus @default(ACTIVE)
+  creditLimit       Decimal   @default(0)
+  taxId             String?
+  paymentTerms      String?
+  contactPerson     String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  createdBy         String?
+  updatedBy         String?
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
+
+  contacts           Contact[]
+  segmentMemberships CustomerSegmentMember[]
+  tags               CustomerTag[]
+  salesOrders        SalesOrder[]
+  invoices           Invoice[]
+  payments           Payment[]
+  quotations         Quotation[]
+  activities         Activity[]
+  deals              Deal[]
+  notes              Note[]
+
+  @@index([customerType])
+  @@index([status])
+  @@index([isActive])
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  CORPORATE
+  GOVERNMENT
+  NON_PROFIT
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  CHURNED
+}
+
+model Contact {
+  id          String    @id @default(uuid())
+  customerId  String
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  mobile      String?
+  jobTitle    String?
+  department  String?
+  isPrimary   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([email])
+}
+
+model CustomerSegment {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  segmentType SegmentType @default(STATIC)
+  criteria    String?   // JSON for dynamic segments
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  members CustomerSegmentMember[]
+
+  @@index([segmentType])
+  @@index([isActive])
+}
+
+enum SegmentType {
+  STATIC
+  DYNAMIC
+}
+
+model CustomerSegmentMember {
+  id              Int       @id @default(autoincrement())
+  segmentId       Int
+  customerId      String
+  addedAt         DateTime  @default(now())
+  addedBy         String?
+
+  segment  CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  customer Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([segmentId, customerId])
+  @@index([segmentId])
+  @@index([customerId])
+}
+
+model CustomerTag {
+  id          Int       @id @default(autoincrement())
+  customerId  String
+  tagName     String
+  tagColor    String?
+  createdAt   DateTime  @default(now())
+  createdBy   String?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, tagName])
+  @@index([customerId])
+  @@index([tagName])
+}
+
+model Lead {
+  id              String    @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  company         String?
+  jobTitle        String?
+  source          String?
+  status          LeadStatus @default(NEW)
+  rating          LeadRating @default(WARM)
+  score           Int       @default(0)
+  assignedTo      String?
+  description     String?
+  website         String?
+  industry        String?
+  annualRevenue   Decimal?
+  numberOfEmployees Int?
+  convertedAt     DateTime?
+  convertedToCustomerId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  activities Activity[]
+  notes      Note[]
+
+  @@index([status])
+  @@index([assignedTo])
+  @@index([source])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum LeadRating {
+  HOT
+  WARM
+  COLD
+}
+
+model Deal {
+  id              String    @id @default(uuid())
+  name            String
+  customerId      String?
+  pipelineId      Int?
+  stageId         Int?
+  amount          Decimal   @default(0)
+  currency        String    @default("TRY")
+  probability     Int       @default(50) // 0-100
+  expectedCloseDate DateTime?
+  actualCloseDate DateTime?
+  status          DealStatus @default(OPEN)
+  assignedTo      String?
+  source          String?
+  description     String?
+  lostReason      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  customer Customer?      @relation(fields: [customerId], references: [id])
+  pipeline Pipeline?      @relation(fields: [pipelineId], references: [id])
+  stage    PipelineStage? @relation(fields: [stageId], references: [id])
+  products DealProduct[]
+  activities Activity[]
+  notes    Note[]
+
+  @@index([customerId])
+  @@index([pipelineId])
+  @@index([stageId])
+  @@index([status])
+  @@index([assignedTo])
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+
+model DealProduct {
+  id          Int       @id @default(autoincrement())
+  dealId      String
+  productId   Int?
+  productName String
+  quantity    Decimal   @default(1)
+  unitPrice   Decimal
+  discount    Decimal   @default(0)
+  total       Decimal
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([productId])
+}
+
+model Pipeline {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  isDefault   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  stages PipelineStage[]
+  deals  Deal[]
+
+  @@index([isActive])
+}
+
+model PipelineStage {
+  id           Int       @id @default(autoincrement())
+  pipelineId   Int
+  name         String
+  probability  Int       @default(0) // 0-100
+  displayOrder Int       @default(0)
+  color        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals    Deal[]
+
+  @@unique([pipelineId, name])
+  @@index([pipelineId])
+}
+
+model Activity {
+  id              String    @id @default(uuid())
+  type            ActivityType
+  subject         String
+  description     String?
+  customerId      String?
+  leadId          String?
+  dealId          String?
+  assignedTo      String?
+  dueDate         DateTime?
+  completedAt     DateTime?
+  priority        ActivityPriority @default(MEDIUM)
+  status          ActivityStatus @default(SCHEDULED)
+  reminderAt      DateTime?
+  location        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+  lead     Lead?     @relation(fields: [leadId], references: [id])
+  deal     Deal?     @relation(fields: [dealId], references: [id])
+
+  @@index([customerId])
+  @@index([leadId])
+  @@index([dealId])
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+  @@index([assignedTo])
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  TASK
+  NOTE
+  DEMO
+  FOLLOW_UP
+}
+
+enum ActivityPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Note {
+  id          String    @id @default(uuid())
+  content     String
+  customerId  String?
+  leadId      String?
+  dealId      String?
+  isPinned    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+  lead     Lead?     @relation(fields: [leadId], references: [id])
+  deal     Deal?     @relation(fields: [dealId], references: [id])
+
+  @@index([customerId])
+  @@index([leadId])
+  @@index([dealId])
+}
+
+model Campaign {
+  id              Int       @id @default(autoincrement())
+  name            String
+  type            CampaignType
+  status          CampaignStatus @default(DRAFT)
+  startDate       DateTime?
+  endDate         DateTime?
+  budget          Decimal?
+  actualCost      Decimal?
+  expectedRevenue Decimal?
+  actualRevenue   Decimal?
+  description     String?
+  targetAudience  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  members CampaignMember[]
+
+  @@index([type])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+enum CampaignType {
+  EMAIL
+  SOCIAL_MEDIA
+  WEBINAR
+  TRADE_SHOW
+  ADVERTISING
+  REFERRAL
+  OTHER
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model CampaignMember {
+  id          Int       @id @default(autoincrement())
+  campaignId  Int
+  contactId   String?
+  leadId      String?
+  status      CampaignMemberStatus @default(SENT)
+  respondedAt DateTime?
+  response    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([status])
+}
+
+enum CampaignMemberStatus {
+  SENT
+  OPENED
+  CLICKED
+  RESPONDED
+  CONVERTED
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+// ============================================
+// HR MODULE (Basic)
+// ============================================
+
+model Employee {
+  id              String    @id @default(uuid())
+  employeeNumber  String    @unique
+  firstName       String
+  lastName        String
+  email           String    @unique
+  phone           String?
+  dateOfBirth     DateTime?
+  gender          Gender?
+  nationalId      String?
+  address         String?
+  city            String?
+  departmentId    Int?
+  positionId      Int?
+  managerId       String?
+  hireDate        DateTime
+  terminationDate DateTime?
+  employmentType  EmploymentType @default(FULL_TIME)
+  status          EmployeeStatus @default(ACTIVE)
+  salary          Decimal?
+  bankAccount     String?
+  emergencyContact String?
+  emergencyPhone  String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  position   Position?   @relation(fields: [positionId], references: [id])
+  manager    Employee?   @relation("EmployeeManager", fields: [managerId], references: [id])
+  subordinates Employee[] @relation("EmployeeManager")
+  leaves     Leave[]
+  attendances Attendance[]
+  documents  EmployeeDocument[]
+
+  @@index([departmentId])
+  @@index([positionId])
+  @@index([managerId])
+  @@index([status])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+  TEMPORARY
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  name        String
+  description String?
+  parentId    Int?
+  managerId   String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+  updatedBy   String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+
+  parent       Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children     Department[] @relation("DepartmentHierarchy")
+  employees    Employee[]
+  positions    Position[]
+
+  @@index([parentId])
+}
+
+model Position {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  title        String
+  description  String?
+  departmentId Int?
+  minSalary    Decimal?
+  maxSalary    Decimal?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  employees  Employee[]
+
+  @@index([departmentId])
+}
+
+model LeaveType {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  code            String    @unique
+  description     String?
+  defaultDays     Int       @default(0)
+  isPaid          Boolean   @default(true)
+  requiresApproval Boolean  @default(true)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+
+  leaves Leave[]
+}
+
+model Leave {
+  id              String    @id @default(uuid())
+  employeeId      String
+  leaveTypeId     Int
+  startDate       DateTime
+  endDate         DateTime
+  days            Decimal
+  reason          String?
+  status          LeaveStatus @default(PENDING)
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  createdBy       String?
+  updatedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+
+  employee  Employee  @relation(fields: [employeeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@index([employeeId])
+  @@index([leaveTypeId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Attendance {
+  id          String    @id @default(uuid())
+  employeeId  String
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      AttendanceStatus @default(PRESENT)
+  workHours   Decimal?
+  overtime    Decimal?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@index([status])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+  HOLIDAY
+  WEEKEND
+}
+
+model EmployeeDocument {
+  id          String    @id @default(uuid())
+  employeeId  String
+  name        String
+  type        String?
+  filePath    String
+  fileSize    Int?
+  mimeType    String?
+  expiryDate  DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  createdBy   String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([type])
+}

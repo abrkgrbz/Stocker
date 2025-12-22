@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database files (local SQLite)
+*.db
+*.db-journal
+*.db-wal
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage
+coverage/
+
+# Prisma
+prisma/.env
