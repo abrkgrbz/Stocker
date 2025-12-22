@@ -260,12 +260,26 @@ export { systemMonitoringService } from './api/systemMonitoringService';
 // Export system management service
 export { systemManagementService } from './api/systemManagementService';
 
+// Export email template service
+export { emailTemplateService } from './api/emailTemplateService';
+
 // Re-export types from systemManagementService
 export type {
   DockerStats,
   SystemError,
   ErrorStatistics,
 } from './api/systemManagementService';
+
+// Re-export types from emailTemplateService
+export type {
+  EmailTemplate,
+  EmailTemplateListDto,
+  CreateEmailTemplateDto,
+  UpdateEmailTemplateDto,
+  EmailTemplatePreviewDto,
+  EmailTemplateValidationDto,
+  GetEmailTemplatesQuery,
+} from './api/emailTemplateService';
 
 // Export axios instance for custom requests
 export default api;
