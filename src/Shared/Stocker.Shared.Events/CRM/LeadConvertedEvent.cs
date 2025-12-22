@@ -10,4 +10,4 @@ public record LeadConvertedEvent(
     DateTime ConvertedAt,
     Guid ConvertedBy,
     string ConversionReason
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

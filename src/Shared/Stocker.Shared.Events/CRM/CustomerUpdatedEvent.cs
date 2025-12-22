@@ -15,4 +15,4 @@ public record CustomerUpdatedEvent(
     int? NumberOfEmployees,
     DateTime UpdatedAt,
     Guid UpdatedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

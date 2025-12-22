@@ -17,4 +17,4 @@ public record LeadCreatedEvent(
     int Score,
     DateTime CreatedAt,
     Guid CreatedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

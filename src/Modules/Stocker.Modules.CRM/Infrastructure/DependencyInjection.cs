@@ -38,17 +38,30 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         // CRMDbContext is registered dynamically per request based on tenant
-        // using ITenantService to get the current tenant's connection string
+        // Supports both HTTP context (via ITenantService) and background jobs (via IBackgroundTenantService)
         // IMPORTANT: Using AddDbContext ensures single instance per scope
         services.AddDbContext<CRMDbContext>((serviceProvider, optionsBuilder) =>
         {
-            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
-            var connectionString = tenantService.GetConnectionString();
+            string? connectionString = null;
+
+            // First try IBackgroundTenantService (for MassTransit consumers and background jobs)
+            var backgroundTenantService = serviceProvider.GetService<IBackgroundTenantService>();
+            if (backgroundTenantService != null)
+            {
+                connectionString = backgroundTenantService.GetConnectionString();
+            }
+
+            // Fall back to ITenantService (for HTTP requests)
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                var tenantService = serviceProvider.GetService<ITenantService>();
+                connectionString = tenantService?.GetConnectionString();
+            }
 
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException(
-                    "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
+                    "Tenant connection string is not available. Ensure tenant resolution middleware has run or BackgroundTenantService is configured.");
             }
 
             optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>

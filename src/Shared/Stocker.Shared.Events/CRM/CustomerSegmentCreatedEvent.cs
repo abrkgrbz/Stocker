@@ -12,4 +12,4 @@ public record CustomerSegmentCreatedEvent(
     int MemberCount,
     DateTime CreatedAt,
     Guid CreatedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

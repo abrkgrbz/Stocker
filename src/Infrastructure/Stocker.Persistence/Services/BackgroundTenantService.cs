@@ -5,8 +5,9 @@ namespace Stocker.Persistence.Services;
 /// <summary>
 /// A tenant service implementation for background jobs that don't have HttpContext.
 /// This service maintains tenant context without requiring HTTP context.
+/// Used by MassTransit consumers and Hangfire jobs.
 /// </summary>
-public class BackgroundTenantService : ITenantService
+public class BackgroundTenantService : IBackgroundTenantService
 {
     private Guid? _tenantId;
     private string? _tenantName;

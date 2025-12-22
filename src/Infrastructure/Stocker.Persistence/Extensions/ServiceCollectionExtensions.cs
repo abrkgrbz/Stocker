@@ -134,6 +134,9 @@ public static class ServiceCollectionExtensions
 
         // Add Tenant Services
         services.AddScoped<ITenantService, TenantService>();
+        // BackgroundTenantService for MassTransit consumers and background jobs (no HttpContext dependency)
+        services.AddScoped<BackgroundTenantService>();
+        services.AddScoped<IBackgroundTenantService>(sp => sp.GetRequiredService<BackgroundTenantService>());
         services.AddScoped<ITenantDbContextFactory, TenantDbContextFactory>();
         services.AddScoped<ITenantUnitOfWorkFactory, TenantUnitOfWorkFactory>();
         services.AddScoped<ITenantContextFactory, TenantContextFactory>();

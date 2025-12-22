@@ -15,4 +15,4 @@ public record OpportunityCreatedEvent(
     DateTime? EstimatedCloseDate,
     DateTime CreatedAt,
     Guid CreatedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

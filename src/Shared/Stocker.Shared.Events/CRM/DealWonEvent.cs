@@ -12,7 +12,7 @@ public record DealWonEvent(
     List<DealProductDto> Products,
     DateTime ClosedDate,
     Guid WonBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;
 
 /// <summary>
 /// Product information in a won deal

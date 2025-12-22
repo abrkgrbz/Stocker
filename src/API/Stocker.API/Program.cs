@@ -19,6 +19,7 @@ using Stocker.Modules.CMS;
 using Stocker.SharedKernel.Settings;
 using Stocker.SignalR.Extensions;
 using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
+using Stocker.Persistence.Filters;
 
 // ========================================
 // NPGSQL CONFIGURATION
@@ -147,6 +148,9 @@ builder.Services.AddMassTransit(x =>
                 h.Heartbeat(TimeSpan.FromSeconds(60));
             });
 
+            // Tenant context filter - sets tenant context for ITenantEvent messages
+            cfg.UseConsumeFilter(typeof(TenantConsumeFilter<>), context);
+
             // Global retry policy with exponential backoff
             cfg.UseMessageRetry(r =>
             {
@@ -186,6 +190,9 @@ builder.Services.AddMassTransit(x =>
         // Use in-memory transport when RabbitMQ is not available
         x.UsingInMemory((context, cfg) =>
         {
+            // Tenant context filter - sets tenant context for ITenantEvent messages
+            cfg.UseConsumeFilter(typeof(TenantConsumeFilter<>), context);
+
             cfg.ConfigureEndpoints(context);
         });
     }

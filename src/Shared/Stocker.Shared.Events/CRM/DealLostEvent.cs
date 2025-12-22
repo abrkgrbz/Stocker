@@ -13,4 +13,4 @@ public record DealLostEvent(
     string? CompetitorName,
     DateTime ClosedDate,
     Guid LostBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

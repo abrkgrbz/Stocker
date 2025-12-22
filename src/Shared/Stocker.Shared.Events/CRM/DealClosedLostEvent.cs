@@ -12,4 +12,4 @@ public record DealClosedLostEvent(
     string LossReason,
     DateTime ClosedDate,
     Guid ClosedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

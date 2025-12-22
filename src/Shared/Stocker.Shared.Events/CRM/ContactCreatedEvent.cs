@@ -15,4 +15,4 @@ public record ContactCreatedEvent(
     bool IsPrimaryContact,
     DateTime CreatedAt,
     Guid CreatedBy
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

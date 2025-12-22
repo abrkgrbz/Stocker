@@ -14,4 +14,4 @@ public record ActivityCompletedEvent(
     DateTime CompletedAt,
     Guid CompletedBy,
     string? Outcome
-) : IntegrationEvent;
+) : IntegrationEvent, ITenantEvent;

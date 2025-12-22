@@ -3,6 +3,15 @@ using MediatR;
 namespace Stocker.Shared.Events;
 
 /// <summary>
+/// Interface for events that contain tenant information
+/// Used by MassTransit filters to set up tenant context for consumers
+/// </summary>
+public interface ITenantEvent
+{
+    Guid TenantId { get; }
+}
+
+/// <summary>
 /// Base class for all integration events in the system
 /// Implements INotification for MediatR event handling
 /// </summary>
