@@ -35,6 +35,7 @@ services:
       # RabbitMQ Management UI - HTTPS
       - "traefik.http.routers.rabbitmq-secure.rule=Host(`rabbitmq.stoocker.app`)"
       - "traefik.http.routers.rabbitmq-secure.entrypoints=https"
+      - "traefik.http.routers.rabbitmq-secure.priority=20"
       - "traefik.http.routers.rabbitmq-secure.tls=true"
       - "traefik.http.routers.rabbitmq-secure.tls.certresolver=cloudflare"
       - "traefik.http.routers.rabbitmq-secure.tls.domains[0].main=stoocker.app"
@@ -45,6 +46,7 @@ services:
       # RabbitMQ Management UI - HTTP redirect
       - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.stoocker.app`)"
       - "traefik.http.routers.rabbitmq.entrypoints=http"
+      - "traefik.http.routers.rabbitmq.priority=20"
       - "traefik.http.routers.rabbitmq.middlewares=redirect-to-https"
 
       # Middleware
