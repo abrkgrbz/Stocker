@@ -294,7 +294,7 @@ export function useCreateActivity() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createActivity,
+    mutationFn: (data: any) => CRMService.createActivity(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.activities });
       showSuccess('Aktivite başarıyla oluşturuldu');
@@ -1148,7 +1148,7 @@ export function useCreatePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createPipeline,
+    mutationFn: (data: any) => CRMService.createPipeline(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
       showSuccess('Pipeline oluşturuldu');
@@ -1180,7 +1180,7 @@ export function useDeletePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deletePipeline,
+    mutationFn: (id: string) => CRMService.deletePipeline(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
       showSuccess('Pipeline silindi');
@@ -1195,7 +1195,7 @@ export function useActivatePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.activatePipeline,
+    mutationFn: (id: string) => CRMService.activatePipeline(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
@@ -1211,7 +1211,7 @@ export function useDeactivatePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deactivatePipeline,
+    mutationFn: (id: string) => CRMService.deactivatePipeline(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipeline(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
@@ -1227,7 +1227,7 @@ export function useSetDefaultPipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.setDefaultPipeline,
+    mutationFn: (id: string) => CRMService.setDefaultPipeline(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.pipelines });
       showSuccess('Varsayılan pipeline ayarlandı');
@@ -1353,7 +1353,7 @@ export function useCreateCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createCampaign,
+    mutationFn: (data: any) => CRMService.createCampaign(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
       showSuccess('Kampanya oluşturuldu');
@@ -1385,7 +1385,7 @@ export function useDeleteCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deleteCampaign,
+    mutationFn: (id: string) => CRMService.deleteCampaign(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
       showSuccess('Kampanya silindi');
@@ -1400,7 +1400,7 @@ export function useStartCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.startCampaign,
+    mutationFn: (id: string) => CRMService.startCampaign(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
@@ -1416,7 +1416,7 @@ export function usePauseCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.pauseCampaign,
+    mutationFn: (id: string) => CRMService.pauseCampaign(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
@@ -1432,7 +1432,7 @@ export function useCompleteCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.completeCampaign,
+    mutationFn: (id: string) => CRMService.completeCampaign(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
@@ -1448,7 +1448,7 @@ export function useAbortCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.abortCampaign,
+    mutationFn: (id: string) => CRMService.abortCampaign(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.campaign(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.campaigns });
@@ -1559,7 +1559,7 @@ export function useCreateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createCustomerSegment,
+    mutationFn: (data: any) => CRMService.createCustomerSegment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showSuccess('Segment oluşturuldu');
@@ -1591,7 +1591,7 @@ export function useDeleteSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deleteCustomerSegment,
+    mutationFn: (id: string) => CRMService.deleteCustomerSegment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
       showSuccess('Segment silindi');
@@ -1606,7 +1606,7 @@ export function useActivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.activateCustomerSegment,
+    mutationFn: (id: string) => CRMService.activateCustomerSegment(id),
     onSuccess: (result, _) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segment(result.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
@@ -1622,7 +1622,7 @@ export function useDeactivateSegment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deactivateCustomerSegment,
+    mutationFn: (id: string) => CRMService.deactivateCustomerSegment(id),
     onSuccess: (result, _) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.segment(result.id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.segments });
@@ -1733,7 +1733,7 @@ export function useCreateWorkflow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.createWorkflow,
+    mutationFn: (data: any) => CRMService.createWorkflow(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
       showSuccess('Workflow başarıyla oluşturuldu');
@@ -1771,7 +1771,7 @@ export function useDeleteWorkflow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deleteWorkflow,
+    mutationFn: (id: number) => CRMService.deleteWorkflow(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
       showSuccess('Workflow silindi');
@@ -1787,7 +1787,7 @@ export function useDeleteWorkflow() {
  */
 export function useExecuteWorkflow() {
   return useMutation({
-    mutationFn: CRMService.executeWorkflow,
+    mutationFn: (data: any) => CRMService.executeWorkflow(data),
     onSuccess: (result) => {
       showSuccess(`Workflow çalıştırıldı: ${result.message}`);
     },
@@ -1804,7 +1804,7 @@ export function useActivateWorkflow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.activateWorkflow,
+    mutationFn: (id: number) => CRMService.activateWorkflow(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.workflow(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.workflows });
@@ -1823,7 +1823,7 @@ export function useDeactivateWorkflow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: CRMService.deactivateWorkflow,
+    mutationFn: (id: number) => CRMService.deactivateWorkflow(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: crmKeys.workflow(id) });
       queryClient.invalidateQueries({ queryKey: crmKeys.workflows });

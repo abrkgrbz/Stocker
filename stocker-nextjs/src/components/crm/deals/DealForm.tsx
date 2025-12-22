@@ -166,16 +166,24 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
                     placeholder="Müşteri seçin"
                     showSearch
                     loading={customersLoading}
-                    optionFilterProp="children"
+                    optionFilterProp="label"
                     filterOption={(input, option) =>
                       (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={customers.map((customer) => ({
-                      label: customer.customerName,
-                      value: customer.id,
-                    }))}
+                    optionLabelProp="label"
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
+                  >
+                    {customers.map((customer) => (
+                      <Select.Option key={customer.id} value={customer.id} label={customer.customerName}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{customer.customerName}</span>
+                          {customer.email && (
+                            <span className="text-xs text-slate-400">{customer.email}</span>
+                          )}
+                        </div>
+                      </Select.Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </div>
               <div className="col-span-6">
