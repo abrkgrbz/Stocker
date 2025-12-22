@@ -19,7 +19,7 @@ export default function EditPipelinePage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      await updatePipeline.mutateAsync({ id: pipelineId, ...values });
+      await updatePipeline.mutateAsync({ id: pipelineId, data: values });
       router.push('/crm/pipelines');
     } catch (error) {
       // Error handled by hook

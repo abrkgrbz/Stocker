@@ -28,7 +28,7 @@ export default function EditCampaignPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      await updateCampaign.mutateAsync({ id: campaignId, ...values });
+      await updateCampaign.mutateAsync({ id: campaignId, data: values });
       router.push('/crm/campaigns');
     } catch (error) {
       // Error handled by hook
