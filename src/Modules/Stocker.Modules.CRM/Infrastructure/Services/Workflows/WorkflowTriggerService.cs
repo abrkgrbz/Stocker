@@ -1,8 +1,10 @@
 using System.Text.Json;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using Stocker.Modules.CRM.Application.Services.Workflows;
 using Stocker.Modules.CRM.Domain.Entities;
 using Stocker.Modules.CRM.Domain.Enums;
+using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 using Stocker.Modules.CRM.Infrastructure.Repositories;
 using Stocker.SharedKernel.Results;
 
@@ -15,18 +17,18 @@ public class WorkflowTriggerService : IWorkflowTriggerService
 {
     private readonly IWorkflowRepository _workflowRepository;
     private readonly IWorkflowExecutionRepository _executionRepository;
-    private readonly IWorkflowExecutionService _executionService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly ILogger<WorkflowTriggerService> _logger;
 
     public WorkflowTriggerService(
         IWorkflowRepository workflowRepository,
         IWorkflowExecutionRepository executionRepository,
-        IWorkflowExecutionService executionService,
+        IBackgroundJobClient backgroundJobClient,
         ILogger<WorkflowTriggerService> logger)
     {
         _workflowRepository = workflowRepository;
         _executionRepository = executionRepository;
-        _executionService = executionService;
+        _backgroundJobClient = backgroundJobClient;
         _logger = logger;
     }
 
@@ -113,22 +115,14 @@ public class WorkflowTriggerService : IWorkflowTriggerService
                         "Created workflow execution {ExecutionId} for workflow {WorkflowId} ({WorkflowName})",
                         execution.Id, workflow.Id, workflow.Name);
 
-                    // Process the workflow execution asynchronously
-                    // Note: In production, this should be queued to a background job (e.g., Hangfire)
-                    // For now, we'll process it inline
-                    _ = System.Threading.Tasks.Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await _executionService.ProcessExecutionAsync(execution.Id, CancellationToken.None);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex,
-                                "Error processing workflow execution {ExecutionId} in background",
-                                execution.Id);
-                        }
-                    }, cancellationToken);
+                    // Queue the workflow execution to Hangfire for background processing
+                    // This ensures proper DI scope and tenant context handling
+                    var jobId = _backgroundJobClient.Enqueue<WorkflowExecutionJob>(
+                        job => job.ProcessExecutionAsync(execution.Id, tenantId));
+
+                    _logger.LogInformation(
+                        "Queued workflow execution {ExecutionId} to Hangfire. JobId: {JobId}",
+                        execution.Id, jobId);
 
                     triggeredCount++;
                 }

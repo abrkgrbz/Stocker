@@ -20,6 +20,7 @@ using Stocker.Modules.CRM.Infrastructure.Services.Email;
 using Stocker.Modules.CRM.Infrastructure.Services.Workflows;
 using Stocker.Modules.CRM.Infrastructure.Services.Templates;
 using Stocker.Modules.CRM.Infrastructure.Services.Reminders;
+using Stocker.Modules.CRM.Infrastructure.BackgroundJobs;
 using Stocker.Modules.CRM.Interfaces;
 using Stocker.SharedKernel.Interfaces;
 
@@ -163,6 +164,9 @@ public static class DependencyInjection
 
         // Register Reminder Service
         services.AddScoped<IReminderService, ReminderService>();
+
+        // Register Hangfire Background Jobs
+        services.AddScoped<WorkflowExecutionJob>();
 
         // Register Cross-Module Services (Contract Implementations)
         services.AddScoped<Shared.Contracts.CRM.ICrmCustomerService, Application.Services.CrmCustomerService>();
