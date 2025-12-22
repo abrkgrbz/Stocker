@@ -5,7 +5,8 @@ version: '3.8'
 
 services:
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    # Using heidiks/rabbitmq-delayed-message-exchange which includes the delayed message plugin
+    image: heidiks/rabbitmq-delayed-message-exchange:3.13.0-management
     container_name: rabbitmq
     restart: unless-stopped
     hostname: rabbitmq-host
