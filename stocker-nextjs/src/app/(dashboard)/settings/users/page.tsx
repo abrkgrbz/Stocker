@@ -279,7 +279,8 @@ export default function UsersPage() {
     };
   };
 
-  const users = usersData?.items || [];
+  // Only show active users (soft-deleted users are filtered out)
+  const users = (usersData?.items || []).filter((u) => u.isActive);
 
   const filteredUsers = users.filter((user) => {
     const matchesRole =
@@ -287,16 +288,14 @@ export default function UsersPage() {
       user.roles.some((r) => r === filterRole || getRoleLabel(r).toLowerCase() === filterRole.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
-      (filterStatus === 'active' && user.isActive && user.status !== 'PendingActivation') ||
-      (filterStatus === 'inactive' && !user.isActive && user.status !== 'PendingActivation') ||
+      (filterStatus === 'active' && user.status !== 'PendingActivation') ||
       (filterStatus === 'pending' && user.status === 'PendingActivation');
     return matchesRole && matchesStatus;
   });
 
   const stats = {
     total: users.length,
-    active: users.filter((u) => u.isActive && u.status !== 'PendingActivation').length,
-    inactive: users.filter((u) => !u.isActive && u.status !== 'PendingActivation').length,
+    active: users.filter((u) => u.status !== 'PendingActivation').length,
     pending: users.filter((u) => u.status === 'PendingActivation').length,
     admins: users.filter((u) => u.roles.some((r) => r === 'FirmaYöneticisi' || r === 'Admin')).length,
   };
@@ -529,7 +528,6 @@ export default function UsersPage() {
           >
             <Select.Option value="all">Tüm Durumlar</Select.Option>
             <Select.Option value="active">Aktif</Select.Option>
-            <Select.Option value="inactive">Pasif</Select.Option>
             <Select.Option value="pending">Davet Bekleniyor</Select.Option>
           </Select>
         </div>
