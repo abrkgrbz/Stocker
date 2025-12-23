@@ -74,10 +74,6 @@ export default function CustomerDetailPage() {
   const updateCustomer = useUpdateCustomer();
   const createOrder = useCreateSalesOrder();
 
-  // Debug: Log customer data to check customerType
-  console.log('Customer data:', customer);
-  console.log('Customer type:', customer?.customerType);
-
   // Fetch customer activities
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
     customerId: customerId,
@@ -705,7 +701,9 @@ export default function CustomerDetailPage() {
                         <ShoppingOutlined />
                         Siparişler
                         {ordersData?.totalCount ? (
-                          <Tag className="ml-1" color="blue">{ordersData.totalCount}</Tag>
+                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
+                            {ordersData.totalCount}
+                          </span>
                         ) : null}
                       </span>
                     ),
@@ -713,120 +711,140 @@ export default function CustomerDetailPage() {
                       <div className="p-6">
                         {/* Module access check */}
                         {!canCreateOrder && !modulesLoading && (
-                          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
-                            <LockOutlined className="text-amber-500 text-lg" />
+                          <div className="mb-6 p-4 bg-amber-50/50 border border-amber-200/50 rounded-lg flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-amber-100">
+                              <LockOutlined className="text-amber-600 text-sm" />
+                            </div>
                             <div>
-                              <p className="font-medium text-amber-800 m-0">Sipariş Oluşturma Kısıtlı</p>
-                              <p className="text-sm text-amber-600 m-0">
+                              <p className="text-sm font-medium text-amber-800 m-0">Sipariş Oluşturma Kısıtlı</p>
+                              <p className="text-xs text-amber-600 m-0">
                                 Sipariş oluşturmak için Satış ve Envanter modüllerine erişim gereklidir.
                               </p>
                             </div>
                           </div>
                         )}
 
-                        {/* Header with create button */}
-                        <div className="flex justify-between items-center mb-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-slate-800 m-0">Müşteri Siparişleri</h3>
-                            <p className="text-sm text-slate-500 m-0">Bu müşteriye ait tüm siparişler</p>
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50">
+                              <ShoppingOutlined className="text-blue-600 text-lg" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-medium text-slate-900 m-0">Siparişler</h3>
+                                {ordersData?.totalCount ? (
+                                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {ordersData.totalCount}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-xs text-slate-500 m-0">Bu müşteriye ait siparişler</p>
+                            </div>
                           </div>
                           {canCreateOrder && (
-                            <Button
-                              type="primary"
-                              icon={<PlusOutlined />}
+                            <button
                               onClick={() => setIsOrderModalOpen(true)}
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                             >
+                              <PlusOutlined />
                               Yeni Sipariş
-                            </Button>
+                            </button>
                           )}
                         </div>
 
                         {/* Orders list */}
                         {ordersLoading ? (
-                          <div className="space-y-4">
-                            <Skeleton active />
-                            <Skeleton active />
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="bg-slate-50 rounded-lg p-4 animate-pulse">
+                                <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+                                <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                              </div>
+                            ))}
                           </div>
                         ) : !ordersData?.items?.length ? (
-                          <div className="py-12 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                              <ShoppingOutlined className="text-2xl text-slate-400" />
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                              <ShoppingOutlined className="text-xl" />
                             </div>
-                            <p className="text-slate-500 mb-4">Henüz sipariş bulunmuyor</p>
+                            <h3 className="text-sm font-medium text-slate-900 mb-1">Sipariş bulunmuyor</h3>
+                            <p className="text-sm text-slate-500 mb-4 max-w-sm">
+                              Bu müşteri için henüz sipariş oluşturulmamış.
+                            </p>
                             {canCreateOrder && (
-                              <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
+                              <button
                                 onClick={() => setIsOrderModalOpen(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                               >
+                                <PlusOutlined />
                                 İlk Siparişi Oluştur
-                              </Button>
+                              </button>
                             )}
                           </div>
                         ) : (
-                          <Table
-                            dataSource={ordersData.items}
-                            rowKey="id"
-                            pagination={{
-                              total: ordersData.totalCount,
-                              pageSize: 10,
-                              showSizeChanger: false,
-                              showTotal: (total) => `Toplam ${total} sipariş`,
-                            }}
-                            columns={[
-                              {
-                                title: 'Sipariş No',
-                                dataIndex: 'orderNumber',
-                                key: 'orderNumber',
-                                render: (text: string) => (
-                                  <span className="font-medium text-blue-600">{text}</span>
-                                ),
-                              },
-                              {
-                                title: 'Tarih',
-                                dataIndex: 'orderDate',
-                                key: 'orderDate',
-                                render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
-                              },
-                              {
-                                title: 'Tutar',
-                                dataIndex: 'totalAmount',
-                                key: 'totalAmount',
-                                render: (amount: number, record: any) => (
-                                  <span className="font-semibold">
-                                    {new Intl.NumberFormat('tr-TR', {
-                                      style: 'currency',
-                                      currency: record.currency || 'TRY',
-                                    }).format(amount)}
-                                  </span>
-                                ),
-                              },
-                              {
-                                title: 'Durum',
-                                dataIndex: 'status',
-                                key: 'status',
-                                render: (status: string) => (
-                                  <Tag color={getOrderStatusColor(status)}>
-                                    {getOrderStatusText(status)}
-                                  </Tag>
-                                ),
-                              },
-                              {
-                                title: 'İşlemler',
-                                key: 'actions',
-                                width: 100,
-                                render: (_: any, record: any) => (
-                                  <Tooltip title="Sipariş Detayı">
-                                    <Button
-                                      type="text"
-                                      icon={<EyeOutlined />}
-                                      onClick={() => router.push(`/sales/orders/${record.id}`)}
-                                    />
-                                  </Tooltip>
-                                ),
-                              },
-                            ]}
-                          />
+                          <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+                            {ordersData.items.map((order: any) => (
+                              <div
+                                key={order.id}
+                                className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                                onClick={() => router.push(`/sales/orders/${order.id}`)}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
+                                    <ShoppingOutlined className="text-slate-500" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-900">{order.orderNumber}</span>
+                                      <span
+                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                        style={{
+                                          backgroundColor: getOrderStatusColor(order.status) === 'default' ? '#64748b15' :
+                                            getOrderStatusColor(order.status) === 'processing' ? '#3b82f615' :
+                                            getOrderStatusColor(order.status) === 'blue' ? '#3b82f615' :
+                                            getOrderStatusColor(order.status) === 'cyan' ? '#06b6d415' :
+                                            getOrderStatusColor(order.status) === 'green' ? '#10b98115' :
+                                            getOrderStatusColor(order.status) === 'red' ? '#ef444415' : '#64748b15',
+                                          color: getOrderStatusColor(order.status) === 'default' ? '#64748b' :
+                                            getOrderStatusColor(order.status) === 'processing' ? '#3b82f6' :
+                                            getOrderStatusColor(order.status) === 'blue' ? '#3b82f6' :
+                                            getOrderStatusColor(order.status) === 'cyan' ? '#06b6d4' :
+                                            getOrderStatusColor(order.status) === 'green' ? '#10b981' :
+                                            getOrderStatusColor(order.status) === 'red' ? '#ef4444' : '#64748b',
+                                        }}
+                                      >
+                                        {getOrderStatusText(order.status)}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-xs text-slate-500">
+                                        {dayjs(order.orderDate).format('DD MMM YYYY')}
+                                      </span>
+                                      <span className="text-xs text-slate-300">•</span>
+                                      <span className="text-xs font-medium text-slate-700">
+                                        {new Intl.NumberFormat('tr-TR', {
+                                          style: 'currency',
+                                          currency: order.currency || 'TRY',
+                                        }).format(order.totalAmount)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/sales/orders/${order.id}`);
+                                    }}
+                                  >
+                                    <EyeOutlined />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     ),
@@ -850,7 +868,7 @@ export default function CustomerDetailPage() {
                       </div>
                     ),
                   },
-                  // Contacts tab - now shown for all customers (was Corporate only)
+                  // Contacts tab - shown for all customers
                   {
                     key: 'contacts',
                     label: (
@@ -858,167 +876,156 @@ export default function CustomerDetailPage() {
                         <UserOutlined />
                         Kişiler
                         {contactsData && contactsData.length > 0 && (
-                          <Tag className="ml-1" color="blue">{contactsData.length}</Tag>
+                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
+                            {contactsData.length}
+                          </span>
                         )}
                       </span>
                     ),
                     children: (
                       <div className="p-6">
-                        {/* Header with create button */}
-                        <div className="flex justify-between items-center mb-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-slate-800 m-0">Firma Kişileri</h3>
-                            <p className="text-sm text-slate-500 m-0">Bu firmaya ait tüm iletişim kişileri</p>
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-50">
+                              <UserOutlined className="text-indigo-600 text-lg" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-medium text-slate-900 m-0">Kişiler</h3>
+                                {contactsData?.length ? (
+                                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {contactsData.length}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-xs text-slate-500 m-0">Firmaya ait iletişim kişileri</p>
+                            </div>
                           </div>
-                          <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
+                          <button
                             onClick={() => handleOpenContactModal()}
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                           >
-                            Yeni Kişi Ekle
-                          </Button>
+                            <PlusOutlined />
+                            Yeni Kişi
+                          </button>
                         </div>
 
                         {/* Contacts list */}
                         {contactsLoading ? (
-                          <div className="space-y-4">
-                            <Skeleton active />
-                            <Skeleton active />
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="bg-slate-50 rounded-lg p-4 animate-pulse">
+                                <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+                                <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                              </div>
+                            ))}
                           </div>
                         ) : !contactsData?.length ? (
-                          <div className="py-12 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                              <UserOutlined className="text-2xl text-slate-400" />
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                              <UserOutlined className="text-xl" />
                             </div>
-                            <p className="text-slate-500 mb-4">Henüz kişi bulunmuyor</p>
-                            <Button
-                              type="primary"
-                              icon={<PlusOutlined />}
+                            <h3 className="text-sm font-medium text-slate-900 mb-1">Kişi bulunmuyor</h3>
+                            <p className="text-sm text-slate-500 mb-4 max-w-sm">
+                              Bu firma için henüz kişi eklenmemiş.
+                            </p>
+                            <button
                               onClick={() => handleOpenContactModal()}
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                             >
+                              <PlusOutlined />
                               İlk Kişiyi Ekle
-                            </Button>
+                            </button>
                           </div>
                         ) : (
-                          <Table
-                            dataSource={contactsData}
-                            rowKey="id"
-                            pagination={false}
-                            columns={[
-                              {
-                                title: 'Ad Soyad',
-                                key: 'fullName',
-                                render: (_: any, record: Contact) => (
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${record.isPrimary ? 'bg-blue-100' : 'bg-slate-100'}`}>
-                                      <UserOutlined className={record.isPrimary ? 'text-blue-600' : 'text-slate-500'} />
+                          <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+                            {contactsData.map((contact: Contact) => (
+                              <div
+                                key={contact.id}
+                                className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${contact.isPrimary ? 'bg-indigo-100' : 'bg-slate-100'}`}>
+                                    <UserOutlined className={contact.isPrimary ? 'text-indigo-600' : 'text-slate-500'} />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-slate-900">{contact.fullName}</span>
+                                      {contact.isPrimary && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                                          Birincil
+                                        </span>
+                                      )}
+                                      {!contact.isActive && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                          Pasif
+                                        </span>
+                                      )}
                                     </div>
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-medium text-slate-800">{record.fullName}</span>
-                                        {record.isPrimary && (
-                                          <Tag color="blue" className="m-0">Birincil</Tag>
-                                        )}
-                                        {!record.isActive && (
-                                          <Tag color="default" className="m-0">Pasif</Tag>
-                                        )}
-                                      </div>
-                                      {record.jobTitle && (
-                                        <span className="text-sm text-slate-500">{record.jobTitle}</span>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      {contact.jobTitle && (
+                                        <>
+                                          <span className="text-xs text-slate-500">{contact.jobTitle}</span>
+                                          {(contact.email || contact.phone) && <span className="text-xs text-slate-300">•</span>}
+                                        </>
+                                      )}
+                                      {contact.email && (
+                                        <a href={`mailto:${contact.email}`} className="text-xs text-slate-500 hover:text-indigo-600 transition-colors">
+                                          {contact.email}
+                                        </a>
+                                      )}
+                                      {contact.phone && (
+                                        <>
+                                          {contact.email && <span className="text-xs text-slate-300">•</span>}
+                                          <a href={`tel:${contact.phone}`} className="text-xs text-slate-500 hover:text-indigo-600 transition-colors">
+                                            {contact.phone}
+                                          </a>
+                                        </>
                                       )}
                                     </div>
                                   </div>
-                                ),
-                              },
-                              {
-                                title: 'E-posta',
-                                dataIndex: 'email',
-                                key: 'email',
-                                render: (email: string) => (
-                                  <a href={`mailto:${email}`} className="text-blue-600 hover:underline">
-                                    {email}
-                                  </a>
-                                ),
-                              },
-                              {
-                                title: 'Telefon',
-                                key: 'phone',
-                                render: (_: any, record: Contact) => (
-                                  <div>
-                                    {record.phone && (
-                                      <div className="flex items-center gap-1">
-                                        <PhoneOutlined className="text-slate-400" />
-                                        <a href={`tel:${record.phone}`} className="text-blue-600 hover:underline">
-                                          {record.phone}
-                                        </a>
-                                      </div>
-                                    )}
-                                    {record.mobilePhone && (
-                                      <div className="flex items-center gap-1 text-sm text-slate-500">
-                                        <PhoneOutlined className="text-slate-400" />
-                                        {record.mobilePhone}
-                                      </div>
-                                    )}
-                                    {!record.phone && !record.mobilePhone && (
-                                      <span className="text-slate-400">-</span>
-                                    )}
-                                  </div>
-                                ),
-                              },
-                              {
-                                title: 'Departman',
-                                dataIndex: 'department',
-                                key: 'department',
-                                render: (department: string) => department || '-',
-                              },
-                              {
-                                title: 'İşlemler',
-                                key: 'actions',
-                                width: 150,
-                                render: (_: any, record: Contact) => (
-                                  <Space>
-                                    {!record.isPrimary && (
-                                      <Tooltip title="Birincil Yap">
-                                        <Button
-                                          type="text"
-                                          size="small"
-                                          icon={<CheckCircleOutlined />}
-                                          onClick={() => handleSetPrimaryContact(record.id)}
-                                          loading={setContactAsPrimary.isPending}
-                                        />
-                                      </Tooltip>
-                                    )}
-                                    <Tooltip title="Düzenle">
-                                      <Button
-                                        type="text"
-                                        size="small"
-                                        icon={<EditOutlined />}
-                                        onClick={() => handleOpenContactModal(record)}
-                                      />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {!contact.isPrimary && (
+                                    <Tooltip title="Birincil Yap">
+                                      <button
+                                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                                        onClick={() => handleSetPrimaryContact(contact.id)}
+                                      >
+                                        <CheckCircleOutlined />
+                                      </button>
                                     </Tooltip>
-                                    <Tooltip title="Sil">
-                                      <Button
-                                        type="text"
-                                        size="small"
-                                        danger
-                                        icon={<DeleteOutlined />}
-                                        onClick={() => {
-                                          Modal.confirm({
-                                            title: 'Kişiyi Sil',
-                                            content: `${record.fullName} kişisini silmek istediğinize emin misiniz?`,
-                                            okText: 'Sil',
-                                            cancelText: 'İptal',
-                                            okButtonProps: { danger: true },
-                                            onOk: () => handleDeleteContact(record.id),
-                                          });
-                                        }}
-                                      />
-                                    </Tooltip>
-                                  </Space>
-                                ),
-                              },
-                            ]}
-                          />
+                                  )}
+                                  <Tooltip title="Düzenle">
+                                    <button
+                                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                                      onClick={() => handleOpenContactModal(contact)}
+                                    >
+                                      <EditOutlined />
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip title="Sil">
+                                    <button
+                                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                      onClick={() => {
+                                        Modal.confirm({
+                                          title: 'Kişiyi Sil',
+                                          content: `${contact.fullName} kişisini silmek istediğinize emin misiniz?`,
+                                          okText: 'Sil',
+                                          cancelText: 'İptal',
+                                          okButtonProps: { danger: true },
+                                          onOk: () => handleDeleteContact(contact.id),
+                                        });
+                                      }}
+                                    >
+                                      <DeleteOutlined />
+                                    </button>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     ),
