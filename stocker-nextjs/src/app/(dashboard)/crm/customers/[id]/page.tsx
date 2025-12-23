@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty, Modal, Form, Input, InputNumber, Tabs, Timeline, Card, Skeleton } from 'antd';
+import { Button, Space, Tag, Spin, Empty, Modal, Form, Input, InputNumber, Tabs, Timeline, Card, Skeleton, Table, Select, DatePicker, Tooltip } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -22,8 +22,15 @@ import {
   ShoppingOutlined,
   FileOutlined,
   UserOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  LockOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { useCustomer, useUpdateCustomer, useActivities } from '@/lib/api/hooks/useCRM';
+import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
+import { useProducts } from '@/lib/api/hooks/useInventory';
+import { useModuleCodes } from '@/lib/api/hooks/useUserModules';
 import { DocumentUpload } from '@/components/crm/shared';
 import { CustomerTags } from '@/components/crm/customers';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -40,16 +47,43 @@ export default function CustomerDetailPage() {
   const customerId = params.id as string;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('activities');
+  const [orderItems, setOrderItems] = useState<Array<{
+    productId: string;
+    productCode: string;
+    productName: string;
+    unit: string;
+    quantity: number;
+    unitPrice: number;
+    vatRate: number;
+    discountRate: number;
+  }>>([]);
   const [form] = Form.useForm();
+  const [orderForm] = Form.useForm();
+
+  // Module access check
+  const { hasModule, isLoading: modulesLoading } = useModuleCodes();
+  const canCreateOrder = hasModule('Sales') && hasModule('Inventory');
 
   const { data: customer, isLoading, error } = useCustomer(customerId);
   const updateCustomer = useUpdateCustomer();
+  const createOrder = useCreateSalesOrder();
 
   // Fetch customer activities
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
     customerId: customerId,
   });
+
+  // Fetch customer orders (only if Sales module is available)
+  const { data: ordersData, isLoading: ordersLoading } = useSalesOrdersByCustomer(
+    customerId,
+    1,
+    10
+  );
+
+  // Fetch products for order creation (only if Inventory module is available)
+  const { data: productsData, isLoading: productsLoading } = useProducts(false);
 
   // Handle edit customer
   const handleEdit = async (values: any) => {
@@ -63,6 +97,109 @@ export default function CustomerDetailPage() {
     } catch (error) {
       showApiError(error, 'Müşteri güncellenirken bir hata oluştu');
     }
+  };
+
+  // Handle create order
+  const handleCreateOrder = async (values: any) => {
+    try {
+      if (orderItems.length === 0) {
+        showApiError(new Error('En az bir ürün eklemeniz gerekmektedir'), 'Sipariş oluşturulamadı');
+        return;
+      }
+
+      await createOrder.mutateAsync({
+        orderDate: values.orderDate?.toISOString() || new Date().toISOString(),
+        customerId: customerId,
+        customerName: customer?.companyName || '',
+        customerEmail: customer?.email,
+        currency: 'TRY',
+        notes: values.notes,
+        items: orderItems.map((item, index) => ({
+          ...item,
+          lineNumber: index + 1,
+        })),
+      });
+
+      showSuccess('Sipariş başarıyla oluşturuldu!');
+      setIsOrderModalOpen(false);
+      setOrderItems([]);
+      orderForm.resetFields();
+    } catch (error) {
+      showApiError(error, 'Sipariş oluşturulurken bir hata oluştu');
+    }
+  };
+
+  // Add product to order items
+  const handleAddProduct = (productId: string) => {
+    const products = Array.isArray(productsData) ? productsData : [];
+    const product = products.find((p: any) => p.id === productId || p.id?.toString() === productId);
+    if (product && !orderItems.find(item => item.productId === productId)) {
+      setOrderItems([
+        ...orderItems,
+        {
+          productId: product.id?.toString() || productId,
+          productCode: product.code || product.sku || '',
+          productName: product.name,
+          unit: product.unit || 'Adet',
+          quantity: 1,
+          unitPrice: product.sellingPrice || product.price || 0,
+          vatRate: 20,
+          discountRate: 0,
+        },
+      ]);
+    }
+  };
+
+  // Update order item
+  const handleUpdateOrderItem = (productId: string, field: string, value: number) => {
+    setOrderItems(
+      orderItems.map(item =>
+        item.productId === productId ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
+  // Remove product from order items
+  const handleRemoveProduct = (productId: string) => {
+    setOrderItems(orderItems.filter(item => item.productId !== productId));
+  };
+
+  // Calculate order totals
+  const calculateOrderTotal = () => {
+    return orderItems.reduce((total, item) => {
+      const subtotal = item.quantity * item.unitPrice;
+      const discount = subtotal * (item.discountRate / 100);
+      const afterDiscount = subtotal - discount;
+      const vat = afterDiscount * (item.vatRate / 100);
+      return total + afterDiscount + vat;
+    }, 0);
+  };
+
+  // Order status helpers
+  const getOrderStatusColor = (status: string) => {
+    const colorMap: Record<string, string> = {
+      Draft: 'default',
+      Confirmed: 'processing',
+      Approved: 'blue',
+      Shipped: 'cyan',
+      Delivered: 'green',
+      Completed: 'success',
+      Cancelled: 'error',
+    };
+    return colorMap[status] || 'default';
+  };
+
+  const getOrderStatusText = (status: string) => {
+    const textMap: Record<string, string> = {
+      Draft: 'Taslak',
+      Confirmed: 'Onaylandı',
+      Approved: 'Onaylandı',
+      Shipped: 'Sevk Edildi',
+      Delivered: 'Teslim Edildi',
+      Completed: 'Tamamlandı',
+      Cancelled: 'İptal',
+    };
+    return textMap[status] || status;
   };
 
   if (isLoading) {
@@ -479,19 +616,130 @@ export default function CustomerDetailPage() {
                       <span className="flex items-center gap-2 py-1">
                         <ShoppingOutlined />
                         Siparişler
+                        {ordersData?.totalCount ? (
+                          <Tag className="ml-1" color="blue">{ordersData.totalCount}</Tag>
+                        ) : null}
                       </span>
                     ),
                     children: (
                       <div className="p-6">
-                        <div className="py-12 text-center">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                            <ShoppingOutlined className="text-2xl text-slate-400" />
+                        {/* Module access check */}
+                        {!canCreateOrder && !modulesLoading && (
+                          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+                            <LockOutlined className="text-amber-500 text-lg" />
+                            <div>
+                              <p className="font-medium text-amber-800 m-0">Sipariş Oluşturma Kısıtlı</p>
+                              <p className="text-sm text-amber-600 m-0">
+                                Sipariş oluşturmak için Satış ve Envanter modüllerine erişim gereklidir.
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-slate-500 mb-4">Henüz sipariş bulunmuyor</p>
-                          <Button type="primary" icon={<ShoppingOutlined />}>
-                            Yeni Sipariş Oluştur
-                          </Button>
+                        )}
+
+                        {/* Header with create button */}
+                        <div className="flex justify-between items-center mb-6">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-800 m-0">Müşteri Siparişleri</h3>
+                            <p className="text-sm text-slate-500 m-0">Bu müşteriye ait tüm siparişler</p>
+                          </div>
+                          {canCreateOrder && (
+                            <Button
+                              type="primary"
+                              icon={<PlusOutlined />}
+                              onClick={() => setIsOrderModalOpen(true)}
+                            >
+                              Yeni Sipariş
+                            </Button>
+                          )}
                         </div>
+
+                        {/* Orders list */}
+                        {ordersLoading ? (
+                          <div className="space-y-4">
+                            <Skeleton active />
+                            <Skeleton active />
+                          </div>
+                        ) : !ordersData?.items?.length ? (
+                          <div className="py-12 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                              <ShoppingOutlined className="text-2xl text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 mb-4">Henüz sipariş bulunmuyor</p>
+                            {canCreateOrder && (
+                              <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setIsOrderModalOpen(true)}
+                              >
+                                İlk Siparişi Oluştur
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <Table
+                            dataSource={ordersData.items}
+                            rowKey="id"
+                            pagination={{
+                              total: ordersData.totalCount,
+                              pageSize: 10,
+                              showSizeChanger: false,
+                              showTotal: (total) => `Toplam ${total} sipariş`,
+                            }}
+                            columns={[
+                              {
+                                title: 'Sipariş No',
+                                dataIndex: 'orderNumber',
+                                key: 'orderNumber',
+                                render: (text: string) => (
+                                  <span className="font-medium text-blue-600">{text}</span>
+                                ),
+                              },
+                              {
+                                title: 'Tarih',
+                                dataIndex: 'orderDate',
+                                key: 'orderDate',
+                                render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
+                              },
+                              {
+                                title: 'Tutar',
+                                dataIndex: 'totalAmount',
+                                key: 'totalAmount',
+                                render: (amount: number, record: any) => (
+                                  <span className="font-semibold">
+                                    {new Intl.NumberFormat('tr-TR', {
+                                      style: 'currency',
+                                      currency: record.currency || 'TRY',
+                                    }).format(amount)}
+                                  </span>
+                                ),
+                              },
+                              {
+                                title: 'Durum',
+                                dataIndex: 'status',
+                                key: 'status',
+                                render: (status: string) => (
+                                  <Tag color={getOrderStatusColor(status)}>
+                                    {getOrderStatusText(status)}
+                                  </Tag>
+                                ),
+                              },
+                              {
+                                title: 'İşlemler',
+                                key: 'actions',
+                                width: 100,
+                                render: (_: any, record: any) => (
+                                  <Tooltip title="Sipariş Detayı">
+                                    <Button
+                                      type="text"
+                                      icon={<EyeOutlined />}
+                                      onClick={() => router.push(`/sales/orders/${record.id}`)}
+                                    />
+                                  </Tooltip>
+                                ),
+                              },
+                            ]}
+                          />
+                        )}
                       </div>
                     ),
                   },
@@ -648,6 +896,220 @@ export default function CustomerDetailPage() {
             </Button>
             <Button type="primary" size="large" htmlType="submit" icon={<EditOutlined />} loading={updateCustomer.isPending}>
               Güncelle
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* Create Order Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <ShoppingOutlined className="text-blue-600" />
+            <span>Yeni Sipariş Oluştur</span>
+          </div>
+        }
+        open={isOrderModalOpen}
+        onCancel={() => {
+          setIsOrderModalOpen(false);
+          setOrderItems([]);
+          orderForm.resetFields();
+        }}
+        footer={null}
+        width={900}
+        centered
+      >
+        <Form
+          form={orderForm}
+          layout="vertical"
+          onFinish={handleCreateOrder}
+          className="mt-6"
+          initialValues={{
+            orderDate: dayjs(),
+          }}
+        >
+          {/* Customer Info (Read-only) */}
+          <div className="bg-slate-50 p-4 rounded-lg mb-6">
+            <p className="text-sm text-slate-500 mb-1">Müşteri</p>
+            <p className="font-semibold text-slate-800 m-0">{customer?.companyName}</p>
+            {customer?.email && <p className="text-sm text-slate-600 m-0">{customer.email}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Form.Item
+              name="orderDate"
+              label="Sipariş Tarihi"
+              rules={[{ required: true, message: 'Sipariş tarihi gereklidir' }]}
+            >
+              <DatePicker
+                className="w-full"
+                format="DD/MM/YYYY"
+                placeholder="Tarih seçin"
+              />
+            </Form.Item>
+
+            <Form.Item name="notes" label="Notlar">
+              <Input placeholder="Sipariş notu..." />
+            </Form.Item>
+          </div>
+
+          {/* Product Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Ürün Ekle</label>
+            <Select
+              showSearch
+              placeholder="Ürün arayın ve seçin..."
+              optionFilterProp="label"
+              loading={productsLoading}
+              className="w-full"
+              value={null}
+              onChange={(value) => value && handleAddProduct(value)}
+              filterOption={(input, option) =>
+                (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={(Array.isArray(productsData) ? productsData : []).map((product: any) => ({
+                value: product.id?.toString(),
+                label: `${product.code || product.sku || ''} - ${product.name}`,
+                disabled: orderItems.some(item => item.productId === product.id?.toString()),
+              }))}
+            />
+          </div>
+
+          {/* Order Items Table */}
+          {orderItems.length > 0 && (
+            <div className="mb-6">
+              <Table
+                dataSource={orderItems}
+                rowKey="productId"
+                pagination={false}
+                size="small"
+                columns={[
+                  {
+                    title: 'Ürün',
+                    key: 'product',
+                    render: (_: any, record: any) => (
+                      <div>
+                        <p className="font-medium m-0">{record.productName}</p>
+                        <p className="text-xs text-slate-500 m-0">{record.productCode}</p>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Miktar',
+                    dataIndex: 'quantity',
+                    key: 'quantity',
+                    width: 100,
+                    render: (value: number, record: any) => (
+                      <InputNumber
+                        min={1}
+                        value={value}
+                        size="small"
+                        onChange={(val) => handleUpdateOrderItem(record.productId, 'quantity', val || 1)}
+                      />
+                    ),
+                  },
+                  {
+                    title: 'Birim Fiyat',
+                    dataIndex: 'unitPrice',
+                    key: 'unitPrice',
+                    width: 120,
+                    render: (value: number, record: any) => (
+                      <InputNumber
+                        min={0}
+                        value={value}
+                        size="small"
+                        formatter={(val) => `₺ ${val}`}
+                        parser={(val) => Number((val || '').replace('₺ ', '')) as any}
+                        onChange={(val) => handleUpdateOrderItem(record.productId, 'unitPrice', val || 0)}
+                      />
+                    ),
+                  },
+                  {
+                    title: 'İndirim %',
+                    dataIndex: 'discountRate',
+                    key: 'discountRate',
+                    width: 90,
+                    render: (value: number, record: any) => (
+                      <InputNumber
+                        min={0}
+                        max={100}
+                        value={value}
+                        size="small"
+                        onChange={(val) => handleUpdateOrderItem(record.productId, 'discountRate', val || 0)}
+                      />
+                    ),
+                  },
+                  {
+                    title: 'Toplam',
+                    key: 'total',
+                    width: 100,
+                    render: (_: any, record: any) => {
+                      const subtotal = record.quantity * record.unitPrice;
+                      const discount = subtotal * (record.discountRate / 100);
+                      const afterDiscount = subtotal - discount;
+                      const vat = afterDiscount * (record.vatRate / 100);
+                      const total = afterDiscount + vat;
+                      return (
+                        <span className="font-semibold">
+                          {new Intl.NumberFormat('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY',
+                          }).format(total)}
+                        </span>
+                      );
+                    },
+                  },
+                  {
+                    title: '',
+                    key: 'actions',
+                    width: 50,
+                    render: (_: any, record: any) => (
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleRemoveProduct(record.productId)}
+                      />
+                    ),
+                  },
+                ]}
+              />
+
+              {/* Order Total */}
+              <div className="flex justify-end mt-4 p-4 bg-slate-50 rounded-lg">
+                <div className="text-right">
+                  <p className="text-sm text-slate-500 mb-1">Genel Toplam</p>
+                  <p className="text-xl font-bold text-slate-800 m-0">
+                    {new Intl.NumberFormat('tr-TR', {
+                      style: 'currency',
+                      currency: 'TRY',
+                    }).format(calculateOrderTotal())}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+            <Button
+              size="large"
+              onClick={() => {
+                setIsOrderModalOpen(false);
+                setOrderItems([]);
+                orderForm.resetFields();
+              }}
+            >
+              İptal
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              icon={<ShoppingOutlined />}
+              loading={createOrder.isPending}
+              disabled={orderItems.length === 0}
+            >
+              Sipariş Oluştur
             </Button>
           </div>
         </Form>

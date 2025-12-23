@@ -149,5 +149,6 @@ public static class DependencyInjection
     {
         // Register event consumers
         configurator.AddConsumer<DealWonEventConsumer>();
+        configurator.AddConsumer<SalesOrderCreatedEventConsumer>();
     }
 }

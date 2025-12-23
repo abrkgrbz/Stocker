@@ -65,6 +65,8 @@ export const salesKeys = {
   orders: ['sales', 'orders'] as const,
   ordersList: (params?: GetSalesOrdersParams) => ['sales', 'orders', 'list', params] as const,
   order: (id: string) => ['sales', 'orders', id] as const,
+  ordersByCustomer: (customerId: string, page?: number, pageSize?: number) =>
+    ['sales', 'orders', 'customer', customerId, page, pageSize] as const,
   statistics: (from?: string, to?: string) => ['sales', 'statistics', from, to] as const,
 
   // Quotations
@@ -147,6 +149,30 @@ export function useSalesStatistics(fromDate?: string, toDate?: string) {
     queryKey: salesKeys.statistics(fromDate, toDate),
     queryFn: () => SalesService.getStatistics(fromDate, toDate),
     staleTime: 60 * 1000, // 1 minute
+  });
+}
+
+/**
+ * Hook to fetch sales orders by customer ID
+ * Optimized for CRM Customer detail page Orders tab
+ */
+export function useSalesOrdersByCustomer(
+  customerId: string,
+  page: number = 1,
+  pageSize: number = 10
+) {
+  return useQuery<PagedResult<SalesOrderListItem>>({
+    queryKey: salesKeys.ordersByCustomer(customerId, page, pageSize),
+    queryFn: () =>
+      SalesService.getOrders({
+        customerId,
+        page,
+        pageSize,
+        sortBy: 'OrderDate',
+        sortDescending: true,
+      }),
+    enabled: !!customerId,
+    staleTime: 30 * 1000,
   });
 }
 

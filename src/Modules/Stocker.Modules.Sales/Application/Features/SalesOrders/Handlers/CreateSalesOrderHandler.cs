@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,7 @@ using Stocker.Modules.Sales.Application.DTOs;
 using Stocker.Modules.Sales.Application.Features.SalesOrders.Commands;
 using Stocker.Modules.Sales.Domain.Entities;
 using Stocker.Modules.Sales.Interfaces;
+using Stocker.Shared.Events.Sales;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
@@ -12,17 +14,21 @@ namespace Stocker.Modules.Sales.Application.Features.SalesOrders.Handlers;
 /// <summary>
 /// Handler for CreateSalesOrderCommand
 /// Uses ISalesUnitOfWork to ensure repository and SaveChanges use the same DbContext instance
+/// Publishes SalesOrderCreatedEvent for cross-module integration (e.g., Inventory stock reservation)
 /// </summary>
 public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, Result<SalesOrderDto>>
 {
     private readonly ISalesUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<CreateSalesOrderHandler> _logger;
 
     public CreateSalesOrderHandler(
         ISalesUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint,
         ILogger<CreateSalesOrderHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
         _logger = logger;
     }
 
@@ -93,6 +99,35 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
         // Reload with items
         var savedOrder = await _unitOfWork.SalesOrders.GetWithItemsAsync(order.Id, cancellationToken);
 
-        return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder!));
+        // Publish integration event for cross-module integration (e.g., Inventory stock reservation)
+        var integrationEvent = new SalesOrderCreatedEvent(
+            OrderId: savedOrder!.Id,
+            OrderNumber: savedOrder.OrderNumber,
+            CustomerId: savedOrder.CustomerId,
+            CustomerName: savedOrder.CustomerName ?? string.Empty,
+            TenantId: tenantId,
+            TotalAmount: savedOrder.TotalAmount,
+            Currency: savedOrder.Currency,
+            Items: savedOrder.Items.Select(i => new SalesOrderItemDto(
+                ItemId: i.Id,
+                ProductId: i.ProductId,
+                ProductCode: i.ProductCode,
+                ProductName: i.ProductName,
+                Unit: i.Unit,
+                Quantity: i.Quantity,
+                UnitPrice: i.UnitPrice,
+                DiscountAmount: i.DiscountAmount
+            )).ToList(),
+            OrderDate: savedOrder.OrderDate,
+            CreatedBy: null // TODO: Get from current user context
+        );
+
+        await _publishEndpoint.Publish(integrationEvent, cancellationToken);
+
+        _logger.LogInformation(
+            "Published SalesOrderCreatedEvent for order {OrderNumber} with {ItemCount} items",
+            orderNumber, savedOrder.Items.Count);
+
+        return Result<SalesOrderDto>.Success(SalesOrderDto.FromEntity(savedOrder));
     }
 }
