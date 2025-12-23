@@ -206,7 +206,11 @@ export function ActivityModal({
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      // Get all form values (not just current step)
+      const values = form.getFieldsValue(true);
+
+      // Debug log
+      console.log('Form values:', values);
 
       // Validate that startTime exists
       if (!values.startTime) {
