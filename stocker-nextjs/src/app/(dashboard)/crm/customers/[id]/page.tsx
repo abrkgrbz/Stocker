@@ -654,42 +654,108 @@ export default function CustomerDetailPage() {
                       <span className="flex items-center gap-2 py-1">
                         <ClockCircleOutlined />
                         Aktiviteler
+                        {timelineData.length > 0 && (
+                          <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
+                            {timelineData.length}
+                          </span>
+                        )}
                       </span>
                     ),
                     children: (
                       <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50">
+                              <ClockCircleOutlined className="text-purple-600 text-lg" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-medium text-slate-900 m-0">Aktiviteler</h3>
+                                {timelineData.length > 0 && (
+                                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {timelineData.length}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 m-0">Müşteri ile ilgili tüm aktiviteler</p>
+                            </div>
+                          </div>
+                          <button
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                          >
+                            <PlusOutlined />
+                            Yeni Aktivite
+                          </button>
+                        </div>
+
+                        {/* Activities List */}
                         {activitiesLoading ? (
-                          <div className="space-y-4">
-                            <Skeleton active />
-                            <Skeleton active />
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="bg-slate-50 rounded-lg p-4 animate-pulse">
+                                <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
+                                <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                              </div>
+                            ))}
                           </div>
                         ) : timelineData.length === 0 ? (
-                          <div className="py-12 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                              <ClockCircleOutlined className="text-2xl text-slate-400" />
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                              <ClockCircleOutlined className="text-xl" />
                             </div>
-                            <p className="text-slate-500 mb-4">Henüz aktivite bulunmuyor</p>
-                            <Button type="dashed" icon={<ClockCircleOutlined />}>
-                              Yeni Aktivite Oluştur
-                            </Button>
+                            <h3 className="text-sm font-medium text-slate-900 mb-1">Aktivite bulunmuyor</h3>
+                            <p className="text-sm text-slate-500 mb-4 max-w-sm">
+                              Bu müşteri için henüz aktivite kaydı oluşturulmamış.
+                            </p>
+                            <button
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                            >
+                              <PlusOutlined />
+                              İlk Aktiviteyi Oluştur
+                            </button>
                           </div>
                         ) : (
-                          <Timeline
-                            items={timelineData.map((item: any) => ({
-                              color: item.color,
-                              dot: item.icon,
-                              children: (
-                                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <p className="font-medium text-slate-800 m-0">{item.title}</p>
-                                    <Tag color={item.color} className="m-0">{item.status}</Tag>
+                          <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+                            {timelineData.map((item: any, index: number) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-4 p-4 hover:bg-slate-50 transition-colors"
+                              >
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                  item.color === 'blue' ? 'bg-blue-50' :
+                                  item.color === 'green' ? 'bg-green-50' :
+                                  item.color === 'orange' ? 'bg-orange-50' :
+                                  item.color === 'red' ? 'bg-red-50' :
+                                  item.color === 'purple' ? 'bg-purple-50' : 'bg-slate-100'
+                                }`}>
+                                  {item.icon || <ClockCircleOutlined className={`text-lg ${
+                                    item.color === 'blue' ? 'text-blue-600' :
+                                    item.color === 'green' ? 'text-green-600' :
+                                    item.color === 'orange' ? 'text-orange-600' :
+                                    item.color === 'red' ? 'text-red-600' :
+                                    item.color === 'purple' ? 'text-purple-600' : 'text-slate-500'
+                                  }`} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2 mb-1">
+                                    <span className="text-sm font-medium text-slate-900">{item.title}</span>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      item.color === 'blue' ? 'bg-blue-50 text-blue-700' :
+                                      item.color === 'green' ? 'bg-green-50 text-green-700' :
+                                      item.color === 'orange' ? 'bg-orange-50 text-orange-700' :
+                                      item.color === 'red' ? 'bg-red-50 text-red-700' :
+                                      item.color === 'purple' ? 'bg-purple-50 text-purple-700' : 'bg-slate-100 text-slate-600'
+                                    }`}>
+                                      {item.status}
+                                    </span>
                                   </div>
-                                  <p className="text-sm text-slate-600 mb-2">{item.description}</p>
+                                  <p className="text-sm text-slate-600 mb-1">{item.description}</p>
                                   <span className="text-xs text-slate-400">{item.time}</span>
                                 </div>
-                              ),
-                            }))}
-                          />
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     ),

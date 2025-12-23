@@ -5,16 +5,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
 import {
-  Button,
   Select,
   Input,
   Form,
-  Space,
   Modal,
   message,
-  Card,
   Progress,
-  Tag,
   Tooltip,
 } from 'antd';
 import {
@@ -27,6 +23,9 @@ import {
   FileImageOutlined,
   FileZipOutlined,
   UploadOutlined,
+  PlusOutlined,
+  CloudUploadOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import {
@@ -66,32 +65,32 @@ const accessLevels: { label: string; value: string }[] = [
   { label: 'Çok Gizli', value: 'Restricted' },
 ];
 
-// File type icon and color mapping
+// File type icon and color mapping - Enterprise Design
 const getFileTypeInfo = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'pdf':
       return {
-        icon: <FilePdfOutlined className="text-white text-2xl" />,
-        color: 'from-red-500 to-red-600',
+        icon: <FilePdfOutlined className="text-red-600 text-lg" />,
         bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
+        textColor: 'text-red-600',
+        label: 'PDF',
       };
     case 'doc':
     case 'docx':
       return {
-        icon: <FileWordOutlined className="text-white text-2xl" />,
-        color: 'from-blue-500 to-blue-600',
+        icon: <FileWordOutlined className="text-blue-600 text-lg" />,
         bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
+        textColor: 'text-blue-600',
+        label: 'Word',
       };
     case 'xls':
     case 'xlsx':
       return {
-        icon: <FileExcelOutlined className="text-white text-2xl" />,
-        color: 'from-green-500 to-green-600',
+        icon: <FileExcelOutlined className="text-green-600 text-lg" />,
         bgColor: 'bg-green-50',
-        borderColor: 'border-green-200',
+        textColor: 'text-green-600',
+        label: 'Excel',
       };
     case 'jpg':
     case 'jpeg':
@@ -99,28 +98,41 @@ const getFileTypeInfo = (fileName: string) => {
     case 'gif':
     case 'svg':
       return {
-        icon: <FileImageOutlined className="text-white text-2xl" />,
-        color: 'from-purple-500 to-purple-600',
+        icon: <FileImageOutlined className="text-purple-600 text-lg" />,
         bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-200',
+        textColor: 'text-purple-600',
+        label: 'Image',
       };
     case 'zip':
     case 'rar':
     case '7z':
       return {
-        icon: <FileZipOutlined className="text-white text-2xl" />,
-        color: 'from-orange-500 to-orange-600',
+        icon: <FileZipOutlined className="text-orange-600 text-lg" />,
         bgColor: 'bg-orange-50',
-        borderColor: 'border-orange-200',
+        textColor: 'text-orange-600',
+        label: 'Archive',
       };
     default:
       return {
-        icon: <FileOutlined className="text-white text-2xl" />,
-        color: 'from-gray-500 to-gray-600',
-        bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-200',
+        icon: <FileOutlined className="text-slate-500 text-lg" />,
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-500',
+        label: 'File',
       };
   }
+};
+
+// Category labels in Turkish
+const getCategoryLabel = (category: string) => {
+  const labels: Record<string, string> = {
+    'General': 'Genel',
+    'Contract': 'Sözleşme',
+    'Quote': 'Teklif',
+    'Invoice': 'Fatura',
+    'Payment': 'Ödeme',
+    'Other': 'Diğer',
+  };
+  return labels[category] || category;
 };
 
 // Format file size
@@ -283,159 +295,201 @@ export function DocumentUpload({
 
   return (
     <div className="relative">
-      {/* Modern Single Card with Integrated Upload */}
-      <Card
-        title={
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FileOutlined className="text-xl" />
-              <span className="font-semibold">Dokümanlar</span>
+      {/* Header - Enterprise Design */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-50">
+            <FileOutlined className="text-emerald-600 text-lg" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-slate-900 m-0">Dokümanlar</h3>
               {documents && documents.length > 0 && (
-                <span className="text-sm text-gray-500">({documents.length})</span>
+                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {documents.length}
+                </span>
               )}
             </div>
-            <Button
-              type="primary"
-              icon={<UploadOutlined />}
-              onClick={handleNewDocumentClick}
-              className="upload-trigger"
-            >
-              Yeni Doküman
-            </Button>
+            <p className="text-xs text-slate-500 m-0">Firmaya ait dokümanlar ve belgeler</p>
           </div>
-        }
-        className="shadow-sm border border-gray-100"
-      >
-        {/* Dropzone Container - Invisible but active */}
-        <div ref={dropzoneRef} className="dropzone-modern">
-          {/* Drag Overlay */}
-          {isDragging && (
-            <div className="absolute inset-0 z-50 bg-blue-500/10 border-4 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none">
-              <div className="text-center bg-white p-8 rounded-xl shadow-2xl">
-                <div className="text-6xl mb-4">📥</div>
-                <p className="text-xl font-bold text-blue-600 mb-2">
-                  Yüklemek için buraya bırakın
-                </p>
-                <p className="text-gray-500">
-                  Maksimum dosya boyutu: {maxFileSize}MB
-                </p>
-              </div>
-            </div>
-          )}
+        </div>
+        <button
+          onClick={handleNewDocumentClick}
+          className="upload-trigger inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+        >
+          <UploadOutlined />
+          Yeni Doküman
+        </button>
+      </div>
 
-          {/* Documents List or Empty State */}
-          {documents && documents.length > 0 ? (
-            <div className="space-y-3">
-              {documents.map((doc, index) => {
+      {/* Dropzone Container */}
+      <div ref={dropzoneRef} className="dropzone-modern relative">
+        {/* Drag Overlay - Enterprise Design */}
+        {isDragging && (
+          <div className="absolute inset-0 z-50 bg-emerald-50/90 border-2 border-dashed border-emerald-400 rounded-lg flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                <CloudUploadOutlined className="text-emerald-600 text-3xl" />
+              </div>
+              <p className="text-lg font-medium text-emerald-700 mb-1">
+                Yüklemek için buraya bırakın
+              </p>
+              <p className="text-sm text-emerald-600">
+                Maksimum dosya boyutu: {maxFileSize}MB
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Documents List or Empty State */}
+        {documents && documents.length > 0 ? (
+          <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
+            {documents.map((doc, index) => {
               const fileInfo = getFileTypeInfo(doc.fileName);
               return (
                 <motion.div
                   key={doc.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ x: 4 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
                 >
-                  <div
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 ${fileInfo.borderColor} ${fileInfo.bgColor} hover:shadow-lg transition-all duration-300 cursor-pointer group`}
-                  >
-                    {/* Icon Section */}
-                    <div className={`flex-shrink-0 w-16 h-16 rounded-lg bg-gradient-to-br ${fileInfo.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                      {fileInfo.icon}
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="flex-1 min-w-0">
-                      {/* File Name */}
-                      <Tooltip title={doc.fileName}>
-                        <h3 className="font-semibold text-gray-900 truncate text-lg mb-1">
-                          {doc.fileName}
-                        </h3>
-                      </Tooltip>
-
-                      {/* Metadata Row */}
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <Tag color="blue" className="m-0">
-                          {doc.category}
-                        </Tag>
-                        <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full border border-gray-200">
-                          {formatFileSize(doc.fileSize || 0)}
-                        </span>
-                        {doc.uploadedAt && (
-                          <span className="text-xs text-gray-500">
-                            📅 {new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}
-                          </span>
-                        )}
+                  <div className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      {/* File Icon */}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${fileInfo.bgColor}`}>
+                        {fileInfo.icon}
                       </div>
 
-                      {/* Description */}
-                      {doc.description && (
-                        <p className="text-sm text-gray-600 line-clamp-1">
-                          {doc.description}
-                        </p>
-                      )}
+                      {/* File Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Tooltip title={doc.fileName}>
+                            <span className="text-sm font-medium text-slate-900 truncate max-w-[200px]">
+                              {doc.fileName}
+                            </span>
+                          </Tooltip>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${fileInfo.bgColor} ${fileInfo.textColor}`}>
+                            {fileInfo.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                            {getCategoryLabel(doc.category)}
+                          </span>
+                          <span>{formatFileSize(doc.fileSize || 0)}</span>
+                          {doc.uploadedAt && (
+                            <>
+                              <span className="text-slate-300">•</span>
+                              <span>{new Date(doc.uploadedAt).toLocaleDateString('tr-TR')}</span>
+                            </>
+                          )}
+                        </div>
+                        {doc.description && (
+                          <p className="text-xs text-slate-500 mt-1 truncate max-w-md">{doc.description}</p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex-shrink-0 flex items-center gap-2">
+                    <div className="flex items-center gap-1 ml-4">
                       <Tooltip title="İndir">
-                        <Button
-                          type="primary"
-                          icon={<DownloadOutlined />}
+                        <button
                           onClick={() => handleDownload(doc.id)}
-                          loading={downloadMutation.isPending}
-                          className="shadow-sm"
-                          size="large"
-                        />
+                          disabled={downloadMutation.isPending}
+                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          <DownloadOutlined />
+                        </button>
                       </Tooltip>
                       <Tooltip title="Sil">
-                        <Button
-                          danger
-                          icon={<DeleteOutlined />}
+                        <button
                           onClick={() => handleDelete(doc.id)}
-                          loading={deleteMutation.isPending}
-                          size="large"
-                        />
+                          disabled={deleteMutation.isPending}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          <DeleteOutlined />
+                        </button>
                       </Tooltip>
                     </div>
                   </div>
                 </motion.div>
               );
             })}
+          </div>
+        ) : (
+          /* Empty State - Enterprise Design */
+          <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+              <FileOutlined className="text-xl" />
             </div>
-          ) : (
-            /* Empty State */
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📁</div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">Henüz doküman yok</h3>
-              <p className="text-gray-500 mb-6">
-                Dokümanları sürükleyip bırakın veya yükle butonuna tıklayın
-              </p>
-              <Button
-                type="dashed"
-                size="large"
-                icon={<UploadOutlined />}
-                onClick={handleNewDocumentClick}
-                className="upload-trigger"
-              >
-                İlk Dokümanı Yükle
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
+            <h3 className="text-sm font-medium text-slate-900 mb-1">Doküman bulunmuyor</h3>
+            <p className="text-sm text-slate-500 mb-4 max-w-sm">
+              Dokümanları sürükleyip bırakın veya yükle butonuna tıklayın
+            </p>
+            <button
+              onClick={handleNewDocumentClick}
+              className="upload-trigger inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              <UploadOutlined />
+              İlk Dokümanı Yükle
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Upload Metadata Modal */}
+      {/* Upload Metadata Modal - Enterprise Design */}
       <Modal
-        title="📋 Doküman Bilgileri"
+        title={null}
         open={isModalVisible}
-        onOk={handleModalOk}
         onCancel={handleModalCancel}
-        confirmLoading={uploadMutation.isPending}
-        okText={uploadMutation.isPending ? 'Yükleniyor...' : 'Yükle'}
-        cancelText="İptal"
+        footer={null}
         width={600}
+        centered
+        className="enterprise-modal"
       >
+        {/* Modal Header */}
+        <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50">
+            <UploadOutlined className="text-emerald-600 text-xl" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 m-0">Doküman Yükle</h2>
+            <p className="text-sm text-slate-500 m-0">
+              {selectedFiles.length > 0
+                ? `${selectedFiles.length} dosya seçildi`
+                : 'Doküman bilgilerini girin'}
+            </p>
+          </div>
+        </div>
+
+        {/* Selected Files Preview */}
+        {selectedFiles.length > 0 && (
+          <div className="mt-6 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+                <FileOutlined className="text-slate-500 text-xs" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Seçilen Dosyalar</span>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+              {selectedFiles.map((file, index) => {
+                const fileInfo = getFileTypeInfo(file.name);
+                return (
+                  <div key={index} className="flex items-center gap-3 bg-white rounded-md p-2 border border-slate-200">
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center ${fileInfo.bgColor}`}>
+                      {fileInfo.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                      <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <Form
           form={form}
           layout="vertical"
@@ -443,54 +497,116 @@ export function DocumentUpload({
             category: 'General',
             accessLevel: 'Internal',
           }}
+          className="mt-6"
         >
-          <Form.Item
-            name="category"
-            label="Kategori"
-            rules={[{ required: true, message: 'Kategori seçiniz' }]}
-          >
-            <Select options={documentCategories} size="large" />
-          </Form.Item>
+          {/* Category Section */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+              <FileOutlined className="text-slate-500 text-xs" />
+            </div>
+            <span className="text-sm font-medium text-slate-700">Doküman Bilgileri</span>
+          </div>
 
-          <Form.Item name="description" label="Açıklama">
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="category"
+              label={<span className="text-sm text-slate-600">Kategori</span>}
+              rules={[{ required: true, message: 'Kategori seçiniz' }]}
+              className="mb-4"
+            >
+              <Select
+                options={documentCategories}
+                className="w-full"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="accessLevel"
+              label={<span className="text-sm text-slate-600">Erişim Seviyesi</span>}
+              rules={[{ required: true, message: 'Erişim seviyesi seçiniz' }]}
+              className="mb-4"
+            >
+              <Select
+                options={accessLevels}
+                className="w-full"
+                size="large"
+              />
+            </Form.Item>
+          </div>
+
+          <Form.Item
+            name="description"
+            label={<span className="text-sm text-slate-600">Açıklama</span>}
+            className="mb-4"
+          >
             <Input.TextArea
               rows={3}
               placeholder="Doküman açıklaması (opsiyonel)"
               showCount
               maxLength={500}
+              className="rounded-lg"
             />
           </Form.Item>
 
-          <Form.Item name="tags" label="Etiketler">
-            <Input placeholder="Virgülle ayrılmış etiketler (opsiyonel)" />
-          </Form.Item>
-
           <Form.Item
-            name="accessLevel"
-            label="Erişim Seviyesi"
-            rules={[{ required: true, message: 'Erişim seviyesi seçiniz' }]}
+            name="tags"
+            label={<span className="text-sm text-slate-600">Etiketler</span>}
+            className="mb-6"
           >
-            <Select options={accessLevels} size="large" />
+            <Input
+              placeholder="Virgülle ayrılmış etiketler (opsiyonel)"
+              className="rounded-lg"
+            />
           </Form.Item>
 
           {/* Progress Bar */}
           {uploadMutation.isPending && uploadProgress > 0 && (
-            <div className="mt-4">
+            <div className="mb-6 p-4 bg-emerald-50 rounded-lg">
               <Progress
                 percent={Math.round(uploadProgress)}
                 status="active"
                 strokeColor={{
-                  '0%': '#108ee9',
-                  '100%': '#87d068',
+                  '0%': '#10b981',
+                  '100%': '#059669',
                 }}
               />
-              <p className="text-center text-sm text-gray-500 mt-2">
+              <p className="text-center text-sm text-emerald-700 mt-2">
                 {selectedFiles.length > 1
                   ? `${Math.round((uploadProgress / 100) * selectedFiles.length)} / ${selectedFiles.length} dosya yüklendi`
                   : 'Yükleniyor...'}
               </p>
             </div>
           )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={handleModalCancel}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              İptal
+            </button>
+            <button
+              type="button"
+              onClick={handleModalOk}
+              disabled={uploadMutation.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            >
+              {uploadMutation.isPending ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Yükleniyor...
+                </>
+              ) : (
+                <>
+                  <UploadOutlined />
+                  Yükle
+                </>
+              )}
+            </button>
+          </div>
         </Form>
       </Modal>
 
