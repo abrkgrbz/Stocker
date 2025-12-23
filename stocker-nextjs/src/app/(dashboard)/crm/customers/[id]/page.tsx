@@ -850,9 +850,8 @@ export default function CustomerDetailPage() {
                       </div>
                     ),
                   },
-                  // Only show Contacts tab for Corporate customers
-                  // DEBUG: Temporarily show for all - check console for customerType value
-                  ...([{
+                  // Contacts tab - now shown for all customers (was Corporate only)
+                  {
                     key: 'contacts',
                     label: (
                       <span className="flex items-center gap-2 py-1">
@@ -1023,7 +1022,7 @@ export default function CustomerDetailPage() {
                         )}
                       </div>
                     ),
-                  }] : []),
+                  },
                 ]}
               />
             </div>
