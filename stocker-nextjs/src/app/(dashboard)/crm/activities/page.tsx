@@ -308,17 +308,16 @@ export default function ActivitiesPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      const activityData = {
-        ...values,
-        startTime: values.startTime.toISOString(),
-        endTime: values.endTime ? values.endTime.toISOString() : null,
-      };
-
+      // ActivityModal already maps frontend fields to backend format:
+      // - title -> subject
+      // - startTime -> dueDate (as ISO string)
+      // - endTime -> duration (calculated in minutes)
+      // So we just pass the values directly
       if (selectedActivity) {
-        await updateActivity.mutateAsync({ id: selectedActivity.id, data: activityData });
+        await updateActivity.mutateAsync({ id: selectedActivity.id, data: values });
         showSuccess('Aktivite başarıyla güncellendi');
       } else {
-        await createActivity.mutateAsync(activityData);
+        await createActivity.mutateAsync(values);
         showSuccess('Yeni aktivite oluşturuldu');
       }
       setModalOpen(false);
