@@ -115,8 +115,13 @@ export default function CustomerDetailPage() {
         currency: 'TRY',
         notes: values.notes,
         items: orderItems.map((item, index) => ({
-          ...item,
-          lineNumber: index + 1,
+          productCode: item.productCode,
+          productName: item.productName,
+          unit: item.unit,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          vatRate: item.vatRate,
+          discountRate: item.discountRate,
         })),
       });
 
