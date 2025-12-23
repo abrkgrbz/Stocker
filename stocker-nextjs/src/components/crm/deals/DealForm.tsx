@@ -172,18 +172,20 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
                     }
                     optionLabelProp="label"
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  >
-                    {customers.map((customer) => (
-                      <Select.Option key={customer.id} value={customer.id} label={customer.customerName}>
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{customer.customerName}</span>
-                          {customer.email && (
-                            <span className="text-xs text-slate-400">{customer.email}</span>
-                          )}
-                        </div>
-                      </Select.Option>
-                    ))}
-                  </Select>
+                    options={customers.map((customer) => ({
+                      value: customer.id,
+                      label: customer.companyName,
+                      email: customer.email,
+                    }))}
+                    optionRender={(option) => (
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-medium">{option.data.label}</span>
+                        {option.data.email && (
+                          <span className="text-xs text-slate-400 ml-2">{option.data.email}</span>
+                        )}
+                      </div>
+                    )}
+                  />
                 </Form.Item>
               </div>
               <div className="col-span-6">
