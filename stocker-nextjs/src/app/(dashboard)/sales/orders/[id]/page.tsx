@@ -231,8 +231,8 @@ export default function SalesOrderDetailPage() {
     },
     {
       title: 'Satır Toplamı',
-      dataIndex: 'lineTotalWithVat',
-      key: 'lineTotalWithVat',
+      dataIndex: 'lineTotal',
+      key: 'lineTotal',
       align: 'right' as const,
       render: (total: number) =>
         new Intl.NumberFormat('tr-TR', { style: 'currency', currency: order?.currency || 'TRY' }).format(total),
@@ -348,14 +348,14 @@ export default function SalesOrderDetailPage() {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic title="KDV" value={order.taxTotal} formatter={(val) => formatCurrency(val as number)} />
+            <Statistic title="KDV" value={order.vatAmount} formatter={(val) => formatCurrency(val as number)} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
               title="Genel Toplam"
-              value={order.grandTotal}
+              value={order.totalAmount}
               formatter={(val) => formatCurrency(val as number)}
               valueStyle={{ color: '#3f8600', fontWeight: 'bold' }}
             />
@@ -440,7 +440,7 @@ export default function SalesOrderDetailPage() {
                       KDV Toplam:
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
-                      {formatCurrency(order.taxTotal)}
+                      {formatCurrency(order.vatAmount)}
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                   <Table.Summary.Row>
@@ -448,7 +448,7 @@ export default function SalesOrderDetailPage() {
                       <strong style={{ fontSize: 16 }}>Genel Toplam:</strong>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
-                      <strong style={{ fontSize: 16, color: '#3f8600' }}>{formatCurrency(order.grandTotal)}</strong>
+                      <strong style={{ fontSize: 16, color: '#3f8600' }}>{formatCurrency(order.totalAmount)}</strong>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                 </Table.Summary>
