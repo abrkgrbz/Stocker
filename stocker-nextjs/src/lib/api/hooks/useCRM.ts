@@ -2457,6 +2457,123 @@ export function useSendTestEmail() {
 }
 
 // =====================================
+// CONTACT HOOKS
+// =====================================
+
+import type { Contact, CreateContactCommand, UpdateContactCommand } from '../services/crm.service';
+
+export function useContactsByCustomer(customerId: string | undefined) {
+  return useQuery({
+    queryKey: ['crm', 'contacts', 'customer', customerId],
+    queryFn: () => CRMService.getContactsByCustomer(customerId!),
+    enabled: !!customerId,
+  });
+}
+
+export function useContact(id: string | undefined) {
+  return useQuery({
+    queryKey: ['crm', 'contacts', id],
+    queryFn: () => CRMService.getContact(id!),
+    enabled: !!id,
+  });
+}
+
+export function useCreateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateContactCommand) => CRMService.createContact(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'customers', variables.customerId] });
+      showSuccess('Kişi başarıyla eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi eklenemedi');
+    },
+  });
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateContactCommand }) =>
+      CRMService.updateContact(id, data),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', result.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', result.id] });
+      showSuccess('Kişi başarıyla güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi güncellenemedi');
+    },
+  });
+}
+
+export function useDeleteContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, customerId }: { id: string; customerId: string }) =>
+      CRMService.deleteContact(id).then(() => ({ id, customerId })),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'customers', variables.customerId] });
+      showSuccess('Kişi başarıyla silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi silinemedi');
+    },
+  });
+}
+
+export function useSetContactAsPrimary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => CRMService.setContactAsPrimary(id),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', result.customerId] });
+      showSuccess('Kişi ana iletişim olarak ayarlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi ana iletişim olarak ayarlanamadı');
+    },
+  });
+}
+
+export function useActivateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => CRMService.activateContact(id),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', result.customerId] });
+      showSuccess('Kişi aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi aktifleştirilemedi');
+    },
+  });
+}
+
+export function useDeactivateContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => CRMService.deactivateContact(id),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'contacts', 'customer', result.customerId] });
+      showSuccess('Kişi pasifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kişi pasifleştirilemedi');
+    },
+  });
+}
+
+// =====================================
 // ALIASES FOR BACKWARD COMPATIBILITY
 // =====================================
 export { useSegments as useCustomerSegments };

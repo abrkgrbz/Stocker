@@ -2034,6 +2034,113 @@ export class CRMService {
   static async sendTestEmail(data: SendTestEmailCommand): Promise<{ message: string; sentTo: string }> {
     return ApiService.post<{ message: string; sentTo: string }>(this.getPath('email/test'), data);
   }
+
+  // =====================================
+  // CONTACTS
+  // =====================================
+
+  /**
+   * Get contacts for a customer
+   */
+  static async getContactsByCustomer(customerId: string): Promise<Contact[]> {
+    return ApiService.get<Contact[]>(this.getPath(`contacts/customer/${customerId}`));
+  }
+
+  /**
+   * Get a single contact
+   */
+  static async getContact(id: string): Promise<Contact> {
+    return ApiService.get<Contact>(this.getPath(`contacts/${id}`));
+  }
+
+  /**
+   * Create a new contact
+   */
+  static async createContact(data: CreateContactCommand): Promise<Contact> {
+    return ApiService.post<Contact>(this.getPath('contacts'), data);
+  }
+
+  /**
+   * Update a contact
+   */
+  static async updateContact(id: string, data: UpdateContactCommand): Promise<Contact> {
+    return ApiService.put<Contact>(this.getPath(`contacts/${id}`), data);
+  }
+
+  /**
+   * Delete a contact
+   */
+  static async deleteContact(id: string): Promise<void> {
+    return ApiService.delete<void>(this.getPath(`contacts/${id}`));
+  }
+
+  /**
+   * Set a contact as primary
+   */
+  static async setContactAsPrimary(id: string): Promise<Contact> {
+    return ApiService.post<Contact>(this.getPath(`contacts/${id}/set-primary`), {});
+  }
+
+  /**
+   * Activate a contact
+   */
+  static async activateContact(id: string): Promise<Contact> {
+    return ApiService.post<Contact>(this.getPath(`contacts/${id}/activate`), {});
+  }
+
+  /**
+   * Deactivate a contact
+   */
+  static async deactivateContact(id: string): Promise<Contact> {
+    return ApiService.post<Contact>(this.getPath(`contacts/${id}/deactivate`), {});
+  }
+}
+
+// =====================================
+// CONTACT TYPES
+// =====================================
+
+export interface Contact {
+  id: string;
+  customerId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone?: string | null;
+  mobilePhone?: string | null;
+  jobTitle?: string | null;
+  department?: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+export interface CreateContactCommand {
+  customerId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  department?: string;
+  isPrimary?: boolean;
+  notes?: string;
+}
+
+export interface UpdateContactCommand {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
+  jobTitle?: string;
+  department?: string;
+  isPrimary?: boolean;
+  notes?: string;
 }
 
 export default CRMService;

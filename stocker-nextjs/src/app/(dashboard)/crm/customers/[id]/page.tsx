@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty, Modal, Form, Input, InputNumber, Tabs, Timeline, Card, Skeleton, Table, Select, DatePicker, Tooltip } from 'antd';
+import { Button, Space, Tag, Spin, Empty, Modal, Form, Input, InputNumber, Tabs, Timeline, Card, Skeleton, Table, Select, DatePicker, Tooltip, Checkbox } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -27,7 +27,8 @@ import {
   LockOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import { useCustomer, useUpdateCustomer, useActivities } from '@/lib/api/hooks/useCRM';
+import { useCustomer, useUpdateCustomer, useActivities, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
+import type { Contact, CreateContactCommand, UpdateContactCommand } from '@/lib/api/services/crm.service';
 import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import { useModuleCodes } from '@/lib/api/hooks/useUserModules';
@@ -48,6 +49,8 @@ export default function CustomerDetailPage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [activeTab, setActiveTab] = useState('activities');
   const [orderItems, setOrderItems] = useState<Array<{
     productId: string;
@@ -61,6 +64,7 @@ export default function CustomerDetailPage() {
   }>>([]);
   const [form] = Form.useForm();
   const [orderForm] = Form.useForm();
+  const [contactForm] = Form.useForm();
 
   // Module access check
   const { hasModule, isLoading: modulesLoading } = useModuleCodes();
@@ -84,6 +88,15 @@ export default function CustomerDetailPage() {
 
   // Fetch products for order creation (only if Inventory module is available)
   const { data: productsData, isLoading: productsLoading } = useProducts(false);
+
+  // Fetch customer contacts (only for Corporate customers)
+  const { data: contactsData, isLoading: contactsLoading } = useContactsByCustomer(
+    customer?.customerType === 'Corporate' ? customerId : undefined
+  );
+  const createContact = useCreateContact();
+  const updateContact = useUpdateContact();
+  const deleteContact = useDeleteContact();
+  const setContactAsPrimary = useSetContactAsPrimary();
 
   // Handle edit customer
   const handleEdit = async (values: any) => {
@@ -178,6 +191,73 @@ export default function CustomerDetailPage() {
       const vat = afterDiscount * (item.vatRate / 100);
       return total + afterDiscount + vat;
     }, 0);
+  };
+
+  // Contact handlers
+  const handleOpenContactModal = (contact?: Contact) => {
+    if (contact) {
+      setEditingContact(contact);
+      contactForm.setFieldsValue({
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        email: contact.email,
+        phone: contact.phone,
+        mobilePhone: contact.mobilePhone,
+        jobTitle: contact.jobTitle,
+        department: contact.department,
+        isPrimary: contact.isPrimary,
+        notes: contact.notes,
+      });
+    } else {
+      setEditingContact(null);
+      contactForm.resetFields();
+    }
+    setIsContactModalOpen(true);
+  };
+
+  const handleCloseContactModal = () => {
+    setIsContactModalOpen(false);
+    setEditingContact(null);
+    contactForm.resetFields();
+  };
+
+  const handleSaveContact = async (values: any) => {
+    try {
+      if (editingContact) {
+        await updateContact.mutateAsync({
+          id: editingContact.id,
+          data: values as UpdateContactCommand,
+        });
+        showSuccess('Kişi başarıyla güncellendi!');
+      } else {
+        await createContact.mutateAsync({
+          ...values,
+          customerId: customerId,
+        } as CreateContactCommand);
+        showSuccess('Kişi başarıyla eklendi!');
+      }
+      handleCloseContactModal();
+    } catch (error) {
+      showApiError(error, editingContact ? 'Kişi güncellenirken bir hata oluştu' : 'Kişi eklenirken bir hata oluştu');
+    }
+  };
+
+  const handleDeleteContact = async (contactId: string) => {
+    try {
+      await deleteContact.mutateAsync({ id: contactId, customerId: customerId });
+      showSuccess('Kişi başarıyla silindi!');
+    } catch (error) {
+      showApiError(error, 'Kişi silinirken bir hata oluştu');
+    }
+  };
+
+  const handleSetPrimaryContact = async (contactId: string) => {
+    try {
+      await setContactAsPrimary.mutateAsync(contactId);
+      showSuccess('Birincil kişi başarıyla belirlendi!');
+    } catch (error) {
+      showApiError(error, 'Birincil kişi belirlenirken bir hata oluştu');
+    }
   };
 
   // Order status helpers
@@ -767,28 +847,179 @@ export default function CustomerDetailPage() {
                       </div>
                     ),
                   },
-                  {
+                  // Only show Contacts tab for Corporate customers
+                  ...(customer?.customerType === 'Corporate' ? [{
                     key: 'contacts',
                     label: (
                       <span className="flex items-center gap-2 py-1">
                         <UserOutlined />
                         Kişiler
+                        {contactsData && contactsData.length > 0 && (
+                          <Tag className="ml-1" color="blue">{contactsData.length}</Tag>
+                        )}
                       </span>
                     ),
                     children: (
                       <div className="p-6">
-                        <div className="py-12 text-center">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                            <UserOutlined className="text-2xl text-slate-400" />
+                        {/* Header with create button */}
+                        <div className="flex justify-between items-center mb-6">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-800 m-0">Firma Kişileri</h3>
+                            <p className="text-sm text-slate-500 m-0">Bu firmaya ait tüm iletişim kişileri</p>
                           </div>
-                          <p className="text-slate-500 mb-4">Henüz kişi bulunmuyor</p>
-                          <Button type="dashed" icon={<UserOutlined />}>
+                          <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => handleOpenContactModal()}
+                          >
                             Yeni Kişi Ekle
                           </Button>
                         </div>
+
+                        {/* Contacts list */}
+                        {contactsLoading ? (
+                          <div className="space-y-4">
+                            <Skeleton active />
+                            <Skeleton active />
+                          </div>
+                        ) : !contactsData?.length ? (
+                          <div className="py-12 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                              <UserOutlined className="text-2xl text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 mb-4">Henüz kişi bulunmuyor</p>
+                            <Button
+                              type="primary"
+                              icon={<PlusOutlined />}
+                              onClick={() => handleOpenContactModal()}
+                            >
+                              İlk Kişiyi Ekle
+                            </Button>
+                          </div>
+                        ) : (
+                          <Table
+                            dataSource={contactsData}
+                            rowKey="id"
+                            pagination={false}
+                            columns={[
+                              {
+                                title: 'Ad Soyad',
+                                key: 'fullName',
+                                render: (_: any, record: Contact) => (
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${record.isPrimary ? 'bg-blue-100' : 'bg-slate-100'}`}>
+                                      <UserOutlined className={record.isPrimary ? 'text-blue-600' : 'text-slate-500'} />
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium text-slate-800">{record.fullName}</span>
+                                        {record.isPrimary && (
+                                          <Tag color="blue" className="m-0">Birincil</Tag>
+                                        )}
+                                        {!record.isActive && (
+                                          <Tag color="default" className="m-0">Pasif</Tag>
+                                        )}
+                                      </div>
+                                      {record.jobTitle && (
+                                        <span className="text-sm text-slate-500">{record.jobTitle}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ),
+                              },
+                              {
+                                title: 'E-posta',
+                                dataIndex: 'email',
+                                key: 'email',
+                                render: (email: string) => (
+                                  <a href={`mailto:${email}`} className="text-blue-600 hover:underline">
+                                    {email}
+                                  </a>
+                                ),
+                              },
+                              {
+                                title: 'Telefon',
+                                key: 'phone',
+                                render: (_: any, record: Contact) => (
+                                  <div>
+                                    {record.phone && (
+                                      <div className="flex items-center gap-1">
+                                        <PhoneOutlined className="text-slate-400" />
+                                        <a href={`tel:${record.phone}`} className="text-blue-600 hover:underline">
+                                          {record.phone}
+                                        </a>
+                                      </div>
+                                    )}
+                                    {record.mobilePhone && (
+                                      <div className="flex items-center gap-1 text-sm text-slate-500">
+                                        <PhoneOutlined className="text-slate-400" />
+                                        {record.mobilePhone}
+                                      </div>
+                                    )}
+                                    {!record.phone && !record.mobilePhone && (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </div>
+                                ),
+                              },
+                              {
+                                title: 'Departman',
+                                dataIndex: 'department',
+                                key: 'department',
+                                render: (department: string) => department || '-',
+                              },
+                              {
+                                title: 'İşlemler',
+                                key: 'actions',
+                                width: 150,
+                                render: (_: any, record: Contact) => (
+                                  <Space>
+                                    {!record.isPrimary && (
+                                      <Tooltip title="Birincil Yap">
+                                        <Button
+                                          type="text"
+                                          size="small"
+                                          icon={<CheckCircleOutlined />}
+                                          onClick={() => handleSetPrimaryContact(record.id)}
+                                          loading={setContactAsPrimary.isPending}
+                                        />
+                                      </Tooltip>
+                                    )}
+                                    <Tooltip title="Düzenle">
+                                      <Button
+                                        type="text"
+                                        size="small"
+                                        icon={<EditOutlined />}
+                                        onClick={() => handleOpenContactModal(record)}
+                                      />
+                                    </Tooltip>
+                                    <Tooltip title="Sil">
+                                      <Button
+                                        type="text"
+                                        size="small"
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                        onClick={() => {
+                                          Modal.confirm({
+                                            title: 'Kişiyi Sil',
+                                            content: `${record.fullName} kişisini silmek istediğinize emin misiniz?`,
+                                            okText: 'Sil',
+                                            cancelText: 'İptal',
+                                            okButtonProps: { danger: true },
+                                            onOk: () => handleDeleteContact(record.id),
+                                          });
+                                        }}
+                                      />
+                                    </Tooltip>
+                                  </Space>
+                                ),
+                              },
+                            ]}
+                          />
+                        )}
                       </div>
                     ),
-                  },
+                  }] : []),
                 ]}
               />
             </div>
@@ -1115,6 +1346,96 @@ export default function CustomerDetailPage() {
               disabled={orderItems.length === 0}
             >
               Sipariş Oluştur
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* Contact Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <UserOutlined className="text-blue-600" />
+            <span>{editingContact ? 'Kişi Düzenle' : 'Yeni Kişi Ekle'}</span>
+          </div>
+        }
+        open={isContactModalOpen}
+        onCancel={handleCloseContactModal}
+        footer={null}
+        width={700}
+        centered
+      >
+        <Form
+          form={contactForm}
+          layout="vertical"
+          onFinish={handleSaveContact}
+          className="mt-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="firstName"
+              label="Ad"
+              rules={[{ required: true, message: 'Ad gereklidir' }]}
+            >
+              <Input size="large" placeholder="Ahmet" />
+            </Form.Item>
+
+            <Form.Item
+              name="lastName"
+              label="Soyad"
+              rules={[{ required: true, message: 'Soyad gereklidir' }]}
+            >
+              <Input size="large" placeholder="Yılmaz" />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="E-posta"
+              rules={[
+                { required: true, message: 'E-posta gereklidir' },
+                { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
+              ]}
+            >
+              <Input size="large" prefix={<MailOutlined />} placeholder="ahmet@firma.com" />
+            </Form.Item>
+
+            <Form.Item name="phone" label="Telefon">
+              <Input size="large" prefix={<PhoneOutlined />} placeholder="+90 212 123 4567" />
+            </Form.Item>
+
+            <Form.Item name="mobilePhone" label="Cep Telefonu">
+              <Input size="large" prefix={<PhoneOutlined />} placeholder="+90 555 123 4567" />
+            </Form.Item>
+
+            <Form.Item name="jobTitle" label="Ünvan">
+              <Input size="large" placeholder="Satış Müdürü" />
+            </Form.Item>
+
+            <Form.Item name="department" label="Departman">
+              <Input size="large" placeholder="Satış" />
+            </Form.Item>
+
+            <Form.Item name="isPrimary" valuePropName="checked" label=" ">
+              <Checkbox>Birincil Kişi olarak belirle</Checkbox>
+            </Form.Item>
+          </div>
+
+          <Form.Item name="notes" label="Notlar">
+            <Input.TextArea rows={3} placeholder="Kişi hakkında notlar..." />
+          </Form.Item>
+
+          <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+            <Button size="large" onClick={handleCloseContactModal}>
+              İptal
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              icon={editingContact ? <EditOutlined /> : <PlusOutlined />}
+              loading={createContact.isPending || updateContact.isPending}
+            >
+              {editingContact ? 'Güncelle' : 'Ekle'}
             </Button>
           </div>
         </Form>
