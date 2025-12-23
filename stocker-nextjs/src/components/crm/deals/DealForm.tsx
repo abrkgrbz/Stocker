@@ -174,14 +174,18 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                     options={customers.map((customer) => ({
                       value: customer.id,
-                      label: customer.companyName,
+                      label: customer.companyName || customer.contactPerson || customer.email || 'İsimsiz Müşteri',
+                      companyName: customer.companyName,
+                      contactPerson: customer.contactPerson,
                       email: customer.email,
                     }))}
                     optionRender={(option) => (
-                      <div className="flex items-center justify-between w-full">
-                        <span className="font-medium">{option.data.label}</span>
-                        {option.data.email && (
-                          <span className="text-xs text-slate-400 ml-2">{option.data.email}</span>
+                      <div className="flex flex-col w-full">
+                        <span className="font-medium text-slate-900">
+                          {option.data.companyName || option.data.contactPerson || option.data.email || 'İsimsiz Müşteri'}
+                        </span>
+                        {(option.data.companyName || option.data.contactPerson) && option.data.email && (
+                          <span className="text-xs text-slate-400">{option.data.email}</span>
                         )}
                       </div>
                     )}
