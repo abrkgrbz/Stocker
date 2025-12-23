@@ -1147,14 +1147,9 @@ export default function CustomerDetailPage() {
         </Form>
       </Modal>
 
-      {/* Create Order Modal */}
+      {/* Create Order Modal - Enterprise Design */}
       <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <ShoppingOutlined className="text-blue-600" />
-            <span>Yeni Sipariş Oluştur</span>
-          </div>
-        }
+        title={null}
         open={isOrderModalOpen}
         onCancel={() => {
           setIsOrderModalOpen(false);
@@ -1164,7 +1159,19 @@ export default function CustomerDetailPage() {
         footer={null}
         width={900}
         centered
+        className="enterprise-modal"
       >
+        {/* Modal Header */}
+        <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50">
+            <ShoppingOutlined className="text-blue-600 text-xl" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 m-0">Yeni Sipariş Oluştur</h2>
+            <p className="text-sm text-slate-500 m-0">{customer?.companyName} için sipariş oluşturun</p>
+          </div>
+        </div>
+
         <Form
           form={orderForm}
           layout="vertical"
@@ -1174,29 +1181,44 @@ export default function CustomerDetailPage() {
             orderDate: dayjs(),
           }}
         >
-          {/* Customer Info (Read-only) */}
-          <div className="bg-slate-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-slate-500 mb-1">Müşteri</p>
-            <p className="font-semibold text-slate-800 m-0">{customer?.companyName}</p>
-            {customer?.email && <p className="text-sm text-slate-600 m-0">{customer.email}</p>}
+          {/* Customer Info Card */}
+          <div className="bg-slate-50/50 border border-slate-200/50 p-4 rounded-xl mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
+                <ShopOutlined className="text-slate-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900 m-0">{customer?.companyName}</p>
+                {customer?.email && <p className="text-xs text-slate-500 m-0">{customer.email}</p>}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Form.Item
-              name="orderDate"
-              label="Sipariş Tarihi"
-              rules={[{ required: true, message: 'Sipariş tarihi gereklidir' }]}
-            >
-              <DatePicker
-                className="w-full"
-                format="DD/MM/YYYY"
-                placeholder="Tarih seçin"
-              />
-            </Form.Item>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Sipariş Tarihi</label>
+              <Form.Item
+                name="orderDate"
+                rules={[{ required: true, message: 'Sipariş tarihi gereklidir' }]}
+                className="mb-0"
+              >
+                <DatePicker
+                  className="w-full h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  format="DD/MM/YYYY"
+                  placeholder="Tarih seçin"
+                />
+              </Form.Item>
+            </div>
 
-            <Form.Item name="notes" label="Notlar">
-              <Input placeholder="Sipariş notu..." />
-            </Form.Item>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Notlar</label>
+              <Form.Item name="notes" className="mb-0">
+                <Input
+                  placeholder="Sipariş notu..."
+                  className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                />
+              </Form.Item>
+            </div>
           </div>
 
           {/* Product Selection */}
@@ -1207,7 +1229,7 @@ export default function CustomerDetailPage() {
               placeholder="Ürün arayın ve seçin..."
               optionFilterProp="label"
               loading={productsLoading}
-              className="w-full"
+              className="w-full enterprise-select"
               value={null}
               onChange={(value) => value && handleAddProduct(value)}
               filterOption={(input, option) =>
@@ -1221,111 +1243,105 @@ export default function CustomerDetailPage() {
             />
           </div>
 
-          {/* Order Items Table */}
-          {orderItems.length > 0 && (
+          {/* Order Items - Enterprise Card List */}
+          {orderItems.length > 0 ? (
             <div className="mb-6">
-              <Table
-                dataSource={orderItems}
-                rowKey="productId"
-                pagination={false}
-                size="small"
-                columns={[
-                  {
-                    title: 'Ürün',
-                    key: 'product',
-                    render: (_: any, record: any) => (
-                      <div>
-                        <p className="font-medium m-0">{record.productName}</p>
-                        <p className="text-xs text-slate-500 m-0">{record.productCode}</p>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'Miktar',
-                    dataIndex: 'quantity',
-                    key: 'quantity',
-                    width: 100,
-                    render: (value: number, record: any) => (
-                      <InputNumber
-                        min={1}
-                        value={value}
-                        size="small"
-                        onChange={(val) => handleUpdateOrderItem(record.productId, 'quantity', val || 1)}
-                      />
-                    ),
-                  },
-                  {
-                    title: 'Birim Fiyat',
-                    dataIndex: 'unitPrice',
-                    key: 'unitPrice',
-                    width: 120,
-                    render: (value: number, record: any) => (
-                      <InputNumber
-                        min={0}
-                        value={value}
-                        size="small"
-                        formatter={(val) => `₺ ${val}`}
-                        parser={(val) => Number((val || '').replace('₺ ', '')) as any}
-                        onChange={(val) => handleUpdateOrderItem(record.productId, 'unitPrice', val || 0)}
-                      />
-                    ),
-                  },
-                  {
-                    title: 'İndirim %',
-                    dataIndex: 'discountRate',
-                    key: 'discountRate',
-                    width: 90,
-                    render: (value: number, record: any) => (
-                      <InputNumber
-                        min={0}
-                        max={100}
-                        value={value}
-                        size="small"
-                        onChange={(val) => handleUpdateOrderItem(record.productId, 'discountRate', val || 0)}
-                      />
-                    ),
-                  },
-                  {
-                    title: 'Toplam',
-                    key: 'total',
-                    width: 100,
-                    render: (_: any, record: any) => {
-                      const subtotal = record.quantity * record.unitPrice;
-                      const discount = subtotal * (record.discountRate / 100);
-                      const afterDiscount = subtotal - discount;
-                      const vat = afterDiscount * (record.vatRate / 100);
-                      const total = afterDiscount + vat;
-                      return (
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat('tr-TR', {
-                            style: 'currency',
-                            currency: 'TRY',
-                          }).format(total)}
-                        </span>
-                      );
-                    },
-                  },
-                  {
-                    title: '',
-                    key: 'actions',
-                    width: 50,
-                    render: (_: any, record: any) => (
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemoveProduct(record.productId)}
-                      />
-                    ),
-                  },
-                ]}
-              />
+              <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+                {orderItems.map((item, index) => {
+                  const subtotal = item.quantity * item.unitPrice;
+                  const discount = subtotal * (item.discountRate / 100);
+                  const afterDiscount = subtotal - discount;
+                  const vat = afterDiscount * (item.vatRate / 100);
+                  const total = afterDiscount + vat;
 
-              {/* Order Total */}
-              <div className="flex justify-end mt-4 p-4 bg-slate-50 rounded-lg">
-                <div className="text-right">
-                  <p className="text-sm text-slate-500 mb-1">Genel Toplam</p>
-                  <p className="text-xl font-bold text-slate-800 m-0">
+                  return (
+                    <div key={item.productId} className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-500 font-medium text-sm">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-slate-900">{item.productName}</span>
+                              <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                {item.productCode}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-3 mt-3">
+                              <div>
+                                <label className="block text-xs text-slate-500 mb-1">Miktar</label>
+                                <InputNumber
+                                  min={1}
+                                  value={item.quantity}
+                                  size="small"
+                                  className="w-full"
+                                  onChange={(val) => handleUpdateOrderItem(item.productId, 'quantity', val || 1)}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-slate-500 mb-1">Birim Fiyat</label>
+                                <InputNumber
+                                  min={0}
+                                  value={item.unitPrice}
+                                  size="small"
+                                  className="w-full"
+                                  formatter={(val) => `₺ ${val}`}
+                                  parser={(val) => Number((val || '').replace('₺ ', '')) as any}
+                                  onChange={(val) => handleUpdateOrderItem(item.productId, 'unitPrice', val || 0)}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-slate-500 mb-1">İndirim %</label>
+                                <InputNumber
+                                  min={0}
+                                  max={100}
+                                  value={item.discountRate}
+                                  size="small"
+                                  className="w-full"
+                                  onChange={(val) => handleUpdateOrderItem(item.productId, 'discountRate', val || 0)}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-slate-500 mb-1">Toplam</label>
+                                <div className="h-[24px] flex items-center">
+                                  <span className="text-sm font-semibold text-slate-900">
+                                    {new Intl.NumberFormat('tr-TR', {
+                                      style: 'currency',
+                                      currency: 'TRY',
+                                    }).format(total)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => handleRemoveProduct(item.productId)}
+                        >
+                          <DeleteOutlined />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Order Total Card */}
+              <div className="mt-4 p-4 bg-slate-900 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10">
+                      <DollarOutlined className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-400 m-0">Genel Toplam</p>
+                      <p className="text-xs text-slate-500 m-0">{orderItems.length} ürün</p>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-white m-0">
                     {new Intl.NumberFormat('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
@@ -1334,119 +1350,249 @@ export default function CustomerDetailPage() {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 mb-6 bg-slate-50/50 border border-dashed border-slate-200 rounded-xl">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+                <ShoppingOutlined className="text-xl" />
+              </div>
+              <h3 className="text-sm font-medium text-slate-900 mb-1">Ürün eklenmedi</h3>
+              <p className="text-sm text-slate-500 max-w-sm text-center">
+                Sipariş oluşturmak için yukarıdan ürün seçin
+              </p>
+            </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
-            <Button
-              size="large"
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
+            <button
+              type="button"
               onClick={() => {
                 setIsOrderModalOpen(false);
                 setOrderItems([]);
                 orderForm.resetFields();
               }}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
             >
               İptal
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              icon={<ShoppingOutlined />}
-              loading={createOrder.isPending}
-              disabled={orderItems.length === 0}
+            </button>
+            <button
+              type="submit"
+              disabled={orderItems.length === 0 || createOrder.isPending}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              {createOrder.isPending ? (
+                <Spin size="small" className="text-white" />
+              ) : (
+                <ShoppingOutlined />
+              )}
               Sipariş Oluştur
-            </Button>
+            </button>
           </div>
         </Form>
       </Modal>
 
-      {/* Contact Modal */}
+      {/* Contact Modal - Enterprise Design */}
       <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <UserOutlined className="text-blue-600" />
-            <span>{editingContact ? 'Kişi Düzenle' : 'Yeni Kişi Ekle'}</span>
-          </div>
-        }
+        title={null}
         open={isContactModalOpen}
         onCancel={handleCloseContactModal}
         footer={null}
         width={700}
         centered
+        className="enterprise-modal"
       >
+        {/* Modal Header */}
+        <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${editingContact ? 'bg-amber-50' : 'bg-indigo-50'}`}>
+            <UserOutlined className={`text-xl ${editingContact ? 'text-amber-600' : 'text-indigo-600'}`} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 m-0">
+              {editingContact ? 'Kişi Düzenle' : 'Yeni Kişi Ekle'}
+            </h2>
+            <p className="text-sm text-slate-500 m-0">
+              {editingContact ? `${editingContact.fullName} bilgilerini güncelleyin` : 'Firmaya yeni bir iletişim kişisi ekleyin'}
+            </p>
+          </div>
+        </div>
+
         <Form
           form={contactForm}
           layout="vertical"
           onFinish={handleSaveContact}
           className="mt-6"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Form.Item
-              name="firstName"
-              label="Ad"
-              rules={[{ required: true, message: 'Ad gereklidir' }]}
-            >
-              <Input size="large" placeholder="Ahmet" />
-            </Form.Item>
+          {/* Personal Info Section */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+                <UserOutlined className="text-slate-500 text-xs" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Kişisel Bilgiler</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Ad <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="firstName"
+                  rules={[{ required: true, message: 'Ad gereklidir' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Ahmet"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
 
-            <Form.Item
-              name="lastName"
-              label="Soyad"
-              rules={[{ required: true, message: 'Soyad gereklidir' }]}
-            >
-              <Input size="large" placeholder="Yılmaz" />
-            </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Soyad <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="lastName"
+                  rules={[{ required: true, message: 'Soyad gereklidir' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Yılmaz"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
 
-            <Form.Item
-              name="email"
-              label="E-posta"
-              rules={[
-                { required: true, message: 'E-posta gereklidir' },
-                { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
-              ]}
-            >
-              <Input size="large" prefix={<MailOutlined />} placeholder="ahmet@firma.com" />
-            </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Ünvan</label>
+                <Form.Item name="jobTitle" className="mb-0">
+                  <Input
+                    placeholder="Satış Müdürü"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
 
-            <Form.Item name="phone" label="Telefon">
-              <Input size="large" prefix={<PhoneOutlined />} placeholder="+90 212 123 4567" />
-            </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Departman</label>
+                <Form.Item name="department" className="mb-0">
+                  <Input
+                    placeholder="Satış"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
 
-            <Form.Item name="mobilePhone" label="Cep Telefonu">
-              <Input size="large" prefix={<PhoneOutlined />} placeholder="+90 555 123 4567" />
-            </Form.Item>
+          {/* Contact Info Section */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+                <PhoneOutlined className="text-slate-500 text-xs" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">İletişim Bilgileri</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">E-posta <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="email"
+                  rules={[
+                    { required: true, message: 'E-posta gereklidir' },
+                    { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
+                  ]}
+                  className="mb-0"
+                >
+                  <Input
+                    prefix={<MailOutlined className="text-slate-400" />}
+                    placeholder="ahmet@firma.com"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
 
-            <Form.Item name="jobTitle" label="Ünvan">
-              <Input size="large" placeholder="Satış Müdürü" />
-            </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Telefon</label>
+                <Form.Item name="phone" className="mb-0">
+                  <Input
+                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    placeholder="+90 212 123 4567"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
 
-            <Form.Item name="department" label="Departman">
-              <Input size="large" placeholder="Satış" />
-            </Form.Item>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Cep Telefonu</label>
+                <Form.Item name="mobilePhone" className="mb-0">
+                  <Input
+                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    placeholder="+90 555 123 4567"
+                    className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
 
-            <Form.Item name="isPrimary" valuePropName="checked" label=" ">
-              <Checkbox>Birincil Kişi olarak belirle</Checkbox>
+          {/* Settings Section */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+                <TagOutlined className="text-slate-500 text-xs" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Ayarlar</span>
+            </div>
+            <div className="bg-slate-50/50 border border-slate-200/50 p-4 rounded-xl">
+              <Form.Item name="isPrimary" valuePropName="checked" className="mb-0">
+                <div className="flex items-center gap-3">
+                  <Checkbox className="enterprise-checkbox" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 m-0">Birincil Kişi olarak belirle</p>
+                    <p className="text-xs text-slate-500 m-0">Bu kişi firma için ana iletişim kişisi olarak görüntülenecek</p>
+                  </div>
+                </div>
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* Notes Section */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
+                <FileTextOutlined className="text-slate-500 text-xs" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Notlar</span>
+            </div>
+            <Form.Item name="notes" className="mb-0">
+              <Input.TextArea
+                rows={3}
+                placeholder="Kişi hakkında notlar..."
+                className="rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
+              />
             </Form.Item>
           </div>
 
-          <Form.Item name="notes" label="Notlar">
-            <Input.TextArea rows={3} placeholder="Kişi hakkında notlar..." />
-          </Form.Item>
-
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
-            <Button size="large" onClick={handleCloseContactModal}>
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              icon={editingContact ? <EditOutlined /> : <PlusOutlined />}
-              loading={createContact.isPending || updateContact.isPending}
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={handleCloseContactModal}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              {editingContact ? 'Güncelle' : 'Ekle'}
-            </Button>
+              İptal
+            </button>
+            <button
+              type="submit"
+              disabled={createContact.isPending || updateContact.isPending}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {(createContact.isPending || updateContact.isPending) ? (
+                <Spin size="small" className="text-white" />
+              ) : editingContact ? (
+                <EditOutlined />
+              ) : (
+                <PlusOutlined />
+              )}
+              {editingContact ? 'Güncelle' : 'Kişi Ekle'}
+            </button>
           </div>
         </Form>
       </Modal>
