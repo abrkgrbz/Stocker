@@ -31,15 +31,24 @@ public static class DependencyInjection
         // InventoryDbContext is registered dynamically per request based on tenant
         // using ITenantService to get the current tenant's connection string
         // IMPORTANT: Using AddDbContext ensures single instance per scope
+        // For background jobs (MassTransit consumers), IBackgroundTenantService is used
         services.AddDbContext<InventoryDbContext>((serviceProvider, optionsBuilder) =>
         {
-            var tenantService = serviceProvider.GetRequiredService<ITenantService>();
-            var connectionString = tenantService.GetConnectionString();
+            // Try IBackgroundTenantService first (for MassTransit consumers/background jobs)
+            var backgroundTenantService = serviceProvider.GetService<IBackgroundTenantService>();
+            var connectionString = backgroundTenantService?.GetConnectionString();
+
+            // Fallback to ITenantService (for HTTP requests)
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                var tenantService = serviceProvider.GetRequiredService<ITenantService>();
+                connectionString = tenantService.GetConnectionString();
+            }
 
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException(
-                    "Tenant connection string is not available. Ensure tenant resolution middleware has run.");
+                    "Tenant connection string is not available. Ensure tenant resolution middleware has run or background tenant context is set.");
             }
 
             optionsBuilder.UseNpgsql(connectionString, npgsqlOptions =>
