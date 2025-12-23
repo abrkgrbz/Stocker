@@ -12,15 +12,15 @@ public record SalesOrderCreatedEvent(
     Guid TenantId,
     decimal TotalAmount,
     string Currency,
-    List<SalesOrderItemDto> Items,
+    List<SalesOrderEventItemDto> Items,
     DateTime OrderDate,
     Guid? CreatedBy
 ) : IntegrationEvent, ITenantEvent;
 
 /// <summary>
-/// Item information in a sales order
+/// Item information in a sales order event
 /// </summary>
-public record SalesOrderItemDto(
+public record SalesOrderEventItemDto(
     Guid ItemId,
     Guid? ProductId,
     string ProductCode,

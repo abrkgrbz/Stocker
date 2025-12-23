@@ -108,7 +108,7 @@ public class CreateSalesOrderHandler : IRequestHandler<CreateSalesOrderCommand, 
             TenantId: tenantId,
             TotalAmount: savedOrder.TotalAmount,
             Currency: savedOrder.Currency,
-            Items: savedOrder.Items.Select(i => new SalesOrderItemDto(
+            Items: savedOrder.Items.Select(i => new SalesOrderEventItemDto(
                 ItemId: i.Id,
                 ProductId: i.ProductId,
                 ProductCode: i.ProductCode,
