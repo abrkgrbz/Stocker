@@ -87,7 +87,7 @@ export class SecuritySettingsService {
    * Get all security settings for the current tenant
    */
   async getSecuritySettings(): Promise<ApiResponse<SecuritySettingsDto>> {
-    return apiClient.get<SecuritySettingsDto>('/api/tenant/securitysettings');
+    return apiClient.get<SecuritySettingsDto>('/tenant/securitysettings');
   }
 
   /**
@@ -95,7 +95,7 @@ export class SecuritySettingsService {
    * Requires Admin role
    */
   async updatePasswordPolicy(data: UpdatePasswordPolicyRequest): Promise<ApiResponse<boolean>> {
-    return apiClient.put<boolean>('/api/tenant/securitysettings/password-policy', data);
+    return apiClient.put<boolean>('/tenant/securitysettings/password-policy', data);
   }
 
   /**
@@ -103,7 +103,7 @@ export class SecuritySettingsService {
    * Requires Admin role
    */
   async updateTwoFactorSettings(data: UpdateTwoFactorSettingsRequest): Promise<ApiResponse<boolean>> {
-    return apiClient.put<boolean>('/api/tenant/securitysettings/two-factor', data);
+    return apiClient.put<boolean>('/tenant/securitysettings/two-factor', data);
   }
 
   /**
@@ -111,7 +111,7 @@ export class SecuritySettingsService {
    * Requires Admin role
    */
   async updateSessionSettings(data: UpdateSessionSettingsRequest): Promise<ApiResponse<boolean>> {
-    return apiClient.put<boolean>('/api/tenant/securitysettings/session', data);
+    return apiClient.put<boolean>('/tenant/securitysettings/session', data);
   }
 
   /**
@@ -119,7 +119,7 @@ export class SecuritySettingsService {
    * Requires Admin role
    */
   async updateApiSecurity(data: UpdateApiSecurityRequest): Promise<ApiResponse<boolean>> {
-    return apiClient.put<boolean>('/api/tenant/securitysettings/api-security', data);
+    return apiClient.put<boolean>('/tenant/securitysettings/api-security', data);
   }
 }
 

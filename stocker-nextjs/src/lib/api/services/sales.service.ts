@@ -1298,7 +1298,7 @@ export interface CancelSalesOrderCommand {
 // SERVICE CLASS
 // =====================================
 
-const BASE_URL = '/api/sales/orders';
+const BASE_URL = '/sales/orders';
 
 export class SalesService {
   // =====================================

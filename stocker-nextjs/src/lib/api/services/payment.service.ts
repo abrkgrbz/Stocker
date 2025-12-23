@@ -146,7 +146,7 @@ export interface RejectPaymentCommand {
 // SERVICE CLASS
 // =====================================
 
-const BASE_URL = '/api/sales/payments';
+const BASE_URL = '/sales/payments';
 
 export class PaymentService {
   // =====================================

@@ -219,7 +219,7 @@ export interface SetEInvoiceCommand {
 // SERVICE CLASS
 // =====================================
 
-const BASE_URL = '/api/sales/invoices';
+const BASE_URL = '/sales/invoices';
 
 export class InvoiceService {
   // =====================================
