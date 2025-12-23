@@ -74,6 +74,10 @@ export default function CustomerDetailPage() {
   const updateCustomer = useUpdateCustomer();
   const createOrder = useCreateSalesOrder();
 
+  // Debug: Log customer data to check customerType
+  console.log('Customer data:', customer);
+  console.log('Customer type:', customer?.customerType);
+
   // Fetch customer activities
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
     customerId: customerId,
@@ -90,9 +94,8 @@ export default function CustomerDetailPage() {
   const { data: productsData, isLoading: productsLoading } = useProducts(false);
 
   // Fetch customer contacts (only for Corporate customers)
-  const { data: contactsData, isLoading: contactsLoading } = useContactsByCustomer(
-    customer?.customerType === 'Corporate' ? customerId : undefined
-  );
+  // DEBUG: Temporarily fetch for all customers
+  const { data: contactsData, isLoading: contactsLoading } = useContactsByCustomer(customerId);
   const createContact = useCreateContact();
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
@@ -848,7 +851,8 @@ export default function CustomerDetailPage() {
                     ),
                   },
                   // Only show Contacts tab for Corporate customers
-                  ...(customer?.customerType === 'Corporate' ? [{
+                  // DEBUG: Temporarily show for all - check console for customerType value
+                  ...([{
                     key: 'contacts',
                     label: (
                       <span className="flex items-center gap-2 py-1">
