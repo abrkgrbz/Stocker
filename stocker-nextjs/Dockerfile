@@ -37,6 +37,8 @@ ARG SENTRY_AUTH_TOKEN
 
 # Environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
+# Increase Node.js memory limit for build (prevents heap out of memory)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Set all required environment variables for build (env.ts validation)
 ENV NODE_ENV=$NODE_ENV
