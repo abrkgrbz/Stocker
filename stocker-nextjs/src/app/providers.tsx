@@ -11,14 +11,32 @@ import { TenantProvider } from '@/lib/tenant';
 import { ToastProvider } from '@/lib/notifications/toast-provider';
 import { ReCaptchaProvider } from '@/providers/ReCaptchaProvider';
 
-// Create a client
+/**
+ * React Query Global Configuration
+ * Optimized to prevent 429 (Too Many Requests) errors
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
+      // Cache & Stale Settings - Aggressive caching to reduce API calls
+      staleTime: 3 * 60 * 1000, // 3 minutes - data considered fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache after unmount
+
+      // Refetch Behavior - Minimize automatic refetches
+      refetchOnWindowFocus: false, // Don't refetch when tab gains focus
+      refetchOnReconnect: false, // Don't refetch on network reconnect
+      refetchOnMount: false, // Don't refetch if data exists and not stale
+      refetchInterval: false, // No polling
+
+      // Retry Settings - Let API client handle retries
+      retry: false, // API client has its own retry with exponential backoff
+
+      // Network Mode
+      networkMode: 'offlineFirst', // Use cached data first, then fetch
+    },
+    mutations: {
+      // Mutations don't need retry - API client handles it
+      retry: false,
     },
   },
 });

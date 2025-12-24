@@ -14,6 +14,7 @@ import type {
   CreatePaymentCommand,
   UpdatePaymentCommand,
 } from '../services/payment.service';
+import { queryOptions } from '../query-options';
 
 // =====================================
 // QUERY KEYS
@@ -39,7 +40,7 @@ export function usePayments(params?: GetPaymentsParams) {
   return useQuery<PagedResult<PaymentListItem>>({
     queryKey: paymentKeys.paymentsList(params),
     queryFn: () => PaymentService.getPayments(params),
-    staleTime: 30 * 1000, // 30 seconds
+    ...queryOptions.list(),
   });
 }
 
@@ -50,8 +51,7 @@ export function usePayment(id: string) {
   return useQuery<Payment>({
     queryKey: paymentKeys.payment(id),
     queryFn: () => PaymentService.getPaymentById(id),
-    enabled: !!id,
-    staleTime: 30 * 1000,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -62,8 +62,7 @@ export function usePaymentByNumber(paymentNumber: string) {
   return useQuery<Payment>({
     queryKey: paymentKeys.paymentByNumber(paymentNumber),
     queryFn: () => PaymentService.getPaymentByNumber(paymentNumber),
-    enabled: !!paymentNumber,
-    staleTime: 30 * 1000,
+    ...queryOptions.detail({ enabled: !!paymentNumber }),
   });
 }
 
@@ -74,8 +73,7 @@ export function usePaymentsByInvoice(invoiceId: string) {
   return useQuery<Payment[]>({
     queryKey: paymentKeys.paymentsByInvoice(invoiceId),
     queryFn: () => PaymentService.getPaymentsByInvoice(invoiceId),
-    enabled: !!invoiceId,
-    staleTime: 30 * 1000,
+    ...queryOptions.list({ enabled: !!invoiceId }),
   });
 }
 
@@ -86,7 +84,7 @@ export function usePaymentStatistics(fromDate?: string, toDate?: string) {
   return useQuery<PaymentStatistics>({
     queryKey: paymentKeys.statistics(fromDate, toDate),
     queryFn: () => PaymentService.getStatistics(fromDate, toDate),
-    staleTime: 60 * 1000, // 1 minute
+    ...queryOptions.realtime(),
   });
 }
 

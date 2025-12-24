@@ -19,6 +19,7 @@ import {
   ApprovalWorkflowService,
 } from '../services/purchase.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
+import { queryOptions } from '../query-options';
 import type {
   CreateSupplierDto,
   UpdateSupplierDto,
@@ -129,7 +130,7 @@ export function useSuppliers(params?: SupplierQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.suppliers, params],
     queryFn: () => SupplierService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -137,7 +138,7 @@ export function useSupplier(id: string) {
   return useQuery({
     queryKey: purchaseKeys.supplier(id),
     queryFn: () => SupplierService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -145,7 +146,7 @@ export function useSupplierProducts(id: string) {
   return useQuery({
     queryKey: purchaseKeys.supplierProducts(id),
     queryFn: () => SupplierService.getProducts(id),
-    enabled: !!id,
+    ...queryOptions.list({ enabled: !!id }),
   });
 }
 
@@ -153,7 +154,7 @@ export function useSupplierContacts(id: string) {
   return useQuery({
     queryKey: purchaseKeys.supplierContacts(id),
     queryFn: () => SupplierService.getContacts(id),
-    enabled: !!id,
+    ...queryOptions.list({ enabled: !!id }),
   });
 }
 
@@ -311,7 +312,7 @@ export function usePurchaseRequests(params?: PurchaseRequestQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.requests, params],
     queryFn: () => PurchaseRequestService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -319,7 +320,7 @@ export function usePurchaseRequest(id: string) {
   return useQuery({
     queryKey: purchaseKeys.request(id),
     queryFn: () => PurchaseRequestService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -460,7 +461,7 @@ export function usePurchaseRequestSummary() {
   return useQuery({
     queryKey: [...purchaseKeys.requests, 'summary'],
     queryFn: () => PurchaseRequestService.getSummary(),
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.realtime(),
   });
 }
 
@@ -472,7 +473,7 @@ export function usePurchaseOrders(params?: PurchaseOrderQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.orders, params],
     queryFn: () => PurchaseOrderService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -480,7 +481,7 @@ export function usePurchaseOrder(id: string) {
   return useQuery({
     queryKey: purchaseKeys.order(id),
     queryFn: () => PurchaseOrderService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -718,7 +719,7 @@ export function useGoodsReceipts(params?: GoodsReceiptQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.goodsReceipts, params],
     queryFn: () => GoodsReceiptService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -726,7 +727,7 @@ export function useGoodsReceipt(id: string) {
   return useQuery({
     queryKey: purchaseKeys.goodsReceipt(id),
     queryFn: () => GoodsReceiptService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -900,7 +901,7 @@ export function usePurchaseInvoices(params?: PurchaseInvoiceQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.invoices, params],
     queryFn: () => PurchaseInvoiceService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -908,7 +909,7 @@ export function usePurchaseInvoice(id: string) {
   return useQuery({
     queryKey: purchaseKeys.invoice(id),
     queryFn: () => PurchaseInvoiceService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -1116,7 +1117,7 @@ export function usePurchaseReturns(params?: PurchaseReturnQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.returns, params],
     queryFn: () => PurchaseReturnService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1124,7 +1125,7 @@ export function usePurchaseReturn(id: string) {
   return useQuery({
     queryKey: purchaseKeys.return(id),
     queryFn: () => PurchaseReturnService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -1348,7 +1349,7 @@ export function useSupplierPayments(params?: SupplierPaymentQueryParams) {
   return useQuery({
     queryKey: [...purchaseKeys.payments, params],
     queryFn: () => SupplierPaymentService.getAll(params),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1356,7 +1357,7 @@ export function useSupplierPayment(id: string) {
   return useQuery({
     queryKey: purchaseKeys.payment(id),
     queryFn: () => SupplierPaymentService.getById(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -1364,7 +1365,7 @@ export function useSupplierBalance(supplierId: string) {
   return useQuery({
     queryKey: purchaseKeys.supplierBalance(supplierId),
     queryFn: () => SupplierPaymentService.getSupplierBalance(supplierId),
-    enabled: !!supplierId,
+    ...queryOptions.detail({ enabled: !!supplierId }),
   });
 }
 
@@ -1372,7 +1373,7 @@ export function useSupplierPaymentHistory(supplierId: string, params?: SupplierP
   return useQuery({
     queryKey: [...purchaseKeys.supplierPayments(supplierId), params],
     queryFn: () => SupplierPaymentService.getSupplierPayments(supplierId, params),
-    enabled: !!supplierId,
+    ...queryOptions.list({ enabled: !!supplierId }),
   });
 }
 

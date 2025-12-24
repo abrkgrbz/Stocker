@@ -5,6 +5,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { InventoryService } from '../services/inventory.service';
+import { queryOptions } from '../query-options';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import type {
   ProductDto,
@@ -357,7 +358,7 @@ export function useProducts(includeInactive: boolean = false, categoryId?: numbe
   return useQuery({
     queryKey: [...inventoryKeys.products, { includeInactive, categoryId, brandId }],
     queryFn: () => InventoryService.getProducts(includeInactive, categoryId, brandId),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -365,7 +366,7 @@ export function useProduct(id: number) {
   return useQuery({
     queryKey: inventoryKeys.product(id),
     queryFn: () => InventoryService.getProduct(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -373,7 +374,7 @@ export function useLowStockProducts(warehouseId?: number) {
   return useQuery({
     queryKey: inventoryKeys.productsLowStock(warehouseId),
     queryFn: () => InventoryService.getLowStockProducts(warehouseId),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -464,7 +465,7 @@ export function useCategories(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...inventoryKeys.categories, { includeInactive }],
     queryFn: () => InventoryService.getCategories(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -472,7 +473,7 @@ export function useCategory(id: number) {
   return useQuery({
     queryKey: inventoryKeys.category(id),
     queryFn: () => InventoryService.getCategory(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -480,7 +481,7 @@ export function useCategoryTree() {
   return useQuery({
     queryKey: inventoryKeys.categoryTree,
     queryFn: () => InventoryService.getCategoryTree(),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -542,7 +543,7 @@ export function useBrands(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...inventoryKeys.brands, { includeInactive }],
     queryFn: () => InventoryService.getBrands(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -550,7 +551,7 @@ export function useBrand(id: number) {
   return useQuery({
     queryKey: inventoryKeys.brand(id),
     queryFn: () => InventoryService.getBrand(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -609,7 +610,7 @@ export function useUnits(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...inventoryKeys.units, { includeInactive }],
     queryFn: () => InventoryService.getUnits(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -617,7 +618,7 @@ export function useUnit(id: number) {
   return useQuery({
     queryKey: inventoryKeys.unit(id),
     queryFn: () => InventoryService.getUnit(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -676,7 +677,7 @@ export function useWarehouses(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...inventoryKeys.warehouses, { includeInactive }],
     queryFn: () => InventoryService.getWarehouses(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -684,7 +685,7 @@ export function useWarehouse(id: number) {
   return useQuery({
     queryKey: inventoryKeys.warehouse(id),
     queryFn: () => InventoryService.getWarehouse(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -692,8 +693,7 @@ export function useWarehouseStockSummary(id: number) {
   return useQuery({
     queryKey: inventoryKeys.warehouseStockSummary(id),
     queryFn: () => InventoryService.getWarehouseStockSummary(id),
-    enabled: !!id && id > 0,
-    staleTime: 30000,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -767,7 +767,7 @@ export function useLocations(warehouseId?: number) {
   return useQuery({
     queryKey: inventoryKeys.locations(warehouseId),
     queryFn: () => InventoryService.getLocations(warehouseId),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -775,7 +775,7 @@ export function useLocation(id: number) {
   return useQuery({
     queryKey: inventoryKeys.location(id),
     queryFn: () => InventoryService.getLocation(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -835,7 +835,7 @@ export function useSuppliers(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...inventoryKeys.suppliers, { includeInactive }],
     queryFn: () => InventoryService.getSuppliers(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -843,7 +843,7 @@ export function useSupplier(id: number) {
   return useQuery({
     queryKey: inventoryKeys.supplier(id),
     queryFn: () => InventoryService.getSupplier(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -933,7 +933,7 @@ export function useStock(warehouseId?: number, productId?: number, locationId?: 
   return useQuery({
     queryKey: inventoryKeys.stock(warehouseId, productId, locationId),
     queryFn: () => InventoryService.getStock(warehouseId, productId, locationId),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -941,8 +941,7 @@ export function useProductStockSummary(productId: number) {
   return useQuery({
     queryKey: inventoryKeys.stockSummary(productId),
     queryFn: () => InventoryService.getProductStockSummary(productId),
-    enabled: !!productId && productId > 0,
-    staleTime: 30000,
+    ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -950,7 +949,7 @@ export function useExpiringStock(daysUntilExpiry: number = 30) {
   return useQuery({
     queryKey: inventoryKeys.stockExpiring(daysUntilExpiry),
     queryFn: () => InventoryService.getExpiringStock(daysUntilExpiry),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1000,7 +999,7 @@ export function useStockMovements(
   return useQuery({
     queryKey: [...inventoryKeys.stockMovements, { productId, warehouseId, movementType, startDate, endDate }],
     queryFn: () => InventoryService.getStockMovements(productId, warehouseId, movementType, startDate, endDate),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1008,7 +1007,7 @@ export function useStockMovement(id: number) {
   return useQuery({
     queryKey: inventoryKeys.stockMovement(id),
     queryFn: () => InventoryService.getStockMovement(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1016,8 +1015,7 @@ export function useStockMovementSummary(startDate: string, endDate: string, ware
   return useQuery({
     queryKey: inventoryKeys.stockMovementSummary(startDate, endDate, warehouseId),
     queryFn: () => InventoryService.getStockMovementSummary(startDate, endDate, warehouseId),
-    enabled: !!startDate && !!endDate,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: !!startDate && !!endDate }),
   });
 }
 
@@ -1067,7 +1065,7 @@ export function useStockReservations(
   return useQuery({
     queryKey: [...inventoryKeys.stockReservations, { productId, warehouseId, status, expiredOnly }],
     queryFn: () => InventoryService.getStockReservations(productId, warehouseId, status, expiredOnly),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1075,7 +1073,7 @@ export function useStockReservation(id: number) {
   return useQuery({
     queryKey: inventoryKeys.stockReservation(id),
     queryFn: () => InventoryService.getStockReservation(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1161,7 +1159,7 @@ export function useStockTransfers(
   return useQuery({
     queryKey: [...inventoryKeys.stockTransfers, { sourceWarehouseId, destinationWarehouseId, status, fromDate, toDate }],
     queryFn: () => InventoryService.getStockTransfers(sourceWarehouseId, destinationWarehouseId, status, fromDate, toDate),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1169,7 +1167,7 @@ export function useStockTransfer(id: number) {
   return useQuery({
     queryKey: inventoryKeys.stockTransfer(id),
     queryFn: () => InventoryService.getStockTransfer(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1319,7 +1317,7 @@ export function useStockCounts(
   return useQuery({
     queryKey: [...inventoryKeys.stockCounts, { warehouseId, status, fromDate, toDate }],
     queryFn: () => InventoryService.getStockCounts(warehouseId, status, fromDate, toDate),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1327,7 +1325,7 @@ export function useStockCount(id: number) {
   return useQuery({
     queryKey: inventoryKeys.stockCount(id),
     queryFn: () => InventoryService.getStockCount(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1335,8 +1333,7 @@ export function useStockCountSummary(id: number) {
   return useQuery({
     queryKey: inventoryKeys.stockCountSummary(id),
     queryFn: () => InventoryService.getStockCountSummary(id),
-    enabled: !!id && id > 0,
-    staleTime: 30000,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1472,7 +1469,7 @@ export function usePriceLists(activeOnly: boolean = true) {
   return useQuery({
     queryKey: [...inventoryKeys.priceLists, { activeOnly }],
     queryFn: () => InventoryService.getPriceLists(activeOnly),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -1480,7 +1477,7 @@ export function usePriceList(id: number) {
   return useQuery({
     queryKey: inventoryKeys.priceList(id),
     queryFn: () => InventoryService.getPriceList(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1488,8 +1485,7 @@ export function useProductPrice(productId: number, priceListId?: number, quantit
   return useQuery({
     queryKey: inventoryKeys.productPrice(productId, priceListId),
     queryFn: () => InventoryService.getProductPrice(productId, priceListId, quantity),
-    enabled: !!productId && productId > 0,
-    staleTime: 60000,
+    ...queryOptions.static({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -1665,7 +1661,7 @@ export function useSerialNumbers(filter?: SerialNumberFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.serialNumbers(filter),
     queryFn: () => InventoryService.getSerialNumbers(filter),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1673,7 +1669,7 @@ export function useSerialNumber(id: number) {
   return useQuery({
     queryKey: inventoryKeys.serialNumber(id),
     queryFn: () => InventoryService.getSerialNumber(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1801,7 +1797,7 @@ export function useLotBatches(filter?: LotBatchFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.lotBatches(filter),
     queryFn: () => InventoryService.getLotBatches(filter),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -1809,7 +1805,7 @@ export function useLotBatch(id: number) {
   return useQuery({
     queryKey: inventoryKeys.lotBatch(id),
     queryFn: () => InventoryService.getLotBatch(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -1869,8 +1865,7 @@ export function useProductImages(productId: number, includeInactive: boolean = f
   return useQuery({
     queryKey: [...inventoryKeys.productImages(productId), { includeInactive }],
     queryFn: () => InventoryService.getProductImages(productId, includeInactive),
-    enabled: !!productId && productId > 0,
-    staleTime: 30000,
+    ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -1961,7 +1956,7 @@ export function useProductAttributes(includeInactive: boolean = false, filterabl
   return useQuery({
     queryKey: [...inventoryKeys.productAttributes, { includeInactive, filterableOnly }],
     queryFn: () => InventoryService.getProductAttributes(includeInactive, filterableOnly),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -1969,7 +1964,7 @@ export function useProductAttribute(id: number) {
   return useQuery({
     queryKey: inventoryKeys.productAttribute(id),
     queryFn: () => InventoryService.getProductAttribute(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -2086,8 +2081,7 @@ export function useProductVariants(productId: number, includeInactive: boolean =
   return useQuery({
     queryKey: [...inventoryKeys.productVariants(productId), { includeInactive }],
     queryFn: () => InventoryService.getProductVariants(productId, includeInactive),
-    enabled: !!productId && productId > 0,
-    staleTime: 30000,
+    ...queryOptions.list({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -2095,7 +2089,7 @@ export function useProductVariant(id: number) {
   return useQuery({
     queryKey: inventoryKeys.productVariant(id),
     queryFn: () => InventoryService.getProductVariant(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -2159,7 +2153,7 @@ export function useProductBundles(
   return useQuery({
     queryKey: [...inventoryKeys.productBundles, { includeInactive, validOnly }],
     queryFn: () => InventoryService.getProductBundles(includeInactive, validOnly),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2167,7 +2161,7 @@ export function useProductBundle(id: number) {
   return useQuery({
     queryKey: inventoryKeys.productBundle(id),
     queryFn: () => InventoryService.getProductBundle(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -2287,8 +2281,7 @@ export function useInventoryDashboard(warehouseId?: number, days: number = 30) {
   return useQuery({
     queryKey: inventoryKeys.analyticsDashboard(warehouseId, days),
     queryFn: () => InventoryService.getInventoryDashboard(warehouseId, days),
-    staleTime: 60000, // 1 minute cache
-    refetchInterval: 300000, // Auto-refresh every 5 minutes
+    ...queryOptions.realtime(),
   });
 }
 
@@ -2303,7 +2296,7 @@ export function useStockValuation(
   return useQuery({
     queryKey: inventoryKeys.analyticsValuation(warehouseId, categoryId, asOfDate),
     queryFn: () => InventoryService.getStockValuation(warehouseId, categoryId, asOfDate),
-    staleTime: 120000, // 2 minute cache
+    ...queryOptions.list(),
   });
 }
 
@@ -2318,8 +2311,7 @@ export function useInventoryKPIs(
   return useQuery({
     queryKey: inventoryKeys.analyticsKPIs(startDate, endDate, warehouseId),
     queryFn: () => InventoryService.getInventoryKPIs(startDate, endDate, warehouseId),
-    staleTime: 120000, // 2 minute cache
-    enabled: !!startDate && !!endDate,
+    ...queryOptions.list({ enabled: !!startDate && !!endDate }),
   });
 }
 
@@ -2334,7 +2326,7 @@ export function useBarcodeFormats() {
   return useQuery({
     queryKey: inventoryKeys.barcodeFormats,
     queryFn: () => InventoryService.getBarcodeFormats(),
-    staleTime: Infinity, // Static data, never stale
+    ...queryOptions.static({ staleTime: Infinity }),
   });
 }
 
@@ -2345,7 +2337,7 @@ export function useLabelSizes() {
   return useQuery({
     queryKey: inventoryKeys.labelSizes,
     queryFn: () => InventoryService.getLabelSizes(),
-    staleTime: Infinity, // Static data, never stale
+    ...queryOptions.static({ staleTime: Infinity }),
   });
 }
 
@@ -2361,9 +2353,7 @@ export function useBarcodeLookup(
   return useQuery({
     queryKey: inventoryKeys.barcodeLookup(barcode, warehouseId),
     queryFn: () => InventoryService.lookupBarcode(barcode, includeStock, warehouseId),
-    enabled: enabled && !!barcode && barcode.length > 0,
-    staleTime: 5000, // 5 seconds cache
-    retry: false, // Don't retry on 404
+    ...queryOptions.search({ enabled: enabled && !!barcode && barcode.length > 0 }),
   });
 }
 
@@ -2472,7 +2462,7 @@ export function useAuditLogs(filter?: InventoryAuditFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.auditLogs(filter),
     queryFn: () => InventoryService.getAuditLogs(filter),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2483,7 +2473,7 @@ export function useAuditDashboard(days: number = 30) {
   return useQuery({
     queryKey: inventoryKeys.auditDashboard(days),
     queryFn: () => InventoryService.getAuditDashboard(days),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2494,8 +2484,7 @@ export function useEntityHistory(entityType: string, entityId: string) {
   return useQuery({
     queryKey: inventoryKeys.entityHistory(entityType, entityId),
     queryFn: () => InventoryService.getEntityHistory(entityType, entityId),
-    enabled: !!entityType && !!entityId,
-    staleTime: 30000,
+    ...queryOptions.list({ enabled: !!entityType && !!entityId }),
   });
 }
 
@@ -2506,8 +2495,7 @@ export function useAuditLogById(id: string) {
   return useQuery({
     queryKey: inventoryKeys.auditLogById(id),
     queryFn: () => InventoryService.getAuditLogById(id),
-    enabled: !!id,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -2518,7 +2506,7 @@ export function useAuditEntityTypes() {
   return useQuery({
     queryKey: inventoryKeys.auditEntityTypes,
     queryFn: () => InventoryService.getAuditEntityTypes(),
-    staleTime: 300000, // 5 minutes - static data
+    ...queryOptions.static(),
   });
 }
 
@@ -2529,7 +2517,7 @@ export function useAuditActionTypes() {
   return useQuery({
     queryKey: inventoryKeys.auditActionTypes,
     queryFn: () => InventoryService.getAuditActionTypes(),
-    staleTime: 300000, // 5 minutes - static data
+    ...queryOptions.static(),
   });
 }
 
@@ -2549,8 +2537,7 @@ export function useProductForecast(
   return useQuery({
     queryKey: inventoryKeys.productForecast(productId, warehouseId, forecastDays, method),
     queryFn: () => InventoryService.getProductForecast(productId, warehouseId, forecastDays, method),
-    enabled: productId > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: productId > 0 }),
   });
 }
 
@@ -2561,7 +2548,7 @@ export function useProductForecasts(filter?: StockForecastFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.productForecasts(filter),
     queryFn: () => InventoryService.getProductForecasts(filter),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2572,7 +2559,7 @@ export function useForecastSummary(filter?: StockForecastFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.forecastSummary(filter),
     queryFn: () => InventoryService.getForecastSummary(filter),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2583,7 +2570,7 @@ export function useStockoutRiskProducts(riskDays: number = 7, warehouseId?: numb
   return useQuery({
     queryKey: inventoryKeys.stockoutRisk(riskDays, warehouseId),
     queryFn: () => InventoryService.getStockoutRiskProducts(riskDays, warehouseId),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2594,8 +2581,7 @@ export function useDemandAnalysis(productId: number, warehouseId?: number, analy
   return useQuery({
     queryKey: inventoryKeys.demandAnalysis(productId, warehouseId, analysisDays),
     queryFn: () => InventoryService.getDemandAnalysis(productId, warehouseId, analysisDays),
-    enabled: productId > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: productId > 0 }),
   });
 }
 
@@ -2606,8 +2592,7 @@ export function useSeasonalPatterns(productId: number) {
   return useQuery({
     queryKey: inventoryKeys.seasonalPatterns(productId),
     queryFn: () => InventoryService.getSeasonalPatterns(productId),
-    enabled: productId > 0,
-    staleTime: 300000,
+    ...queryOptions.static({ enabled: productId > 0 }),
   });
 }
 
@@ -2618,7 +2603,7 @@ export function useAbcClassification(categoryId?: number, analysisDays: number =
   return useQuery({
     queryKey: inventoryKeys.abcClassification(categoryId, analysisDays),
     queryFn: () => InventoryService.getAbcClassification(categoryId, analysisDays),
-    staleTime: 300000,
+    ...queryOptions.static(),
   });
 }
 
@@ -2629,8 +2614,7 @@ export function useSafetyStockCalculation(productId: number, serviceLevel: numbe
   return useQuery({
     queryKey: inventoryKeys.safetyStock(productId, serviceLevel),
     queryFn: () => InventoryService.getSafetyStockCalculation(productId, serviceLevel),
-    enabled: productId > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: productId > 0 }),
   });
 }
 
@@ -2641,8 +2625,7 @@ export function useStockOptimization(productId: number) {
   return useQuery({
     queryKey: inventoryKeys.stockOptimization(productId),
     queryFn: () => InventoryService.getStockOptimization(productId),
-    enabled: productId > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: productId > 0 }),
   });
 }
 
@@ -2653,7 +2636,7 @@ export function useBulkStockOptimizations(categoryId?: number, warehouseId?: num
   return useQuery({
     queryKey: inventoryKeys.bulkStockOptimizations(categoryId, warehouseId),
     queryFn: () => InventoryService.getBulkStockOptimizations(categoryId, warehouseId),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2673,7 +2656,7 @@ export function useReorderRules(
   return useQuery({
     queryKey: inventoryKeys.reorderRules(productId, categoryId, warehouseId, status),
     queryFn: () => InventoryService.getReorderRules(productId, categoryId, warehouseId, status),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2684,8 +2667,7 @@ export function useReorderRule(id: number) {
   return useQuery({
     queryKey: inventoryKeys.reorderRule(id),
     queryFn: () => InventoryService.getReorderRuleById(id),
-    enabled: id > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: id > 0 }),
   });
 }
 
@@ -2831,7 +2813,7 @@ export function useReorderSuggestions(filter?: ReorderSuggestionFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.reorderSuggestions(filter),
     queryFn: () => InventoryService.getReorderSuggestions(filter),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2842,8 +2824,7 @@ export function useReorderSuggestion(id: number) {
   return useQuery({
     queryKey: inventoryKeys.reorderSuggestion(id),
     queryFn: () => InventoryService.getReorderSuggestionById(id),
-    enabled: id > 0,
-    staleTime: 30000,
+    ...queryOptions.detail({ enabled: id > 0 }),
   });
 }
 
@@ -2935,7 +2916,7 @@ export function useCostLayers(filter?: CostLayerFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.costLayers(filter),
     queryFn: () => InventoryService.getCostLayers(filter),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -2950,8 +2931,7 @@ export function useProductCostLayers(
   return useQuery({
     queryKey: inventoryKeys.productCostLayers(productId, warehouseId, includeFullyConsumed),
     queryFn: () => InventoryService.getProductCostLayers(productId, warehouseId, includeFullyConsumed),
-    enabled: !!productId && productId > 0,
-    staleTime: 60000,
+    ...queryOptions.list({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -3000,8 +2980,7 @@ export function useProductCostingSummary(productId: number, warehouseId?: number
   return useQuery({
     queryKey: inventoryKeys.productCostingSummary(productId, warehouseId),
     queryFn: () => InventoryService.getProductCostingSummary(productId, warehouseId),
-    enabled: !!productId && productId > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -3012,7 +2991,7 @@ export function useProductCostingSummaries(categoryId?: number, warehouseId?: nu
   return useQuery({
     queryKey: inventoryKeys.productCostingSummaries(categoryId, warehouseId),
     queryFn: () => InventoryService.getProductCostingSummaries(categoryId, warehouseId),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -3035,8 +3014,7 @@ export function useCostMethodComparison(productId: number, quantity: number, war
   return useQuery({
     queryKey: inventoryKeys.costMethodComparison(productId, quantity, warehouseId),
     queryFn: () => InventoryService.compareCostMethods(productId, quantity, warehouseId),
-    enabled: !!productId && productId > 0 && quantity > 0,
-    staleTime: 60000,
+    ...queryOptions.detail({ enabled: !!productId && productId > 0 && quantity > 0 }),
   });
 }
 
@@ -3047,7 +3025,7 @@ export function useInventoryValuation(filter?: InventoryValuationFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.inventoryValuation(filter),
     queryFn: () => InventoryService.getInventoryValuation(filter),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -3058,7 +3036,7 @@ export function useTotalInventoryValue(method?: CostingMethod, warehouseId?: num
   return useQuery({
     queryKey: inventoryKeys.totalInventoryValue(method, warehouseId),
     queryFn: () => InventoryService.getTotalInventoryValue(method, warehouseId),
-    staleTime: 60000,
+    ...queryOptions.detail(),
   });
 }
 
@@ -3069,8 +3047,7 @@ export function useCOGSReport(filter: COGSReportFilterDto) {
   return useQuery({
     queryKey: inventoryKeys.cogsReport(filter),
     queryFn: () => InventoryService.getCOGSReport(filter),
-    enabled: !!filter.startDate && !!filter.endDate,
-    staleTime: 60000,
+    ...queryOptions.list({ enabled: !!filter.startDate && !!filter.endDate }),
   });
 }
 
@@ -3101,7 +3078,7 @@ export function useCostVarianceAnalysis(categoryId?: number) {
   return useQuery({
     queryKey: inventoryKeys.costVarianceAnalysis(categoryId),
     queryFn: () => InventoryService.getCostVarianceAnalysis(categoryId),
-    staleTime: 60000,
+    ...queryOptions.list(),
   });
 }
 
@@ -3151,8 +3128,7 @@ export function useProductCostingMethod(productId: number) {
   return useQuery({
     queryKey: inventoryKeys.productCostingMethod(productId),
     queryFn: () => InventoryService.getProductCostingMethod(productId),
-    enabled: !!productId && productId > 0,
-    staleTime: 300000, // 5 minutes
+    ...queryOptions.static({ enabled: !!productId && productId > 0 }),
   });
 }
 
@@ -3183,7 +3159,7 @@ export function useCostingMethods() {
   return useQuery({
     queryKey: inventoryKeys.costingMethods,
     queryFn: () => InventoryService.getCostingMethods(),
-    staleTime: Infinity, // Static data
+    ...queryOptions.static({ staleTime: Infinity }),
   });
 }
 
@@ -3360,8 +3336,7 @@ export function useAbcXyzAnalysis(filter?: AbcXyzAnalysisFilterDto, enabled: boo
   return useQuery({
     queryKey: inventoryKeys.abcXyzAnalysis(filter),
     queryFn: () => InventoryService.getAbcXyzAnalysis(filter),
-    enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes - analysis data doesn't change frequently
+    ...queryOptions.static({ enabled }),
   });
 }
 
@@ -3377,8 +3352,7 @@ export function useProductAbcXyzClassification(
   return useQuery({
     queryKey: inventoryKeys.productAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
     queryFn: () => InventoryService.getProductAbcXyzClassification(productId, analysisPeriodDays, warehouseId),
-    enabled: enabled && !!productId && productId > 0,
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.static({ enabled: enabled && !!productId && productId > 0 }),
   });
 }
 
@@ -3390,8 +3364,7 @@ export function useInventoryTurnoverAnalysis(filter?: InventoryTurnoverFilterDto
   return useQuery({
     queryKey: inventoryKeys.inventoryTurnover(filter),
     queryFn: () => InventoryService.getInventoryTurnoverAnalysis(filter),
-    enabled,
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.static({ enabled }),
   });
 }
 
@@ -3403,8 +3376,7 @@ export function useDeadStockAnalysis(filter?: DeadStockFilterDto, enabled: boole
   return useQuery({
     queryKey: inventoryKeys.deadStock(filter),
     queryFn: () => InventoryService.getDeadStockAnalysis(filter),
-    enabled,
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.static({ enabled }),
   });
 }
 
@@ -3416,8 +3388,7 @@ export function useServiceLevelAnalysis(filter?: ServiceLevelFilterDto, enabled:
   return useQuery({
     queryKey: inventoryKeys.serviceLevel(filter),
     queryFn: () => InventoryService.getServiceLevelAnalysis(filter),
-    enabled,
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.static({ enabled }),
   });
 }
 
@@ -3429,7 +3400,6 @@ export function useInventoryHealthScore(filter?: InventoryHealthScoreFilterDto, 
   return useQuery({
     queryKey: inventoryKeys.inventoryHealthScore(filter),
     queryFn: () => InventoryService.getInventoryHealthScore(filter),
-    enabled,
-    staleTime: 5 * 60 * 1000,
+    ...queryOptions.static({ enabled }),
   });
 }

@@ -1,11 +1,13 @@
 /**
  * React Query Hooks for CRM Module
  * Comprehensive hooks for all 116 CRM endpoints with optimistic updates and cache management
+ * Optimized with centralized query options to prevent 429 errors
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CRMService } from '../services/crm.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
+import { queryOptions } from '../query-options';
 import type {
   Guid,
   DateTime,
@@ -183,10 +185,7 @@ export function useCustomers(filters?: any) {
   return useQuery({
     queryKey: [...crmKeys.customers, filters],
     queryFn: () => CRMService.getCustomers(filters),
-    staleTime: 2 * 60 * 1000, // 2 minutes - prevent excessive refetching
-    gcTime: 5 * 60 * 1000, // 5 minutes cache time
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
-    retry: false, // API client handles retries with backoff
+    ...queryOptions.list(),
   });
 }
 
@@ -194,11 +193,7 @@ export function useCustomer(id: string) {
   return useQuery({
     queryKey: crmKeys.customer(id),
     queryFn: () => CRMService.getCustomer(id),
-    enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes cache time
-    refetchOnWindowFocus: false,
-    retry: false, // API client handles retries
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -257,6 +252,7 @@ export function useActivities(filters?: any) {
   return useQuery({
     queryKey: [...crmKeys.activities, filters],
     queryFn: () => CRMService.getActivities(filters),
+    ...queryOptions.list(),
   });
 }
 
@@ -264,7 +260,7 @@ export function useActivity(id: Guid) {
   return useQuery({
     queryKey: crmKeys.activity(id),
     queryFn: () => CRMService.getActivity(Number(id)),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -272,6 +268,7 @@ export function useUpcomingActivities(days: number = 7) {
   return useQuery({
     queryKey: crmKeys.activitiesUpcoming(days),
     queryFn: () => CRMService.getUpcomingActivities(days),
+    ...queryOptions.list(),
   });
 }
 
@@ -279,6 +276,7 @@ export function useOverdueActivities() {
   return useQuery({
     queryKey: crmKeys.activitiesOverdue(),
     queryFn: () => CRMService.getOverdueActivities(),
+    ...queryOptions.list(),
   });
 }
 
@@ -286,7 +284,7 @@ export function useCalendarActivities(fromDate: DateTime, toDate: DateTime) {
   return useQuery({
     queryKey: crmKeys.activitiesCalendar(fromDate, toDate),
     queryFn: () => CRMService.getCalendarActivities(fromDate, toDate),
-    enabled: !!fromDate && !!toDate,
+    ...queryOptions.list({ enabled: !!fromDate && !!toDate }),
   });
 }
 
@@ -294,6 +292,7 @@ export function useActivityStatistics(fromDate?: DateTime, toDate?: DateTime) {
   return useQuery({
     queryKey: crmKeys.activitiesStats(fromDate, toDate),
     queryFn: () => CRMService.getActivityStatistics(fromDate, toDate),
+    ...queryOptions.static(),
   });
 }
 
@@ -404,6 +403,7 @@ export function useLeads(filters?: any) {
   return useQuery({
     queryKey: [...crmKeys.leads, filters],
     queryFn: () => CRMService.getLeads(filters),
+    ...queryOptions.list(),
   });
 }
 
@@ -411,7 +411,7 @@ export function useLead(id: Guid) {
   return useQuery({
     queryKey: crmKeys.lead(id),
     queryFn: () => CRMService.getLead(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -419,7 +419,7 @@ export function useLeadActivities(id: Guid) {
   return useQuery({
     queryKey: crmKeys.leadActivities(id),
     queryFn: () => CRMService.getLeadActivities(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -427,6 +427,7 @@ export function useLeadStatistics(fromDate?: DateTime, toDate?: DateTime) {
   return useQuery({
     queryKey: crmKeys.leadsStats(fromDate, toDate),
     queryFn: () => CRMService.getLeadStatistics(fromDate, toDate),
+    ...queryOptions.static(),
   });
 }
 
@@ -594,6 +595,7 @@ export function useDeals(filters?: any) {
   return useQuery({
     queryKey: [...crmKeys.deals, filters],
     queryFn: () => CRMService.getDeals(filters),
+    ...queryOptions.list(),
   });
 }
 
@@ -601,7 +603,7 @@ export function useDeal(id: Guid) {
   return useQuery({
     queryKey: crmKeys.deal(id),
     queryFn: () => CRMService.getDeal(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -609,7 +611,7 @@ export function useDealActivities(id: Guid) {
   return useQuery({
     queryKey: crmKeys.dealActivities(id),
     queryFn: () => CRMService.getDealActivities(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -617,7 +619,7 @@ export function useDealProducts(id: Guid) {
   return useQuery({
     queryKey: crmKeys.dealProducts(id),
     queryFn: () => CRMService.getDealProducts(id),
-    enabled: !!id,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 

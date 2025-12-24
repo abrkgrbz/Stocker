@@ -1,11 +1,13 @@
 /**
  * React Query Hooks for Sales Module
  * Comprehensive hooks for sales order management with optimistic updates and cache management
+ * Optimized with centralized query options to prevent 429 errors
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SalesService } from '../services/sales.service';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
+import { queryOptions } from '../query-options';
 import type {
   SalesOrder,
   SalesOrderListItem,
@@ -125,7 +127,7 @@ export function useSalesOrders(params?: GetSalesOrdersParams) {
   return useQuery<PagedResult<SalesOrderListItem>>({
     queryKey: salesKeys.ordersList(params),
     queryFn: () => SalesService.getOrders(params),
-    staleTime: 30 * 1000, // 30 seconds
+    ...queryOptions.list(),
   });
 }
 
@@ -136,8 +138,7 @@ export function useSalesOrder(id: string) {
   return useQuery<SalesOrder>({
     queryKey: salesKeys.order(id),
     queryFn: () => SalesService.getOrderById(id),
-    enabled: !!id,
-    staleTime: 30 * 1000,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -148,7 +149,7 @@ export function useSalesStatistics(fromDate?: string, toDate?: string) {
   return useQuery<SalesOrderStatistics>({
     queryKey: salesKeys.statistics(fromDate, toDate),
     queryFn: () => SalesService.getStatistics(fromDate, toDate),
-    staleTime: 60 * 1000, // 1 minute
+    ...queryOptions.static(),
   });
 }
 
@@ -171,8 +172,7 @@ export function useSalesOrdersByCustomer(
         sortBy: 'OrderDate',
         sortDescending: true,
       }),
-    enabled: !!customerId,
-    staleTime: 30 * 1000,
+    ...queryOptions.list({ enabled: !!customerId }),
   });
 }
 

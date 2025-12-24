@@ -269,7 +269,7 @@ public class ContactsController : ControllerBase
         if (contact == null)
             return NotFound(new Error("Contact.NotFound", "Contact not found", ErrorType.NotFound));
 
-        await _contactRepository.DeleteAsync(contact);
+        _contactRepository.Remove(contact);
 
         return NoContent();
     }

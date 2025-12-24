@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { UserModulesService } from '../services/user-modules.service';
 import type { UserModulesResponse, ModuleInfo } from '../services/user-modules.service';
+import { queryOptions } from '../query-options';
 
 // =====================================
 // QUERY KEYS
@@ -27,10 +28,7 @@ export function useActiveModules() {
   return useQuery<UserModulesResponse>({
     queryKey: userModulesKeys.active(),
     queryFn: () => UserModulesService.getActiveModules(),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: 2,
-    refetchOnWindowFocus: false,
+    ...queryOptions.static(),
   });
 }
 

@@ -18,6 +18,7 @@ import type {
   RecordPaymentCommand,
   SetEInvoiceCommand,
 } from '../services/invoice.service';
+import { queryOptions } from '../query-options';
 
 // =====================================
 // QUERY KEYS
@@ -42,7 +43,7 @@ export function useInvoices(params?: GetInvoicesParams) {
   return useQuery<PagedResult<InvoiceListItem>>({
     queryKey: invoiceKeys.invoicesList(params),
     queryFn: () => InvoiceService.getInvoices(params),
-    staleTime: 30 * 1000, // 30 seconds
+    ...queryOptions.list(),
   });
 }
 
@@ -53,8 +54,7 @@ export function useInvoice(id: string) {
   return useQuery<Invoice>({
     queryKey: invoiceKeys.invoice(id),
     queryFn: () => InvoiceService.getInvoiceById(id),
-    enabled: !!id,
-    staleTime: 30 * 1000,
+    ...queryOptions.detail({ enabled: !!id }),
   });
 }
 
@@ -65,8 +65,7 @@ export function useInvoiceByNumber(invoiceNumber: string) {
   return useQuery<Invoice>({
     queryKey: invoiceKeys.invoiceByNumber(invoiceNumber),
     queryFn: () => InvoiceService.getInvoiceByNumber(invoiceNumber),
-    enabled: !!invoiceNumber,
-    staleTime: 30 * 1000,
+    ...queryOptions.detail({ enabled: !!invoiceNumber }),
   });
 }
 
@@ -77,7 +76,7 @@ export function useInvoiceStatistics(fromDate?: string, toDate?: string) {
   return useQuery<InvoiceStatistics>({
     queryKey: invoiceKeys.statistics(fromDate, toDate),
     queryFn: () => InvoiceService.getStatistics(fromDate, toDate),
-    staleTime: 60 * 1000, // 1 minute
+    ...queryOptions.realtime(),
   });
 }
 

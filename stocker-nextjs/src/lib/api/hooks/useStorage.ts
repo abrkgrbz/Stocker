@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { StorageService } from '../services/storage.service';
 import type { StorageUsageResponse, BucketExistsResponse, BucketNameResponse } from '../services/storage.service';
+import { queryOptions } from '../query-options';
 
 // =====================================
 // QUERY KEYS
@@ -29,10 +30,7 @@ export function useStorageUsage(options?: { enabled?: boolean }) {
   return useQuery<StorageUsageResponse, Error>({
     queryKey: storageKeys.usage(),
     queryFn: () => StorageService.getStorageUsage(),
-    staleTime: 5 * 60 * 1000, // 5 minutes - storage doesn't change frequently
-    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
-    retry: 2,
-    enabled: options?.enabled ?? true,
+    ...queryOptions.static({ enabled: options?.enabled ?? true }),
   });
 }
 
@@ -43,9 +41,7 @@ export function useBucketExists(options?: { enabled?: boolean }) {
   return useQuery<BucketExistsResponse, Error>({
     queryKey: storageKeys.exists(),
     queryFn: () => StorageService.checkBucketExists(),
-    staleTime: 30 * 60 * 1000, // 30 minutes - bucket existence rarely changes
-    retry: 2,
-    enabled: options?.enabled ?? true,
+    ...queryOptions.static({ staleTime: 30 * 60 * 1000, enabled: options?.enabled ?? true }),
   });
 }
 
@@ -56,9 +52,7 @@ export function useBucketName(options?: { enabled?: boolean }) {
   return useQuery<BucketNameResponse, Error>({
     queryKey: storageKeys.bucketName(),
     queryFn: () => StorageService.getBucketName(),
-    staleTime: Infinity, // Bucket name never changes
-    retry: 2,
-    enabled: options?.enabled ?? true,
+    ...queryOptions.static({ staleTime: Infinity, enabled: options?.enabled ?? true }),
   });
 }
 

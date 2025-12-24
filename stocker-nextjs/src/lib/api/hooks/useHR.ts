@@ -6,6 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HRService } from '../services/hr.service';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
+import { queryOptions } from '../query-options';
 import type {
   // Employee
   EmployeeDto,
@@ -359,7 +360,7 @@ export function useEmployees(filter?: EmployeeFilterDto) {
   return useQuery({
     queryKey: filter ? hrKeys.employeesFiltered(filter) : hrKeys.employees,
     queryFn: () => HRService.getEmployees(filter),
-    staleTime: 30000,
+    ...queryOptions.list(),
   });
 }
 
@@ -367,7 +368,7 @@ export function useEmployee(id: number) {
   return useQuery({
     queryKey: hrKeys.employee(id),
     queryFn: () => HRService.getEmployee(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -475,7 +476,7 @@ export function useDepartments(includeInactive: boolean = false) {
   return useQuery({
     queryKey: [...hrKeys.departments, { includeInactive }],
     queryFn: () => HRService.getDepartments(includeInactive),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
@@ -483,7 +484,7 @@ export function useDepartment(id: number) {
   return useQuery({
     queryKey: hrKeys.department(id),
     queryFn: () => HRService.getDepartment(id),
-    enabled: !!id && id > 0,
+    ...queryOptions.detail({ enabled: !!id && id > 0 }),
   });
 }
 
@@ -491,7 +492,7 @@ export function useDepartmentTree() {
   return useQuery({
     queryKey: hrKeys.departmentTree,
     queryFn: () => HRService.getDepartmentTree(),
-    staleTime: 60000,
+    ...queryOptions.static(),
   });
 }
 
