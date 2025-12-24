@@ -93,7 +93,8 @@ public class TenantRateLimitingMiddleware
             "/hangfire",
             "/.well-known",
             "/favicon.ico",
-            "/api/tenant/securitysettings" // Settings page needs frequent access
+            "/api/tenant/securitysettings", // Settings page needs frequent access
+            "/hubs/" // SignalR hubs have their own rate limiting (SignalRRateLimiter)
         };
 
         foreach (var skipPath in skipPaths)
