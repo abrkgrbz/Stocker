@@ -183,7 +183,10 @@ export function useCustomers(filters?: any) {
   return useQuery({
     queryKey: [...crmKeys.customers, filters],
     queryFn: () => CRMService.getCustomers(filters),
-    staleTime: 30000,
+    staleTime: 2 * 60 * 1000, // 2 minutes - prevent excessive refetching
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    retry: false, // API client handles retries with backoff
   });
 }
 
@@ -192,6 +195,10 @@ export function useCustomer(id: string) {
     queryKey: crmKeys.customer(id),
     queryFn: () => CRMService.getCustomer(id),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes cache time
+    refetchOnWindowFocus: false,
+    retry: false, // API client handles retries
   });
 }
 

@@ -7,6 +7,75 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
 /**
+ * Retry Configuration for 429 and transient errors
+ */
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRY_DELAY = 10000; // 10 seconds
+
+/**
+ * Request Queue for Rate Limiting
+ */
+class RequestQueue {
+  private queue: Array<() => Promise<void>> = [];
+  private processing = false;
+  private lastRequestTime = 0;
+  private minRequestInterval = 100; // Minimum 100ms between requests
+
+  async add<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await request();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      this.process();
+    });
+  }
+
+  private async process() {
+    if (this.processing) return;
+    this.processing = true;
+
+    while (this.queue.length > 0) {
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+
+      if (timeSinceLastRequest < this.minRequestInterval) {
+        await this.sleep(this.minRequestInterval - timeSinceLastRequest);
+      }
+
+      const request = this.queue.shift();
+      if (request) {
+        this.lastRequestTime = Date.now();
+        await request();
+      }
+    }
+
+    this.processing = false;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Increase interval when rate limited
+  increaseInterval() {
+    this.minRequestInterval = Math.min(this.minRequestInterval * 2, 2000);
+  }
+
+  // Reset interval when requests succeed
+  resetInterval() {
+    this.minRequestInterval = 100;
+  }
+}
+
+const requestQueue = new RequestQueue();
+
+/**
  * Custom API Error Class
  */
 export class ApiClientError extends Error {
@@ -89,7 +158,65 @@ export class ApiClient {
   }
 
   /**
-   * Generic request method
+   * Sleep helper for retry delays
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Calculate retry delay with exponential backoff and jitter
+   */
+  private getRetryDelay(attempt: number, retryAfter?: number): number {
+    if (retryAfter) {
+      return Math.min(retryAfter * 1000, MAX_RETRY_DELAY);
+    }
+    // Exponential backoff with jitter
+    const exponentialDelay = INITIAL_RETRY_DELAY * Math.pow(2, attempt);
+    const jitter = Math.random() * 500; // Add random jitter up to 500ms
+    return Math.min(exponentialDelay + jitter, MAX_RETRY_DELAY);
+  }
+
+  /**
+   * Check if error is retryable
+   */
+  private isRetryableError(status: number): boolean {
+    // 429 Too Many Requests, 503 Service Unavailable, 504 Gateway Timeout
+    return [429, 503, 504].includes(status);
+  }
+
+  /**
+   * Execute single request
+   */
+  private async executeRequest<T>(
+    url: string,
+    config: RequestInit,
+    signal?: AbortSignal
+  ): Promise<{ response: Response; data: any }> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+
+    try {
+      const response = await fetch(url, {
+        ...config,
+        signal: signal || controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // Handle empty responses
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      return { response, data };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  /**
+   * Generic request method with retry logic for 429 errors
    */
   private async request<T>(
     endpoint: string,
@@ -124,7 +251,7 @@ export class ApiClient {
     const config: RequestInit = {
       method,
       headers: requestHeaders,
-      credentials: 'include', // Include HttpOnly cookies for authentication
+      credentials: 'include',
       signal,
     };
 
@@ -132,67 +259,101 @@ export class ApiClient {
       config.body = JSON.stringify(body);
     }
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+    // Use request queue to throttle requests
+    return requestQueue.add(async () => {
+      let lastError: ApiClientError | null = null;
 
-      const response = await fetch(url, {
-        ...config,
-        signal: signal || controller.signal,
-      });
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const { response, data } = await this.executeRequest<T>(url, config, signal);
 
-      clearTimeout(timeoutId);
+          if (!response.ok) {
+            // Check if we should retry
+            if (this.isRetryableError(response.status) && attempt < MAX_RETRIES) {
+              // Parse Retry-After header if present
+              const retryAfterHeader = response.headers.get('Retry-After');
+              const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
 
-      const data = await response.json();
+              // Increase request interval for rate limiting
+              if (response.status === 429) {
+                requestQueue.increaseInterval();
+                console.warn(`[API] Rate limited (429). Retrying in ${this.getRetryDelay(attempt, retryAfter)}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+              }
 
-      if (!response.ok) {
-        // Transform backend error response to ApiError format
-        // Backend returns: { detail, errors: [{code, message}], ... }
-        const apiError: ApiError = {
-          code: (data.errors?.[0]?.code || 'UNKNOWN_ERROR') as any,
-          message: data.detail || data.errors?.[0]?.message || data.message || 'An error occurred',
-          details: data.errors || data,
-          timestamp: data.timestamp || new Date().toISOString(),
-        };
+              await this.sleep(this.getRetryDelay(attempt, retryAfter));
+              continue;
+            }
 
-        throw new ApiClientError(
-          response.status,
-          apiError,
-          response
-        );
-      }
+            // Transform backend error response to ApiError format
+            const apiError: ApiError = {
+              code: (data?.errors?.[0]?.code || 'UNKNOWN_ERROR') as any,
+              message: data?.detail || data?.errors?.[0]?.message || data?.message || 'An error occurred',
+              details: data?.errors || data,
+              timestamp: data?.timestamp || new Date().toISOString(),
+            };
 
-      return data as ApiResponse<T>;
-    } catch (error) {
-      if (error instanceof ApiClientError) {
-        throw error;
-      }
+            throw new ApiClientError(response.status, apiError, response);
+          }
 
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new ApiClientError(
-            408,
-            {
-              code: 'TIMEOUT',
-              message: 'İstek zaman aşımına uğradı',
-              timestamp: new Date().toISOString(),
-            } as any
-          );
+          // Request succeeded, reset interval
+          requestQueue.resetInterval();
+          return data as ApiResponse<T>;
+
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            lastError = error;
+
+            // Don't retry non-retryable errors
+            if (!this.isRetryableError(error.statusCode)) {
+              throw error;
+            }
+
+            // Last attempt failed
+            if (attempt === MAX_RETRIES) {
+              throw error;
+            }
+
+            continue;
+          }
+
+          if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+              throw new ApiClientError(
+                408,
+                {
+                  code: 'TIMEOUT',
+                  message: 'İstek zaman aşımına uğradı',
+                  timestamp: new Date().toISOString(),
+                } as any
+              );
+            }
+
+            // Network errors can be retried
+            if (attempt < MAX_RETRIES) {
+              console.warn(`[API] Network error. Retrying in ${this.getRetryDelay(attempt)}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+              await this.sleep(this.getRetryDelay(attempt));
+              continue;
+            }
+
+            throw new ApiClientError(
+              0,
+              {
+                code: 'NETWORK_ERROR',
+                message: 'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
+                details: error.message,
+                timestamp: new Date().toISOString(),
+              } as any
+            );
+          }
+
+          throw error;
         }
-
-        throw new ApiClientError(
-          0,
-          {
-            code: 'NETWORK_ERROR',
-            message: 'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
-            details: error.message,
-            timestamp: new Date().toISOString(),
-          } as any
-        );
       }
 
-      throw error;
-    }
+      // Should not reach here, but throw last error if we do
+      if (lastError) throw lastError;
+      throw new Error('Unexpected error in request retry loop');
+    });
   }
 
   /**
