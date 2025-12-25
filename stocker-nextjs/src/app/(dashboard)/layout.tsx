@@ -277,6 +277,44 @@ const MODULE_MENUS = {
         label: 'Pazarlama',
         children: [
           { key: '/sales/discounts', icon: <TagsOutlined />, label: 'İndirimler' },
+          { key: '/sales/segments', icon: <TeamOutlined />, label: 'Müşteri Segmentleri' },
+          { key: '/sales/pricelists', icon: <DollarOutlined />, label: 'Fiyat Listeleri' },
+        ],
+      },
+      {
+        key: 'sales-performance',
+        icon: <AimOutlined />,
+        label: 'Performans',
+        children: [
+          { key: '/sales/targets', icon: <AimOutlined />, label: 'Satış Hedefleri' },
+        ],
+      },
+      {
+        key: 'sales-logistics',
+        icon: <SwapOutlined />,
+        label: 'Lojistik',
+        children: [
+          { key: '/sales/reservations', icon: <InboxOutlined />, label: 'Stok Rezervasyonları' },
+          { key: '/sales/backorders', icon: <ClockCircleOutlined />, label: 'Bekleyen Siparişler' },
+          { key: '/sales/delivery-notes', icon: <FileTextOutlined />, label: 'İrsaliyeler' },
+        ],
+      },
+      {
+        key: 'sales-financial',
+        icon: <AccountBookOutlined />,
+        label: 'Finansal İşlemler',
+        children: [
+          { key: '/sales/advance-payments', icon: <WalletOutlined />, label: 'Avans Ödemeler' },
+          { key: '/sales/credit-notes', icon: <RollbackOutlined />, label: 'Alacak Dekontları' },
+        ],
+      },
+      {
+        key: 'sales-postsales',
+        icon: <ToolOutlined />,
+        label: 'Satış Sonrası',
+        children: [
+          { key: '/sales/service', icon: <ToolOutlined />, label: 'Servis Talepleri' },
+          { key: '/sales/warranty', icon: <SafetyCertificateOutlined />, label: 'Garanti Sorgulama' },
         ],
       },
     ],
@@ -651,6 +689,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/sales/contracts': '/sales/contracts',
       '/sales/territories': '/sales/territories',
       '/sales/shipments': '/sales/shipments',
+      '/sales/segments': '/sales/segments',
+      '/sales/pricelists': '/sales/pricelists',
+      '/sales/targets': '/sales/targets',
+      '/sales/reservations': '/sales/reservations',
+      '/sales/backorders': '/sales/backorders',
+      '/sales/delivery-notes': '/sales/delivery-notes',
+      '/sales/advance-payments': '/sales/advance-payments',
+      '/sales/credit-notes': '/sales/credit-notes',
+      '/sales/service': '/sales/service',
+      '/sales/warranty': '/sales/warranty',
       // HR Module
       '/hr/employees': '/hr/employees',
       '/hr/departments': '/hr/departments',
