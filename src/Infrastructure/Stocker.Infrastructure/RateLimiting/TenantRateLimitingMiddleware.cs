@@ -37,6 +37,13 @@ public class TenantRateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip rate limiting if disabled via config
+        if (!_options.Enabled)
+        {
+            await _next(context);
+            return;
+        }
+
         // Skip rate limiting in Testing environment
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         if (environment == "Testing")
@@ -342,6 +349,7 @@ public class TenantRateLimitingMiddleware
 /// </summary>
 public class TenantRateLimitingOptions
 {
+    public bool Enabled { get; set; } = true;
     public RateLimitAlgorithm Algorithm { get; set; } = RateLimitAlgorithm.SlidingWindow;
     public int PermitLimit { get; set; } = 500;
     public int WindowSeconds { get; set; } = 60;
