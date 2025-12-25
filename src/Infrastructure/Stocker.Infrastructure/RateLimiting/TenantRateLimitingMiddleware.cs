@@ -31,8 +31,14 @@ public class TenantRateLimitingMiddleware
         _next = next;
         _logger = logger;
         _cache = cache;
-        _options = configuration.GetSection("TenantRateLimiting").Get<TenantRateLimitingOptions>() 
-            ?? new TenantRateLimitingOptions();
+
+        // Use Bind() to properly read from both appsettings.json and environment variables
+        _options = new TenantRateLimitingOptions();
+        configuration.GetSection("TenantRateLimiting").Bind(_options);
+
+        _logger.LogInformation(
+            "TenantRateLimiting initialized: Enabled={Enabled}, PermitLimit={PermitLimit}, Algorithm={Algorithm}",
+            _options.Enabled, _options.PermitLimit, _options.Algorithm);
     }
 
     public async Task InvokeAsync(HttpContext context)
