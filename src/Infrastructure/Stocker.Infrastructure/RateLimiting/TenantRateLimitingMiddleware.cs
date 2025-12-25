@@ -56,8 +56,10 @@ public class TenantRateLimitingMiddleware
         var tenantId = GetTenantIdentifier(context);
         if (string.IsNullOrEmpty(tenantId))
         {
-            // Use IP-based rate limiting for anonymous requests
-            tenantId = GetClientIpAddress(context);
+            // Skip rate limiting for anonymous/IP-based requests
+            // Only rate limit authenticated tenant requests
+            await _next(context);
+            return;
         }
 
         // Get or create rate limiter for this tenant
@@ -337,7 +339,7 @@ public class TenantRateLimitingMiddleware
 public class TenantRateLimitingOptions
 {
     public RateLimitAlgorithm Algorithm { get; set; } = RateLimitAlgorithm.SlidingWindow;
-    public int PermitLimit { get; set; } = 100;
+    public int PermitLimit { get; set; } = 500;
     public int WindowSeconds { get; set; } = 60;
     public int QueueLimit { get; set; } = 5;
     
