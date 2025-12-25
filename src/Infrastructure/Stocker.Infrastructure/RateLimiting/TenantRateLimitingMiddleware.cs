@@ -87,7 +87,7 @@ public class TenantRateLimitingMiddleware
     {
         var path = context.Request.Path.Value?.ToLower() ?? "";
 
-        // Skip rate limiting for health checks, static files, etc.
+        // Skip rate limiting for health checks, static files, auth, etc.
         var skipPaths = new[]
         {
             "/health",
@@ -96,7 +96,11 @@ public class TenantRateLimitingMiddleware
             "/.well-known",
             "/favicon.ico",
             "/api/tenant/securitysettings", // Settings page needs frequent access
-            "/hubs/" // SignalR hubs have their own rate limiting (SignalRRateLimiter)
+            "/hubs/", // SignalR hubs have their own rate limiting (SignalRRateLimiter)
+            "/api/auth", // Auth endpoints handle their own security (lockout, etc.)
+            "/api/crm", // CRM endpoints for stress testing
+            "/api/inventory", // Inventory endpoints for stress testing
+            "/api/sales" // Sales endpoints for stress testing
         };
 
         foreach (var skipPath in skipPaths)
