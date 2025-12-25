@@ -2,6 +2,26 @@ using Stocker.Modules.Sales.Domain.Entities;
 
 namespace Stocker.Modules.Sales.Application.DTOs;
 
+/// <summary>
+/// Address snapshot DTO for preserving address data at order time
+/// </summary>
+public record AddressSnapshotDto
+{
+    public string RecipientName { get; init; } = string.Empty;
+    public string? RecipientPhone { get; init; }
+    public string? CompanyName { get; init; }
+    public string AddressLine1 { get; init; } = string.Empty;
+    public string? AddressLine2 { get; init; }
+    public string? District { get; init; }
+    public string? Town { get; init; }
+    public string City { get; init; } = string.Empty;
+    public string? State { get; init; }
+    public string Country { get; init; } = "Türkiye";
+    public string? PostalCode { get; init; }
+    public string? TaxId { get; init; }
+    public string? TaxOffice { get; init; }
+}
+
 public record SalesOrderDto
 {
     public Guid Id { get; init; }
@@ -35,6 +55,25 @@ public record SalesOrderDto
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
     public List<SalesOrderItemDto> Items { get; init; } = new();
+
+    // Address Snapshots - structured address data preserved at order time
+    public AddressSnapshotDto? ShippingAddressSnapshot { get; init; }
+    public AddressSnapshotDto? BillingAddressSnapshot { get; init; }
+
+    // Source Document Relations - traceability to originating documents
+    public Guid? QuotationId { get; init; }
+    public string? QuotationNumber { get; init; }
+    public Guid? OpportunityId { get; init; }
+    public Guid? CustomerContractId { get; init; }
+
+    // Invoicing Status - tracks invoice coverage
+    public string InvoicingStatus { get; init; } = "NotInvoiced";
+    public decimal TotalInvoicedAmount { get; init; }
+    public decimal RemainingInvoiceAmount => TotalAmount - TotalInvoicedAmount;
+
+    // Fulfillment Status - tracks shipment progress
+    public string FulfillmentStatus { get; init; } = "Pending";
+    public int CompletedShipmentCount { get; init; }
 
     public static SalesOrderDto FromEntity(SalesOrder entity)
     {
@@ -70,7 +109,59 @@ public record SalesOrderDto
             CancellationReason = entity.CancellationReason,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
-            Items = entity.Items.Select(SalesOrderItemDto.FromEntity).ToList()
+            Items = entity.Items.Select(SalesOrderItemDto.FromEntity).ToList(),
+
+            // Address Snapshots
+            ShippingAddressSnapshot = entity.ShippingAddressSnapshot != null
+                ? new AddressSnapshotDto
+                {
+                    RecipientName = entity.ShippingAddressSnapshot.RecipientName,
+                    RecipientPhone = entity.ShippingAddressSnapshot.RecipientPhone,
+                    CompanyName = entity.ShippingAddressSnapshot.CompanyName,
+                    AddressLine1 = entity.ShippingAddressSnapshot.AddressLine1,
+                    AddressLine2 = entity.ShippingAddressSnapshot.AddressLine2,
+                    District = entity.ShippingAddressSnapshot.District,
+                    Town = entity.ShippingAddressSnapshot.Town,
+                    City = entity.ShippingAddressSnapshot.City,
+                    State = entity.ShippingAddressSnapshot.State,
+                    Country = entity.ShippingAddressSnapshot.Country,
+                    PostalCode = entity.ShippingAddressSnapshot.PostalCode,
+                    TaxId = entity.ShippingAddressSnapshot.TaxId,
+                    TaxOffice = entity.ShippingAddressSnapshot.TaxOffice
+                }
+                : null,
+            BillingAddressSnapshot = entity.BillingAddressSnapshot != null
+                ? new AddressSnapshotDto
+                {
+                    RecipientName = entity.BillingAddressSnapshot.RecipientName,
+                    RecipientPhone = entity.BillingAddressSnapshot.RecipientPhone,
+                    CompanyName = entity.BillingAddressSnapshot.CompanyName,
+                    AddressLine1 = entity.BillingAddressSnapshot.AddressLine1,
+                    AddressLine2 = entity.BillingAddressSnapshot.AddressLine2,
+                    District = entity.BillingAddressSnapshot.District,
+                    Town = entity.BillingAddressSnapshot.Town,
+                    City = entity.BillingAddressSnapshot.City,
+                    State = entity.BillingAddressSnapshot.State,
+                    Country = entity.BillingAddressSnapshot.Country,
+                    PostalCode = entity.BillingAddressSnapshot.PostalCode,
+                    TaxId = entity.BillingAddressSnapshot.TaxId,
+                    TaxOffice = entity.BillingAddressSnapshot.TaxOffice
+                }
+                : null,
+
+            // Source Document Relations
+            QuotationId = entity.QuotationId,
+            QuotationNumber = entity.QuotationNumber,
+            OpportunityId = entity.OpportunityId,
+            CustomerContractId = entity.CustomerContractId,
+
+            // Invoicing Status
+            InvoicingStatus = entity.InvoicingStatus.ToString(),
+            TotalInvoicedAmount = entity.TotalInvoicedAmount,
+
+            // Fulfillment Status
+            FulfillmentStatus = entity.FulfillmentStatus.ToString(),
+            CompletedShipmentCount = entity.CompletedShipmentCount
         };
     }
 }
@@ -138,6 +229,13 @@ public record SalesOrderListDto
     public int ItemCount { get; init; }
     public DateTime CreatedAt { get; init; }
 
+    // Source Document Reference
+    public string? QuotationNumber { get; init; }
+
+    // Status Tracking for list view
+    public string InvoicingStatus { get; init; } = "NotInvoiced";
+    public string FulfillmentStatus { get; init; } = "Pending";
+
     public static SalesOrderListDto FromEntity(SalesOrder entity)
     {
         return new SalesOrderListDto
@@ -152,7 +250,10 @@ public record SalesOrderListDto
             IsApproved = entity.IsApproved,
             IsCancelled = entity.IsCancelled,
             ItemCount = entity.Items.Count,
-            CreatedAt = entity.CreatedAt
+            CreatedAt = entity.CreatedAt,
+            QuotationNumber = entity.QuotationNumber,
+            InvoicingStatus = entity.InvoicingStatus.ToString(),
+            FulfillmentStatus = entity.FulfillmentStatus.ToString()
         };
     }
 }

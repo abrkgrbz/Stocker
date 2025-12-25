@@ -82,6 +82,27 @@ public class SalesOrdersController : ControllerBase
     }
 
     /// <summary>
+    /// Gets a sales order by order number
+    /// </summary>
+    [HttpGet("number/{orderNumber}")]
+    public async Task<ActionResult<SalesOrderDto>> GetOrderByNumber(
+        string orderNumber,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetSalesOrderByNumberQuery { OrderNumber = orderNumber };
+        var result = await _mediator.Send(query, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Gets sales order statistics
     /// </summary>
     [HttpGet("statistics")]
@@ -202,6 +223,82 @@ public class SalesOrdersController : ControllerBase
     public async Task<ActionResult<SalesOrderDto>> ApproveOrder(Guid id, CancellationToken cancellationToken)
     {
         var command = new ApproveSalesOrderCommand { Id = id };
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Confirms a sales order (customer confirmation received)
+    /// </summary>
+    [HttpPost("{id:guid}/confirm")]
+    public async Task<ActionResult<SalesOrderDto>> ConfirmOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var command = new ConfirmSalesOrderCommand { Id = id };
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Marks a sales order as shipped
+    /// </summary>
+    [HttpPost("{id:guid}/ship")]
+    public async Task<ActionResult<SalesOrderDto>> ShipOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var command = new ShipSalesOrderCommand { Id = id };
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Marks a sales order as delivered
+    /// </summary>
+    [HttpPost("{id:guid}/deliver")]
+    public async Task<ActionResult<SalesOrderDto>> DeliverOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var command = new DeliverSalesOrderCommand { Id = id };
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Error.Code == "NotFound")
+                return NotFound(new { error = result.Error.Description });
+            return BadRequest(new { error = result.Error.Description });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Marks a sales order as completed
+    /// </summary>
+    [HttpPost("{id:guid}/complete")]
+    public async Task<ActionResult<SalesOrderDto>> CompleteOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var command = new CompleteSalesOrderCommand { Id = id };
         var result = await _mediator.Send(command, cancellationToken);
 
         if (!result.IsSuccess)

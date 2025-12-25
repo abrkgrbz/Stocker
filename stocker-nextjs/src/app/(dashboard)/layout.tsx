@@ -241,6 +241,7 @@ const MODULE_MENUS = {
           { key: '/sales/orders', icon: <ShoppingCartOutlined />, label: 'Siparişler' },
           { key: '/sales/invoices', icon: <FileTextOutlined />, label: 'Faturalar' },
           { key: '/sales/e-invoices', icon: <SafetyCertificateOutlined />, label: 'E-Fatura' },
+          { key: '/sales/shipments', icon: <SwapOutlined />, label: 'Sevkiyatlar' },
           { key: '/sales/returns', icon: <RollbackOutlined />, label: 'İadeler' },
         ],
       },
@@ -252,6 +253,22 @@ const MODULE_MENUS = {
           { key: '/sales/payments', icon: <WalletOutlined />, label: 'Ödemeler' },
           { key: '/sales/customers', icon: <ContactsOutlined />, label: 'Bakiyeler' },
           { key: '/sales/commissions', icon: <CalculatorOutlined />, label: 'Komisyonlar' },
+        ],
+      },
+      {
+        key: 'sales-contracts',
+        icon: <FileOutlined />,
+        label: 'Sözleşmeler',
+        children: [
+          { key: '/sales/contracts', icon: <FileOutlined />, label: 'Müşteri Sözleşmeleri' },
+        ],
+      },
+      {
+        key: 'sales-territories',
+        icon: <GlobalOutlined />,
+        label: 'Satış Bölgeleri',
+        children: [
+          { key: '/sales/territories', icon: <GlobalOutlined />, label: 'Bölgeler' },
         ],
       },
       {
@@ -631,6 +648,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       '/sales/returns': '/sales/returns',
       '/sales/commissions': '/sales/commissions',
       '/sales/discounts': '/sales/discounts',
+      '/sales/contracts': '/sales/contracts',
+      '/sales/territories': '/sales/territories',
+      '/sales/shipments': '/sales/shipments',
       // HR Module
       '/hr/employees': '/hr/employees',
       '/hr/departments': '/hr/departments',

@@ -201,5 +201,8 @@ public enum PaymentMethod
     DebitCard = 3,
     Check = 4,
     DirectDebit = 5,
-    Other = 6
+    OnlinePayment = 6,
+    MobilePayment = 7,
+    Cryptocurrency = 8,
+    Other = 99
 }

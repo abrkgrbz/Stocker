@@ -1988,6 +1988,851 @@ export class SalesService {
   static async deleteSalesReturn(id: string): Promise<void> {
     return ApiService.delete<void>(`/sales/salesreturns/${id}`);
   }
+
+  // =====================================
+  // CUSTOMER CONTRACTS
+  // =====================================
+
+  static async getCustomerContracts(params?: CustomerContractQueryParams): Promise<PagedResult<CustomerContractListDto>> {
+    return ApiService.get<PagedResult<CustomerContractListDto>>('/sales/customercontracts', { params });
+  }
+
+  static async getCustomerContract(id: string): Promise<CustomerContractDto> {
+    return ApiService.get<CustomerContractDto>(`/sales/customercontracts/${id}`);
+  }
+
+  static async getCustomerContractByNumber(contractNumber: string): Promise<CustomerContractDto> {
+    return ApiService.get<CustomerContractDto>(`/sales/customercontracts/by-number/${contractNumber}`);
+  }
+
+  static async getCustomerContractsByCustomer(customerId: string): Promise<CustomerContractListDto[]> {
+    return ApiService.get<CustomerContractListDto[]>(`/sales/customercontracts/by-customer/${customerId}`);
+  }
+
+  static async getActiveContractsByCustomer(customerId: string): Promise<CustomerContractListDto[]> {
+    return ApiService.get<CustomerContractListDto[]>(`/sales/customercontracts/by-customer/${customerId}/active`);
+  }
+
+  static async createCustomerContract(data: CreateCustomerContractCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>('/sales/customercontracts', data);
+  }
+
+  static async updateCustomerContract(id: string, data: UpdateCustomerContractCommand): Promise<CustomerContractDto> {
+    return ApiService.put<CustomerContractDto>(`/sales/customercontracts/${id}`, data);
+  }
+
+  static async deleteCustomerContract(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/customercontracts/${id}`);
+  }
+
+  static async activateContract(id: string): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/activate`);
+  }
+
+  static async suspendContract(id: string, reason: string): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/suspend`, { reason });
+  }
+
+  static async terminateContract(id: string, data: TerminateContractCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/terminate`, data);
+  }
+
+  static async renewContract(id: string, extensionMonths?: number): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/renew`, { extensionMonths });
+  }
+
+  static async blockContract(id: string, reason: string): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/block`, { reason });
+  }
+
+  static async unblockContract(id: string, notes?: string): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/unblock`, { notes });
+  }
+
+  static async updateCreditLimit(id: string, data: UpdateCreditLimitCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/credit-limit`, data);
+  }
+
+  static async configureSLA(id: string, data: ConfigureSLACommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/sla`, data);
+  }
+
+  static async addPriceAgreement(id: string, data: AddPriceAgreementCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/price-agreements`, data);
+  }
+
+  static async addPaymentTerm(id: string, data: AddPaymentTermCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/payment-terms`, data);
+  }
+
+  static async addCommitment(id: string, data: AddCommitmentCommand): Promise<CustomerContractDto> {
+    return ApiService.post<CustomerContractDto>(`/sales/customercontracts/${id}/commitments`, data);
+  }
+
+  // =====================================
+  // SALES TERRITORIES
+  // =====================================
+
+  static async getSalesTerritories(params?: SalesTerritoryQueryParams): Promise<PagedResult<SalesTerritoryListDto>> {
+    return ApiService.get<PagedResult<SalesTerritoryListDto>>('/sales/salesterritories', { params });
+  }
+
+  static async getSalesTerritory(id: string): Promise<SalesTerritoryDto> {
+    return ApiService.get<SalesTerritoryDto>(`/sales/salesterritories/${id}`);
+  }
+
+  static async getSalesTerritoryByCode(code: string): Promise<SalesTerritoryDto> {
+    return ApiService.get<SalesTerritoryDto>(`/sales/salesterritories/by-code/${code}`);
+  }
+
+  static async getChildTerritories(parentId: string): Promise<SalesTerritoryListDto[]> {
+    return ApiService.get<SalesTerritoryListDto[]>(`/sales/salesterritories/${parentId}/children`);
+  }
+
+  static async getRootTerritories(): Promise<SalesTerritoryListDto[]> {
+    return ApiService.get<SalesTerritoryListDto[]>('/sales/salesterritories/roots');
+  }
+
+  static async createSalesTerritory(data: CreateSalesTerritoryCommand): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>('/sales/salesterritories', data);
+  }
+
+  static async updateSalesTerritory(id: string, data: UpdateSalesTerritoryCommand): Promise<SalesTerritoryDto> {
+    return ApiService.put<SalesTerritoryDto>(`/sales/salesterritories/${id}`, data);
+  }
+
+  static async deleteSalesTerritory(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/salesterritories/${id}`);
+  }
+
+  static async activateTerritory(id: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/activate`);
+  }
+
+  static async deactivateTerritory(id: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/deactivate`);
+  }
+
+  static async suspendTerritory(id: string, reason: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/suspend`, { reason });
+  }
+
+  static async assignManager(id: string, managerId: string, managerName: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/manager`, { managerId, managerName });
+  }
+
+  static async removeManager(id: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/manager/remove`);
+  }
+
+  static async assignSalesRep(id: string, data: AssignSalesRepCommand): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/assignments`, data);
+  }
+
+  static async removeAssignment(id: string, assignmentId: string): Promise<SalesTerritoryDto> {
+    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/assignments/${assignmentId}`);
+  }
+
+  static async assignCustomer(id: string, data: AssignCustomerToTerritoryCommand): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/customers`, data);
+  }
+
+  static async removeCustomer(id: string, customerId: string): Promise<SalesTerritoryDto> {
+    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/customers/${customerId}`);
+  }
+
+  static async addPostalCode(id: string, postalCode: string, areaName?: string): Promise<SalesTerritoryDto> {
+    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/postal-codes`, { postalCode, areaName });
+  }
+
+  static async removePostalCode(id: string, postalCodeId: string): Promise<SalesTerritoryDto> {
+    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/postal-codes/${postalCodeId}`);
+  }
+
+  // =====================================
+  // SHIPMENTS
+  // =====================================
+
+  static async getShipments(params?: ShipmentQueryParams): Promise<PagedResult<ShipmentListDto>> {
+    return ApiService.get<PagedResult<ShipmentListDto>>('/sales/shipments', { params });
+  }
+
+  static async getShipment(id: string): Promise<ShipmentDto> {
+    return ApiService.get<ShipmentDto>(`/sales/shipments/${id}`);
+  }
+
+  static async getShipmentByNumber(shipmentNumber: string): Promise<ShipmentDto> {
+    return ApiService.get<ShipmentDto>(`/sales/shipments/by-number/${shipmentNumber}`);
+  }
+
+  static async getShipmentsByOrder(orderId: string): Promise<ShipmentListDto[]> {
+    return ApiService.get<ShipmentListDto[]>(`/sales/shipments/by-order/${orderId}`);
+  }
+
+  static async getShipmentsByCustomer(customerId: string): Promise<ShipmentListDto[]> {
+    return ApiService.get<ShipmentListDto[]>(`/sales/shipments/by-customer/${customerId}`);
+  }
+
+  static async getPendingShipments(): Promise<ShipmentListDto[]> {
+    return ApiService.get<ShipmentListDto[]>('/sales/shipments/pending');
+  }
+
+  static async getInTransitShipments(): Promise<ShipmentListDto[]> {
+    return ApiService.get<ShipmentListDto[]>('/sales/shipments/in-transit');
+  }
+
+  static async getOverdueShipments(): Promise<ShipmentListDto[]> {
+    return ApiService.get<ShipmentListDto[]>('/sales/shipments/overdue');
+  }
+
+  static async createShipment(data: CreateShipmentCommand): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>('/sales/shipments', data);
+  }
+
+  static async createShipmentFromOrder(data: CreateShipmentFromOrderCommand): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>('/sales/shipments/from-order', data);
+  }
+
+  static async updateShipment(id: string, data: UpdateShipmentCommand): Promise<ShipmentDto> {
+    return ApiService.put<ShipmentDto>(`/sales/shipments/${id}`, data);
+  }
+
+  static async deleteShipment(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/shipments/${id}`);
+  }
+
+  static async confirmShipment(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/confirm`);
+  }
+
+  static async pickShipment(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/pick`);
+  }
+
+  static async packShipment(id: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/pack`);
+  }
+
+  static async shipShipment(id: string, data: ShipShipmentCommand): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/ship`, data);
+  }
+
+  static async deliverShipment(id: string, data: DeliverShipmentCommand): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/deliver`, data);
+  }
+
+  static async cancelShipment(id: string, reason: string): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/cancel`, { reason });
+  }
+
+  static async addShipmentItem(id: string, data: AddShipmentItemCommand): Promise<ShipmentDto> {
+    return ApiService.post<ShipmentDto>(`/sales/shipments/${id}/items`, data);
+  }
+
+  static async updateShipmentItem(id: string, itemId: string, data: UpdateShipmentItemCommand): Promise<ShipmentDto> {
+    return ApiService.put<ShipmentDto>(`/sales/shipments/${id}/items/${itemId}`, data);
+  }
+
+  static async removeShipmentItem(id: string, itemId: string): Promise<ShipmentDto> {
+    return ApiService.delete<ShipmentDto>(`/sales/shipments/${id}/items/${itemId}`);
+  }
+
+  static async updateTrackingInfo(id: string, data: UpdateTrackingCommand): Promise<ShipmentDto> {
+    return ApiService.put<ShipmentDto>(`/sales/shipments/${id}/tracking`, data);
+  }
+}
+
+// =====================================
+// CUSTOMER CONTRACT TYPES
+// Based on Backend DTOs: 2025-12-25
+// =====================================
+
+export type ContractStatus = 'Draft' | 'Active' | 'Suspended' | 'Terminated' | 'Expired' | 'PendingApproval';
+export type ContractType = 'Standard' | 'Premium' | 'Enterprise' | 'Custom' | 'Framework' | 'ServiceLevel';
+export type TerminationType = 'Completed' | 'Mutual' | 'Breach' | 'Convenience' | 'NonPayment' | 'Other';
+export type ServiceLevelAgreement = 'None' | 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+export type SupportPriority = 'Low' | 'Normal' | 'High' | 'Critical';
+export type PaymentTermType = 'Net' | 'DueOnReceipt' | 'EndOfMonth' | 'Prepaid' | 'Custom';
+export type CommitmentPeriod = 'Monthly' | 'Quarterly' | 'SemiAnnual' | 'Annual';
+export type CommitmentTypeContract = 'MinimumSpend' | 'MinimumQuantity' | 'ExclusiveSupplier';
+
+export interface CustomerContractDto {
+  id: string;
+  contractNumber: string;
+  title: string;
+  description?: string;
+  contractType: ContractType;
+  customerId: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  startDate: string;
+  endDate: string;
+  signedDate?: string;
+  status: ContractStatus;
+  contractValue?: MoneyDto;
+  minimumAnnualCommitment?: MoneyDto;
+  priceListId?: string;
+  generalDiscountPercentage?: number;
+  defaultPaymentDueDays: number;
+  creditLimit?: MoneyDto;
+  autoRenewal: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeBeforeDays?: number;
+  salesRepresentativeId?: string;
+  salesRepresentativeName?: string;
+  customerSignatory?: string;
+  customerSignatoryTitle?: string;
+  companySignatory?: string;
+  companySignatoryTitle?: string;
+  specialTerms?: string;
+  internalNotes?: string;
+  terminatedDate?: string;
+  terminationReason?: string;
+  terminationType?: TerminationType;
+  serviceLevel: ServiceLevelAgreement;
+  responseTimeHours?: number;
+  resolutionTimeHours?: number;
+  supportHours?: string;
+  dedicatedSupportContact?: string;
+  supportPriority: SupportPriority;
+  includesOnSiteSupport: boolean;
+  currentCreditBalance?: MoneyDto;
+  availableCredit?: MoneyDto;
+  creditLimitLastReviewDate?: string;
+  renewalGracePeriodDays?: number;
+  isBlocked: boolean;
+  blockReason?: string;
+  priceAgreements: ContractPriceAgreementDto[];
+  paymentTerms: ContractPaymentTermDto[];
+  commitments: ContractCommitmentDto[];
+  documents: ContractDocumentDto[];
+  daysUntilExpiration: number;
+  isExpiringSoon: boolean;
+}
+
+export interface CustomerContractListDto {
+  id: string;
+  contractNumber: string;
+  title: string;
+  contractType: ContractType;
+  customerId: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  status: ContractStatus;
+  contractValue?: MoneyDto;
+  serviceLevel: ServiceLevelAgreement;
+  salesRepresentativeName?: string;
+  daysUntilExpiration: number;
+  isExpiringSoon: boolean;
+}
+
+export interface ContractPriceAgreementDto {
+  id: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  specialPrice: MoneyDto;
+  discountPercentage?: number;
+  minimumQuantity: number;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  isActive: boolean;
+}
+
+export interface ContractPaymentTermDto {
+  id: string;
+  termType: PaymentTermType;
+  dueDays: number;
+  discountPercentage?: number;
+  discountDays?: number;
+  description?: string;
+  isDefault: boolean;
+}
+
+export interface ContractCommitmentDto {
+  id: string;
+  commitmentType: CommitmentTypeContract;
+  period: CommitmentPeriod;
+  targetValue?: MoneyDto;
+  targetQuantity?: number;
+  achievedValue?: MoneyDto;
+  achievedQuantity?: number;
+  startDate: string;
+  endDate: string;
+  achievementPercentage: number;
+  isActive: boolean;
+}
+
+export interface ContractDocumentDto {
+  id: string;
+  documentName: string;
+  documentType: string;
+  documentPath: string;
+  fileSize: number;
+  uploadedAt: string;
+  uploadedBy: string;
+  notes?: string;
+}
+
+export interface MoneyDto {
+  amount: number;
+  currency: string;
+}
+
+export interface CustomerContractQueryParams {
+  searchTerm?: string;
+  status?: ContractStatus;
+  contractType?: ContractType;
+  customerId?: string;
+  fromDate?: string;
+  toDate?: string;
+  serviceLevel?: ServiceLevelAgreement;
+  expiringSoon?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateCustomerContractCommand {
+  title: string;
+  description?: string;
+  contractType: ContractType;
+  customerId: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  startDate: string;
+  endDate: string;
+  defaultPaymentDueDays?: number;
+  priceListId?: string;
+  generalDiscountPercentage?: number;
+  creditLimitAmount?: number;
+  creditLimitCurrency?: string;
+  autoRenewal?: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeBeforeDays?: number;
+  salesRepresentativeId?: string;
+  salesRepresentativeName?: string;
+  customerSignatory?: string;
+  customerSignatoryTitle?: string;
+  companySignatory?: string;
+  companySignatoryTitle?: string;
+  serviceLevel?: ServiceLevelAgreement;
+  responseTimeHours?: number;
+  resolutionTimeHours?: number;
+  supportHours?: string;
+  supportPriority?: SupportPriority;
+}
+
+export interface UpdateCustomerContractCommand {
+  priceListId?: string;
+  generalDiscountPercentage?: number;
+  autoRenewal?: boolean;
+  renewalPeriodMonths?: number;
+  renewalNoticeBeforeDays?: number;
+  salesRepresentativeId?: string;
+  salesRepresentativeName?: string;
+}
+
+export interface TerminateContractCommand {
+  terminationType: TerminationType;
+  reason: string;
+}
+
+export interface UpdateCreditLimitCommand {
+  amount: number;
+  currency: string;
+  notes?: string;
+}
+
+export interface ConfigureSLACommand {
+  serviceLevel: ServiceLevelAgreement;
+  responseTimeHours?: number;
+  resolutionTimeHours?: number;
+  supportHours?: string;
+  supportPriority?: SupportPriority;
+}
+
+export interface AddPriceAgreementCommand {
+  productId: string;
+  productCode: string;
+  productName: string;
+  specialPrice: number;
+  currency: string;
+  discountPercentage?: number;
+  minimumQuantity?: number;
+}
+
+export interface AddPaymentTermCommand {
+  termType: PaymentTermType;
+  dueDays: number;
+  discountPercentage?: number;
+  discountDays?: number;
+  description?: string;
+  isDefault?: boolean;
+}
+
+export interface AddCommitmentCommand {
+  commitmentType: CommitmentTypeContract;
+  period: CommitmentPeriod;
+  targetAmount?: number;
+  targetCurrency?: string;
+  targetQuantity?: number;
+  startDate: string;
+  endDate: string;
+}
+
+// =====================================
+// SALES TERRITORY TYPES
+// Based on Backend DTOs: 2025-12-25
+// =====================================
+
+export type TerritoryType = 'Country' | 'Region' | 'City' | 'District' | 'Zone' | 'Custom';
+export type TerritoryStatus = 'Active' | 'Inactive' | 'Suspended';
+export type TerritoryAssignmentRole = 'Primary' | 'Secondary' | 'Support' | 'Manager';
+
+export interface SalesTerritoryDto {
+  id: string;
+  territoryCode: string;
+  name: string;
+  description?: string;
+  territoryType: TerritoryType;
+  parentTerritoryId?: string;
+  hierarchyLevel: number;
+  country?: string;
+  region?: string;
+  city?: string;
+  district?: string;
+  geoBoundary?: string;
+  status: TerritoryStatus;
+  territoryManagerId?: string;
+  territoryManagerName?: string;
+  defaultPriceListId?: string;
+  potentialValue?: MoneyDto;
+  annualTarget?: MoneyDto;
+  lastPerformanceScore?: number;
+  lastPerformanceDate?: string;
+  notes?: string;
+  hierarchyPath: string;
+  customerCount: number;
+  activeAssignmentCount: number;
+  assignments: TerritoryAssignmentDto[];
+  customers: TerritoryCustomerDto[];
+  postalCodes: TerritoryPostalCodeDto[];
+}
+
+export interface SalesTerritoryListDto {
+  id: string;
+  territoryCode: string;
+  name: string;
+  territoryType: TerritoryType;
+  region?: string;
+  city?: string;
+  status: TerritoryStatus;
+  territoryManagerName?: string;
+  customerCount: number;
+  activeAssignmentCount: number;
+  lastPerformanceScore?: number;
+}
+
+export interface TerritoryAssignmentDto {
+  id: string;
+  salesRepresentativeId: string;
+  salesRepresentativeName: string;
+  role: TerritoryAssignmentRole;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  commissionRate?: number;
+  isActive: boolean;
+  isCurrentlyEffective: boolean;
+}
+
+export interface TerritoryCustomerDto {
+  id: string;
+  customerId: string;
+  customerName: string;
+  primarySalesRepresentativeId?: string;
+  primarySalesRepresentativeName?: string;
+  assignedAt: string;
+  isActive: boolean;
+}
+
+export interface TerritoryPostalCodeDto {
+  id: string;
+  postalCode: string;
+  areaName?: string;
+}
+
+export interface SalesTerritoryQueryParams {
+  searchTerm?: string;
+  status?: TerritoryStatus;
+  territoryType?: TerritoryType;
+  parentTerritoryId?: string;
+  managerId?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateSalesTerritoryCommand {
+  territoryCode: string;
+  name: string;
+  description?: string;
+  territoryType: TerritoryType;
+  parentTerritoryId?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  district?: string;
+  geoBoundary?: string;
+  territoryManagerId?: string;
+  territoryManagerName?: string;
+  defaultPriceListId?: string;
+  potentialAmount?: number;
+  potentialCurrency?: string;
+  annualTargetAmount?: number;
+  annualTargetCurrency?: string;
+  notes?: string;
+}
+
+export interface UpdateSalesTerritoryCommand {
+  name?: string;
+  description?: string;
+  country?: string;
+  region?: string;
+  city?: string;
+  district?: string;
+  geoBoundary?: string;
+  territoryManagerId?: string;
+  territoryManagerName?: string;
+  defaultPriceListId?: string;
+  potentialAmount?: number;
+  potentialCurrency?: string;
+  annualTargetAmount?: number;
+  annualTargetCurrency?: string;
+  notes?: string;
+}
+
+export interface AssignSalesRepCommand {
+  salesRepresentativeId: string;
+  salesRepresentativeName: string;
+  role: TerritoryAssignmentRole;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  commissionRate?: number;
+}
+
+export interface AssignCustomerToTerritoryCommand {
+  customerId: string;
+  customerName: string;
+  primarySalesRepresentativeId?: string;
+  primarySalesRepresentativeName?: string;
+}
+
+// =====================================
+// SHIPMENT TYPES
+// Based on Backend DTOs: 2025-12-25
+// =====================================
+
+export type ShipmentStatus = 'Draft' | 'Confirmed' | 'Preparing' | 'PickedUp' | 'Packed' | 'Shipped' | 'InTransit' | 'OutForDelivery' | 'Delivered' | 'Failed' | 'Cancelled' | 'Returned';
+export type ShipmentType = 'Standard' | 'Express' | 'SameDay' | 'NextDay' | 'Economy' | 'Freight';
+export type ShipmentPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export interface ShipmentDto {
+  id: string;
+  shipmentNumber: string;
+  salesOrderId: string;
+  orderNumber: string;
+  customerId: string;
+  customerName: string;
+  status: ShipmentStatus;
+  shipmentType: ShipmentType;
+  priority: ShipmentPriority;
+  warehouseId?: string;
+  warehouseName?: string;
+  shippingAddressLine1: string;
+  shippingAddressLine2?: string;
+  shippingCity: string;
+  shippingState?: string;
+  shippingPostalCode?: string;
+  shippingCountry: string;
+  recipientName: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  carrierId?: string;
+  carrierName?: string;
+  carrierService?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  estimatedShipDate?: string;
+  actualShipDate?: string;
+  estimatedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+  totalWeight?: number;
+  weightUnit: string;
+  totalPackages: number;
+  shippingCost?: MoneyDto;
+  insuranceValue?: MoneyDto;
+  requiresSignature: boolean;
+  deliveryInstructions?: string;
+  internalNotes?: string;
+  items: ShipmentItemDto[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ShipmentListDto {
+  id: string;
+  shipmentNumber: string;
+  orderNumber: string;
+  customerName: string;
+  status: ShipmentStatus;
+  shipmentType: ShipmentType;
+  priority: ShipmentPriority;
+  carrierName?: string;
+  trackingNumber?: string;
+  estimatedDeliveryDate?: string;
+  actualDeliveryDate?: string;
+  shippingCity: string;
+  totalPackages: number;
+  createdAt: string;
+}
+
+export interface ShipmentItemDto {
+  id: string;
+  salesOrderItemId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  weight?: number;
+  isPicked: boolean;
+  pickedAt?: string;
+  pickedBy?: string;
+  isPacked: boolean;
+  packedAt?: string;
+  packedBy?: string;
+}
+
+export interface ShipmentQueryParams {
+  searchTerm?: string;
+  status?: ShipmentStatus;
+  shipmentType?: ShipmentType;
+  priority?: ShipmentPriority;
+  customerId?: string;
+  orderId?: string;
+  carrierId?: string;
+  warehouseId?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateShipmentCommand {
+  salesOrderId: string;
+  shipmentType?: ShipmentType;
+  priority?: ShipmentPriority;
+  warehouseId?: string;
+  shippingAddressLine1: string;
+  shippingAddressLine2?: string;
+  shippingCity: string;
+  shippingState?: string;
+  shippingPostalCode?: string;
+  shippingCountry: string;
+  recipientName: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  carrierId?: string;
+  carrierName?: string;
+  estimatedShipDate?: string;
+  estimatedDeliveryDate?: string;
+  requiresSignature?: boolean;
+  deliveryInstructions?: string;
+  internalNotes?: string;
+  items?: CreateShipmentItemCommand[];
+}
+
+export interface CreateShipmentFromOrderCommand {
+  salesOrderId: string;
+  shipmentType?: ShipmentType;
+  priority?: ShipmentPriority;
+  warehouseId?: string;
+  carrierId?: string;
+  carrierName?: string;
+  estimatedShipDate?: string;
+  estimatedDeliveryDate?: string;
+  requiresSignature?: boolean;
+  deliveryInstructions?: string;
+  internalNotes?: string;
+  includeAllItems?: boolean;
+}
+
+export interface CreateShipmentItemCommand {
+  salesOrderItemId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  weight?: number;
+}
+
+export interface UpdateShipmentCommand {
+  shipmentType?: ShipmentType;
+  priority?: ShipmentPriority;
+  carrierId?: string;
+  carrierName?: string;
+  carrierService?: string;
+  estimatedShipDate?: string;
+  estimatedDeliveryDate?: string;
+  requiresSignature?: boolean;
+  deliveryInstructions?: string;
+  internalNotes?: string;
+}
+
+export interface ShipShipmentCommand {
+  trackingNumber?: string;
+  trackingUrl?: string;
+  carrierService?: string;
+  actualShipDate?: string;
+}
+
+export interface DeliverShipmentCommand {
+  actualDeliveryDate?: string;
+  receivedBy?: string;
+  signature?: string;
+  deliveryNotes?: string;
+}
+
+export interface AddShipmentItemCommand {
+  salesOrderItemId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  weight?: number;
+}
+
+export interface UpdateShipmentItemCommand {
+  quantity?: number;
+  weight?: number;
+}
+
+export interface UpdateTrackingCommand {
+  trackingNumber?: string;
+  trackingUrl?: string;
+  carrierService?: string;
+}
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export default SalesService;

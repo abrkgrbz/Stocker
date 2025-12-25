@@ -1,3 +1,4 @@
+using Stocker.Modules.Sales.Domain.ValueObjects;
 using Stocker.SharedKernel.MultiTenancy;
 using Stocker.SharedKernel.Results;
 
@@ -13,12 +14,32 @@ public class Invoice : TenantAggregateRoot
     public string InvoiceNumber { get; private set; } = string.Empty;
     public DateTime InvoiceDate { get; private set; }
     public DateTime? DueDate { get; private set; }
+    #region Kaynak Belge İlişkileri (Source Document Relations)
+    
     public Guid? SalesOrderId { get; private set; }
+    public string? SalesOrderNumber { get; private set; }
+    public Guid? ShipmentId { get; private set; }
+    public string? ShipmentNumber { get; private set; }
+    public Guid? DeliveryNoteId { get; private set; }
+    public string? DeliveryNoteNumber { get; private set; }
+    public Guid? QuotationId { get; private set; }
+    
+    #endregion
+    
+    #region Müşteri Bilgileri (Customer Information - Snapshot)
+    
     public Guid? CustomerId { get; private set; }
     public string? CustomerName { get; private set; }
     public string? CustomerEmail { get; private set; }
+    public string? CustomerPhone { get; private set; }
     public string? CustomerTaxNumber { get; private set; }
+    public string? CustomerTaxOffice { get; private set; }
     public string? CustomerAddress { get; private set; }
+    
+    /// <summary>Fatura adresi snapshot'ı (yapılandırılmış)</summary>
+    public ShippingAddressSnapshot? BillingAddressSnapshot { get; private set; }
+    
+    #endregion
     public decimal SubTotal { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal DiscountRate { get; private set; }
@@ -48,10 +69,13 @@ public class Invoice : TenantAggregateRoot
         DateTime invoiceDate,
         InvoiceType type,
         Guid? salesOrderId = null,
+        string? salesOrderNumber = null,
         Guid? customerId = null,
         string? customerName = null,
         string? customerEmail = null,
+        string? customerPhone = null,
         string? customerTaxNumber = null,
+        string? customerTaxOffice = null,
         string? customerAddress = null,
         string currency = "TRY")
     {
@@ -65,10 +89,13 @@ public class Invoice : TenantAggregateRoot
         invoice.InvoiceDate = invoiceDate;
         invoice.Type = type;
         invoice.SalesOrderId = salesOrderId;
+        invoice.SalesOrderNumber = salesOrderNumber;
         invoice.CustomerId = customerId;
         invoice.CustomerName = customerName;
         invoice.CustomerEmail = customerEmail;
+        invoice.CustomerPhone = customerPhone;
         invoice.CustomerTaxNumber = customerTaxNumber;
+        invoice.CustomerTaxOffice = customerTaxOffice;
         invoice.CustomerAddress = customerAddress;
         invoice.Currency = currency;
         invoice.ExchangeRate = 1;
@@ -228,6 +255,92 @@ public class Invoice : TenantAggregateRoot
         UpdatedAt = DateTime.UtcNow;
 
         return Result.Success();
+    }
+
+    #region Belge İlişkileri (Document Relations)
+
+    /// <summary>
+    /// Sevkiyat ilişkisini ayarlar
+    /// </summary>
+    public Result SetShipment(Guid shipmentId, string shipmentNumber)
+    {
+        ShipmentId = shipmentId;
+        ShipmentNumber = shipmentNumber;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// İrsaliye ilişkisini ayarlar
+    /// </summary>
+    public Result SetDeliveryNote(Guid deliveryNoteId, string deliveryNoteNumber)
+    {
+        DeliveryNoteId = deliveryNoteId;
+        DeliveryNoteNumber = deliveryNoteNumber;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Teklif ilişkisini ayarlar
+    /// </summary>
+    public Result SetQuotation(Guid quotationId)
+    {
+        QuotationId = quotationId;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Fatura adresi snapshot'ını ayarlar
+    /// </summary>
+    public Result SetBillingAddressSnapshot(ShippingAddressSnapshot addressSnapshot)
+    {
+        BillingAddressSnapshot = addressSnapshot;
+        CustomerAddress = addressSnapshot?.ToString();
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Siparişten fatura oluşturur
+    /// </summary>
+    public static Result<Invoice> CreateFromOrder(
+        Guid tenantId,
+        string invoiceNumber,
+        DateTime invoiceDate,
+        SalesOrder order,
+        InvoiceType type = InvoiceType.Sales)
+    {
+        var result = Create(
+            tenantId: tenantId,
+            invoiceNumber: invoiceNumber,
+            invoiceDate: invoiceDate,
+            type: type,
+            salesOrderId: order.Id,
+            salesOrderNumber: order.OrderNumber,
+            customerId: order.CustomerId,
+            customerName: order.CustomerName,
+            customerEmail: order.CustomerEmail,
+            customerTaxNumber: null,
+            customerTaxOffice: null,
+            customerAddress: order.BillingAddress ?? order.ShippingAddress,
+            currency: order.Currency);
+
+        if (!result.IsSuccess)
+            return result;
+
+        var invoice = result.Value!;
+        
+        // Adres snapshot'ını kopyala
+        if (order.BillingAddressSnapshot != null)
+            invoice.BillingAddressSnapshot = order.BillingAddressSnapshot;
+        else if (order.ShippingAddressSnapshot != null)
+            invoice.BillingAddressSnapshot = order.ShippingAddressSnapshot;
+
+        return Result<Invoice>.Success(invoice);
     }
 
     private void RecalculateTotals()

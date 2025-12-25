@@ -69,6 +69,10 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Invoices);
         services.AddScoped<IPaymentRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().Payments);
 
+        // Phase 3: Contract & Territory Repositories
+        services.AddScoped<ICustomerContractRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().CustomerContracts);
+        services.AddScoped<ISalesTerritoryRepository>(sp => sp.GetRequiredService<ISalesUnitOfWork>().SalesTerritories);
+
         return services;
     }
 

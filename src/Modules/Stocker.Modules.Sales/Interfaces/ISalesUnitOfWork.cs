@@ -46,4 +46,26 @@ public interface ISalesUnitOfWork : IUnitOfWork
     IPaymentRepository Payments { get; }
 
     #endregion
+
+    #region Phase 3: Contract & Territory Repositories
+
+    /// <summary>
+    /// Gets the Customer Contract repository.
+    /// Used for credit limit checks, SLA management, and contract validation.
+    /// </summary>
+    ICustomerContractRepository CustomerContracts { get; }
+
+    /// <summary>
+    /// Gets the Sales Territory repository.
+    /// Used for regional sales organization and customer assignment.
+    /// </summary>
+    ISalesTerritoryRepository SalesTerritories { get; }
+
+    /// <summary>
+    /// Gets the Shipment repository.
+    /// Used for shipment tracking, delivery management, and logistics.
+    /// </summary>
+    IShipmentRepository Shipments { get; }
+
+    #endregion
 }

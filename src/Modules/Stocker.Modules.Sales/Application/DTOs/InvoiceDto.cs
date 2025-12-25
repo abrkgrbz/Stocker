@@ -33,6 +33,21 @@ public record InvoiceDto
     public DateTime? UpdatedAt { get; init; }
     public List<InvoiceItemDto> Items { get; init; } = new();
 
+    // Source Document Relations - traceability to originating documents
+    public string? SalesOrderNumber { get; init; }
+    public Guid? ShipmentId { get; init; }
+    public string? ShipmentNumber { get; init; }
+    public Guid? DeliveryNoteId { get; init; }
+    public string? DeliveryNoteNumber { get; init; }
+    public Guid? QuotationId { get; init; }
+
+    // Additional Customer Info
+    public string? CustomerPhone { get; init; }
+    public string? CustomerTaxOffice { get; init; }
+
+    // Billing Address Snapshot
+    public AddressSnapshotDto? BillingAddressSnapshot { get; init; }
+
     public static InvoiceDto FromEntity(Invoice entity)
     {
         return new InvoiceDto
@@ -64,7 +79,39 @@ public record InvoiceDto
             EInvoiceDate = entity.EInvoiceDate,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
-            Items = entity.Items.Select(InvoiceItemDto.FromEntity).ToList()
+            Items = entity.Items.Select(InvoiceItemDto.FromEntity).ToList(),
+
+            // Source Document Relations
+            SalesOrderNumber = entity.SalesOrderNumber,
+            ShipmentId = entity.ShipmentId,
+            ShipmentNumber = entity.ShipmentNumber,
+            DeliveryNoteId = entity.DeliveryNoteId,
+            DeliveryNoteNumber = entity.DeliveryNoteNumber,
+            QuotationId = entity.QuotationId,
+
+            // Additional Customer Info
+            CustomerPhone = entity.CustomerPhone,
+            CustomerTaxOffice = entity.CustomerTaxOffice,
+
+            // Billing Address Snapshot
+            BillingAddressSnapshot = entity.BillingAddressSnapshot != null
+                ? new AddressSnapshotDto
+                {
+                    RecipientName = entity.BillingAddressSnapshot.RecipientName,
+                    RecipientPhone = entity.BillingAddressSnapshot.RecipientPhone,
+                    CompanyName = entity.BillingAddressSnapshot.CompanyName,
+                    AddressLine1 = entity.BillingAddressSnapshot.AddressLine1,
+                    AddressLine2 = entity.BillingAddressSnapshot.AddressLine2,
+                    District = entity.BillingAddressSnapshot.District,
+                    Town = entity.BillingAddressSnapshot.Town,
+                    City = entity.BillingAddressSnapshot.City,
+                    State = entity.BillingAddressSnapshot.State,
+                    Country = entity.BillingAddressSnapshot.Country,
+                    PostalCode = entity.BillingAddressSnapshot.PostalCode,
+                    TaxId = entity.BillingAddressSnapshot.TaxId,
+                    TaxOffice = entity.BillingAddressSnapshot.TaxOffice
+                }
+                : null
         };
     }
 }
@@ -133,6 +180,11 @@ public record InvoiceListDto
     public int ItemCount { get; init; }
     public DateTime CreatedAt { get; init; }
 
+    // Source Document References for list view
+    public string? SalesOrderNumber { get; init; }
+    public string? ShipmentNumber { get; init; }
+    public string? DeliveryNoteNumber { get; init; }
+
     public static InvoiceListDto FromEntity(Invoice entity)
     {
         return new InvoiceListDto
@@ -150,7 +202,10 @@ public record InvoiceListDto
             Type = entity.Type.ToString(),
             IsEInvoice = entity.IsEInvoice,
             ItemCount = entity.Items.Count,
-            CreatedAt = entity.CreatedAt
+            CreatedAt = entity.CreatedAt,
+            SalesOrderNumber = entity.SalesOrderNumber,
+            ShipmentNumber = entity.ShipmentNumber,
+            DeliveryNoteNumber = entity.DeliveryNoteNumber
         };
     }
 }

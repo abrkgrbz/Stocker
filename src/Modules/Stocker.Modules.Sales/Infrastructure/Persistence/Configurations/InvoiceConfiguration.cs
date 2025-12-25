@@ -22,18 +22,36 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
             .IsRequired()
             .HasMaxLength(50);
 
+        // Kaynak belge ilişkileri
+        builder.Property(i => i.SalesOrderNumber)
+            .HasMaxLength(50);
+
+        builder.Property(i => i.ShipmentNumber)
+            .HasMaxLength(50);
+
+        builder.Property(i => i.DeliveryNoteNumber)
+            .HasMaxLength(50);
+
+        // Müşteri bilgileri
         builder.Property(i => i.CustomerName)
             .HasMaxLength(200);
 
         builder.Property(i => i.CustomerEmail)
             .HasMaxLength(255);
 
+        builder.Property(i => i.CustomerPhone)
+            .HasMaxLength(50);
+
         builder.Property(i => i.CustomerTaxNumber)
             .HasMaxLength(50);
+
+        builder.Property(i => i.CustomerTaxOffice)
+            .HasMaxLength(100);
 
         builder.Property(i => i.CustomerAddress)
             .HasMaxLength(500);
 
+        // Tutarlar
         builder.Property(i => i.SubTotal)
             .HasPrecision(18, 2);
 
@@ -76,6 +94,24 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.EInvoiceId)
             .HasMaxLength(100);
 
+        // BillingAddressSnapshot - Owned Entity olarak yapılandır
+        builder.OwnsOne(i => i.BillingAddressSnapshot, address =>
+        {
+            address.Property(a => a.RecipientName).HasColumnName("Billing_RecipientName").HasMaxLength(200);
+            address.Property(a => a.RecipientPhone).HasColumnName("Billing_RecipientPhone").HasMaxLength(50);
+            address.Property(a => a.CompanyName).HasColumnName("Billing_CompanyName").HasMaxLength(200);
+            address.Property(a => a.AddressLine1).HasColumnName("Billing_AddressLine1").HasMaxLength(300);
+            address.Property(a => a.AddressLine2).HasColumnName("Billing_AddressLine2").HasMaxLength(200);
+            address.Property(a => a.District).HasColumnName("Billing_District").HasMaxLength(100);
+            address.Property(a => a.Town).HasColumnName("Billing_Town").HasMaxLength(100);
+            address.Property(a => a.City).HasColumnName("Billing_City").HasMaxLength(100);
+            address.Property(a => a.State).HasColumnName("Billing_State").HasMaxLength(100);
+            address.Property(a => a.Country).HasColumnName("Billing_Country").HasMaxLength(100);
+            address.Property(a => a.PostalCode).HasColumnName("Billing_PostalCode").HasMaxLength(20);
+            address.Property(a => a.TaxId).HasColumnName("Billing_TaxId").HasMaxLength(20);
+            address.Property(a => a.TaxOffice).HasColumnName("Billing_TaxOffice").HasMaxLength(100);
+        });
+
         // Relationships
         builder.HasMany(i => i.Items)
             .WithOne(item => item.Invoice)
@@ -95,6 +131,9 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(i => new { i.TenantId, i.InvoiceDate });
         builder.HasIndex(i => new { i.TenantId, i.DueDate });
         builder.HasIndex(i => new { i.TenantId, i.SalesOrderId });
+        builder.HasIndex(i => new { i.TenantId, i.ShipmentId });
+        builder.HasIndex(i => new { i.TenantId, i.DeliveryNoteId });
+        builder.HasIndex(i => new { i.TenantId, i.QuotationId });
         builder.HasIndex(i => new { i.TenantId, i.EInvoiceId });
     }
 }

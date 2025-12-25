@@ -20,6 +20,82 @@ public record CreateSalesOrderCommand : IRequest<Result<SalesOrderDto>>
     public Guid? SalesPersonId { get; init; }
     public string? SalesPersonName { get; init; }
     public List<CreateSalesOrderItemCommand> Items { get; init; } = new();
+
+    // Address Snapshot Input - structured address data to be preserved at order time
+    public AddressSnapshotInput? ShippingAddressSnapshot { get; init; }
+    public AddressSnapshotInput? BillingAddressSnapshot { get; init; }
+
+    // Source Document Relations
+    public Guid? QuotationId { get; init; }
+    public string? QuotationNumber { get; init; }
+    public Guid? OpportunityId { get; init; }
+    public Guid? CustomerContractId { get; init; }
+
+    #region Phase 3: Enhanced Order Creation Options
+
+    /// <summary>
+    /// Territory ID to assign to the order (optional - auto-detected from customer address if not provided)
+    /// </summary>
+    public Guid? TerritoryId { get; init; }
+
+    /// <summary>
+    /// If true, validates customer contract credit limit before creating order
+    /// </summary>
+    public bool ValidateCreditLimit { get; init; } = true;
+
+    /// <summary>
+    /// If true, allows order creation during contract grace period
+    /// </summary>
+    public bool AllowGracePeriod { get; init; } = false;
+
+    /// <summary>
+    /// If true, attempts to reserve stock for all items
+    /// </summary>
+    public bool ReserveStock { get; init; } = true;
+
+    /// <summary>
+    /// Stock reservation expiry in hours (default: 48 hours)
+    /// </summary>
+    public int ReservationExpiryHours { get; init; } = 48;
+
+    /// <summary>
+    /// If true, creates back orders for items with insufficient stock
+    /// Otherwise fails the order creation if stock is insufficient
+    /// </summary>
+    public bool AllowBackOrders { get; init; } = false;
+
+    /// <summary>
+    /// Payment due days from order date (used for credit terms)
+    /// </summary>
+    public int? PaymentDueDays { get; init; }
+
+    /// <summary>
+    /// Current outstanding balance for the customer (for credit limit calculation)
+    /// If not provided, will be calculated from existing unpaid orders
+    /// </summary>
+    public decimal? CurrentOutstandingBalance { get; init; }
+
+    #endregion
+}
+
+/// <summary>
+/// Input model for creating address snapshots
+/// </summary>
+public record AddressSnapshotInput
+{
+    public string RecipientName { get; init; } = string.Empty;
+    public string? RecipientPhone { get; init; }
+    public string? CompanyName { get; init; }
+    public string AddressLine1 { get; init; } = string.Empty;
+    public string? AddressLine2 { get; init; }
+    public string? District { get; init; }
+    public string? Town { get; init; }
+    public string City { get; init; } = string.Empty;
+    public string? State { get; init; }
+    public string Country { get; init; } = "Türkiye";
+    public string? PostalCode { get; init; }
+    public string? TaxId { get; init; }
+    public string? TaxOffice { get; init; }
 }
 
 public record CreateSalesOrderItemCommand

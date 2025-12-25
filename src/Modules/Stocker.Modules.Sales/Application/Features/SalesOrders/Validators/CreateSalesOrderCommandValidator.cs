@@ -38,8 +38,32 @@ public class CreateSalesOrderCommandValidator : AbstractValidator<CreateSalesOrd
             .MaximumLength(200).WithMessage("Sales person name must not exceed 200 characters")
             .When(x => !string.IsNullOrEmpty(x.SalesPersonName));
 
+        // Items validation - at least one item required
+        RuleFor(x => x.Items)
+            .NotEmpty().WithMessage("At least one order item is required");
+
         RuleForEach(x => x.Items)
             .SetValidator(new CreateSalesOrderItemCommandValidator());
+
+        #region Phase 3: Enhanced Validation Rules
+
+        RuleFor(x => x.ReservationExpiryHours)
+            .InclusiveBetween(1, 720).WithMessage("Reservation expiry must be between 1 and 720 hours (30 days)");
+
+        RuleFor(x => x.PaymentDueDays)
+            .InclusiveBetween(0, 365).WithMessage("Payment due days must be between 0 and 365")
+            .When(x => x.PaymentDueDays.HasValue);
+
+        RuleFor(x => x.CurrentOutstandingBalance)
+            .GreaterThanOrEqualTo(0).WithMessage("Outstanding balance cannot be negative")
+            .When(x => x.CurrentOutstandingBalance.HasValue);
+
+        // If ValidateCreditLimit is true, CustomerId must be provided when contract is specified
+        RuleFor(x => x.CustomerId)
+            .NotEmpty().WithMessage("Customer ID is required when credit limit validation is enabled")
+            .When(x => x.ValidateCreditLimit && x.CustomerContractId.HasValue);
+
+        #endregion
     }
 }
 

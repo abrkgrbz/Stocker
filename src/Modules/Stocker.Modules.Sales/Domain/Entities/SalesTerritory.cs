@@ -211,6 +211,83 @@ public class SalesTerritory : TenantAggregateRoot
     public int GetCustomerCount() => _customers.Count(c => c.IsActive);
     public bool ContainsPostalCode(string postalCode) => _postalCodes.Any(p => p.PostalCode == postalCode);
     public string GetHierarchyPath() => $"{Country ?? ""}/{Region ?? ""}/{City ?? ""}/{Name}".Trim('/');
+
+    #region Customer Territory Check (Phase 3)
+
+    /// <summary>
+    /// Checks if a customer belongs to this territory based on their geographic information.
+    /// First checks explicit assignment, then geographic match.
+    /// </summary>
+    public Result<bool> IsCustomerInTerritory(
+        Guid customerId,
+        string? customerCity = null,
+        string? customerRegion = null,
+        string? customerPostalCode = null)
+    {
+        // Check explicit assignment first
+        if (_customers.Any(c => c.CustomerId == customerId && c.IsActive))
+            return Result<bool>.Success(true);
+
+        // Check postal code match
+        if (!string.IsNullOrWhiteSpace(customerPostalCode) && ContainsPostalCode(customerPostalCode))
+            return Result<bool>.Success(true);
+
+        // Check city match
+        if (!string.IsNullOrWhiteSpace(City) && !string.IsNullOrWhiteSpace(customerCity))
+        {
+            if (string.Equals(City, customerCity, StringComparison.OrdinalIgnoreCase))
+                return Result<bool>.Success(true);
+        }
+
+        // Check region match
+        if (!string.IsNullOrWhiteSpace(Region) && !string.IsNullOrWhiteSpace(customerRegion))
+        {
+            if (string.Equals(Region, customerRegion, StringComparison.OrdinalIgnoreCase))
+                return Result<bool>.Success(true);
+        }
+
+        // Check child territories recursively
+        foreach (var child in _childTerritories)
+        {
+            var childResult = child.IsCustomerInTerritory(customerId, customerCity, customerRegion, customerPostalCode);
+            if (childResult.IsSuccess && childResult.Value)
+                return Result<bool>.Success(true);
+        }
+
+        return Result<bool>.Success(false);
+    }
+
+    /// <summary>
+    /// Validates if a sales person can sell to a customer in this territory.
+    /// Considers territory rules and assignments.
+    /// </summary>
+    public Result ValidateSalesAccess(Guid salesPersonId)
+    {
+        if (Status != TerritoryStatus.Active)
+            return Result.Failure(Error.Validation("Territory.Inactive", "Bölge aktif değil."));
+
+        // Check if sales person is assigned to this territory
+        var isAssigned = _assignments.Any(a =>
+            a.SalesRepresentativeId == salesPersonId &&
+            a.IsActive &&
+            a.IsEffectiveAt(DateTime.UtcNow));
+
+        if (!isAssigned)
+            return Result.Failure(Error.Validation("Territory.NotAssigned", "Satış temsilcisi bu bölgeye atanmamış."));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Gets the primary sales representative for a customer in this territory.
+    /// </summary>
+    public Guid? GetPrimarySalesRepForCustomer(Guid customerId)
+    {
+        var customerAssignment = _customers.FirstOrDefault(c => c.CustomerId == customerId && c.IsActive);
+        return customerAssignment?.PrimarySalesRepresentativeId;
+    }
+
+    #endregion
 }
 
 public class TerritoryAssignment : Entity<Guid>

@@ -74,6 +74,9 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     private ISalesOrderRepository? _salesOrders;
     private IInvoiceRepository? _invoices;
     private IPaymentRepository? _payments;
+    private ICustomerContractRepository? _customerContracts;
+    private ISalesTerritoryRepository? _salesTerritories;
+    private IShipmentRepository? _shipments;
 
     #endregion
 
@@ -115,6 +118,18 @@ public sealed class SalesUnitOfWork : ISalesUnitOfWork, IAsyncDisposable
     /// <inheritdoc />
     public IPaymentRepository Payments =>
         _payments ??= GetOrAddSpecificRepository<IPaymentRepository, PaymentRepository>();
+
+    /// <inheritdoc />
+    public ICustomerContractRepository CustomerContracts =>
+        _customerContracts ??= GetOrAddSpecificRepository<ICustomerContractRepository, CustomerContractRepository>();
+
+    /// <inheritdoc />
+    public ISalesTerritoryRepository SalesTerritories =>
+        _salesTerritories ??= GetOrAddSpecificRepository<ISalesTerritoryRepository, SalesTerritoryRepository>();
+
+    /// <inheritdoc />
+    public IShipmentRepository Shipments =>
+        _shipments ??= GetOrAddSpecificRepository<IShipmentRepository, ShipmentRepository>();
 
     #endregion
 

@@ -40,10 +40,13 @@ public class CreateInvoiceHandler : IRequestHandler<CreateInvoiceCommand, Result
             request.InvoiceDate,
             request.Type,
             request.SalesOrderId,
+            null, // salesOrderNumber - will be set separately if needed
             request.CustomerId,
             request.CustomerName,
             request.CustomerEmail,
+            null, // customerPhone
             request.CustomerTaxNumber,
+            null, // customerTaxOffice
             request.CustomerAddress,
             request.Currency);
 

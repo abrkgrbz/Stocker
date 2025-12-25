@@ -72,6 +72,83 @@ public class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOrder>
         builder.Property(o => o.CancellationReason)
             .HasMaxLength(500);
 
+        // Yeni alanlar - Kaynak belge ilişkileri
+        builder.Property(o => o.QuotationNumber)
+            .HasMaxLength(50);
+
+        builder.Property(o => o.InvoicingStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(o => o.FulfillmentStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(o => o.TotalInvoicedAmount)
+            .HasPrecision(18, 2);
+
+        // Phase 3: Stock Reservation
+        builder.Property(o => o.TotalReservedQuantity)
+            .HasPrecision(18, 4);
+
+        builder.Property(o => o.IsStockReserved)
+            .HasDefaultValue(false);
+
+        // Phase 3: Payment Integration
+        builder.Property(o => o.TotalAdvancePaymentAmount)
+            .HasPrecision(18, 2);
+
+        builder.Property(o => o.TotalPaymentAmount)
+            .HasPrecision(18, 2);
+
+        builder.Property(o => o.PaymentStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        // Phase 3: BackOrder Integration
+        builder.Property(o => o.UnresolvedBackOrderCount)
+            .HasDefaultValue(0);
+
+        // Phase 3: Territory
+        builder.Property(o => o.TerritoryName)
+            .HasMaxLength(200);
+
+        // ShippingAddressSnapshot - Owned Entity olarak yapılandır
+        builder.OwnsOne(o => o.ShippingAddressSnapshot, address =>
+        {
+            address.Property(a => a.RecipientName).HasColumnName("Shipping_RecipientName").HasMaxLength(200);
+            address.Property(a => a.RecipientPhone).HasColumnName("Shipping_RecipientPhone").HasMaxLength(50);
+            address.Property(a => a.CompanyName).HasColumnName("Shipping_CompanyName").HasMaxLength(200);
+            address.Property(a => a.AddressLine1).HasColumnName("Shipping_AddressLine1").HasMaxLength(300);
+            address.Property(a => a.AddressLine2).HasColumnName("Shipping_AddressLine2").HasMaxLength(200);
+            address.Property(a => a.District).HasColumnName("Shipping_District").HasMaxLength(100);
+            address.Property(a => a.Town).HasColumnName("Shipping_Town").HasMaxLength(100);
+            address.Property(a => a.City).HasColumnName("Shipping_City").HasMaxLength(100);
+            address.Property(a => a.State).HasColumnName("Shipping_State").HasMaxLength(100);
+            address.Property(a => a.Country).HasColumnName("Shipping_Country").HasMaxLength(100);
+            address.Property(a => a.PostalCode).HasColumnName("Shipping_PostalCode").HasMaxLength(20);
+            address.Property(a => a.TaxId).HasColumnName("Shipping_TaxId").HasMaxLength(20);
+            address.Property(a => a.TaxOffice).HasColumnName("Shipping_TaxOffice").HasMaxLength(100);
+        });
+
+        // BillingAddressSnapshot - Owned Entity olarak yapılandır
+        builder.OwnsOne(o => o.BillingAddressSnapshot, address =>
+        {
+            address.Property(a => a.RecipientName).HasColumnName("Billing_RecipientName").HasMaxLength(200);
+            address.Property(a => a.RecipientPhone).HasColumnName("Billing_RecipientPhone").HasMaxLength(50);
+            address.Property(a => a.CompanyName).HasColumnName("Billing_CompanyName").HasMaxLength(200);
+            address.Property(a => a.AddressLine1).HasColumnName("Billing_AddressLine1").HasMaxLength(300);
+            address.Property(a => a.AddressLine2).HasColumnName("Billing_AddressLine2").HasMaxLength(200);
+            address.Property(a => a.District).HasColumnName("Billing_District").HasMaxLength(100);
+            address.Property(a => a.Town).HasColumnName("Billing_Town").HasMaxLength(100);
+            address.Property(a => a.City).HasColumnName("Billing_City").HasMaxLength(100);
+            address.Property(a => a.State).HasColumnName("Billing_State").HasMaxLength(100);
+            address.Property(a => a.Country).HasColumnName("Billing_Country").HasMaxLength(100);
+            address.Property(a => a.PostalCode).HasColumnName("Billing_PostalCode").HasMaxLength(20);
+            address.Property(a => a.TaxId).HasColumnName("Billing_TaxId").HasMaxLength(20);
+            address.Property(a => a.TaxOffice).HasColumnName("Billing_TaxOffice").HasMaxLength(100);
+        });
+
         // Relationships
         builder.HasMany(o => o.Items)
             .WithOne(i => i.SalesOrder)
@@ -85,5 +162,14 @@ public class SalesOrderConfiguration : IEntityTypeConfiguration<SalesOrder>
         builder.HasIndex(o => new { o.TenantId, o.Status });
         builder.HasIndex(o => new { o.TenantId, o.OrderDate });
         builder.HasIndex(o => new { o.TenantId, o.SalesPersonId });
+        builder.HasIndex(o => new { o.TenantId, o.QuotationId });
+        builder.HasIndex(o => new { o.TenantId, o.InvoicingStatus });
+        builder.HasIndex(o => new { o.TenantId, o.FulfillmentStatus });
+
+        // Phase 3 Indexes
+        builder.HasIndex(o => new { o.TenantId, o.TerritoryId });
+        builder.HasIndex(o => new { o.TenantId, o.PaymentStatus });
+        builder.HasIndex(o => o.PaymentDueDate);
+        builder.HasIndex(o => new { o.TenantId, o.IsStockReserved });
     }
 }

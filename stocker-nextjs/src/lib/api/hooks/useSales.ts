@@ -56,6 +56,38 @@ import type {
   CreateSalesReturnItemDto,
   ProcessRefundDto,
   ReturnableItem,
+  // Customer Contracts
+  CustomerContractDto,
+  CustomerContractListDto,
+  CustomerContractQueryParams,
+  CreateCustomerContractCommand,
+  UpdateCustomerContractCommand,
+  TerminateContractCommand,
+  UpdateCreditLimitCommand,
+  ConfigureSLACommand,
+  AddPriceAgreementCommand,
+  AddPaymentTermCommand,
+  AddCommitmentCommand,
+  // Sales Territories
+  SalesTerritoryDto,
+  SalesTerritoryListDto,
+  SalesTerritoryQueryParams,
+  CreateSalesTerritoryCommand,
+  UpdateSalesTerritoryCommand,
+  AssignSalesRepCommand,
+  AssignCustomerToTerritoryCommand,
+  // Shipments
+  ShipmentDto,
+  ShipmentListDto,
+  ShipmentQueryParams,
+  CreateShipmentCommand,
+  CreateShipmentFromOrderCommand,
+  UpdateShipmentCommand,
+  ShipShipmentCommand,
+  DeliverShipmentCommand,
+  AddShipmentItemCommand,
+  UpdateShipmentItemCommand,
+  UpdateTrackingCommand,
 } from '../services/sales.service';
 
 // =====================================
@@ -114,6 +146,33 @@ export const salesKeys = {
   salesReturnsPending: ['sales', 'returns', 'pending'] as const,
   salesReturnSummary: (from?: string, to?: string) => ['sales', 'returns', 'summary', from, to] as const,
   returnableItems: (orderId: string) => ['sales', 'returns', 'returnable-items', orderId] as const,
+
+  // Customer Contracts
+  customerContracts: ['sales', 'contracts'] as const,
+  customerContractsList: (params?: CustomerContractQueryParams) => ['sales', 'contracts', 'list', params] as const,
+  customerContract: (id: string) => ['sales', 'contracts', id] as const,
+  customerContractByNumber: (contractNumber: string) => ['sales', 'contracts', 'number', contractNumber] as const,
+  customerContractsByCustomer: (customerId: string) => ['sales', 'contracts', 'customer', customerId] as const,
+  activeContractsByCustomer: (customerId: string) => ['sales', 'contracts', 'customer', customerId, 'active'] as const,
+
+  // Sales Territories
+  salesTerritories: ['sales', 'territories'] as const,
+  salesTerritoriesList: (params?: SalesTerritoryQueryParams) => ['sales', 'territories', 'list', params] as const,
+  salesTerritory: (id: string) => ['sales', 'territories', id] as const,
+  salesTerritoryByCode: (code: string) => ['sales', 'territories', 'code', code] as const,
+  childTerritories: (parentId: string) => ['sales', 'territories', parentId, 'children'] as const,
+  rootTerritories: ['sales', 'territories', 'roots'] as const,
+
+  // Shipments
+  shipments: ['sales', 'shipments'] as const,
+  shipmentsList: (params?: ShipmentQueryParams) => ['sales', 'shipments', 'list', params] as const,
+  shipment: (id: string) => ['sales', 'shipments', id] as const,
+  shipmentByNumber: (shipmentNumber: string) => ['sales', 'shipments', 'number', shipmentNumber] as const,
+  shipmentsByOrder: (orderId: string) => ['sales', 'shipments', 'order', orderId] as const,
+  shipmentsByCustomer: (customerId: string) => ['sales', 'shipments', 'customer', customerId] as const,
+  pendingShipments: ['sales', 'shipments', 'pending'] as const,
+  inTransitShipments: ['sales', 'shipments', 'in-transit'] as const,
+  overdueShipments: ['sales', 'shipments', 'overdue'] as const,
 };
 
 // =====================================
@@ -1615,6 +1674,1065 @@ export function useDeleteSalesReturn() {
     },
     onError: (error) => {
       showApiError(error, 'İade silinemedi');
+    },
+  });
+}
+
+// =====================================
+// CUSTOMER CONTRACT QUERIES
+// =====================================
+
+/**
+ * Hook to fetch paginated customer contracts
+ */
+export function useCustomerContracts(params?: CustomerContractQueryParams) {
+  return useQuery<PagedResult<CustomerContractListDto>>({
+    queryKey: salesKeys.customerContractsList(params),
+    queryFn: () => SalesService.getCustomerContracts(params),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Hook to fetch a single customer contract by ID
+ */
+export function useCustomerContract(id: string) {
+  return useQuery<CustomerContractDto>({
+    queryKey: salesKeys.customerContract(id),
+    queryFn: () => SalesService.getCustomerContractById(id),
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+/**
+ * Hook to fetch customer contract by contract number
+ */
+export function useCustomerContractByNumber(contractNumber: string) {
+  return useQuery<CustomerContractDto>({
+    queryKey: salesKeys.customerContractByNumber(contractNumber),
+    queryFn: () => SalesService.getCustomerContractByNumber(contractNumber),
+    enabled: !!contractNumber,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch customer contracts by customer ID
+ */
+export function useCustomerContractsByCustomer(customerId: string, page: number = 1, pageSize: number = 20) {
+  return useQuery<PagedResult<CustomerContractListDto>>({
+    queryKey: [...salesKeys.customerContractsByCustomer(customerId), page, pageSize],
+    queryFn: () => SalesService.getCustomerContractsByCustomer(customerId, page, pageSize),
+    enabled: !!customerId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch active contracts by customer ID
+ */
+export function useActiveContractsByCustomer(customerId: string) {
+  return useQuery<CustomerContractListDto[]>({
+    queryKey: salesKeys.activeContractsByCustomer(customerId),
+    queryFn: () => SalesService.getActiveContractsByCustomer(customerId),
+    enabled: !!customerId,
+    staleTime: 30 * 1000,
+  });
+}
+
+// =====================================
+// CUSTOMER CONTRACT MUTATIONS
+// =====================================
+
+/**
+ * Hook to create a new customer contract
+ */
+export function useCreateCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCustomerContractCommand) => SalesService.createCustomerContract(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Müşteri sözleşmesi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri sözleşmesi oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update a customer contract
+ */
+export function useUpdateCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<UpdateCustomerContractCommand, 'id'> }) =>
+      SalesService.updateCustomerContract(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Müşteri sözleşmesi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri sözleşmesi güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete a customer contract
+ */
+export function useDeleteCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.deleteCustomerContract(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Müşteri sözleşmesi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri sözleşmesi silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to activate a customer contract
+ */
+export function useActivateCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.activateContract(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Sözleşme aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sözleşme aktifleştirilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to suspend a customer contract
+ */
+export function useSuspendCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      SalesService.suspendContract(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Sözleşme askıya alındı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sözleşme askıya alınamadı');
+    },
+  });
+}
+
+/**
+ * Hook to terminate a customer contract
+ */
+export function useTerminateCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<TerminateContractCommand, 'id'> }) =>
+      SalesService.terminateContract(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Sözleşme feshedildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sözleşme feshedilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to renew a customer contract
+ */
+export function useRenewCustomerContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, newEndDate }: { id: string; newEndDate: string }) =>
+      SalesService.renewContract(id, newEndDate),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContracts });
+      showSuccess('Sözleşme yenilendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sözleşme yenilenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to update contract credit limit
+ */
+export function useUpdateContractCreditLimit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<UpdateCreditLimitCommand, 'id'> }) =>
+      SalesService.updateCreditLimit(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      showSuccess('Kredi limiti güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Kredi limiti güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to configure contract SLA
+ */
+export function useConfigureContractSLA() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<ConfigureSLACommand, 'id'> }) =>
+      SalesService.configureSLA(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      showSuccess('SLA yapılandırması güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'SLA yapılandırması güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to add price agreement to contract
+ */
+export function useAddPriceAgreement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AddPriceAgreementCommand, 'contractId'> }) =>
+      SalesService.addPriceAgreement(id, { ...data, contractId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      showSuccess('Fiyat anlaşması eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat anlaşması eklenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to remove price agreement from contract
+ */
+export function useRemovePriceAgreement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ contractId, agreementId }: { contractId: string; agreementId: string }) =>
+      SalesService.removePriceAgreement(contractId, agreementId),
+    onSuccess: (_, { contractId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(contractId) });
+      showSuccess('Fiyat anlaşması kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Fiyat anlaşması kaldırılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to add payment term to contract
+ */
+export function useAddPaymentTerm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AddPaymentTermCommand, 'contractId'> }) =>
+      SalesService.addPaymentTerm(id, { ...data, contractId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      showSuccess('Ödeme koşulu eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ödeme koşulu eklenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to remove payment term from contract
+ */
+export function useRemovePaymentTerm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ contractId, termId }: { contractId: string; termId: string }) =>
+      SalesService.removePaymentTerm(contractId, termId),
+    onSuccess: (_, { contractId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(contractId) });
+      showSuccess('Ödeme koşulu kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ödeme koşulu kaldırılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to add commitment to contract
+ */
+export function useAddContractCommitment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AddCommitmentCommand, 'contractId'> }) =>
+      SalesService.addCommitment(id, { ...data, contractId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(id) });
+      showSuccess('Taahhüt eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Taahhüt eklenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to remove commitment from contract
+ */
+export function useRemoveContractCommitment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ contractId, commitmentId }: { contractId: string; commitmentId: string }) =>
+      SalesService.removeCommitment(contractId, commitmentId),
+    onSuccess: (_, { contractId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.customerContract(contractId) });
+      showSuccess('Taahhüt kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Taahhüt kaldırılamadı');
+    },
+  });
+}
+
+// =====================================
+// SALES TERRITORY QUERIES
+// =====================================
+
+/**
+ * Hook to fetch paginated sales territories
+ */
+export function useSalesTerritories(params?: SalesTerritoryQueryParams) {
+  return useQuery<PagedResult<SalesTerritoryListDto>>({
+    queryKey: salesKeys.salesTerritoriesList(params),
+    queryFn: () => SalesService.getSalesTerritories(params),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Hook to fetch a single sales territory by ID
+ */
+export function useSalesTerritory(id: string) {
+  return useQuery<SalesTerritoryDto>({
+    queryKey: salesKeys.salesTerritory(id),
+    queryFn: () => SalesService.getSalesTerritoryById(id),
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+/**
+ * Hook to fetch sales territory by code
+ */
+export function useSalesTerritoryByCode(code: string) {
+  return useQuery<SalesTerritoryDto>({
+    queryKey: salesKeys.salesTerritoryByCode(code),
+    queryFn: () => SalesService.getSalesTerritoryByCode(code),
+    enabled: !!code,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch child territories
+ */
+export function useChildTerritories(parentId: string) {
+  return useQuery<SalesTerritoryListDto[]>({
+    queryKey: salesKeys.childTerritories(parentId),
+    queryFn: () => SalesService.getChildTerritories(parentId),
+    enabled: !!parentId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch root territories (no parent)
+ */
+export function useRootTerritories() {
+  return useQuery<SalesTerritoryListDto[]>({
+    queryKey: salesKeys.rootTerritories,
+    queryFn: () => SalesService.getRootTerritories(),
+    staleTime: 60 * 1000,
+  });
+}
+
+// =====================================
+// SALES TERRITORY MUTATIONS
+// =====================================
+
+/**
+ * Hook to create a new sales territory
+ */
+export function useCreateSalesTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateSalesTerritoryCommand) => SalesService.createSalesTerritory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritories });
+      queryClient.invalidateQueries({ queryKey: salesKeys.rootTerritories });
+      showSuccess('Satış bölgesi oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış bölgesi oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update a sales territory
+ */
+export function useUpdateSalesTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<UpdateSalesTerritoryCommand, 'id'> }) =>
+      SalesService.updateSalesTerritory(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritories });
+      showSuccess('Satış bölgesi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış bölgesi güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete a sales territory
+ */
+export function useDeleteSalesTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.deleteSalesTerritory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritories });
+      queryClient.invalidateQueries({ queryKey: salesKeys.rootTerritories });
+      showSuccess('Satış bölgesi silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış bölgesi silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to activate a sales territory
+ */
+export function useActivateSalesTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.activateTerritory(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritories });
+      showSuccess('Satış bölgesi aktifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış bölgesi aktifleştirilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to deactivate a sales territory
+ */
+export function useDeactivateSalesTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.deactivateTerritory(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritories });
+      showSuccess('Satış bölgesi pasifleştirildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış bölgesi pasifleştirilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to assign sales rep to territory
+ */
+export function useAssignSalesRepToTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AssignSalesRepCommand, 'territoryId'> }) =>
+      SalesService.assignSalesRep(id, { ...data, territoryId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      showSuccess('Satış temsilcisi atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış temsilcisi atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to remove sales rep from territory
+ */
+export function useRemoveSalesRepFromTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ territoryId, salesRepId }: { territoryId: string; salesRepId: string }) =>
+      SalesService.removeSalesRep(territoryId, salesRepId),
+    onSuccess: (_, { territoryId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(territoryId) });
+      showSuccess('Satış temsilcisi kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Satış temsilcisi kaldırılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to assign customer to territory
+ */
+export function useAssignCustomerToTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AssignCustomerToTerritoryCommand, 'territoryId'> }) =>
+      SalesService.assignCustomerToTerritory(id, { ...data, territoryId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      showSuccess('Müşteri bölgeye atandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri bölgeye atanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to remove customer from territory
+ */
+export function useRemoveCustomerFromTerritory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ territoryId, customerId }: { territoryId: string; customerId: string }) =>
+      SalesService.removeCustomerFromTerritory(territoryId, customerId),
+    onSuccess: (_, { territoryId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(territoryId) });
+      showSuccess('Müşteri bölgeden kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Müşteri bölgeden kaldırılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to set territory quota
+ */
+export function useSetTerritoryQuota() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, amount, currency, period }: { id: string; amount: number; currency: string; period: string }) =>
+      SalesService.setQuota(id, amount, currency, period),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.salesTerritory(id) });
+      showSuccess('Bölge kotası belirlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Bölge kotası belirlenemedi');
+    },
+  });
+}
+
+// =====================================
+// SHIPMENT QUERIES
+// =====================================
+
+/**
+ * Hook to fetch paginated shipments
+ */
+export function useShipments(params?: ShipmentQueryParams) {
+  return useQuery<PagedResult<ShipmentListDto>>({
+    queryKey: salesKeys.shipmentsList(params),
+    queryFn: () => SalesService.getShipments(params),
+    ...queryOptions.list(),
+  });
+}
+
+/**
+ * Hook to fetch a single shipment by ID
+ */
+export function useShipment(id: string) {
+  return useQuery<ShipmentDto>({
+    queryKey: salesKeys.shipment(id),
+    queryFn: () => SalesService.getShipmentById(id),
+    ...queryOptions.detail({ enabled: !!id }),
+  });
+}
+
+/**
+ * Hook to fetch shipment by shipment number
+ */
+export function useShipmentByNumber(shipmentNumber: string) {
+  return useQuery<ShipmentDto>({
+    queryKey: salesKeys.shipmentByNumber(shipmentNumber),
+    queryFn: () => SalesService.getShipmentByNumber(shipmentNumber),
+    enabled: !!shipmentNumber,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch shipments by order ID
+ */
+export function useShipmentsByOrder(orderId: string) {
+  return useQuery<ShipmentListDto[]>({
+    queryKey: salesKeys.shipmentsByOrder(orderId),
+    queryFn: () => SalesService.getShipmentsByOrder(orderId),
+    enabled: !!orderId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch shipments by customer ID
+ */
+export function useShipmentsByCustomer(customerId: string, page: number = 1, pageSize: number = 20) {
+  return useQuery<PagedResult<ShipmentListDto>>({
+    queryKey: [...salesKeys.shipmentsByCustomer(customerId), page, pageSize],
+    queryFn: () => SalesService.getShipmentsByCustomer(customerId, page, pageSize),
+    enabled: !!customerId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch pending shipments
+ */
+export function usePendingShipments() {
+  return useQuery<ShipmentListDto[]>({
+    queryKey: salesKeys.pendingShipments,
+    queryFn: () => SalesService.getPendingShipments(),
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch in-transit shipments
+ */
+export function useInTransitShipments() {
+  return useQuery<ShipmentListDto[]>({
+    queryKey: salesKeys.inTransitShipments,
+    queryFn: () => SalesService.getInTransitShipments(),
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch overdue shipments
+ */
+export function useOverdueShipments() {
+  return useQuery<ShipmentListDto[]>({
+    queryKey: salesKeys.overdueShipments,
+    queryFn: () => SalesService.getOverdueShipments(),
+    staleTime: 30 * 1000,
+  });
+}
+
+// =====================================
+// SHIPMENT MUTATIONS
+// =====================================
+
+/**
+ * Hook to create a new shipment
+ */
+export function useCreateShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateShipmentCommand) => SalesService.createShipment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to create shipment from sales order
+ */
+export function useCreateShipmentFromOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateShipmentFromOrderCommand) => SalesService.createShipmentFromOrder(data),
+    onSuccess: (_, data) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipmentsByOrder(data.salesOrderId) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.order(data.salesOrderId) });
+      showSuccess('Siparişten sevkiyat oluşturuldu');
+    },
+    onError: (error) => {
+      showApiError(error, 'Siparişten sevkiyat oluşturulamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update a shipment
+ */
+export function useUpdateShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<UpdateShipmentCommand, 'id'> }) =>
+      SalesService.updateShipment(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to delete a shipment
+ */
+export function useDeleteShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.deleteShipment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat silindi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat silinemedi');
+    },
+  });
+}
+
+/**
+ * Hook to confirm a shipment
+ */
+export function useConfirmShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.confirmShipment(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat onaylandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat onaylanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to start preparing a shipment
+ */
+export function useStartPreparingShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.startPreparing(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat hazırlanmaya başlandı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat hazırlanamadı');
+    },
+  });
+}
+
+/**
+ * Hook to mark shipment as packed
+ */
+export function usePackShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.packShipment(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat paketlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat paketlenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to ship a shipment
+ */
+export function useShipShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<ShipShipmentCommand, 'id'> }) =>
+      SalesService.shipShipment(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      queryClient.invalidateQueries({ queryKey: salesKeys.pendingShipments });
+      queryClient.invalidateQueries({ queryKey: salesKeys.inTransitShipments });
+      showSuccess('Sevkiyat gönderildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat gönderilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to mark shipment as in transit
+ */
+export function useMarkShipmentInTransit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.markInTransit(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      queryClient.invalidateQueries({ queryKey: salesKeys.inTransitShipments });
+      showSuccess('Sevkiyat yolda olarak işaretlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat yolda olarak işaretlenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to mark shipment as out for delivery
+ */
+export function useMarkShipmentOutForDelivery() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => SalesService.markOutForDelivery(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat teslimat için yolda');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat teslimat için yolda işaretlenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to deliver a shipment
+ */
+export function useDeliverShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<DeliverShipmentCommand, 'id'> }) =>
+      SalesService.deliverShipment(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      queryClient.invalidateQueries({ queryKey: salesKeys.inTransitShipments });
+      showSuccess('Sevkiyat teslim edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat teslim edilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to mark shipment as failed
+ */
+export function useMarkShipmentFailed() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      SalesService.markFailed(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat başarısız olarak işaretlendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat başarısız olarak işaretlenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to cancel a shipment
+ */
+export function useCancelShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      SalesService.cancelShipment(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat iptal edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat iptal edilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to return a shipment
+ */
+export function useReturnShipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      SalesService.returnShipment(id, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipments });
+      showSuccess('Sevkiyat iade edildi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat iade edilemedi');
+    },
+  });
+}
+
+/**
+ * Hook to add item to shipment
+ */
+export function useAddShipmentItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<AddShipmentItemCommand, 'shipmentId'> }) =>
+      SalesService.addShipmentItem(id, { ...data, shipmentId: id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      showSuccess('Ürün sevkiyata eklendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün sevkiyata eklenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to update shipment item
+ */
+export function useUpdateShipmentItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ shipmentId, itemId, data }: { shipmentId: string; itemId: string; data: Omit<UpdateShipmentItemCommand, 'shipmentId' | 'itemId'> }) =>
+      SalesService.updateShipmentItem(shipmentId, itemId, { ...data, shipmentId, itemId }),
+    onSuccess: (_, { shipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(shipmentId) });
+      showSuccess('Sevkiyat kalemi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Sevkiyat kalemi güncellenemedi');
+    },
+  });
+}
+
+/**
+ * Hook to remove item from shipment
+ */
+export function useRemoveShipmentItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ shipmentId, itemId }: { shipmentId: string; itemId: string }) =>
+      SalesService.removeShipmentItem(shipmentId, itemId),
+    onSuccess: (_, { shipmentId }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(shipmentId) });
+      showSuccess('Ürün sevkiyattan kaldırıldı');
+    },
+    onError: (error) => {
+      showApiError(error, 'Ürün sevkiyattan kaldırılamadı');
+    },
+  });
+}
+
+/**
+ * Hook to update shipment tracking
+ */
+export function useUpdateShipmentTracking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<UpdateTrackingCommand, 'id'> }) =>
+      SalesService.updateTracking(id, { ...data, id }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: salesKeys.shipment(id) });
+      showSuccess('Takip bilgisi güncellendi');
+    },
+    onError: (error) => {
+      showApiError(error, 'Takip bilgisi güncellenemedi');
     },
   });
 }
