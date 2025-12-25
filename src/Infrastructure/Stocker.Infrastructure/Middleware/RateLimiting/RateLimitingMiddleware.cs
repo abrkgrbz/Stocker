@@ -27,9 +27,16 @@ public class RateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip rate limiting for certain paths (auth, health, etc.)
+        if (ShouldSkipRateLimiting(context))
+        {
+            await _next(context);
+            return;
+        }
+
         var endpoint = context.GetEndpoint();
         var rateLimitAttribute = endpoint?.Metadata.GetMetadata<RateLimitAttribute>();
-        
+
         if (rateLimitAttribute == null && !_options.EnableGlobalRateLimit)
         {
             await _next(context);
@@ -61,6 +68,36 @@ public class RateLimitingMiddleware
         });
 
         await _next(context);
+    }
+
+    private bool ShouldSkipRateLimiting(HttpContext context)
+    {
+        var path = context.Request.Path.Value?.ToLower() ?? "";
+
+        // Skip rate limiting for these paths
+        var skipPaths = new[]
+        {
+            "/health",
+            "/swagger",
+            "/hangfire",
+            "/.well-known",
+            "/favicon.ico",
+            "/hubs/",           // SignalR hubs have their own rate limiting
+            "/api/auth",        // Auth endpoints handle their own security (lockout, etc.)
+            "/api/crm",         // CRM endpoints for stress testing
+            "/api/inventory",   // Inventory endpoints for stress testing
+            "/api/sales",       // Sales endpoints for stress testing
+            "/api/purchase",    // Purchase endpoints for stress testing
+            "/api/tenant"       // Tenant endpoints
+        };
+
+        foreach (var skipPath in skipPaths)
+        {
+            if (path.StartsWith(skipPath) || path.Contains(skipPath))
+                return true;
+        }
+
+        return false;
     }
 
     private string GenerateClientKey(HttpContext context)
