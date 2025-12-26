@@ -1,26 +1,43 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Select } from 'antd';
-import {
-  UserOutlined,
-  BankOutlined,
-  CameraOutlined,
-} from '@ant-design/icons';
+/**
+ * =====================================
+ * CUSTOMER FORM - ENTERPRISE UI
+ * =====================================
+ *
+ * Migrated from Ant Design to custom primitives.
+ * Uses FormSection pattern with new input components.
+ */
+
+import React, { useEffect, useState, useCallback, useRef, useImperativeHandle, forwardRef } from 'react';
+import { BuildingOfficeIcon, UserIcon } from '@heroicons/react/24/outline';
 import type { Customer } from '@/lib/api/services/crm.service';
-import { getCityNames, getDistrictsByCity } from '@/lib/data/turkey-cities';
-import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
-const { TextArea } = Input;
+// Primitives
+import {
+  Input,
+  Textarea,
+  Select,
+  CurrencyInput,
+  PhoneInput,
+  CitySelect,
+  DistrictSelect,
+  TaxNumberInput,
+} from '@/components/primitives';
 
-// Customer status options
+// Patterns
+import { FormSection, FormField } from '@/components/patterns/forms/FormSection';
+
+// =====================================
+// OPTIONS
+// =====================================
+
 const statusOptions = [
   { value: 'Active', label: 'Aktif' },
   { value: 'Inactive', label: 'Pasif' },
   { value: 'Potential', label: 'Potansiyel' },
 ];
 
-// Payment terms options
 const paymentTermsOptions = [
   { value: 'Immediate', label: 'Peşin' },
   { value: '15 Days', label: '15 Gün' },
@@ -30,336 +47,391 @@ const paymentTermsOptions = [
   { value: '90 Days', label: '90 Gün' },
 ];
 
-interface CustomerFormProps {
-  form: ReturnType<typeof Form.useForm>[0];
+// =====================================
+// TYPES
+// =====================================
+
+export interface CustomerFormData {
+  companyName: string;
+  customerType: 'Corporate' | 'Individual';
+  contactPerson: string;
+  email: string;
+  phone: string;
+  website: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  taxId: string;
+  taxOffice: string;
+  creditLimit: number;
+  paymentTerms: string;
+  status: string;
+  notes: string;
+}
+
+export interface CustomerFormRef {
+  submit: () => void;
+  getValues: () => CustomerFormData;
+  validate: () => boolean;
+}
+
+export interface CustomerFormProps {
   initialValues?: Customer;
-  onFinish: (values: any) => void;
+  onFinish: (values: CustomerFormData) => void;
   loading?: boolean;
 }
 
-export default function CustomerForm({ form, initialValues, onFinish, loading }: CustomerFormProps) {
-  const [customerType, setCustomerType] = useState<string>('Corporate');
-  const [selectedCity, setSelectedCity] = useState<string>('');
-  const [districts, setDistricts] = useState<string[]>([]);
+// =====================================
+// FORM COMPONENT
+// =====================================
 
-  const cityNames = getCityNames();
+const CustomerForm = forwardRef<CustomerFormRef, CustomerFormProps>(function CustomerForm(
+  { initialValues, onFinish, loading = false },
+  ref
+) {
+  // Form state
+  const [formData, setFormData] = useState<CustomerFormData>({
+    companyName: '',
+    customerType: 'Corporate',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    website: '',
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'Türkiye',
+    taxId: '',
+    taxOffice: '',
+    creditLimit: 0,
+    paymentTerms: '',
+    status: 'Active',
+    notes: '',
+  });
 
+  // Validation errors
+  const [errors, setErrors] = useState<Partial<Record<keyof CustomerFormData, string>>>({});
+
+  // Form ref for submit
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Initialize with existing values
   useEffect(() => {
     if (initialValues) {
-      form.setFieldsValue({
-        ...initialValues,
+      setFormData({
+        companyName: initialValues.companyName || '',
+        customerType: (initialValues.customerType as 'Corporate' | 'Individual') || 'Corporate',
+        contactPerson: initialValues.contactPerson || '',
+        email: initialValues.email || '',
+        phone: initialValues.phone || '',
+        website: initialValues.website || '',
+        address: initialValues.address || '',
+        city: initialValues.city || '',
+        state: initialValues.state || '',
+        postalCode: initialValues.postalCode || '',
         country: initialValues.country || 'Türkiye',
-      });
-      setCustomerType(initialValues.customerType || 'Corporate');
-      if (initialValues.city) {
-        setSelectedCity(initialValues.city);
-        setDistricts(getDistrictsByCity(initialValues.city));
-      }
-    } else {
-      form.setFieldsValue({
-        customerType: 'Corporate',
-        status: 'Active',
-        country: 'Türkiye',
-        creditLimit: 0,
+        taxId: initialValues.taxId || '',
+        taxOffice: initialValues.taxOffice || '',
+        creditLimit: initialValues.creditLimit || 0,
+        paymentTerms: initialValues.paymentTerms || '',
+        status: initialValues.status || 'Active',
+        notes: initialValues.notes || '',
       });
     }
-  }, [form, initialValues]);
+  }, [initialValues]);
 
-  const handleCityChange = (city: string) => {
-    setSelectedCity(city);
-    const cityDistricts = getDistrictsByCity(city);
-    setDistricts(cityDistricts);
-    form.setFieldsValue({ state: undefined });
-  };
+  // Field change handler
+  const handleChange = useCallback(<K extends keyof CustomerFormData>(
+    field: K,
+    value: CustomerFormData[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error on change
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  }, [errors]);
+
+  // City change handler (clears district)
+  const handleCityChange = useCallback((city: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: city || '',
+      state: '', // Reset district when city changes
+    }));
+  }, []);
+
+  // Validate form
+  const validate = useCallback((): boolean => {
+    const newErrors: Partial<Record<keyof CustomerFormData, string>> = {};
+
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = 'Müşteri adı zorunludur';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'E-posta zorunludur';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Geçerli bir e-posta adresi girin';
+    }
+
+    if (formData.taxId && !/^[0-9]{10,11}$/.test(formData.taxId)) {
+      newErrors.taxId = 'Geçerli bir vergi numarası girin (10-11 hane)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  // Form submit handler
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      onFinish(formData);
+    }
+  }, [validate, onFinish, formData]);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      if (validate()) {
+        onFinish(formData);
+      }
+    },
+    getValues: () => formData,
+    validate,
+  }), [validate, onFinish, formData]);
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={onFinish}
-      disabled={loading}
-      className="w-full"
-      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
-    >
+    <form ref={formRef} onSubmit={handleSubmit} className="w-full">
       {/* Main Card */}
       <div className="bg-white border border-slate-200 rounded-xl">
-
         {/* ═══════════════════════════════════════════════════════════════
-            HEADER: Logo + Name + Type Selector (Inline)
+            HEADER: Logo + Name + Type Selector
         ═══════════════════════════════════════════════════════════════ */}
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
-            {/* Logo Upload */}
+            {/* Logo Placeholder */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-200 transition-all">
-                {customerType === 'Corporate' ? (
-                  <BankOutlined className="text-xl text-slate-500" />
+                {formData.customerType === 'Corporate' ? (
+                  <BuildingOfficeIcon className="h-6 w-6 text-slate-500" />
                 ) : (
-                  <UserOutlined className="text-xl text-slate-500" />
+                  <UserIcon className="h-6 w-6 text-slate-500" />
                 )}
               </div>
             </div>
 
-            {/* Company/Customer Name - Title Style */}
+            {/* Company/Customer Name */}
             <div className="flex-1">
-              <Form.Item
-                name="companyName"
-                rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
-                className="mb-0"
-              >
-                <Input
-                  placeholder={customerType === 'Corporate' ? 'Firma Adı Girin...' : 'Ad Soyad Girin...'}
-                  variant="borderless"
-                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
-                />
-              </Form.Item>
+              <Input
+                value={formData.companyName}
+                onChange={(e) => handleChange('companyName', e.target.value)}
+                placeholder={
+                  formData.customerType === 'Corporate'
+                    ? 'Firma Adı Girin...'
+                    : 'Ad Soyad Girin...'
+                }
+                variant="borderless"
+                error={!!errors.companyName}
+                disabled={loading}
+                className="!text-2xl !font-bold !text-slate-900"
+              />
+              {errors.companyName && (
+                <p className="mt-1 text-xs text-red-600">{errors.companyName}</p>
+              )}
             </div>
 
             {/* Type Selector */}
             <div className="flex-shrink-0">
-              <Form.Item name="customerType" className="mb-0" initialValue="Corporate">
-                <div className="flex bg-slate-100 p-1 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustomerType('Corporate');
-                      form.setFieldValue('customerType', 'Corporate');
-                    }}
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      customerType === 'Corporate'
-                        ? 'bg-white shadow-sm text-slate-900'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    Kurumsal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCustomerType('Individual');
-                      form.setFieldValue('customerType', 'Individual');
-                    }}
-                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      customerType === 'Individual'
-                        ? 'bg-white shadow-sm text-slate-900'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    Bireysel
-                  </button>
-                </div>
-              </Form.Item>
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => handleChange('customerType', 'Corporate')}
+                  disabled={loading}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    formData.customerType === 'Corporate'
+                      ? 'bg-white shadow-sm text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Kurumsal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange('customerType', 'Individual')}
+                  disabled={loading}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    formData.customerType === 'Individual'
+                      ? 'bg-white shadow-sm text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Bireysel
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
-            FORM BODY: High-Density Grid Layout
+            FORM BODY
         ═══════════════════════════════════════════════════════════════ */}
         <div className="px-8 py-6">
-
           {/* ─────────────── İLETİŞİM BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              İletişim Bilgileri
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İrtibat Kişisi</label>
-                <Form.Item name="contactPerson" className="mb-0">
-                  <Input
-                    placeholder="—"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta <span className="text-red-500">*</span></label>
-                <Form.Item
-                  name="email"
-                  rules={[
-                    { required: true, message: 'E-posta zorunludur' },
-                    { type: 'email', message: 'Geçerli bir e-posta adresi girin' },
-                  ]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="ornek@firma.com"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
-                <Form.Item name="phone" className="mb-0">
-                  <FormPhoneInput defaultCountry="TR" />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Web Sitesi</label>
-                <Form.Item name="website" className="mb-0">
-                  <Input
-                    placeholder="https://"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
+          <FormSection title="İletişim Bilgileri">
+            <FormField label="İrtibat Kişisi" span={6}>
+              <Input
+                value={formData.contactPerson}
+                onChange={(e) => handleChange('contactPerson', e.target.value)}
+                placeholder="—"
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="E-posta" required span={6} error={errors.email}>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="ornek@firma.com"
+                error={!!errors.email}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Telefon" span={6}>
+              <PhoneInput
+                value={formData.phone}
+                onChange={(value) => handleChange('phone', value)}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Web Sitesi" span={6}>
+              <Input
+                value={formData.website}
+                onChange={(e) => handleChange('website', e.target.value)}
+                placeholder="https://"
+                disabled={loading}
+              />
+            </FormField>
+          </FormSection>
 
           {/* ─────────────── ADRES BİLGİLERİ ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Adres Bilgileri
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres</label>
-                <Form.Item name="address" className="mb-0">
-                  <TextArea
-                    placeholder="Sokak, mahalle, bina no..."
-                    rows={2}
-                    maxLength={200}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir</label>
-                <Form.Item name="city" className="mb-0">
-                  <Select
-                    placeholder="Seçin"
-                    showSearch
-                    optionFilterProp="children"
-                    onChange={handleCityChange}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white [&_.ant-select-focused_.ant-select-selector]:!shadow-none"
-                  >
-                    {cityNames.map((city) => (
-                      <Select.Option key={city} value={city}>{city}</Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe</label>
-                <Form.Item name="state" className="mb-0">
-                  <Select
-                    placeholder={selectedCity ? 'Seçin' : '—'}
-                    showSearch
-                    optionFilterProp="children"
-                    disabled={!selectedCity}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  >
-                    {districts.map((district) => (
-                      <Select.Option key={district} value={district}>{district}</Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
-                <Form.Item name="postalCode" className="mb-0">
-                  <Input
-                    placeholder="34000"
-                    maxLength={10}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-            <Form.Item name="country" className="hidden" initialValue="Türkiye">
-              <Input type="hidden" />
-            </Form.Item>
-          </div>
+          <FormSection title="Adres Bilgileri">
+            <FormField label="Adres" span={12}>
+              <Textarea
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                placeholder="Sokak, mahalle, bina no..."
+                rows={2}
+                maxLength={200}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Şehir" span={4}>
+              <CitySelect
+                value={formData.city || null}
+                onChange={(cityName) => handleCityChange(cityName)}
+                valueType="name"
+                showPlateCode={false}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="İlçe" span={4}>
+              <DistrictSelect
+                cityCode={formData.city || null}
+                cityValueType="name"
+                value={formData.state || null}
+                onChange={(district) => handleChange('state', district || '')}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Posta Kodu" span={4}>
+              <Input
+                value={formData.postalCode}
+                onChange={(e) => handleChange('postalCode', e.target.value)}
+                placeholder="34000"
+                maxLength={10}
+                disabled={loading}
+              />
+            </FormField>
+          </FormSection>
 
           {/* ─────────────── MALİ BİLGİLER ─────────────── */}
-          <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Mali Bilgiler
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Numarası</label>
-                <Form.Item
-                  name="taxId"
-                  rules={[{ pattern: /^[0-9]{10,11}$/, message: 'Geçerli bir vergi numarası girin (10-11 hane)' }]}
-                  className="mb-0"
-                >
-                  <Input
-                    placeholder="10-11 haneli"
-                    maxLength={11}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Dairesi</label>
-                <Form.Item name="taxOffice" className="mb-0">
-                  <Input
-                    placeholder="—"
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kredi Limiti</label>
-                <Form.Item name="creditLimit" className="mb-0" initialValue={0}>
-                  <InputNumber
-                    className="!w-full [&_.ant-input-number]:!bg-slate-50 [&_.ant-input-number]:!border-slate-300 [&_.ant-input-number:hover]:!border-slate-400 [&_.ant-input-number-focused]:!border-slate-900 [&_.ant-input-number-focused]:!bg-white"
-                    formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={(value) => value?.replace(/₺\s?|(,*)/g, '') as any}
-                    min={0}
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Vadesi</label>
-                <Form.Item name="paymentTerms" className="mb-0">
-                  <Select
-                    placeholder="Seçin"
-                    options={paymentTermsOptions}
-                    allowClear
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-              <div className="col-span-4">
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Durum</label>
-                <Form.Item name="status" className="mb-0" initialValue="Active">
-                  <Select
-                    options={statusOptions}
-                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
+          <FormSection title="Mali Bilgiler">
+            <FormField label="Vergi Numarası" span={6} error={errors.taxId}>
+              <TaxNumberInput
+                value={formData.taxId}
+                onChange={(value) => handleChange('taxId', value)}
+                error={!!errors.taxId}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Vergi Dairesi" span={6}>
+              <Input
+                value={formData.taxOffice}
+                onChange={(e) => handleChange('taxOffice', e.target.value)}
+                placeholder="—"
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Kredi Limiti" span={4}>
+              <CurrencyInput
+                value={formData.creditLimit}
+                onChange={(value) => handleChange('creditLimit', value ?? 0)}
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Ödeme Vadesi" span={4}>
+              <Select
+                value={formData.paymentTerms || null}
+                onChange={(value) => handleChange('paymentTerms', value || '')}
+                options={paymentTermsOptions}
+                placeholder="Seçin"
+                disabled={loading}
+              />
+            </FormField>
+
+            <FormField label="Durum" span={4}>
+              <Select
+                value={formData.status}
+                onChange={(value) => handleChange('status', value || 'Active')}
+                options={statusOptions}
+                disabled={loading}
+              />
+            </FormField>
+          </FormSection>
 
           {/* ─────────────── NOTLAR ─────────────── */}
-          <div>
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-              Notlar
-            </h3>
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12">
-                <Form.Item name="notes" className="mb-0">
-                  <TextArea
-                    placeholder="Müşteri hakkında ek notlar..."
-                    rows={3}
-                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
-                  />
-                </Form.Item>
-              </div>
-            </div>
-          </div>
-
+          <FormSection title="Notlar" className="mb-0">
+            <FormField span={12}>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                placeholder="Müşteri hakkında ek notlar..."
+                rows={3}
+                disabled={loading}
+              />
+            </FormField>
+          </FormSection>
         </div>
       </div>
 
-      {/* Hidden submit */}
-      <Form.Item hidden>
-        <button type="submit" />
-      </Form.Item>
-    </Form>
+      {/* Hidden submit button for form submission */}
+      <button type="submit" className="hidden" />
+    </form>
   );
-}
+});
+
+export default CustomerForm;

@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Spin, Alert } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Button, Spinner } from '@/components/primitives';
 
 interface CrmFormPageLayoutProps {
   /** Page title displayed in header */
@@ -42,7 +42,7 @@ interface CrmFormPageLayoutProps {
  * - Centered content with max-w-4xl
  * - Back button, title, subtitle
  * - Cancel and Save buttons
- * - Premium black theme styling
+ * - Premium slate theme styling
  * - Loading and error states for edit pages
  */
 export function CrmFormPageLayout({
@@ -66,7 +66,7 @@ export function CrmFormPageLayout({
   if (isDataLoading) {
     return (
       <div className="min-h-screen bg-white flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -75,17 +75,13 @@ export function CrmFormPageLayout({
   if (dataError) {
     return (
       <div className="p-8">
-        <Alert
-          message={errorMessage}
-          description={errorDescription}
-          type="error"
-          showIcon
-          action={
-            <Button onClick={() => router.push(cancelPath)}>
-              Geri Dön
-            </Button>
-          }
-        />
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">{errorMessage}</h3>
+          <p className="text-red-600 mb-4">{errorDescription}</p>
+          <Button variant="outline" onClick={() => router.push(cancelPath)}>
+            Geri Dön
+          </Button>
+        </div>
       </div>
     );
   }
@@ -103,37 +99,35 @@ export function CrmFormPageLayout({
       >
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftOutlined />}
+            <button
               onClick={() => router.back()}
-              type="text"
-              className="text-slate-500 hover:text-slate-800"
-            />
+              className="p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+            >
+              <ArrowLeftIcon className="h-5 w-5" />
+            </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-slate-900 m-0">
+                <h1 className="text-xl font-semibold text-slate-900">
                   {title}
                 </h1>
                 {titleExtra}
               </div>
-              <p className="text-sm text-slate-400 m-0">{subtitle}</p>
+              <p className="text-sm text-slate-400">{subtitle}</p>
             </div>
           </div>
-          <Space>
+          <div className="flex items-center gap-3">
             {extraActions}
-            <Button onClick={() => router.push(cancelPath)}>
+            <Button variant="outline" onClick={() => router.push(cancelPath)}>
               Vazgeç
             </Button>
             <Button
-              type="primary"
-              icon={<SaveOutlined />}
+              variant="primary"
               loading={loading}
               onClick={onSave}
-              className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
             >
               {saveButtonText}
             </Button>
-          </Space>
+          </div>
         </div>
       </div>
 

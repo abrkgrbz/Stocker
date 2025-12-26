@@ -1,18 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Form } from 'antd';
 import { CrmFormPageLayout } from '@/components/crm/shared';
-import { CustomerForm } from '@/components/crm/customers';
+import CustomerForm, { type CustomerFormRef, type CustomerFormData } from '@/components/crm/customers/CustomerForm';
 import { useCreateCustomer } from '@/lib/api/hooks/useCRM';
 
 export default function NewCustomerPage() {
   const router = useRouter();
-  const [form] = Form.useForm();
+  const formRef = useRef<CustomerFormRef>(null);
   const createCustomer = useCreateCustomer();
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CustomerFormData) => {
     try {
       await createCustomer.mutateAsync(values);
       router.push('/crm/customers');
@@ -27,10 +26,10 @@ export default function NewCustomerPage() {
       subtitle="Yeni müşteri kaydı oluşturun"
       cancelPath="/crm/customers"
       loading={createCustomer.isPending}
-      onSave={() => form.submit()}
+      onSave={() => formRef.current?.submit()}
     >
       <CustomerForm
-        form={form}
+        ref={formRef}
         onFinish={handleSubmit}
         loading={createCustomer.isPending}
       />
