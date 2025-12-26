@@ -1,23 +1,53 @@
+/**
+ * =====================================
+ * STOCKER - GLOBAL STYLES
+ * =====================================
+ *
+ * This file contains truly global styles that cannot be handled
+ * by Ant Design's theme system or Tailwind utilities.
+ *
+ * Categories:
+ * - Tailwind CSS v4 import
+ * - CSS Custom Properties (Design System Variables)
+ * - Base resets and accessibility
+ * - Mobile viewport fixes
+ * - Custom animations (landing page, scanner, etc.)
+ * - Utility classes
+ *
+ * NOTE: Ant Design component styles are handled in src/theme/
+ */
+
 @import "tailwindcss";
 
-html {
-  scroll-behavior: smooth;
-}
+/* =====================================
+   CSS CUSTOM PROPERTIES
+   ===================================== */
 
 :root {
+  /* Core colors - synced with theme system */
   --background: #ffffff;
-  --foreground: #171717;
-  /* Dynamic viewport height for mobile - prevents flickering */
+  --foreground: #0f172a;
+
+  /* Dynamic viewport height for mobile */
   --vh-full: 100vh;
 }
 
-/* Use dynamic viewport height on mobile devices */
+/* Dynamic viewport height on supporting browsers */
 @supports (height: 100dvh) {
   :root {
     --vh-full: 100dvh;
   }
 }
 
+/* Dark mode variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #f1f5f9;
+  }
+}
+
+/* Tailwind v4 theme integration */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -25,156 +55,44 @@ html {
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =====================================
+   BASE RESETS & ACCESSIBILITY
+   ===================================== */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  /* Prevent mobile viewport height issues */
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
   min-height: 100dvh;
-  /* Prevent horizontal scroll and layout shift on mobile */
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Fix for mobile viewport height - prevents flickering */
-html, body {
-  /* Use dynamic viewport height for mobile */
+/* Prevent layout shift during hydration */
+html,
+body {
   height: 100%;
   height: 100dvh;
 }
 
-/* Prevent layout shift during hydration */
 #__next {
   min-height: 100%;
   min-height: 100dvh;
 }
 
-/* Smooth transitions for layout changes */
+/* Remove tap highlight on mobile */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent text size adjustment on orientation change */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-/* Dashboard specific mobile fixes */
-@media (max-width: 768px) {
-  /* Hide sidebar on mobile by default */
-  .ant-layout-sider {
-    display: none !important;
-  }
-
-  /* Remove sidebar margin on mobile */
-  .ant-layout {
-    margin-left: 0 !important;
-  }
-
-  /* Prevent content overflow */
-  .ant-layout-content {
-    overflow-x: hidden;
-  }
-
-  /* Fix header on mobile */
-  .ant-layout-header {
-    padding: 0 12px !important;
-  }
-}
-
-/* Prevent flicker on page transitions */
-.ant-spin-container {
-  transition: opacity 0.15s ease-in-out;
-}
-
-/* Stabilize Ant Design components */
-.ant-table-wrapper,
-.ant-card,
-.ant-form {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* ===== MOBILE ANIMATION OPTIMIZATIONS ===== */
-@media (max-width: 768px) {
-  /* Disable or reduce animations on mobile for better performance */
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.1s !important;
-    animation-delay: 0s !important;
-    transition-duration: 0.1s !important;
-    transition-delay: 0s !important;
-  }
-
-  /* Disable transform animations that cause flickering */
-  .ant-btn:hover,
-  .ant-card:hover,
-  .ant-menu-item:hover {
-    transform: none !important;
-  }
-
-  /* Disable backdrop-filter on mobile (performance heavy) */
-  .ant-modal-mask,
-  .ant-drawer-mask {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  /* Optimize Ant Design animations */
-  .ant-motion-collapse,
-  .ant-collapse-motion,
-  .ant-menu-inline-collapsed-tooltip {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  /* Prevent menu animation flickering */
-  .ant-menu-submenu-popup {
-    animation: none !important;
-  }
-
-  /* Optimize modal and drawer animations */
-  .ant-modal,
-  .ant-drawer {
-    transition-duration: 0.15s !important;
-  }
-
-  /* Disable hover scale effects */
-  [style*="transform: scale"] {
-    transform: none !important;
-  }
-
-  /* Optimize spin animation */
-  .ant-spin-dot {
-    animation-duration: 0.8s !important;
-  }
-
-  /* Prevent layout shift on scroll */
-  .ant-layout {
-    will-change: auto;
-    contain: layout style;
-  }
-
-  /* Force GPU acceleration for smooth scrolling */
-  .ant-layout-content {
-    -webkit-overflow-scrolling: touch;
-    transform: translateZ(0);
-  }
-}
-
-/* Reduce motion for users who prefer it */
+/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -186,24 +104,31 @@ html {
   }
 }
 
-/* ===== HOVER ANIMATION FIXES ===== */
-/* Landing page buttons - disable scale on mobile */
+/* =====================================
+   MOBILE OPTIMIZATIONS
+   ===================================== */
+
 @media (max-width: 768px) {
-  .btn-neon-green.ant-btn:hover,
-  .btn-ghost-white.ant-btn:hover,
-  .btn-pricing-ghost.ant-btn:hover {
-    transform: none !important;
+  /* Reduce animation duration for better performance */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.1s !important;
+    transition-duration: 0.1s !important;
   }
 }
 
-/* ===== PREVENT CONTENT FLASH ===== */
-/* Hide content until React hydration is complete */
+/* =====================================
+   LOADING SKELETON ANIMATION
+   ===================================== */
+
 .loading-skeleton {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes skeleton-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -211,8 +136,11 @@ html {
   }
 }
 
-/* ===== PRO BARCODE SCANNER STYLES ===== */
-/* Scanner input flash animation on successful scan */
+/* =====================================
+   PRO BARCODE SCANNER STYLES
+   ===================================== */
+
+/* Scanner input flash on successful scan */
 .scan-flash {
   animation: scanFlash 0.2s ease-out;
 }
@@ -231,30 +159,10 @@ html {
   }
 }
 
-/* Scanner input styles for dark mode control bar */
-.scanner-input.ant-input-affix-wrapper {
-  background-color: rgb(30 41 59) !important;
-  border-color: rgb(71 85 105) !important;
-}
-
-.scanner-input.ant-input-affix-wrapper:focus,
-.scanner-input.ant-input-affix-wrapper-focused {
-  border-color: rgb(16 185 129) !important;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
-}
-
-.scanner-input .ant-input {
-  background-color: transparent !important;
-  color: white !important;
-}
-
-.scanner-input .ant-input::placeholder {
-  color: rgb(100 116 139) !important;
-}
-
-/* Scanner status indicator pulse animation */
+/* Scanner status indicator pulse */
 @keyframes scanner-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -268,243 +176,18 @@ html {
   animation: scanner-pulse 2s ease-in-out infinite;
 }
 
-/* Pro scanner card hover effects */
+/* Pro scanner card hover effect */
 .pro-scanner-card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
   transition: all 0.2s ease;
 }
 
-/* Modern Dropzone Styles */
-.dropzone-modern {
-  min-height: 200px;
-  position: relative;
-}
+/* =====================================
+   LANDING PAGE ANIMATIONS
+   ===================================== */
 
-.dropzone-modern .dz-message {
-  display: none;
-}
-
-.dropzone-modern.dz-drag-hover {
-  background-color: rgba(59, 130, 246, 0.05);
-}
-
-/* Landing Page Neon Green CTA Button */
-.btn-neon-green.ant-btn {
-  background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%) !important;
-  color: #0a1f2e !important;
-  font-weight: 700 !important;
-  border: none !important;
-}
-
-.btn-neon-green.ant-btn:hover {
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6) !important;
-  transform: scale(1.05);
-}
-
-/* Landing Page Ghost Button */
-.btn-ghost-white.ant-btn {
-  background: transparent !important;
-  color: white !important;
-  border: 2px solid rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(4px);
-}
-
-.btn-ghost-white.ant-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: white !important;
-  color: white !important;
-  transform: scale(1.05);
-}
-
-/* Pricing Section Buttons */
-.btn-pricing-ghost.ant-btn {
-  background: transparent !important;
-  border: 2px solid rgb(209, 213, 219) !important;
-  color: rgb(17, 24, 39) !important;
-}
-
-.btn-pricing-ghost.ant-btn:hover {
-  border-color: rgb(17, 24, 39) !important;
-  color: rgb(17, 24, 39) !important;
-  transform: scale(1.05);
-}
-
-/* Scrollbar Hide Utility */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
-}
-
-/* ===== USER MODAL CLEAN/DARK CORPORATE THEME ===== */
-/* Switch - Black when active */
-.user-modal-switch.ant-switch-checked {
-  background: #0f172a !important;
-}
-
-.user-modal-switch.ant-switch-checked:hover {
-  background: #1e293b !important;
-}
-
-/* Input Focus States - Slate ring instead of blue */
-.ant-drawer .ant-input:focus,
-.ant-drawer .ant-input-focused,
-.ant-drawer .ant-input:hover,
-.ant-drawer .ant-input-affix-wrapper:focus,
-.ant-drawer .ant-input-affix-wrapper-focused,
-.ant-drawer .ant-input-affix-wrapper:hover,
-.ant-drawer .ant-select-focused .ant-select-selector,
-.ant-drawer .ant-select:hover .ant-select-selector {
-  border-color: #0f172a !important;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1) !important;
-}
-
-.ant-drawer .ant-input-affix-wrapper:focus-within {
-  border-color: #0f172a !important;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1) !important;
-}
-
-/* Password Input Focus */
-.ant-drawer .ant-input-password:focus-within {
-  border-color: #0f172a !important;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1) !important;
-}
-
-/* ===== DASHBOARD SIDEBAR MENU STYLING ===== */
-/* Override Ant Design Menu active state from blue to slate/black */
-.dashboard-sider .ant-menu-item-selected {
-  background-color: #f1f5f9 !important; /* bg-slate-100 */
-  color: #0f172a !important; /* text-slate-900 */
-  border-left: 4px solid #0f172a !important;
-  margin-left: -4px;
-  padding-left: 28px !important;
-}
-
-.dashboard-sider .ant-menu-item-selected .anticon {
-  color: #0f172a !important;
-}
-
-.dashboard-sider .ant-menu-item-selected::after {
-  border-right: none !important;
-}
-
-/* Submenu active states */
-.dashboard-sider .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: #0f172a !important;
-}
-
-.dashboard-sider .ant-menu-submenu-selected > .ant-menu-submenu-title .anticon {
-  color: #0f172a !important;
-}
-
-/* Hover state */
-.dashboard-sider .ant-menu-item:hover:not(.ant-menu-item-selected) {
-  background-color: #f8fafc !important; /* bg-slate-50 */
-  color: #334155 !important; /* text-slate-700 */
-}
-
-.dashboard-sider .ant-menu-submenu-title:hover {
-  background-color: #f8fafc !important;
-  color: #334155 !important;
-}
-
-/* ===== CRM ENTERPRISE TABLE STYLING ===== */
-/* Monochrome Enterprise Design - Clean Black/White/Gray */
-.crm-enterprise-table .ant-table-thead > tr > th {
-  text-transform: uppercase !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  color: #64748b !important; /* text-slate-500 */
-  letter-spacing: 0.05em !important;
-  background: #f8fafc !important; /* bg-slate-50 */
-  border-bottom: 1px solid #e2e8f0 !important; /* border-slate-200 */
-  padding: 12px 16px !important;
-}
-
-.crm-enterprise-table .ant-table-tbody > tr > td {
-  border-bottom: 1px solid #f1f5f9 !important; /* border-slate-100 */
-  padding: 14px 16px !important;
-}
-
-.crm-enterprise-table .ant-table-tbody > tr:hover > td {
-  background: #f8fafc !important; /* bg-slate-50 */
-}
-
-/* Action buttons in table - monochrome */
-.crm-enterprise-table .ant-btn-text {
-  color: #64748b !important; /* text-slate-500 */
-}
-
-.crm-enterprise-table .ant-btn-text:hover {
-  color: #0f172a !important; /* text-slate-900 */
-  background: #f1f5f9 !important; /* bg-slate-100 */
-}
-
-/* ===== MOBILE RESPONSIVE LAYOUT ===== */
-/* Hide desktop sidebar on mobile */
-@media (max-width: 1023px) {
-  .dashboard-sider {
-    display: none !important;
-  }
-}
-
-/* Mobile-friendly Ant Design Drawer */
-.ant-drawer-content-wrapper {
-  max-width: 85vw !important;
-}
-
-/* Mobile menu improvements */
-@media (max-width: 640px) {
-  .ant-menu-inline .ant-menu-item {
-    padding-left: 16px !important;
-    height: 44px !important;
-    line-height: 44px !important;
-  }
-
-  .ant-menu-inline .ant-menu-submenu-title {
-    padding-left: 16px !important;
-    height: 44px !important;
-    line-height: 44px !important;
-  }
-
-  /* Larger touch targets for mobile */
-  .ant-btn {
-    min-height: 36px;
-  }
-
-  /* Better mobile table scrolling */
-  .ant-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .ant-table {
-    min-width: 600px;
-  }
-}
-
-/* Responsive form layouts */
-@media (max-width: 768px) {
-  .ant-form-item {
-    margin-bottom: 16px;
-  }
-
-  .ant-modal {
-    max-width: calc(100vw - 32px) !important;
-    margin: 16px auto !important;
-  }
-
-  .ant-modal-content {
-    padding: 16px !important;
-  }
-}
-
-/* ===== LANDING PAGE ANIMATIONS ===== */
-/* Infinite horizontal scroll animation */
+/* Infinite horizontal scroll */
 @keyframes scroll-x {
   0% {
     transform: translateX(0);
@@ -522,7 +205,7 @@ html {
   animation-play-state: paused;
 }
 
-/* Testimonial marquee animation */
+/* Testimonial marquee */
 @keyframes marquee {
   0% {
     transform: translateX(0%);
@@ -538,7 +221,8 @@ html {
 
 /* Gradient text animation */
 @keyframes gradient-shift {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -553,7 +237,8 @@ html {
 
 /* Subtle float animation for mockups */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -567,7 +252,8 @@ html {
 
 /* Pulse glow effect */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(1);
   }
@@ -579,4 +265,98 @@ html {
 
 .animate-pulse-glow {
   animation: pulse-glow 4s ease-in-out infinite;
+}
+
+/* =====================================
+   LANDING PAGE BUTTON STYLES
+   ===================================== */
+
+/* Neon Green CTA Button */
+.btn-neon-green {
+  background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%);
+  color: #0a1f2e;
+  font-weight: 700;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-neon-green:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+  transform: scale(1.05);
+}
+
+/* Ghost White Button */
+.btn-ghost-white {
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.btn-ghost-white:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+  transform: scale(1.05);
+}
+
+/* Pricing Ghost Button */
+.btn-pricing-ghost {
+  background: transparent;
+  border: 2px solid rgb(209, 213, 219);
+  color: rgb(17, 24, 39);
+  transition: all 0.2s ease;
+}
+
+.btn-pricing-ghost:hover {
+  border-color: rgb(17, 24, 39);
+  transform: scale(1.05);
+}
+
+/* Disable transform on mobile for landing buttons */
+@media (max-width: 768px) {
+  .btn-neon-green:hover,
+  .btn-ghost-white:hover,
+  .btn-pricing-ghost:hover {
+    transform: none;
+  }
+}
+
+/* =====================================
+   DROPZONE STYLES
+   ===================================== */
+
+.dropzone-modern {
+  min-height: 200px;
+  position: relative;
+}
+
+.dropzone-modern .dz-message {
+  display: none;
+}
+
+.dropzone-modern.dz-drag-hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* =====================================
+   UTILITY CLASSES
+   ===================================== */
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
