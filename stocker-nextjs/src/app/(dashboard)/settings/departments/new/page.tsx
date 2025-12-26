@@ -11,12 +11,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, Select, Spin } from 'antd';
+import { Form, Input, Select } from 'antd';
 import {
-  ArrowLeftOutlined,
-  ApartmentOutlined,
-  CheckOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingOffice2Icon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import {
   createDepartment,
   getDepartments,
@@ -83,7 +83,7 @@ export default function NewDepartmentPage() {
               onClick={() => router.back()}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Yeni Departman</h1>
@@ -183,7 +183,7 @@ export default function NewDepartmentPage() {
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: '#8b5cf615' }}
                     >
-                      <ApartmentOutlined style={{ color: '#8b5cf6' }} />
+                      <BuildingOffice2Icon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
                     </div>
                     <div>
                       <div className="text-2xl font-semibold text-slate-900">{departments.length}</div>
@@ -224,7 +224,7 @@ export default function NewDepartmentPage() {
             <div className="text-sm text-slate-500">
               {autoCode ? (
                 <span className="flex items-center gap-2">
-                  <CheckOutlined className="text-emerald-500" />
+                  <CheckIcon className="w-4 h-4 text-emerald-500" />
                   Kod otomatik oluşturulacak: <span className="font-medium text-slate-700">{autoCode}</span>
                 </span>
               ) : (

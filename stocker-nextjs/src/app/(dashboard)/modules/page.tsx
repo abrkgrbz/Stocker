@@ -3,21 +3,20 @@
 import React from 'react';
 import { Card, Row, Col, Typography, Tag, Switch, Button, Space, Tooltip, Statistic, Progress } from 'antd';
 import {
-  TeamOutlined,
-  ShoppingCartOutlined,
-  DollarCircleOutlined,
-  BarChartOutlined,
-  SettingOutlined,
-  AppstoreAddOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  RocketOutlined,
-  SafetyOutlined,
-  ThunderboltOutlined,
-  CrownOutlined,
-  StarOutlined,
-  ReconciliationOutlined,
-} from '@ant-design/icons';
+  UsersIcon,
+  ShoppingCartIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  Squares2X2Icon,
+  CheckCircleIcon,
+  ClockIcon,
+  RocketLaunchIcon,
+  ShieldCheckIcon,
+  BoltIcon,
+  StarIcon,
+  ClipboardDocumentListIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
 const { Title, Text, Paragraph } = Typography;
@@ -28,7 +27,7 @@ const modules = [
     id: 'crm',
     name: 'CRM',
     description: 'Müşteri İlişkileri Yönetimi',
-    icon: <TeamOutlined style={{ fontSize: 48, color: '#1890ff' }} />,
+    icon: <UsersIcon className="w-12 h-12" style={{ color: '#1890ff' }} />,
     color: '#1890ff',
     enabled: true,
     features: [
@@ -51,7 +50,7 @@ const modules = [
     id: 'inventory',
     name: 'Stok Yönetimi',
     description: 'Envanter ve Depo Yönetimi',
-    icon: <ShoppingCartOutlined style={{ fontSize: 48, color: '#52c41a' }} />,
+    icon: <ShoppingCartIcon className="w-12 h-12" style={{ color: '#52c41a' }} />,
     color: '#52c41a',
     enabled: false,
     features: [
@@ -73,7 +72,7 @@ const modules = [
     id: 'finance',
     name: 'Finans',
     description: 'Muhasebe ve Mali İşlemler',
-    icon: <DollarCircleOutlined style={{ fontSize: 48, color: '#faad14' }} />,
+    icon: <CurrencyDollarIcon className="w-12 h-12" style={{ color: '#faad14' }} />,
     color: '#faad14',
     enabled: false,
     features: [
@@ -95,7 +94,7 @@ const modules = [
     id: 'analytics',
     name: 'Raporlama',
     description: 'İş Zekası ve Analitik',
-    icon: <BarChartOutlined style={{ fontSize: 48, color: '#722ed1' }} />,
+    icon: <ChartBarIcon className="w-12 h-12" style={{ color: '#722ed1' }} />,
     color: '#722ed1',
     enabled: false,
     features: [
@@ -117,7 +116,7 @@ const modules = [
     id: 'hrm',
     name: 'İnsan Kaynakları',
     description: 'Personel ve Bordro Yönetimi',
-    icon: <TeamOutlined style={{ fontSize: 48, color: '#eb2f96' }} />,
+    icon: <UsersIcon className="w-12 h-12" style={{ color: '#eb2f96' }} />,
     color: '#eb2f96',
     enabled: false,
     features: [
@@ -139,7 +138,7 @@ const modules = [
     id: 'purchase',
     name: 'Satın Alma',
     description: 'Tedarik ve Satın Alma Yönetimi',
-    icon: <ReconciliationOutlined style={{ fontSize: 48, color: '#8b5cf6' }} />,
+    icon: <ClipboardDocumentListIcon className="w-12 h-12" style={{ color: '#8b5cf6' }} />,
     color: '#8b5cf6',
     enabled: false,
     features: [
@@ -161,7 +160,7 @@ const modules = [
     id: 'production',
     name: 'Üretim',
     description: 'Üretim Planlama ve Takip',
-    icon: <SettingOutlined style={{ fontSize: 48, color: '#13c2c2' }} />,
+    icon: <Cog6ToothIcon className="w-12 h-12" style={{ color: '#13c2c2' }} />,
     color: '#13c2c2',
     enabled: false,
     features: [
@@ -184,19 +183,19 @@ const modules = [
 const tierConfig = {
   standard: {
     name: 'Standard',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
     color: '#52c41a',
     badge: 'success',
   },
   premium: {
     name: 'Premium',
-    icon: <StarOutlined />,
+    icon: <StarIcon className="w-4 h-4" />,
     color: '#faad14',
     badge: 'warning',
   },
   enterprise: {
     name: 'Enterprise',
-    icon: <CrownOutlined />,
+    icon: <StarIcon className="w-4 h-4" />,
     color: '#722ed1',
     badge: 'purple',
   },
@@ -232,7 +231,7 @@ export default function ModulesPage() {
           <Button
             type="primary"
             size="large"
-            icon={<AppstoreAddOutlined />}
+            icon={<Squares2X2Icon className="w-5 h-5" />}
           >
             Tüm Modülleri Keşfet
           </Button>
@@ -246,7 +245,7 @@ export default function ModulesPage() {
                 title="Aktif Modüller"
                 value={activeModules}
                 suffix={`/ ${totalModules}`}
-                prefix={<RocketOutlined />}
+                prefix={<RocketLaunchIcon className="w-5 h-5" />}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>
@@ -257,7 +256,7 @@ export default function ModulesPage() {
                 title="Aktivasyon Oranı"
                 value={activationRate}
                 suffix="%"
-                prefix={<ThunderboltOutlined />}
+                prefix={<BoltIcon className="w-5 h-5" />}
                 valueStyle={{ color: '#52c41a' }}
               />
               <Progress
@@ -273,7 +272,7 @@ export default function ModulesPage() {
               <Statistic
                 title="Toplam Kullanıcı"
                 value={modules.reduce((sum, m) => sum + m.stats.users, 0)}
-                prefix={<TeamOutlined />}
+                prefix={<UsersIcon className="w-5 h-5" />}
                 valueStyle={{ color: '#722ed1' }}
               />
             </Card>
@@ -362,7 +361,7 @@ export default function ModulesPage() {
                     <div className="space-y-1">
                       {module.features.map((feature, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm">
-                          <CheckCircleOutlined style={{ color: module.color }} />
+                          <CheckCircleIcon className="w-4 h-4" style={{ color: module.color }} />
                           <Text className="text-gray-600">{feature}</Text>
                         </div>
                       ))}
@@ -380,7 +379,7 @@ export default function ModulesPage() {
                         >
                           Modülü Aç
                         </Button>
-                        <Button icon={<SettingOutlined />}>
+                        <Button icon={<Cog6ToothIcon className="w-4 h-4" />}>
                           Ayarlar
                         </Button>
                       </>
@@ -388,7 +387,7 @@ export default function ModulesPage() {
                       <Button
                         type="dashed"
                         block
-                        icon={<RocketOutlined />}
+                        icon={<RocketLaunchIcon className="w-4 h-4" />}
                         onClick={() => handleToggleModule(module.id, true)}
                       >
                         Aktifleştir

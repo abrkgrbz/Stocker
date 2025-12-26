@@ -7,21 +7,22 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag } from 'antd';
+import { Empty, Tag } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ShareAltOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  GiftOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  ShareIcon,
+  CalendarIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  CurrencyDollarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  GiftIcon,
+} from '@heroicons/react/24/outline';
 import { useReferral } from '@/lib/api/hooks/useCRM';
 import { ReferralStatus, ReferralType, ReferralRewardType } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -67,7 +68,7 @@ export default function ReferralDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -100,7 +101,7 @@ export default function ReferralDetailPage() {
               onClick={() => router.push('/crm/referrals')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -109,8 +110,8 @@ export default function ReferralDetailPage() {
                   referral.status === ReferralStatus.Converted ? 'bg-emerald-100' : 'bg-orange-100'
                 }`}
               >
-                <ShareAltOutlined
-                  className={`text-lg ${
+                <ShareIcon
+                  className={`w-5 h-5 ${
                     referral.status === ReferralStatus.Converted ? 'text-emerald-600' : 'text-orange-600'
                   }`}
                 />
@@ -130,7 +131,7 @@ export default function ReferralDetailPage() {
             onClick={() => router.push(`/crm/referrals/${referral.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -143,7 +144,7 @@ export default function ReferralDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <UserOutlined className="text-blue-500" />
+                <UserIcon className="w-4 h-4 text-blue-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Referans Veren
                 </p>
@@ -151,7 +152,7 @@ export default function ReferralDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <UserOutlined className="text-blue-600 text-xl" />
+                    <UserIcon className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{referral.referrerName}</p>
@@ -166,7 +167,7 @@ export default function ReferralDetailPage() {
                         href={`mailto:${referral.referrerEmail}`}
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        <MailOutlined className="text-xs" />
+                        <EnvelopeIcon className="w-3 h-3" />
                         {referral.referrerEmail}
                       </a>
                     </div>
@@ -178,7 +179,7 @@ export default function ReferralDetailPage() {
                         href={`tel:${referral.referrerPhone}`}
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        <PhoneOutlined className="text-xs" />
+                        <PhoneIcon className="w-3 h-3" />
                         {referral.referrerPhone}
                       </a>
                     </div>
@@ -192,7 +193,7 @@ export default function ReferralDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <UserOutlined className="text-emerald-500" />
+                <UserIcon className="w-4 h-4 text-emerald-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Referans Edilen
                 </p>
@@ -200,7 +201,7 @@ export default function ReferralDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-lg">
                   <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <UserOutlined className="text-emerald-600 text-xl" />
+                    <UserIcon className="w-6 h-6 text-emerald-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{referral.referredName}</p>
@@ -217,7 +218,7 @@ export default function ReferralDetailPage() {
                         href={`mailto:${referral.referredEmail}`}
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        <MailOutlined className="text-xs" />
+                        <EnvelopeIcon className="w-3 h-3" />
                         {referral.referredEmail}
                       </a>
                     </div>
@@ -229,7 +230,7 @@ export default function ReferralDetailPage() {
                         href={`tel:${referral.referredPhone}`}
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        <PhoneOutlined className="text-xs" />
+                        <PhoneIcon className="w-3 h-3" />
                         {referral.referredPhone}
                       </a>
                     </div>
@@ -243,7 +244,7 @@ export default function ReferralDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <CalendarOutlined className="text-slate-400" />
+                <CalendarIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Tarihler & Durum
                 </p>
@@ -295,7 +296,7 @@ export default function ReferralDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <GiftOutlined className="text-amber-500" />
+                <GiftIcon className="w-4 h-4 text-amber-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Ödüller
                 </p>
@@ -313,7 +314,7 @@ export default function ReferralDetailPage() {
                   <p className="text-xs text-slate-400 mb-1">Ödül Durumu</p>
                   <Tag
                     color={referral.rewardPaid ? 'success' : 'warning'}
-                    icon={referral.rewardPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={referral.rewardPaid ? <CheckCircleIcon className="w-3 h-3" /> : <ClockIcon className="w-3 h-3" />}
                   >
                     {referral.rewardPaid ? 'Ödendi' : 'Bekliyor'}
                   </Tag>
@@ -351,7 +352,7 @@ export default function ReferralDetailPage() {
             <div className="col-span-12 lg:col-span-6">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <DollarOutlined className="text-emerald-500" />
+                  <CurrencyDollarIcon className="w-4 h-4 text-emerald-500" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                     Dönüşüm Sonuçları
                   </p>

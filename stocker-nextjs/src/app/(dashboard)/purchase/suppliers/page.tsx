@@ -2,25 +2,26 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Input, Tag, Dropdown, Spin, Select } from 'antd';
+import { Table, Input, Tag, Dropdown, Select } from 'antd';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  ShopOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  FileExcelOutlined,
-  StarOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  TableCellsIcon,
+  StarIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSuppliers,
   useDeleteSupplier,
@@ -245,7 +246,7 @@ export default function SuppliersPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: statusConfig[record.status as SupplierStatus]?.bgColor || '#64748b15' }}
           >
-            <ShopOutlined style={{ color: statusConfig[record.status as SupplierStatus]?.color || '#64748b' }} />
+            <BuildingStorefrontIcon className="w-5 h-5" style={{ color: statusConfig[record.status as SupplierStatus]?.color || '#64748b' }} />
           </div>
           <div>
             <div
@@ -276,13 +277,13 @@ export default function SuppliersPage() {
         <div className="space-y-1">
           {record.email && (
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <MailOutlined className="text-slate-400" />
+              <EnvelopeIcon className="w-3 h-3 text-slate-400" />
               <span className="truncate max-w-[150px]">{record.email}</span>
             </div>
           )}
           {record.phone && (
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <PhoneOutlined className="text-slate-400" />
+              <PhoneIcon className="w-3 h-3 text-slate-400" />
               <span>{record.phone}</span>
             </div>
           )}
@@ -316,7 +317,7 @@ export default function SuppliersPage() {
       align: 'center',
       render: (rating) => (
         <div className="flex items-center justify-center gap-1">
-          <StarOutlined className="text-amber-400 text-xs" />
+          <StarIcon className="w-3 h-3 text-amber-400" />
           <span className="font-medium text-slate-700">{rating?.toFixed(1) || '-'}</span>
         </div>
       ),
@@ -338,19 +339,19 @@ export default function SuppliersPage() {
       width: 50,
       render: (_, record) => {
         const menuItems: MenuProps['items'] = [
-          { key: 'view', icon: <EyeOutlined />, label: 'Görüntüle', onClick: () => router.push(`/purchase/suppliers/${record.id}`) },
-          { key: 'edit', icon: <EditOutlined />, label: 'Düzenle', onClick: () => router.push(`/purchase/suppliers/${record.id}/edit`) },
+          { key: 'view', icon: <EyeIcon className="w-4 h-4" />, label: 'Görüntüle', onClick: () => router.push(`/purchase/suppliers/${record.id}`) },
+          { key: 'edit', icon: <PencilIcon className="w-4 h-4" />, label: 'Düzenle', onClick: () => router.push(`/purchase/suppliers/${record.id}/edit`) },
           { type: 'divider' },
-          ...(record.status !== 'Active' ? [{ key: 'activate', icon: <CheckCircleOutlined />, label: 'Aktifleştir', onClick: () => handleStatusChange(record, 'activate') }] : []),
-          ...(record.status === 'Active' ? [{ key: 'deactivate', icon: <StopOutlined />, label: 'Devre Dışı Bırak', onClick: () => handleStatusChange(record, 'deactivate') }] : []),
-          ...(record.status !== 'Blacklisted' ? [{ key: 'block', icon: <StopOutlined />, label: 'Blokla', danger: true, onClick: () => handleStatusChange(record, 'block') }] : []),
+          ...(record.status !== 'Active' ? [{ key: 'activate', icon: <CheckCircleIcon className="w-4 h-4" />, label: 'Aktifleştir', onClick: () => handleStatusChange(record, 'activate') }] : []),
+          ...(record.status === 'Active' ? [{ key: 'deactivate', icon: <NoSymbolIcon className="w-4 h-4" />, label: 'Devre Dışı Bırak', onClick: () => handleStatusChange(record, 'deactivate') }] : []),
+          ...(record.status !== 'Blacklisted' ? [{ key: 'block', icon: <NoSymbolIcon className="w-4 h-4" />, label: 'Blokla', danger: true, onClick: () => handleStatusChange(record, 'block') }] : []),
           { type: 'divider' },
-          { key: 'delete', icon: <DeleteOutlined />, label: 'Sil', danger: true, onClick: () => handleDelete(record) },
+          { key: 'delete', icon: <TrashIcon className="w-4 h-4" />, label: 'Sil', danger: true, onClick: () => handleDelete(record) },
         ];
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
             <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" onClick={(e) => e.stopPropagation()}>
-              <MoreOutlined className="text-slate-400" />
+              <EllipsisVerticalIcon className="w-4 h-4 text-slate-400" />
             </button>
           </Dropdown>
         );
@@ -362,7 +363,7 @@ export default function SuppliersPage() {
     return (
       <PageContainer>
         <div className="flex items-center justify-center h-96">
-          <Spin size="large" />
+          <Spinner size="lg" />
         </div>
       </PageContainer>
     );
@@ -373,10 +374,10 @@ export default function SuppliersPage() {
       <ListPageHeader
         title="Tedarikçiler"
         description="Tedarikçi firmalarınızı yönetin"
-        icon={<ShopOutlined className="text-purple-600" />}
+        icon={<BuildingStorefrontIcon className="w-5 h-5 text-purple-600" />}
         primaryAction={{
           label: 'Yeni Tedarikçi',
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
           onClick: () => router.push('/purchase/suppliers/new'),
         }}
         secondaryActions={
@@ -384,7 +385,7 @@ export default function SuppliersPage() {
             onClick={handleExportExcel}
             className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
           >
-            <FileExcelOutlined />
+            <TableCellsIcon className="w-4 h-4" />
             Excel İndir
           </button>
         }
@@ -395,7 +396,7 @@ export default function SuppliersPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <ShopOutlined className="text-xl" style={{ color: '#6366f1' }} />
+              <BuildingStorefrontIcon className="w-6 h-6" style={{ color: '#6366f1' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
@@ -406,7 +407,7 @@ export default function SuppliersPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined className="text-xl" style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
@@ -417,7 +418,7 @@ export default function SuppliersPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#64748b15' }}>
-              <StopOutlined className="text-xl" style={{ color: '#64748b' }} />
+              <NoSymbolIcon className="w-6 h-6" style={{ color: '#64748b' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.inactive}</div>
@@ -428,7 +429,7 @@ export default function SuppliersPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <DollarOutlined className="text-xl" style={{ color: '#ef4444' }} />
+              <CurrencyDollarIcon className="w-6 h-6" style={{ color: '#ef4444' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.blocked}</div>
@@ -444,7 +445,7 @@ export default function SuppliersPage() {
           <div className="flex flex-wrap items-center gap-4">
             <Input
               placeholder="Tedarikçi ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="w-72"
@@ -494,7 +495,7 @@ export default function SuppliersPage() {
                   onClick={handleBulkActivate}
                   disabled={bulkLoading}
                 >
-                  <CheckCircleOutlined className="text-xs" />
+                  <CheckCircleIcon className="w-3 h-3" />
                   Aktifleştir
                 </button>
                 <button
@@ -502,7 +503,7 @@ export default function SuppliersPage() {
                   onClick={handleBulkDeactivate}
                   disabled={bulkLoading}
                 >
-                  <StopOutlined className="text-xs" />
+                  <NoSymbolIcon className="w-3 h-3" />
                   Pasifleştir
                 </button>
                 <button
@@ -510,7 +511,7 @@ export default function SuppliersPage() {
                   onClick={handleBulkBlock}
                   disabled={bulkLoading}
                 >
-                  <StopOutlined className="text-xs" />
+                  <NoSymbolIcon className="w-3 h-3" />
                   Blokla
                 </button>
                 <button
@@ -518,7 +519,7 @@ export default function SuppliersPage() {
                   onClick={handleBulkDelete}
                   disabled={bulkLoading}
                 >
-                  <DeleteOutlined className="text-xs" />
+                  <TrashIcon className="w-3 h-3" />
                   Sil
                 </button>
                 <button

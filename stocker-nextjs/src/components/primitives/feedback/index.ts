@@ -14,3 +14,8 @@ export {
   type LoadingScreenProps,
   type LoadingStateProps,
 } from './Spinner';
+
+export {
+  Alert,
+  type AlertProps,
+} from './Alert';

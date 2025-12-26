@@ -14,7 +14,7 @@ export default function PageLoader({
   fullScreen = true
 }: PageLoaderProps) {
   const containerClass = fullScreen
-    ? 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900'
+    ? 'min-h-screen flex items-center justify-center bg-gray-50'
     : 'flex items-center justify-center p-8';
 
   return (

@@ -16,23 +16,22 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  WalletOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  PlayCircleOutlined,
-  SyncOutlined,
-  BankOutlined,
-  CreditCardOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  WalletIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+  PlayCircleIcon,
+  BuildingLibraryIcon,
+  CreditCardIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
@@ -82,12 +81,12 @@ const methodLabels: Record<PaymentMethod, string> = {
 };
 
 const methodIcons: Record<PaymentMethod, React.ReactNode> = {
-  Cash: <DollarOutlined />,
-  BankTransfer: <BankOutlined />,
-  CreditCard: <CreditCardOutlined />,
-  Check: <WalletOutlined />,
-  DirectDebit: <SyncOutlined />,
-  Other: <WalletOutlined />,
+  Cash: <CurrencyDollarIcon className="w-4 h-4" />,
+  BankTransfer: <BuildingLibraryIcon className="w-4 h-4" />,
+  CreditCard: <CreditCardIcon className="w-4 h-4" />,
+  Check: <WalletIcon className="w-4 h-4" />,
+  DirectDebit: <ArrowPathIcon className="w-4 h-4" />,
+  Other: <WalletIcon className="w-4 h-4" />,
 };
 
 export default function SupplierPaymentsPage() {
@@ -234,46 +233,46 @@ export default function SupplierPaymentsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/purchase/payments/${record.id}`),
               },
               record.status === 'Draft' && {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/purchase/payments/${record.id}/edit`),
               },
               { type: 'divider' },
               record.status === 'PendingApproval' && {
                 key: 'approve',
-                icon: <CheckCircleOutlined />,
+                icon: <CheckCircleIcon className="w-4 h-4" />,
                 label: 'Onayla',
                 onClick: () => approvePayment.mutate({ id: record.id }),
               },
               record.status === 'PendingApproval' && {
                 key: 'reject',
-                icon: <CloseCircleOutlined />,
+                icon: <XCircleIcon className="w-4 h-4" />,
                 label: 'Reddet',
                 danger: true,
                 onClick: () => handleReject(record),
               },
               record.status === 'Approved' && {
                 key: 'process',
-                icon: <PlayCircleOutlined />,
+                icon: <PlayCircleIcon className="w-4 h-4" />,
                 label: 'İşle',
                 onClick: () => processPayment.mutate(record.id),
               },
               record.status === 'Completed' && !record.isReconciled && {
                 key: 'reconcile',
-                icon: <SyncOutlined />,
+                icon: <ArrowPathIcon className="w-4 h-4" />,
                 label: 'Mutabakat Yap',
                 onClick: () => reconcilePayment.mutate({ id: record.id, bankTransactionId: `BANK-${record.paymentNumber}` }),
               },
               { type: 'divider' },
               record.status === 'Draft' && {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -282,7 +281,7 @@ export default function SupplierPaymentsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -294,14 +293,14 @@ export default function SupplierPaymentsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Title level={3} className="!mb-1 flex items-center gap-2">
-            <WalletOutlined className="text-green-500" />
+            <WalletIcon className="w-5 h-5 text-green-500" />
             Tedarikçi Ödemeleri
           </Title>
           <Text type="secondary">Tedarikçilere yapılan ödemeleri yönetin</Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/payments/new')}
         >
@@ -314,7 +313,7 @@ export default function SupplierPaymentsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Belge ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}
@@ -355,10 +354,10 @@ export default function SupplierPaymentsPage() {
           />
           <div className="flex-1" />
           <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
+            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
           </Tooltip>
           <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
+            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
           </Tooltip>
         </div>
       </Card>

@@ -9,7 +9,6 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
@@ -17,16 +16,17 @@ import {
   Empty,
   Modal,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ApartmentOutlined,
-  TeamOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  BuildingOfficeIcon,
+  UsersIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import {
   useDepartment,
   useEmployees,
@@ -88,7 +88,7 @@ export default function DepartmentDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -136,7 +136,7 @@ export default function DepartmentDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/departments')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/departments')}>
             Geri
           </Button>
           <div>
@@ -153,15 +153,15 @@ export default function DepartmentDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={department.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={department.isActive ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {department.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/departments/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/departments/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -176,7 +176,7 @@ export default function DepartmentDetailPage() {
                 <Statistic
                   title="Çalışan Sayısı"
                   value={department.employeeCount || 0}
-                  prefix={<TeamOutlined />}
+                  prefix={<UsersIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#7c3aed' }}
                 />
               </Card>
@@ -186,7 +186,7 @@ export default function DepartmentDetailPage() {
                 <Statistic
                   title="Aktif Çalışan"
                   value={departmentEmployees.filter((e) => e.status === EmployeeStatus.Active).length}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircleIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#52c41a' }}
                 />
               </Card>
@@ -219,7 +219,7 @@ export default function DepartmentDetailPage() {
           <Card
             title={
               <Space>
-                <UserOutlined />
+                <UserIcon className="w-5 h-5" />
                 Departman Çalışanları
               </Space>
             }

@@ -2,8 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, CalendarOutlined, SearchOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  CalendarIcon,
+  MagnifyingGlassIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  UsersIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -15,7 +24,8 @@ import { RowActions, createAction } from '@/components/ui/RowActions';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingStatus, MeetingType, MeetingPriority } from '@/lib/api/services/crm.types';
 import { useMeetings, useDeleteMeeting } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -87,7 +97,7 @@ function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
             )}
           </div>
           <div className="p-2 bg-slate-50 rounded-lg">
-            <TeamOutlined className="text-xl text-slate-600" />
+            <UsersIcon className="w-5 h-5 text-slate-600" />
           </div>
         </div>
       </Card>
@@ -103,7 +113,7 @@ function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
             )}
           </div>
           <div className="p-2 bg-blue-50 rounded-lg">
-            <ClockCircleOutlined className="text-xl text-blue-600" />
+            <ClockIcon className="w-5 h-5 text-blue-600" />
           </div>
         </div>
       </Card>
@@ -119,7 +129,7 @@ function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
             )}
           </div>
           <div className="p-2 bg-green-50 rounded-lg">
-            <CheckCircleOutlined className="text-xl text-green-600" />
+            <CheckCircleIcon className="w-5 h-5 text-green-600" />
           </div>
         </div>
       </Card>
@@ -135,7 +145,7 @@ function MeetingsStats({ meetings, loading }: MeetingsStatsProps) {
             )}
           </div>
           <div className="p-2 bg-purple-50 rounded-lg">
-            <CalendarOutlined className="text-xl text-purple-600" />
+            <CalendarIcon className="w-5 h-5 text-purple-600" />
           </div>
         </div>
       </Card>
@@ -362,7 +372,7 @@ export default function MeetingsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<CalendarOutlined />}
+        icon={<CalendarIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Toplantılar"
         description="Toplantıları planlayın ve takip edin"
@@ -370,7 +380,7 @@ export default function MeetingsPage() {
         primaryAction={{
           label: 'Yeni Toplantı',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -378,7 +388,7 @@ export default function MeetingsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -388,7 +398,7 @@ export default function MeetingsPage() {
         <div className="flex items-center gap-4 flex-wrap">
           <Input
             placeholder="Toplantı ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-64"
@@ -423,7 +433,7 @@ export default function MeetingsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

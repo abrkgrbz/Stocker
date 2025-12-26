@@ -7,8 +7,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Progress, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, AimOutlined, SearchOutlined, EditOutlined, TrophyOutlined, WarningOutlined, GlobalOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select, Progress } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  BuildingOffice2Icon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrophyIcon,
+  ExclamationTriangleIcon,
+  GlobeAltIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -23,7 +33,8 @@ import {
   ListPageHeader,
   Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+} from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 const threatLevelLabels: Record<ThreatLevel, { label: string; color: string }> = {
   [ThreatLevel.VeryLow]: { label: 'Çok Düşük', color: 'green' },
@@ -56,7 +67,7 @@ function CompetitorsStats({
       label: 'Toplam Rakip',
       value: loading ? '-' : totalCompetitors,
       subtext: `${activeCompetitors} aktif`,
-      icon: <AimOutlined className="text-xl" />,
+      icon: <BuildingOffice2Icon className="w-5 h-5" />,
       color: 'text-slate-600',
       bgColor: 'bg-slate-50',
     },
@@ -64,7 +75,7 @@ function CompetitorsStats({
       label: 'Yüksek Tehdit',
       value: loading ? '-' : highThreat,
       subtext: 'rakip',
-      icon: <WarningOutlined className="text-xl" />,
+      icon: <ExclamationTriangleIcon className="w-5 h-5" />,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
     },
@@ -72,7 +83,7 @@ function CompetitorsStats({
       label: 'Kazanma Oranı',
       value: loading ? '-' : `%${overallWinRate}`,
       subtext: `${totalWins}/${totalEncounters} karşılaşma`,
-      icon: <TrophyOutlined className="text-xl" />,
+      icon: <TrophyIcon className="w-5 h-5" />,
       color: overallWinRate >= 50 ? 'text-green-600' : 'text-orange-600',
       bgColor: overallWinRate >= 50 ? 'bg-green-50' : 'bg-orange-50',
     },
@@ -80,7 +91,7 @@ function CompetitorsStats({
       label: 'Online Varlık',
       value: loading ? '-' : competitors.filter(c => c.website).length,
       subtext: 'website',
-      icon: <GlobalOutlined className="text-xl" />,
+      icon: <GlobeAltIcon className="w-5 h-5" />,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
@@ -281,7 +292,7 @@ export default function CompetitorsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<AimOutlined />}
+        icon={<BuildingOffice2Icon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Rakipler"
         description="Rakip analizlerinizi yönetin"
@@ -289,7 +300,7 @@ export default function CompetitorsPage() {
         primaryAction={{
           label: 'Yeni Rakip',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -297,7 +308,7 @@ export default function CompetitorsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -307,7 +318,7 @@ export default function CompetitorsPage() {
         <div className="flex items-center gap-4">
           <Input
             placeholder="Rakip ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
@@ -331,7 +342,7 @@ export default function CompetitorsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

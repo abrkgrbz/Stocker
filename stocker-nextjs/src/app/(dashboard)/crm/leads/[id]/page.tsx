@@ -7,22 +7,23 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Progress } from 'antd';
+import { Empty, Tag, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  GlobalOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  TrophyOutlined,
-  FireOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  GlobeAltIcon,
+  CalendarIcon,
+  UsersIcon,
+  TrophyIcon,
+  FireIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import { useLead } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
@@ -58,7 +59,7 @@ export default function LeadDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -91,12 +92,12 @@ export default function LeadDetailPage() {
               onClick={() => router.push('/crm/leads')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
-                <UserOutlined className="text-blue-600 text-lg" />
+                <UserIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -111,7 +112,7 @@ export default function LeadDetailPage() {
             onClick={() => router.push(`/crm/leads/${lead.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -180,7 +181,7 @@ export default function LeadDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {lead.createdAt ? dayjs(lead.createdAt).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -249,7 +250,7 @@ export default function LeadDetailPage() {
             <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <EnvironmentOutlined className="text-slate-400" />
+                  <MapPinIcon className="w-5 h-5 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                     Adres Bilgileri
                   </p>

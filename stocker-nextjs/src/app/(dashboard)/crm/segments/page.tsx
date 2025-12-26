@@ -2,29 +2,30 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
+import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  TeamOutlined,
-  UserOutlined,
-  ReloadOutlined,
-  ApartmentOutlined,
-  MoreOutlined,
-  CopyOutlined,
-  MailOutlined,
-  DownloadOutlined,
-  SearchOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  UserGroupIcon,
+  UserIcon,
+  ArrowPathIcon,
+  BuildingOffice2Icon,
+  EllipsisVerticalIcon,
+  DocumentDuplicateIcon,
+  EnvelopeIcon,
+  ArrowDownTrayIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { useCustomerSegments, useDeleteCustomerSegment, useCreateCustomerSegment } from '@/lib/api/hooks/useCRM';
 import { SegmentsStats } from '@/components/crm/segments/SegmentsStats';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 const segmentTypeLabels: Record<string, string> = {
   Static: 'Statik',
@@ -165,7 +166,7 @@ export default function CustomerSegmentsPage() {
             style={{
               background: `linear-gradient(135deg, ${record.color || '#1890ff'}, ${record.color || '#1890ff'}dd)`,
             }}
-            icon={<ApartmentOutlined />}
+            icon={<BuildingOffice2Icon className="w-5 h-5" />}
           >
             {text.charAt(0)}
           </Avatar>
@@ -196,7 +197,7 @@ export default function CustomerSegmentsPage() {
       width: 120,
       align: 'center',
       render: (count) => (
-        <Tag icon={<UserOutlined />} color="blue">
+        <Tag icon={<UserIcon className="w-4 h-4" />} color="blue">
           {count || 0}
         </Tag>
       ),
@@ -208,11 +209,11 @@ export default function CustomerSegmentsPage() {
       width: 120,
       render: (isActive) =>
         isActive ? (
-          <Tag icon={<CheckCircleOutlined />} color="success">
+          <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">
             Aktif
           </Tag>
         ) : (
-          <Tag icon={<CloseCircleOutlined />} color="default">
+          <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default">
             Pasif
           </Tag>
         ),
@@ -236,19 +237,19 @@ export default function CustomerSegmentsPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/crm/segments/${record.id}`),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => handleEdit(record),
               },
               {
                 key: 'clone',
                 label: 'Kopyala',
-                icon: <CopyOutlined />,
+                icon: <DocumentDuplicateIcon className="w-4 h-4" />,
                 onClick: () => handleClone(record),
                 disabled: createSegment.isPending,
               },
@@ -256,20 +257,20 @@ export default function CustomerSegmentsPage() {
               {
                 key: 'export',
                 label: 'Üyeleri Dışa Aktar (.csv)',
-                icon: <DownloadOutlined />,
+                icon: <ArrowDownTrayIcon className="w-4 h-4" />,
                 onClick: () => handleExport(record),
               },
               {
                 key: 'campaign',
                 label: 'Bu Segmente Kampanya Gönder',
-                icon: <MailOutlined />,
+                icon: <EnvelopeIcon className="w-4 h-4" />,
                 onClick: () => handleSendCampaign(record),
               },
               { type: 'divider' as const },
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 onClick: () => handleDelete(record.id),
                 disabled: deleteSegment.isPending,
@@ -278,7 +279,7 @@ export default function CustomerSegmentsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -293,7 +294,7 @@ export default function CustomerSegmentsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TeamOutlined />}
+        icon={<UserGroupIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Müşteri Segmentleri"
         description="Müşteri segmentlerinizi yönetin"
@@ -301,7 +302,7 @@ export default function CustomerSegmentsPage() {
         primaryAction={{
           label: 'Yeni Segment',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -309,7 +310,7 @@ export default function CustomerSegmentsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -318,7 +319,7 @@ export default function CustomerSegmentsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Segment ara..."
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -330,7 +331,7 @@ export default function CustomerSegmentsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -383,7 +384,7 @@ export default function CustomerSegmentsPage() {
                         onClick={handleCreate}
                         className="h-12 px-8 text-base font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors inline-flex items-center gap-2"
                       >
-                        <PlusOutlined />
+                        <PlusIcon className="w-5 h-5" />
                         İlk Segmentini Oluştur
                       </button>
                     </div>

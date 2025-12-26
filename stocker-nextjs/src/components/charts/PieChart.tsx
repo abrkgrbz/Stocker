@@ -34,14 +34,14 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
         <div className="flex items-center gap-2 text-sm">
           <div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: data.payload.fill }}
           />
-          <span className="text-gray-600 dark:text-gray-400">{data.name}:</span>
-          <span className="font-medium text-gray-900 dark:text-white">{data.value}</span>
+          <span className="text-gray-600">{data.name}:</span>
+          <span className="font-medium text-gray-900">{data.value}</span>
         </div>
       </div>
     );

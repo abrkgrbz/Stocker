@@ -7,20 +7,21 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Progress } from 'antd';
+import { Empty, Tag, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  PhoneOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  AudioOutlined,
-  StarOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  PhoneIcon,
+  CalendarIcon,
+  ClockIcon,
+  UserIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  MicrophoneIcon,
+  StarIcon,
+  ArrowsRightLeftIcon,
+} from '@heroicons/react/24/outline';
 import { useCallLog } from '@/lib/api/hooks/useCRM';
 import { CallDirection, CallType, CallStatus, CallOutcome } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -89,7 +90,7 @@ export default function CallLogDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -123,7 +124,7 @@ export default function CallLogDetailPage() {
               onClick={() => router.push('/crm/call-logs')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -132,8 +133,8 @@ export default function CallLogDetailPage() {
                   callLog.status === CallStatus.Completed ? 'bg-emerald-100' : 'bg-blue-100'
                 }`}
               >
-                <PhoneOutlined
-                  className={`text-lg ${
+                <PhoneIcon
+                  className={`w-6 h-6 ${
                     callLog.status === CallStatus.Completed ? 'text-emerald-600' : 'text-blue-600'
                   }`}
                 />
@@ -155,7 +156,7 @@ export default function CallLogDetailPage() {
             onClick={() => router.push(`/crm/call-logs/${callLog.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -177,7 +178,7 @@ export default function CallLogDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Yön</p>
-                  <Tag color={directionInfo.color} icon={<SwapOutlined />}>
+                  <Tag color={directionInfo.color} icon={<ArrowsRightLeftIcon className="w-3 h-3" />}>
                     {directionInfo.label}
                   </Tag>
                 </div>
@@ -200,7 +201,7 @@ export default function CallLogDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {callLog.startTime ? dayjs(callLog.startTime).format('DD/MM/YYYY HH:mm') : '-'}
                     </span>
@@ -209,7 +210,7 @@ export default function CallLogDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş</p>
                   <div className="flex items-center gap-1">
-                    <ClockCircleOutlined className="text-slate-400" />
+                    <ClockIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {callLog.endTime ? dayjs(callLog.endTime).format('DD/MM/YYYY HH:mm') : '-'}
                     </span>
@@ -273,7 +274,7 @@ export default function CallLogDetailPage() {
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <span className="text-sm text-slate-500">Müşteri Memnuniyeti</span>
                     <div className="flex items-center gap-1">
-                      <StarOutlined className="text-amber-500" />
+                      <StarIcon className="w-4 h-4 text-amber-500" />
                       <span className="font-medium">{callLog.customerSatisfaction}/5</span>
                     </div>
                   </div>
@@ -282,7 +283,7 @@ export default function CallLogDetailPage() {
                 {callLog.hasRecording && (
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <AudioOutlined className="text-blue-600" />
+                      <MicrophoneIcon className="w-5 h-5 text-blue-600" />
                       <span className="text-sm font-medium text-blue-900">Kayıt Mevcut</span>
                     </div>
                     {callLog.recordingUrl && (
@@ -301,7 +302,7 @@ export default function CallLogDetailPage() {
                 {callLog.agentName && (
                   <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <UserOutlined className="text-indigo-600" />
+                      <UserIcon className="w-4 h-4 text-indigo-600" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">{callLog.agentName}</p>
@@ -318,7 +319,7 @@ export default function CallLogDetailPage() {
             <div className="col-span-12 lg:col-span-6">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <CalendarOutlined className="text-orange-500" />
+                  <CalendarIcon className="w-5 h-5 text-orange-500" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                     Takip Bilgileri
                   </p>

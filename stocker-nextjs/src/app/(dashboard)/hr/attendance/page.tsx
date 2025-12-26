@@ -13,20 +13,19 @@ import {
   Select,
   DatePicker,
   Dropdown,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  FieldTimeOutlined,
-  MoreOutlined,
-  EditOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  ClockIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  UserIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useAttendance, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AttendanceDto, AttendanceFilterDto } from '@/lib/api/services/hr.types';
@@ -93,7 +92,7 @@ export default function AttendancePage() {
       render: (_, record: AttendanceDto) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-            <UserOutlined style={{ color: '#8b5cf6' }} />
+            <UserIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{record.employeeName || `Çalışan #${record.employeeId}`}</div>
@@ -153,13 +152,13 @@ export default function AttendancePage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/attendance/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/attendance/${record.id}/edit`),
               },
@@ -168,7 +167,7 @@ export default function AttendancePage() {
           trigger={['click']}
         >
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <MoreOutlined className="text-sm" />
+            <EllipsisVerticalIcon className="w-4 h-4" />
           </button>
         </Dropdown>
       ),
@@ -186,7 +185,7 @@ export default function AttendancePage() {
               <div className="text-2xl font-semibold text-slate-900">{totalRecords}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7c3aed15' }}>
-              <FieldTimeOutlined style={{ color: '#7c3aed' }} />
+              <ClockIcon className="w-6 h-6" style={{ color: '#7c3aed' }} />
             </div>
           </div>
         </div>
@@ -197,7 +196,7 @@ export default function AttendancePage() {
               <div className="text-2xl font-semibold text-slate-900">{presentCount}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -208,7 +207,7 @@ export default function AttendancePage() {
               <div className="text-2xl font-semibold text-slate-900">{lateCount}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockCircleOutlined style={{ color: '#f59e0b' }} />
+              <ClockIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -219,7 +218,7 @@ export default function AttendancePage() {
               <div className="text-2xl font-semibold text-slate-900">{absentCount}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <WarningOutlined style={{ color: '#ef4444' }} />
+              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: '#ef4444' }} />
             </div>
           </div>
         </div>
@@ -227,7 +226,7 @@ export default function AttendancePage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<FieldTimeOutlined />}
+        icon={<ClockIcon className="w-5 h-5" />}
         iconColor="#7c3aed"
         title="Yoklama Takibi"
         description="Çalışan yoklama kayıtlarını görüntüle ve yönet"
@@ -235,7 +234,7 @@ export default function AttendancePage() {
         primaryAction={{
           label: 'Yeni Kayıt',
           onClick: () => router.push('/hr/attendance/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -243,7 +242,7 @@ export default function AttendancePage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -305,7 +304,7 @@ export default function AttendancePage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

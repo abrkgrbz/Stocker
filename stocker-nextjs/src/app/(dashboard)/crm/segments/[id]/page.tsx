@@ -7,18 +7,19 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Progress } from 'antd';
+import { Empty, Tag, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FilterOutlined,
-  UserOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  UsersIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  FunnelIcon,
+  UserIcon,
+  ArrowPathIcon,
+} from '@heroicons/react/24/outline';
 import { useSegment, useSegmentMembers } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
@@ -43,7 +44,7 @@ export default function SegmentDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -76,7 +77,7 @@ export default function SegmentDetailPage() {
               onClick={() => router.push('/crm/segments')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -85,8 +86,8 @@ export default function SegmentDetailPage() {
                   segment.isActive ? 'bg-cyan-100' : 'bg-slate-100'
                 }`}
               >
-                <TeamOutlined
-                  className={`text-lg ${segment.isActive ? 'text-cyan-600' : 'text-slate-400'}`}
+                <UsersIcon
+                  className={`w-6 h-6 ${segment.isActive ? 'text-cyan-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
@@ -102,7 +103,7 @@ export default function SegmentDetailPage() {
             onClick={() => router.push(`/crm/segments/${segment.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -129,7 +130,7 @@ export default function SegmentDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={segment.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={segment.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     color={segment.isActive ? 'success' : 'default'}
                   >
                     {segment.isActive ? 'Aktif' : 'Pasif'}
@@ -138,14 +139,14 @@ export default function SegmentDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Üye Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <UserOutlined className="text-slate-400" />
+                    <UserIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">{memberCount}</span>
                   </div>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {segment.createdAt ? dayjs(segment.createdAt).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -154,7 +155,7 @@ export default function SegmentDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Son Güncelleme</p>
                   <div className="flex items-center gap-1">
-                    <SyncOutlined className="text-slate-400" />
+                    <ArrowPathIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {segment.updatedAt ? dayjs(segment.updatedAt).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -183,8 +184,8 @@ export default function SegmentDetailPage() {
                     segment.isActive ? 'bg-cyan-100' : 'bg-slate-100'
                   }`}
                 >
-                  <TeamOutlined
-                    className={`text-3xl ${segment.isActive ? 'text-cyan-600' : 'text-slate-400'}`}
+                  <UsersIcon
+                    className={`w-10 h-10 ${segment.isActive ? 'text-cyan-600' : 'text-slate-400'}`}
                   />
                 </div>
                 <p className="text-2xl font-bold text-slate-900 mt-3">{memberCount}</p>
@@ -212,7 +213,7 @@ export default function SegmentDetailPage() {
             <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <FilterOutlined className="text-slate-400" />
+                  <FunnelIcon className="w-5 h-5 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                     Segment Kriterleri
                   </p>
@@ -247,7 +248,7 @@ export default function SegmentDetailPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <UserOutlined className="text-slate-400" />
+                    <UserIcon className="w-5 h-5 text-slate-400" />
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                       Segment Üyeleri
                     </p>

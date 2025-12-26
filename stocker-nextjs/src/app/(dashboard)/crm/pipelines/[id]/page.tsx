@@ -7,18 +7,19 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Progress } from 'antd';
+import { Empty, Tag, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FunnelPlotOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  RightOutlined,
-  StarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  FunnelIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CurrencyDollarIcon,
+  ChevronRightIcon,
+  StarIcon,
+} from '@heroicons/react/24/outline';
 import { usePipeline, usePipelineStatistics } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
@@ -36,7 +37,7 @@ export default function PipelineDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -70,7 +71,7 @@ export default function PipelineDetailPage() {
               onClick={() => router.push('/crm/pipelines')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -79,15 +80,15 @@ export default function PipelineDetailPage() {
                   pipeline.isActive ? 'bg-indigo-100' : 'bg-slate-100'
                 }`}
               >
-                <FunnelPlotOutlined
-                  className={`text-lg ${pipeline.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
+                <FunnelIcon
+                  className={`w-6 h-6 ${pipeline.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{pipeline.name}</h1>
                   {pipeline.isDefault && (
-                    <Tag color="gold" icon={<StarOutlined />}>
+                    <Tag color="gold" icon={<StarIcon className="w-3 h-3" />}>
                       Varsayılan
                     </Tag>
                   )}
@@ -102,7 +103,7 @@ export default function PipelineDetailPage() {
             onClick={() => router.push(`/crm/pipelines/${pipeline.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -125,7 +126,7 @@ export default function PipelineDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={pipeline.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={pipeline.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     color={pipeline.isActive ? 'success' : 'default'}
                   >
                     {pipeline.isActive ? 'Aktif' : 'Pasif'}
@@ -144,7 +145,7 @@ export default function PipelineDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {pipeline.createdAt ? dayjs(pipeline.createdAt).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -173,7 +174,7 @@ export default function PipelineDetailPage() {
               </p>
               <div className="flex flex-col items-center justify-center py-4">
                 <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <DollarOutlined className="text-3xl text-indigo-600" />
+                  <CurrencyDollarIcon className="w-10 h-10 text-indigo-600" />
                 </div>
                 <p className="text-2xl font-bold text-slate-900 mt-3">
                   ₺{totalValue.toLocaleString('tr-TR')}
@@ -244,7 +245,7 @@ export default function PipelineDetailPage() {
                           </div>
                         </div>
                         {index < stages.length - 1 && (
-                          <RightOutlined className="text-slate-300 flex-shrink-0" />
+                          <ChevronRightIcon className="w-5 h-5 text-slate-300 flex-shrink-0" />
                         )}
                       </React.Fragment>
                     ))}

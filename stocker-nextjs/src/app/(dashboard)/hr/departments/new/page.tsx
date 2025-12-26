@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ApartmentOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, CheckIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import { DepartmentForm } from '@/components/hr';
 import { useCreateDepartment } from '@/lib/api/hooks/useHR';
 import type { CreateDepartmentDto } from '@/lib/api/services/hr.types';
@@ -36,14 +36,14 @@ export default function NewDepartmentPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ApartmentOutlined className="mr-2" />
+                <BuildingOfficeIcon className="w-5 h-5 mr-2 inline" />
                 Yeni Departman
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir departman oluşturun</p>
@@ -53,7 +53,7 @@ export default function NewDepartmentPage() {
             <Button onClick={() => router.push('/hr/departments')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createDepartment.isPending}
               onClick={() => form.submit()}
               style={{

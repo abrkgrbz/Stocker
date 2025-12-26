@@ -9,7 +9,6 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
@@ -17,13 +16,13 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ClockCircleOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  ClockIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
 import {
   useShift,
   useDeleteShift,

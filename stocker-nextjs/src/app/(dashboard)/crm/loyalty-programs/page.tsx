@@ -2,8 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, GiftOutlined, SearchOutlined, EditOutlined, TrophyOutlined, UserOutlined, StarOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  GiftIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrophyIcon,
+  UserIcon,
+  StarIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -12,7 +22,8 @@ import {
 import type { LoyaltyProgramDto } from '@/lib/api/services/crm.types';
 import { LoyaltyProgramType } from '@/lib/api/services/crm.types';
 import { useLoyaltyPrograms, useDeleteLoyaltyProgram } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 
 const programTypeLabels: Record<LoyaltyProgramType, { label: string; color: string }> = {
@@ -38,28 +49,28 @@ function LoyaltyProgramsStats({ programs, loading }: LoyaltyProgramsStatsProps) 
     {
       title: 'Toplam Program',
       value: totalPrograms,
-      icon: <GiftOutlined className="text-xl" />,
+      icon: <GiftIcon className="w-5 h-5" />,
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
     },
     {
       title: 'Aktif',
       value: activePrograms,
-      icon: <TrophyOutlined className="text-xl" />,
+      icon: <TrophyIcon className="w-5 h-5" />,
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
     },
     {
       title: 'Toplam Üye',
       value: totalMembers.toLocaleString('tr-TR'),
-      icon: <UserOutlined className="text-xl" />,
+      icon: <UserIcon className="w-5 h-5" />,
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
     },
     {
       title: 'Dağıtılan Puan',
       value: totalPoints.toLocaleString('tr-TR'),
-      icon: <StarOutlined className="text-xl" />,
+      icon: <StarIcon className="w-5 h-5" />,
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-600',
     },
@@ -238,7 +249,7 @@ export default function LoyaltyProgramsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => handleView(record)}
             className="text-blue-600 hover:text-blue-700"
           >
@@ -247,7 +258,7 @@ export default function LoyaltyProgramsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => handleEdit(record)}
             className="text-slate-600 hover:text-slate-900"
           >
@@ -276,7 +287,7 @@ export default function LoyaltyProgramsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<GiftOutlined />}
+        icon={<GiftIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Sadakat Programları"
         description="Müşteri sadakat programlarını yönetin"
@@ -284,7 +295,7 @@ export default function LoyaltyProgramsPage() {
         primaryAction={{
           label: 'Yeni Program',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -292,7 +303,7 @@ export default function LoyaltyProgramsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -302,7 +313,7 @@ export default function LoyaltyProgramsPage() {
         <div className="flex items-center gap-4 flex-wrap">
           <Input
             placeholder="Program ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-64"
@@ -337,7 +348,7 @@ export default function LoyaltyProgramsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

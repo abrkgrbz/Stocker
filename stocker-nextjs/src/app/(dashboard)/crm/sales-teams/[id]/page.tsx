@@ -7,20 +7,21 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Progress } from 'antd';
+import { Empty, Tag, Progress } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  UserOutlined,
-  MailOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CrownOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  UsersIcon,
+  CalendarIcon,
+  UserIcon,
+  EnvelopeIcon,
+  CurrencyDollarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  StarIcon,
+  GlobeAltIcon,
+} from '@heroicons/react/24/outline';
 import { useSalesTeam } from '@/lib/api/hooks/useCRM';
 import { SalesTeamRole } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -46,7 +47,7 @@ export default function SalesTeamDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -76,7 +77,7 @@ export default function SalesTeamDetailPage() {
               onClick={() => router.push('/crm/sales-teams')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -85,15 +86,15 @@ export default function SalesTeamDetailPage() {
                   team.isActive ? 'bg-indigo-100' : 'bg-slate-100'
                 }`}
               >
-                <TeamOutlined
-                  className={`text-lg ${team.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
+                <UsersIcon
+                  className={`w-5 h-5 ${team.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{team.name}</h1>
                   <Tag
-                    icon={team.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={team.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     color={team.isActive ? 'success' : 'default'}
                   >
                     {team.isActive ? 'Aktif' : 'Pasif'}
@@ -109,7 +110,7 @@ export default function SalesTeamDetailPage() {
             onClick={() => router.push(`/crm/sales-teams/${team.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -136,7 +137,7 @@ export default function SalesTeamDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={team.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={team.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     color={team.isActive ? 'success' : 'default'}
                   >
                     {team.isActive ? 'Aktif' : 'Pasif'}
@@ -153,7 +154,7 @@ export default function SalesTeamDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {team.createdAt ? dayjs(team.createdAt).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -166,7 +167,7 @@ export default function SalesTeamDetailPage() {
                       href={`mailto:${team.teamEmail}`}
                       className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                     >
-                      <MailOutlined className="text-xs" />
+                      <EnvelopeIcon className="w-3 h-3" />
                       {team.teamEmail}
                     </a>
                   </div>
@@ -198,7 +199,7 @@ export default function SalesTeamDetailPage() {
               {team.teamLeaderName && (
                 <div className="flex items-center gap-3 p-4 bg-indigo-50 rounded-lg mb-4">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <CrownOutlined className="text-indigo-600" />
+                    <StarIcon className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{team.teamLeaderName}</p>
@@ -224,7 +225,7 @@ export default function SalesTeamDetailPage() {
               {team.territoryNames && (
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <GlobalOutlined className="text-slate-400" />
+                    <GlobeAltIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-xs text-slate-500">Atanan Bölgeler</span>
                   </div>
                   <p className="text-sm text-slate-700">{team.territoryNames}</p>
@@ -239,7 +240,7 @@ export default function SalesTeamDetailPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <UserOutlined className="text-slate-400" />
+                    <UserIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                       Ekip Üyeleri ({team.members.length})
                     </p>
@@ -261,8 +262,8 @@ export default function SalesTeamDetailPage() {
                               member.isActive ? 'bg-indigo-100' : 'bg-slate-200'
                             }`}
                           >
-                            <UserOutlined
-                              className={member.isActive ? 'text-indigo-600' : 'text-slate-400'}
+                            <UserIcon
+                              className={`w-5 h-5 ${member.isActive ? 'text-indigo-600' : 'text-slate-400'}`}
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -319,7 +320,7 @@ export default function SalesTeamDetailPage() {
                   onClick={() => router.push(`/crm/sales-teams/${team.parentTeamId}`)}
                 >
                   <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    <TeamOutlined className="text-indigo-500" />
+                    <UsersIcon className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">

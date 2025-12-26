@@ -37,16 +37,16 @@ export interface BarChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3">
-        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+        <p className="text-sm font-semibold text-gray-900 mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
               className="w-3 h-3 rounded"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-gray-600 dark:text-gray-400">{entry.name}:</span>
-            <span className="font-medium text-gray-900 dark:text-white">{entry.value}</span>
+            <span className="text-gray-600">{entry.name}:</span>
+            <span className="font-medium text-gray-900">{entry.value}</span>
           </div>
         ))}
       </div>
@@ -74,17 +74,17 @@ export default function BarChart({
         layout={layout}
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />}
+        {showGrid && <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />}
         <XAxis
           dataKey={layout === 'horizontal' ? xAxisKey : undefined}
           type={layout === 'horizontal' ? 'category' : 'number'}
-          className="text-xs text-gray-600 dark:text-gray-400"
+          className="text-xs text-gray-600"
           stroke="currentColor"
         />
         <YAxis
           dataKey={layout === 'vertical' ? xAxisKey : undefined}
           type={layout === 'horizontal' ? 'number' : 'category'}
-          className="text-xs text-gray-600 dark:text-gray-400"
+          className="text-xs text-gray-600"
           stroke="currentColor"
         />
         {showTooltip && <Tooltip content={<CustomTooltip />} />}

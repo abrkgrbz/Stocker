@@ -53,16 +53,16 @@ export default function ComparisonCard({
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-gray-700">
                     {item.label}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <span className="text-sm font-semibold text-gray-900">
                     {formattedValue}
                   </span>
                   {showPercentage && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-gray-500">
                       ({item.percentage.toFixed(1)}%)
                     </span>
                   )}
@@ -84,12 +84,12 @@ export default function ComparisonCard({
 
         {/* Total */}
         {total !== undefined && (
-          <div className="pt-3 mt-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="pt-3 mt-3 border-t border-gray-100">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-semibold text-gray-700">
                 Toplam
               </span>
-              <span className="text-base font-bold text-gray-900 dark:text-white">
+              <span className="text-base font-bold text-gray-900">
                 {new Intl.NumberFormat('tr-TR').format(calculatedTotal)}
               </span>
             </div>

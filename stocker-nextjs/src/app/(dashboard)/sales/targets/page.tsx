@@ -7,8 +7,8 @@
  */
 
 import React, { useState } from 'react';
-import { PageContainer, ListPageHeader } from '@/components/ui/enterprise-page';
-import { AimOutlined } from '@ant-design/icons';
+import { PageContainer, ListPageHeader } from '@/components/patterns';
+import { CrosshairIcon } from 'lucide-react';
 import {
   TargetGrid,
   TargetStatistics,
@@ -35,7 +35,7 @@ export default function SalesTargetsPage() {
   return (
     <PageContainer maxWidth="6xl">
       <ListPageHeader
-        icon={<AimOutlined />}
+        icon={<CrosshairIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
         title="Satış Hedefleri"
         description="Satış temsilcilerinin performansını takip edin"

@@ -7,22 +7,23 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag } from 'antd';
+import { Empty, Tag } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  EnvironmentOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  DocumentTextIcon,
+  MapPinIcon,
+  ExclamationCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useActivity } from '@/lib/api/hooks/useCRM';
 import { ActivityType, ActivityStatus, ActivityPriority } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -31,11 +32,11 @@ import 'dayjs/locale/tr';
 dayjs.locale('tr');
 
 const typeLabels: Record<ActivityType, { label: string; color: string; icon: React.ReactNode }> = {
-  [ActivityType.Call]: { label: 'Arama', color: 'blue', icon: <PhoneOutlined /> },
-  [ActivityType.Email]: { label: 'E-posta', color: 'cyan', icon: <MailOutlined /> },
-  [ActivityType.Meeting]: { label: 'Toplantı', color: 'purple', icon: <TeamOutlined /> },
-  [ActivityType.Task]: { label: 'Görev', color: 'orange', icon: <CheckCircleOutlined /> },
-  [ActivityType.Note]: { label: 'Not', color: 'default', icon: <FileTextOutlined /> },
+  [ActivityType.Call]: { label: 'Arama', color: 'blue', icon: <PhoneIcon className="w-4 h-4" /> },
+  [ActivityType.Email]: { label: 'E-posta', color: 'cyan', icon: <EnvelopeIcon className="w-4 h-4" /> },
+  [ActivityType.Meeting]: { label: 'Toplantı', color: 'purple', icon: <UsersIcon className="w-4 h-4" /> },
+  [ActivityType.Task]: { label: 'Görev', color: 'orange', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  [ActivityType.Note]: { label: 'Not', color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> },
 };
 
 const statusLabels: Record<ActivityStatus, { label: string; color: string }> = {
@@ -62,7 +63,7 @@ export default function ActivityDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -75,7 +76,7 @@ export default function ActivityDetailPage() {
     );
   }
 
-  const typeInfo = typeLabels[activity.type] || { label: activity.type, color: 'default', icon: <FileTextOutlined /> };
+  const typeInfo = typeLabels[activity.type] || { label: activity.type, color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> };
   const statusInfo = statusLabels[activity.status] || { label: activity.status, color: 'default' };
   const priorityInfo = priorityLabels[activity.priority] || { label: activity.priority, color: 'default' };
 
@@ -96,7 +97,7 @@ export default function ActivityDetailPage() {
               onClick={() => router.push('/crm/activities')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -116,7 +117,7 @@ export default function ActivityDetailPage() {
                   </h1>
                   <Tag color={statusInfo.color}>{statusInfo.label}</Tag>
                   {activity.isOverdue && (
-                    <Tag color="red" icon={<ExclamationCircleOutlined />}>
+                    <Tag color="red" icon={<ExclamationCircleIcon className="w-3 h-3" />}>
                       Gecikmiş
                     </Tag>
                   )}
@@ -129,7 +130,7 @@ export default function ActivityDetailPage() {
             onClick={() => router.push(`/crm/activities/${activity.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -168,7 +169,7 @@ export default function ActivityDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Planlanan Tarih</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {activity.scheduledAt
                         ? dayjs(activity.scheduledAt).format('DD/MM/YYYY HH:mm')
@@ -179,7 +180,7 @@ export default function ActivityDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <ClockCircleOutlined className="text-slate-400" />
+                    <ClockIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {activity.dueAt
                         ? dayjs(activity.dueAt).format('DD/MM/YYYY HH:mm')
@@ -191,7 +192,7 @@ export default function ActivityDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Tamamlanma Tarihi</p>
                     <div className="flex items-center gap-1">
-                      <CheckCircleOutlined className="text-emerald-500" />
+                      <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
                       <span className="text-sm font-medium text-slate-900">
                         {dayjs(activity.completedAt).format('DD/MM/YYYY HH:mm')}
                       </span>
@@ -202,7 +203,7 @@ export default function ActivityDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Konum</p>
                     <div className="flex items-center gap-1">
-                      <EnvironmentOutlined className="text-slate-400" />
+                      <MapPinIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm font-medium text-slate-900">{activity.location}</span>
                     </div>
                   </div>
@@ -242,7 +243,7 @@ export default function ActivityDetailPage() {
                 {activity.ownerName && (
                   <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <UserOutlined className="text-blue-600" />
+                      <UserIcon className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">{activity.ownerName}</p>
@@ -253,7 +254,7 @@ export default function ActivityDetailPage() {
                 {activity.assignedToName && (
                   <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <UserOutlined className="text-purple-600" />
+                      <UserIcon className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">{activity.assignedToName}</p>

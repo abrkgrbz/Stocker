@@ -37,18 +37,18 @@ export default function CookieConsent() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-[9999]"
         >
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
             <div className="flex items-start gap-3 mb-4">
               <span className="text-2xl">🍪</span>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                <h3 className="font-semibold text-gray-900 text-sm">
                   Çerez Kullanımı
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs mt-1 leading-relaxed">
+                <p className="text-gray-600 text-xs mt-1 leading-relaxed">
                   Deneyiminizi iyileştirmek için çerez kullanıyoruz.{' '}
                   <Link
                     href="/cookies"
-                    className="text-purple-600 dark:text-purple-400 hover:underline"
+                    className="text-purple-600 hover:underline"
                   >
                     Daha fazla
                   </Link>
@@ -59,7 +59,7 @@ export default function CookieConsent() {
             <div className="flex gap-2">
               <button
                 onClick={handleReject}
-                className="flex-1 px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 Reddet
               </button>

@@ -2,8 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, PhoneOutlined, SearchOutlined, ArrowDownOutlined, ArrowUpOutlined, CheckCircleOutlined, PhoneFilled, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  PhoneIcon,
+  MagnifyingGlassIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CheckCircleIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
+import { PhoneIcon as PhoneIconSolid } from '@heroicons/react/24/solid';
 import {
   showDeleteSuccess,
   showError,
@@ -12,7 +22,8 @@ import {
 import type { CallLogDto } from '@/lib/api/services/crm.types';
 import { CallDirection, CallOutcome } from '@/lib/api/services/crm.types';
 import { useCallLogs, useDeleteCallLog } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -54,28 +65,28 @@ function CallLogsStats({ callLogs, loading }: CallLogsStatsProps) {
     {
       title: 'Toplam Arama',
       value: totalCalls,
-      icon: <PhoneFilled className="text-2xl" />,
+      icon: <PhoneIconSolid className="w-6 h-6" />,
       iconBg: 'bg-slate-100',
       iconColor: 'text-slate-600',
     },
     {
       title: 'Gelen',
       value: inboundCalls,
-      icon: <ArrowDownOutlined className="text-2xl" />,
+      icon: <ArrowDownIcon className="w-6 h-6" />,
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
     },
     {
       title: 'Giden',
       value: outboundCalls,
-      icon: <ArrowUpOutlined className="text-2xl" />,
+      icon: <ArrowUpIcon className="w-6 h-6" />,
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
     },
     {
       title: 'Başarılı',
       value: successfulCalls,
-      icon: <CheckCircleOutlined className="text-2xl" />,
+      icon: <CheckCircleIcon className="w-6 h-6" />,
       iconBg: 'bg-emerald-100',
       iconColor: 'text-emerald-600',
     },
@@ -269,7 +280,7 @@ export default function CallLogsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<PhoneOutlined />}
+        icon={<PhoneIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Arama Kayıtları"
         description="Telefon görüşmelerini takip edin"
@@ -277,7 +288,7 @@ export default function CallLogsPage() {
         primaryAction={{
           label: 'Yeni Arama',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -285,7 +296,7 @@ export default function CallLogsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -295,7 +306,7 @@ export default function CallLogsPage() {
         <div className="flex items-center gap-4">
           <Input
             placeholder="Numara ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 200 }}
@@ -319,7 +330,7 @@ export default function CallLogsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

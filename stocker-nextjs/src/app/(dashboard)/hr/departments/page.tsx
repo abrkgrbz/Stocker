@@ -14,24 +14,24 @@ import {
   Select,
   Dropdown,
   Modal,
-  Spin,
   Segmented,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  ApartmentOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  TeamOutlined,
-  UnorderedListOutlined,
-  PartitionOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  EllipsisVerticalIcon,
+  BuildingOfficeIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  UsersIcon,
+  Bars3Icon,
+  RectangleGroupIcon,
+} from '@heroicons/react/24/outline';
 import {
   useDepartments,
   useDeleteDepartment,
@@ -151,7 +151,7 @@ export default function DepartmentsPage() {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7c3aed15' }}>
-            <ApartmentOutlined style={{ color: '#7c3aed' }} />
+            <BuildingOfficeIcon className="w-5 h-5" style={{ color: '#7c3aed' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{record.name}</div>
@@ -204,27 +204,27 @@ export default function DepartmentsPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
           { type: 'divider' as const },
           {
             key: 'toggle',
-            icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+            icon: record.isActive ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
             label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
             onClick: () => handleToggleActive(record),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -234,7 +234,7 @@ export default function DepartmentsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -253,7 +253,7 @@ export default function DepartmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalDepartments}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7c3aed15' }}>
-              <ApartmentOutlined style={{ color: '#7c3aed' }} />
+              <BuildingOfficeIcon className="w-6 h-6" style={{ color: '#7c3aed' }} />
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function DepartmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeDepartments}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function DepartmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalEmployees}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <TeamOutlined style={{ color: '#3b82f6' }} />
+              <UsersIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function DepartmentsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ApartmentOutlined />}
+        icon={<BuildingOfficeIcon className="w-5 h-5" />}
         iconColor="#7c3aed"
         title="Departmanlar"
         description="Tüm departmanları görüntüle ve yönet"
@@ -291,7 +291,7 @@ export default function DepartmentsPage() {
         primaryAction={{
           label: 'Yeni Departman',
           onClick: () => router.push('/hr/departments/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -299,7 +299,7 @@ export default function DepartmentsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -310,7 +310,7 @@ export default function DepartmentsPage() {
           <div className="flex items-center gap-4 flex-1 flex-wrap">
             <Input
               placeholder="Departman adı, kod veya açıklama ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -339,7 +339,7 @@ export default function DepartmentsPage() {
               {
                 label: (
                   <div className="flex items-center gap-2 px-1">
-                    <UnorderedListOutlined />
+                    <Bars3Icon className="w-4 h-4" />
                     <span>Liste</span>
                   </div>
                 ),
@@ -348,7 +348,7 @@ export default function DepartmentsPage() {
               {
                 label: (
                   <div className="flex items-center gap-2 px-1">
-                    <PartitionOutlined />
+                    <RectangleGroupIcon className="w-4 h-4" />
                     <span>Ağaç</span>
                   </div>
                 ),
@@ -363,7 +363,7 @@ export default function DepartmentsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : viewMode === 'tree' ? (

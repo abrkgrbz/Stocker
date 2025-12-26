@@ -16,18 +16,18 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  InboxOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  InboxIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
@@ -163,32 +163,32 @@ export default function GoodsReceiptsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/purchase/goods-receipts/${record.id}`),
               },
               record.status === 'Draft' && {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
               },
               { type: 'divider' },
               !['Completed', 'Cancelled'].includes(record.status) && {
                 key: 'complete',
-                icon: <CheckCircleOutlined />,
+                icon: <CheckCircleIcon className="w-4 h-4" />,
                 label: 'Tamamla',
                 onClick: () => completeReceipt.mutate(record.id),
               },
               !['Completed', 'Cancelled'].includes(record.status) && {
                 key: 'cancel',
-                icon: <CloseCircleOutlined />,
+                icon: <XCircleIcon className="w-4 h-4" />,
                 label: 'İptal Et',
                 danger: true,
                 onClick: () => cancelReceipt.mutate({ id: record.id, reason: 'Manual cancellation' }),
               },
               record.status === 'Draft' && {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -197,7 +197,7 @@ export default function GoodsReceiptsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -209,14 +209,14 @@ export default function GoodsReceiptsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Title level={3} className="!mb-1 flex items-center gap-2">
-            <InboxOutlined className="text-cyan-500" />
+            <InboxIcon className="w-5 h-5 text-cyan-500" />
             Mal Alım Belgeleri
           </Title>
           <Text type="secondary">Tedarikçilerden gelen malları kaydedin</Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/goods-receipts/new')}
         >
@@ -229,7 +229,7 @@ export default function GoodsReceiptsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Belge ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}
@@ -251,10 +251,10 @@ export default function GoodsReceiptsPage() {
           />
           <div className="flex-1" />
           <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
+            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
           </Tooltip>
           <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
+            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
           </Tooltip>
         </div>
       </Card>

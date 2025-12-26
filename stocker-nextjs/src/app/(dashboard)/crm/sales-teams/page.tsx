@@ -2,8 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, TeamOutlined, SearchOutlined, UserOutlined, CheckCircleOutlined, TrophyOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  UsersIcon,
+  MagnifyingGlassIcon,
+  UserIcon,
+  CheckCircleIcon,
+  TrophyIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -12,7 +21,8 @@ import {
 import type { SalesTeamDto } from '@/lib/api/services/crm.types';
 import { useSalesTeams, useDeleteSalesTeam } from '@/lib/api/hooks/useCRM';
 import type { ColumnsType } from 'antd/es/table';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 interface SalesTeamsStatsProps {
   salesTeams: SalesTeamDto[];
@@ -31,25 +41,25 @@ function SalesTeamsStats({ salesTeams, loading }: SalesTeamsStatsProps) {
     {
       title: 'Toplam Ekip',
       value: totalTeams,
-      icon: <TeamOutlined className="text-2xl" />,
+      icon: <UsersIcon className="w-6 h-6" />,
       color: 'bg-blue-500',
     },
     {
       title: 'Toplam Üye',
       value: totalMembers,
-      icon: <UserOutlined className="text-2xl" />,
+      icon: <UserIcon className="w-6 h-6" />,
       color: 'bg-purple-500',
     },
     {
       title: 'Aktif',
       value: activeTeams,
-      icon: <CheckCircleOutlined className="text-2xl" />,
+      icon: <CheckCircleIcon className="w-6 h-6" />,
       color: 'bg-green-500',
     },
     {
       title: 'Ortalama Performans',
       value: `${avgPerformance}%`,
-      icon: <TrophyOutlined className="text-2xl" />,
+      icon: <TrophyIcon className="w-6 h-6" />,
       color: 'bg-amber-500',
     },
   ];
@@ -60,7 +70,7 @@ function SalesTeamsStats({ salesTeams, loading }: SalesTeamsStatsProps) {
         <Card key={index} className="relative overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Spin size="small" />
+              <Spinner size="sm" />
             </div>
           ) : (
             <div className="flex items-center justify-between">
@@ -201,7 +211,7 @@ export default function SalesTeamsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/crm/sales-teams/${record.id}`)}
             className="text-blue-600 hover:text-blue-700"
           >
@@ -229,7 +239,7 @@ export default function SalesTeamsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TeamOutlined />}
+        icon={<UsersIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Satış Ekipleri"
         description="Satış ekiplerinizi yönetin"
@@ -237,7 +247,7 @@ export default function SalesTeamsPage() {
         primaryAction={{
           label: 'Yeni Ekip',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -245,7 +255,7 @@ export default function SalesTeamsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -254,7 +264,7 @@ export default function SalesTeamsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Ekip ara..."
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -266,7 +276,7 @@ export default function SalesTeamsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

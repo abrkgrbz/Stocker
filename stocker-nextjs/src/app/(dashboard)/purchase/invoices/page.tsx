@@ -2,24 +2,25 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Input, Tag, Dropdown, Spin, Select, DatePicker } from 'antd';
+import { Table, Input, Tag, Dropdown, Select, DatePicker } from 'antd';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  FileExcelOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CurrencyDollarIcon,
+  TableCellsIcon,
+  ExclamationTriangleIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePurchaseInvoices,
   useDeletePurchaseInvoice,
@@ -221,7 +222,7 @@ export default function PurchaseInvoicesPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: statusConfig[record.status as PurchaseInvoiceStatus]?.bgColor || '#64748b15' }}
           >
-            <FileTextOutlined style={{ color: statusConfig[record.status as PurchaseInvoiceStatus]?.color || '#64748b' }} />
+            <DocumentTextIcon className="w-5 h-5" style={{ color: statusConfig[record.status as PurchaseInvoiceStatus]?.color || '#64748b' }} />
           </div>
           <div>
             <div
@@ -312,18 +313,18 @@ export default function PurchaseInvoicesPage() {
       width: 50,
       render: (_, record) => {
         const menuItems: MenuProps['items'] = [
-          { key: 'view', icon: <EyeOutlined />, label: 'Görüntüle', onClick: () => router.push(`/purchase/invoices/${record.id}`) },
-          ...(record.status === 'Draft' ? [{ key: 'edit', icon: <EditOutlined />, label: 'Düzenle', onClick: () => router.push(`/purchase/invoices/${record.id}/edit`) }] : []),
+          { key: 'view', icon: <EyeIcon className="w-4 h-4" />, label: 'Görüntüle', onClick: () => router.push(`/purchase/invoices/${record.id}`) },
+          ...(record.status === 'Draft' ? [{ key: 'edit', icon: <PencilIcon className="w-4 h-4" />, label: 'Düzenle', onClick: () => router.push(`/purchase/invoices/${record.id}/edit`) }] : []),
           { type: 'divider' },
-          ...(record.status === 'PendingApproval' ? [{ key: 'approve', icon: <CheckCircleOutlined />, label: 'Onayla', onClick: () => approveInvoice.mutate({ id: record.id }) }] : []),
-          ...(record.status === 'Approved' ? [{ key: 'pay', icon: <DollarOutlined />, label: 'Ödendi İşaretle', onClick: () => markAsPaid.mutate({ id: record.id }) }] : []),
+          ...(record.status === 'PendingApproval' ? [{ key: 'approve', icon: <CheckCircleIcon className="w-4 h-4" />, label: 'Onayla', onClick: () => approveInvoice.mutate({ id: record.id }) }] : []),
+          ...(record.status === 'Approved' ? [{ key: 'pay', icon: <CurrencyDollarIcon className="w-4 h-4" />, label: 'Ödendi İşaretle', onClick: () => markAsPaid.mutate({ id: record.id }) }] : []),
           { type: 'divider' },
-          ...(record.status === 'Draft' ? [{ key: 'delete', icon: <DeleteOutlined />, label: 'Sil', danger: true, onClick: () => handleDelete(record) }] : []),
+          ...(record.status === 'Draft' ? [{ key: 'delete', icon: <TrashIcon className="w-4 h-4" />, label: 'Sil', danger: true, onClick: () => handleDelete(record) }] : []),
         ];
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
             <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors" onClick={(e) => e.stopPropagation()}>
-              <MoreOutlined className="text-slate-400" />
+              <EllipsisVerticalIcon className="w-4 h-4 text-slate-400" />
             </button>
           </Dropdown>
         );
@@ -335,7 +336,7 @@ export default function PurchaseInvoicesPage() {
     return (
       <PageContainer>
         <div className="flex items-center justify-center h-96">
-          <Spin size="large" />
+          <Spinner size="lg" />
         </div>
       </PageContainer>
     );
@@ -346,10 +347,10 @@ export default function PurchaseInvoicesPage() {
       <ListPageHeader
         title="Satın Alma Faturaları"
         description="Tedarikçi faturalarını yönetin"
-        icon={<FileTextOutlined className="text-blue-600" />}
+        icon={<DocumentTextIcon className="w-5 h-5 text-blue-600" />}
         primaryAction={{
           label: 'Yeni Fatura',
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
           onClick: () => router.push('/purchase/invoices/new'),
         }}
         secondaryActions={
@@ -357,7 +358,7 @@ export default function PurchaseInvoicesPage() {
             onClick={handleExportExcel}
             className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
           >
-            <FileExcelOutlined />
+            <TableCellsIcon className="w-4 h-4" />
             Excel İndir
           </button>
         }
@@ -368,7 +369,7 @@ export default function PurchaseInvoicesPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <FileTextOutlined className="text-xl" style={{ color: '#6366f1' }} />
+              <DocumentTextIcon className="w-6 h-6" style={{ color: '#6366f1' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
@@ -379,7 +380,7 @@ export default function PurchaseInvoicesPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockCircleOutlined className="text-xl" style={{ color: '#f59e0b' }} />
+              <ClockIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
@@ -390,7 +391,7 @@ export default function PurchaseInvoicesPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <WarningOutlined className="text-xl" style={{ color: '#ef4444' }} />
+              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: '#ef4444' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">{stats.overdue}</div>
@@ -401,7 +402,7 @@ export default function PurchaseInvoicesPage() {
         <Card className="bg-white border border-slate-200">
           <div className="flex items-center gap-4 p-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <DollarOutlined className="text-xl" style={{ color: '#10b981' }} />
+              <CurrencyDollarIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
             <div>
               <div className="text-2xl font-semibold text-slate-900">
@@ -419,7 +420,7 @@ export default function PurchaseInvoicesPage() {
           <div className="flex flex-wrap items-center gap-4">
             <Input
               placeholder="Fatura ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="w-72"
@@ -453,7 +454,7 @@ export default function PurchaseInvoicesPage() {
                   onClick={handleBulkApprove}
                   disabled={bulkLoading}
                 >
-                  <CheckCircleOutlined className="text-xs" />
+                  <CheckCircleIcon className="w-3 h-3" />
                   Onayla
                 </button>
                 <button
@@ -461,7 +462,7 @@ export default function PurchaseInvoicesPage() {
                   onClick={handleBulkMarkPaid}
                   disabled={bulkLoading}
                 >
-                  <DollarOutlined className="text-xs" />
+                  <CurrencyDollarIcon className="w-3 h-3" />
                   Ödendi İşaretle
                 </button>
                 <button
@@ -469,7 +470,7 @@ export default function PurchaseInvoicesPage() {
                   onClick={handleBulkReject}
                   disabled={bulkLoading}
                 >
-                  <CloseCircleOutlined className="text-xs" />
+                  <XCircleIcon className="w-3 h-3" />
                   Reddet
                 </button>
                 <button
@@ -477,7 +478,7 @@ export default function PurchaseInvoicesPage() {
                   onClick={handleBulkDelete}
                   disabled={bulkLoading}
                 >
-                  <DeleteOutlined className="text-xs" />
+                  <TrashIcon className="w-3 h-3" />
                   Sil
                 </button>
                 <button

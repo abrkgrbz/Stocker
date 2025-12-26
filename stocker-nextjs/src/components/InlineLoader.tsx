@@ -19,7 +19,7 @@ export default function InlineLoader({
         indicator={<LoadingOutlined style={{ fontSize }} spin />}
         size={size}
       />
-      {text && <span className="text-gray-600 dark:text-gray-400">{text}</span>}
+      {text && <span className="text-gray-600">{text}</span>}
     </div>
   );
 }

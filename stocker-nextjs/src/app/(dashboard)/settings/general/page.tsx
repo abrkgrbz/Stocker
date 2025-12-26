@@ -8,13 +8,14 @@
  * - Minimal accent colors
  */
 
-import { Form, Input, Switch, Spin } from 'antd';
+import { Form, Input, Switch } from 'antd';
 import {
-  ArrowLeftOutlined,
-  ControlOutlined,
-  GlobalOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  AdjustmentsHorizontalIcon,
+  GlobeAltIcon,
+  BellIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRouter } from 'next/navigation';
 import { useTenant } from '@/lib/tenant';
 import { StorageUsageCard } from '@/components/settings';
@@ -37,7 +38,7 @@ export default function GeneralSettingsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -52,7 +53,7 @@ export default function GeneralSettingsPage() {
               onClick={() => router.back()}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Genel Ayarlar</h1>
@@ -104,7 +105,7 @@ export default function GeneralSettingsPage() {
                       name="timezone"
                       label={
                         <span className="flex items-center gap-2 text-sm text-slate-600">
-                          <GlobalOutlined className="text-slate-400" />
+                          <GlobeAltIcon className="w-4 h-4 text-slate-400" />
                           Zaman Dilimi
                         </span>
                       }
@@ -158,7 +159,7 @@ export default function GeneralSettingsPage() {
                           className="w-10 h-10 rounded-lg flex items-center justify-center"
                           style={{ backgroundColor: '#3b82f615' }}
                         >
-                          <BellOutlined style={{ color: '#3b82f6' }} />
+                          <BellIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
                         </div>
                         <div>
                           <span className="text-sm font-medium text-slate-900 block">E-posta Bildirimleri</span>
@@ -190,7 +191,7 @@ export default function GeneralSettingsPage() {
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-slate-500">
-              <ControlOutlined />
+              <AdjustmentsHorizontalIcon className="w-4 h-4" />
               <span>Genel sistem ayarları</span>
             </div>
             <div className="flex items-center gap-3">

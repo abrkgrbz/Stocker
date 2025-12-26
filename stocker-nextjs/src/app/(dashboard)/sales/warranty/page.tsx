@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Input, message, Spin } from 'antd';
+import { Input, message } from 'antd';
+import { Spinner } from '@/components/primitives';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import {
@@ -36,7 +37,7 @@ import {
   Card,
   Badge,
 } from '@/components/ui/enterprise-page';
-import { SafetyCertificateOutlined } from '@ant-design/icons';
+import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { SalesService, WarrantyListDto, WarrantyDto, WarrantyStatisticsDto } from '@/lib/api/services/sales.service';
 
 dayjs.locale('tr');
@@ -188,7 +189,7 @@ export default function WarrantyLookupPage() {
   return (
     <PageContainer maxWidth="5xl">
       <ListPageHeader
-        icon={<SafetyCertificateOutlined />}
+        icon={<ShieldCheckIcon className="w-5 h-5" />}
         iconColor="#059669"
         title="Garanti Sorgulama"
         description="Ürün garanti durumunu kontrol edin"
@@ -239,7 +240,7 @@ export default function WarrantyLookupPage() {
               disabled={loading}
               className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
             >
-              {loading ? <Spin size="small" /> : 'Ara'}
+              {loading ? <Spinner size="sm" /> : 'Ara'}
             </button>
           </div>
         </div>
@@ -261,7 +262,7 @@ export default function WarrantyLookupPage() {
 
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Spin size="large" />
+                <Spinner size="lg" />
               </div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-3">
@@ -357,7 +358,7 @@ export default function WarrantyLookupPage() {
               <Card>
                 {detailLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Spin size="large" />
+                    <Spinner size="lg" />
                   </div>
                 ) : (
                   (() => {

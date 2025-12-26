@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, Button, Steps, Typography, Space, Alert, Input, message, Divider, Tag } from 'antd';
-import { SafetyOutlined, QrcodeOutlined, KeyOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { ShieldCheckIcon, QrCodeIcon, KeyIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { generateTOTPSecret, generateQRCode, generateBackupCodes, type BackupCode } from '@/lib/auth/totp';
 
@@ -85,7 +85,7 @@ export default function TwoFactorSetupPage() {
   const steps = [
     {
       title: 'QR Kod Tara',
-      icon: <QrcodeOutlined />,
+      icon: <QrCodeIcon className="w-5 h-5" />,
       content: (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Alert
@@ -124,7 +124,7 @@ export default function TwoFactorSetupPage() {
     },
     {
       title: 'Doğrulama',
-      icon: <KeyOutlined />,
+      icon: <KeyIcon className="w-5 h-5" />,
       content: (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Alert
@@ -156,7 +156,7 @@ export default function TwoFactorSetupPage() {
     },
     {
       title: 'Yedekleme Kodları',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-5 h-5" />,
       content: (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Alert
@@ -169,7 +169,7 @@ export default function TwoFactorSetupPage() {
           <Card
             title="Yedekleme Kodları"
             extra={
-              <Button icon={<SafetyOutlined />} onClick={handleDownloadCodes}>
+              <Button icon={<ShieldCheckIcon className="w-4 h-4" />} onClick={handleDownloadCodes}>
                 İndir
               </Button>
             }
@@ -203,7 +203,7 @@ export default function TwoFactorSetupPage() {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2}>
-            <SafetyOutlined /> İki Faktörlü Doğrulama
+            <ShieldCheckIcon className="w-6 h-6 inline-block mr-2" /> İki Faktörlü Doğrulama
           </Title>
           <Paragraph type="secondary">
             Hesabınızı ekstra bir güvenlik katmanıyla koruyun. Giriş yaparken şifrenizin yanı sıra
@@ -222,7 +222,7 @@ export default function TwoFactorSetupPage() {
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Title level={5}>Güvenlik Durumu</Title>
               <Space>
-                <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+                <CheckCircleIcon className="w-5 h-5" style={{ color: '#52c41a' }} />
                 <Text strong>2FA Aktif</Text>
               </Space>
               <Text type="secondary">

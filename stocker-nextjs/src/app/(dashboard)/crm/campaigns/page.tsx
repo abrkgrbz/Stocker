@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Table, Tag, Progress, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
+import { Table, Tag, Progress, Avatar, Dropdown, Empty, Input } from 'antd';
 import {
   showCreateSuccess,
   showDeleteSuccess,
@@ -16,24 +16,24 @@ import {
   confirmDelete,
 } from '@/lib/utils/sweetalert';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlayCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  MailOutlined,
-  DollarOutlined,
-  UserAddOutlined,
-  ReloadOutlined,
-  TrophyOutlined,
-  MoreOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  CopyOutlined,
-  SearchOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  PlayCircleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  EnvelopeIcon,
+  CurrencyDollarIcon,
+  UserPlusIcon,
+  ArrowPathIcon,
+  TrophyIcon,
+  EllipsisHorizontalIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  DocumentDuplicateIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
 import {
@@ -50,18 +50,19 @@ import {
   ListPageHeader,
   Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+} from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 const campaignTypeLabels: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  Email: { label: 'E-posta', icon: <MailOutlined />, color: 'blue' },
-  SocialMedia: { label: 'Sosyal Medya', icon: <UserAddOutlined />, color: 'cyan' },
-  Webinar: { label: 'Webinar', icon: <PlayCircleOutlined />, color: 'purple' },
-  Event: { label: 'Etkinlik', icon: <CheckCircleOutlined />, color: 'green' },
-  Conference: { label: 'Konferans', icon: <CheckCircleOutlined />, color: 'geekblue' },
-  Advertisement: { label: 'Reklam', icon: <DollarOutlined />, color: 'orange' },
-  Banner: { label: 'Banner', icon: <DollarOutlined />, color: 'gold' },
-  Telemarketing: { label: 'Telefonla Pazarlama', icon: <MailOutlined />, color: 'magenta' },
-  PublicRelations: { label: 'Halkla İlişkiler', icon: <UserAddOutlined />, color: 'volcano' },
+  Email: { label: 'E-posta', icon: <EnvelopeIcon className="w-4 h-4" />, color: 'blue' },
+  SocialMedia: { label: 'Sosyal Medya', icon: <UserPlusIcon className="w-4 h-4" />, color: 'cyan' },
+  Webinar: { label: 'Webinar', icon: <PlayCircleIcon className="w-4 h-4" />, color: 'purple' },
+  Event: { label: 'Etkinlik', icon: <CheckCircleIcon className="w-4 h-4" />, color: 'green' },
+  Conference: { label: 'Konferans', icon: <CheckCircleIcon className="w-4 h-4" />, color: 'geekblue' },
+  Advertisement: { label: 'Reklam', icon: <CurrencyDollarIcon className="w-4 h-4" />, color: 'orange' },
+  Banner: { label: 'Banner', icon: <CurrencyDollarIcon className="w-4 h-4" />, color: 'gold' },
+  Telemarketing: { label: 'Telefonla Pazarlama', icon: <EnvelopeIcon className="w-4 h-4" />, color: 'magenta' },
+  PublicRelations: { label: 'Halkla İlişkiler', icon: <UserPlusIcon className="w-4 h-4" />, color: 'volcano' },
 };
 
 const campaignStatusLabels: Record<string, { label: string; color: string }> = {
@@ -269,9 +270,9 @@ export default function CampaignsPage() {
       render: (roi) => (
         <div className="flex items-center justify-end gap-1">
           {roi > 0 ? (
-            <ArrowUpOutlined className="text-emerald-500 text-xs" />
+            <ArrowUpIcon className="w-3 h-3 text-emerald-500" />
           ) : roi < 0 ? (
-            <ArrowDownOutlined className="text-red-500 text-xs" />
+            <ArrowDownIcon className="w-3 h-3 text-red-500" />
           ) : null}
           <Tag color={roi > 0 ? 'success' : roi < 0 ? 'error' : 'default'}>
             {roi > 0 ? '+' : ''}
@@ -320,7 +321,7 @@ export default function CampaignsPage() {
         menuItems.push({
           key: 'view',
           label: 'Görüntüle',
-          icon: <EyeOutlined />,
+          icon: <EyeIcon className="w-4 h-4" />,
           onClick: () => router.push(`/crm/campaigns/${record.id}`),
         });
 
@@ -328,7 +329,7 @@ export default function CampaignsPage() {
           menuItems.push({
             key: 'start',
             label: 'Başlat',
-            icon: <PlayCircleOutlined />,
+            icon: <PlayCircleIcon className="w-4 h-4" />,
             onClick: () => handleStart(record.id),
             disabled: startCampaign.isPending,
           });
@@ -338,7 +339,7 @@ export default function CampaignsPage() {
           menuItems.push({
             key: 'complete',
             label: 'Tamamla',
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             onClick: () => handleComplete(record.id),
             disabled: completeCampaign.isPending,
           });
@@ -347,14 +348,14 @@ export default function CampaignsPage() {
         menuItems.push({
           key: 'edit',
           label: 'Düzenle',
-          icon: <EditOutlined />,
+          icon: <PencilIcon className="w-4 h-4" />,
           onClick: () => handleEdit(record),
         });
 
         menuItems.push({
           key: 'clone',
           label: 'Kopyala',
-          icon: <CopyOutlined />,
+          icon: <DocumentDuplicateIcon className="w-4 h-4" />,
           onClick: () => handleClone(record),
           disabled: createCampaign.isPending,
         });
@@ -364,7 +365,7 @@ export default function CampaignsPage() {
           menuItems.push({
             key: 'abort',
             label: 'İptal Et',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             danger: true,
             onClick: () => handleAbort(record.id),
             disabled: abortCampaign.isPending,
@@ -375,7 +376,7 @@ export default function CampaignsPage() {
         menuItems.push({
           key: 'delete',
           label: 'Sil',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           danger: true,
           onClick: () => handleDelete(record.id, record),
           disabled: deleteCampaign.isPending,
@@ -384,7 +385,7 @@ export default function CampaignsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -401,7 +402,7 @@ export default function CampaignsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<MailOutlined />}
+        icon={<EnvelopeIcon className="w-5 h-5" />}
         iconColor="#ec4899"
         title="Pazarlama Kampanyaları"
         description="Kampanyalarınızı yönetin ve performansını takip edin"
@@ -409,7 +410,7 @@ export default function CampaignsPage() {
         primaryAction={{
           label: 'Yeni Kampanya',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -417,7 +418,7 @@ export default function CampaignsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -426,7 +427,7 @@ export default function CampaignsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Kampanya ara... (isim, açıklama)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -438,7 +439,7 @@ export default function CampaignsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -457,7 +458,7 @@ export default function CampaignsPage() {
             locale={{
               emptyText: (
                 <Empty
-                  image={<TrophyOutlined style={{ fontSize: 48, color: '#94a3b8' }} />}
+                  image={<TrophyIcon className="w-12 h-12 text-slate-400" />}
                   imageStyle={{ height: 60 }}
                   description={
                     <div className="py-4">
@@ -469,9 +470,9 @@ export default function CampaignsPage() {
                       </div>
                       <button
                         onClick={handleCreate}
-                        className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors inline-flex items-center gap-2"
                       >
-                        <PlusOutlined className="mr-2" />
+                        <PlusIcon className="w-4 h-4" />
                         Kampanya Oluştur
                       </button>
                     </div>

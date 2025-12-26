@@ -22,20 +22,20 @@ import {
   Divider,
 } from 'antd';
 import {
-  ClockCircleOutlined,
-  PlusOutlined,
-  MoreOutlined,
-  BellOutlined,
-  MailOutlined,
-  MobileOutlined,
-  SnippetsOutlined,
-  ReloadOutlined,
-  SyncOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  UserOutlined,
-  LinkOutlined,
-} from '@ant-design/icons';
+  ClockIcon,
+  PlusIcon,
+  EllipsisVerticalIcon,
+  BellIcon,
+  EnvelopeIcon,
+  DevicePhoneMobileIcon,
+  DocumentDuplicateIcon,
+  ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  UserIcon,
+  LinkIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -297,7 +297,7 @@ export default function RemindersPage() {
                   }}
                   trigger={['click']}
                 >
-                  <Button type="text" size="small" icon={<MoreOutlined />} />
+                  <Button type="text" size="small" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
                 </Dropdown>
               </div>
 
@@ -305,7 +305,7 @@ export default function RemindersPage() {
                 <Tag color={getReminderTypeColor(reminder.type)}>{getReminderTypeLabel(reminder.type)}</Tag>
                 <Tag color={getReminderStatusColor(reminder.status)}>{getReminderStatusLabel(reminder.status)}</Tag>
                 {recurrenceLabel && (
-                  <Tag icon={<SyncOutlined />} color="blue">
+                  <Tag icon={<ArrowsRightLeftIcon className="w-3 h-3" />} color="blue">
                     {recurrenceLabel}
                   </Tag>
                 )}
@@ -325,7 +325,7 @@ export default function RemindersPage() {
 
               <Space direction="vertical" size={4} style={{ width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <ClockCircleOutlined style={{ marginRight: 6, color: isPast ? '#ff4d4f' : '#1890ff' }} />
+                  <ClockIcon className="w-4 h-4 mr-1.5" style={{ color: isPast ? '#ff4d4f' : '#1890ff' }} />
                   <Text type={isPast && !isCompleted ? 'danger' : 'secondary'} style={{ fontSize: 12 }}>
                     {dayjs(reminder.remindAt).format('DD MMM YYYY HH:mm')}
                     <Text type="secondary"> ({dayjs(reminder.remindAt).fromNow()})</Text>
@@ -334,7 +334,7 @@ export default function RemindersPage() {
 
                 {reminder.relatedEntityType && reminder.relatedEntityId && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <LinkOutlined style={{ marginRight: 6 }} />
+                    <LinkIcon className="w-4 h-4 mr-1.5" />
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       {reminder.relatedEntityType} #{reminder.relatedEntityId}
                     </Text>
@@ -343,7 +343,7 @@ export default function RemindersPage() {
 
                 {reminder.assignedToUserId && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <UserOutlined style={{ marginRight: 6 }} />
+                    <UserIcon className="w-4 h-4 mr-1.5" />
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       {reminder.assignedToUserId}
                     </Text>
@@ -352,7 +352,7 @@ export default function RemindersPage() {
 
                 {reminder.status === 1 && reminder.snoozedUntil && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <ClockCircleOutlined style={{ marginRight: 6 }} />
+                    <ClockIcon className="w-4 h-4 mr-1.5" />
                     <Text type="warning" style={{ fontSize: 12 }}>
                       {dayjs(reminder.snoozedUntil).format('HH:mm')} saatine kadar ertelendi
                     </Text>
@@ -361,7 +361,7 @@ export default function RemindersPage() {
 
                 {reminder.dueDate && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <SnippetsOutlined style={{ marginRight: 6 }} />
+                    <DocumentDuplicateIcon className="w-4 h-4 mr-1.5" />
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       Teslim: {dayjs(reminder.dueDate).format('DD MMM YYYY')}
                     </Text>
@@ -370,7 +370,7 @@ export default function RemindersPage() {
 
                 {(reminder.meetingStartTime || reminder.meetingEndTime) && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <SnippetsOutlined style={{ marginRight: 6 }} />
+                    <DocumentDuplicateIcon className="w-4 h-4 mr-1.5" />
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       {dayjs(reminder.meetingStartTime).format('HH:mm')} - {dayjs(reminder.meetingEndTime).format('HH:mm')}
                     </Text>
@@ -382,9 +382,9 @@ export default function RemindersPage() {
                 <>
                   <Divider style={{ margin: '8px 0' }} />
                   <Space size={4} wrap>
-                    {reminder.sendEmail && <Tag icon={<MailOutlined />} color="blue">E-posta</Tag>}
-                    {reminder.sendPush && <Tag icon={<MobileOutlined />} color="green">Bildirim</Tag>}
-                    {reminder.sendInApp && <Tag icon={<BellOutlined />} color="purple">Uygulama</Tag>}
+                    {reminder.sendEmail && <Tag icon={<EnvelopeIcon className="w-3 h-3" />} color="blue">E-posta</Tag>}
+                    {reminder.sendPush && <Tag icon={<DevicePhoneMobileIcon className="w-3 h-3" />} color="green">Bildirim</Tag>}
+                    {reminder.sendInApp && <Tag icon={<BellIcon className="w-3 h-3" />} color="purple">Uygulama</Tag>}
                   </Space>
                 </>
               )}
@@ -417,13 +417,13 @@ export default function RemindersPage() {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
           <Title level={2} style={{ margin: 0 }}>
-            <BellOutlined /> Hatırlatıcılar
+            <BellIcon className="w-6 h-6 inline-block mr-2" /> Hatırlatıcılar
           </Title>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={loadReminders} loading={loading}>
+            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={loadReminders} loading={loading}>
               Yenile
             </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
               Yeni Hatırlatıcı
             </Button>
           </Space>
@@ -432,7 +432,7 @@ export default function RemindersPage() {
         <Space style={{ marginBottom: 16, width: '100%', flexWrap: 'wrap' }} size="middle">
           <Input
             placeholder="Hatırlatıcı ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}
@@ -442,7 +442,7 @@ export default function RemindersPage() {
             value={filterType}
             onChange={setFilterType}
             style={{ width: 200 }}
-            suffixIcon={<FilterOutlined />}
+            suffixIcon={<FunnelIcon className="w-4 h-4" />}
           >
             <Select.Option value="all">Tüm Tipler</Select.Option>
             <Select.Option value={0}>Genel</Select.Option>
@@ -469,14 +469,14 @@ export default function RemindersPage() {
           >
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ReloadOutlined spin style={{ fontSize: 32 }} />
+                <ArrowPathIcon className="w-8 h-8 animate-spin" />
               </div>
             ) : filteredReminders.length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="Henüz hatırlatıcı yok"
               >
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
                   İlk Hatırlatıcıyı Oluştur
                 </Button>
               </Empty>
@@ -497,7 +497,7 @@ export default function RemindersPage() {
           >
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ReloadOutlined spin style={{ fontSize: 32 }} />
+                <ArrowPathIcon className="w-8 h-8 animate-spin" />
               </div>
             ) : filteredReminders.length === 0 ? (
               <Empty
@@ -521,7 +521,7 @@ export default function RemindersPage() {
           >
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <ReloadOutlined spin style={{ fontSize: 32 }} />
+                <ArrowPathIcon className="w-8 h-8 animate-spin" />
               </div>
             ) : filteredReminders.length === 0 ? (
               <Empty

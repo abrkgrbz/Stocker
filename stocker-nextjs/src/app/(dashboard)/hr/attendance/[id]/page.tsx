@@ -9,19 +9,19 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
   Empty,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  ClockIcon,
+  UserIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
 import { useAttendanceById } from '@/lib/api/hooks/useHR';
 import { AttendanceStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -64,7 +64,7 @@ export default function AttendanceDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function AttendanceDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/attendance')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/attendance')}>
             Geri
           </Button>
           <div>
@@ -104,7 +104,7 @@ export default function AttendanceDetailPage() {
             </Space>
           </div>
         </Space>
-        <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/attendance/${id}/edit`)}>
+        <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/attendance/${id}/edit`)}>
           Düzenle
         </Button>
       </div>
@@ -118,7 +118,7 @@ export default function AttendanceDetailPage() {
                 <Statistic
                   title="Giriş Saati"
                   value={formatTime(attendance.checkInTime)}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#52c41a' }}
                 />
               </Card>
@@ -128,7 +128,7 @@ export default function AttendanceDetailPage() {
                 <Statistic
                   title="Çıkış Saati"
                   value={formatTime(attendance.checkOutTime)}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#1890ff' }}
                 />
               </Card>
@@ -160,13 +160,13 @@ export default function AttendanceDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {attendance.employeeName || `Çalışan #${attendance.employeeId}`}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Tarih">
                 <Space>
-                  <CalendarOutlined />
+                  <CalendarIcon className="w-4 h-4" />
                   {dayjs(attendance.date).format('DD MMMM YYYY, dddd')}
                 </Space>
               </Descriptions.Item>

@@ -24,12 +24,14 @@ export interface TextareaProps
 const variantClasses = {
   default: `
     bg-slate-50 border border-slate-300 rounded-md
+    text-slate-900
     hover:border-slate-400
     focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white
     placeholder:text-slate-400
   `,
   borderless: `
     bg-transparent border-0 border-b border-slate-200
+    text-slate-900
     hover:border-slate-400
     focus:border-slate-900 focus:ring-0
     rounded-none
@@ -37,6 +39,7 @@ const variantClasses = {
   `,
   filled: `
     bg-slate-100 border border-transparent rounded-md
+    text-slate-900
     hover:bg-slate-200
     focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900
     placeholder:text-slate-500

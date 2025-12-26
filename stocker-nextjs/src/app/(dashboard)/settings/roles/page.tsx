@@ -10,18 +10,19 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Tooltip, Dropdown, Spin } from 'antd';
+import { Input, Tooltip, Dropdown } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  LockOutlined,
-  TeamOutlined,
-  SafetyOutlined,
-  MoreOutlined,
-  SearchOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  LockClosedIcon,
+  UsersIcon,
+  ShieldCheckIcon,
+  EllipsisVerticalIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';
 import { type Role } from '@/lib/api/roles';
 import { confirmDelete } from '@/lib/utils/sweetalert';
@@ -89,21 +90,21 @@ export default function RolesPage() {
     {
       key: 'view',
       label: 'Detayları Görüntüle',
-      icon: <EyeOutlined />,
+      icon: <EyeIcon className="w-4 h-4" />,
       onClick: () => handleViewDetails(role),
     },
     { type: 'divider' as const },
     {
       key: 'edit',
       label: 'Düzenle',
-      icon: <EditOutlined />,
+      icon: <PencilIcon className="w-4 h-4" />,
       disabled: role.isSystemRole,
       onClick: () => handleEdit(role),
     },
     {
       key: 'delete',
       label: 'Sil',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       danger: true,
       disabled: role.isSystemRole,
       onClick: () => handleDelete(role),
@@ -128,7 +129,7 @@ export default function RolesPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <SafetyOutlined style={{ color: '#6366f1' }} />
+              <ShieldCheckIcon className="w-5 h-5" style={{ color: '#6366f1' }} />
             </div>
           </div>
         </div>
@@ -139,7 +140,7 @@ export default function RolesPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.users}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <TeamOutlined style={{ color: '#10b981' }} />
+              <UsersIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -150,7 +151,7 @@ export default function RolesPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.system}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <LockOutlined style={{ color: '#f59e0b' }} />
+              <LockClosedIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -169,7 +170,7 @@ export default function RolesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<SafetyOutlined />}
+        icon={<ShieldCheckIcon className="w-5 h-5" />}
         iconColor="#6366f1"
         title="Roller"
         description="Sistemdeki rolleri yönetin ve yetkileri düzenleyin"
@@ -177,7 +178,7 @@ export default function RolesPage() {
         primaryAction={{
           label: 'Yeni Rol',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
       />
 
@@ -185,7 +186,7 @@ export default function RolesPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Rolleri ara... (rol adı, açıklama)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           allowClear
@@ -197,13 +198,13 @@ export default function RolesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : filteredRoles.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<SafetyOutlined className="text-xl" />}
+            icon={<ShieldCheckIcon className="w-6 h-6" />}
             title={searchQuery ? 'Sonuç bulunamadı' : 'Henüz rol oluşturulmamış'}
             description={
               searchQuery
@@ -243,7 +244,7 @@ export default function RolesPage() {
                     <span className="text-sm font-medium text-slate-900">{role.name}</span>
                     {role.isSystemRole && (
                       <Badge variant="warning">
-                        <LockOutlined className="mr-1" />
+                        <LockClosedIcon className="w-3 h-3 mr-1" />
                         Sistem
                       </Badge>
                     )}
@@ -256,11 +257,11 @@ export default function RolesPage() {
                 {/* Stats */}
                 <div className="hidden md:flex items-center gap-6 text-xs text-slate-500">
                   <div className="flex items-center gap-1">
-                    <TeamOutlined />
+                    <UsersIcon className="w-3 h-3" />
                     <span>{role.userCount} kullanıcı</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <SafetyOutlined />
+                    <ShieldCheckIcon className="w-3 h-3" />
                     <span>{role.permissions.length} yetki</span>
                   </div>
                 </div>
@@ -277,7 +278,7 @@ export default function RolesPage() {
                     disabled={role.isSystemRole}
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <EditOutlined className="text-sm" />
+                    <PencilIcon className="w-4 h-4" />
                   </button>
                 </Tooltip>
                 <Tooltip title="Sil">
@@ -289,7 +290,7 @@ export default function RolesPage() {
                     disabled={role.isSystemRole}
                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <DeleteOutlined className="text-sm" />
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </Tooltip>
                 <Dropdown menu={{ items: getMenuItems(role) as any }} trigger={['click']}>
@@ -297,7 +298,7 @@ export default function RolesPage() {
                     onClick={(e) => e.stopPropagation()}
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
                   >
-                    <MoreOutlined className="text-sm" />
+                    <EllipsisVerticalIcon className="w-4 h-4" />
                   </button>
                 </Dropdown>
               </div>

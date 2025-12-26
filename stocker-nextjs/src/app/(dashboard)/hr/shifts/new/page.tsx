@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { ShiftForm } from '@/components/hr';
 import { useCreateShift } from '@/lib/api/hooks/useHR';
 import type { CreateShiftDto } from '@/lib/api/services/hr.types';

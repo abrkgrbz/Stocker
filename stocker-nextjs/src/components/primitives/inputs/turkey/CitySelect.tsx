@@ -6,13 +6,19 @@
  * =====================================
  *
  * Searchable city (il) select with Turkey's 81 provinces.
+ * Uses react-select for Select2-like experience.
  */
 
-import React, { Fragment, useState, useMemo } from 'react';
-import { Combobox, Transition } from '@headlessui/react';
-import { ChevronUpDownIcon, CheckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import React, { useMemo } from 'react';
+import Select, { SingleValue, StylesConfig } from 'react-select';
 import { cn } from '@/lib/cn';
 import { TURKEY_CITIES, type City } from './data/cities';
+
+export interface CityOption {
+  value: string;
+  label: string;
+  city: City;
+}
 
 export interface CitySelectProps {
   /** Selected city (name or code based on valueType) */
@@ -39,10 +45,10 @@ export interface CitySelectProps {
   className?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-8 text-sm',
-  md: 'h-10 text-sm',
-  lg: 'h-12 text-base',
+const sizeConfig = {
+  sm: { height: 32, fontSize: 14 },
+  md: { height: 40, fontSize: 14 },
+  lg: { height: 48, fontSize: 16 },
 };
 
 export function CitySelect({
@@ -55,129 +61,148 @@ export function CitySelect({
   errorMessage,
   size = 'md',
   fullWidth = true,
-  showPlateCode = true,
+  showPlateCode = false,
   className,
 }: CitySelectProps) {
-  const [query, setQuery] = useState('');
-
-  const selectedCity = useMemo(
-    () => {
-      if (!value) return null;
-      if (valueType === 'code') {
-        return TURKEY_CITIES.find((city) => city.code === value) || null;
-      }
-      return TURKEY_CITIES.find((city) => city.name === value) || null;
-    },
-    [value, valueType]
+  // Convert cities to react-select options
+  const options: CityOption[] = useMemo(
+    () =>
+      TURKEY_CITIES.map((city) => ({
+        value: valueType === 'code' ? city.code : city.name,
+        label: showPlateCode ? `${city.code} - ${city.name}` : city.name,
+        city,
+      })),
+    [valueType, showPlateCode]
   );
 
-  const filteredCities = useMemo(() => {
-    if (query === '') return TURKEY_CITIES;
-    const lowerQuery = query.toLowerCase();
-    return TURKEY_CITIES.filter(
-      (city) =>
-        city.name.toLowerCase().includes(lowerQuery) ||
-        city.code.includes(query)
-    );
-  }, [query]);
+  // Find selected option
+  const selectedOption = useMemo(() => {
+    if (!value) return null;
+    return options.find((opt) => opt.value === value) || null;
+  }, [value, options]);
 
-  const handleChange = (city: City | null) => {
-    const returnValue = city ? (valueType === 'code' ? city.code : city.name) : null;
-    onChange(returnValue, city);
-    setQuery('');
+  const handleChange = (option: SingleValue<CityOption>) => {
+    if (option) {
+      onChange(option.value, option.city);
+    } else {
+      onChange(null, null);
+    }
+  };
+
+  const { height, fontSize } = sizeConfig[size];
+
+  // Custom styles for react-select
+  const customStyles: StylesConfig<CityOption, false> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: height,
+      height: height,
+      fontSize: fontSize,
+      backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+      borderColor: error
+        ? '#ef4444'
+        : state.isFocused
+          ? '#0f172a'
+          : '#cbd5e1',
+      borderRadius: 6,
+      boxShadow: state.isFocused
+        ? error
+          ? '0 0 0 1px #ef4444'
+          : '0 0 0 1px #0f172a'
+        : 'none',
+      '&:hover': {
+        borderColor: error ? '#ef4444' : state.isFocused ? '#0f172a' : '#94a3b8',
+      },
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+      opacity: state.isDisabled ? 0.5 : 1,
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0 12px',
+      height: height - 2,
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      color: '#0f172a',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: '#0f172a',
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: '#94a3b8',
+    }),
+    indicatorSeparator: () => ({
+      display: 'none',
+    }),
+    dropdownIndicator: (base, state) => ({
+      ...base,
+      padding: '0 8px',
+      color: '#94a3b8',
+      '&:hover': {
+        color: '#64748b',
+      },
+      transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : undefined,
+      transition: 'transform 0.2s ease',
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+      marginTop: 4,
+      borderRadius: 6,
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e2e8f0',
+      overflow: 'hidden',
+    }),
+    menuList: (base) => ({
+      ...base,
+      padding: 4,
+      maxHeight: 240,
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: fontSize,
+      padding: '8px 12px',
+      borderRadius: 4,
+      cursor: 'pointer',
+      backgroundColor: state.isSelected
+        ? '#f1f5f9'
+        : state.isFocused
+          ? '#f8fafc'
+          : 'transparent',
+      color: '#0f172a',
+      fontWeight: state.isSelected ? 500 : 400,
+      '&:active': {
+        backgroundColor: '#e2e8f0',
+      },
+    }),
+    noOptionsMessage: (base) => ({
+      ...base,
+      fontSize: fontSize,
+      color: '#64748b',
+    }),
   };
 
   return (
-    <div className={cn('relative', fullWidth && 'w-full')}>
-      <Combobox value={selectedCity} onChange={handleChange} disabled={disabled}>
-        <div className="relative">
-          <div className="relative">
-            <Combobox.Input
-              className={cn(
-                'w-full rounded-md pl-3 pr-10 outline-none transition-all duration-200',
-                'bg-slate-50 border border-slate-300',
-                'hover:border-slate-400',
-                'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
-                'placeholder:text-slate-400',
-                sizeClasses[size],
-                error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
-                disabled && 'opacity-50 cursor-not-allowed bg-slate-100',
-                className
-              )}
-              displayValue={(city: City | null) =>
-                city ? (showPlateCode ? `${city.code} - ${city.name}` : city.name) : ''
-              }
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={placeholder}
-            />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
-            </Combobox.Button>
-          </div>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-            afterLeave={() => setQuery('')}
-          >
-            <Combobox.Options
-              className={cn(
-                'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md',
-                'bg-white py-1 shadow-lg ring-1 ring-black/5',
-                'focus:outline-none text-sm'
-              )}
-            >
-              {filteredCities.length === 0 && query !== '' ? (
-                <div className="relative cursor-default select-none py-2 px-4 text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <MagnifyingGlassIcon className="h-4 w-4" />
-                    <span>Sonuç bulunamadı</span>
-                  </div>
-                </div>
-              ) : (
-                filteredCities.map((city) => (
-                  <Combobox.Option
-                    key={city.code}
-                    value={city}
-                    className={({ active, selected }) =>
-                      cn(
-                        'relative cursor-pointer select-none py-2 pl-10 pr-4',
-                        active && 'bg-slate-100',
-                        selected && 'bg-slate-50'
-                      )
-                    }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <div className="flex items-center gap-2">
-                          {showPlateCode && (
-                            <span className="w-6 text-slate-400 text-xs font-mono">
-                              {city.code}
-                            </span>
-                          )}
-                          <span className={cn('block truncate', selected && 'font-medium')}>
-                            {city.name}
-                          </span>
-                          <span className="text-xs text-slate-400 ml-auto">
-                            {city.region}
-                          </span>
-                        </div>
-                        {selected && (
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-900">
-                            <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Combobox.Option>
-                ))
-              )}
-            </Combobox.Options>
-          </Transition>
-        </div>
-      </Combobox>
+    <div className={cn('relative', fullWidth && 'w-full', className)}>
+      <Select<CityOption, false>
+        value={selectedOption}
+        onChange={handleChange}
+        options={options}
+        placeholder={placeholder}
+        isDisabled={disabled}
+        isClearable
+        isSearchable
+        styles={customStyles}
+        noOptionsMessage={() => 'Sonuç bulunamadı'}
+        loadingMessage={() => 'Yükleniyor...'}
+        classNamePrefix="city-select"
+        menuPlacement="auto"
+        menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
+      />
       {errorMessage && <p className="mt-1 text-xs text-red-600">{errorMessage}</p>}
     </div>
   );

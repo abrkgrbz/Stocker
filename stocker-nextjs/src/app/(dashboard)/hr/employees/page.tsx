@@ -15,24 +15,24 @@ import {
   Dropdown,
   Avatar,
   Modal,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  TeamOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  MailOutlined,
-  IdcardOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  EllipsisVerticalIcon,
+  UsersIcon,
+  UserIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  EnvelopeIcon,
+  IdentificationIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
 import {
   useEmployees,
   useDepartments,
@@ -179,7 +179,7 @@ export default function EmployeesPage() {
           <Avatar
             size={40}
             src={record.photoUrl}
-            icon={<UserOutlined />}
+            icon={<UserIcon className="w-5 h-5" />}
             style={{ backgroundColor: record.photoUrl ? undefined : '#7c3aed' }}
           />
           <div>
@@ -211,7 +211,7 @@ export default function EmployeesPage() {
       render: (email) =>
         email ? (
           <div className="flex items-center gap-1 text-xs text-slate-600">
-            <MailOutlined className="text-slate-400" />
+            <EnvelopeIcon className="w-3 h-3 text-slate-400" />
             <span>{email}</span>
           </div>
         ) : (
@@ -251,27 +251,27 @@ export default function EmployeesPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
           { type: 'divider' as const },
           {
             key: 'toggle',
-            icon: record.status === EmployeeStatus.Active ? <StopOutlined /> : <CheckCircleOutlined />,
+            icon: record.status === EmployeeStatus.Active ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
             label: record.status === EmployeeStatus.Active ? 'Pasifleştir' : 'Aktifleştir',
             onClick: () => handleToggleActive(record),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -281,7 +281,7 @@ export default function EmployeesPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -300,7 +300,7 @@ export default function EmployeesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalEmployees}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7c3aed15' }}>
-              <TeamOutlined style={{ color: '#7c3aed' }} />
+              <UsersIcon className="w-6 h-6" style={{ color: '#7c3aed' }} />
             </div>
           </div>
         </div>
@@ -311,7 +311,7 @@ export default function EmployeesPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeEmployees}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -322,7 +322,7 @@ export default function EmployeesPage() {
               <div className="text-2xl font-semibold text-slate-900">{onLeaveEmployees}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CalendarOutlined style={{ color: '#3b82f6' }} />
+              <CalendarIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -333,7 +333,7 @@ export default function EmployeesPage() {
               <div className="text-2xl font-semibold text-slate-900">{departmentCount}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <IdcardOutlined style={{ color: '#8b5cf6' }} />
+              <IdentificationIcon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -341,7 +341,7 @@ export default function EmployeesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TeamOutlined />}
+        icon={<UsersIcon className="w-5 h-5" />}
         iconColor="#7c3aed"
         title="Çalışanlar"
         description="Tüm çalışanları görüntüle ve yönet"
@@ -349,7 +349,7 @@ export default function EmployeesPage() {
         primaryAction={{
           label: 'Yeni Çalışan',
           onClick: () => router.push('/hr/employees/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -357,7 +357,7 @@ export default function EmployeesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -368,7 +368,7 @@ export default function EmployeesPage() {
           <div className="md:col-span-2">
             <Input
               placeholder="Ad, kod, e-posta ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -415,7 +415,7 @@ export default function EmployeesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

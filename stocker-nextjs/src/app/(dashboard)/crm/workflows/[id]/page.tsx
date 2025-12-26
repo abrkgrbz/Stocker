@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, use } from 'react';
-import { Empty, Spin, Modal, message } from 'antd';
+import { Empty, Modal, message } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ThunderboltOutlined,
-  ArrowLeftOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  PlusOutlined,
-  SaveOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons';
+  BoltIcon,
+  ArrowLeftIcon,
+  PlayCircleIcon,
+  PauseCircleIcon,
+  PlusIcon,
+  BookmarkIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
 import type { WorkflowDto, WorkflowActionType } from '@/lib/api/services/crm.types';
@@ -265,7 +266,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
   if (loading && !workflow) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -305,11 +306,11 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                 onClick={() => router.push('/crm/workflows')}
                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <ArrowLeftOutlined />
+                <ArrowLeftIcon className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-                  <ThunderboltOutlined className="text-white text-lg" />
+                  <BoltIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h1 className="text-lg font-semibold text-slate-900">{workflow.name}</h1>
@@ -349,12 +350,12 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
               >
                 {workflow.isActive ? (
                   <>
-                    <PauseCircleOutlined />
+                    <PauseCircleIcon className="w-4 h-4" />
                     Deaktif Et
                   </>
                 ) : (
                   <>
-                    <PlayCircleOutlined />
+                    <PlayCircleIcon className="w-4 h-4" />
                     Aktif Et
                   </>
                 )}
@@ -364,7 +365,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                 disabled={saving}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
               >
-                <SaveOutlined className={saving ? 'animate-spin' : ''} />
+                <BookmarkIcon className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
             </div>
@@ -440,7 +441,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                   >
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-                        <PlusOutlined className="text-lg" />
+                        <PlusIcon className="w-5 h-5" />
                       </div>
                       <span className="text-sm font-medium">Aksiyon Ekle</span>
                     </div>
@@ -470,7 +471,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <BarChartOutlined className="text-blue-600" />
+                      <ChartBarIcon className="w-5 h-5 text-blue-600" />
                     </div>
                     <span className="text-sm text-slate-600">Toplam Adım</span>
                   </div>
@@ -480,7 +481,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center">
-                      <CheckCircleOutlined className="text-green-600" />
+                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
                     </div>
                     <span className="text-sm text-slate-600">Aktif Adım</span>
                   </div>
@@ -492,7 +493,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center">
-                      <ThunderboltOutlined className="text-purple-600" />
+                      <BoltIcon className="w-5 h-5 text-purple-600" />
                     </div>
                     <span className="text-sm text-slate-600">Çalıştırma</span>
                   </div>
@@ -509,7 +510,7 @@ export default function WorkflowDetailPage({ params }: WorkflowDetailPageProps) 
               <div className="p-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <ClockCircleOutlined className="text-slate-500" />
+                    <ClockIcon className="w-5 h-5 text-slate-500" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">

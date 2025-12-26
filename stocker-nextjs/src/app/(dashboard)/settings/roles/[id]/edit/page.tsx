@@ -11,14 +11,15 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Form, Input, Spin, Checkbox, Alert } from 'antd';
+import { Form, Input, Checkbox, Alert } from 'antd';
 import {
-  ArrowLeftOutlined,
-  CheckOutlined,
-  DownOutlined,
-  RightOutlined,
-  LockOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  LockClosedIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRole, useUpdateRole } from '@/hooks/useRoles';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import {
@@ -269,9 +270,9 @@ export default function EditRolePage() {
               {permCount}/{maxPerms}
             </span>
             {isExpanded ? (
-              <DownOutlined className="text-slate-400 text-xs" />
+              <ChevronDownIcon className="w-3 h-3 text-slate-400" />
             ) : (
-              <RightOutlined className="text-slate-400 text-xs" />
+              <ChevronRightIcon className="w-3 h-3 text-slate-400" />
             )}
           </div>
         </div>
@@ -289,7 +290,7 @@ export default function EditRolePage() {
   if (isLoading || modulesLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -321,7 +322,7 @@ export default function EditRolePage() {
               onClick={() => router.back()}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Rol Düzenle</h1>
@@ -339,7 +340,7 @@ export default function EditRolePage() {
             description="Bu rol sistem tarafından oluşturulmuştur ve düzenlenemez. Sadece görüntüleyebilirsiniz."
             type="warning"
             showIcon
-            icon={<LockOutlined />}
+            icon={<LockClosedIcon className="w-4 h-4" />}
           />
         </div>
       )}
@@ -381,7 +382,7 @@ export default function EditRolePage() {
                     </span>
                     {isSystemRole && (
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-md">
-                        <LockOutlined className="text-xs" />
+                        <LockClosedIcon className="w-3 h-3" />
                         Sistem Rolü
                       </span>
                     )}
@@ -446,7 +447,7 @@ export default function EditRolePage() {
             <div className="text-sm text-slate-500">
               {selectedPermissions.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <CheckOutlined className="text-green-500" />
+                  <CheckIcon className="w-4 h-4 text-green-500" />
                   {selectedPermissions.length} yetki atanmış
                 </span>
               ) : (

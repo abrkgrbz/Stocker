@@ -21,13 +21,35 @@ export const userModulesKeys = {
 // QUERIES
 // =====================================
 
+// Dev bypass mock modules - all modules active
+const DEV_MOCK_MODULES: UserModulesResponse = {
+  tenantId: 'dev-tenant-id',
+  packageName: 'Dev Package',
+  modules: [
+    { code: 'crm', name: 'CRM', isActive: true },
+    { code: 'inventory', name: 'Inventory', isActive: true },
+    { code: 'sales', name: 'Sales', isActive: true },
+    { code: 'purchase', name: 'Purchase', isActive: true },
+    { code: 'hr', name: 'HR', isActive: true },
+  ],
+};
+
 /**
  * Hook to fetch current user's active modules
  */
 export function useActiveModules() {
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+
   return useQuery<UserModulesResponse>({
     queryKey: userModulesKeys.active(),
-    queryFn: () => UserModulesService.getActiveModules(),
+    queryFn: () => {
+      if (isAuthBypassed) {
+        console.log('🔓 Modules bypassed - using all modules');
+        return Promise.resolve(DEV_MOCK_MODULES);
+      }
+      return UserModulesService.getActiveModules();
+    },
     ...queryOptions.static(),
   });
 }

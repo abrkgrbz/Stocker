@@ -6,7 +6,6 @@ import {
   Button,
   Space,
   Tag,
-  Spin,
   Modal,
   Upload,
   Image,
@@ -14,28 +13,29 @@ import {
   Tooltip,
   Progress,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import type { RcFile } from 'antd/es/upload';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  WarningOutlined,
-  BarcodeOutlined,
-  PlusOutlined,
-  PictureOutlined,
-  StarOutlined,
-  StarFilled,
-  BoxPlotOutlined,
-  DollarOutlined,
-  SettingOutlined,
-  ClockCircleOutlined,
-  TagOutlined,
-  AppstoreOutlined,
-  ScissorOutlined,
-  ExpandOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  StopIcon,
+  ExclamationTriangleIcon,
+  IdentificationIcon,
+  PlusIcon,
+  PhotoIcon,
+  StarIcon,
+  CubeIcon,
+  CurrencyDollarIcon,
+  Cog6ToothIcon,
+  ClockIcon,
+  TagIcon,
+  Squares2X2Icon,
+  ScissorsIcon,
+  ArrowsPointingOutIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import {
   useProduct,
   useDeleteProduct,
@@ -148,7 +148,7 @@ export default function ProductDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50 p-8">
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center max-w-lg mx-auto mt-20">
-          <WarningOutlined className="text-5xl text-slate-300 mb-4" />
+          <ExclamationTriangleIcon className="w-12 h-12 text-slate-300 mb-4 mx-auto" />
           <h2 className="text-xl font-semibold text-slate-900 mb-2">Ürün Bulunamadı</h2>
           <p className="text-slate-500 mb-6">İstenen ürün bulunamadı veya bir hata oluştu.</p>
           <Button onClick={() => router.push('/inventory/products')} className="!border-slate-300">
@@ -191,7 +191,7 @@ export default function ProductDetailPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="!text-slate-500 hover:!text-slate-800"
@@ -201,11 +201,11 @@ export default function ProductDetailPage() {
                 <h1 className="text-xl font-semibold text-slate-900 m-0">{product.name}</h1>
                 {product.isActive ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-900 text-white">
-                    <CheckCircleOutlined className="text-[10px]" /> Aktif
+                    <CheckCircleIcon className="w-3 h-3" /> Aktif
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-200 text-slate-600">
-                    <StopOutlined className="text-[10px]" /> Pasif
+                    <StopIcon className="w-3 h-3" /> Pasif
                   </span>
                 )}
               </div>
@@ -214,7 +214,7 @@ export default function ProductDetailPage() {
           </div>
           <Space size="small">
             <Button
-              icon={product.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+              icon={product.isActive ? <StopIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
               onClick={handleToggleActive}
               loading={activateProduct.isPending || deactivateProduct.isPending}
               className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
               {product.isActive ? 'Pasifleştir' : 'Aktifleştir'}
             </Button>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilSquareIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/products/${productId}/edit`)}
               className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
             >
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
             </Button>
             <Button
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={handleDelete}
               loading={deleteProduct.isPending}
             >
@@ -250,7 +250,7 @@ export default function ProductDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <BoxPlotOutlined className="text-slate-600 text-lg" />
+                  <CubeIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Toplam Stok</p>
               </div>
@@ -262,7 +262,7 @@ export default function ProductDetailPage() {
               </div>
               {isLowStock && (
                 <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 font-medium">
-                  <WarningOutlined /> Düşük stok seviyesi
+                  <ExclamationTriangleIcon className="w-4 h-4" /> Düşük stok seviyesi
                 </div>
               )}
             </div>
@@ -272,7 +272,7 @@ export default function ProductDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-slate-600 text-lg" />
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kullanılabilir</p>
               </div>
@@ -289,7 +289,7 @@ export default function ProductDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <DollarOutlined className="text-slate-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Birim Fiyat</p>
               </div>
@@ -305,7 +305,7 @@ export default function ProductDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                  <DollarOutlined className="text-white text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stok Değeri</p>
               </div>
@@ -324,7 +324,7 @@ export default function ProductDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
-                  <PictureOutlined className="text-slate-400" />
+                  <PhotoIcon className="w-4 h-4 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Ürün Görselleri</p>
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-xs text-slate-600">
                     {images.length}
@@ -343,14 +343,14 @@ export default function ProductDetailPage() {
                     preview={{
                       mask: (
                         <div className="flex items-center gap-2 text-white">
-                          <ExpandOutlined /> Büyüt
+                          <ArrowsPointingOutIcon className="w-4 h-4" /> Büyüt
                         </div>
                       ),
                     }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
-                    <PictureOutlined className="text-6xl mb-3" />
+                    <PhotoIcon className="w-16 h-16 mb-3" />
                     <span className="text-sm">Görsel yok</span>
                   </div>
                 )}
@@ -359,7 +359,7 @@ export default function ProductDetailPage() {
               {/* Thumbnail Grid */}
               {imagesLoading ? (
                 <div className="flex justify-center py-4">
-                  <Spin size="small" />
+                  <Spinner size="sm" />
                 </div>
               ) : images.length > 0 ? (
                 <div className="grid grid-cols-5 gap-2 mb-4">
@@ -383,7 +383,7 @@ export default function ProductDetailPage() {
                                   <Button
                                     type="text"
                                     size="small"
-                                    icon={<StarOutlined />}
+                                    icon={<StarIcon className="w-4 h-4" />}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleSetPrimary(img.id);
@@ -396,7 +396,7 @@ export default function ProductDetailPage() {
                                 <Button
                                   type="text"
                                   size="small"
-                                  icon={<DeleteOutlined />}
+                                  icon={<TrashIcon className="w-4 h-4" />}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteImage(img.id);
@@ -410,7 +410,7 @@ export default function ProductDetailPage() {
                       />
                       {img.isPrimary && (
                         <div className="absolute top-1 left-1">
-                          <StarFilled className="text-amber-400 text-sm drop-shadow" />
+                          <StarIconSolid className="w-4 h-4 text-amber-400 drop-shadow" />
                         </div>
                       )}
                     </div>
@@ -426,7 +426,7 @@ export default function ProductDetailPage() {
                 disabled={uploadImage.isPending}
               >
                 <Button
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   loading={uploadImage.isPending}
                   block
                   className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
@@ -466,7 +466,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
                     {product.barcode ? (
                       <>
-                        <BarcodeOutlined className="text-slate-400" />
+                        <IdentificationIcon className="w-4 h-4 text-slate-400" />
                         {product.barcode}
                       </>
                     ) : '-'}
@@ -477,7 +477,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
                     {product.categoryName ? (
                       <>
-                        <AppstoreOutlined className="text-slate-400" />
+                        <Squares2X2Icon className="w-4 h-4 text-slate-400" />
                         {product.categoryName}
                       </>
                     ) : '-'}
@@ -488,7 +488,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm font-medium text-slate-900 m-0 flex items-center gap-2">
                     {product.brandName ? (
                       <>
-                        <TagOutlined className="text-slate-400" />
+                        <TagIcon className="w-4 h-4 text-slate-400" />
                         {product.brandName}
                       </>
                     ) : '-'}
@@ -509,7 +509,7 @@ export default function ProductDetailPage() {
 
               {/* Stock Settings */}
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <SettingOutlined /> Stok Ayarları
+                <Cog6ToothIcon className="w-4 h-4" /> Stok Ayarları
               </p>
 
               <div className="grid grid-cols-4 gap-4 mb-6">
@@ -549,17 +549,17 @@ export default function ProductDetailPage() {
               {/* Tracking Options */}
               <div className="flex items-center gap-4">
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${product.trackSerialNumbers ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                  <ScissorOutlined />
+                  <ScissorsIcon className="w-4 h-4" />
                   <span className="text-xs font-medium">Seri No Takibi</span>
-                  {product.trackSerialNumbers && <CheckCircleOutlined className="text-xs" />}
+                  {product.trackSerialNumbers && <CheckCircleIcon className="w-3 h-3" />}
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${product.trackLotNumbers ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                  <BoxPlotOutlined />
+                  <CubeIcon className="w-4 h-4" />
                   <span className="text-xs font-medium">Lot Takibi</span>
-                  {product.trackLotNumbers && <CheckCircleOutlined className="text-xs" />}
+                  {product.trackLotNumbers && <CheckCircleIcon className="w-3 h-3" />}
                 </div>
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-600">
-                  <ClockCircleOutlined />
+                  <ClockIcon className="w-4 h-4" />
                   <span className="text-xs font-medium">Tedarik: {product.leadTimeDays} gün</span>
                 </div>
               </div>

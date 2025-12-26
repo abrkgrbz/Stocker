@@ -19,17 +19,17 @@ import {
   message,
 } from 'antd';
 import {
-  PlusOutlined,
-  CalendarOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  CalendarIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useLeaves,
@@ -128,7 +128,7 @@ export default function LeavesPage() {
       key: 'employee',
       render: (_, record: LeaveDto) => (
         <Space>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -181,13 +181,13 @@ export default function LeavesPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/leaves/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/leaves/${record.id}/edit`),
                 disabled: record.status !== LeaveStatus.Pending,
@@ -197,13 +197,13 @@ export default function LeavesPage() {
                 ? [
                     {
                       key: 'approve',
-                      icon: <CheckCircleOutlined />,
+                      icon: <CheckCircleIcon className="w-4 h-4" />,
                       label: 'Onayla',
                       onClick: () => handleApprove(record),
                     },
                     {
                       key: 'reject',
-                      icon: <CloseCircleOutlined />,
+                      icon: <XCircleIcon className="w-4 h-4" />,
                       label: 'Reddet',
                       onClick: () => handleReject(record),
                     },
@@ -212,7 +212,7 @@ export default function LeavesPage() {
                 : []),
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -221,7 +221,7 @@ export default function LeavesPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -232,12 +232,12 @@ export default function LeavesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CalendarOutlined className="mr-2" />
+          <CalendarIcon className="w-6 h-6 mr-2 inline" />
           İzin Yönetimi
         </Title>
         <Space>
           <Button onClick={() => router.push('/hr/leave-types')}>İzin Türleri</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/leaves/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leaves/new')}>
             Yeni İzin Talebi
           </Button>
         </Space>
@@ -250,7 +250,7 @@ export default function LeavesPage() {
             <Statistic
               title="Toplam Talep"
               value={totalLeaves}
-              prefix={<CalendarOutlined />}
+              prefix={<CalendarIcon className="w-5 h-5" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -260,7 +260,7 @@ export default function LeavesPage() {
             <Statistic
               title="Beklemede"
               value={pendingLeaves}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-5 h-5" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -270,7 +270,7 @@ export default function LeavesPage() {
             <Statistic
               title="Onaylanan"
               value={approvedLeaves}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-5 h-5" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -280,7 +280,7 @@ export default function LeavesPage() {
             <Statistic
               title="Reddedilen"
               value={rejectedLeaves}
-              prefix={<CloseCircleOutlined />}
+              prefix={<XCircleIcon className="w-5 h-5" />}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>

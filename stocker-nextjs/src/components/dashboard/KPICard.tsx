@@ -53,7 +53,7 @@ export default function KPICard({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+            <span className="text-sm text-gray-600 font-medium">
               {title}
             </span>
             {isLive && <LiveBadge isLive showText={false} size="small" />}
@@ -74,7 +74,7 @@ export default function KPICard({
         {/* Value */}
         <div className="flex items-baseline gap-2">
           {prefix && (
-            <span className="text-xl font-semibold text-gray-500 dark:text-gray-400">
+            <span className="text-xl font-semibold text-gray-500">
               {prefix}
             </span>
           )}
@@ -85,7 +85,7 @@ export default function KPICard({
             {formattedValue}
           </span>
           {suffix && (
-            <span className="text-xl font-semibold text-gray-500 dark:text-gray-400">
+            <span className="text-xl font-semibold text-gray-500">
               {suffix}
             </span>
           )}
@@ -101,7 +101,7 @@ export default function KPICard({
               reverseColors={reverseColors}
             />
             {trend.label && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500">
                 {trend.label}
               </span>
             )}
@@ -110,7 +110,7 @@ export default function KPICard({
 
         {/* Footer */}
         {footer && (
-          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div className="pt-3 border-t border-gray-100">
             {footer}
           </div>
         )}

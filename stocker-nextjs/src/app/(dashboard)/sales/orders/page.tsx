@@ -7,8 +7,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusOutlined, ReloadOutlined, ShoppingCartOutlined } from '@ant-design/icons';
-import { PageContainer, ListPageHeader } from '@/components/ui/enterprise-page';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  ShoppingCartIcon,
+} from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader } from '@/components/patterns';
 import { OrdersTable, OrderStats, useSalesOrders } from '@/features/sales';
 import type { GetSalesOrdersParams } from '@/features/sales';
 
@@ -27,7 +31,7 @@ export default function SalesOrdersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ShoppingCartOutlined />}
+        icon={<ShoppingCartIcon className="w-5 h-5" />}
         iconColor="#6366f1"
         title="Siparişler"
         description="Satış siparişlerini yönetin"
@@ -35,7 +39,7 @@ export default function SalesOrdersPage() {
         primaryAction={{
           label: 'Yeni Sipariş',
           onClick: () => router.push('/sales/orders/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -43,7 +47,7 @@ export default function SalesOrdersPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />

@@ -8,15 +8,15 @@ import {
   Typography,
   Button,
   Space,
-  Spin,
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckOutlined,
-  StopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CheckIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useCommissionPlan,
@@ -61,7 +61,7 @@ export default function CommissionPlanDetailPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function CommissionPlanDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/commissions')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/commissions')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>
@@ -89,12 +89,12 @@ export default function CommissionPlanDetailPage() {
           </Tag>
         </Space>
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/sales/commissions/plans/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/commissions/plans/${id}/edit`)}>
             Düzenle
           </Button>
           <Button
             type={plan.isActive ? 'default' : 'primary'}
-            icon={plan.isActive ? <StopOutlined /> : <CheckOutlined />}
+            icon={plan.isActive ? <StopIcon className="w-4 h-4" /> : <CheckIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {plan.isActive ? 'Pasifleştir' : 'Aktifleştir'}

@@ -16,20 +16,20 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  RollbackOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  SendOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  ArrowUturnLeftIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+  PaperAirplaneIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
@@ -235,33 +235,33 @@ export default function PurchaseReturnsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/purchase/returns/${record.id}`),
               },
               record.status === 'Draft' && {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/purchase/returns/${record.id}/edit`),
               },
               { type: 'divider' },
               record.status === 'Pending' && {
                 key: 'approve',
-                icon: <CheckCircleOutlined />,
+                icon: <CheckCircleIcon className="w-4 h-4" />,
                 label: 'Onayla',
                 onClick: () => approveReturn.mutate({ id: record.id }),
               },
               record.status === 'Pending' && {
                 key: 'reject',
-                icon: <CloseCircleOutlined />,
+                icon: <XCircleIcon className="w-4 h-4" />,
                 label: 'Reddet',
                 danger: true,
                 onClick: () => handleReject(record),
               },
               record.status === 'Approved' && {
                 key: 'ship',
-                icon: <SendOutlined />,
+                icon: <PaperAirplaneIcon className="w-4 h-4" />,
                 label: 'Gönder',
                 onClick: () => shipReturn.mutate({
                   id: record.id,
@@ -270,14 +270,14 @@ export default function PurchaseReturnsPage() {
               },
               ['Shipped', 'Received'].includes(record.status) && {
                 key: 'refund',
-                icon: <DollarOutlined />,
+                icon: <CurrencyDollarIcon className="w-4 h-4" />,
                 label: 'İade İşle',
                 onClick: () => router.push(`/purchase/returns/${record.id}?action=refund`),
               },
               { type: 'divider' },
               record.status === 'Draft' && {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),

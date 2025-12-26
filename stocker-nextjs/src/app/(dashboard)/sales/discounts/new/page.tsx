@@ -16,7 +16,8 @@ import {
   Col,
   Switch,
 } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
 import { useCreateDiscount } from '@/lib/api/hooks/useSales';
 import type { CreateDiscountDto, DiscountType } from '@/lib/api/services/sales.service';
@@ -71,7 +72,7 @@ export default function NewDiscountPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/discounts')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/discounts')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>Yeni İndirim</Title>
@@ -254,7 +255,7 @@ export default function NewDiscountPage() {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Button
                   type="primary"
-                  icon={<SaveOutlined />}
+                  icon={<CheckIcon className="w-4 h-4" />}
                   htmlType="submit"
                   loading={createMutation.isPending}
                   block

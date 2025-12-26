@@ -2,22 +2,23 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Space, Tag, Spin, Modal, Empty } from 'antd';
+import { Button, Space, Tag, Modal, Empty } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  AppstoreOutlined,
-  BarcodeOutlined,
-  DollarOutlined,
-  ShoppingOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  StarOutlined,
-  ScaleOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  TrashIcon,
+  Squares2X2Icon,
+  QrCodeIcon,
+  CurrencyDollarIcon,
+  ShoppingBagIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CalendarIcon,
+  StarIcon,
+  ScaleIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import {
   useProductVariant,
   useDeleteProductVariant,
@@ -46,7 +47,7 @@ export default function ProductVariantDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -100,7 +101,7 @@ export default function ProductVariantDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -116,14 +117,14 @@ export default function ProductVariantDetailPage() {
                 />
               ) : (
                 <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                  <AppstoreOutlined className="text-white text-lg" />
+                  <Squares2X2Icon className="w-5 h-5 text-white" />
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{variant.name}</h1>
                   <Tag
-                    icon={variant.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={variant.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       variant.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -133,7 +134,7 @@ export default function ProductVariantDetailPage() {
                     {variant.isActive ? 'Aktif' : 'Pasif'}
                   </Tag>
                   {variant.isDefault && (
-                    <Tag icon={<StarOutlined />} className="border-0 bg-amber-50 text-amber-700">
+                    <Tag icon={<StarIcon className="w-3 h-3" />} className="border-0 bg-amber-50 text-amber-700">
                       Varsayılan
                     </Tag>
                   )}
@@ -144,7 +145,7 @@ export default function ProductVariantDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/product-variants/${variantId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -152,7 +153,7 @@ export default function ProductVariantDetailPage() {
             </Button>
             <Button
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => setDeleteModalOpen(true)}
             >
               Sil
@@ -170,7 +171,7 @@ export default function ProductVariantDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <DollarOutlined className="text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Satış Fiyatı
@@ -188,7 +189,7 @@ export default function ProductVariantDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <DollarOutlined className="text-slate-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Maliyet
@@ -206,7 +207,7 @@ export default function ProductVariantDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <DollarOutlined className="text-emerald-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kar Marjı
@@ -228,7 +229,7 @@ export default function ProductVariantDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <ScaleOutlined className="text-slate-600 text-lg" />
+                  <ScaleIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ağırlık
@@ -257,7 +258,7 @@ export default function ProductVariantDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">SKU</p>
                   <div className="flex items-center gap-2">
-                    <BarcodeOutlined className="text-slate-400 text-xs" />
+                    <QrCodeIcon className="w-3 h-3 text-slate-400" />
                     <code className="text-sm font-medium text-slate-900 bg-slate-50 px-2 py-0.5 rounded">
                       {variant.sku}
                     </code>
@@ -267,7 +268,7 @@ export default function ProductVariantDetailPage() {
                   <p className="text-xs text-slate-400 mb-1">Barkod</p>
                   {variant.barcode ? (
                     <div className="flex items-center gap-2">
-                      <BarcodeOutlined className="text-slate-400 text-xs" />
+                      <QrCodeIcon className="w-3 h-3 text-slate-400" />
                       <code className="text-sm font-medium text-slate-900 bg-slate-50 px-2 py-0.5 rounded">
                         {variant.barcode}
                       </code>
@@ -279,7 +280,7 @@ export default function ProductVariantDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={variant.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={variant.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       variant.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -303,7 +304,7 @@ export default function ProductVariantDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Aktif</span>
                   <Tag
-                    icon={variant.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={variant.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       variant.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -316,7 +317,7 @@ export default function ProductVariantDetailPage() {
                 <div className="flex justify-between items-center py-2">
                   <span className="text-sm text-slate-600">Varsayılan Varyant</span>
                   <Tag
-                    icon={variant.isDefault ? <StarOutlined /> : <CloseCircleOutlined />}
+                    icon={variant.isDefault ? <StarIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       variant.isDefault
                         ? 'bg-amber-50 text-amber-700'
@@ -341,7 +342,7 @@ export default function ProductVariantDetailPage() {
                 onClick={() => router.push(`/inventory/products/${variant.productId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-emerald-600 flex items-center justify-center">
-                  <ShoppingOutlined className="text-white text-xl" />
+                  <ShoppingBagIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{variant.productName}</p>
@@ -349,7 +350,7 @@ export default function ProductVariantDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
-                  <RightOutlined className="text-xs" />
+                  <ChevronRightIcon className="w-3 h-3" />
                 </div>
               </div>
             </div>
@@ -363,14 +364,14 @@ export default function ProductVariantDetailPage() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <DollarOutlined className="text-blue-600 text-xl mb-2" />
+                  <CurrencyDollarIcon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                   <p className="text-xl font-bold text-blue-600 m-0">
                     {formatCurrency(variant.price, variant.priceCurrency)}
                   </p>
                   <p className="text-xs text-slate-500 m-0 mt-1">Satış Fiyatı</p>
                 </div>
                 <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <DollarOutlined className="text-slate-600 text-xl mb-2" />
+                  <CurrencyDollarIcon className="w-6 h-6 text-slate-600 mx-auto mb-2" />
                   <p className="text-xl font-bold text-slate-700 m-0">
                     {formatCurrency(variant.costPrice, variant.costPriceCurrency)}
                   </p>
@@ -423,7 +424,7 @@ export default function ProductVariantDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -435,7 +436,7 @@ export default function ProductVariantDetailPage() {
                 {variant.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

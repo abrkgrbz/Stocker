@@ -2,19 +2,20 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Tag, Spin, Empty } from 'antd';
+import { Button, Space, Tag, Empty } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  AppstoreOutlined,
-  FolderOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  SortAscendingOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilSquareIcon,
+  Squares2X2Icon,
+  FolderIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CalendarIcon,
+  DocumentTextIcon,
+  BarsArrowDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import { useCategory, useCategories } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
 
@@ -29,7 +30,7 @@ export default function CategoryDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -65,7 +66,7 @@ export default function CategoryDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -74,13 +75,13 @@ export default function CategoryDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <AppstoreOutlined className="text-white text-lg" />
+                <Squares2X2Icon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{category.name}</h1>
                   <Tag
-                    icon={category.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={category.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       category.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -96,7 +97,7 @@ export default function CategoryDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilSquareIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/categories/${categoryId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -115,7 +116,7 @@ export default function CategoryDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <SortAscendingOutlined className="text-slate-600 text-lg" />
+                  <BarsArrowDownIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sıralama
@@ -131,7 +132,7 @@ export default function CategoryDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <FolderOutlined className="text-slate-600 text-lg" />
+                  <FolderIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Alt Kategori
@@ -148,7 +149,7 @@ export default function CategoryDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <CalendarOutlined className="text-slate-600 text-lg" />
+                  <CalendarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Oluşturulma

@@ -18,7 +18,8 @@ import {
   Col,
   Alert,
 } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/solid';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateSalesReturn, useReturnableItems, useSalesOrders } from '@/lib/api/hooks/useSales';
 import type { CreateSalesReturnDto, CreateSalesReturnItemDto, SalesReturnReason } from '@/lib/api/services/sales.service';
@@ -182,7 +183,7 @@ export default function NewSalesReturnPage() {
         <Button
           type="primary"
           size="small"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           onClick={() => handleAddItem(record)}
           disabled={record.returnableQuantity <= 0}
         >
@@ -236,7 +237,7 @@ export default function NewSalesReturnPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -247,7 +248,7 @@ export default function NewSalesReturnPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/returns')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/returns')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>Yeni İade</Title>
@@ -370,7 +371,7 @@ export default function NewSalesReturnPage() {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Button
                   type="primary"
-                  icon={<SaveOutlined />}
+                  icon={<CheckIcon className="w-4 h-4" />}
                   htmlType="submit"
                   loading={createMutation.isPending}
                   block

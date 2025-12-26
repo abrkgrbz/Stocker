@@ -8,8 +8,8 @@
 
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { PageContainer, ListPageHeader } from '@/components/ui/enterprise-page';
-import { TeamOutlined } from '@ant-design/icons';
+import { PageContainer, ListPageHeader } from '@/components/patterns';
+import { UsersIcon } from '@heroicons/react/24/outline';
 import {
   SegmentsTable,
   CreateSegmentModal,
@@ -44,7 +44,7 @@ export default function CustomerSegmentsPage() {
   return (
     <PageContainer maxWidth="6xl">
       <ListPageHeader
-        icon={<TeamOutlined />}
+        icon={<UsersIcon className="w-5 h-5" />}
         iconColor="#6366f1"
         title="Müşteri Segmentleri"
         description="Müşteri gruplarını ve indirim oranlarını yönetin"

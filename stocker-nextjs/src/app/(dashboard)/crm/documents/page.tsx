@@ -1,23 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Table, Button, Space, Tag, Empty, Tooltip, Modal, Input, Spin } from 'antd';
+import { Table, Button, Space, Tag, Empty, Tooltip, Modal, Input } from 'antd';
 import {
-  FileOutlined,
-  DownloadOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  FilePdfOutlined,
-  FileWordOutlined,
-  FileExcelOutlined,
-  FileImageOutlined,
-  FileTextOutlined,
-  FileMarkdownOutlined,
-} from '@ant-design/icons';
+  DocumentIcon,
+  ArrowDownTrayIcon,
+  TrashIcon,
+  EyeIcon,
+  PlusIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  PhotoIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import { DocumentUpload } from '@/components/crm/shared';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
@@ -49,11 +46,11 @@ const accessLevelLabels: Record<AccessLevel, { label: string; color: string }> =
 
 // Get file icon based on content type
 const getFileIcon = (contentType: string) => {
-  if (contentType.includes('pdf')) return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
-  if (contentType.includes('word') || contentType.includes('document')) return <FileWordOutlined style={{ color: '#1890ff' }} />;
-  if (contentType.includes('excel') || contentType.includes('spreadsheet')) return <FileExcelOutlined style={{ color: '#52c41a' }} />;
-  if (contentType.includes('image')) return <FileImageOutlined style={{ color: '#722ed1' }} />;
-  return <FileTextOutlined />;
+  if (contentType.includes('pdf')) return <DocumentTextIcon className="w-5 h-5 text-red-500" />;
+  if (contentType.includes('word') || contentType.includes('document')) return <DocumentTextIcon className="w-5 h-5 text-blue-500" />;
+  if (contentType.includes('excel') || contentType.includes('spreadsheet')) return <DocumentTextIcon className="w-5 h-5 text-green-500" />;
+  if (contentType.includes('image')) return <PhotoIcon className="w-5 h-5 text-purple-500" />;
+  return <DocumentIcon className="w-5 h-5 text-slate-500" />;
 };
 
 // Format file size
@@ -83,28 +80,28 @@ const DocumentsStats: React.FC<DocumentsStatsProps> = ({ documents, loading }) =
     {
       title: 'Toplam Belge',
       value: stats.total,
-      icon: <FileOutlined className="text-2xl" />,
+      icon: <DocumentIcon className="w-6 h-6" />,
       bgColor: 'bg-slate-50',
       iconColor: 'text-slate-600',
     },
     {
       title: 'Sözleşmeler',
       value: stats.contracts,
-      icon: <FileTextOutlined className="text-2xl" />,
+      icon: <DocumentTextIcon className="w-6 h-6" />,
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
     },
     {
       title: 'Teklifler',
       value: stats.proposals,
-      icon: <FileMarkdownOutlined className="text-2xl" />,
+      icon: <DocumentTextIcon className="w-6 h-6" />,
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
     },
     {
       title: 'Toplam Boyut',
       value: formatFileSize(stats.totalSize),
-      icon: <FilePdfOutlined className="text-2xl" />,
+      icon: <DocumentTextIcon className="w-6 h-6" />,
       bgColor: 'bg-amber-50',
       iconColor: 'text-amber-600',
     },
@@ -118,7 +115,7 @@ const DocumentsStats: React.FC<DocumentsStatsProps> = ({ documents, loading }) =
             <div className="flex-1">
               <p className="text-sm font-medium text-slate-600 mb-1">{stat.title}</p>
               <p className="text-2xl font-semibold text-slate-900">
-                {loading ? <Spin size="small" /> : stat.value}
+                {loading ? <Spinner size="sm" /> : stat.value}
               </p>
             </div>
             <div className={`w-12 h-12 rounded-lg ${stat.bgColor} flex items-center justify-center ${stat.iconColor}`}>
@@ -287,7 +284,7 @@ export default function DocumentsPage() {
             <Button
               type="text"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<EyeIcon className="w-4 h-4" />}
               onClick={() => handleView(record)}
             />
           </Tooltip>
@@ -295,7 +292,7 @@ export default function DocumentsPage() {
             <Button
               type="text"
               size="small"
-              icon={<DownloadOutlined />}
+              icon={<ArrowDownTrayIcon className="w-4 h-4" />}
               onClick={() => handleDownload(record)}
             />
           </Tooltip>
@@ -304,7 +301,7 @@ export default function DocumentsPage() {
               type="text"
               size="small"
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => handleDelete(record)}
             />
           </Tooltip>
@@ -329,7 +326,7 @@ export default function DocumentsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<FileOutlined />}
+        icon={<DocumentIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Belgeler"
         description="Belgeleri yükleyin ve yönetin"
@@ -337,7 +334,7 @@ export default function DocumentsPage() {
         primaryAction={{
           label: 'Yeni Belge',
           onClick: () => setUploadModalOpen(true),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -345,7 +342,7 @@ export default function DocumentsPage() {
             disabled={loading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={loading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -365,7 +362,7 @@ export default function DocumentsPage() {
       {loading && documents.length === 0 ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -385,7 +382,7 @@ export default function DocumentsPage() {
                       <div>
                         <Button
                           type="primary"
-                          icon={<PlusOutlined />}
+                          icon={<PlusIcon className="w-4 h-4" />}
                           onClick={() => setUploadModalOpen(true)}
                         >
                           İlk Belgeyi Yükle
@@ -416,7 +413,7 @@ export default function DocumentsPage() {
         width={600}
       >
         <div className="text-center py-8">
-          <FileOutlined className="text-6xl text-slate-300 mb-4" />
+          <DocumentIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h4 className="text-lg font-semibold text-slate-900 mb-2">Belge Yükleme</h4>
           <p className="text-slate-500">
             Belge yüklemek için ilgili varlık sayfasını (Müşteri, Lead, vb.) kullanın.

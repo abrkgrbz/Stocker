@@ -20,16 +20,16 @@ import {
   Statistic,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DollarOutlined,
-  ReloadOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  CheckIcon,
+  XMarkIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {
   useSalesCommissions,
@@ -146,7 +146,7 @@ export default function CommissionsPage() {
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => router.push(`/sales/commissions/${record.id}`),
       },
@@ -156,13 +156,13 @@ export default function CommissionsPage() {
       items.push(
         {
           key: 'approve',
-          icon: <CheckOutlined />,
+          icon: <CheckIcon className="w-4 h-4" />,
           label: 'Onayla',
           onClick: () => handleApprove(record.id),
         },
         {
           key: 'reject',
-          icon: <CloseOutlined />,
+          icon: <XMarkIcon className="w-4 h-4" />,
           label: 'Reddet',
           danger: true,
           onClick: () => handleRejectClick(record),
@@ -173,7 +173,7 @@ export default function CommissionsPage() {
     if (record.status === 'Approved') {
       items.push({
         key: 'pay',
-        icon: <DollarOutlined />,
+        icon: <CurrencyDollarIcon className="w-4 h-4" />,
         label: 'Ödendi İşaretle',
         onClick: () => handlePayClick(record),
       });
@@ -242,7 +242,7 @@ export default function CommissionsPage() {
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -306,11 +306,11 @@ export default function CommissionsPage() {
           <Text type="secondary">Satış komisyonlarını yönetin</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
-            icon={<SettingOutlined />}
+            icon={<Cog6ToothIcon className="w-4 h-4" />}
             onClick={() => router.push('/sales/commissions/plans/new')}
           >
             Yeni Plan
@@ -376,7 +376,7 @@ export default function CommissionsPage() {
                     <Col xs={24} sm={12} md={8} lg={6}>
                       <Input
                         placeholder="Ara..."
-                        prefix={<SearchOutlined />}
+                        prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
                         allowClear
                         onChange={(e) =>
                           setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))
@@ -437,7 +437,7 @@ export default function CommissionsPage() {
                 <div style={{ marginBottom: 16 }}>
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={() => router.push('/sales/commissions/plans/new')}
                   >
                     Yeni Plan

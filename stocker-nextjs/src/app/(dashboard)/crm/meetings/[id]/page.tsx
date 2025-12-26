@@ -7,22 +7,23 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag } from 'antd';
+import { Empty, Tag } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  TeamOutlined,
-  EnvironmentOutlined,
-  VideoCameraOutlined,
-  PhoneOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  BellOutlined,
-  LinkOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CalendarIcon,
+  ClockIcon,
+  UserIcon,
+  UsersIcon,
+  MapPinIcon,
+  VideoCameraIcon,
+  PhoneIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  BellIcon,
+  LinkIcon,
+} from '@heroicons/react/24/outline';
 import { useMeeting } from '@/lib/api/hooks/useCRM';
 import {
   MeetingType,
@@ -74,10 +75,10 @@ const priorityLabels: Record<MeetingPriority, { label: string; color: string }> 
 };
 
 const locationTypeLabels: Record<MeetingLocationType, { label: string; icon: React.ReactNode }> = {
-  [MeetingLocationType.InPerson]: { label: 'Yüz Yüze', icon: <EnvironmentOutlined /> },
-  [MeetingLocationType.Online]: { label: 'Online', icon: <VideoCameraOutlined /> },
-  [MeetingLocationType.Hybrid]: { label: 'Hibrit', icon: <TeamOutlined /> },
-  [MeetingLocationType.Phone]: { label: 'Telefon', icon: <PhoneOutlined /> },
+  [MeetingLocationType.InPerson]: { label: 'Yüz Yüze', icon: <MapPinIcon className="w-4 h-4" /> },
+  [MeetingLocationType.Online]: { label: 'Online', icon: <VideoCameraIcon className="w-4 h-4" /> },
+  [MeetingLocationType.Hybrid]: { label: 'Hibrit', icon: <UsersIcon className="w-4 h-4" /> },
+  [MeetingLocationType.Phone]: { label: 'Telefon', icon: <PhoneIcon className="w-4 h-4" /> },
 };
 
 const attendeeResponseColors: Record<AttendeeResponse, string> = {
@@ -97,7 +98,7 @@ export default function MeetingDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -113,7 +114,7 @@ export default function MeetingDetailPage() {
   const typeInfo = meetingTypeLabels[meeting.meetingType] || { label: meeting.meetingType, color: 'default' };
   const statusInfo = statusLabels[meeting.status] || { label: meeting.status, color: 'default' };
   const priorityInfo = priorityLabels[meeting.priority] || { label: meeting.priority, color: 'default' };
-  const locationInfo = locationTypeLabels[meeting.locationType] || { label: meeting.locationType, icon: <EnvironmentOutlined /> };
+  const locationInfo = locationTypeLabels[meeting.locationType] || { label: meeting.locationType, icon: <MapPinIcon className="w-4 h-4" /> };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -132,12 +133,12 @@ export default function MeetingDetailPage() {
               onClick={() => router.push('/crm/meetings')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center">
-                <TeamOutlined className="text-lg text-purple-600" />
+                <UsersIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -152,7 +153,7 @@ export default function MeetingDetailPage() {
             onClick={() => router.push(`/crm/meetings/${meeting.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -187,7 +188,7 @@ export default function MeetingDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {meeting.startTime ? dayjs(meeting.startTime).format('DD/MM/YYYY HH:mm') : '-'}
                     </span>
@@ -196,7 +197,7 @@ export default function MeetingDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş</p>
                   <div className="flex items-center gap-1">
-                    <ClockCircleOutlined className="text-slate-400" />
+                    <ClockIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {meeting.endTime ? dayjs(meeting.endTime).format('DD/MM/YYYY HH:mm') : '-'}
                     </span>
@@ -232,7 +233,7 @@ export default function MeetingDetailPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
                   >
-                    <LinkOutlined />
+                    <LinkIcon className="w-4 h-4" />
                     {meeting.onlineMeetingPlatform || 'Toplantıya Katıl'}
                   </a>
                 </div>
@@ -270,7 +271,7 @@ export default function MeetingDetailPage() {
               {meeting.organizerName && (
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg mb-4">
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                    <UserOutlined className="text-purple-600" />
+                    <UserIcon className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{meeting.organizerName}</p>
@@ -284,7 +285,7 @@ export default function MeetingDetailPage() {
               {meeting.hasReminder && (
                 <div className="p-4 bg-amber-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <BellOutlined className="text-amber-600" />
+                    <BellIcon className="w-5 h-5 text-amber-600" />
                     <span className="text-sm font-medium text-amber-900">Hatırlatıcı Aktif</span>
                   </div>
                   {meeting.reminderMinutesBefore && (
@@ -302,7 +303,7 @@ export default function MeetingDetailPage() {
             <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TeamOutlined className="text-slate-400" />
+                  <UsersIcon className="w-5 h-5 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                     Katılımcılar ({meeting.attendees.length})
                   </p>
@@ -315,7 +316,7 @@ export default function MeetingDetailPage() {
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                          <UserOutlined className="text-indigo-600 text-xs" />
+                          <UserIcon className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-slate-900 truncate">

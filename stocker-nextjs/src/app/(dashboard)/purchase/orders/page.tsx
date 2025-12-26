@@ -14,25 +14,25 @@ import {
   Select,
   DatePicker,
   Dropdown,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import type { MenuProps } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  ShoppingCartOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  ReloadOutlined,
-  FileExcelOutlined,
-  ClockCircleOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  ShoppingCartIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  PaperAirplaneIcon,
+  ArrowPathIcon,
+  TableCellsIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableProps } from 'antd';
 import {
@@ -284,7 +284,7 @@ export default function PurchaseOrdersPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: statusConfig[record.status as PurchaseOrderStatus]?.bgColor || '#64748b15' }}
           >
-            <ShoppingCartOutlined style={{ color: statusConfig[record.status as PurchaseOrderStatus]?.color || '#64748b' }} />
+            <ShoppingCartIcon className="w-5 h-5" style={{ color: statusConfig[record.status as PurchaseOrderStatus]?.color || '#64748b' }} />
           </div>
           <div>
             <div
@@ -364,7 +364,7 @@ export default function PurchaseOrdersPage() {
         const menuItems: MenuProps['items'] = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => router.push(`/purchase/orders/${record.id}`),
           },
@@ -373,7 +373,7 @@ export default function PurchaseOrdersPage() {
         if (record.status === 'Draft') {
           menuItems.push({
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => router.push(`/purchase/orders/${record.id}/edit`),
           });
@@ -385,13 +385,13 @@ export default function PurchaseOrdersPage() {
           menuItems.push(
             {
               key: 'approve',
-              icon: <CheckCircleOutlined />,
+              icon: <CheckCircleIcon className="w-4 h-4" />,
               label: 'Onayla',
               onClick: () => handleApprove(record),
             },
             {
               key: 'reject',
-              icon: <CloseCircleOutlined />,
+              icon: <XCircleIcon className="w-4 h-4" />,
               label: 'Reddet',
               danger: true,
               onClick: () => handleReject(record),
@@ -402,7 +402,7 @@ export default function PurchaseOrdersPage() {
         if (record.status === 'Confirmed') {
           menuItems.push({
             key: 'send',
-            icon: <SendOutlined />,
+            icon: <PaperAirplaneIcon className="w-4 h-4" />,
             label: 'Tedarikçiye Gönder',
             onClick: () => handleSend(record),
           });
@@ -411,7 +411,7 @@ export default function PurchaseOrdersPage() {
         if (!['Cancelled', 'Completed', 'Closed'].includes(record.status)) {
           menuItems.push({
             key: 'cancel',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
             danger: true,
             onClick: () => handleCancel(record),
@@ -421,7 +421,7 @@ export default function PurchaseOrdersPage() {
         if (record.status === 'Draft') {
           menuItems.push({
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -434,7 +434,7 @@ export default function PurchaseOrdersPage() {
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreOutlined className="text-sm" />
+              <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -453,7 +453,7 @@ export default function PurchaseOrdersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.total}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <ShoppingCartOutlined style={{ color: '#6366f1' }} />
+              <ShoppingCartIcon className="w-5 h-5" style={{ color: '#6366f1' }} />
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function PurchaseOrdersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockCircleOutlined style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+              <ClockIcon className="w-5 h-5" style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -475,7 +475,7 @@ export default function PurchaseOrdersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.sent}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#06b6d415' }}>
-              <SendOutlined style={{ color: '#06b6d4' }} />
+              <PaperAirplaneIcon className="w-5 h-5" style={{ color: '#06b6d4' }} />
             </div>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default function PurchaseOrdersPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <DollarOutlined style={{ color: '#10b981' }} />
+              <CurrencyDollarIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -496,7 +496,7 @@ export default function PurchaseOrdersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ShoppingCartOutlined />}
+        icon={<ShoppingCartIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="Satın Alma Siparişleri"
         description="Tedarikçilere verilen siparişleri yönetin"
@@ -504,7 +504,7 @@ export default function PurchaseOrdersPage() {
         primaryAction={{
           label: 'Yeni Sipariş',
           onClick: () => router.push('/purchase/orders/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
@@ -512,7 +512,7 @@ export default function PurchaseOrdersPage() {
               onClick={handleExportExcel}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50"
             >
-              <FileExcelOutlined />
+              <TableCellsIcon className="w-4 h-4" />
               Excel {selectedRowKeys.length > 0 && `(${selectedRowKeys.length})`}
             </button>
             <button
@@ -520,7 +520,7 @@ export default function PurchaseOrdersPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         }
@@ -539,7 +539,7 @@ export default function PurchaseOrdersPage() {
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
               >
-                <CheckCircleOutlined />
+                <CheckCircleIcon className="w-4 h-4" />
                 Onayla
               </button>
               <button
@@ -547,7 +547,7 @@ export default function PurchaseOrdersPage() {
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
               >
-                <SendOutlined />
+                <PaperAirplaneIcon className="w-4 h-4" />
                 Gönder
               </button>
               <button
@@ -555,7 +555,7 @@ export default function PurchaseOrdersPage() {
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
               >
-                <CloseCircleOutlined />
+                <XCircleIcon className="w-4 h-4" />
                 İptal
               </button>
               <button
@@ -574,7 +574,7 @@ export default function PurchaseOrdersPage() {
         <div className="flex flex-col md:flex-row gap-4">
           <Input
             placeholder="Sipariş ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 300 }}
@@ -603,7 +603,7 @@ export default function PurchaseOrdersPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

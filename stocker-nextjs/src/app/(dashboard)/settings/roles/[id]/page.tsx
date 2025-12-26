@@ -10,26 +10,27 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Spin, Empty, Tag, Input } from 'antd';
+import { Empty, Tag, Input } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  SafetyOutlined,
-  TeamOutlined,
-  LockOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  SearchOutlined,
-  DownOutlined,
-  AppstoreOutlined,
-  ShoppingOutlined,
-  ShoppingCartOutlined,
-  UserOutlined,
-  DollarOutlined,
-  FileTextOutlined,
-  InboxOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  LockClosedIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  Squares2X2Icon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
+  UserIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  InboxIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRole } from '@/hooks/useRoles';
 import {
   parsePermission,
@@ -60,16 +61,16 @@ interface CategoryPermissions {
 // Get icon component for category
 const getCategoryIcon = (categoryCode: string) => {
   const iconMap: Record<string, React.ReactNode> = {
-    CORE: <SettingOutlined className="text-indigo-500 text-lg" />,
-    INVENTORY: <InboxOutlined className="text-indigo-500 text-lg" />,
-    SALES: <ShoppingOutlined className="text-indigo-500 text-lg" />,
-    PURCHASE: <ShoppingCartOutlined className="text-indigo-500 text-lg" />,
-    CRM: <UserOutlined className="text-indigo-500 text-lg" />,
-    HR: <TeamOutlined className="text-indigo-500 text-lg" />,
-    FINANCE: <DollarOutlined className="text-indigo-500 text-lg" />,
-    CMS: <FileTextOutlined className="text-indigo-500 text-lg" />,
+    CORE: <Cog6ToothIcon className="w-5 h-5 text-indigo-500" />,
+    INVENTORY: <InboxIcon className="w-5 h-5 text-indigo-500" />,
+    SALES: <ShoppingBagIcon className="w-5 h-5 text-indigo-500" />,
+    PURCHASE: <ShoppingCartIcon className="w-5 h-5 text-indigo-500" />,
+    CRM: <UserIcon className="w-5 h-5 text-indigo-500" />,
+    HR: <UsersIcon className="w-5 h-5 text-indigo-500" />,
+    FINANCE: <CurrencyDollarIcon className="w-5 h-5 text-indigo-500" />,
+    CMS: <DocumentTextIcon className="w-5 h-5 text-indigo-500" />,
   };
-  return iconMap[categoryCode] || <AppstoreOutlined className="text-indigo-500 text-lg" />;
+  return iconMap[categoryCode] || <Squares2X2Icon className="w-5 h-5 text-indigo-500" />;
 };
 
 /**
@@ -249,7 +250,7 @@ export default function RoleDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -286,7 +287,7 @@ export default function RoleDetailPage() {
               onClick={() => router.push('/settings/roles')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -301,7 +302,7 @@ export default function RoleDetailPage() {
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{role.name}</h1>
                   {role.isSystemRole && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-xs rounded-md">
-                      <LockOutlined className="text-xs" />
+                      <LockClosedIcon className="w-3 h-3" />
                       Sistem Rolü
                     </span>
                   )}
@@ -317,7 +318,7 @@ export default function RoleDetailPage() {
               onClick={() => router.push(`/settings/roles/${role.id}/edit`)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              <EditOutlined />
+              <PencilIcon className="w-4 h-4" />
               Düzenle
             </button>
           )}
@@ -343,7 +344,7 @@ export default function RoleDetailPage() {
                   <p className="text-xs text-slate-400 mb-1">Rol Tipi</p>
                   {role.isSystemRole ? (
                     <Tag color="purple" className="m-0">
-                      <LockOutlined className="mr-1" />
+                      <LockClosedIcon className="w-3 h-3 mr-1 inline" />
                       Sistem Rolü
                     </Tag>
                   ) : (
@@ -355,14 +356,14 @@ export default function RoleDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Kullanıcı Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <TeamOutlined className="text-slate-400" />
+                    <UsersIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">{role.userCount}</span>
                   </div>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Yetki Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <SafetyOutlined className="text-slate-400" />
+                    <ShieldCheckIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {role.permissions.length}
                     </span>
@@ -371,7 +372,7 @@ export default function RoleDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(role.createdDate).format('DD/MM/YYYY')}
                     </span>
@@ -380,7 +381,7 @@ export default function RoleDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Modül Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <AppstoreOutlined className="text-slate-400" />
+                    <Squares2X2Icon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {categorizedPermissions.length}
                     </span>
@@ -442,7 +443,7 @@ export default function RoleDetailPage() {
               <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <SafetyOutlined className="text-slate-400" />
+                    <ShieldCheckIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                       Yetkiler ({role.permissions.length})
                     </p>
@@ -469,7 +470,7 @@ export default function RoleDetailPage() {
                     </div>
                     <Input
                       placeholder="Yetki veya modül ara..."
-                      prefix={<SearchOutlined className="text-slate-400" />}
+                      prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       allowClear
@@ -519,7 +520,7 @@ export default function RoleDetailPage() {
                                 isExpanded ? 'rotate-180' : ''
                               }`}
                             >
-                              <DownOutlined className="text-xs" />
+                              <ChevronDownIcon className="w-3 h-3" />
                             </div>
                           </div>
                         </button>
@@ -537,7 +538,7 @@ export default function RoleDetailPage() {
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                       <div className="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center">
-                                        <LockOutlined className="text-indigo-500 text-xs" />
+                                        <LockClosedIcon className="w-3 h-3 text-indigo-500" />
                                       </div>
                                       <p className="text-sm font-medium text-slate-900 m-0 truncate">
                                         {res.resourceLabel}
@@ -555,7 +556,7 @@ export default function RoleDetailPage() {
                                         key={index}
                                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-white border border-slate-200 text-slate-700 group-hover:border-indigo-200 group-hover:text-indigo-700 transition-colors"
                                       >
-                                        <CheckCircleOutlined className="text-emerald-500 text-[10px]" />
+                                        <CheckCircleIcon className="w-3 h-3 text-emerald-500" />
                                         {
                                           PERMISSION_TYPE_LABELS[
                                             perm.permissionType as PermissionType
@@ -576,7 +577,7 @@ export default function RoleDetailPage() {
               ) : searchQuery ? (
                 <div className="py-12 text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                    <SearchOutlined className="text-2xl text-slate-400" />
+                    <MagnifyingGlassIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <p className="text-slate-500 mb-1">Aramanızla eşleşen yetki bulunamadı</p>
                   <p className="text-sm text-slate-400">
@@ -592,7 +593,7 @@ export default function RoleDetailPage() {
               ) : (
                 <div className="py-12 text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                    <SafetyOutlined className="text-2xl text-slate-400" />
+                    <ShieldCheckIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <p className="text-slate-500">Bu rolde henüz yetki bulunmuyor</p>
                 </div>

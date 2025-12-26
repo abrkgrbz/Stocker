@@ -7,8 +7,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons';
-import { PageContainer, ListPageHeader } from '@/components/ui/enterprise-page';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
+import { PageContainer, ListPageHeader } from '@/components/patterns';
 import { QuotationsTable, useQuotations } from '@/features/sales';
 import type { GetQuotationsParams } from '@/features/sales';
 
@@ -23,7 +27,7 @@ export default function QuotationsPage() {
     <PageContainer maxWidth="7xl">
       {/* Header */}
       <ListPageHeader
-        icon={<FileTextOutlined />}
+        icon={<DocumentTextIcon className="w-5 h-5" />}
         iconColor="#6366f1"
         title="Satış Teklifleri"
         description="Müşterilere sunulan teklifleri yönetin"
@@ -31,7 +35,7 @@ export default function QuotationsPage() {
         primaryAction={{
           label: 'Yeni Teklif',
           onClick: () => router.push('/sales/quotations/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -39,7 +43,7 @@ export default function QuotationsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />

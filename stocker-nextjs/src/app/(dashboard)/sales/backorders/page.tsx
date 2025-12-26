@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Modal, message, Select } from 'antd';
+import { Modal, message } from 'antd';
 import {
   Package,
   Clock,
@@ -27,8 +27,9 @@ import {
   Card,
   Badge,
   EmptyState,
-} from '@/components/ui/enterprise-page';
-import { ClockCircleOutlined } from '@ant-design/icons';
+} from '@/components/patterns';
+import { Select } from '@/components/primitives';
+import { ClockIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
@@ -302,7 +303,7 @@ export default function BackOrdersPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<ClockCircleOutlined />}
+        icon={<ClockIcon className="w-5 h-5" />}
         iconColor="#f97316"
         title="Bekleyen Siparişler"
         description="Stokta olmayan ve tedarik beklenen sipariş kalemleri"
@@ -372,30 +373,26 @@ export default function BackOrdersPage() {
             />
           </div>
           <Select
-            placeholder="Durum"
-            allowClear
-            value={statusFilter === 'All' ? undefined : statusFilter}
-            onChange={(value) => setStatusFilter(value || 'All')}
-            style={{ width: 180 }}
-            options={[
-              { value: 'Waiting', label: 'Stok Bekleniyor' },
-              { value: 'PartiallyAvailable', label: 'Kısmen Mevcut' },
-              { value: 'ReadyToShip', label: 'Gönderime Hazır' },
-              { value: 'Cancelled', label: 'İptal Edildi' },
-            ]}
-          />
+            value={statusFilter === 'All' ? '' : statusFilter}
+            onChange={(e) => setStatusFilter((e.target.value as BackOrderStatus) || 'All')}
+            className="w-44"
+          >
+            <option value="">Tüm Durumlar</option>
+            <option value="Waiting">Stok Bekleniyor</option>
+            <option value="PartiallyAvailable">Kısmen Mevcut</option>
+            <option value="ReadyToShip">Gönderime Hazır</option>
+            <option value="Cancelled">İptal Edildi</option>
+          </Select>
           <Select
-            placeholder="Öncelik"
-            allowClear
-            value={priorityFilter === 'All' ? undefined : priorityFilter}
-            onChange={(value) => setPriorityFilter(value || 'All')}
-            style={{ width: 140 }}
-            options={[
-              { value: 'Critical', label: 'Kritik' },
-              { value: 'High', label: 'Yüksek' },
-              { value: 'Normal', label: 'Normal' },
-            ]}
-          />
+            value={priorityFilter === 'All' ? '' : priorityFilter}
+            onChange={(e) => setPriorityFilter((e.target.value as BackOrderPriority) || 'All')}
+            className="w-36"
+          >
+            <option value="">Tüm Öncelikler</option>
+            <option value="Critical">Kritik</option>
+            <option value="High">Yüksek</option>
+            <option value="Normal">Normal</option>
+          </Select>
         </div>
       </Card>
 

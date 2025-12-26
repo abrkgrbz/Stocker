@@ -49,10 +49,10 @@ export default function TrendIndicator({
 
   // Color classes
   const colorClasses = isPositive
-    ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
+    ? 'text-green-600 bg-green-50'
     : isNegative
-    ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
-    : 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20';
+    ? 'text-red-600 bg-red-50'
+    : 'text-gray-600 bg-gray-50';
 
   // Icon component
   const Icon = trendDirection === 'up' ? ArrowUpOutlined : trendDirection === 'down' ? ArrowDownOutlined : MinusOutlined;

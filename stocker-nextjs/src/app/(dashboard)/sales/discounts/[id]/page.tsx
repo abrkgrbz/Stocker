@@ -8,18 +8,18 @@ import {
   Typography,
   Button,
   Space,
-  Spin,
   Statistic,
   Row,
   Col,
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckOutlined,
-  StopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CheckIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useDiscount,
@@ -71,7 +71,7 @@ export default function DiscountDetailPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function DiscountDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/discounts')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/discounts')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>
@@ -109,12 +109,12 @@ export default function DiscountDetailPage() {
           </Tag>
         </Space>
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/sales/discounts/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/discounts/${id}/edit`)}>
             Düzenle
           </Button>
           <Button
             type={discount.isActive ? 'default' : 'primary'}
-            icon={discount.isActive ? <StopOutlined /> : <CheckOutlined />}
+            icon={discount.isActive ? <StopIcon className="w-4 h-4" /> : <CheckIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {discount.isActive ? 'Pasifleştir' : 'Aktifleştir'}

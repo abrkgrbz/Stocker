@@ -33,15 +33,25 @@ interface CompleteOnboardingResult {
 export function useOnboarding() {
   const { user, isAuthenticated } = useAuth();
   const { tenant } = useTenant();
+
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+
   const [wizardData, setWizardData] = useState<WizardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isAuthBypassed);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip onboarding check if auth bypassed
+    if (isAuthBypassed) {
+      console.log('🔓 Onboarding bypassed - skipping check');
+      return;
+    }
+
     if (isAuthenticated && user && tenant) {
       checkOnboardingStatus();
     }
-  }, [isAuthenticated, user, tenant]);
+  }, [isAuthenticated, user, tenant, isAuthBypassed]);
 
   const checkOnboardingStatus = async () => {
     try {

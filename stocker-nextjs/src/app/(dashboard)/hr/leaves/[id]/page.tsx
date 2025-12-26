@@ -9,7 +9,6 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
@@ -18,14 +17,15 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CalendarIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import {
   useLeave,
   useDeleteLeave,
@@ -111,7 +111,7 @@ export default function LeaveDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -134,7 +134,7 @@ export default function LeaveDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/leaves')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leaves')}>
             Geri
           </Button>
           <div>
@@ -154,25 +154,25 @@ export default function LeaveDetailPage() {
             <>
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleApprove}
                 style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
               >
                 Onayla
               </Button>
-              <Button danger icon={<CloseCircleOutlined />} onClick={handleReject}>
+              <Button danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleReject}>
                 Reddet
               </Button>
             </>
           )}
           <Button
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/leaves/${id}/edit`)}
             disabled={leave.status !== LeaveStatus.Pending}
           >
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -187,7 +187,7 @@ export default function LeaveDetailPage() {
                 <Statistic
                   title="Başlangıç"
                   value={dayjs(leave.startDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#52c41a', fontSize: 18 }}
                 />
               </Card>
@@ -197,7 +197,7 @@ export default function LeaveDetailPage() {
                 <Statistic
                   title="Bitiş"
                   value={dayjs(leave.endDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#1890ff', fontSize: 18 }}
                 />
               </Card>
@@ -230,7 +230,7 @@ export default function LeaveDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {leave.employeeName || `Çalışan #${leave.employeeId}`}
                 </Space>
               </Descriptions.Item>

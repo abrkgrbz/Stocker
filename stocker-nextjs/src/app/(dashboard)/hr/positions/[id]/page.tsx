@@ -9,7 +9,6 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
@@ -17,16 +16,17 @@ import {
   Empty,
   Modal,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  SafetyCertificateOutlined,
-  TeamOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePosition,
   useEmployees,
@@ -93,7 +93,7 @@ export default function PositionDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -141,7 +141,7 @@ export default function PositionDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/positions')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/positions')}>
             Geri
           </Button>
           <div>
@@ -158,15 +158,15 @@ export default function PositionDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={position.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={position.isActive ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {position.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/positions/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/positions/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -181,7 +181,7 @@ export default function PositionDetailPage() {
                 <Statistic
                   title="Çalışan Sayısı"
                   value={position.filledPositions || 0}
-                  prefix={<TeamOutlined />}
+                  prefix={<UsersIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#7c3aed' }}
                 />
               </Card>
@@ -191,7 +191,7 @@ export default function PositionDetailPage() {
                 <Statistic
                   title="Min. Maaş"
                   value={position.minSalary || 0}
-                  prefix={<DollarOutlined />}
+                  prefix={<CurrencyDollarIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#52c41a', fontSize: 16 }}
                   formatter={(val) => formatCurrency(Number(val))}
                 />
@@ -202,7 +202,7 @@ export default function PositionDetailPage() {
                 <Statistic
                   title="Max. Maaş"
                   value={position.maxSalary || 0}
-                  prefix={<DollarOutlined />}
+                  prefix={<CurrencyDollarIcon className="w-5 h-5" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                   formatter={(val) => formatCurrency(Number(val))}
                 />
@@ -255,7 +255,7 @@ export default function PositionDetailPage() {
           <Card
             title={
               <Space>
-                <TeamOutlined />
+                <UsersIcon className="w-5 h-5" />
                 Bu Pozisyondaki Çalışanlar
               </Space>
             }

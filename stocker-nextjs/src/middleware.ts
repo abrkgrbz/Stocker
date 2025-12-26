@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true'
+
   const hostname = request.headers.get('host') || ''
   const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3001'
   const authDomain = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'http://localhost:3000'
@@ -39,8 +42,8 @@ export function middleware(request: NextRequest) {
                         request.headers.get('Next-Router-Prefetch') === '1'
 
   // Redirect unauthenticated users from protected routes to login
-  // Skip cross-origin redirect for RSC prefetch to avoid CORS errors
-  if (isProtectedRoute && !isAuthenticated && !isRSCPrefetch) {
+  // Skip if auth bypassed or RSC prefetch request
+  if (isProtectedRoute && !isAuthenticated && !isRSCPrefetch && !isAuthBypassed) {
     const url = request.nextUrl.clone()
     if (isDev) {
       url.pathname = '/login'

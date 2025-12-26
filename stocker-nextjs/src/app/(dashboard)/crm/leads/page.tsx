@@ -7,8 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, UserAddOutlined } from '@ant-design/icons';
+import { PlusIcon, ArrowPathIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import {
   showUpdateSuccess,
   showDeleteSuccess,
@@ -34,7 +34,7 @@ import {
   ListPageHeader,
   Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+} from '@/components/patterns';
 
 export default function LeadsPage() {
   const router = useRouter();
@@ -120,9 +120,9 @@ export default function LeadsPage() {
       try {
         await qualifyLead.mutateAsync({ id: lead.id.toString() });
         showUpdateSuccess('Lead', 'nitelikli olarak işaretlendi');
-      } catch (error: any) {
-        const apiError = error.response?.data;
-        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      } catch (error: unknown) {
+        const apiError = (error as { response?: { data?: { detail?: string; errors?: Array<{ message?: string }>; title?: string } } })?.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || (error instanceof Error ? error.message : 'İşlem başarısız');
         showError(errorMessage);
       }
     }
@@ -142,15 +142,15 @@ export default function LeadsPage() {
           reason: 'Kullanıcı tarafından niteliksiz işaretlendi',
         });
         showInfo('Lead İşaretlendi', 'Lead niteliksiz olarak işaretlendi');
-      } catch (error: any) {
-        const apiError = error.response?.data;
-        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || error.message || 'İşlem başarısız';
+      } catch (error: unknown) {
+        const apiError = (error as { response?: { data?: { detail?: string; errors?: Array<{ message?: string }>; title?: string } } })?.response?.data;
+        const errorMessage = apiError?.detail || apiError?.errors?.[0]?.message || apiError?.title || (error instanceof Error ? error.message : 'İşlem başarısız');
         showError(errorMessage);
       }
     }
   };
 
-  const handleConvertSubmit = async (values: any) => {
+  const handleConvertSubmit = async (values: Record<string, unknown>) => {
     if (!leadToConvert) return;
 
     try {
@@ -160,8 +160,8 @@ export default function LeadsPage() {
       });
       showUpdateSuccess('potansiyel müşteri', 'müşteriye dönüştürüldü');
       setConvertModalOpen(false);
-    } catch (error: any) {
-      const apiError = error.response?.data;
+    } catch (error: unknown) {
+      const apiError = (error as { response?: { data?: { detail?: string; errors?: Array<{ message?: string }>; title?: string } } })?.response?.data;
       let errorMessage = 'Dönüştürme işlemi başarısız';
 
       if (apiError) {
@@ -169,7 +169,7 @@ export default function LeadsPage() {
                       apiError.errors?.[0]?.message ||
                       apiError.title ||
                       errorMessage;
-      } else if (error.message) {
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
 
@@ -215,7 +215,7 @@ export default function LeadsPage() {
             if (lead) {
               return updateLead.mutateAsync({
                 id: lead.id,
-                data: { ...lead, status: status as any },
+                data: { ...lead, status: status as Lead['status'] },
               });
             }
             return Promise.resolve();
@@ -246,7 +246,7 @@ export default function LeadsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<UserAddOutlined />}
+        icon={<UserPlusIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Potansiyel Müşteriler"
         description="Lead'leri yönetin ve müşteriye dönüştürün"
@@ -254,7 +254,7 @@ export default function LeadsPage() {
         primaryAction={{
           label: 'Yeni Lead',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -262,7 +262,7 @@ export default function LeadsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -295,7 +295,7 @@ export default function LeadsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

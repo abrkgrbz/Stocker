@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Space, Form, Spin, Alert, Tag, message } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, Space, Form, Alert, Tag, message } from 'antd';
+import { Spinner } from '@/components/primitives';
+import { ArrowLeftIcon, CheckIcon, CheckCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { ProductForm } from '@/components/inventory/products';
 import { useProduct, useUpdateProduct, useUploadProductImage } from '@/lib/api/hooks/useInventory';
 import type { UpdateProductDto } from '@/lib/api/services/inventory.types';
@@ -62,7 +63,7 @@ export default function EditProductPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -99,7 +100,7 @@ export default function EditProductPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -111,7 +112,7 @@ export default function EditProductPage() {
                     {product.name}
                   </h1>
                   <Tag
-                    icon={product.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={product.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <ClockIcon className="w-3 h-3" />}
                     color={product.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -128,7 +129,7 @@ export default function EditProductPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateProduct.isPending}
               onClick={() => form.submit()}
               style={{

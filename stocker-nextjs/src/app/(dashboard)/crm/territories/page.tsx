@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, GlobalOutlined, SearchOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import { PlusIcon, ArrowPathIcon, GlobeAltIcon, MagnifyingGlassIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -12,7 +12,8 @@ import {
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 import { useTerritories, useDeleteTerritory } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 
 const typeLabels: Record<TerritoryType, { label: string; color: string }> = {
@@ -86,7 +87,7 @@ function TerritoriesStats({ territories, loading }: TerritoriesStatsProps) {
               <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
             </div>
             <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-              <GlobalOutlined className="text-white text-xl" />
+              <GlobeAltIcon className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
@@ -231,7 +232,7 @@ export default function TerritoriesPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => handleView(record)}
             className="text-blue-600 hover:text-blue-700"
           >
@@ -240,7 +241,7 @@ export default function TerritoriesPage() {
           <Button
             type="text"
             size="small"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => handleEdit(record)}
             className="text-slate-600 hover:text-slate-900"
           >
@@ -268,7 +269,7 @@ export default function TerritoriesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<GlobalOutlined />}
+        icon={<GlobeAltIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Bölgeler"
         description="Satış bölgelerini yönetin"
@@ -276,7 +277,7 @@ export default function TerritoriesPage() {
         primaryAction={{
           label: 'Yeni Bölge',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -284,7 +285,7 @@ export default function TerritoriesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -294,7 +295,7 @@ export default function TerritoriesPage() {
         <div className="flex items-center gap-4">
           <Input
             placeholder="Bölge ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 200 }}
@@ -329,7 +330,7 @@ export default function TerritoriesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

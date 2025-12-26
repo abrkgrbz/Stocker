@@ -7,7 +7,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, message, Select, Spin } from 'antd';
+import { Modal, message, Select } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   FileText,
   Search,
@@ -30,7 +31,7 @@ import {
   Card,
   EmptyState,
 } from '@/components/ui/enterprise-page';
-import { FileExclamationOutlined } from '@ant-design/icons';
+import { DocumentMinusIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import SalesService, {
@@ -132,7 +133,7 @@ export default function CreditNotesPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<FileExclamationOutlined />}
+        icon={<DocumentMinusIcon className="w-5 h-5" />}
         iconColor="#dc2626"
         title="Alacak Dekontları"
         description="İade ve geri ödemeleri yönetin (Kontra Fatura)"
@@ -239,7 +240,7 @@ export default function CreditNotesPage() {
       {loading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : creditNotes.length === 0 ? (
@@ -413,7 +414,7 @@ export default function CreditNotesPage() {
       >
         {detailLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         ) : selectedNote ? (
           <div className="space-y-6 py-4">

@@ -68,7 +68,7 @@ export default function PulseIndicator({
       </span>
 
       {label && (
-        <span className={`${sizes.text} text-gray-700 dark:text-gray-300`}>
+        <span className={`${sizes.text} text-gray-700`}>
           {label}
         </span>
       )}

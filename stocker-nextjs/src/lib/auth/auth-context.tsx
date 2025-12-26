@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiService } from '@/lib/api';
+import logger from '@/lib/utils/logger';
 
 export interface User {
   id: string;
@@ -44,15 +45,35 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Dev bypass mock user - only used when NEXT_PUBLIC_AUTH_BYPASS=true
+const DEV_MOCK_USER: User = {
+  id: 'dev-user-id',
+  email: 'dev@stocker.local',
+  firstName: 'Dev',
+  lastName: 'User',
+  role: 'Admin',
+  tenantId: 'dev-tenant-id',
+  tenantCode: 'dev',
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+
+  const [user, setUser] = useState<User | null>(isAuthBypassed ? DEV_MOCK_USER : null);
+  const [isLoading, setIsLoading] = useState(!isAuthBypassed);
   const router = useRouter();
 
   const isAuthenticated = !!user;
 
   // Load user from HttpOnly cookie on mount
   useEffect(() => {
+    // Skip auth check if bypassed
+    if (isAuthBypassed) {
+      logger.debug('Auth bypassed - using dev mock user', { component: 'AuthContext' });
+      return;
+    }
+
     const initializeAuth = async () => {
       // ✅ Try to load user from HttpOnly cookie
       // If cookie exists, /auth/me will succeed
@@ -61,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, []);
+  }, [isAuthBypassed]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -90,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         router.push('/dashboard');
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      logger.error('Login failed', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
       throw error;
     }
   };
@@ -118,21 +139,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         router.push('/dashboard');
       }
     } catch (error) {
-      console.error('Registration failed:', error);
+      logger.error('Registration failed', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      console.log('🚪 Logging out...');
+      logger.info('Logging out', { component: 'AuthContext' });
 
       // Call logout endpoint - backend will revoke refresh tokens
       await ApiService.post('/auth/logout');
 
-      console.log('✅ Logout API call successful');
+      logger.debug('Logout API call successful', { component: 'AuthContext' });
     } catch (error) {
-      console.error('❌ Logout API error:', error);
+      logger.error('Logout API error', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
       // Continue with client-side cleanup even if API fails
     } finally {
       // Clear user state
@@ -152,33 +173,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Clear cookie for base domain (e.g., .stoocker.app)
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${baseDomain}`;
         });
-        console.log('🍪 Cleared all cookies');
 
         // Clear localStorage
         localStorage.removeItem('tenantId');
         localStorage.removeItem('tenantIdentifier');
         localStorage.removeItem('requiresSetup');
-        console.log('🧹 Cleared localStorage auth data');
 
         // Clear sessionStorage
         sessionStorage.clear();
-        console.log('🧹 Cleared sessionStorage');
+
+        logger.debug('Cleared cookies and storage', { component: 'AuthContext' });
       }
 
       // Redirect to auth subdomain login page in production
       const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
       if (isProduction) {
-        console.log('✅ Logout complete - redirecting to auth.stoocker.app/login');
+        logger.info('Logout complete - redirecting to auth.stoocker.app/login', { component: 'AuthContext' });
         window.location.href = 'https://auth.stoocker.app/login';
       } else {
-        console.log('✅ Logout complete - redirecting to /login');
+        logger.info('Logout complete - redirecting to /login', { component: 'AuthContext' });
         router.push('/login');
       }
     }
   };
 
   // Helper function to decode JWT token (only the payload, not verifying signature)
-  const decodeJwtPayload = (token: string): any => {
+  const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -190,42 +210,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Failed to decode JWT:', error);
+      logger.error('Failed to decode JWT', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
       return null;
     }
   };
 
   const refreshUser = async () => {
     try {
-      console.log('🔍 Checking authentication...');
-      console.log('📋 Readable cookies:', document.cookie);
+      logger.debug('Checking authentication', { component: 'AuthContext' });
 
       // Note: auth-token is httpOnly so we can't read it with document.cookie
       // But tenant-code is NOT httpOnly, so we can use it as an auth indicator
       const tenantCodeCookie = document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='));
 
       if (!tenantCodeCookie) {
-        console.log('❌ No tenant-code cookie - user not authenticated');
+        logger.debug('No tenant-code cookie - user not authenticated', { component: 'AuthContext' });
         setUser(null);
         return;
       }
 
       const tenantCode = tenantCodeCookie.split('=')[1];
-      console.log('✅ Found tenant-code cookie:', tenantCode);
+      logger.debug('Found tenant-code cookie', { component: 'AuthContext', metadata: { tenantCode } });
 
       // Try to get JWT token from cookie (even though it's httpOnly, some browsers allow reading)
       // If not available, we'll rely on /auth/me endpoint
       const authTokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('auth-token='));
-      let jwtPayload = null;
+      let jwtPayload: Record<string, unknown> | null = null;
 
       if (authTokenCookie) {
         const token = authTokenCookie.split('=')[1];
         jwtPayload = decodeJwtPayload(token);
-        console.log('🔓 Decoded JWT payload:', jwtPayload);
+        logger.debug('Decoded JWT payload', { component: 'AuthContext' });
       }
 
       // Fetch real user data from /auth/me endpoint
-      console.log('📡 Fetching user data from /auth/me...');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
       try {
@@ -239,21 +257,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         if (!response.ok) {
-          console.warn('⚠️ /auth/me endpoint returned:', response.status);
+          logger.warn('/auth/me endpoint returned error', { component: 'AuthContext', metadata: { status: response.status } });
 
           // Fallback to temp user if endpoint not available yet (401/404)
           if (response.status === 401 || response.status === 404) {
-            console.log('📝 Using fallback user from JWT (endpoint not deployed yet)');
             const userData: User = {
-              id: jwtPayload?.nameid || 'temp-user-id',
-              email: jwtPayload?.email || '',
-              firstName: jwtPayload?.unique_name?.split('-')[0] || 'User',
+              id: (jwtPayload?.nameid as string) || 'temp-user-id',
+              email: (jwtPayload?.email as string) || '',
+              firstName: ((jwtPayload?.unique_name as string)?.split('-')[0]) || 'User',
               lastName: '',
-              role: jwtPayload?.role || 'User',
-              tenantId: jwtPayload?.TenantId || '',
-              tenantCode: jwtPayload?.TenantName || tenantCode,
+              role: (jwtPayload?.role as string) || 'User',
+              tenantId: (jwtPayload?.TenantId as string) || '',
+              tenantCode: (jwtPayload?.TenantName as string) || tenantCode,
             };
-            console.log('✅ User from JWT:', userData);
+            logger.debug('Using fallback user from JWT', { component: 'AuthContext' });
             setUser(userData);
             return;
           }
@@ -263,7 +280,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         const result = await response.json();
-        console.log('📋 User data response:', result);
 
         if (result.success && result.data) {
           const userData: User = {
@@ -271,35 +287,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
             email: result.data.email,
             firstName: result.data.fullName?.split(' ')[0] || '',
             lastName: result.data.fullName?.split(' ').slice(1).join(' ') || '',
-            role: result.data.roles?.[0] || result.data.role || jwtPayload?.role || 'User',
+            role: result.data.roles?.[0] || result.data.role || (jwtPayload?.role as string) || 'User',
             tenantId: result.data.tenantId || '',
             tenantCode: result.data.tenantCode || tenantCode,
           };
 
-          console.log('✅ User authenticated with real data:', userData);
+          logger.info('User authenticated', { component: 'AuthContext', userId: userData.id });
           setUser(userData);
         } else {
-          console.error('❌ Invalid user data response');
+          logger.error('Invalid user data response', new Error('Invalid response format'), { component: 'AuthContext' });
           setUser(null);
         }
       } catch (fetchError) {
-        console.warn('⚠️ /auth/me fetch failed, using fallback from JWT:', fetchError);
+        logger.warn('/auth/me fetch failed, using fallback from JWT', { component: 'AuthContext' });
         // Fallback to user data from JWT on network error
         const userData: User = {
-          id: jwtPayload?.nameid || 'temp-user-id',
-          email: jwtPayload?.email || '',
-          firstName: jwtPayload?.unique_name?.split('-')[0] || 'User',
+          id: (jwtPayload?.nameid as string) || 'temp-user-id',
+          email: (jwtPayload?.email as string) || '',
+          firstName: ((jwtPayload?.unique_name as string)?.split('-')[0]) || 'User',
           lastName: '',
-          role: jwtPayload?.role || 'User',
-          tenantId: jwtPayload?.TenantId || '',
-          tenantCode: jwtPayload?.TenantName || tenantCode,
+          role: (jwtPayload?.role as string) || 'User',
+          tenantId: (jwtPayload?.TenantId as string) || '',
+          tenantCode: (jwtPayload?.TenantName as string) || tenantCode,
         };
-        console.log('✅ User from JWT fallback:', userData);
         setUser(userData);
       }
     } catch (error) {
-      console.error('❌ Failed to refresh user:', error);
-      // ✅ NO COOKIE CLEARING - Just clear user state
+      logger.error('Failed to refresh user', error instanceof Error ? error : new Error(String(error)), { component: 'AuthContext' });
+      // NO COOKIE CLEARING - Just clear user state
       setUser(null);
     }
   };

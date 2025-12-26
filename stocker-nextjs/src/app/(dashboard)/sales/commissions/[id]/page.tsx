@@ -8,18 +8,18 @@ import {
   Typography,
   Button,
   Space,
-  Spin,
   Timeline,
   message,
   Modal,
   Input,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  XMarkIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useSalesCommission,
@@ -98,7 +98,7 @@ export default function CommissionDetailPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function CommissionDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/commissions')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/commissions')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>
@@ -128,16 +128,16 @@ export default function CommissionDetailPage() {
         <Space>
           {commission.status === 'Pending' && (
             <>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleApprove}>
+              <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleApprove}>
                 Onayla
               </Button>
-              <Button danger icon={<CloseOutlined />} onClick={() => setRejectModalOpen(true)}>
+              <Button danger icon={<XMarkIcon className="w-4 h-4" />} onClick={() => setRejectModalOpen(true)}>
                 Reddet
               </Button>
             </>
           )}
           {commission.status === 'Approved' && (
-            <Button type="primary" icon={<DollarOutlined />} onClick={() => setPayModalOpen(true)}>
+            <Button type="primary" icon={<CurrencyDollarIcon className="w-4 h-4" />} onClick={() => setPayModalOpen(true)}>
               Ödendi İşaretle
             </Button>
           )}

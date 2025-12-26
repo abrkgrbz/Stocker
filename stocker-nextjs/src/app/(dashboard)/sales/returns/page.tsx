@@ -18,18 +18,18 @@ import {
   Col,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  InboxOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  InboxIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {
   useSalesReturns,
@@ -187,7 +187,7 @@ export default function SalesReturnsPage() {
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => router.push(`/sales/returns/${record.id}`),
       },
@@ -197,13 +197,13 @@ export default function SalesReturnsPage() {
       items.push(
         {
           key: 'edit',
-          icon: <EditOutlined />,
+          icon: <PencilIcon className="w-4 h-4" />,
           label: 'Düzenle',
           onClick: () => router.push(`/sales/returns/${record.id}/edit`),
         },
         {
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => handleDelete(record.id),
@@ -215,13 +215,13 @@ export default function SalesReturnsPage() {
       items.push(
         {
           key: 'approve',
-          icon: <CheckOutlined />,
+          icon: <CheckIcon className="w-4 h-4" />,
           label: 'Onayla',
           onClick: () => handleApprove(record.id),
         },
         {
           key: 'reject',
-          icon: <CloseOutlined />,
+          icon: <XMarkIcon className="w-4 h-4" />,
           label: 'Reddet',
           danger: true,
           onClick: () => handleRejectClick(record),
@@ -232,7 +232,7 @@ export default function SalesReturnsPage() {
     if (record.status === 'Approved') {
       items.push({
         key: 'receive',
-        icon: <InboxOutlined />,
+        icon: <InboxIcon className="w-4 h-4" />,
         label: 'Teslim Al',
         onClick: () => handleReceive(record.id),
       });
@@ -241,7 +241,7 @@ export default function SalesReturnsPage() {
     if (!['Cancelled', 'Completed', 'Rejected'].includes(record.status)) {
       items.push({
         key: 'cancel',
-        icon: <CloseOutlined />,
+        icon: <XMarkIcon className="w-4 h-4" />,
         label: 'İptal Et',
         danger: true,
         onClick: () => handleCancelClick(record),
@@ -317,7 +317,7 @@ export default function SalesReturnsPage() {
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -342,12 +342,12 @@ export default function SalesReturnsPage() {
           <Text type="secondary">Müşteri iadelerini yönetin</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/sales/returns/new')}
           >
             Yeni İade
@@ -361,7 +361,7 @@ export default function SalesReturnsPage() {
           <Col xs={24} sm={12} md={8} lg={6}>
             <Input
               placeholder="Ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               allowClear
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))

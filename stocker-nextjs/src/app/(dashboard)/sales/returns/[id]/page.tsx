@@ -9,20 +9,20 @@ import {
   Typography,
   Button,
   Space,
-  Spin,
   Timeline,
   message,
   Modal,
   Input,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  InboxOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  InboxIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useSalesReturn,
@@ -132,7 +132,7 @@ export default function SalesReturnDetailPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -187,7 +187,7 @@ export default function SalesReturnDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/returns')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/returns')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>
@@ -199,27 +199,27 @@ export default function SalesReturnDetailPage() {
         </Space>
         <Space>
           {returnData.status === 'Draft' && (
-            <Button icon={<EditOutlined />} onClick={() => router.push(`/sales/returns/${id}/edit`)}>
+            <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/returns/${id}/edit`)}>
               Düzenle
             </Button>
           )}
           {returnData.status === 'Submitted' && (
             <>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleApprove}>
+              <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleApprove}>
                 Onayla
               </Button>
-              <Button danger icon={<CloseOutlined />} onClick={() => setRejectModalOpen(true)}>
+              <Button danger icon={<XMarkIcon className="w-4 h-4" />} onClick={() => setRejectModalOpen(true)}>
                 Reddet
               </Button>
             </>
           )}
           {returnData.status === 'Approved' && (
-            <Button type="primary" icon={<InboxOutlined />} onClick={handleReceive}>
+            <Button type="primary" icon={<InboxIcon className="w-4 h-4" />} onClick={handleReceive}>
               Teslim Al
             </Button>
           )}
           {(returnData.status === 'Received' || returnData.status === 'Processing') && (
-            <Button type="primary" icon={<CheckOutlined />} onClick={handleComplete}>
+            <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleComplete}>
               Tamamla
             </Button>
           )}

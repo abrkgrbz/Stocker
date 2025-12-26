@@ -16,20 +16,20 @@ import {
   Segmented,
   Badge,
   Tooltip,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  TagsOutlined,
-  FolderOutlined,
-  ApartmentOutlined,
-  UnorderedListOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  TagIcon,
+  FolderIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useCategories, useCategoryTree, useDeleteCategory } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -151,9 +151,9 @@ export default function CategoriesPage() {
             style={{ backgroundColor: '#10b98115' }}
           >
             {record.parentCategoryId ? (
-              <FolderOutlined style={{ color: '#10b981' }} />
+              <FolderIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             ) : (
-              <TagsOutlined style={{ color: '#10b981' }} />
+              <TagIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             )}
           </div>
           <div>
@@ -208,7 +208,7 @@ export default function CategoriesPage() {
             onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
           >
-            <EditOutlined />
+            <PencilSquareIcon className="w-4 h-4" />
           </button>
           <Popconfirm
             title="Kategoriyi silmek istediğinize emin misiniz?"
@@ -217,7 +217,7 @@ export default function CategoriesPage() {
             cancelText="Hayır"
           >
             <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-              <DeleteOutlined />
+              <TrashIcon className="w-4 h-4" />
             </button>
           </Popconfirm>
         </div>
@@ -240,9 +240,9 @@ export default function CategoriesPage() {
               style={{ backgroundColor: record.level === 0 ? '#10b98115' : '#f1f5f9' }}
             >
               {record.level === 0 ? (
-                <TagsOutlined style={{ color: '#10b981' }} />
+                <TagIcon className="w-5 h-5" style={{ color: '#10b981' }} />
               ) : (
-                <FolderOutlined style={{ color: '#64748b' }} />
+                <FolderIcon className="w-5 h-5" style={{ color: '#64748b' }} />
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export default function CategoriesPage() {
               onClick={() => router.push(`/inventory/categories/${record.id}/edit`)}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <EditOutlined />
+              <PencilSquareIcon className="w-4 h-4" />
             </button>
           </Tooltip>
           <Popconfirm
@@ -327,7 +327,7 @@ export default function CategoriesPage() {
           >
             <Tooltip title="Sil">
               <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                <DeleteOutlined />
+                <TrashIcon className="w-4 h-4" />
               </button>
             </Tooltip>
           </Popconfirm>
@@ -347,7 +347,7 @@ export default function CategoriesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalCategories}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <TagsOutlined style={{ color: '#10b981' }} />
+              <TagIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -358,7 +358,7 @@ export default function CategoriesPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeCategories}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -369,7 +369,7 @@ export default function CategoriesPage() {
               <div className="text-2xl font-semibold text-slate-900">{rootCategories}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <ApartmentOutlined style={{ color: '#8b5cf6' }} />
+              <Squares2X2Icon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -380,7 +380,7 @@ export default function CategoriesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <FolderOutlined style={{ color: '#f59e0b' }} />
+              <FolderIcon className="w-6 h-6" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -388,7 +388,7 @@ export default function CategoriesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TagsOutlined />}
+        icon={<TagIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="Kategoriler"
         description="Ürün kategorilerini yönetin"
@@ -396,7 +396,7 @@ export default function CategoriesPage() {
         primaryAction={{
           label: 'Yeni Kategori',
           onClick: () => router.push('/inventory/categories/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -404,7 +404,7 @@ export default function CategoriesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -414,7 +414,7 @@ export default function CategoriesPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Input
             placeholder="Kategori ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 300 }}
@@ -427,12 +427,12 @@ export default function CategoriesPage() {
             options={[
               {
                 value: 'tree',
-                icon: <ApartmentOutlined />,
+                icon: <Squares2X2Icon className="w-4 h-4" />,
                 label: 'Ağaç Görünümü',
               },
               {
                 value: 'flat',
-                icon: <UnorderedListOutlined />,
+                icon: <ListBulletIcon className="w-4 h-4" />,
                 label: 'Liste Görünümü',
               },
             ]}
@@ -444,7 +444,7 @@ export default function CategoriesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

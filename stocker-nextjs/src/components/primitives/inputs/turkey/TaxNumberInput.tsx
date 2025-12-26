@@ -123,6 +123,7 @@ export const TaxNumberInput = forwardRef<HTMLInputElement, TaxNumberInputProps>(
           className={cn(
             'outline-none transition-all duration-200 rounded-md',
             'bg-slate-50 border border-slate-300',
+            'text-slate-900',
             'hover:border-slate-400',
             'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
             'placeholder:text-slate-400',

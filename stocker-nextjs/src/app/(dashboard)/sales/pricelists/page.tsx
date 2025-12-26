@@ -25,8 +25,8 @@ import {
   Card,
   Badge,
   EmptyState,
-} from '@/components/ui/enterprise-page';
-import { DollarOutlined } from '@ant-design/icons';
+} from '@/components/patterns';
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 
 // Types
@@ -186,7 +186,7 @@ export default function PriceListsPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<DollarOutlined />}
+        icon={<CurrencyDollarIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="Fiyat Listeleri"
         description="Segment bazlı fiyatlandırma listelerini yönetin"

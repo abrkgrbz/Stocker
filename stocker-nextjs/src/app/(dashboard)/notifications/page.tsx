@@ -13,18 +13,18 @@ import {
   Empty,
   Dropdown,
   Menu,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  BellOutlined,
-  CheckOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+  BellIcon,
+  CheckIcon,
+  TrashIcon,
+  EllipsisVerticalIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
 import { CRMService } from '@/lib/api/services/crm.service';
 import type { NotificationDto } from '@/lib/api/services/crm.types';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
@@ -105,15 +105,15 @@ const NotificationsPage = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'Deal':
-        return <TrophyOutlined style={{ color: '#52c41a' }} />;
+        return <TrophyIcon className="w-5 h-5" style={{ color: '#52c41a' }} />;
       case 'Task':
-        return <CheckCircleOutlined style={{ color: '#1890ff' }} />;
+        return <CheckCircleIcon className="w-5 h-5" style={{ color: '#1890ff' }} />;
       case 'Alert':
-        return <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />;
+        return <ExclamationCircleIcon className="w-5 h-5" style={{ color: '#ff4d4f' }} />;
       case 'Workflow':
-        return <InfoCircleOutlined style={{ color: '#722ed1' }} />;
+        return <InformationCircleIcon className="w-5 h-5" style={{ color: '#722ed1' }} />;
       default:
-        return <BellOutlined style={{ color: '#8c8c8c' }} />;
+        return <BellIcon className="w-5 h-5" style={{ color: '#8c8c8c' }} />;
     }
   };
 
@@ -151,7 +151,7 @@ const NotificationsPage = () => {
     <div>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2} style={{ margin: 0 }}>
-          <BellOutlined /> Bildirimler
+          <BellIcon className="w-6 h-6 inline-block mr-2" /> Bildirimler
           {unreadCount > 0 && (
             <Badge count={unreadCount} style={{ marginLeft: 12 }} />
           )}
@@ -159,7 +159,7 @@ const NotificationsPage = () => {
         {unreadCount > 0 && (
           <Button
             type="primary"
-            icon={<CheckOutlined />}
+            icon={<CheckIcon className="w-4 h-4" />}
             onClick={handleMarkAllAsRead}
           >
             Tümünü Okundu İşaretle
@@ -208,7 +208,7 @@ const NotificationsPage = () => {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         ) : filteredNotifications.length === 0 ? (
           <Empty
@@ -241,7 +241,7 @@ const NotificationsPage = () => {
                         {!item.isRead && (
                           <Menu.Item
                             key="read"
-                            icon={<CheckOutlined />}
+                            icon={<CheckIcon className="w-4 h-4" />}
                             onClick={() => handleMarkAsRead(item.id)}
                           >
                             Okundu İşaretle
@@ -249,7 +249,7 @@ const NotificationsPage = () => {
                         )}
                         <Menu.Item
                           key="delete"
-                          icon={<DeleteOutlined />}
+                          icon={<TrashIcon className="w-4 h-4" />}
                           danger
                           onClick={() => handleDelete(item.id)}
                         >
@@ -259,7 +259,7 @@ const NotificationsPage = () => {
                     }
                     trigger={['click']}
                   >
-                    <Button type="text" icon={<MoreOutlined />} />
+                    <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
                   </Dropdown>,
                 ]}
               >

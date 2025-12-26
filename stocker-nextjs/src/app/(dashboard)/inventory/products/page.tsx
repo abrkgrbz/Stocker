@@ -21,32 +21,32 @@ import {
   Empty,
   Dropdown,
   Tooltip,
-  Spin,
   Checkbox,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  AppstoreOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-  DownloadOutlined,
-  FilterOutlined,
-  SaveOutlined,
-  StarOutlined,
-  StarFilled,
-  ClearOutlined,
-  SettingOutlined,
-  FolderOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  EyeIcon,
+  EllipsisHorizontalIcon,
+  Squares2X2Icon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  StopIcon,
+  DocumentIcon,
+  TableCellsIcon,
+  ArrowDownTrayIcon,
+  FunnelIcon,
+  CheckIcon,
+  StarIcon,
+  XMarkIcon,
+  Cog6ToothIcon,
+  FolderIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import {
   useProducts,
   useCategories,
@@ -122,31 +122,31 @@ const filterPresets: { key: string; label: string; icon: React.ReactNode; filter
   {
     key: 'lowStock',
     label: 'Düşük Stok',
-    icon: <WarningOutlined style={{ color: '#fa8c16' }} />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#fa8c16' }} />,
     filters: { stockStatus: ['lowStock'] },
   },
   {
     key: 'outOfStock',
     label: 'Stokta Yok',
-    icon: <WarningOutlined style={{ color: '#f5222d' }} />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#f5222d' }} />,
     filters: { stockStatus: ['outOfStock'] },
   },
   {
     key: 'serialTracked',
     label: 'Seri Takipli',
-    icon: <SettingOutlined style={{ color: '#1890ff' }} />,
+    icon: <Cog6ToothIcon className="w-4 h-4" style={{ color: '#1890ff' }} />,
     filters: { trackingType: ['serial'] },
   },
   {
     key: 'lotTracked',
     label: 'Lot Takipli',
-    icon: <SettingOutlined style={{ color: '#52c41a' }} />,
+    icon: <Cog6ToothIcon className="w-4 h-4" style={{ color: '#52c41a' }} />,
     filters: { trackingType: ['lot'] },
   },
   {
     key: 'inactive',
     label: 'Pasif Ürünler',
-    icon: <StopOutlined style={{ color: '#8c8c8c' }} />,
+    icon: <StopIcon className="w-4 h-4" style={{ color: '#8c8c8c' }} />,
     filters: { includeInactive: true },
   },
 ];
@@ -690,7 +690,7 @@ export default function ProductsPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: '#3b82f615' }}
           >
-            <AppstoreOutlined style={{ color: '#3b82f6' }} />
+            <Squares2X2Icon className="w-5 h-5" style={{ color: '#3b82f6' }} />
           </div>
           <div>
             <div
@@ -769,12 +769,12 @@ export default function ProductsPage() {
             </span>
             {isLow && !isZero && (
               <Tooltip title="Düşük stok">
-                <WarningOutlined className="text-amber-500" />
+                <ExclamationTriangleIcon className="w-4 h-4 text-amber-500" />
               </Tooltip>
             )}
             {isZero && (
               <Tooltip title="Stok yok">
-                <WarningOutlined className="text-red-500" />
+                <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
               </Tooltip>
             )}
           </div>
@@ -830,26 +830,26 @@ export default function ProductsPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilSquareIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
           { type: 'divider' as const },
           {
             key: 'toggle',
-            icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+            icon: record.isActive ? <StopIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
             label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
             onClick: () => handleToggleActive(record),
           },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -859,7 +859,7 @@ export default function ProductsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -878,7 +878,7 @@ export default function ProductsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <AppstoreOutlined style={{ color: '#3b82f6' }} />
+              <Squares2X2Icon className="w-6 h-6" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -889,7 +889,7 @@ export default function ProductsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -900,7 +900,7 @@ export default function ProductsPage() {
               <div className="text-2xl font-semibold text-slate-900">{lowStockProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: lowStockProducts > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <WarningOutlined style={{ color: lowStockProducts > 0 ? '#f59e0b' : '#64748b' }} />
+              <ExclamationTriangleIcon className="w-6 h-6" style={{ color: lowStockProducts > 0 ? '#f59e0b' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -911,7 +911,7 @@ export default function ProductsPage() {
               <div className="text-2xl font-semibold text-slate-900">₺{totalValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <AppstoreOutlined style={{ color: '#8b5cf6' }} />
+              <Squares2X2Icon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -926,42 +926,42 @@ export default function ProductsPage() {
               <button
                 onClick={handleBulkEdit}
                 disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
               >
-                <EditOutlined className="mr-1" /> Toplu Düzenle
+                <PencilSquareIcon className="w-4 h-4" /> Toplu Düzenle
               </button>
               <button
                 onClick={() => handleBulkActivate(true)}
                 disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
               >
-                <CheckCircleOutlined className="mr-1" /> Aktifleştir
+                <CheckCircleIcon className="w-4 h-4" /> Aktifleştir
               </button>
               <button
                 onClick={() => handleBulkActivate(false)}
                 disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
               >
-                <StopOutlined className="mr-1" /> Pasifleştir
+                <StopIcon className="w-4 h-4" /> Pasifleştir
               </button>
               <Dropdown
                 menu={{
                   items: [
-                    { key: 'pdf', icon: <FilePdfOutlined />, label: 'Seçilenleri PDF İndir', onClick: handleExportPDF },
-                    { key: 'excel', icon: <FileExcelOutlined />, label: 'Seçilenleri Excel İndir', onClick: handleExportExcel },
+                    { key: 'pdf', icon: <DocumentIcon className="w-4 h-4" />, label: 'Seçilenleri PDF İndir', onClick: handleExportPDF },
+                    { key: 'excel', icon: <TableCellsIcon className="w-4 h-4" />, label: 'Seçilenleri Excel İndir', onClick: handleExportExcel },
                   ],
                 }}
               >
-                <button className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors">
-                  <DownloadOutlined className="mr-1" /> Dışa Aktar
+                <button className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors inline-flex items-center gap-1">
+                  <ArrowDownTrayIcon className="w-4 h-4" /> Dışa Aktar
                 </button>
               </Dropdown>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkLoading}
-                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1"
               >
-                <DeleteOutlined className="mr-1" /> Sil
+                <TrashIcon className="w-4 h-4" /> Sil
               </button>
               <button
                 onClick={() => setSelectedRowKeys([])}
@@ -976,7 +976,7 @@ export default function ProductsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<AppstoreOutlined />}
+        icon={<Squares2X2Icon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Ürünler"
         description="Ürün kataloğunuzu yönetin"
@@ -984,20 +984,20 @@ export default function ProductsPage() {
         primaryAction={{
           label: 'Yeni Ürün',
           onClick: () => router.push('/inventory/products/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
             <Dropdown
               menu={{
                 items: [
-                  { key: 'pdf', icon: <FilePdfOutlined />, label: 'PDF İndir', onClick: handleExportPDF },
-                  { key: 'excel', icon: <FileExcelOutlined />, label: 'Excel İndir', onClick: handleExportExcel },
+                  { key: 'pdf', icon: <DocumentIcon className="w-4 h-4" />, label: 'PDF İndir', onClick: handleExportPDF },
+                  { key: 'excel', icon: <TableCellsIcon className="w-4 h-4" />, label: 'Excel İndir', onClick: handleExportExcel },
                 ],
               }}
             >
               <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-                <DownloadOutlined />
+                <ArrowDownTrayIcon className="w-5 h-5" />
               </button>
             </Dropdown>
             <button
@@ -1005,7 +1005,7 @@ export default function ProductsPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         }
@@ -1016,7 +1016,7 @@ export default function ProductsPage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
-              <FolderOutlined className="text-slate-400" /> Görünümler:
+              <FolderIcon className="w-4 h-4 text-slate-400" /> Görünümler:
             </span>
             {savedViews.length === 0 ? (
               <span className="text-sm text-slate-400">Henüz kayıtlı görünüm yok</span>
@@ -1027,7 +1027,7 @@ export default function ProductsPage() {
                   color={activeViewId === view.id ? 'blue' : 'default'}
                   style={{ cursor: 'pointer' }}
                   onClick={() => handleApplyView(view)}
-                  icon={view.isDefault ? <StarFilled style={{ color: '#faad14' }} /> : null}
+                  icon={view.isDefault ? <StarIconSolid className="w-3 h-3" style={{ color: '#faad14' }} /> : null}
                 >
                   {view.name}
                 </Tag>
@@ -1045,7 +1045,7 @@ export default function ProductsPage() {
               onClick={() => setManageViewsModalOpen(true)}
               className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1"
             >
-              <SettingOutlined /> Yönet
+              <Cog6ToothIcon className="w-4 h-4" /> Yönet
             </button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -1069,7 +1069,7 @@ export default function ProductsPage() {
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <Input
             placeholder="Ürün adı, kodu veya barkod ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={filters.searchText}
             onChange={(e) => updateFilter('searchText', e.target.value)}
             allowClear
@@ -1109,7 +1109,7 @@ export default function ProductsPage() {
                   showAdvancedFilters ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <FilterOutlined /> Gelişmiş
+                <FunnelIcon className="w-4 h-4" /> Gelişmiş
               </button>
             </Badge>
             {hasActiveFilters && (
@@ -1118,13 +1118,13 @@ export default function ProductsPage() {
                   onClick={handleSaveView}
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
                 >
-                  <SaveOutlined /> Kaydet
+                  <CheckIcon className="w-4 h-4" /> Kaydet
                 </button>
                 <button
                   onClick={clearFilters}
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
                 >
-                  <ClearOutlined /> Temizle
+                  <XMarkIcon className="w-4 h-4" /> Temizle
                 </button>
               </>
             )}
@@ -1259,7 +1259,7 @@ export default function ProductsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -1291,7 +1291,7 @@ export default function ProductsPage() {
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <EditOutlined style={{ color: '#3b82f6' }} />
+              <PencilSquareIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">Toplu Düzenleme</div>
@@ -1366,7 +1366,7 @@ export default function ProductsPage() {
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <SaveOutlined style={{ color: '#8b5cf6' }} />
+              <CheckIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">Görünümü Kaydet</div>
@@ -1391,7 +1391,7 @@ export default function ProductsPage() {
           <Form.Item name="isDefault" valuePropName="checked">
             <Checkbox>
               <span className="flex items-center gap-1">
-                <StarOutlined style={{ color: '#faad14' }} />
+                <StarIcon className="w-4 h-4" style={{ color: '#faad14' }} />
                 Varsayılan görünüm olarak ayarla
               </span>
             </Checkbox>
@@ -1415,7 +1415,7 @@ export default function ProductsPage() {
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#64748b15' }}>
-              <FolderOutlined style={{ color: '#64748b' }} />
+              <FolderIcon className="w-5 h-5" style={{ color: '#64748b' }} />
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">Kayıtlı Görünümler</div>
@@ -1440,7 +1440,7 @@ export default function ProductsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      {view.isDefault && <StarFilled style={{ color: '#faad14' }} />}
+                      {view.isDefault && <StarIconSolid className="w-4 h-4" style={{ color: '#faad14' }} />}
                       <span className="font-medium text-slate-900">{view.name}</span>
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
@@ -1463,7 +1463,7 @@ export default function ProductsPage() {
                           onClick={() => handleSetDefaultView(view.id)}
                           className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
                         >
-                          <StarOutlined />
+                          <StarIcon className="w-4 h-4" />
                         </button>
                       </Tooltip>
                     )}
@@ -1472,7 +1472,7 @@ export default function ProductsPage() {
                         onClick={() => handleDeleteView(view.id)}
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
-                        <DeleteOutlined />
+                        <TrashIcon className="w-4 h-4" />
                       </button>
                     </Tooltip>
                   </div>

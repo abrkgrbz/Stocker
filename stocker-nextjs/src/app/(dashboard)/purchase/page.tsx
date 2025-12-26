@@ -4,21 +4,21 @@ import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Row, Col, Statistic, Typography, Button, Space, List, Tag, Tooltip, Progress } from 'antd';
 import {
-  ShopOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  WalletOutlined,
-  InboxOutlined,
-  RollbackOutlined,
-  PlusOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  DollarOutlined,
-  BarChartOutlined,
-} from '@ant-design/icons';
+  BuildingStorefrontIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+  WalletIcon,
+  InboxIcon,
+  ArrowUturnLeftIcon,
+  PlusIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSupplierSummary,
   usePurchaseRequestSummary,
@@ -116,14 +116,14 @@ export default function PurchaseDashboardPage() {
   };
 
   const quickActions = [
-    { icon: <ShopOutlined />, label: 'Yeni Tedarikçi', path: '/purchase/suppliers/new', color: '#8b5cf6' },
-    { icon: <FileTextOutlined />, label: 'Yeni Talep', path: '/purchase/requests/new', color: '#a855f7' },
-    { icon: <ShoppingCartOutlined />, label: 'Yeni Sipariş', path: '/purchase/orders/new', color: '#3b82f6' },
-    { icon: <InboxOutlined />, label: 'Mal Alımı', path: '/purchase/goods-receipts/new', color: '#10b981' },
-    { icon: <FileTextOutlined />, label: 'Yeni Fatura', path: '/purchase/invoices/new', color: '#f59e0b' },
-    { icon: <WalletOutlined />, label: 'Yeni Ödeme', path: '/purchase/payments/new', color: '#06b6d4' },
-    { icon: <RollbackOutlined />, label: 'Yeni İade', path: '/purchase/returns/new', color: '#ef4444' },
-    { icon: <BarChartOutlined />, label: 'Raporlar', path: '/purchase/reports', color: '#0ea5e9' },
+    { icon: <BuildingStorefrontIcon className="w-4 h-4" />, label: 'Yeni Tedarikçi', path: '/purchase/suppliers/new', color: '#8b5cf6' },
+    { icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Yeni Talep', path: '/purchase/requests/new', color: '#a855f7' },
+    { icon: <ShoppingCartIcon className="w-4 h-4" />, label: 'Yeni Sipariş', path: '/purchase/orders/new', color: '#3b82f6' },
+    { icon: <InboxIcon className="w-4 h-4" />, label: 'Mal Alımı', path: '/purchase/goods-receipts/new', color: '#10b981' },
+    { icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Yeni Fatura', path: '/purchase/invoices/new', color: '#f59e0b' },
+    { icon: <WalletIcon className="w-4 h-4" />, label: 'Yeni Ödeme', path: '/purchase/payments/new', color: '#06b6d4' },
+    { icon: <ArrowUturnLeftIcon className="w-4 h-4" />, label: 'Yeni İade', path: '/purchase/returns/new', color: '#ef4444' },
+    { icon: <ChartBarIcon className="w-4 h-4" />, label: 'Raporlar', path: '/purchase/reports', color: '#0ea5e9' },
   ];
 
   return (
@@ -171,7 +171,7 @@ export default function PurchaseDashboardPage() {
             <Statistic
               title={
                 <span className="flex items-center gap-2">
-                  <ShopOutlined style={{ color: '#8b5cf6' }} />
+                  <BuildingStorefrontIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
                   Tedarikçiler
                 </span>
               }
@@ -206,7 +206,7 @@ export default function PurchaseDashboardPage() {
             <Statistic
               title={
                 <span className="flex items-center gap-2">
-                  <FileTextOutlined style={{ color: '#a855f7' }} />
+                  <DocumentTextIcon className="w-5 h-5" style={{ color: '#a855f7' }} />
                   Satın Alma Talepleri
                 </span>
               }
@@ -234,7 +234,7 @@ export default function PurchaseDashboardPage() {
             <Statistic
               title={
                 <span className="flex items-center gap-2">
-                  <ShoppingCartOutlined style={{ color: '#3b82f6' }} />
+                  <ShoppingCartIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
                   Açık Siparişler
                 </span>
               }
@@ -257,7 +257,7 @@ export default function PurchaseDashboardPage() {
             <Statistic
               title={
                 <span className="flex items-center gap-2">
-                  <FileTextOutlined style={{ color: '#f59e0b' }} />
+                  <DocumentTextIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
                   Bekleyen Faturalar
                 </span>
               }
@@ -266,7 +266,7 @@ export default function PurchaseDashboardPage() {
             />
             <div className="mt-2 text-sm">
               <span className="text-red-500 flex items-center gap-1">
-                <WarningOutlined />
+                <ExclamationTriangleIcon className="w-4 h-4" />
                 {invoiceSummary?.overdueInvoices || 0} vadesi geçmiş
               </span>
             </div>
@@ -282,7 +282,7 @@ export default function PurchaseDashboardPage() {
             <Statistic
               title={
                 <span className="flex items-center gap-2">
-                  <WalletOutlined style={{ color: '#10b981' }} />
+                  <WalletIcon className="w-5 h-5" style={{ color: '#10b981' }} />
                   Bu Ay Ödemeler
                 </span>
               }
@@ -356,7 +356,7 @@ export default function PurchaseDashboardPage() {
               <Statistic
                 title="Toplam İadeler"
                 value={returnSummary?.totalReturns || 0}
-                prefix={<RollbackOutlined style={{ color: '#ef4444' }} />}
+                prefix={<ArrowUturnLeftIcon className="w-5 h-5" style={{ color: '#ef4444' }} />}
               />
 
               <div className="grid grid-cols-2 gap-4">
@@ -590,7 +590,7 @@ export default function PurchaseDashboardPage() {
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <ShopOutlined className="text-xl text-purple-600" />
+                <BuildingStorefrontIcon className="w-6 h-6 text-purple-600" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">Tedarikçiler</div>
@@ -611,7 +611,7 @@ export default function PurchaseDashboardPage() {
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center">
-                <FileTextOutlined className="text-xl text-violet-600" />
+                <DocumentTextIcon className="w-6 h-6 text-violet-600" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">Talepler</div>
@@ -632,7 +632,7 @@ export default function PurchaseDashboardPage() {
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <ShoppingCartOutlined className="text-xl text-blue-600" />
+                <ShoppingCartIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">Siparişler</div>
@@ -653,7 +653,7 @@ export default function PurchaseDashboardPage() {
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <FileTextOutlined className="text-xl text-amber-600" />
+                <DocumentTextIcon className="w-6 h-6 text-amber-600" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">Faturalar</div>
@@ -674,7 +674,7 @@ export default function PurchaseDashboardPage() {
           <Card size="small">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <WalletOutlined className="text-xl text-green-600" />
+                <WalletIcon className="w-6 h-6 text-green-600" />
               </div>
               <div>
                 <div className="text-gray-500 text-sm">Ödemeler</div>

@@ -19,27 +19,28 @@ import {
   confirmDelete,
   confirmAction,
 } from '@/lib/utils/sweetalert';
-import { Table, Input, Select, Tooltip, Dropdown, Spin } from 'antd';
+import { Table, Input, Select, Tooltip, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  UserOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  LockOutlined,
-  UnlockOutlined,
-  MailOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SafetyOutlined,
-  EyeOutlined,
-  CrownOutlined,
-  SendOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  UserIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ShieldCheckIcon,
+  EyeIcon,
+  PaperAirplaneIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
+import { CrownIcon } from 'lucide-react';
+import { Spinner } from '@/components/primitives';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import { UserModal } from '@/features/users/components/UserModal';
 import { useAuth } from '@/lib/auth';
@@ -235,13 +236,13 @@ export default function UsersPage() {
         {
           key: 'view',
           label: 'Detayları Görüntüle',
-          icon: <EyeOutlined />,
+          icon: <EyeIcon className="w-4 h-4" />,
           onClick: () => handleViewDetails(user.id),
         },
         {
           key: 'edit',
           label: 'Düzenle',
-          icon: <EditOutlined />,
+          icon: <PencilIcon className="w-4 h-4" />,
           onClick: () => handleEditUser(user),
         },
         // Show "Resend Invitation" for pending users
@@ -250,7 +251,7 @@ export default function UsersPage() {
               {
                 key: 'resend',
                 label: 'Daveti Tekrar Gönder',
-                icon: <SendOutlined />,
+                icon: <PaperAirplaneIcon className="w-4 h-4" />,
                 onClick: () => handleResendInvitation(user),
               },
             ]
@@ -261,7 +262,7 @@ export default function UsersPage() {
               {
                 key: 'toggle',
                 label: user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et',
-                icon: user.isActive ? <LockOutlined /> : <UnlockOutlined />,
+                icon: user.isActive ? <LockClosedIcon className="w-4 h-4" /> : <LockOpenIcon className="w-4 h-4" />,
                 onClick: () => handleToggleStatus(user),
               },
             ]
@@ -270,7 +271,7 @@ export default function UsersPage() {
         {
           key: 'delete',
           label: 'Sil',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           danger: true,
           disabled: user.roles.includes('FirmaYöneticisi') || user.roles.includes('Admin'),
           onClick: () => handleDeleteUser(user),
@@ -328,7 +329,7 @@ export default function UsersPage() {
       key: 'email',
       render: (email: string) => (
         <div className="flex items-center gap-2">
-          <MailOutlined className="text-slate-400 text-xs" />
+          <EnvelopeIcon className="w-3 h-3 text-slate-400" />
           <span className="text-sm text-slate-600">{email}</span>
         </div>
       ),
@@ -372,7 +373,7 @@ export default function UsersPage() {
         if (record.status === 'PendingActivation') {
           return (
             <Badge variant="warning">
-              <ClockCircleOutlined className="mr-1" />
+              <ClockIcon className="w-3 h-3 mr-1" />
               Davet Bekleniyor
             </Badge>
           );
@@ -396,7 +397,7 @@ export default function UsersPage() {
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <MoreOutlined />
+              <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         </AdminOnly>
@@ -409,7 +410,7 @@ export default function UsersPage() {
       <PageContainer maxWidth="5xl">
         <Card>
           <EmptyState
-            icon={<UserOutlined className="text-xl" />}
+            icon={<UserIcon className="w-6 h-6" />}
             title="Hata oluştu"
             description="Kullanıcılar yüklenirken bir hata oluştu"
           />
@@ -429,7 +430,7 @@ export default function UsersPage() {
                 <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
                 {subscriptionInfo && (
                   <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
-                    <CrownOutlined className="text-amber-500 text-xs" />
+                    <CrownIcon className="w-3 h-3 text-amber-500" />
                   </Tooltip>
                 )}
               </div>
@@ -441,7 +442,7 @@ export default function UsersPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <TeamOutlined style={{ color: '#3b82f6' }} />
+              <UsersIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -452,7 +453,7 @@ export default function UsersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.active}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -463,7 +464,7 @@ export default function UsersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <ClockCircleOutlined style={{ color: '#f59e0b' }} />
+              <ClockIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -474,7 +475,7 @@ export default function UsersPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.admins}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#0284c715' }}>
-              <SafetyOutlined style={{ color: '#0284c7' }} />
+              <ShieldCheckIcon className="w-5 h-5" style={{ color: '#0284c7' }} />
             </div>
           </div>
         </div>
@@ -482,7 +483,7 @@ export default function UsersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<UserOutlined />}
+        icon={<UserIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Kullanıcılar"
         description="Sistem kullanıcılarını yönetin"
@@ -492,7 +493,7 @@ export default function UsersPage() {
             ? {
                 label: 'Kullanıcı Davet Et',
                 onClick: handleCreateUser,
-                icon: <SendOutlined />,
+                icon: <PaperAirplaneIcon className="w-4 h-4" />,
               }
             : undefined
         }
@@ -504,7 +505,7 @@ export default function UsersPage() {
           <div className="flex-1 min-w-[200px]">
             <Input
               placeholder="Kullanıcı ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
@@ -537,13 +538,13 @@ export default function UsersPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : filteredUsers.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<UserOutlined className="text-xl" />}
+            icon={<UserIcon className="w-6 h-6" />}
             title="Kullanıcı bulunamadı"
             description="Arama kriterlerinizi değiştirmeyi deneyin"
             action={

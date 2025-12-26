@@ -3,18 +3,18 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+import { CheckCircleIcon, XCircleIcon, ClockIcon, PlayCircleIcon, PauseCircleIcon } from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { CampaignForm } from '@/components/crm/campaigns';
 import { useCampaign, useUpdateCampaign } from '@/lib/api/hooks/useCRM';
 
 // Status labels and colors
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  Planned: { label: 'Planlandı', color: 'default', icon: <ClockCircleOutlined /> },
-  InProgress: { label: 'Devam Ediyor', color: 'processing', icon: <PlayCircleOutlined /> },
-  Completed: { label: 'Tamamlandı', color: 'success', icon: <CheckCircleOutlined /> },
-  OnHold: { label: 'Beklemede', color: 'warning', icon: <PauseCircleOutlined /> },
-  Aborted: { label: 'İptal Edildi', color: 'error', icon: <CloseCircleOutlined /> },
+  Planned: { label: 'Planlandı', color: 'default', icon: <ClockIcon className="w-4 h-4" /> },
+  InProgress: { label: 'Devam Ediyor', color: 'processing', icon: <PlayCircleIcon className="w-4 h-4" /> },
+  Completed: { label: 'Tamamlandı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  OnHold: { label: 'Beklemede', color: 'warning', icon: <PauseCircleIcon className="w-4 h-4" /> },
+  Aborted: { label: 'İptal Edildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 export default function EditCampaignPage() {

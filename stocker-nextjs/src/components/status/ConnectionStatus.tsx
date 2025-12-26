@@ -82,7 +82,7 @@ export default function ConnectionStatus({
         spin={state === 'connecting' || state === 'reconnecting'}
       />
       {showText && (
-        <span className={`${size === 'small' ? 'text-xs' : 'text-sm'} text-gray-600 dark:text-gray-400`}>
+        <span className={`${size === 'small' ? 'text-xs' : 'text-sm'} text-gray-600`}>
           {config.text}
         </span>
       )}

@@ -144,6 +144,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
             className={cn(
               'w-full rounded-md outline-none transition-all duration-200 cursor-pointer',
               'bg-slate-50 border border-slate-300',
+              'text-slate-900',
               'hover:border-slate-400',
               'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
               'placeholder:text-slate-400',

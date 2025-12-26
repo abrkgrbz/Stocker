@@ -2,8 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Input, InputNumber, Select, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { Button, Form, Input, InputNumber, Select, Row, Col, Empty } from 'antd';
+import { Spinner } from '@/components/primitives';
+import { ArrowLeftIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { usePosition, useUpdatePosition, useDepartments } from '@/lib/api/hooks/useHR';
 import type { UpdatePositionDto } from '@/lib/api/services/hr.types';
 
@@ -63,7 +64,7 @@ export default function EditPositionPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -94,11 +95,11 @@ export default function EditPositionPage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/positions/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <SafetyCertificateOutlined className="text-lg text-gray-600" />
+              <ShieldCheckIcon className="w-5 h-5 text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Pozisyon Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

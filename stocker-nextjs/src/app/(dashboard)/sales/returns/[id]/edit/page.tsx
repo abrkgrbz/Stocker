@@ -16,9 +16,10 @@ import {
   Divider,
   Row,
   Col,
-  Spin,
 } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/24/solid';
+import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';
 import { useSalesReturn, useUpdateSalesReturn } from '@/lib/api/hooks/useSales';
 import type { UpdateSalesReturnDto, SalesReturnReason } from '@/lib/api/services/sales.service';
@@ -132,7 +133,7 @@ export default function EditSalesReturnPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -200,7 +201,7 @@ export default function EditSalesReturnPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -211,7 +212,7 @@ export default function EditSalesReturnPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push(`/sales/returns/${id}`)}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/returns/${id}`)}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>İade Düzenle: {returnData.returnNumber}</Title>
@@ -286,7 +287,7 @@ export default function EditSalesReturnPage() {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Button
                   type="primary"
-                  icon={<SaveOutlined />}
+                  icon={<CheckIcon className="w-4 h-4" />}
                   htmlType="submit"
                   loading={updateMutation.isPending}
                   block

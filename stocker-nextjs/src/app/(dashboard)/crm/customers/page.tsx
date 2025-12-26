@@ -7,22 +7,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Alert, Spin } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  TeamOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  UserGroupIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { CustomersStats, CustomersTable } from '@/components/crm/customers';
 import {
   PageContainer,
   ListPageHeader,
-  Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+  Card,
+} from '@/components/patterns';
+import { Input, Alert, Spinner } from '@/components/primitives';
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -71,7 +71,7 @@ export default function CustomersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TeamOutlined />}
+        icon={<UserGroupIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Müşteriler"
         description="Müşteri portföyünüzü yönetin"
@@ -79,7 +79,7 @@ export default function CustomersPage() {
         primaryAction={{
           label: 'Müşteri Ekle',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -87,7 +87,7 @@ export default function CustomersPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -95,14 +95,13 @@ export default function CustomersPage() {
       {/* Error Alert */}
       {error && (
         <Alert
-          message="Müşteriler yüklenemedi"
-          description={
+          variant="error"
+          title="Müşteriler yüklenemedi"
+          message={
             error instanceof Error
               ? error.message
               : 'Müşteriler getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
           }
-          type="error"
-          showIcon
           closable
           action={
             <button
@@ -120,11 +119,10 @@ export default function CustomersPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Müşteri ara... (şirket adı, yetkili kişi, e-posta)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-          className="h-10"
+          size="lg"
         />
       </div>
 
@@ -132,7 +130,7 @@ export default function CustomersPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

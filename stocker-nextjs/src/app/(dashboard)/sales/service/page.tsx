@@ -6,7 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, message, Spin } from 'antd';
+import { Modal, message } from 'antd';
+import { Spinner } from '@/components/primitives';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -30,7 +31,7 @@ import {
   ListPageHeader,
   Badge,
 } from '@/components/ui/enterprise-page';
-import { ToolOutlined } from '@ant-design/icons';
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { SalesService, ServiceOrderListDto, ServiceOrderDto, ServiceOrderStatisticsDto } from '@/lib/api/services/sales.service';
 
 dayjs.extend(relativeTime);
@@ -260,7 +261,7 @@ export default function ServiceOrdersPage() {
     return (
       <PageContainer maxWidth="full">
         <div className="flex items-center justify-center h-96">
-          <Spin size="large" />
+          <Spinner size="lg" />
         </div>
       </PageContainer>
     );
@@ -269,7 +270,7 @@ export default function ServiceOrdersPage() {
   return (
     <PageContainer maxWidth="full">
       <ListPageHeader
-        icon={<ToolOutlined />}
+        icon={<WrenchScrewdriverIcon className="w-5 h-5" />}
         iconColor="#7c3aed"
         title="Servis Talepleri"
         description="Tamir ve bakım taleplerini yönetin"
@@ -462,7 +463,7 @@ export default function ServiceOrdersPage() {
       >
         {detailLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         ) : selectedOrder ? (
           <div className="space-y-4">

@@ -2,8 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Input, TimePicker, InputNumber, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, Form, Input, TimePicker, InputNumber, Row, Col, Empty } from 'antd';
+import { Spinner } from '@/components/primitives';
+import { ArrowLeftIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { useShift, useUpdateShift } from '@/lib/api/hooks/useHR';
 import type { UpdateShiftDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';

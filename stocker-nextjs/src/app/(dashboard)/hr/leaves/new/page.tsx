@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CalendarOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, CheckIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { LeaveForm } from '@/components/hr';
 import { useCreateLeave } from '@/lib/api/hooks/useHR';
 import type { CreateLeaveDto } from '@/lib/api/services/hr.types';
@@ -49,14 +49,14 @@ export default function NewLeavePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <CalendarOutlined className="mr-2" />
+                <CalendarIcon className="w-5 h-5 mr-2 inline" />
                 Yeni İzin Talebi
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir izin talebi oluşturun</p>
@@ -66,7 +66,7 @@ export default function NewLeavePage() {
             <Button onClick={() => router.push('/hr/leaves')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createLeave.isPending}
               onClick={() => form.submit()}
               style={{

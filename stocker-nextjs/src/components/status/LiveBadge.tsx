@@ -72,8 +72,8 @@ export default function LiveBadge({
           size === 'small' ? 'text-xs' : 'text-sm'
         } ${
           isLive
-            ? 'text-red-600 dark:text-red-400'
-            : 'text-gray-500 dark:text-gray-400'
+            ? 'text-red-600'
+            : 'text-gray-500'
         }`}
       >
         {isLive ? liveText : staticText}

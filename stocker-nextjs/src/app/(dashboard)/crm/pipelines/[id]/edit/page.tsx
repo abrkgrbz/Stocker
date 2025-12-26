@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, StarFilled } from '@ant-design/icons';
+import { CheckCircleIcon, XCircleIcon, StarIcon } from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { PipelineForm } from '@/components/crm/pipelines';
 import { usePipeline, useUpdatePipeline } from '@/lib/api/hooks/useCRM';
@@ -41,14 +41,14 @@ export default function EditPipelinePage() {
         pipeline && (
           <>
             {(pipeline as any).isDefault && (
-              <StarFilled className="text-yellow-500" title="Varsayılan Pipeline" />
+              <StarIcon className="w-5 h-5 text-yellow-500 fill-yellow-500" title="Varsayılan Pipeline" />
             )}
             {pipeline.isActive ? (
-              <Tag icon={<CheckCircleOutlined />} color="success">
+              <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">
                 Aktif
               </Tag>
             ) : (
-              <Tag icon={<CloseCircleOutlined />} color="default">
+              <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default">
                 Pasif
               </Tag>
             )}

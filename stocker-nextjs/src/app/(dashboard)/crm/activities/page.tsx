@@ -17,24 +17,23 @@ import {
 } from 'antd';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CalendarOutlined,
-  ThunderboltOutlined,
-  TrophyOutlined,
-  FireOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CloseCircleOutlined,
-  FieldTimeOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CalendarIcon,
+  BoltIcon,
+  TrophyIcon,
+  FireIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UsersIcon,
+  DocumentTextIcon,
+  ClockIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { Activity } from '@/lib/api/services/crm.service';
 import {
   useActivities,
@@ -50,7 +49,8 @@ import { ActivityCalendar } from '@/components/crm/activities/ActivityCalendar';
 import { ActivityModal } from '@/features/activities/components';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 // Activity type configuration
 const activityConfig: Record<
@@ -58,31 +58,31 @@ const activityConfig: Record<
   { icon: React.ReactNode; color: string; label: string; gradient: string }
 > = {
   Call: {
-    icon: <PhoneOutlined />,
+    icon: <PhoneIcon className="w-4 h-4" />,
     color: 'blue',
     label: 'Arama',
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   },
   Email: {
-    icon: <MailOutlined />,
+    icon: <EnvelopeIcon className="w-4 h-4" />,
     color: 'cyan',
     label: 'E-posta',
     gradient: 'linear-gradient(135deg, #00c6fb 0%, #005bea 100%)'
   },
   Meeting: {
-    icon: <TeamOutlined />,
+    icon: <UsersIcon className="w-4 h-4" />,
     color: 'green',
     label: 'Toplantı',
     gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
   },
   Task: {
-    icon: <FileTextOutlined />,
+    icon: <DocumentTextIcon className="w-4 h-4" />,
     color: 'orange',
     label: 'Görev',
     gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
   },
   Note: {
-    icon: <FileTextOutlined />,
+    icon: <DocumentTextIcon className="w-4 h-4" />,
     color: 'default',
     label: 'Not',
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
@@ -116,25 +116,25 @@ const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }
     {
       title: 'Toplam Aktivite',
       value: stats.total,
-      icon: <ThunderboltOutlined className="text-2xl" />,
+      icon: <BoltIcon className="w-6 h-6" />,
       color: 'slate',
     },
     {
       title: 'Bugünün Aktiviteleri',
       value: stats.today,
-      icon: <CalendarOutlined className="text-2xl" />,
+      icon: <CalendarIcon className="w-6 h-6" />,
       color: 'slate',
     },
     {
       title: 'Tamamlanan',
       value: stats.completed,
-      icon: <CheckCircleOutlined className="text-2xl" />,
+      icon: <CheckCircleIcon className="w-6 h-6" />,
       color: 'emerald',
     },
     {
       title: 'Bekleyen',
       value: stats.pending,
-      icon: <ClockCircleOutlined className="text-2xl" />,
+      icon: <ClockIcon className="w-6 h-6" />,
       color: 'amber',
     },
   ];
@@ -145,7 +145,7 @@ const ActivitiesStats: React.FC<ActivitiesStatsProps> = ({ activities, loading }
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <div className="flex items-center justify-center py-8">
-              <Spin />
+              <Spinner />
             </div>
           </Card>
         ))}
@@ -340,7 +340,7 @@ export default function ActivitiesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ThunderboltOutlined />}
+        icon={<BoltIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Aktiviteler"
         description="Tüm aktivitelerinizi takvimde yönetin ve takip edin"
@@ -348,7 +348,7 @@ export default function ActivitiesPage() {
         primaryAction={{
           label: 'Yeni Aktivite',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -356,7 +356,7 @@ export default function ActivitiesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -366,7 +366,7 @@ export default function ActivitiesPage() {
         <div className="flex flex-col gap-4">
           {/* Owner Filter */}
           <div className="flex items-center gap-3">
-            <UserOutlined className="text-lg text-slate-600" />
+            <UserIcon className="w-5 h-5 text-slate-600" />
             <span className="text-slate-600 font-medium">Aktivite Sahibi:</span>
             <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden">
               <button
@@ -410,21 +410,21 @@ export default function ActivitiesPage() {
                 onClick={() => handleQuickAction('Call')}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
-                <PhoneOutlined />
+                <PhoneIcon className="w-4 h-4" />
                 Görüşme
               </button>
               <button
                 onClick={() => handleQuickAction('Email')}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
-                <MailOutlined />
+                <EnvelopeIcon className="w-4 h-4" />
                 E-posta
               </button>
               <button
                 onClick={() => handleQuickAction('Meeting')}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded-lg shadow-sm transition-all text-sm font-medium"
               >
-                <TeamOutlined />
+                <UsersIcon className="w-4 h-4" />
                 Toplantı
               </button>
             </Space>
@@ -436,7 +436,7 @@ export default function ActivitiesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -538,7 +538,7 @@ export default function ActivitiesPage() {
             {/* Time Information */}
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-slate-600 mb-2">
-                <ClockCircleOutlined />
+                <ClockIcon className="w-4 h-4" />
                 <span className="font-semibold">Zaman</span>
               </div>
               <div className="text-base text-slate-900">
@@ -548,7 +548,7 @@ export default function ActivitiesPage() {
                 )}
               </div>
               {dayjs(drawerActivity.startTime).isBefore(dayjs()) && drawerActivity.status === 'Scheduled' && (
-                <Tag icon={<FireOutlined />} color="error" className="mt-2">
+                <Tag icon={<FireIcon className="w-3 h-3" />} color="error" className="mt-2">
                   Gecikmiş
                 </Tag>
               )}
@@ -558,7 +558,7 @@ export default function ActivitiesPage() {
             {drawerActivity.description && (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <FileTextOutlined />
+                  <DocumentTextIcon className="w-4 h-4" />
                   <span className="font-semibold">Açıklama</span>
                 </div>
                 <p className="text-slate-900">{drawerActivity.description}</p>
@@ -569,7 +569,7 @@ export default function ActivitiesPage() {
             {drawerActivity.customerId && (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   <span className="font-semibold">Müşteri</span>
                 </div>
                 <Descriptions column={1} size="small">

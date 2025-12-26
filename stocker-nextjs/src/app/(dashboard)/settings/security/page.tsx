@@ -10,7 +10,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Form, InputNumber, Spin } from 'antd';
+import { Form, InputNumber } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   ArrowLeft,
   Shield,
@@ -235,7 +236,7 @@ export default function SecurityPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }

@@ -7,7 +7,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, message, Select, Spin } from 'antd';
+import { Modal, message, Select } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
   CreditCard,
   Search,
@@ -30,7 +31,7 @@ import {
   Card,
   EmptyState,
 } from '@/components/ui/enterprise-page';
-import { WalletOutlined } from '@ant-design/icons';
+import { WalletIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 import SalesService, {
@@ -189,7 +190,7 @@ export default function AdvancePaymentsPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<WalletOutlined />}
+        icon={<WalletIcon className="w-5 h-5" />}
         iconColor="#6366f1"
         title="Avans Ödemeler"
         description="Depozito ve ön ödemeleri takip edin"
@@ -281,7 +282,7 @@ export default function AdvancePaymentsPage() {
       {loading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : payments.length === 0 ? (

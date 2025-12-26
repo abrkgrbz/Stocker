@@ -2,8 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Select, DatePicker, Input, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Button, Form, Select, DatePicker, Input, Row, Col, Empty } from 'antd';
+import { Spinner } from '@/components/primitives';
+import { ArrowLeftIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { useLeave, useUpdateLeave, useEmployees, useLeaveTypes } from '@/lib/api/hooks/useHR';
 import type { UpdateLeaveDto } from '@/lib/api/services/hr.types';
 import { LeaveStatus } from '@/lib/api/services/hr.types';
@@ -63,7 +64,7 @@ export default function EditLeavePage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -105,11 +106,11 @@ export default function EditLeavePage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/leaves/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <CalendarOutlined className="text-lg text-gray-600" />
+              <CalendarIcon className="w-5 h-5 text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">İzin Talebi Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

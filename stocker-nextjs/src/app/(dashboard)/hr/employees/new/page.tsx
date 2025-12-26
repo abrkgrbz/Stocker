@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, UserOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, CheckIcon, UserIcon } from '@heroicons/react/24/outline';
 import { EmployeeForm } from '@/components/hr';
 import { useCreateEmployee } from '@/lib/api/hooks/useHR';
 import type { CreateEmployeeDto } from '@/lib/api/services/hr.types';
@@ -67,14 +67,14 @@ export default function NewEmployeePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <UserOutlined className="mr-2" />
+                <UserIcon className="w-5 h-5 mr-2 inline" />
                 Yeni Çalışan
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir çalışan kaydı oluşturun</p>
@@ -84,7 +84,7 @@ export default function NewEmployeePage() {
             <Button onClick={() => router.push('/hr/employees')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createEmployee.isPending}
               onClick={() => form.submit()}
               style={{

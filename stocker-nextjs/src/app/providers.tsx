@@ -7,13 +7,13 @@
  *
  * Central provider composition with:
  * - React Query for server state management
- * - Ant Design with enterprise theme system
+ * - Ant Design with enterprise theme system (Light mode only)
  * - Authentication and tenant context
  * - Toast notifications
  * - reCAPTCHA integration
  */
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ConfigProvider, App as AntdApp } from 'antd';
@@ -23,14 +23,7 @@ import { AuthProvider } from '@/lib/auth';
 import { TenantProvider } from '@/lib/tenant';
 import { ToastProvider } from '@/lib/notifications/toast-provider';
 import { ReCaptchaProvider } from '@/providers/ReCaptchaProvider';
-import {
-  lightTheme,
-  darkTheme,
-  type ThemeMode,
-  getStoredThemeMode,
-  setStoredThemeMode,
-  getSystemThemeMode,
-} from '@/theme';
+import { lightTheme } from '@/theme';
 
 // =====================================
 // REACT QUERY CONFIGURATION
@@ -67,105 +60,46 @@ const queryClient = new QueryClient({
 });
 
 // =====================================
-// THEME CONTEXT
+// THEME CONTEXT (Simplified - Light mode only)
 // =====================================
 
 interface ThemeContextValue {
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
-  toggleMode: () => void;
-  isDark: boolean;
+  mode: 'light';
+  isDark: false;
 }
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextValue>({
+  mode: 'light',
+  isDark: false,
+});
 
 /**
  * Hook to access theme context
  */
 export function useTheme(): ThemeContextValue {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
+  return useContext(ThemeContext);
 }
 
 // =====================================
-// THEME PROVIDER
+// THEME PROVIDER (Light mode only)
 // =====================================
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultMode?: ThemeMode;
 }
 
-function ThemeProvider({ children, defaultMode = 'light' }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(defaultMode);
-  const [mounted, setMounted] = useState(false);
-
-  // Initialize theme from storage/system on mount
-  useEffect(() => {
-    const stored = getStoredThemeMode();
-    if (stored) {
-      setModeState(stored);
-    } else {
-      const system = getSystemThemeMode();
-      setModeState(system);
-    }
-    setMounted(true);
-  }, []);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only update if no stored preference
-      if (!getStoredThemeMode()) {
-        setModeState(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  const setMode = useCallback((newMode: ThemeMode) => {
-    setModeState(newMode);
-    setStoredThemeMode(newMode);
-  }, []);
-
-  const toggleMode = useCallback(() => {
-    setMode(mode === 'dark' ? 'light' : 'dark');
-  }, [mode, setMode]);
-
+function ThemeProvider({ children }: ThemeProviderProps) {
   const value = useMemo(
     () => ({
-      mode,
-      setMode,
-      toggleMode,
-      isDark: mode === 'dark',
+      mode: 'light' as const,
+      isDark: false as const,
     }),
-    [mode, setMode, toggleMode]
+    []
   );
-
-  const theme = mode === 'dark' ? darkTheme : lightTheme;
-
-  // Prevent flash of incorrect theme on SSR
-  if (!mounted) {
-    return (
-      <ThemeContext.Provider value={value}>
-        <ConfigProvider locale={trTR} theme={lightTheme}>
-          {children}
-        </ConfigProvider>
-      </ThemeContext.Provider>
-    );
-  }
 
   return (
     <ThemeContext.Provider value={value}>
-      <ConfigProvider locale={trTR} theme={theme}>
+      <ConfigProvider locale={trTR} theme={lightTheme}>
         <AntdApp>
           {children}
         </AntdApp>

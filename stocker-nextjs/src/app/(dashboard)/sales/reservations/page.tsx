@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Modal, message, Input, InputNumber, Form } from 'antd';
+import { Modal, message, InputNumber } from 'antd';
 import {
   Package,
   Clock,
@@ -26,8 +26,8 @@ import {
   Card,
   Badge,
   EmptyState,
-} from '@/components/ui/enterprise-page';
-import { InboxOutlined } from '@ant-design/icons';
+} from '@/components/patterns';
+import { InboxIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
@@ -273,7 +273,7 @@ export default function InventoryReservationsPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<InboxOutlined />}
+        icon={<InboxIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Stok Rezervasyonları"
         description="Siparişler için ayrılmış stok rezervasyonlarını yönetin"

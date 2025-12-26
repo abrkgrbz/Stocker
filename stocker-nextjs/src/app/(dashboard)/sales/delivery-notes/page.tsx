@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Modal, message, Select } from 'antd';
+import { Modal, message } from 'antd';
 import {
   FileText,
   Truck,
@@ -31,8 +31,9 @@ import {
   Card,
   Badge,
   EmptyState,
-} from '@/components/ui/enterprise-page';
-import { FileTextOutlined } from '@ant-design/icons';
+} from '@/components/patterns';
+import { Select } from '@/components/primitives';
+import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
@@ -277,7 +278,7 @@ export default function DeliveryNotesPage() {
   return (
     <PageContainer maxWidth="7xl">
       <ListPageHeader
-        icon={<FileTextOutlined />}
+        icon={<DocumentTextIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="İrsaliyeler"
         description="Sevkiyat ile gönderilen resmi belgeler"
@@ -335,17 +336,16 @@ export default function DeliveryNotesPage() {
           </div>
           <Select
             placeholder="Durum"
-            allowClear
-            value={statusFilter === 'All' ? undefined : statusFilter}
-            onChange={(value) => setStatusFilter(value || 'All')}
-            style={{ width: 160 }}
-            options={[
-              { value: 'Preparing', label: 'Hazırlanıyor' },
-              { value: 'InTransit', label: 'Yolda' },
-              { value: 'Delivered', label: 'Teslim Edildi' },
-              { value: 'Returned', label: 'İade Edildi' },
-            ]}
-          />
+            value={statusFilter === 'All' ? '' : statusFilter}
+            onChange={(e) => setStatusFilter((e.target.value as DeliveryStatus) || 'All')}
+            className="w-40"
+          >
+            <option value="">Tümü</option>
+            <option value="Preparing">Hazırlanıyor</option>
+            <option value="InTransit">Yolda</option>
+            <option value="Delivered">Teslim Edildi</option>
+            <option value="Returned">İade Edildi</option>
+          </Select>
         </div>
       </Card>
 

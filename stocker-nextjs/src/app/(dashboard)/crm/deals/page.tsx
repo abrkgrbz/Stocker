@@ -8,19 +8,19 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Tag, Tooltip, Spin } from 'antd';
+import { Input, Tag, Tooltip } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  TrophyOutlined,
-  CloseCircleOutlined,
-  ReloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  TrophyIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import {
   showUpdateSuccess,
   showDeleteSuccess,
@@ -43,7 +43,8 @@ import {
   PageContainer,
   ListPageHeader,
   Card,
-} from '@/components/ui/enterprise-page';
+} from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 // Status colors
 const statusColors: Record<Deal['status'], string> = {
@@ -177,8 +178,8 @@ export default function DealsPage() {
         {/* Header */}
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {isLost && <StopOutlined className="text-red-500 text-xs" />}
-            {isWon && <TrophyOutlined className="text-emerald-500 text-xs" />}
+            {isLost && <NoSymbolIcon className="w-3 h-3 text-red-500" />}
+            {isWon && <TrophyIcon className="w-3 h-3 text-emerald-500" />}
             <span className="text-sm font-medium text-slate-900 truncate">{deal.title}</span>
           </div>
           <Tag color={statusColors[deal.status]} className="ml-2 text-xs">
@@ -189,7 +190,7 @@ export default function DealsPage() {
         {/* Customer */}
         {deal.customerName && (
           <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
-            <UserOutlined className="text-slate-400" />
+            <UserIcon className="w-3 h-3 text-slate-400" />
             <span>{deal.customerName}</span>
           </div>
         )}
@@ -221,7 +222,7 @@ export default function DealsPage() {
               }}
               className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1"
             >
-              <CheckCircleOutlined />
+              <CheckCircleIcon className="w-3 h-3" />
               Kazanıldı
             </button>
             <button
@@ -231,7 +232,7 @@ export default function DealsPage() {
               }}
               className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
             >
-              <StopOutlined />
+              <NoSymbolIcon className="w-3 h-3" />
               Kaybedildi
             </button>
           </div>
@@ -239,13 +240,13 @@ export default function DealsPage() {
 
         {/* Status Message for Closed Deals */}
         {isWon && (
-          <div className="text-center text-emerald-600 font-medium text-xs pt-2">
-            <TrophyOutlined /> Başarıyla tamamlandı!
+          <div className="text-center text-emerald-600 font-medium text-xs pt-2 flex items-center justify-center gap-1">
+            <TrophyIcon className="w-3 h-3" /> Başarıyla tamamlandı!
           </div>
         )}
         {isLost && (
-          <div className="text-center text-red-600 font-medium text-xs pt-2">
-            <CloseCircleOutlined /> Kaybedildi
+          <div className="text-center text-red-600 font-medium text-xs pt-2 flex items-center justify-center gap-1">
+            <XCircleIcon className="w-3 h-3" /> Kaybedildi
           </div>
         )}
       </div>
@@ -322,7 +323,7 @@ export default function DealsPage() {
         <div className="bg-white border-2 border-red-300 rounded-lg h-full">
           <div className="p-3 border-b border-red-200 bg-red-50">
             <div className="flex items-center gap-2 mb-1">
-              <StopOutlined className="text-red-500" />
+              <NoSymbolIcon className="w-4 h-4 text-red-500" />
               <span className="text-sm font-medium text-slate-900">❌ Kaybedildi</span>
               <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
                 {lostDeals.length}
@@ -369,11 +370,11 @@ export default function DealsPage() {
                 }`}
               >
                 {isLost ? (
-                  <StopOutlined className="text-red-500" />
+                  <NoSymbolIcon className="w-5 h-5 text-red-500" />
                 ) : isWon ? (
-                  <TrophyOutlined className="text-emerald-500" />
+                  <TrophyIcon className="w-5 h-5 text-emerald-500" />
                 ) : (
-                  <TrophyOutlined className="text-amber-500" />
+                  <TrophyIcon className="w-5 h-5 text-amber-500" />
                 )}
               </div>
 
@@ -392,7 +393,7 @@ export default function DealsPage() {
                 </div>
                 {deal.customerName && (
                   <div className="text-xs text-slate-500 flex items-center gap-1">
-                    <UserOutlined className="text-slate-400" />
+                    <UserIcon className="w-3 h-3 text-slate-400" />
                     <span>{deal.customerName}</span>
                   </div>
                 )}
@@ -435,7 +436,7 @@ export default function DealsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TrophyOutlined />}
+        icon={<TrophyIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
         title="Fırsatlar"
         description="Satış fırsatlarınızı yönetin ve takip edin"
@@ -443,7 +444,7 @@ export default function DealsPage() {
         primaryAction={{
           label: 'Yeni Fırsat',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
@@ -451,24 +452,24 @@ export default function DealsPage() {
             <div className="flex bg-slate-100 rounded-md p-0.5">
               <button
                 onClick={() => setViewMode('kanban')}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors flex items-center gap-1 ${
                   viewMode === 'kanban'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <AppstoreOutlined className="mr-1" />
+                <Squares2X2Icon className="w-4 h-4" />
                 Kanban
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors flex items-center gap-1 ${
                   viewMode === 'list'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <UnorderedListOutlined className="mr-1" />
+                <ListBulletIcon className="w-4 h-4" />
                 Liste
               </button>
             </div>
@@ -478,7 +479,7 @@ export default function DealsPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         }
@@ -488,7 +489,7 @@ export default function DealsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Fırsat ara..."
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -500,7 +501,7 @@ export default function DealsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : viewMode === 'kanban' ? (

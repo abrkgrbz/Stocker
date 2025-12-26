@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, FieldTimeOutlined } from '@ant-design/icons';
+import { ArrowLeftIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { AttendanceCheckInForm } from '@/components/hr';
 import { useCheckIn } from '@/lib/api/hooks/useHR';
 import type { CheckInDto } from '@/lib/api/services/hr.types';
@@ -41,14 +41,14 @@ export default function NewAttendancePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <FieldTimeOutlined className="mr-2" />
+                <ClockIcon className="w-5 h-5 mr-2 inline" />
                 Manuel Giriş Kaydı
               </h1>
               <p className="text-sm text-gray-400 m-0">Çalışan için manuel giriş kaydı oluşturun</p>
@@ -58,7 +58,7 @@ export default function NewAttendancePage() {
             <Button onClick={() => router.push('/hr/attendance')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={checkIn.isPending}
               onClick={() => form.submit()}
               style={{

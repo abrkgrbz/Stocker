@@ -14,22 +14,22 @@ import {
   Select,
   Dropdown,
   Modal,
-  Spin,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  SafetyCertificateOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  TeamOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  EllipsisVerticalIcon,
+  ShieldCheckIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  UsersIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePositions,
   useDepartments,
@@ -153,7 +153,7 @@ export default function PositionsPage() {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-            <SafetyCertificateOutlined style={{ color: '#8b5cf6' }} />
+            <ShieldCheckIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{record.title}</div>
@@ -177,7 +177,7 @@ export default function PositionsPage() {
         if (!record.minSalary && !record.maxSalary) return <span className="text-slate-400">-</span>;
         return (
           <div className="flex items-center gap-1 text-xs text-slate-600">
-            <DollarOutlined className="text-slate-400" />
+            <CurrencyDollarIcon className="w-3 h-3 text-slate-400" />
             <span>{formatCurrency(record.minSalary)} - {formatCurrency(record.maxSalary)}</span>
           </div>
         );
@@ -213,27 +213,27 @@ export default function PositionsPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
           { type: 'divider' as const },
           {
             key: 'toggle',
-            icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+            icon: record.isActive ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
             label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
             onClick: () => handleToggleActive(record),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -243,7 +243,7 @@ export default function PositionsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -262,7 +262,7 @@ export default function PositionsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalPositions}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <SafetyCertificateOutlined style={{ color: '#8b5cf6' }} />
+              <ShieldCheckIcon className="w-6 h-6" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function PositionsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activePositions}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-6 h-6" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -284,7 +284,7 @@ export default function PositionsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalEmployees}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <TeamOutlined style={{ color: '#3b82f6' }} />
+              <UsersIcon className="w-6 h-6" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function PositionsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<SafetyCertificateOutlined />}
+        icon={<ShieldCheckIcon className="w-5 h-5" />}
         iconColor="#8b5cf6"
         title="Pozisyonlar"
         description="Tüm pozisyonları görüntüle ve yönet"
@@ -300,7 +300,7 @@ export default function PositionsPage() {
         primaryAction={{
           label: 'Yeni Pozisyon',
           onClick: () => router.push('/hr/positions/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -308,7 +308,7 @@ export default function PositionsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -319,7 +319,7 @@ export default function PositionsPage() {
           <div className="md:col-span-2">
             <Input
               placeholder="Pozisyon adı, kod veya açıklama ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -356,7 +356,7 @@ export default function PositionsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

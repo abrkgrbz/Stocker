@@ -13,12 +13,12 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, Tooltip } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TeamOutlined,
-  ApartmentOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  UsersIcon,
+  BuildingOffice2Icon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   deleteDepartment,
@@ -88,7 +88,7 @@ export default function DepartmentsPage() {
             className="w-8 h-8 rounded-md flex items-center justify-center"
             style={{ backgroundColor: '#8b5cf615' }}
           >
-            <ApartmentOutlined style={{ color: '#8b5cf6', fontSize: 14 }} />
+            <BuildingOffice2Icon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
@@ -117,7 +117,7 @@ export default function DepartmentsPage() {
       width: 100,
       render: (count: number) => (
         <div className="flex items-center justify-center gap-1.5">
-          <TeamOutlined className="text-slate-400 text-xs" />
+          <UsersIcon className="w-3 h-3 text-slate-400" />
           <span className={`text-sm ${count > 0 ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
             {count}
           </span>
@@ -136,7 +136,7 @@ export default function DepartmentsPage() {
               onClick={() => handleEdit(record)}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <EditOutlined className="text-sm" />
+              <PencilIcon className="w-4 h-4" />
             </button>
           </Tooltip>
           <Tooltip title="Sil">
@@ -145,7 +145,7 @@ export default function DepartmentsPage() {
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
               disabled={record.employeeCount > 0}
             >
-              <DeleteOutlined className="text-sm" />
+              <TrashIcon className="w-4 h-4" />
             </button>
           </Tooltip>
         </div>
@@ -160,7 +160,7 @@ export default function DepartmentsPage() {
   return (
     <PageContainer maxWidth="5xl">
       <ListPageHeader
-        icon={<ApartmentOutlined />}
+        icon={<BuildingOffice2Icon className="w-5 h-5" />}
         iconColor="#8b5cf6"
         title="Departmanlar"
         description="Organizasyonunuzun departmanlarını yönetin"
@@ -168,14 +168,14 @@ export default function DepartmentsPage() {
         primaryAction={{
           label: 'Yeni Departman',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
       />
 
       {departments.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<ApartmentOutlined className="text-xl" />}
+            icon={<BuildingOffice2Icon className="w-6 h-6" />}
             title="Henüz departman eklenmemiş"
             description="Organizasyonunuzu yapılandırmak için ilk departmanınızı oluşturun."
             action={{

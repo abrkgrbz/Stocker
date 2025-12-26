@@ -9,20 +9,18 @@ import {
   Empty,
   Tooltip,
   Modal,
-  Spin,
 } from 'antd';
 import {
-  ThunderboltOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  PercentageOutlined,
-} from '@ant-design/icons';
+  BoltIcon,
+  PlusIcon,
+  TrashIcon,
+  PlayIcon,
+  PauseIcon,
+  ArrowPathIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';
@@ -35,7 +33,8 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import { useRouter } from 'next/navigation';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -89,25 +88,25 @@ function WorkflowsStats({ workflows, loading }: WorkflowsStatsProps) {
     {
       title: 'Toplam İş Akışı',
       value: stats.total,
-      icon: <ThunderboltOutlined className="text-xl" />,
+      icon: <BoltIcon className="w-6 h-6" />,
       color: 'bg-slate-50 text-slate-700',
     },
     {
       title: 'Aktif',
       value: stats.active,
-      icon: <CheckCircleOutlined className="text-xl" />,
+      icon: <CheckCircleIcon className="w-6 h-6" />,
       color: 'bg-green-50 text-green-700',
     },
     {
       title: 'Çalıştırma Sayısı',
       value: stats.totalExecutions,
-      icon: <ClockCircleOutlined className="text-xl" />,
+      icon: <ClockIcon className="w-6 h-6" />,
       color: 'bg-blue-50 text-blue-700',
     },
     {
       title: 'Başarı Oranı',
       value: `${stats.successRate}%`,
-      icon: <PercentageOutlined className="text-xl" />,
+      icon: <span className="text-xl font-bold">%</span>,
       color: 'bg-purple-50 text-purple-700',
     },
   ];
@@ -260,7 +259,7 @@ export default function WorkflowsPage() {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'success' : 'default'} icon={isActive ? <ThunderboltOutlined /> : undefined}>
+        <Tag color={isActive ? 'success' : 'default'} icon={isActive ? <BoltIcon className="w-4 h-4" /> : undefined}>
           {isActive ? 'Aktif' : 'Pasif'}
         </Tag>
       ),
@@ -301,7 +300,7 @@ export default function WorkflowsPage() {
             <Button
               type="text"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<EyeIcon className="w-4 h-4" />}
               onClick={() => handleView(record.id)}
             />
           </Tooltip>
@@ -309,7 +308,7 @@ export default function WorkflowsPage() {
             <Button
               type="text"
               size="small"
-              icon={record.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+              icon={record.isActive ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
               onClick={() => record.isActive ? handleDeactivate(record.id) : handleActivate(record.id)}
             />
           </Tooltip>
@@ -318,7 +317,7 @@ export default function WorkflowsPage() {
               type="text"
               size="small"
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -336,7 +335,7 @@ export default function WorkflowsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ThunderboltOutlined />}
+        icon={<BoltIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="İş Akışları"
         description="Otomasyon iş akışlarınızı yönetin"
@@ -344,7 +343,7 @@ export default function WorkflowsPage() {
         primaryAction={{
           label: 'Yeni İş Akışı',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -352,7 +351,7 @@ export default function WorkflowsPage() {
             disabled={loading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={loading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -361,7 +360,7 @@ export default function WorkflowsPage() {
       {loading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -381,7 +380,7 @@ export default function WorkflowsPage() {
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description="Henüz iş akışı bulunmuyor"
                 >
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                  <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
                     İlk İş Akışını Oluştur
                   </Button>
                 </Empty>

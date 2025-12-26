@@ -19,16 +19,16 @@ import {
   Switch,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  CheckOutlined,
-  StopOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  MagnifyingGlassIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {
   useDiscounts,
@@ -112,26 +112,26 @@ export default function DiscountsPage() {
   const getActionMenu = (record: DiscountListItem): MenuProps['items'] => [
     {
       key: 'view',
-      icon: <EyeOutlined />,
+      icon: <EyeIcon className="w-4 h-4" />,
       label: 'Görüntüle',
       onClick: () => router.push(`/sales/discounts/${record.id}`),
     },
     {
       key: 'edit',
-      icon: <EditOutlined />,
+      icon: <PencilIcon className="w-4 h-4" />,
       label: 'Düzenle',
       onClick: () => router.push(`/sales/discounts/${record.id}/edit`),
     },
     {
       key: 'toggle',
-      icon: record.isActive ? <StopOutlined /> : <CheckOutlined />,
+      icon: record.isActive ? <StopIcon className="w-4 h-4" /> : <CheckIcon className="w-4 h-4" />,
       label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
       onClick: () => handleToggleActive(record.id, record.isActive),
     },
     { type: 'divider' },
     {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       label: 'Sil',
       danger: true,
       onClick: () => handleDelete(record.id),
@@ -216,7 +216,7 @@ export default function DiscountsPage() {
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -242,12 +242,12 @@ export default function DiscountsPage() {
           <Text type="secondary">İndirim kampanyalarını yönetin</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/sales/discounts/new')}
           >
             Yeni İndirim
@@ -261,7 +261,7 @@ export default function DiscountsPage() {
           <Col xs={24} sm={12} md={8} lg={6}>
             <Input
               placeholder="Kod veya ad ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               allowClear
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, searchTerm: e.target.value, page: 1 }))

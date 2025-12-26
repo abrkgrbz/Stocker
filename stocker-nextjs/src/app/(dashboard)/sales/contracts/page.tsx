@@ -7,13 +7,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, Alert, Spin, Select, Modal, message } from 'antd';
+import { Modal, message } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  FileTextOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import {
   useCustomerContracts,
   useActivateCustomerContract,
@@ -27,7 +27,8 @@ import {
   ListPageHeader,
   Card,
   DataTableWrapper,
-} from '@/components/ui/enterprise-page';
+} from '@/components/patterns';
+import { Input, Select, Alert, Spinner } from '@/components/primitives';
 
 const statusOptions: { value: ContractStatus; label: string }[] = [
   { value: 'Draft', label: 'Taslak' },
@@ -147,7 +148,7 @@ export default function ContractsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<FileTextOutlined />}
+        icon={<DocumentTextIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="Müşteri Sözleşmeleri"
         description="Müşteri sözleşmelerini yönetin"
@@ -155,7 +156,7 @@ export default function ContractsPage() {
         primaryAction={{
           label: 'Yeni Sözleşme',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -163,7 +164,7 @@ export default function ContractsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -171,14 +172,13 @@ export default function ContractsPage() {
       {/* Error Alert */}
       {error && (
         <Alert
-          message="Sözleşmeler yüklenemedi"
-          description={
+          variant="error"
+          title="Sözleşmeler yüklenemedi"
+          message={
             error instanceof Error
               ? error.message
               : 'Sözleşmeler getirilirken bir hata oluştu. Lütfen tekrar deneyin.'
           }
-          type="error"
-          showIcon
           closable
           action={
             <button
@@ -197,25 +197,21 @@ export default function ContractsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             placeholder="Sözleşme ara... (no, müşteri adı)"
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            className="h-10"
           />
           <Select
             placeholder="Durum"
-            allowClear
             options={statusOptions}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-            className="h-10"
+            value={(filters.status as ContractStatus) || null}
+            onChange={(value) => setFilters((prev) => ({ ...prev, status: value || undefined }))}
           />
           <Select
             placeholder="Tür"
-            allowClear
             options={typeOptions}
-            onChange={(value) => setFilters((prev) => ({ ...prev, contractType: value }))}
-            className="h-10"
+            value={(filters.contractType as ContractType) || null}
+            onChange={(value) => setFilters((prev) => ({ ...prev, contractType: value || undefined }))}
           />
         </div>
       </div>
@@ -224,7 +220,7 @@ export default function ContractsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

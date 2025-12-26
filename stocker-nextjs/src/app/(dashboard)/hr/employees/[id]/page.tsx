@@ -9,7 +9,6 @@ import {
   Card,
   Descriptions,
   Tag,
-  Spin,
   Row,
   Col,
   Statistic,
@@ -20,25 +19,26 @@ import {
   Timeline,
   Modal,
 } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  HomeOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  BankOutlined,
-  IdcardOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  FileTextOutlined,
-  TrophyOutlined,
-  BookOutlined,
-  DeleteOutlined,
-  StopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  HomeIcon,
+  CalendarIcon,
+  UsersIcon,
+  BuildingLibraryIcon,
+  IdentificationIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  TrophyIcon,
+  BookOpenIcon,
+  TrashIcon,
+  NoSymbolIcon,
+} from '@heroicons/react/24/outline';
 import {
   useEmployee,
   useEmployeeDocuments,
@@ -138,7 +138,7 @@ export default function EmployeeDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -226,7 +226,7 @@ export default function EmployeeDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/employees')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/employees')}>
             Geri
           </Button>
           <div>
@@ -241,15 +241,15 @@ export default function EmployeeDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={employee.status === EmployeeStatus.Active ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={employee.status === EmployeeStatus.Active ? <NoSymbolIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {employee.status === EmployeeStatus.Active ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/employees/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employees/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -263,7 +263,7 @@ export default function EmployeeDetailPage() {
               <Avatar
                 size={120}
                 src={employee.photoUrl}
-                icon={<UserOutlined />}
+                icon={<UserIcon className="w-12 h-12" />}
                 style={{ backgroundColor: employee.photoUrl ? undefined : '#7c3aed' }}
               />
               <Title level={4} className="mt-4 mb-0">
@@ -277,14 +277,14 @@ export default function EmployeeDetailPage() {
                 <Statistic
                   title="Kıdem (Yıl)"
                   value={yearsOfService}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-5 h-5" />}
                 />
               </Col>
               <Col span={12}>
                 <Statistic
                   title="Departman"
                   value={employee.departmentName || '-'}
-                  prefix={<TeamOutlined />}
+                  prefix={<UsersIcon className="w-5 h-5" />}
                   valueStyle={{ fontSize: 16 }}
                 />
               </Col>
@@ -294,19 +294,19 @@ export default function EmployeeDetailPage() {
               <Space direction="vertical" className="w-full">
                 {employee.email && (
                   <Space>
-                    <MailOutlined />
+                    <EnvelopeIcon className="w-4 h-4" />
                     <Text>{employee.email}</Text>
                   </Space>
                 )}
                 {employee.phone && (
                   <Space>
-                    <PhoneOutlined />
+                    <PhoneIcon className="w-4 h-4" />
                     <Text>{employee.phone}</Text>
                   </Space>
                 )}
                 {(employee.street || employee.city) && (
                   <Space align="start">
-                    <HomeOutlined />
+                    <HomeIcon className="w-4 h-4" />
                     <Text>{[employee.street, employee.city, employee.country].filter(Boolean).join(', ')}</Text>
                   </Space>
                 )}
@@ -321,7 +321,7 @@ export default function EmployeeDetailPage() {
             <TabPane
               tab={
                 <span>
-                  <IdcardOutlined />
+                  <IdentificationIcon className="w-4 h-4 inline mr-1" />
                   Bilgiler
                 </span>
               }
@@ -370,7 +370,7 @@ export default function EmployeeDetailPage() {
             <TabPane
               tab={
                 <span>
-                  <CalendarOutlined />
+                  <CalendarIcon className="w-4 h-4 inline mr-1" />
                   İzinler
                 </span>
               }
@@ -394,7 +394,7 @@ export default function EmployeeDetailPage() {
             <TabPane
               tab={
                 <span>
-                  <FileTextOutlined />
+                  <DocumentTextIcon className="w-4 h-4 inline mr-1" />
                   Belgeler
                 </span>
               }
@@ -418,7 +418,7 @@ export default function EmployeeDetailPage() {
             <TabPane
               tab={
                 <span>
-                  <BookOutlined />
+                  <BookOpenIcon className="w-4 h-4 inline mr-1" />
                   Eğitimler
                 </span>
               }

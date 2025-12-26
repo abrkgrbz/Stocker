@@ -2,8 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Space, Table, Tag, Input, Select, Spin } from 'antd';
-import { PlusOutlined, ReloadOutlined, ShareAltOutlined, SearchOutlined, DollarOutlined, FileTextOutlined, CheckCircleOutlined, SyncOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Space, Table, Tag, Input, Select } from 'antd';
+import {
+  PlusIcon,
+  ArrowPathIcon,
+  ShareIcon,
+  MagnifyingGlassIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
   showError,
@@ -12,7 +21,8 @@ import {
 import type { ReferralDto } from '@/lib/api/services/crm.types';
 import { ReferralStatus, ReferralType } from '@/lib/api/services/crm.types';
 import { useReferrals, useDeleteReferral } from '@/lib/api/hooks/useCRM';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -60,28 +70,28 @@ function ReferralsStats({ referrals, loading }: ReferralsStatsProps) {
 
   const statCards = [
     {
-      icon: <FileTextOutlined className="text-2xl" />,
+      icon: <DocumentTextIcon className="w-6 h-6" />,
       label: 'Toplam Referans',
       value: stats.total.toLocaleString('tr-TR'),
       bgColor: 'bg-slate-50',
       iconColor: 'text-slate-600',
     },
     {
-      icon: <SyncOutlined className="text-2xl" />,
+      icon: <ArrowPathIcon className="w-6 h-6" />,
       label: 'Yeni',
       value: stats.new.toLocaleString('tr-TR'),
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
     },
     {
-      icon: <CheckCircleOutlined className="text-2xl" />,
+      icon: <CheckCircleIcon className="w-6 h-6" />,
       label: 'Dönüştürülen',
       value: stats.converted.toLocaleString('tr-TR'),
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
     },
     {
-      icon: <DollarOutlined className="text-2xl" />,
+      icon: <CurrencyDollarIcon className="w-6 h-6" />,
       label: 'Toplam Gelir',
       value: `₺${stats.totalRevenue.toLocaleString('tr-TR')}`,
       bgColor: 'bg-purple-50',
@@ -249,7 +259,7 @@ export default function ReferralsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/crm/referrals/${record.id}`)}
             className="text-blue-600 hover:text-blue-700"
           >
@@ -277,7 +287,7 @@ export default function ReferralsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ShareAltOutlined />}
+        icon={<ShareIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Referanslar"
         description="Müşteri referanslarını yönetin"
@@ -285,7 +295,7 @@ export default function ReferralsPage() {
         primaryAction={{
           label: 'Yeni Referans',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -293,7 +303,7 @@ export default function ReferralsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -303,7 +313,7 @@ export default function ReferralsPage() {
         <div className="flex items-center gap-4 flex-wrap">
           <Input
             placeholder="Referans ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 200 }}
@@ -338,7 +348,7 @@ export default function ReferralsPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (

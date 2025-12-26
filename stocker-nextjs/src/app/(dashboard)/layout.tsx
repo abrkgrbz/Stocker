@@ -2,22 +2,23 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Layout, Menu, Dropdown, Spin, Button, Tooltip, Popover, Badge, Drawer } from 'antd';
+import { Layout, Menu, Dropdown, Button, Tooltip, Popover, Badge, Drawer } from 'antd';
+import { Spinner } from '@/components/primitives';
 import {
-  AppstoreOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  ContactsOutlined,
-  RiseOutlined,
-  ArrowLeftOutlined,
-  IdcardOutlined,
-  ReconciliationOutlined,
-  FileTextOutlined,
-  ShoppingCartOutlined,
-  UserAddOutlined,
-  ExclamationCircleOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  Squares2X2Icon,
+  UserIcon,
+  ArrowRightOnRectangleIcon,
+  UsersIcon,
+  ArrowTrendingUpIcon,
+  ArrowLeftIcon,
+  IdentificationIcon,
+  DocumentTextIcon,
+  ShoppingCartIcon,
+  UserPlusIcon,
+  ExclamationCircleIcon,
+  InboxIcon,
+  ClipboardDocumentListIcon,
+} from '@heroicons/react/24/outline';
 import { Search, HelpCircle, Plus, ChevronDown, Menu as MenuIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useTenant } from '@/lib/tenant';
@@ -35,6 +36,9 @@ import logger from '@/lib/utils/logger';
 const { Header, Sider, Content } = Layout;
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { tenant, isLoading: tenantLoading } = useTenant();
   const router = useRouter();
@@ -107,6 +111,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Skip redirect if auth bypassed
+    if (isAuthBypassed) return;
+
     if (!authLoading && !isAuthenticated) {
       const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('stoocker.app');
       if (isProduction) {
@@ -115,7 +122,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         router.push('/login');
       }
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, isAuthBypassed]);
 
   // Get current module based on pathname
   const currentModule = useMemo(() => getCurrentModule(pathname), [pathname]);
@@ -238,20 +245,21 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return [pathname];
   }, [pathname]);
 
-  if (authLoading || tenantLoading || onboardingLoading || modulesLoading) {
+  // Skip loading checks if auth bypassed
+  if (!isAuthBypassed && (authLoading || tenantLoading || onboardingLoading || modulesLoading)) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthBypassed && !isAuthenticated) {
     return null;
   }
 
-  // Block access to dashboard if onboarding is not completed
-  if (requiresOnboarding) {
+  // Block access to dashboard if onboarding is not completed (skip if bypassed)
+  if (!isAuthBypassed && requiresOnboarding) {
     return (
       <div className="flex items-center justify-center bg-gray-50" style={{ minHeight: '100dvh' }}>
         <OnboardingModal
@@ -287,7 +295,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           return (
             <div className="flex items-center justify-center bg-gray-50" style={{ minHeight: '100dvh' }}>
               <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-                <ExclamationCircleOutlined style={{ fontSize: 48, color: '#faad14' }} />
+                <ExclamationCircleIcon className="w-12 h-12 mx-auto text-amber-500" />
                 <h2 className="text-xl font-semibold mt-4 mb-2">Erişim Yetkiniz Yok</h2>
                 <p className="text-gray-500 mb-4">
                   Bu modüle erişim için aboneliğinizi yükseltmeniz gerekmektedir.
@@ -313,8 +321,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   };
 
   const userMenuItems = [
-    { key: 'profile', icon: <UserOutlined />, label: 'Profil' },
-    { key: 'logout', icon: <LogoutOutlined />, label: 'Çıkış Yap', danger: true },
+    { key: 'profile', icon: <UserIcon className="w-4 h-4" />, label: 'Profil' },
+    { key: 'logout', icon: <ArrowRightOnRectangleIcon className="w-4 h-4" />, label: 'Çıkış Yap', danger: true },
   ];
 
   const handleUserMenuClick = (key: string) => {
@@ -350,7 +358,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <Tooltip title="Modüllere Dön">
           <Button
             type="text"
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeftIcon className="w-4 h-4" />}
             onClick={() => {
               handleBackToApp();
               setMobileMenuOpen(false);
@@ -655,7 +663,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               >
                 <Button
                   type="text"
-                  icon={<AppstoreOutlined />}
+                  icon={<Squares2X2Icon className="w-4 h-4" />}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -776,7 +784,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                               color: '#7c3aed',
                               fontSize: 14,
                             }}>
-                              <ContactsOutlined />
+                              <UsersIcon className="w-4 h-4" />
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Müşteri</div>
@@ -808,7 +816,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                               color: '#7c3aed',
                               fontSize: 14,
                             }}>
-                              <UserAddOutlined />
+                              <UserPlusIcon className="w-4 h-4" />
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Potansiyel</div>
@@ -840,7 +848,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                               color: '#7c3aed',
                               fontSize: 14,
                             }}>
-                              <RiseOutlined />
+                              <ArrowTrendingUpIcon className="w-4 h-4" />
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Fırsat</div>
@@ -876,7 +884,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                             color: '#10b981',
                             fontSize: 14,
                           }}>
-                            <AppstoreOutlined />
+                            <Squares2X2Icon className="w-4 h-4" />
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Ürün</div>
@@ -912,7 +920,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                               color: '#f59e0b',
                               fontSize: 14,
                             }}>
-                              <ShoppingCartOutlined />
+                              <ShoppingCartIcon className="w-4 h-4" />
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Sipariş</div>
@@ -944,7 +952,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                               color: '#f59e0b',
                               fontSize: 14,
                             }}>
-                              <FileTextOutlined />
+                              <DocumentTextIcon className="w-4 h-4" />
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Fatura</div>
@@ -980,7 +988,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                             color: '#0ea5e9',
                             fontSize: 14,
                           }}>
-                            <IdcardOutlined />
+                            <IdentificationIcon className="w-4 h-4" />
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Çalışan</div>
@@ -1015,7 +1023,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                             color: '#8b5cf6',
                             fontSize: 14,
                           }}>
-                            <ReconciliationOutlined />
+                            <ClipboardDocumentListIcon className="w-4 h-4" />
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>Yeni Satın Alma</div>

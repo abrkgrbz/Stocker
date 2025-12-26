@@ -11,24 +11,25 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Spin, Empty, Tag, Timeline } from 'antd';
+import { Empty, Tag, Timeline } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  TeamOutlined,
-  SafetyOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LockOutlined,
-  ClockCircleOutlined,
-  SettingOutlined,
-  HistoryOutlined,
-  SendOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  UsersIcon,
+  ShieldCheckIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  LockClosedIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+  ClockIcon as HistoryIcon,
+  PaperAirplaneIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { getUserById, formatDate, getRoleLabel, type User } from '@/lib/api/users';
 import { Badge } from '@/components/ui/enterprise-page';
 
@@ -46,7 +47,7 @@ export default function UserDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -91,7 +92,7 @@ export default function UserDetailPage() {
               onClick={() => router.push('/settings/users')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -116,7 +117,7 @@ export default function UserDetailPage() {
             onClick={() => router.push(`/settings/users/${user.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Duzenle
           </button>
         </div>
@@ -140,10 +141,10 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">E-posta</p>
                   <div className="flex items-center gap-1">
-                    <MailOutlined className="text-slate-400 text-xs" />
+                    <EnvelopeIcon className="w-3 h-3 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">{user.email}</span>
                     {user.emailConfirmed && (
-                      <CheckCircleOutlined className="text-green-500 text-xs" />
+                      <CheckCircleIcon className="w-3 h-3 text-green-500" />
                     )}
                   </div>
                 </div>
@@ -151,7 +152,7 @@ export default function UserDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Telefon</p>
                     <div className="flex items-center gap-1">
-                      <PhoneOutlined className="text-slate-400 text-xs" />
+                      <PhoneIcon className="w-3 h-3 text-slate-400" />
                       <span className="text-sm font-medium text-slate-900">{user.phoneNumber}</span>
                     </div>
                   </div>
@@ -166,7 +167,7 @@ export default function UserDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Departman</p>
                     <div className="flex items-center gap-1">
-                      <TeamOutlined className="text-slate-400 text-xs" />
+                      <UsersIcon className="w-3 h-3 text-slate-400" />
                       <span className="text-sm font-medium text-slate-900">{user.department.name}</span>
                     </div>
                   </div>
@@ -180,7 +181,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Olusturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <CalendarIcon className="w-3 h-3 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {formatDate(user.createdDate)}
                     </span>
@@ -190,7 +191,7 @@ export default function UserDetailPage() {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Son Giris</p>
                     <div className="flex items-center gap-1">
-                      <ClockCircleOutlined className="text-slate-400 text-xs" />
+                      <ClockIcon className="w-3 h-3 text-slate-400" />
                       <span className="text-sm font-medium text-slate-900">
                         {formatDate(user.lastLoginDate)}
                       </span>
@@ -256,7 +257,7 @@ export default function UserDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <SafetyOutlined className="text-slate-400" />
+                <ShieldCheckIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Hesap Durumu
                 </p>
@@ -265,17 +266,17 @@ export default function UserDetailPage() {
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <p className="text-xs text-slate-400 mb-1">Hesap Durumu</p>
                   {user.isActive ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
+                    <Tag color="success" icon={<CheckCircleIcon className="w-3 h-3" />}>Aktif</Tag>
                   ) : (
-                    <Tag color="error" icon={<CloseCircleOutlined />}>Pasif</Tag>
+                    <Tag color="error" icon={<XCircleIcon className="w-3 h-3" />}>Pasif</Tag>
                   )}
                 </div>
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <p className="text-xs text-slate-400 mb-1">Iki Faktorlu Dogrulama</p>
                   {user.twoFactorEnabled ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />}>Aktif</Tag>
+                    <Tag color="success" icon={<CheckCircleIcon className="w-3 h-3" />}>Aktif</Tag>
                   ) : (
-                    <Tag icon={<CloseCircleOutlined />}>Pasif</Tag>
+                    <Tag icon={<XCircleIcon className="w-3 h-3" />}>Pasif</Tag>
                   )}
                 </div>
                 <div className="p-3 bg-slate-50 rounded-lg">
@@ -293,7 +294,7 @@ export default function UserDetailPage() {
                 {user.lockoutEnabled && user.lockoutEnd && (
                   <div className="p-3 bg-slate-50 rounded-lg col-span-2">
                     <p className="text-xs text-slate-400 mb-1">Kilit Durumu</p>
-                    <Tag color="error" icon={<LockOutlined />}>
+                    <Tag color="error" icon={<LockClosedIcon className="w-3 h-3" />}>
                       {new Date(user.lockoutEnd) > new Date()
                         ? `Kilitli - ${formatDate(user.lockoutEnd)}`
                         : 'Kilidi Acik'}
@@ -308,7 +309,7 @@ export default function UserDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <SettingOutlined className="text-slate-400" />
+                <Cog6ToothIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Kullanici Tercihleri
                 </p>
@@ -348,7 +349,7 @@ export default function UserDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <SafetyOutlined className="text-slate-400" />
+                <ShieldCheckIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Roller ({user.roles.length})
                 </p>
@@ -364,7 +365,7 @@ export default function UserDetailPage() {
               ) : (
                 <div className="py-8 text-center">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                    <SafetyOutlined className="text-xl text-slate-400" />
+                    <ShieldCheckIcon className="w-5 h-5 text-slate-400" />
                   </div>
                   <p className="text-slate-500 text-sm">Henuz rol atanmamis</p>
                 </div>
@@ -376,7 +377,7 @@ export default function UserDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <LockOutlined className="text-slate-400" />
+                <LockClosedIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Yetkiler ({user.permissions.length})
                 </p>
@@ -395,7 +396,7 @@ export default function UserDetailPage() {
               ) : (
                 <div className="py-8 text-center">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                    <LockOutlined className="text-xl text-slate-400" />
+                    <LockClosedIcon className="w-5 h-5 text-slate-400" />
                   </div>
                   <p className="text-slate-500 text-sm">Henuz yetki atanmamis</p>
                 </div>
@@ -407,7 +408,7 @@ export default function UserDetailPage() {
           <div className="col-span-12">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <HistoryOutlined className="text-slate-400" />
+                <HistoryIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Son Giris Aktiviteleri
                 </p>

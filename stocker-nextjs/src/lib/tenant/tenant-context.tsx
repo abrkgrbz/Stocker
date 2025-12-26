@@ -27,9 +27,23 @@ interface TenantProviderProps {
   initialTenant?: TenantInfo | null;
 }
 
+// Dev bypass mock tenant - only used when NEXT_PUBLIC_AUTH_BYPASS=true
+const DEV_MOCK_TENANT: TenantInfo = {
+  id: 'dev-tenant-id',
+  identifier: 'dev',
+  name: 'Dev Tenant',
+  domain: 'localhost',
+  isActive: true,
+};
+
 export function TenantProvider({ children, initialTenant }: TenantProviderProps) {
-  const [tenant, setTenant] = useState<TenantInfo | null>(initialTenant || null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Check for auth bypass in development
+  const isAuthBypassed = process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true';
+
+  const [tenant, setTenant] = useState<TenantInfo | null>(
+    isAuthBypassed ? DEV_MOCK_TENANT : (initialTenant || null)
+  );
+  const [isLoading, setIsLoading] = useState(!isAuthBypassed);
   const [isValidating, setIsValidating] = useState(false);
   const router = useRouter();
 
@@ -125,6 +139,12 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
   };
 
   useEffect(() => {
+    // Skip tenant validation if auth bypassed
+    if (isAuthBypassed) {
+      console.log('🔓 Tenant bypassed - using dev mock tenant');
+      return;
+    }
+
     const initializeTenant = async () => {
       setIsLoading(true);
       await validateTenant();
@@ -132,7 +152,7 @@ export function TenantProvider({ children, initialTenant }: TenantProviderProps)
     };
 
     initializeTenant();
-  }, []);
+  }, [isAuthBypassed]);
 
   const value: TenantContextType = {
     tenant,

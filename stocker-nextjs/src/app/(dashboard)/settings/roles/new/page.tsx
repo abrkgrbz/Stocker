@@ -11,13 +11,14 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Form, Input, Select, Spin, Checkbox } from 'antd';
+import { Form, Input, Select, Checkbox } from 'antd';
 import {
-  ArrowLeftOutlined,
-  CheckOutlined,
-  DownOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useCreateRole, useRoles } from '@/hooks/useRoles';
 import { useActiveModules } from '@/lib/api/hooks/useUserModules';
 import {
@@ -262,9 +263,9 @@ export default function NewRolePage() {
               {permCount}/{maxPerms}
             </span>
             {isExpanded ? (
-              <DownOutlined className="text-slate-400 text-xs" />
+              <ChevronDownIcon className="w-3 h-3 text-slate-400" />
             ) : (
-              <RightOutlined className="text-slate-400 text-xs" />
+              <ChevronRightIcon className="w-3 h-3 text-slate-400" />
             )}
           </div>
         </div>
@@ -282,7 +283,7 @@ export default function NewRolePage() {
   if (modulesLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -297,7 +298,7 @@ export default function NewRolePage() {
               onClick={() => router.back()}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Yeni Rol</h1>
@@ -412,7 +413,7 @@ export default function NewRolePage() {
             <div className="text-sm text-slate-500">
               {selectedPermissions.length > 0 ? (
                 <span className="flex items-center gap-2">
-                  <CheckOutlined className="text-green-500" />
+                  <CheckIcon className="w-4 h-4 text-green-500" />
                   {selectedPermissions.length} yetki seçildi
                 </span>
               ) : (

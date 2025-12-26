@@ -49,7 +49,7 @@ export default function NotificationCenter() {
 
   return (
     <Dropdown
-      dropdownRender={() => (
+      popupRender={() => (
         <NotificationDropdown
           unreadCount={unreadCount}
           filterType={filterType}

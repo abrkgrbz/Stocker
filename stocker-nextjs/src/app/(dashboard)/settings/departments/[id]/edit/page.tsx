@@ -10,13 +10,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Form, Input, Select, Spin } from 'antd';
+import { Form, Input, Select } from 'antd';
 import {
-  ArrowLeftOutlined,
-  ApartmentOutlined,
-  TeamOutlined,
-  CheckOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingOffice2Icon,
+  UsersIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/primitives';
 import { useDepartment, useDepartments, useUpdateDepartment } from '@/hooks/useDepartments';
 import type { UpdateDepartmentRequest } from '@/lib/api/departments';
 
@@ -68,7 +69,7 @@ export default function EditDepartmentPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spin size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -99,7 +100,7 @@ export default function EditDepartmentPage() {
               onClick={() => router.back()}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Departman Düzenle</h1>
@@ -127,7 +128,7 @@ export default function EditDepartmentPage() {
                     className="w-10 h-10 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: '#8b5cf615' }}
                   >
-                    <ApartmentOutlined style={{ color: '#8b5cf6' }} />
+                    <BuildingOffice2Icon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Kod</div>
@@ -143,7 +144,7 @@ export default function EditDepartmentPage() {
                     className="w-10 h-10 rounded-lg flex items-center justify-center"
                     style={{ backgroundColor: '#3b82f615' }}
                   >
-                    <TeamOutlined style={{ color: '#3b82f6' }} />
+                    <UsersIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
                   </div>
                   <div>
                     <div className="text-xs text-slate-500">Çalışan</div>
@@ -178,7 +179,7 @@ export default function EditDepartmentPage() {
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
                       style={{ backgroundColor: '#6366f115' }}
                     >
-                      <ApartmentOutlined style={{ color: '#6366f1' }} />
+                      <BuildingOffice2Icon className="w-5 h-5" style={{ color: '#6366f1' }} />
                     </div>
                     <div>
                       <div className="text-xs text-slate-500">Üst Departman</div>
@@ -280,7 +281,7 @@ export default function EditDepartmentPage() {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <CheckOutlined className="text-emerald-500" />
+                  <CheckIcon className="w-4 h-4 text-emerald-500" />
                   Tüm değişiklikler kaydedildi
                 </span>
               )}

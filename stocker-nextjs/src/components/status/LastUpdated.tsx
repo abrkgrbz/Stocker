@@ -78,7 +78,7 @@ export default function LastUpdated({
   const textSize = size === 'small' ? 'text-xs' : 'text-sm';
 
   return (
-    <div className={`inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400 ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 text-gray-500 ${className}`}>
       {showIcon && <ClockCircleOutlined className={iconSize} />}
       <span className={textSize}>
         {prefix}: {relativeTime}

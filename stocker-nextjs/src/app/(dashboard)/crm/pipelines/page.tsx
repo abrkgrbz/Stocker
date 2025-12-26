@@ -2,27 +2,28 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input, Spin } from 'antd';
+import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input } from 'antd';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FunnelPlotOutlined,
-  ReloadOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  CopyOutlined,
-  StarOutlined,
-  StarFilled,
-  SearchOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  FunnelIcon,
+  ArrowPathIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  DocumentDuplicateIcon,
+  StarIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import type { ColumnsType } from 'antd/es/table';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 import { usePipelines, useDeletePipeline, useActivatePipeline, useDeactivatePipeline, useCreatePipeline, useSetDefaultPipeline } from '@/lib/api/hooks/useCRM';
 import { PipelinesStats } from '@/components/crm/pipelines/PipelinesStats';
-import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/ui/enterprise-page';
+import { PageContainer, ListPageHeader, Card, DataTableWrapper } from '@/components/patterns';
+import { Spinner } from '@/components/primitives';
 
 const pipelineTypeLabels: Record<string, string> = {
   Sales: 'Satış',
@@ -145,7 +146,7 @@ export default function PipelinesPage() {
           <Avatar
             size={40}
             className="bg-gradient-to-br from-slate-500 to-slate-600 flex-shrink-0"
-            icon={<FunnelPlotOutlined />}
+            icon={<FunnelIcon className="w-5 h-5" />}
           >
             {text.charAt(0)}
           </Avatar>
@@ -153,7 +154,7 @@ export default function PipelinesPage() {
             <div className="flex items-center gap-2">
               <div className="font-semibold text-slate-900 truncate">{text}</div>
               {(record as any).isDefault && (
-                <StarFilled className="text-yellow-500 text-sm flex-shrink-0" title="Varsayılan Pipeline" />
+                <StarIconSolid className="w-4 h-4 text-yellow-500 flex-shrink-0" title="Varsayılan Pipeline" />
               )}
             </div>
             {record.description && (
@@ -184,7 +185,7 @@ export default function PipelinesPage() {
         <Button
           type="link"
           size="small"
-          icon={<EyeOutlined />}
+          icon={<EyeIcon className="w-4 h-4" />}
           onClick={() => handleViewStages(record)}
           className="flex items-center gap-1 text-slate-600 hover:text-slate-800"
         >
@@ -223,11 +224,11 @@ export default function PipelinesPage() {
       width: 120,
       render: (isActive) =>
         isActive ? (
-          <Tag icon={<CheckCircleOutlined />} color="success" className="border-green-200">
+          <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success" className="border-green-200">
             Aktif
           </Tag>
         ) : (
-          <Tag icon={<CloseCircleOutlined />} color="default" className="border-slate-200 text-slate-500">
+          <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default" className="border-slate-200 text-slate-500">
             Pasif
           </Tag>
         ),
@@ -244,20 +245,20 @@ export default function PipelinesPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => handleView(record),
               },
               {
                 key: 'toggle',
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
-                icon: record.isActive ? <CloseCircleOutlined /> : <CheckCircleOutlined />,
+                icon: record.isActive ? <XCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
                 onClick: () => handleToggleActive(record),
                 disabled: activatePipeline.isPending || deactivatePipeline.isPending,
               },
               {
                 key: 'setDefault',
                 label: 'Varsayılan Yap',
-                icon: <StarOutlined />,
+                icon: <StarIcon className="w-4 h-4" />,
                 onClick: () => handleSetDefault(record),
                 disabled: (record as any).isDefault,
               },
@@ -265,13 +266,13 @@ export default function PipelinesPage() {
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => handleEdit(record),
               },
               {
                 key: 'clone',
                 label: 'Kopyala',
-                icon: <CopyOutlined />,
+                icon: <DocumentDuplicateIcon className="w-4 h-4" />,
                 onClick: () => handleClone(record),
                 disabled: createPipeline.isPending,
               },
@@ -279,7 +280,7 @@ export default function PipelinesPage() {
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 onClick: () => handleDelete(record.id),
                 disabled: deletePipeline.isPending,
@@ -290,7 +291,7 @@ export default function PipelinesPage() {
         >
           <Button
             type="text"
-            icon={<MoreOutlined />}
+            icon={<EllipsisHorizontalIcon className="w-5 h-5" />}
             className="text-slate-400 hover:text-slate-600"
           />
         </Dropdown>
@@ -307,7 +308,7 @@ export default function PipelinesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<FunnelPlotOutlined />}
+        icon={<FunnelIcon className="w-5 h-5" />}
         iconColor="#0f172a"
         title="Satış Süreçleri (Pipelines)"
         description="Pipeline'larınızı yönetin ve yapılandırın"
@@ -315,7 +316,7 @@ export default function PipelinesPage() {
         primaryAction={{
           label: 'Yeni Pipeline',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-5 h-5" />,
         }}
         secondaryActions={
           <button
@@ -324,7 +325,7 @@ export default function PipelinesPage() {
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             title="Yenile"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />
@@ -333,7 +334,7 @@ export default function PipelinesPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Pipeline ara..."
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           allowClear
@@ -346,7 +347,7 @@ export default function PipelinesPage() {
       {isLoading ? (
         <Card>
           <div className="flex items-center justify-center py-12">
-            <Spin size="large" />
+            <Spinner size="lg" />
           </div>
         </Card>
       ) : (
@@ -364,7 +365,7 @@ export default function PipelinesPage() {
             locale={{
               emptyText: (
                 <Empty
-                  image={<FunnelPlotOutlined style={{ fontSize: 80, color: '#cbd5e1' }} />}
+                  image={<FunnelIcon className="w-20 h-20 text-slate-300" />}
                   imageStyle={{ height: 100 }}
                   description={
                     <div className="py-8">
@@ -379,7 +380,7 @@ export default function PipelinesPage() {
                       <Button
                         type="primary"
                         size="large"
-                        icon={<PlusOutlined />}
+                        icon={<PlusIcon className="w-5 h-5" />}
                         onClick={handleCreate}
                         className="h-12 px-8 text-base font-semibold bg-slate-900 hover:bg-slate-800 border-slate-900"
                       >
@@ -398,7 +399,7 @@ export default function PipelinesPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <FunnelPlotOutlined className="text-slate-600" />
+            <FunnelIcon className="w-5 h-5 text-slate-600" />
             <span className="text-slate-900">{viewingPipeline?.name} - Aşamalar</span>
           </div>
         }

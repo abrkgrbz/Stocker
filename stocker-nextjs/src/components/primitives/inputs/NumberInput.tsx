@@ -201,13 +201,28 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
+
+      // Allow digits, decimal separator (comma for TR, dot for EN), and minus sign
+      // Filter out invalid characters but allow intermediate states like "123," or "123."
+      const allowedPattern = locale === 'tr-TR'
+        ? /^-?[\d.,]*$/
+        : /^-?[\d,.]*$/;
+
+      if (!allowedPattern.test(inputValue) && inputValue !== '') {
+        return; // Don't update if invalid characters
+      }
+
       setDisplayValue(inputValue);
 
       // Parse and emit value on each change (for controlled components)
+      // Allow intermediate states like "123," to pass through without emitting
       const parsed = parseNumber(inputValue, locale);
-      if (parsed !== null || inputValue === '') {
+      if (parsed !== null) {
         onChange?.(parsed);
+      } else if (inputValue === '' || inputValue === '-') {
+        onChange?.(null);
       }
+      // Don't call onChange for intermediate states like "123," - wait for blur
     };
 
     const handleIncrement = () => {
@@ -268,6 +283,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             className={cn(
               'outline-none transition-all duration-200 flex-1 text-right',
               'bg-slate-50 border border-slate-300',
+              'text-slate-900',
               'hover:border-slate-400',
               'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
               'placeholder:text-slate-400',
@@ -350,11 +366,24 @@ NumberInput.displayName = 'NumberInput';
 // =====================================
 
 export interface CurrencyInputProps extends Omit<NumberInputProps, 'format'> {
-  currency?: string;
+  /** Show currency symbol in value */
+  showCurrencySymbol?: boolean;
 }
 
-export function CurrencyInput({ currency = 'TRY', ...props }: CurrencyInputProps) {
-  return <NumberInput format="currency" currency={currency} {...props} />;
+export function CurrencyInput({
+  showCurrencySymbol = false,
+  placeholder = '0',
+  precision = 0,
+  ...props
+}: CurrencyInputProps) {
+  return (
+    <NumberInput
+      format={showCurrencySymbol ? 'currency' : 'number'}
+      precision={precision}
+      placeholder={placeholder}
+      {...props}
+    />
+  );
 }
 
 export interface PercentageInputProps extends Omit<NumberInputProps, 'format' | 'min' | 'max'> {

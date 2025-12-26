@@ -23,18 +23,17 @@ import {
   Tabs,
 } from 'antd';
 import {
-  SearchOutlined,
-  SendOutlined,
-  SyncOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  FileTextOutlined,
-  CloudUploadOutlined,
-  HistoryOutlined,
-  SettingOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationCircleIcon,
+  DocumentTextIcon,
+  CloudArrowUpIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useInvoices, useSetEInvoice } from '@/lib/api/hooks/useInvoices';
 import type { InvoiceListItem, InvoiceStatus } from '@/lib/api/services/invoice.service';
@@ -44,13 +43,13 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const eInvoiceStatusConfig: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'default', label: 'Bekliyor', icon: <ExclamationCircleOutlined /> },
-  Queued: { color: 'processing', label: 'Kuyrukta', icon: <SyncOutlined spin /> },
-  Sent: { color: 'blue', label: 'Gönderildi', icon: <SendOutlined /> },
-  Delivered: { color: 'cyan', label: 'Ulaştı', icon: <CheckCircleOutlined /> },
-  Accepted: { color: 'green', label: 'Kabul Edildi', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Error: { color: 'error', label: 'Hata', icon: <CloseCircleOutlined /> },
+  Pending: { color: 'default', label: 'Bekliyor', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  Queued: { color: 'processing', label: 'Kuyrukta', icon: <ArrowPathIcon className="w-4 h-4 animate-spin" /> },
+  Sent: { color: 'blue', label: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
+  Delivered: { color: 'cyan', label: 'Ulaştı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Accepted: { color: 'green', label: 'Kabul Edildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Error: { color: 'error', label: 'Hata', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const invoiceStatusColors: Record<InvoiceStatus, string> = {
@@ -216,7 +215,7 @@ export default function EInvoicePage() {
               <Button
                 type="primary"
                 size="small"
-                icon={<SendOutlined />}
+                icon={<PaperAirplaneIcon className="w-4 h-4" />}
                 onClick={() => handleSendEInvoice(record)}
               >
                 Gönder
@@ -344,7 +343,7 @@ export default function EInvoicePage() {
                 Yenile
               </Button>
               {selectedInvoices.length > 0 && (
-                <Button type="primary" icon={<SendOutlined />} onClick={handleBulkSend}>
+                <Button type="primary" icon={<PaperAirplaneIcon className="w-4 h-4" />} onClick={handleBulkSend}>
                   Seçilenleri Gönder ({selectedInvoices.length})
                 </Button>
               )}

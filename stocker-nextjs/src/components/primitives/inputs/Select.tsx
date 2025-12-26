@@ -5,7 +5,7 @@
  * ENTERPRISE SELECT COMPONENT
  * =====================================
  *
- * Accessible dropdown select using Headless UI Listbox.
+ * Accessible dropdown select using react-select.
  * Features:
  * - Keyboard navigation
  * - Search/filter option
@@ -13,9 +13,8 @@
  * - Custom option rendering
  */
 
-import React, { Fragment } from 'react';
-import { Listbox, Transition } from '@headlessui/react';
-import { ChevronUpDownIcon, CheckIcon } from '@heroicons/react/24/outline';
+import React, { useMemo } from 'react';
+import ReactSelect, { SingleValue, MultiValue, StylesConfig } from 'react-select';
 import { cn } from '@/lib/cn';
 
 export interface SelectOption {
@@ -45,14 +44,18 @@ export interface SelectProps {
   size?: 'sm' | 'md' | 'lg';
   /** Full width */
   fullWidth?: boolean;
+  /** Allow search */
+  searchable?: boolean;
+  /** Allow clear */
+  clearable?: boolean;
   /** Additional class names */
   className?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-8 text-sm px-2.5',
-  md: 'h-10 text-sm px-3',
-  lg: 'h-12 text-base px-4',
+const sizeConfig = {
+  sm: { height: 32, fontSize: 14 },
+  md: { height: 40, fontSize: 14 },
+  lg: { height: 48, fontSize: 16 },
 };
 
 export function Select({
@@ -65,86 +68,157 @@ export function Select({
   errorMessage,
   size = 'md',
   fullWidth = true,
+  searchable = false,
+  clearable = false,
   className,
 }: SelectProps) {
-  const selectedOption = options.find((opt) => opt.value === value);
+  // Convert to react-select format
+  const selectOptions = useMemo(
+    () =>
+      options.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+        isDisabled: opt.disabled,
+      })),
+    [options]
+  );
+
+  // Find selected option
+  const selectedOption = useMemo(() => {
+    if (!value) return null;
+    return selectOptions.find((opt) => opt.value === value) || null;
+  }, [value, selectOptions]);
+
+  const handleChange = (option: SingleValue<{ value: string; label: string }>) => {
+    if (option) {
+      onChange(option.value);
+    } else if (clearable) {
+      onChange('');
+    }
+  };
+
+  const { height, fontSize } = sizeConfig[size];
+
+  // Custom styles for react-select
+  const customStyles: StylesConfig<{ value: string; label: string }, false> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: height,
+      height: height,
+      fontSize: fontSize,
+      backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+      borderColor: error
+        ? '#ef4444'
+        : state.isFocused
+          ? '#0f172a'
+          : '#cbd5e1',
+      borderRadius: 6,
+      boxShadow: state.isFocused
+        ? error
+          ? '0 0 0 1px #ef4444'
+          : '0 0 0 1px #0f172a'
+        : 'none',
+      '&:hover': {
+        borderColor: error ? '#ef4444' : state.isFocused ? '#0f172a' : '#94a3b8',
+      },
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+      opacity: state.isDisabled ? 0.5 : 1,
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0 12px',
+      height: height - 2,
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      color: '#0f172a',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: '#0f172a',
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: '#94a3b8',
+    }),
+    indicatorSeparator: () => ({
+      display: 'none',
+    }),
+    dropdownIndicator: (base, state) => ({
+      ...base,
+      padding: '0 8px',
+      color: '#94a3b8',
+      '&:hover': {
+        color: '#64748b',
+      },
+      transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : undefined,
+      transition: 'transform 0.2s ease',
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      padding: '0 4px',
+      color: '#94a3b8',
+      '&:hover': {
+        color: '#64748b',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+      marginTop: 4,
+      borderRadius: 6,
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e2e8f0',
+      overflow: 'hidden',
+    }),
+    menuList: (base) => ({
+      ...base,
+      padding: 4,
+      maxHeight: 240,
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: fontSize,
+      padding: '8px 12px',
+      borderRadius: 4,
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+      backgroundColor: state.isSelected
+        ? '#f1f5f9'
+        : state.isFocused
+          ? '#f8fafc'
+          : 'transparent',
+      color: state.isDisabled ? '#94a3b8' : '#0f172a',
+      fontWeight: state.isSelected ? 500 : 400,
+      opacity: state.isDisabled ? 0.5 : 1,
+      '&:active': {
+        backgroundColor: state.isDisabled ? 'transparent' : '#e2e8f0',
+      },
+    }),
+    noOptionsMessage: (base) => ({
+      ...base,
+      fontSize: fontSize,
+      color: '#64748b',
+    }),
+  };
 
   return (
-    <div className={cn('relative', fullWidth && 'w-full')}>
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative">
-          <Listbox.Button
-            className={cn(
-              'relative w-full cursor-pointer rounded-md text-left outline-none',
-              'bg-slate-50 border border-slate-300',
-              'hover:border-slate-400',
-              'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
-              'transition-all duration-200',
-              sizeClasses[size],
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
-              disabled && 'opacity-50 cursor-not-allowed bg-slate-100',
-              className
-            )}
-          >
-            <span className={cn('block truncate pr-8', !selectedOption && 'text-slate-400')}>
-              {selectedOption ? selectedOption.label : placeholder}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
-            </span>
-          </Listbox.Button>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options
-              className={cn(
-                'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md',
-                'bg-white py-1 shadow-lg ring-1 ring-black/5',
-                'focus:outline-none text-sm'
-              )}
-            >
-              {options.map((option) => (
-                <Listbox.Option
-                  key={option.value}
-                  value={option.value}
-                  disabled={option.disabled}
-                  className={({ active, selected }) =>
-                    cn(
-                      'relative cursor-pointer select-none py-2 pl-10 pr-4',
-                      active && 'bg-slate-100',
-                      selected && 'bg-slate-50',
-                      option.disabled && 'opacity-50 cursor-not-allowed'
-                    )
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <div className="flex items-center gap-2">
-                        {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
-                        <span className={cn('block truncate', selected && 'font-medium')}>
-                          {option.label}
-                        </span>
-                      </div>
-                      {option.description && (
-                        <p className="text-xs text-slate-500 mt-0.5 ml-0">{option.description}</p>
-                      )}
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-900">
-                          <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </Transition>
-        </div>
-      </Listbox>
+    <div className={cn('relative', fullWidth && 'w-full', className)}>
+      <ReactSelect
+        value={selectedOption}
+        onChange={handleChange}
+        options={selectOptions}
+        placeholder={placeholder}
+        isDisabled={disabled}
+        isClearable={clearable}
+        isSearchable={searchable}
+        styles={customStyles}
+        noOptionsMessage={() => 'Seçenek bulunamadı'}
+        classNamePrefix="select"
+        menuPlacement="auto"
+        menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
+      />
       {errorMessage && <p className="mt-1 text-xs text-red-600">{errorMessage}</p>}
     </div>
   );
@@ -163,6 +237,7 @@ export interface MultiSelectProps {
   errorMessage?: string;
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
+  searchable?: boolean;
   className?: string;
 }
 
@@ -176,91 +251,168 @@ export function MultiSelect({
   errorMessage,
   size = 'md',
   fullWidth = true,
+  searchable = true,
   className,
 }: MultiSelectProps) {
-  const selectedOptions = options.filter((opt) => value.includes(opt.value));
+  // Convert to react-select format
+  const selectOptions = useMemo(
+    () =>
+      options.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+        isDisabled: opt.disabled,
+      })),
+    [options]
+  );
+
+  // Find selected options
+  const selectedOptions = useMemo(() => {
+    return selectOptions.filter((opt) => value.includes(opt.value));
+  }, [value, selectOptions]);
+
+  const handleChange = (
+    newValue: MultiValue<{ value: string; label: string }>
+  ) => {
+    onChange(newValue.map((opt) => opt.value));
+  };
+
+  const { height, fontSize } = sizeConfig[size];
+
+  // Custom styles for react-select
+  const customStyles: StylesConfig<{ value: string; label: string }, true> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight: height,
+      fontSize: fontSize,
+      backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+      borderColor: error
+        ? '#ef4444'
+        : state.isFocused
+          ? '#0f172a'
+          : '#cbd5e1',
+      borderRadius: 6,
+      boxShadow: state.isFocused
+        ? error
+          ? '0 0 0 1px #ef4444'
+          : '0 0 0 1px #0f172a'
+        : 'none',
+      '&:hover': {
+        borderColor: error ? '#ef4444' : state.isFocused ? '#0f172a' : '#94a3b8',
+      },
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+      opacity: state.isDisabled ? 0.5 : 1,
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '4px 12px',
+      gap: 4,
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      color: '#0f172a',
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: '#e2e8f0',
+      borderRadius: 4,
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: '#334155',
+      fontSize: fontSize - 2,
+      padding: '2px 6px',
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: '#64748b',
+      '&:hover': {
+        backgroundColor: '#cbd5e1',
+        color: '#334155',
+      },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: '#94a3b8',
+    }),
+    indicatorSeparator: () => ({
+      display: 'none',
+    }),
+    dropdownIndicator: (base, state) => ({
+      ...base,
+      padding: '0 8px',
+      color: '#94a3b8',
+      '&:hover': {
+        color: '#64748b',
+      },
+      transform: state.selectProps.menuIsOpen ? 'rotate(180deg)' : undefined,
+      transition: 'transform 0.2s ease',
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      padding: '0 4px',
+      color: '#94a3b8',
+      '&:hover': {
+        color: '#64748b',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+      marginTop: 4,
+      borderRadius: 6,
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e2e8f0',
+      overflow: 'hidden',
+    }),
+    menuList: (base) => ({
+      ...base,
+      padding: 4,
+      maxHeight: 240,
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: fontSize,
+      padding: '8px 12px',
+      borderRadius: 4,
+      cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+      backgroundColor: state.isSelected
+        ? '#f1f5f9'
+        : state.isFocused
+          ? '#f8fafc'
+          : 'transparent',
+      color: state.isDisabled ? '#94a3b8' : '#0f172a',
+      fontWeight: state.isSelected ? 500 : 400,
+      opacity: state.isDisabled ? 0.5 : 1,
+      '&:active': {
+        backgroundColor: state.isDisabled ? 'transparent' : '#e2e8f0',
+      },
+    }),
+    noOptionsMessage: (base) => ({
+      ...base,
+      fontSize: fontSize,
+      color: '#64748b',
+    }),
+  };
 
   return (
-    <div className={cn('relative', fullWidth && 'w-full')}>
-      <Listbox value={value} onChange={onChange} disabled={disabled} multiple>
-        <div className="relative">
-          <Listbox.Button
-            className={cn(
-              'relative w-full cursor-pointer rounded-md text-left outline-none',
-              'bg-slate-50 border border-slate-300',
-              'hover:border-slate-400',
-              'focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:bg-white',
-              'transition-all duration-200 min-h-[40px] py-1.5',
-              size === 'sm' && 'min-h-[32px] text-sm px-2.5',
-              size === 'md' && 'min-h-[40px] text-sm px-3',
-              size === 'lg' && 'min-h-[48px] text-base px-4',
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
-              disabled && 'opacity-50 cursor-not-allowed bg-slate-100',
-              className
-            )}
-          >
-            <span className="flex flex-wrap gap-1 pr-8">
-              {selectedOptions.length > 0 ? (
-                selectedOptions.map((opt) => (
-                  <span
-                    key={opt.value}
-                    className="inline-flex items-center px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs"
-                  >
-                    {opt.label}
-                  </span>
-                ))
-              ) : (
-                <span className="text-slate-400">{placeholder}</span>
-              )}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
-            </span>
-          </Listbox.Button>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options
-              className={cn(
-                'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md',
-                'bg-white py-1 shadow-lg ring-1 ring-black/5',
-                'focus:outline-none text-sm'
-              )}
-            >
-              {options.map((option) => (
-                <Listbox.Option
-                  key={option.value}
-                  value={option.value}
-                  disabled={option.disabled}
-                  className={({ active }) =>
-                    cn(
-                      'relative cursor-pointer select-none py-2 pl-10 pr-4',
-                      active && 'bg-slate-100',
-                      value.includes(option.value) && 'bg-slate-50',
-                      option.disabled && 'opacity-50 cursor-not-allowed'
-                    )
-                  }
-                >
-                  <>
-                    <span className={cn('block truncate', value.includes(option.value) && 'font-medium')}>
-                      {option.label}
-                    </span>
-                    {value.includes(option.value) && (
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-900">
-                        <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    )}
-                  </>
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </Transition>
-        </div>
-      </Listbox>
+    <div className={cn('relative', fullWidth && 'w-full', className)}>
+      <ReactSelect
+        value={selectedOptions}
+        onChange={handleChange}
+        options={selectOptions}
+        placeholder={placeholder}
+        isDisabled={disabled}
+        isClearable
+        isSearchable={searchable}
+        isMulti
+        styles={customStyles}
+        noOptionsMessage={() => 'Seçenek bulunamadı'}
+        classNamePrefix="multi-select"
+        menuPlacement="auto"
+        menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
+      />
       {errorMessage && <p className="mt-1 text-xs text-red-600">{errorMessage}</p>}
     </div>
   );

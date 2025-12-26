@@ -17,16 +17,16 @@ import {
   Input,
 } from 'antd';
 import {
-  PlusOutlined,
-  ClockCircleOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  ClockIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  StopIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useShifts, useDeleteShift, useActivateShift, useDeactivateShift } from '@/lib/api/hooks/useHR';
 import type { ShiftDto } from '@/lib/api/services/hr.types';
@@ -100,7 +100,7 @@ export default function ShiftsPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: ShiftDto) => (
         <Space>
-          <ClockCircleOutlined style={{ color: '#8b5cf6' }} />
+          <ClockIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <a onClick={() => router.push(`/hr/shifts/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -151,26 +151,26 @@ export default function ShiftsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/shifts/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/shifts/${record.id}/edit`),
               },
               {
                 key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+                icon: record.isActive ? <StopIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 onClick: () => handleToggleActive(record),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -179,7 +179,7 @@ export default function ShiftsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -190,10 +190,10 @@ export default function ShiftsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <ClockCircleOutlined className="mr-2" />
+          <ClockIcon className="w-6 h-6 mr-2 inline" />
           Vardiya Yönetimi
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/shifts/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/shifts/new')}>
           Yeni Vardiya
         </Button>
       </div>
@@ -205,7 +205,7 @@ export default function ShiftsPage() {
             <Statistic
               title="Toplam Vardiya"
               value={totalShifts}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-5 h-5" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -215,7 +215,7 @@ export default function ShiftsPage() {
             <Statistic
               title="Aktif Vardiya"
               value={activeShifts}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-5 h-5" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -225,7 +225,7 @@ export default function ShiftsPage() {
             <Statistic
               title="Gece Vardiyası"
               value={nightShifts}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-5 h-5" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -238,7 +238,7 @@ export default function ShiftsPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Vardiya ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
