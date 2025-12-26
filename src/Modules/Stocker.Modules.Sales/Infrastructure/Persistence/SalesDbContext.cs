@@ -41,6 +41,22 @@ public class SalesDbContext : DbContext
     public DbSet<SalesReturn> SalesReturns { get; set; } = null!;
     public DbSet<SalesReturnItem> SalesReturnItems { get; set; } = null!;
 
+    // Advance Payments
+    public DbSet<AdvancePayment> AdvancePayments { get; set; } = null!;
+
+    // Credit Notes
+    public DbSet<CreditNote> CreditNotes { get; set; } = null!;
+    public DbSet<CreditNoteItem> CreditNoteItems { get; set; } = null!;
+
+    // Service Orders
+    public DbSet<ServiceOrder> ServiceOrders { get; set; } = null!;
+    public DbSet<ServiceOrderItem> ServiceOrderItems { get; set; } = null!;
+    public DbSet<ServiceOrderNote> ServiceOrderNotes { get; set; } = null!;
+
+    // Warranties
+    public DbSet<Warranty> Warranties { get; set; } = null!;
+    public DbSet<WarrantyClaim> WarrantyClaims { get; set; } = null!;
+
     public SalesDbContext(
         DbContextOptions<SalesDbContext> options,
         ITenantService tenantService)
@@ -76,6 +92,22 @@ public class SalesDbContext : DbContext
             modelBuilder.Entity<SalesCommission>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<SalesReturn>().HasQueryFilter(e => e.TenantId == tenantId.Value);
             modelBuilder.Entity<SalesReturnItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Advance Payments
+            modelBuilder.Entity<AdvancePayment>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Credit Notes
+            modelBuilder.Entity<CreditNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<CreditNoteItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Service Orders
+            modelBuilder.Entity<ServiceOrder>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ServiceOrderItem>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<ServiceOrderNote>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+
+            // Warranties
+            modelBuilder.Entity<Warranty>().HasQueryFilter(e => e.TenantId == tenantId.Value);
+            modelBuilder.Entity<WarrantyClaim>().HasQueryFilter(e => e.TenantId == tenantId.Value);
         }
     }
 
