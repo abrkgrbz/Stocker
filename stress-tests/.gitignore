@@ -1,6 +1,0 @@
-# Test results
-results/*.json
-results/*.txt
-
-# But keep the directory
-!results/.gitkeep
