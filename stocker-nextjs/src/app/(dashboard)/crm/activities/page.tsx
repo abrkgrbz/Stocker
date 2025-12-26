@@ -496,20 +496,20 @@ export default function ActivitiesPage() {
               {drawerActivity.status === 'Scheduled' && (
                 <>
                   <Button
-                    icon={<FieldTimeOutlined />}
+                    icon={<ClockIcon className="w-4 h-4" />}
                     onClick={() => handleReschedule(drawerActivity)}
                   >
                     Yeniden Planla
                   </Button>
                   <Button
-                    icon={<CloseCircleOutlined />}
+                    icon={<XCircleIcon className="w-4 h-4" />}
                     onClick={() => handleCancel(drawerActivity)}
                   >
                     İptal Et
                   </Button>
                   <Button
                     type="primary"
-                    icon={<CheckCircleOutlined />}
+                    icon={<CheckCircleIcon className="w-4 h-4" />}
                     onClick={() => handleComplete(drawerActivity.id)}
                   >
                     Tamamla
@@ -517,14 +517,14 @@ export default function ActivitiesPage() {
                 </>
               )}
               <Button
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => handleEdit(drawerActivity)}
               >
                 Düzenle
               </Button>
               <Button
                 danger
-                icon={<DeleteOutlined />}
+                icon={<TrashIcon className="w-4 h-4" />}
                 onClick={() => handleDelete(drawerActivity.id)}
               >
                 Sil
@@ -590,7 +590,7 @@ export default function ActivitiesPage() {
                     block
                     size="large"
                     type="primary"
-                    icon={<CheckCircleOutlined />}
+                    icon={<CheckCircleIcon className="w-4 h-4" />}
                     onClick={() => handleComplete(drawerActivity.id)}
                   >
                     Tamamlandı Olarak İşaretle
@@ -598,7 +598,7 @@ export default function ActivitiesPage() {
                   <Button
                     block
                     size="large"
-                    icon={<FieldTimeOutlined />}
+                    icon={<ClockIcon className="w-4 h-4" />}
                     onClick={() => handleReschedule(drawerActivity)}
                   >
                     Aktiviteyi Yeniden Planla
@@ -606,7 +606,7 @@ export default function ActivitiesPage() {
                   <Button
                     block
                     size="large"
-                    icon={<CloseCircleOutlined />}
+                    icon={<XCircleIcon className="w-4 h-4" />}
                     onClick={() => handleCancel(drawerActivity)}
                   >
                     Aktiviteyi İptal Et
@@ -616,7 +616,7 @@ export default function ActivitiesPage() {
               <Button
                 block
                 size="large"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => handleEdit(drawerActivity)}
               >
                 Aktiviteyi Düzenle
@@ -625,7 +625,7 @@ export default function ActivitiesPage() {
                 block
                 size="large"
                 danger
-                icon={<DeleteOutlined />}
+                icon={<TrashIcon className="w-4 h-4" />}
                 onClick={() => handleDelete(drawerActivity.id)}
               >
                 Aktiviteyi Sil
@@ -652,7 +652,7 @@ export default function ActivitiesPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <FieldTimeOutlined className="text-blue-600" />
+            <ClockIcon className="w-4 h-4 text-blue-600" />
             <span>Aktiviteyi Yeniden Planla</span>
           </div>
         }
@@ -710,7 +710,7 @@ export default function ActivitiesPage() {
                 type="primary"
                 htmlType="submit"
                 loading={rescheduleActivity.isPending}
-                icon={<FieldTimeOutlined />}
+                icon={<ClockIcon className="w-4 h-4" />}
               >
                 Yeniden Planla
               </Button>
@@ -723,7 +723,7 @@ export default function ActivitiesPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <CloseCircleOutlined className="text-red-600" />
+            <XCircleIcon className="w-4 h-4 text-red-600" />
             <span>Aktiviteyi İptal Et</span>
           </div>
         }
@@ -755,7 +755,7 @@ export default function ActivitiesPage() {
                 type="primary"
                 htmlType="submit"
                 loading={cancelActivity.isPending}
-                icon={<CloseCircleOutlined />}
+                icon={<XCircleIcon className="w-4 h-4" />}
               >
                 İptal Et
               </Button>
