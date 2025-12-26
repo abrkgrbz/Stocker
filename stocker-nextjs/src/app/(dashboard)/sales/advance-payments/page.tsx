@@ -6,8 +6,8 @@
  * Financial-grade UI with clean, high-contrast numbers
  */
 
-import React, { useState } from 'react';
-import { Modal, message, Input, Select } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Modal, message, Select, Spin } from 'antd';
 import {
   CreditCard,
   Search,
@@ -22,163 +22,65 @@ import {
   Building2,
   FileText,
   Banknote,
+  RefreshCw,
 } from 'lucide-react';
 import {
   PageContainer,
   ListPageHeader,
   Card,
-  Badge,
   EmptyState,
 } from '@/components/ui/enterprise-page';
 import { WalletOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
+import SalesService, {
+  AdvancePaymentListDto,
+  AdvancePaymentStatisticsDto,
+  AdvancePaymentStatus
+} from '@/lib/api/services/sales.service';
 
 dayjs.locale('tr');
 
-// Types
-type PaymentStatus = 'Pending' | 'Captured' | 'Refunded' | 'Cancelled';
-type PaymentMethod = 'CreditCard' | 'BankTransfer' | 'Cash' | 'Check';
-
-interface AdvancePayment {
-  id: string;
-  transactionId: string;
-  date: string;
-  customerId: string;
-  customerName: string;
-  orderRef: string | null;
-  orderId: string | null;
-  amount: number;
-  currency: string;
-  paymentMethod: PaymentMethod;
-  status: PaymentStatus;
-  capturedAt: string | null;
-  refundedAt: string | null;
-  notes?: string;
-}
-
-// Mock data
-const mockPayments: AdvancePayment[] = [
-  {
-    id: '1',
-    transactionId: 'TRX-2024-001234',
-    date: '2024-12-24T10:30:00',
-    customerId: 'c1',
-    customerName: 'MediaMarkt Turkey',
-    orderRef: 'SIP-2024-001250',
-    orderId: 'ord1',
-    amount: 125000,
-    currency: 'TRY',
-    paymentMethod: 'CreditCard',
-    status: 'Pending',
-    capturedAt: null,
-    refundedAt: null,
-  },
-  {
-    id: '2',
-    transactionId: 'TRX-2024-001233',
-    date: '2024-12-23T14:15:00',
-    customerId: 'c2',
-    customerName: 'Teknosa A.Ş.',
-    orderRef: 'SIP-2024-001248',
-    orderId: 'ord2',
-    amount: 89500,
-    currency: 'TRY',
-    paymentMethod: 'BankTransfer',
-    status: 'Captured',
-    capturedAt: '2024-12-23T16:00:00',
-    refundedAt: null,
-  },
-  {
-    id: '3',
-    transactionId: 'TRX-2024-001232',
-    date: '2024-12-22T09:45:00',
-    customerId: 'c3',
-    customerName: 'Hepsiburada',
-    orderRef: 'SIP-2024-001245',
-    orderId: 'ord3',
-    amount: 250000,
-    currency: 'TRY',
-    paymentMethod: 'CreditCard',
-    status: 'Captured',
-    capturedAt: '2024-12-22T11:30:00',
-    refundedAt: null,
-  },
-  {
-    id: '4',
-    transactionId: 'TRX-2024-001231',
-    date: '2024-12-21T16:20:00',
-    customerId: 'c4',
-    customerName: 'Vatan Bilgisayar',
-    orderRef: null,
-    orderId: null,
-    amount: 45000,
-    currency: 'TRY',
-    paymentMethod: 'Cash',
-    status: 'Pending',
-    capturedAt: null,
-    refundedAt: null,
-    notes: 'Müşteri depozito - sipariş bekleniyor',
-  },
-  {
-    id: '5',
-    transactionId: 'TRX-2024-001230',
-    date: '2024-12-20T11:00:00',
-    customerId: 'c5',
-    customerName: 'n11.com',
-    orderRef: 'SIP-2024-001200',
-    orderId: 'ord5',
-    amount: 175000,
-    currency: 'TRY',
-    paymentMethod: 'CreditCard',
-    status: 'Refunded',
-    capturedAt: '2024-12-20T12:00:00',
-    refundedAt: '2024-12-22T10:00:00',
-    notes: 'Sipariş iptal edildi',
-  },
-  {
-    id: '6',
-    transactionId: 'TRX-2024-001229',
-    date: '2024-12-19T13:30:00',
-    customerId: 'c6',
-    customerName: 'Trendyol',
-    orderRef: 'SIP-2024-001195',
-    orderId: 'ord6',
-    amount: 320000,
-    currency: 'TRY',
-    paymentMethod: 'BankTransfer',
-    status: 'Captured',
-    capturedAt: '2024-12-19T15:45:00',
-    refundedAt: null,
-  },
-  {
-    id: '7',
-    transactionId: 'TRX-2024-001228',
-    date: '2024-12-18T10:00:00',
-    customerId: 'c7',
-    customerName: 'Amazon Turkey',
-    orderRef: null,
-    orderId: null,
-    amount: 500000,
-    currency: 'TRY',
-    paymentMethod: 'Check',
-    status: 'Cancelled',
-    capturedAt: null,
-    refundedAt: null,
-    notes: 'Çek karşılıksız',
-  },
-];
+type PaymentMethod = 'CreditCard' | 'BankTransfer' | 'Cash' | 'Check' | 'DebitCard' | 'Other';
 
 export default function AdvancePaymentsPage() {
-  const [payments, setPayments] = useState<AdvancePayment[]>(mockPayments);
+  const [payments, setPayments] = useState<AdvancePaymentListDto[]>([]);
+  const [statistics, setStatistics] = useState<AdvancePaymentStatisticsDto | null>(null);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'All'>('All');
+  const [statusFilter, setStatusFilter] = useState<AdvancePaymentStatus | 'All'>('All');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<AdvancePayment | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<AdvancePaymentListDto | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const getStatusConfig = (status: PaymentStatus) => {
-    const configs = {
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [paymentsResult, statsResult] = await Promise.all([
+        SalesService.getAdvancePayments({
+          searchTerm: searchTerm || undefined,
+          status: statusFilter === 'All' ? undefined : statusFilter,
+          pageSize: 100,
+        }),
+        SalesService.getAdvancePaymentStatistics(),
+      ]);
+      setPayments(paymentsResult.items);
+      setStatistics(statsResult);
+    } catch (error) {
+      console.error('Failed to fetch advance payments:', error);
+      message.error('Avans ödemeleri yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const getStatusConfig = (status: string) => {
+    const configs: Record<string, { label: string; bgColor: string; textColor: string; icon: typeof Clock }> = {
       Pending: {
         label: 'Beklemede',
         bgColor: 'bg-slate-100',
@@ -187,6 +89,18 @@ export default function AdvancePaymentsPage() {
       },
       Captured: {
         label: 'Tahsil Edildi',
+        bgColor: 'bg-green-50',
+        textColor: 'text-green-700',
+        icon: CheckCircle,
+      },
+      PartiallyApplied: {
+        label: 'Kısmen Uygulandı',
+        bgColor: 'bg-blue-50',
+        textColor: 'text-blue-700',
+        icon: CheckCircle,
+      },
+      FullyApplied: {
+        label: 'Tamamen Uygulandı',
         bgColor: 'bg-green-50',
         textColor: 'text-green-700',
         icon: CheckCircle,
@@ -204,17 +118,19 @@ export default function AdvancePaymentsPage() {
         icon: Clock,
       },
     };
-    return configs[status];
+    return configs[status] || configs['Pending'];
   };
 
-  const getPaymentMethodConfig = (method: PaymentMethod) => {
-    const configs = {
+  const getPaymentMethodConfig = (method: string) => {
+    const configs: Record<string, { label: string; icon: typeof CreditCard }> = {
       CreditCard: { label: 'Kredi Kartı', icon: CreditCard },
+      DebitCard: { label: 'Banka Kartı', icon: CreditCard },
       BankTransfer: { label: 'Havale/EFT', icon: Building2 },
       Cash: { label: 'Nakit', icon: Banknote },
       Check: { label: 'Çek', icon: FileText },
+      Other: { label: 'Diğer', icon: CreditCard },
     };
-    return configs[method];
+    return configs[method] || configs['Other'];
   };
 
   const formatCurrency = (amount: number, currency: string = 'TRY') => {
@@ -225,78 +141,50 @@ export default function AdvancePaymentsPage() {
     }).format(amount);
   };
 
-  const handleCaptureClick = (payment: AdvancePayment) => {
+  const handleCaptureClick = (payment: AdvancePaymentListDto) => {
     setSelectedPayment(payment);
     setCaptureModalOpen(true);
     setOpenDropdown(null);
   };
 
-  const handleCaptureConfirm = () => {
+  const handleCaptureConfirm = async () => {
     if (!selectedPayment) return;
 
-    setPayments((prev) =>
-      prev.map((p) =>
-        p.id === selectedPayment.id
-          ? {
-              ...p,
-              status: 'Captured' as PaymentStatus,
-              capturedAt: new Date().toISOString(),
-            }
-          : p
-      )
-    );
-    message.success('Ödeme başarıyla tahsil edildi');
-    setCaptureModalOpen(false);
-    setSelectedPayment(null);
+    try {
+      setActionLoading(true);
+      await SalesService.captureAdvancePayment(selectedPayment.id);
+      message.success('Ödeme başarıyla tahsil edildi');
+      setCaptureModalOpen(false);
+      setSelectedPayment(null);
+      fetchData();
+    } catch (error) {
+      console.error('Failed to capture payment:', error);
+      message.error('Ödeme tahsil edilirken hata oluştu');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleRefund = (id: string) => {
+  const handleRefund = async (id: string) => {
     Modal.confirm({
       title: 'Ödeme İadesi',
       content: 'Bu ödemeyi iade etmek istediğinizden emin misiniz?',
       okText: 'İade Et',
       okType: 'danger',
       cancelText: 'Vazgeç',
-      onOk: () => {
-        setPayments((prev) =>
-          prev.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  status: 'Refunded' as PaymentStatus,
-                  refundedAt: new Date().toISOString(),
-                }
-              : p
-          )
-        );
-        message.success('İade işlemi tamamlandı');
+      onOk: async () => {
+        try {
+          await SalesService.refundAdvancePayment(id, { reason: 'Müşteri talebi' });
+          message.success('İade işlemi tamamlandı');
+          fetchData();
+        } catch (error) {
+          console.error('Failed to refund payment:', error);
+          message.error('İade işlemi sırasında hata oluştu');
+        }
       },
     });
     setOpenDropdown(null);
   };
-
-  // Filter
-  const filteredPayments = payments.filter((p) => {
-    const matchesSearch =
-      p.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.orderRef?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // Summary calculations
-  const pendingTotal = payments
-    .filter((p) => p.status === 'Pending')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const capturedTotal = payments
-    .filter((p) => p.status === 'Captured')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const refundedTotal = payments
-    .filter((p) => p.status === 'Refunded')
-    .reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <PageContainer maxWidth="7xl">
@@ -306,6 +194,16 @@ export default function AdvancePaymentsPage() {
         title="Avans Ödemeler"
         description="Depozito ve ön ödemeleri takip edin"
         itemCount={payments.length}
+        secondaryActions={
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Yenile
+          </button>
+        }
       />
 
       {/* Summary Cards */}
@@ -316,7 +214,7 @@ export default function AdvancePaymentsPage() {
             <DollarSign className="w-5 h-5 text-slate-400" />
           </div>
           <div className="mt-2 text-2xl font-semibold text-slate-900 font-mono">
-            {payments.length}
+            {statistics?.totalCount ?? payments.length}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg p-4">
@@ -325,25 +223,25 @@ export default function AdvancePaymentsPage() {
             <Clock className="w-5 h-5 text-amber-500" />
           </div>
           <div className="mt-2 text-2xl font-semibold text-amber-600 font-mono">
-            {formatCurrency(pendingTotal)}
+            {statistics ? formatCurrency(statistics.totalAmount - statistics.appliedAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">Tahsil Edilen</span>
+            <span className="text-sm text-slate-500">Toplam Tutar</span>
             <ArrowDownLeft className="w-5 h-5 text-green-500" />
           </div>
           <div className="mt-2 text-2xl font-semibold text-green-600 font-mono">
-            {formatCurrency(capturedTotal)}
+            {statistics ? formatCurrency(statistics.totalAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">İade Edilen</span>
-            <ArrowUpRight className="w-5 h-5 text-red-500" />
+            <span className="text-sm text-slate-500">Uygulanan</span>
+            <ArrowUpRight className="w-5 h-5 text-blue-500" />
           </div>
-          <div className="mt-2 text-2xl font-semibold text-red-600 font-mono">
-            {formatCurrency(refundedTotal)}
+          <div className="mt-2 text-2xl font-semibold text-blue-600 font-mono">
+            {statistics ? formatCurrency(statistics.appliedAmount, statistics.currency) : '₺0,00'}
           </div>
         </div>
       </div>
@@ -370,6 +268,8 @@ export default function AdvancePaymentsPage() {
             options={[
               { value: 'Pending', label: 'Beklemede' },
               { value: 'Captured', label: 'Tahsil Edildi' },
+              { value: 'PartiallyApplied', label: 'Kısmen Uygulandı' },
+              { value: 'FullyApplied', label: 'Tamamen Uygulandı' },
               { value: 'Refunded', label: 'İade Edildi' },
               { value: 'Cancelled', label: 'İptal' },
             ]}
@@ -378,7 +278,13 @@ export default function AdvancePaymentsPage() {
       </Card>
 
       {/* Ledger Table */}
-      {filteredPayments.length === 0 ? (
+      {loading ? (
+        <Card>
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        </Card>
+      ) : payments.length === 0 ? (
         <Card>
           <EmptyState
             icon={<CreditCard className="w-6 h-6" />}
@@ -410,6 +316,9 @@ export default function AdvancePaymentsPage() {
                   <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
                     Tutar
                   </th>
+                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
+                    Kalan
+                  </th>
                   <th className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">
                     Durum
                   </th>
@@ -419,7 +328,7 @@ export default function AdvancePaymentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPayments.map((payment) => {
+                {payments.map((payment) => {
                   const statusConfig = getStatusConfig(payment.status);
                   const methodConfig = getPaymentMethodConfig(payment.paymentMethod);
                   const StatusIcon = statusConfig.icon;
@@ -431,25 +340,25 @@ export default function AdvancePaymentsPage() {
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Calendar className="w-4 h-4 text-slate-400" />
                           <div>
-                            <div>{dayjs(payment.date).format('DD MMM YYYY')}</div>
+                            <div>{dayjs(payment.paymentDate).format('DD MMM YYYY')}</div>
                             <div className="text-xs text-slate-400">
-                              {dayjs(payment.date).format('HH:mm')}
+                              {dayjs(payment.paymentDate).format('HH:mm')}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-mono text-sm text-slate-900">
-                          {payment.transactionId}
+                          {payment.paymentNumber}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-medium text-slate-900">{payment.customerName}</span>
                       </td>
                       <td className="px-6 py-4">
-                        {payment.orderRef ? (
+                        {payment.salesOrderNumber ? (
                           <span className="font-mono text-sm text-indigo-600 hover:underline cursor-pointer">
-                            {payment.orderRef}
+                            {payment.salesOrderNumber}
                           </span>
                         ) : (
                           <span className="text-sm text-slate-400 italic">Atanmamış</span>
@@ -462,16 +371,19 @@ export default function AdvancePaymentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
+                        <span className="font-mono text-lg font-semibold text-slate-900">
+                          {formatCurrency(payment.amount, payment.currency)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
                         <span
-                          className={`font-mono text-lg font-semibold ${
-                            payment.status === 'Captured'
-                              ? 'text-green-600'
-                              : payment.status === 'Refunded'
-                              ? 'text-red-600'
-                              : 'text-slate-900'
+                          className={`font-mono text-sm ${
+                            payment.remainingAmount > 0
+                              ? 'text-amber-600'
+                              : 'text-green-600'
                           }`}
                         >
-                          {formatCurrency(payment.amount, payment.currency)}
+                          {formatCurrency(payment.remainingAmount, payment.currency)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -501,7 +413,7 @@ export default function AdvancePaymentsPage() {
                                 />
                                 <div className="absolute right-0 z-20 mt-1 w-44 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                   <div className="py-1">
-                                    {payment.status === 'Pending' && (
+                                    {payment.status === 'Pending' && !payment.isCaptured && (
                                       <button
                                         onClick={() => handleCaptureClick(payment)}
                                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50"
@@ -510,7 +422,7 @@ export default function AdvancePaymentsPage() {
                                         Tahsil Et
                                       </button>
                                     )}
-                                    {payment.status === 'Captured' && (
+                                    {(payment.status === 'Captured' || payment.isCaptured) && (
                                       <button
                                         onClick={() => handleRefund(payment.id)}
                                         className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -551,7 +463,7 @@ export default function AdvancePaymentsPage() {
         }}
         okText="Tahsil Et"
         cancelText="Vazgeç"
-        okButtonProps={{ className: 'bg-green-600 hover:bg-green-700' }}
+        okButtonProps={{ className: 'bg-green-600 hover:bg-green-700', loading: actionLoading }}
         width={450}
       >
         {selectedPayment && (
@@ -570,7 +482,7 @@ export default function AdvancePaymentsPage() {
               </div>
               <div>
                 <div className="text-slate-500 mb-1">İşlem No</div>
-                <div className="font-mono text-slate-900">{selectedPayment.transactionId}</div>
+                <div className="font-mono text-slate-900">{selectedPayment.paymentNumber}</div>
               </div>
               <div>
                 <div className="text-slate-500 mb-1">Ödeme Yöntemi</div>
@@ -581,14 +493,14 @@ export default function AdvancePaymentsPage() {
               <div>
                 <div className="text-slate-500 mb-1">Sipariş</div>
                 <div className="font-mono text-slate-900">
-                  {selectedPayment.orderRef || '-'}
+                  {selectedPayment.salesOrderNumber || '-'}
                 </div>
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-200">
               <div className="text-xs text-slate-500">
-                Bu işlem onaylandığında ödeme "Tahsil Edildi" olarak işaretlenecek ve
+                Bu işlem onaylandığında ödeme &quot;Tahsil Edildi&quot; olarak işaretlenecek ve
                 müşteri bakiyesine yansıtılacaktır.
               </div>
             </div>

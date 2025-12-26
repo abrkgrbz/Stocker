@@ -2240,6 +2240,266 @@ export class SalesService {
   static async updateTrackingInfo(id: string, data: UpdateTrackingCommand): Promise<ShipmentDto> {
     return ApiService.put<ShipmentDto>(`/sales/shipments/${id}/tracking`, data);
   }
+
+  // =====================================
+  // ADVANCE PAYMENTS
+  // =====================================
+
+  static async getAdvancePayments(params?: AdvancePaymentQueryParams): Promise<PagedResult<AdvancePaymentListDto>> {
+    return ApiService.get<PagedResult<AdvancePaymentListDto>>('/sales/advance-payments', { params });
+  }
+
+  static async getAdvancePayment(id: string): Promise<AdvancePaymentDto> {
+    return ApiService.get<AdvancePaymentDto>(`/sales/advance-payments/${id}`);
+  }
+
+  static async getAdvancePaymentsByCustomer(customerId: string): Promise<AdvancePaymentListDto[]> {
+    return ApiService.get<AdvancePaymentListDto[]>(`/sales/advance-payments/by-customer/${customerId}`);
+  }
+
+  static async getAdvancePaymentStatistics(): Promise<AdvancePaymentStatisticsDto> {
+    return ApiService.get<AdvancePaymentStatisticsDto>('/sales/advance-payments/statistics');
+  }
+
+  static async createAdvancePayment(data: CreateAdvancePaymentCommand): Promise<AdvancePaymentDto> {
+    return ApiService.post<AdvancePaymentDto>('/sales/advance-payments', data);
+  }
+
+  static async updateAdvancePayment(id: string, data: UpdateAdvancePaymentCommand): Promise<AdvancePaymentDto> {
+    return ApiService.put<AdvancePaymentDto>(`/sales/advance-payments/${id}`, data);
+  }
+
+  static async deleteAdvancePayment(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/advance-payments/${id}`);
+  }
+
+  static async captureAdvancePayment(id: string): Promise<AdvancePaymentDto> {
+    return ApiService.post<AdvancePaymentDto>(`/sales/advance-payments/${id}/capture`);
+  }
+
+  static async applyAdvancePayment(id: string, data: ApplyAdvancePaymentCommand): Promise<AdvancePaymentDto> {
+    return ApiService.post<AdvancePaymentDto>(`/sales/advance-payments/${id}/apply`, data);
+  }
+
+  static async refundAdvancePayment(id: string, data: RefundAdvancePaymentCommand): Promise<AdvancePaymentDto> {
+    return ApiService.post<AdvancePaymentDto>(`/sales/advance-payments/${id}/refund`, data);
+  }
+
+  static async issueReceipt(id: string): Promise<AdvancePaymentDto> {
+    return ApiService.post<AdvancePaymentDto>(`/sales/advance-payments/${id}/receipt`);
+  }
+
+  // =====================================
+  // CREDIT NOTES
+  // =====================================
+
+  static async getCreditNotes(params?: CreditNoteQueryParams): Promise<PagedResult<CreditNoteListDto>> {
+    return ApiService.get<PagedResult<CreditNoteListDto>>('/sales/credit-notes', { params });
+  }
+
+  static async getCreditNote(id: string): Promise<CreditNoteDto> {
+    return ApiService.get<CreditNoteDto>(`/sales/credit-notes/${id}`);
+  }
+
+  static async getCreditNotesByCustomer(customerId: string): Promise<CreditNoteListDto[]> {
+    return ApiService.get<CreditNoteListDto[]>(`/sales/credit-notes/by-customer/${customerId}`);
+  }
+
+  static async getCreditNoteStatistics(): Promise<CreditNoteStatisticsDto> {
+    return ApiService.get<CreditNoteStatisticsDto>('/sales/credit-notes/statistics');
+  }
+
+  static async createCreditNote(data: CreateCreditNoteCommand): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>('/sales/credit-notes', data);
+  }
+
+  static async createCreditNoteFromReturn(data: CreateCreditNoteFromReturnCommand): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>('/sales/credit-notes/from-return', data);
+  }
+
+  static async updateCreditNote(id: string, data: UpdateCreditNoteCommand): Promise<CreditNoteDto> {
+    return ApiService.put<CreditNoteDto>(`/sales/credit-notes/${id}`, data);
+  }
+
+  static async deleteCreditNote(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/credit-notes/${id}`);
+  }
+
+  static async approveCreditNote(id: string, notes?: string): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>(`/sales/credit-notes/${id}/approve`, { notes });
+  }
+
+  static async applyCreditNote(id: string, data: ApplyCreditNoteCommand): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>(`/sales/credit-notes/${id}/apply`, data);
+  }
+
+  static async voidCreditNote(id: string, reason: string): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>(`/sales/credit-notes/${id}/void`, { reason });
+  }
+
+  static async addCreditNoteItem(id: string, data: AddCreditNoteItemCommand): Promise<CreditNoteDto> {
+    return ApiService.post<CreditNoteDto>(`/sales/credit-notes/${id}/items`, data);
+  }
+
+  static async updateCreditNoteItem(id: string, itemId: string, data: UpdateCreditNoteItemCommand): Promise<CreditNoteDto> {
+    return ApiService.put<CreditNoteDto>(`/sales/credit-notes/${id}/items/${itemId}`, data);
+  }
+
+  static async removeCreditNoteItem(id: string, itemId: string): Promise<CreditNoteDto> {
+    return ApiService.delete<CreditNoteDto>(`/sales/credit-notes/${id}/items/${itemId}`);
+  }
+
+  // =====================================
+  // SERVICE ORDERS
+  // =====================================
+
+  static async getServiceOrders(params?: ServiceOrderQueryParams): Promise<PagedResult<ServiceOrderListDto>> {
+    return ApiService.get<PagedResult<ServiceOrderListDto>>('/sales/service-orders', { params });
+  }
+
+  static async getServiceOrder(id: string): Promise<ServiceOrderDto> {
+    return ApiService.get<ServiceOrderDto>(`/sales/service-orders/${id}`);
+  }
+
+  static async getServiceOrdersByCustomer(customerId: string): Promise<ServiceOrderListDto[]> {
+    return ApiService.get<ServiceOrderListDto[]>(`/sales/service-orders/by-customer/${customerId}`);
+  }
+
+  static async getServiceOrderStatistics(): Promise<ServiceOrderStatisticsDto> {
+    return ApiService.get<ServiceOrderStatisticsDto>('/sales/service-orders/statistics');
+  }
+
+  static async createServiceOrder(data: CreateServiceOrderCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>('/sales/service-orders', data);
+  }
+
+  static async updateServiceOrder(id: string, data: UpdateServiceOrderCommand): Promise<ServiceOrderDto> {
+    return ApiService.put<ServiceOrderDto>(`/sales/service-orders/${id}`, data);
+  }
+
+  static async deleteServiceOrder(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/service-orders/${id}`);
+  }
+
+  static async assignTechnician(id: string, data: AssignTechnicianCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/assign`, data);
+  }
+
+  static async startServiceOrder(id: string): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/start`);
+  }
+
+  static async completeServiceOrder(id: string, data: CompleteServiceOrderCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/complete`, data);
+  }
+
+  static async cancelServiceOrder(id: string, reason: string): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/cancel`, { reason });
+  }
+
+  static async addServiceOrderItem(id: string, data: AddServiceOrderItemCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/items`, data);
+  }
+
+  static async updateServiceOrderItem(id: string, itemId: string, data: UpdateServiceOrderItemCommand): Promise<ServiceOrderDto> {
+    return ApiService.put<ServiceOrderDto>(`/sales/service-orders/${id}/items/${itemId}`, data);
+  }
+
+  static async removeServiceOrderItem(id: string, itemId: string): Promise<ServiceOrderDto> {
+    return ApiService.delete<ServiceOrderDto>(`/sales/service-orders/${id}/items/${itemId}`);
+  }
+
+  static async addServiceOrderNote(id: string, data: AddServiceOrderNoteCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/notes`, data);
+  }
+
+  static async submitFeedback(id: string, data: SubmitServiceFeedbackCommand): Promise<ServiceOrderDto> {
+    return ApiService.post<ServiceOrderDto>(`/sales/service-orders/${id}/feedback`, data);
+  }
+
+  // =====================================
+  // WARRANTIES
+  // =====================================
+
+  static async getWarranties(params?: WarrantyQueryParams): Promise<PagedResult<WarrantyListDto>> {
+    return ApiService.get<PagedResult<WarrantyListDto>>('/sales/warranties', { params });
+  }
+
+  static async getWarranty(id: string): Promise<WarrantyDto> {
+    return ApiService.get<WarrantyDto>(`/sales/warranties/${id}`);
+  }
+
+  static async getWarrantyByNumber(warrantyNumber: string): Promise<WarrantyDto> {
+    return ApiService.get<WarrantyDto>(`/sales/warranties/by-number/${warrantyNumber}`);
+  }
+
+  static async getWarrantiesByCustomer(customerId: string): Promise<WarrantyListDto[]> {
+    return ApiService.get<WarrantyListDto[]>(`/sales/warranties/by-customer/${customerId}`);
+  }
+
+  static async getWarrantiesByProduct(productId: string): Promise<WarrantyListDto[]> {
+    return ApiService.get<WarrantyListDto[]>(`/sales/warranties/by-product/${productId}`);
+  }
+
+  static async getWarrantyBySerial(serialNumber: string): Promise<WarrantyDto> {
+    return ApiService.get<WarrantyDto>(`/sales/warranties/by-serial/${serialNumber}`);
+  }
+
+  static async getWarrantyStatistics(): Promise<WarrantyStatisticsDto> {
+    return ApiService.get<WarrantyStatisticsDto>('/sales/warranties/statistics');
+  }
+
+  static async createWarranty(data: CreateWarrantyCommand): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>('/sales/warranties', data);
+  }
+
+  static async updateWarranty(id: string, data: UpdateWarrantyCommand): Promise<WarrantyDto> {
+    return ApiService.put<WarrantyDto>(`/sales/warranties/${id}`, data);
+  }
+
+  static async deleteWarranty(id: string): Promise<void> {
+    return ApiService.delete<void>(`/sales/warranties/${id}`);
+  }
+
+  static async activateWarranty(id: string): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/activate`);
+  }
+
+  static async extendWarranty(id: string, data: ExtendWarrantyCommand): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/extend`, data);
+  }
+
+  static async voidWarranty(id: string, reason: string): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/void`, { reason });
+  }
+
+  static async registerWarranty(id: string): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/register`);
+  }
+
+  static async createWarrantyClaim(id: string, data: CreateWarrantyClaimCommand): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/claims`, data);
+  }
+
+  static async approveWarrantyClaim(id: string, claimId: string, data: ApproveWarrantyClaimCommand): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/claims/${claimId}/approve`, data);
+  }
+
+  static async rejectWarrantyClaim(id: string, claimId: string, reason: string): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/claims/${claimId}/reject`, { reason });
+  }
+
+  static async resolveWarrantyClaim(id: string, claimId: string, data: ResolveWarrantyClaimCommand): Promise<WarrantyDto> {
+    return ApiService.post<WarrantyDto>(`/sales/warranties/${id}/claims/${claimId}/resolve`, data);
+  }
+
+  static async lookupWarranty(serialNumber: string): Promise<WarrantyDto | null> {
+    try {
+      return await ApiService.get<WarrantyDto>(`/sales/warranties/lookup/${serialNumber}`);
+    } catch {
+      return null;
+    }
+  }
 }
 
 // =====================================
@@ -2823,6 +3083,839 @@ export interface UpdateTrackingCommand {
   trackingNumber?: string;
   trackingUrl?: string;
   carrierService?: string;
+}
+
+// =====================================
+// ADVANCE PAYMENT TYPES
+// Based on Backend DTOs: 2025-12-26
+// =====================================
+
+export type AdvancePaymentStatus =
+  | 'Pending'
+  | 'Captured'
+  | 'PartiallyApplied'
+  | 'FullyApplied'
+  | 'Refunded'
+  | 'Cancelled';
+
+export type PaymentMethod =
+  | 'Cash'
+  | 'CreditCard'
+  | 'DebitCard'
+  | 'BankTransfer'
+  | 'Check'
+  | 'Other';
+
+export interface AdvancePaymentDto {
+  id: string;
+  paymentNumber: string;
+  paymentDate: string;
+  customerId?: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  orderTotalAmount: number;
+  amount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  refundedAmount: number;
+  currency: string;
+  exchangeRate: number;
+  paymentMethod: string;
+  paymentReference?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  checkNumber?: string;
+  checkDate?: string;
+  status: string;
+  isCaptured: boolean;
+  isFullyApplied: boolean;
+  isRefunded: boolean;
+  capturedDate?: string;
+  capturedBy?: string;
+  capturedByName?: string;
+  refundedDate?: string;
+  refundedBy?: string;
+  refundReason?: string;
+  receiptNumber?: string;
+  receiptDate?: string;
+  receiptIssued: boolean;
+  notes?: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AdvancePaymentListDto {
+  id: string;
+  paymentNumber: string;
+  paymentDate: string;
+  customerName: string;
+  salesOrderNumber?: string;
+  amount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  currency: string;
+  paymentMethod: string;
+  status: string;
+  isCaptured: boolean;
+  receiptIssued: boolean;
+  createdAt: string;
+}
+
+export interface AdvancePaymentStatisticsDto {
+  totalCount: number;
+  pendingCount: number;
+  capturedCount: number;
+  totalAmount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  currency: string;
+}
+
+export interface AdvancePaymentQueryParams {
+  searchTerm?: string;
+  status?: AdvancePaymentStatus;
+  customerId?: string;
+  salesOrderId?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateAdvancePaymentCommand {
+  customerId?: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  salesOrderId?: string;
+  amount: number;
+  currency?: string;
+  exchangeRate?: number;
+  paymentMethod: PaymentMethod;
+  paymentReference?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  checkNumber?: string;
+  checkDate?: string;
+  notes?: string;
+}
+
+export interface UpdateAdvancePaymentCommand {
+  amount?: number;
+  paymentMethod?: PaymentMethod;
+  paymentReference?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  checkNumber?: string;
+  checkDate?: string;
+  notes?: string;
+}
+
+export interface ApplyAdvancePaymentCommand {
+  invoiceId?: string;
+  salesOrderId?: string;
+  amount: number;
+  notes?: string;
+}
+
+export interface RefundAdvancePaymentCommand {
+  amount?: number;
+  reason: string;
+}
+
+// =====================================
+// CREDIT NOTE TYPES
+// Based on Backend DTOs: 2025-12-26
+// =====================================
+
+export type CreditNoteType =
+  | 'Full'
+  | 'Partial'
+  | 'Adjustment'
+  | 'Goodwill';
+
+export type CreditNoteReason =
+  | 'Return'
+  | 'Defective'
+  | 'PricingError'
+  | 'Discount'
+  | 'Cancellation'
+  | 'Goodwill'
+  | 'Other';
+
+export type CreditNoteStatus =
+  | 'Draft'
+  | 'Pending'
+  | 'Approved'
+  | 'Applied'
+  | 'Voided'
+  | 'Cancelled';
+
+export interface CreditNoteDto {
+  id: string;
+  creditNoteNumber: string;
+  creditNoteDate: string;
+  type: string;
+  reason: string;
+  reasonDescription?: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  salesReturnId?: string;
+  salesReturnNumber?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  customerId?: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  customerAddress?: string;
+  subTotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  currency: string;
+  exchangeRate: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  isFullyApplied: boolean;
+  status: string;
+  isApproved: boolean;
+  approvedBy?: string;
+  approvedDate?: string;
+  isVoided: boolean;
+  voidReason?: string;
+  voidedDate?: string;
+  isEDocument: boolean;
+  eDocumentId?: string;
+  eDocumentDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+  items: CreditNoteItemDto[];
+}
+
+export interface CreditNoteItemDto {
+  id: string;
+  creditNoteId: string;
+  lineNumber: number;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  description?: string;
+  invoiceItemId?: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  discountRate: number;
+  discountAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  lineTotal: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreditNoteListDto {
+  id: string;
+  creditNoteNumber: string;
+  creditNoteDate: string;
+  type: string;
+  reason: string;
+  invoiceNumber: string;
+  customerName: string;
+  totalAmount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  currency: string;
+  status: string;
+  isApproved: boolean;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface CreditNoteStatisticsDto {
+  totalCount: number;
+  draftCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  totalAmount: number;
+  appliedAmount: number;
+  remainingAmount: number;
+  currency: string;
+}
+
+export interface CreditNoteQueryParams {
+  searchTerm?: string;
+  status?: CreditNoteStatus;
+  type?: CreditNoteType;
+  reason?: CreditNoteReason;
+  customerId?: string;
+  invoiceId?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateCreditNoteCommand {
+  invoiceId: string;
+  type: CreditNoteType;
+  reason: CreditNoteReason;
+  reasonDescription?: string;
+  salesReturnId?: string;
+  notes?: string;
+  items: CreateCreditNoteItemCommand[];
+}
+
+export interface CreateCreditNoteFromReturnCommand {
+  salesReturnId: string;
+  notes?: string;
+}
+
+export interface CreateCreditNoteItemCommand {
+  invoiceItemId?: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  description?: string;
+  quantity: number;
+  unit?: string;
+  unitPrice: number;
+  discountRate?: number;
+  taxRate?: number;
+}
+
+export interface UpdateCreditNoteCommand {
+  reasonDescription?: string;
+  notes?: string;
+}
+
+export interface ApplyCreditNoteCommand {
+  invoiceId?: string;
+  amount: number;
+  notes?: string;
+}
+
+export interface AddCreditNoteItemCommand {
+  invoiceItemId?: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  description?: string;
+  quantity: number;
+  unit?: string;
+  unitPrice: number;
+  discountRate?: number;
+  taxRate?: number;
+}
+
+export interface UpdateCreditNoteItemCommand {
+  quantity?: number;
+  unitPrice?: number;
+  discountRate?: number;
+  taxRate?: number;
+}
+
+// =====================================
+// SERVICE ORDER TYPES
+// Based on Backend DTOs: 2025-12-26
+// =====================================
+
+export type ServiceOrderType =
+  | 'Repair'
+  | 'Maintenance'
+  | 'Installation'
+  | 'Inspection'
+  | 'Calibration'
+  | 'Training'
+  | 'Consultation'
+  | 'Other';
+
+export type ServiceOrderPriority =
+  | 'Low'
+  | 'Normal'
+  | 'High'
+  | 'Urgent'
+  | 'Critical';
+
+export type ServiceOrderStatus =
+  | 'Draft'
+  | 'Pending'
+  | 'Assigned'
+  | 'InProgress'
+  | 'OnHold'
+  | 'Completed'
+  | 'Cancelled';
+
+export type ServiceLocation =
+  | 'InHouse'
+  | 'OnSite'
+  | 'Remote';
+
+export type ServiceItemType =
+  | 'Labor'
+  | 'Part'
+  | 'Material'
+  | 'Travel'
+  | 'Other';
+
+export type ServiceNoteType =
+  | 'General'
+  | 'Diagnosis'
+  | 'Repair'
+  | 'Customer'
+  | 'Internal';
+
+export interface ServiceOrderDto {
+  id: string;
+  serviceOrderNumber: string;
+  orderDate: string;
+  type: string;
+  priority: string;
+  customerId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  serialNumber?: string;
+  assetTag?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  invoiceId?: string;
+  invoiceNumber?: string;
+  warrantyId?: string;
+  warrantyNumber?: string;
+  isCoveredByWarranty: boolean;
+  reportedIssue?: string;
+  diagnosisNotes?: string;
+  repairNotes?: string;
+  issueCategory?: string;
+  scheduledDate?: string;
+  scheduledEndDate?: string;
+  estimatedDuration?: string;
+  location: string;
+  serviceAddress?: string;
+  technicianId?: string;
+  technicianName?: string;
+  assignedTeamId?: string;
+  assignedTeamName?: string;
+  assignedDate?: string;
+  status: string;
+  startedDate?: string;
+  completedDate?: string;
+  cancelledDate?: string;
+  cancellationReason?: string;
+  actualDuration?: string;
+  isBillable: boolean;
+  laborCost: number;
+  partsCost: number;
+  travelCost: number;
+  otherCost: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  currency: string;
+  isInvoiced: boolean;
+  serviceInvoiceId?: string;
+  serviceInvoiceNumber?: string;
+  invoicedDate?: string;
+  customerRating?: number;
+  customerFeedback?: string;
+  feedbackDate?: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+  items: ServiceOrderItemDto[];
+  notes: ServiceOrderNoteDto[];
+}
+
+export interface ServiceOrderItemDto {
+  id: string;
+  serviceOrderId: string;
+  lineNumber: number;
+  itemType: string;
+  productId?: string;
+  code: string;
+  name: string;
+  description?: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate: number;
+  discountAmount: number;
+  totalPrice: number;
+  hoursWorked?: number;
+  hourlyRate?: number;
+  isCoveredByWarranty: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ServiceOrderNoteDto {
+  id: string;
+  serviceOrderId: string;
+  type: string;
+  content: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdAt: string;
+}
+
+export interface ServiceOrderListDto {
+  id: string;
+  serviceOrderNumber: string;
+  orderDate: string;
+  type: string;
+  priority: string;
+  customerName: string;
+  productName?: string;
+  serialNumber?: string;
+  status: string;
+  scheduledDate?: string;
+  technicianName?: string;
+  isCoveredByWarranty: boolean;
+  isBillable: boolean;
+  totalAmount: number;
+  isInvoiced: boolean;
+  customerRating?: number;
+  createdAt: string;
+}
+
+export interface ServiceOrderStatisticsDto {
+  totalCount: number;
+  pendingCount: number;
+  inProgressCount: number;
+  completedCount: number;
+  cancelledCount: number;
+  averageRating: number;
+  totalRevenue: number;
+  currency: string;
+}
+
+export interface ServiceOrderQueryParams {
+  searchTerm?: string;
+  status?: ServiceOrderStatus;
+  type?: ServiceOrderType;
+  priority?: ServiceOrderPriority;
+  customerId?: string;
+  technicianId?: string;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateServiceOrderCommand {
+  type: ServiceOrderType;
+  priority?: ServiceOrderPriority;
+  customerId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  productId?: string;
+  productCode?: string;
+  productName?: string;
+  serialNumber?: string;
+  assetTag?: string;
+  salesOrderId?: string;
+  warrantyId?: string;
+  reportedIssue?: string;
+  scheduledDate?: string;
+  scheduledEndDate?: string;
+  estimatedDuration?: string;
+  location?: ServiceLocation;
+  serviceAddress?: string;
+  isBillable?: boolean;
+}
+
+export interface UpdateServiceOrderCommand {
+  priority?: ServiceOrderPriority;
+  reportedIssue?: string;
+  diagnosisNotes?: string;
+  repairNotes?: string;
+  scheduledDate?: string;
+  scheduledEndDate?: string;
+  estimatedDuration?: string;
+  location?: ServiceLocation;
+  serviceAddress?: string;
+  isBillable?: boolean;
+}
+
+export interface AssignTechnicianCommand {
+  technicianId: string;
+  technicianName: string;
+  teamId?: string;
+  teamName?: string;
+}
+
+export interface CompleteServiceOrderCommand {
+  repairNotes?: string;
+  actualDuration?: string;
+}
+
+export interface AddServiceOrderItemCommand {
+  itemType: ServiceItemType;
+  productId?: string;
+  code: string;
+  name: string;
+  description?: string;
+  unit?: string;
+  quantity: number;
+  unitPrice: number;
+  discountRate?: number;
+  hoursWorked?: number;
+  hourlyRate?: number;
+  isCoveredByWarranty?: boolean;
+}
+
+export interface UpdateServiceOrderItemCommand {
+  quantity?: number;
+  unitPrice?: number;
+  discountRate?: number;
+  hoursWorked?: number;
+}
+
+export interface AddServiceOrderNoteCommand {
+  type: ServiceNoteType;
+  content: string;
+}
+
+export interface SubmitServiceFeedbackCommand {
+  rating: number;
+  feedback?: string;
+}
+
+// =====================================
+// WARRANTY TYPES
+// Based on Backend DTOs: 2025-12-26
+// =====================================
+
+export type WarrantyType =
+  | 'Standard'
+  | 'Extended'
+  | 'Premium'
+  | 'Limited'
+  | 'Lifetime';
+
+export type WarrantyCoverageType =
+  | 'Full'
+  | 'PartsOnly'
+  | 'LaborOnly'
+  | 'LimitedParts';
+
+export type WarrantyStatus =
+  | 'Draft'
+  | 'Active'
+  | 'Expired'
+  | 'Void'
+  | 'Suspended';
+
+export type WarrantyClaimType =
+  | 'Repair'
+  | 'Replacement'
+  | 'Refund'
+  | 'Service';
+
+export type WarrantyClaimStatus =
+  | 'Submitted'
+  | 'UnderReview'
+  | 'Approved'
+  | 'Rejected'
+  | 'InProgress'
+  | 'Resolved'
+  | 'Closed';
+
+export type WarrantyResolutionType =
+  | 'Repaired'
+  | 'Replaced'
+  | 'Refunded'
+  | 'Credited';
+
+export interface WarrantyDto {
+  id: string;
+  warrantyNumber: string;
+  productId?: string;
+  productCode: string;
+  productName: string;
+  serialNumber?: string;
+  lotNumber?: string;
+  salesOrderId?: string;
+  salesOrderNumber?: string;
+  salesOrderItemId?: string;
+  invoiceId?: string;
+  invoiceNumber?: string;
+  purchaseDate?: string;
+  customerId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  startDate: string;
+  endDate: string;
+  durationMonths: number;
+  remainingDays: number;
+  type: string;
+  coverageType: string;
+  coverageDescription?: string;
+  maxClaimAmount?: number;
+  maxClaimCount?: number;
+  status: string;
+  isActive: boolean;
+  isExpired: boolean;
+  isVoid: boolean;
+  voidReason?: string;
+  voidedDate?: string;
+  isExtended: boolean;
+  originalWarrantyId?: string;
+  extensionPrice?: number;
+  extendedDate?: string;
+  claimCount: number;
+  approvedClaimCount: number;
+  totalClaimedAmount: number;
+  isRegistered: boolean;
+  registeredDate?: string;
+  registeredBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+  claims: WarrantyClaimDto[];
+}
+
+export interface WarrantyClaimDto {
+  id: string;
+  warrantyId: string;
+  claimNumber: string;
+  claimDate: string;
+  issueDescription: string;
+  claimType: string;
+  failureCode?: string;
+  diagnosticNotes?: string;
+  status: string;
+  resolution?: string;
+  resolutionType?: string;
+  resolvedDate?: string;
+  resolvedBy?: string;
+  claimAmount: number;
+  approvedAmount: number;
+  paidAmount: number;
+  replacementProductId?: string;
+  replacementSerialNumber?: string;
+  serviceOrderId?: string;
+  serviceOrderNumber?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface WarrantyListDto {
+  id: string;
+  warrantyNumber: string;
+  productCode: string;
+  productName: string;
+  serialNumber?: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  remainingDays: number;
+  type: string;
+  coverageType: string;
+  status: string;
+  isActive: boolean;
+  isExpired: boolean;
+  claimCount: number;
+  createdAt: string;
+}
+
+export interface WarrantyStatisticsDto {
+  totalCount: number;
+  activeCount: number;
+  expiredCount: number;
+  expiringThisMonthCount: number;
+  totalClaimCount: number;
+  pendingClaimCount: number;
+  averageClaimResolutionDays: number;
+}
+
+export interface WarrantyQueryParams {
+  searchTerm?: string;
+  status?: WarrantyStatus;
+  type?: WarrantyType;
+  customerId?: string;
+  productId?: string;
+  isActive?: boolean;
+  isExpired?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CreateWarrantyCommand {
+  productId?: string;
+  productCode: string;
+  productName: string;
+  serialNumber?: string;
+  lotNumber?: string;
+  salesOrderId?: string;
+  salesOrderItemId?: string;
+  customerId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  startDate: string;
+  durationMonths: number;
+  type: WarrantyType;
+  coverageType: WarrantyCoverageType;
+  coverageDescription?: string;
+  maxClaimAmount?: number;
+  maxClaimCount?: number;
+  notes?: string;
+}
+
+export interface UpdateWarrantyCommand {
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  coverageDescription?: string;
+  notes?: string;
+}
+
+export interface ExtendWarrantyCommand {
+  additionalMonths: number;
+  extensionPrice?: number;
+  notes?: string;
+}
+
+export interface CreateWarrantyClaimCommand {
+  issueDescription: string;
+  claimType: WarrantyClaimType;
+  failureCode?: string;
+  claimAmount?: number;
+  notes?: string;
+}
+
+export interface ApproveWarrantyClaimCommand {
+  approvedAmount: number;
+  resolutionType: WarrantyResolutionType;
+  notes?: string;
+}
+
+export interface ResolveWarrantyClaimCommand {
+  resolution: string;
+  resolutionType: WarrantyResolutionType;
+  paidAmount?: number;
+  replacementProductId?: string;
+  replacementSerialNumber?: string;
+  serviceOrderId?: string;
+  notes?: string;
 }
 
 export interface PagedResult<T> {

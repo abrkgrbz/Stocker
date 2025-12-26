@@ -683,6 +683,56 @@ public partial class MigrationService
                     });
                 }
 
+                // Check Sales module migrations if tenant has Sales access
+                List<string> salesPendingMigrations = new();
+                List<string> salesAppliedMigrations = new();
+
+                try
+                {
+                    var hasSalesAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "Sales", cancellationToken);
+
+                    if (hasSalesAccess)
+                    {
+                        var salesOptionsBuilder = new DbContextOptionsBuilder<SalesDbContext>();
+                        salesOptionsBuilder.UseNpgsql(tenant.ConnectionString);
+                        salesOptionsBuilder.ConfigureWarnings(warnings =>
+                            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                        var mockTenantService = new MockTenantService(tenant.Id, tenant.ConnectionString);
+
+                        using var salesDbContext = new SalesDbContext(
+                            salesOptionsBuilder.Options,
+                            mockTenantService);
+
+                        var salesPending = await salesDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                        var salesApplied = await salesDbContext.Database.GetAppliedMigrationsAsync(cancellationToken);
+
+                        salesPendingMigrations = salesPending.ToList();
+                        salesAppliedMigrations = salesApplied.ToList();
+                    }
+                }
+                catch (Exception salesEx)
+                {
+                    _logger.LogWarning(salesEx, "Failed to check Sales migrations for tenant {TenantId}", tenant.Id);
+                }
+
+                if (salesPendingMigrations.Any())
+                {
+                    allPendingMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Sales",
+                        Migrations = salesPendingMigrations
+                    });
+                }
+                if (salesAppliedMigrations.Any())
+                {
+                    allAppliedMigrations.Add(new MigrationModuleDto
+                    {
+                        Module = "Sales",
+                        Migrations = salesAppliedMigrations
+                    });
+                }
+
                 results.Add(new TenantMigrationStatusDto
                 {
                     TenantId = tenant.Id,
@@ -690,7 +740,7 @@ public partial class MigrationService
                     TenantCode = tenant.Code,
                     PendingMigrations = allPendingMigrations,
                     AppliedMigrations = allAppliedMigrations,
-                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any() || inventoryPendingMigrations.Any() || hrPendingMigrations.Any()
+                    HasPendingMigrations = pendingList.Any() || crmPendingMigrations.Any() || inventoryPendingMigrations.Any() || hrPendingMigrations.Any() || salesPendingMigrations.Any()
                 });
             }
             catch (Exception ex)
@@ -921,6 +971,62 @@ public partial class MigrationService
         {
             _logger.LogError(hrEx, "Error applying HR migrations for tenant {TenantId}. Continuing...", tenant.Id);
             // Don't fail the overall migration if HR migrations fail
+        }
+
+        // Check Sales module migrations if tenant has Sales access
+        List<string> salesPendingMigrations = new();
+        try
+        {
+            var hasSalesAccess = await tenantModuleService.HasModuleAccessAsync(tenant.Id, "Sales", cancellationToken);
+            _logger.LogWarning("DEBUG ApplyMigration: Tenant {TenantId} has Sales access: {HasSalesAccess}", tenant.Id, hasSalesAccess);
+
+            if (hasSalesAccess)
+            {
+                _logger.LogInformation("Tenant {TenantId} has Sales module access. Checking Sales migrations...", tenant.Id);
+
+                var salesOptionsBuilder = new DbContextOptionsBuilder<SalesDbContext>();
+                salesOptionsBuilder.UseNpgsql(tenant.ConnectionString.Value, sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(SalesDbContext).Assembly.FullName);
+                    sqlOptions.CommandTimeout(30);
+                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+                });
+                salesOptionsBuilder.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
+                var mockTenantServiceSales = new MockTenantService(tenant.Id, tenant.ConnectionString.Value);
+
+                using var salesDbContext = new SalesDbContext(
+                    salesOptionsBuilder.Options,
+                    mockTenantServiceSales);
+
+                var salesPending = await salesDbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+                salesPendingMigrations = salesPending.ToList();
+
+                _logger.LogWarning("DEBUG ApplyMigration: Sales pending migrations count: {Count}, Migrations: {Migrations}",
+                    salesPendingMigrations.Count, string.Join(", ", salesPendingMigrations));
+
+                if (salesPendingMigrations.Any())
+                {
+                    _logger.LogInformation("Applying {Count} Sales migrations to tenant {TenantId}", salesPendingMigrations.Count, tenant.Id);
+                    await salesDbContext.Database.MigrateAsync(cancellationToken);
+                    allAppliedMigrations.AddRange(salesPendingMigrations.Select(m => $"Sales:{m}"));
+                    _logger.LogInformation("Sales migrations applied successfully. Applied: {Migrations}", string.Join(", ", salesPendingMigrations));
+                }
+                else
+                {
+                    _logger.LogInformation("No Sales migrations to apply for tenant {TenantId}", tenant.Id);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Tenant {TenantId} does not have Sales module access. Sales migrations skipped.", tenant.Id);
+            }
+        }
+        catch (Exception salesEx)
+        {
+            _logger.LogError(salesEx, "Error applying Sales migrations for tenant {TenantId}. Continuing...", tenant.Id);
+            // Don't fail the overall migration if Sales migrations fail
         }
 
         // Return result

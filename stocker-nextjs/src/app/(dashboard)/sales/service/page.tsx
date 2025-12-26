@@ -5,9 +5,10 @@
  * Kanban board for managing repair and maintenance tickets
  */
 
-import React, { useState } from 'react';
-import { Modal, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Modal, message, Spin } from 'antd';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
 import {
   Wrench,
@@ -18,41 +19,25 @@ import {
   Package,
   Phone,
   Calendar,
-  ChevronRight,
   GripVertical,
   Plus,
+  RefreshCw,
+  FileText,
+  DollarSign,
 } from 'lucide-react';
 import {
   PageContainer,
   ListPageHeader,
-  Card,
   Badge,
 } from '@/components/ui/enterprise-page';
 import { ToolOutlined } from '@ant-design/icons';
+import { SalesService, ServiceOrderListDto, ServiceOrderDto, ServiceOrderStatisticsDto } from '@/lib/api/services/sales.service';
 
+dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
 // Types
-type ServiceStatus = 'NewRequest' | 'TechnicianAssigned' | 'InRepair' | 'Completed';
-type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
-
-interface ServiceOrder {
-  id: string;
-  ticketNumber: string;
-  productName: string;
-  productSku: string;
-  customerName: string;
-  customerPhone: string;
-  issue: string;
-  priority: Priority;
-  status: ServiceStatus;
-  technicianId: string | null;
-  technicianName: string | null;
-  technicianAvatar: string | null;
-  createdAt: string;
-  estimatedCompletion: string | null;
-  notes: string;
-}
+type ServiceStatus = 'Received' | 'Diagnosing' | 'WaitingParts' | 'InProgress' | 'Testing' | 'Completed' | 'Delivered' | 'Cancelled';
 
 interface KanbanColumn {
   id: ServiceStatus;
@@ -62,24 +47,24 @@ interface KanbanColumn {
   borderColor: string;
 }
 
-// Kanban columns configuration
+// Kanban columns configuration - mapping to backend statuses
 const kanbanColumns: KanbanColumn[] = [
   {
-    id: 'NewRequest',
+    id: 'Received',
     title: 'Yeni Talep',
     color: 'text-blue-700',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
   },
   {
-    id: 'TechnicianAssigned',
-    title: 'Teknisyen Atandı',
+    id: 'Diagnosing',
+    title: 'Teşhis',
     color: 'text-amber-700',
     bgColor: 'bg-amber-50',
     borderColor: 'border-amber-200',
   },
   {
-    id: 'InRepair',
+    id: 'InProgress',
     title: 'Onarımda',
     color: 'text-purple-700',
     bgColor: 'bg-purple-50',
@@ -94,160 +79,54 @@ const kanbanColumns: KanbanColumn[] = [
   },
 ];
 
-// Mock technicians
-const technicians = [
-  { id: 't1', name: 'Ahmet Yılmaz', avatar: 'AY' },
-  { id: 't2', name: 'Mehmet Kaya', avatar: 'MK' },
-  { id: 't3', name: 'Ali Demir', avatar: 'AD' },
-];
-
-// Mock data
-const mockServiceOrders: ServiceOrder[] = [
-  {
-    id: '1',
-    ticketNumber: 'SRV-2024-001',
-    productName: 'Samsung Galaxy S24 Ultra',
-    productSku: 'SAM-S24U-256',
-    customerName: 'Ahmet Yıldırım',
-    customerPhone: '+90 532 111 2233',
-    issue: 'Ekran kırığı - Sol alt köşe',
-    priority: 'High',
-    status: 'NewRequest',
-    technicianId: null,
-    technicianName: null,
-    technicianAvatar: null,
-    createdAt: '2024-12-24T10:30:00',
-    estimatedCompletion: null,
-    notes: 'Müşteri acil tamir istiyor',
-  },
-  {
-    id: '2',
-    ticketNumber: 'SRV-2024-002',
-    productName: 'iPhone 15 Pro Max',
-    productSku: 'APL-15PM-512',
-    customerName: 'Zeynep Arslan',
-    customerPhone: '+90 533 222 3344',
-    issue: 'Batarya şişmesi',
-    priority: 'Urgent',
-    status: 'NewRequest',
-    technicianId: null,
-    technicianName: null,
-    technicianAvatar: null,
-    createdAt: '2024-12-24T09:15:00',
-    estimatedCompletion: null,
-    notes: 'Güvenlik riski - öncelikli işlem',
-  },
-  {
-    id: '3',
-    ticketNumber: 'SRV-2024-003',
-    productName: 'MacBook Pro 14"',
-    productSku: 'APL-MBP14-M3',
-    customerName: 'Can Özkan',
-    customerPhone: '+90 534 333 4455',
-    issue: 'Klavye tuşları çalışmıyor',
-    priority: 'Medium',
-    status: 'TechnicianAssigned',
-    technicianId: 't1',
-    technicianName: 'Ahmet Yılmaz',
-    technicianAvatar: 'AY',
-    createdAt: '2024-12-23T14:00:00',
-    estimatedCompletion: '2024-12-26T18:00:00',
-    notes: 'Parça siparişi verildi',
-  },
-  {
-    id: '4',
-    ticketNumber: 'SRV-2024-004',
-    productName: 'Sony PlayStation 5',
-    productSku: 'SNY-PS5-DISC',
-    customerName: 'Emre Demir',
-    customerPhone: '+90 535 444 5566',
-    issue: 'Disk okuyucu arızası',
-    priority: 'Low',
-    status: 'TechnicianAssigned',
-    technicianId: 't2',
-    technicianName: 'Mehmet Kaya',
-    technicianAvatar: 'MK',
-    createdAt: '2024-12-22T11:30:00',
-    estimatedCompletion: '2024-12-27T18:00:00',
-    notes: '',
-  },
-  {
-    id: '5',
-    ticketNumber: 'SRV-2024-005',
-    productName: 'Dell XPS 15',
-    productSku: 'DEL-XPS15-I9',
-    customerName: 'Ayşe Kara',
-    customerPhone: '+90 536 555 6677',
-    issue: 'Fan gürültüsü ve aşırı ısınma',
-    priority: 'Medium',
-    status: 'InRepair',
-    technicianId: 't1',
-    technicianName: 'Ahmet Yılmaz',
-    technicianAvatar: 'AY',
-    createdAt: '2024-12-21T09:00:00',
-    estimatedCompletion: '2024-12-25T12:00:00',
-    notes: 'Termal macun değişimi yapılıyor',
-  },
-  {
-    id: '6',
-    ticketNumber: 'SRV-2024-006',
-    productName: 'Apple Watch Series 9',
-    productSku: 'APL-AW9-45',
-    customerName: 'Murat Şahin',
-    customerPhone: '+90 537 666 7788',
-    issue: 'Ekran dokunmatik tepkisiz',
-    priority: 'High',
-    status: 'InRepair',
-    technicianId: 't3',
-    technicianName: 'Ali Demir',
-    technicianAvatar: 'AD',
-    createdAt: '2024-12-20T16:45:00',
-    estimatedCompletion: '2024-12-25T18:00:00',
-    notes: 'Yeni ekran takıldı, test ediliyor',
-  },
-  {
-    id: '7',
-    ticketNumber: 'SRV-2024-007',
-    productName: 'Samsung Galaxy Tab S9',
-    productSku: 'SAM-TABS9-256',
-    customerName: 'Deniz Yıldız',
-    customerPhone: '+90 538 777 8899',
-    issue: 'Şarj portu arızası',
-    priority: 'Low',
-    status: 'Completed',
-    technicianId: 't2',
-    technicianName: 'Mehmet Kaya',
-    technicianAvatar: 'MK',
-    createdAt: '2024-12-18T10:00:00',
-    estimatedCompletion: '2024-12-24T14:00:00',
-    notes: 'Başarıyla tamamlandı - müşteri bilgilendirildi',
-  },
-  {
-    id: '8',
-    ticketNumber: 'SRV-2024-008',
-    productName: 'LG OLED TV 55"',
-    productSku: 'LG-OLED55-C3',
-    customerName: 'Elif Aksoy',
-    customerPhone: '+90 539 888 9900',
-    issue: 'Panel burn-in sorunu',
-    priority: 'Medium',
-    status: 'Completed',
-    technicianId: 't1',
-    technicianName: 'Ahmet Yılmaz',
-    technicianAvatar: 'AY',
-    createdAt: '2024-12-15T13:30:00',
-    estimatedCompletion: '2024-12-23T16:00:00',
-    notes: 'Panel değişimi yapıldı, 1 yıl garanti verildi',
-  },
-];
+// Map backend status to kanban column
+const mapStatusToColumn = (status: string): ServiceStatus => {
+  const statusMap: Record<string, ServiceStatus> = {
+    'Received': 'Received',
+    'Diagnosing': 'Diagnosing',
+    'WaitingParts': 'InProgress', // Group WaitingParts with InProgress
+    'InProgress': 'InProgress',
+    'Testing': 'InProgress', // Group Testing with InProgress
+    'Completed': 'Completed',
+    'Delivered': 'Completed', // Group Delivered with Completed
+    'Cancelled': 'Completed', // Show Cancelled in Completed column
+  };
+  return statusMap[status] || 'Received';
+};
 
 export default function ServiceOrdersPage() {
-  const [orders, setOrders] = useState<ServiceOrder[]>(mockServiceOrders);
-  const [selectedOrder, setSelectedOrder] = useState<ServiceOrder | null>(null);
+  const [orders, setOrders] = useState<ServiceOrderListDto[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<ServiceOrderDto | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [draggedOrder, setDraggedOrder] = useState<ServiceOrder | null>(null);
+  const [draggedOrder, setDraggedOrder] = useState<ServiceOrderListDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [statistics, setStatistics] = useState<ServiceOrderStatisticsDto | null>(null);
 
-  const getPriorityConfig = (priority: Priority) => {
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [ordersResult, statsResult] = await Promise.all([
+        SalesService.getServiceOrders({ pageSize: 100 }),
+        SalesService.getServiceOrderStatistics().catch(() => null),
+      ]);
+      setOrders(ordersResult.items);
+      if (statsResult) {
+        setStatistics(statsResult);
+      }
+    } catch (error) {
+      console.error('Error fetching service orders:', error);
+      message.error('Servis talepleri yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case 'Urgent':
         return {
@@ -261,11 +140,11 @@ export default function ServiceOrdersPage() {
           icon: <AlertTriangle className="w-3 h-3" />,
           label: 'Yüksek',
         };
-      case 'Medium':
+      case 'Normal':
         return {
           color: 'bg-amber-100 text-amber-700 border-amber-200',
           icon: null,
-          label: 'Orta',
+          label: 'Normal',
         };
       case 'Low':
         return {
@@ -273,14 +152,20 @@ export default function ServiceOrdersPage() {
           icon: null,
           label: 'Düşük',
         };
+      default:
+        return {
+          color: 'bg-slate-100 text-slate-600 border-slate-200',
+          icon: null,
+          label: priority,
+        };
     }
   };
 
-  const getOrdersByStatus = (status: ServiceStatus) => {
-    return orders.filter((order) => order.status === status);
+  const getOrdersByStatus = (columnStatus: ServiceStatus) => {
+    return orders.filter((order) => mapStatusToColumn(order.status) === columnStatus);
   };
 
-  const handleDragStart = (e: React.DragEvent, order: ServiceOrder) => {
+  const handleDragStart = (e: React.DragEvent, order: ServiceOrderListDto) => {
     setDraggedOrder(order);
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -290,56 +175,96 @@ export default function ServiceOrdersPage() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent, targetStatus: ServiceStatus) => {
+  const handleDrop = async (e: React.DragEvent, targetStatus: ServiceStatus) => {
     e.preventDefault();
-    if (draggedOrder && draggedOrder.status !== targetStatus) {
-      // Validate status transitions
-      const validTransitions: Record<ServiceStatus, ServiceStatus[]> = {
-        NewRequest: ['TechnicianAssigned'],
-        TechnicianAssigned: ['NewRequest', 'InRepair'],
-        InRepair: ['TechnicianAssigned', 'Completed'],
-        Completed: ['InRepair'],
-      };
+    if (!draggedOrder) return;
 
-      if (!validTransitions[draggedOrder.status].includes(targetStatus)) {
-        message.warning('Bu durum geçişi izin verilmiyor');
-        setDraggedOrder(null);
-        return;
-      }
-
-      // Auto-assign technician if moving to TechnicianAssigned
-      let updatedOrder = { ...draggedOrder, status: targetStatus };
-      if (targetStatus === 'TechnicianAssigned' && !draggedOrder.technicianId) {
-        const randomTech = technicians[Math.floor(Math.random() * technicians.length)];
-        updatedOrder = {
-          ...updatedOrder,
-          technicianId: randomTech.id,
-          technicianName: randomTech.name,
-          technicianAvatar: randomTech.avatar,
-          estimatedCompletion: dayjs().add(3, 'day').format('YYYY-MM-DDTHH:mm:ss'),
-        };
-      }
-
-      setOrders((prev) =>
-        prev.map((o) => (o.id === draggedOrder.id ? updatedOrder : o))
-      );
-      message.success(`Servis talebi "${targetStatus}" durumuna taşındı`);
+    const currentColumn = mapStatusToColumn(draggedOrder.status);
+    if (currentColumn === targetStatus) {
+      setDraggedOrder(null);
+      return;
     }
+
+    // Validate status transitions
+    const validTransitions: Record<ServiceStatus, ServiceStatus[]> = {
+      Received: ['Diagnosing'],
+      Diagnosing: ['Received', 'InProgress'],
+      InProgress: ['Diagnosing', 'Completed'],
+      Completed: ['InProgress'],
+      WaitingParts: ['InProgress'],
+      Testing: ['InProgress', 'Completed'],
+      Delivered: [],
+      Cancelled: [],
+    };
+
+    if (!validTransitions[currentColumn]?.includes(targetStatus)) {
+      message.warning('Bu durum geçişi izin verilmiyor');
+      setDraggedOrder(null);
+      return;
+    }
+
+    try {
+      // Use appropriate API methods based on target status
+      if (targetStatus === 'InProgress') {
+        await SalesService.startServiceOrder(draggedOrder.id);
+      } else if (targetStatus === 'Completed') {
+        await SalesService.completeServiceOrder(draggedOrder.id, {});
+      }
+      message.success(`Servis talebi "${targetStatus}" durumuna taşındı`);
+      fetchData(); // Refresh the data
+    } catch (error) {
+      console.error('Error updating service order status:', error);
+      message.error('Durum güncellenirken hata oluştu');
+    }
+
     setDraggedOrder(null);
   };
 
-  const handleCardClick = (order: ServiceOrder) => {
-    setSelectedOrder(order);
-    setDetailModalOpen(true);
+  const handleCardClick = async (order: ServiceOrderListDto) => {
+    try {
+      setDetailLoading(true);
+      setDetailModalOpen(true);
+      const orderDetail = await SalesService.getServiceOrder(order.id);
+      setSelectedOrder(orderDetail);
+    } catch (error) {
+      console.error('Error fetching service order detail:', error);
+      message.error('Servis detayı yüklenirken hata oluştu');
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
-  // Calculate stats
-  const totalOrders = orders.length;
+  // Calculate stats from statistics or orders
+  const totalOrders = statistics?.totalCount ?? orders.length;
   const urgentOrders = orders.filter((o) => o.priority === 'Urgent' || o.priority === 'High').length;
-  const inProgressOrders = orders.filter((o) => o.status === 'InRepair').length;
-  const completedToday = orders.filter(
-    (o) => o.status === 'Completed' && dayjs(o.estimatedCompletion).isSame(dayjs(), 'day')
+  const inProgressOrders = statistics?.inProgressCount ?? orders.filter((o) =>
+    o.status === 'InProgress' || o.status === 'Diagnosing' || o.status === 'WaitingParts' || o.status === 'Testing'
   ).length;
+  const completedOrders = statistics?.completedCount ?? orders.filter((o) => o.status === 'Completed').length;
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'default' | 'info' }> = {
+      Received: { label: 'Alındı', variant: 'info' },
+      Diagnosing: { label: 'Teşhis', variant: 'warning' },
+      WaitingParts: { label: 'Parça Bekleniyor', variant: 'warning' },
+      InProgress: { label: 'Devam Ediyor', variant: 'info' },
+      Testing: { label: 'Test', variant: 'info' },
+      Completed: { label: 'Tamamlandı', variant: 'success' },
+      Delivered: { label: 'Teslim Edildi', variant: 'success' },
+      Cancelled: { label: 'İptal', variant: 'error' },
+    };
+    return statusConfig[status] || { label: status, variant: 'default' as const };
+  };
+
+  if (loading) {
+    return (
+      <PageContainer maxWidth="full">
+        <div className="flex items-center justify-center h-96">
+          <Spin size="large" />
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer maxWidth="full">
@@ -349,10 +274,17 @@ export default function ServiceOrdersPage() {
         title="Servis Talepleri"
         description="Tamir ve bakım taleplerini yönetin"
         itemCount={totalOrders}
-        actions={
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-sm font-medium">
-            <Plus className="w-4 h-4" />
-            Yeni Talep
+        primaryAction={{
+          label: 'Yeni Talep',
+          onClick: () => {},
+          icon: <Plus className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={fetchData}
+            className="inline-flex items-center gap-2 px-3 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
           </button>
         }
       />
@@ -387,7 +319,7 @@ export default function ServiceOrdersPage() {
               <Wrench className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <div className="text-sm text-slate-500">Onarımda</div>
+              <div className="text-sm text-slate-500">Devam Eden</div>
               <div className="text-xl font-bold text-purple-600">{inProgressOrders}</div>
             </div>
           </div>
@@ -398,8 +330,8 @@ export default function ServiceOrdersPage() {
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <div className="text-sm text-slate-500">Bugün Biten</div>
-              <div className="text-xl font-bold text-emerald-600">{completedToday}</div>
+              <div className="text-sm text-slate-500">Tamamlanan</div>
+              <div className="text-xl font-bold text-emerald-600">{completedOrders}</div>
             </div>
           </div>
         </div>
@@ -448,7 +380,7 @@ export default function ServiceOrdersPage() {
                         <div className="flex items-center gap-2">
                           <GripVertical className="w-4 h-4 text-slate-300" />
                           <span className="text-xs font-mono text-slate-500">
-                            {order.ticketNumber}
+                            {order.serviceOrderNumber}
                           </span>
                         </div>
                         <div
@@ -461,24 +393,24 @@ export default function ServiceOrdersPage() {
 
                       {/* Product Name */}
                       <h4 className="font-medium text-slate-900 text-sm mb-1 line-clamp-1">
-                        {order.productName}
+                        {order.productName || 'Ürün Belirtilmedi'}
                       </h4>
 
-                      {/* Issue */}
-                      <p className="text-xs text-slate-500 mb-3 line-clamp-2">
-                        {order.issue}
+                      {/* Customer */}
+                      <p className="text-xs text-slate-500 mb-3 line-clamp-1">
+                        {order.customerName}
                       </p>
 
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                        {/* Technician Avatar */}
-                        {order.technicianAvatar ? (
+                        {/* Technician */}
+                        {order.technicianName ? (
                           <div className="flex items-center gap-1.5">
                             <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-medium">
-                              {order.technicianAvatar}
+                              {order.technicianName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                             </div>
                             <span className="text-xs text-slate-500 hidden sm:inline">
-                              {order.technicianName?.split(' ')[0]}
+                              {order.technicianName.split(' ')[0]}
                             </span>
                           </div>
                         ) : (
@@ -521,39 +453,55 @@ export default function ServiceOrdersPage() {
           </div>
         }
         open={detailModalOpen}
-        onCancel={() => setDetailModalOpen(false)}
+        onCancel={() => {
+          setDetailModalOpen(false);
+          setSelectedOrder(null);
+        }}
         footer={null}
-        width={600}
+        width={700}
       >
-        {selectedOrder && (
+        {detailLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        ) : selectedOrder ? (
           <div className="space-y-4">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-sm font-mono text-slate-500 mb-1">
-                  {selectedOrder.ticketNumber}
+                  {selectedOrder.serviceOrderNumber}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  {selectedOrder.productName}
+                  {selectedOrder.productName || 'Ürün Belirtilmedi'}
                 </h3>
-                <div className="text-sm text-slate-500">{selectedOrder.productSku}</div>
+                {selectedOrder.serialNumber && (
+                  <div className="text-sm text-slate-500">SN: {selectedOrder.serialNumber}</div>
+                )}
               </div>
-              <Badge
-                variant={
-                  selectedOrder.priority === 'Urgent' || selectedOrder.priority === 'High'
-                    ? 'error'
-                    : 'default'
-                }
-              >
-                {getPriorityConfig(selectedOrder.priority).label} Öncelik
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={getStatusBadge(selectedOrder.status).variant}>
+                  {getStatusBadge(selectedOrder.status).label}
+                </Badge>
+                <Badge
+                  variant={
+                    selectedOrder.priority === 'Urgent' || selectedOrder.priority === 'High'
+                      ? 'error'
+                      : 'default'
+                  }
+                >
+                  {getPriorityConfig(selectedOrder.priority).label}
+                </Badge>
+              </div>
             </div>
 
             {/* Issue Description */}
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-sm font-medium text-slate-700 mb-1">Sorun Açıklaması</div>
-              <p className="text-slate-600">{selectedOrder.issue}</p>
-            </div>
+            {selectedOrder.reportedIssue && (
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="text-sm font-medium text-slate-700 mb-1">Bildirilen Sorun</div>
+                <p className="text-slate-600">{selectedOrder.reportedIssue}</p>
+              </div>
+            )}
 
             {/* Customer Info */}
             <div className="grid grid-cols-2 gap-4">
@@ -569,7 +517,7 @@ export default function ServiceOrdersPage() {
                   <Phone className="w-4 h-4" />
                   <span className="text-xs">Telefon</span>
                 </div>
-                <div className="font-medium text-slate-900">{selectedOrder.customerPhone}</div>
+                <div className="font-medium text-slate-900">{selectedOrder.customerPhone || '-'}</div>
               </div>
             </div>
 
@@ -578,12 +526,12 @@ export default function ServiceOrdersPage() {
               <div className="bg-white border border-slate-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-slate-500 mb-1">
                   <Wrench className="w-4 h-4" />
-                  <span className="text-xs">Teknisyen</span>
+                  <span className="text-xs">Atanan Teknisyen</span>
                 </div>
                 {selectedOrder.technicianName ? (
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-medium">
-                      {selectedOrder.technicianAvatar}
+                      {selectedOrder.technicianName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </div>
                     <span className="font-medium text-slate-900">
                       {selectedOrder.technicianName}
@@ -596,11 +544,11 @@ export default function ServiceOrdersPage() {
               <div className="bg-white border border-slate-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-slate-500 mb-1">
                   <Calendar className="w-4 h-4" />
-                  <span className="text-xs">Tahmini Tamamlanma</span>
+                  <span className="text-xs">Planlanan Tarih</span>
                 </div>
-                {selectedOrder.estimatedCompletion ? (
+                {selectedOrder.scheduledDate ? (
                   <div className="font-medium text-slate-900">
-                    {dayjs(selectedOrder.estimatedCompletion).format('DD MMM YYYY, HH:mm')}
+                    {dayjs(selectedOrder.scheduledDate).format('DD MMM YYYY, HH:mm')}
                   </div>
                 ) : (
                   <span className="text-slate-400">Belirlenmedi</span>
@@ -608,27 +556,139 @@ export default function ServiceOrdersPage() {
               </div>
             </div>
 
-            {/* Notes */}
-            {selectedOrder.notes && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <div className="text-sm font-medium text-amber-700 mb-1">Notlar</div>
-                <p className="text-amber-800 text-sm">{selectedOrder.notes}</p>
+            {/* Cost Information */}
+            {(selectedOrder.laborCost > 0 || selectedOrder.partsCost > 0) && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-xs">İşçilik</span>
+                  </div>
+                  <div className="font-medium text-slate-900">
+                    {selectedOrder.laborCost.toLocaleString('tr-TR')} ₺
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-slate-500 mb-1">
+                    <Package className="w-4 h-4" />
+                    <span className="text-xs">Parça</span>
+                  </div>
+                  <div className="font-medium text-slate-900">
+                    {selectedOrder.partsCost.toLocaleString('tr-TR')} ₺
+                  </div>
+                </div>
+                <div className="bg-white border border-emerald-200 rounded-lg p-3 bg-emerald-50/50">
+                  <div className="flex items-center gap-2 text-emerald-600 mb-1">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-xs">Toplam</span>
+                  </div>
+                  <div className="font-medium text-emerald-700">
+                    {selectedOrder.totalAmount.toLocaleString('tr-TR')} ₺
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Diagnosis Notes */}
+            {selectedOrder.diagnosisNotes && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="text-sm font-medium text-blue-700 mb-1">Teşhis Notları</div>
+                <p className="text-blue-800 text-sm">{selectedOrder.diagnosisNotes}</p>
+              </div>
+            )}
+
+            {/* Repair Notes */}
+            {selectedOrder.repairNotes && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <div className="text-sm font-medium text-emerald-700 mb-1">Onarım Notları</div>
+                <p className="text-emerald-800 text-sm">{selectedOrder.repairNotes}</p>
+              </div>
+            )}
+
+            {/* Service Items */}
+            {selectedOrder.items && selectedOrder.items.length > 0 && (
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                  <span className="text-sm font-medium text-slate-700">Servis Kalemleri</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {selectedOrder.items.map((item, index) => (
+                    <div key={item.id || index} className="px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-slate-900">{item.name}</div>
+                        <div className="text-xs text-slate-500">
+                          {item.itemType} • Miktar: {item.quantity}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium text-slate-900">
+                          {item.totalPrice.toLocaleString('tr-TR')} ₺
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Service Notes */}
+            {selectedOrder.notes && selectedOrder.notes.length > 0 && (
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm font-medium text-slate-700">Notlar</span>
+                  </div>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {selectedOrder.notes.map((note, index) => (
+                    <div key={note.id || index} className="px-4 py-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-500">{note.type}</span>
+                        <span className="text-xs text-slate-400">
+                          {dayjs(note.createdAt).format('DD MMM YYYY, HH:mm')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-700">{note.content}</p>
+                      {note.createdByName && (
+                        <div className="text-xs text-slate-400 mt-1">- {note.createdByName}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Timeline */}
             <div className="border-t border-slate-100 pt-4">
               <div className="text-sm font-medium text-slate-700 mb-2">Zaman Çizelgesi</div>
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Clock className="w-4 h-4" />
-                <span>Oluşturulma: {dayjs(selectedOrder.createdAt).format('DD MMM YYYY, HH:mm')}</span>
+              <div className="space-y-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>Oluşturulma: {dayjs(selectedOrder.createdAt).format('DD MMM YYYY, HH:mm')}</span>
+                </div>
+                {selectedOrder.startedDate && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>Başlangıç: {dayjs(selectedOrder.startedDate).format('DD MMM YYYY, HH:mm')}</span>
+                  </div>
+                )}
+                {selectedOrder.completedDate && (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span>Tamamlanma: {dayjs(selectedOrder.completedDate).format('DD MMM YYYY, HH:mm')}</span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
               <button
-                onClick={() => setDetailModalOpen(false)}
+                onClick={() => {
+                  setDetailModalOpen(false);
+                  setSelectedOrder(null);
+                }}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 text-sm font-medium"
               >
                 Kapat
@@ -638,7 +698,7 @@ export default function ServiceOrdersPage() {
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </Modal>
     </PageContainer>
   );
