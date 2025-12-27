@@ -307,7 +307,7 @@ export default function JobPostingDetailPage() {
             {/* Location */}
             <Card className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <MapPinIcon className="w-4 h-4" className="text-lg" />
+                <MapPinIcon className="w-4 h-4 text-lg" />
                 <Title level={5} className="m-0">Konum</Title>
               </div>
               <div className="space-y-2">
@@ -336,7 +336,7 @@ export default function JobPostingDetailPage() {
             {jobPosting.showSalary && (jobPosting.salaryMin || jobPosting.salaryMax) && (
               <Card className="mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <CurrencyDollarIcon className="w-4 h-4" className="text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4 text-lg" />
                   <Title level={5} className="m-0">Maaş Bilgisi</Title>
                 </div>
                 <div className="space-y-2">
@@ -357,7 +357,7 @@ export default function JobPostingDetailPage() {
             {/* Dates */}
             <Card className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <ClockIcon className="w-4 h-4" className="text-lg" />
+                <ClockIcon className="w-4 h-4 text-lg" />
                 <Title level={5} className="m-0">Tarihler</Title>
               </div>
               <Timeline

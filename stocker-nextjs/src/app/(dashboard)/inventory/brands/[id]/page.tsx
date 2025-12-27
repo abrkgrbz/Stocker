@@ -63,7 +63,7 @@ export default function BrandDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <TagIcon className="w-4 h-4" className="text-white text-lg" />
+                <TagIcon className="w-4 h-4 text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export default function BrandDetailPage() {
               {brand.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
+                    <DocumentTextIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Açıklama</p>
                   </div>
                   <p className="text-sm text-slate-700">{brand.description}</p>
@@ -172,7 +172,7 @@ export default function BrandDetailPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <GlobeAltIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                    <GlobeAltIcon className="w-4 h-4 text-slate-600 text-lg" />
                   </div>
                   <div className="flex-1">
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -201,7 +201,7 @@ export default function BrandDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -211,7 +211,7 @@ export default function BrandDetailPage() {
                 {brand.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

@@ -144,7 +144,7 @@ export default function NewLotBatchPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ShoppingBagIcon className="w-4 h-4" className="mr-1" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4 mr-1" /> Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"
@@ -182,7 +182,7 @@ export default function NewLotBatchPage() {
                   <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <InboxIcon className="w-4 h-4" className="text-white text-xl" />
+                        <InboxIcon className="w-4 h-4 text-white text-xl" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
@@ -216,7 +216,7 @@ export default function NewLotBatchPage() {
               {/* Dates */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler
+                  <CalendarIcon className="w-4 h-4 mr-1" /> Tarihler
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -316,7 +316,7 @@ export default function NewLotBatchPage() {
                     key: 'certificate',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <ShieldCheckIcon className="w-4 h-4" className="mr-1" /> Sertifika Bilgileri
+                        <ShieldCheckIcon className="w-4 h-4 mr-1" /> Sertifika Bilgileri
                       </Text>
                     ),
                     children: (

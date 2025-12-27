@@ -279,7 +279,7 @@ export default function HRDashboardPage() {
               <span className="text-xs text-slate-400">{activeEmployees} aktif</span>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <UserGroupIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <UserGroupIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function HRDashboardPage() {
               <div className="text-2xl font-semibold text-slate-900">{positionsLoading ? '-' : positions.length}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <IdentificationIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <IdentificationIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>
@@ -381,22 +381,22 @@ export default function HRDashboardPage() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <CheckCircleIcon className="w-4 h-4" className="text-green-500 text-lg mb-1" />
+            <CheckCircleIcon className="w-4 h-4 text-green-500 text-lg mb-1" />
             <div className="text-xl font-semibold text-slate-900">{presentToday}</div>
             <div className="text-xs text-slate-500">Mevcut</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ExclamationTriangleIcon className="w-4 h-4" className="text-red-500 text-lg mb-1" />
+            <ExclamationTriangleIcon className="w-4 h-4 text-red-500 text-lg mb-1" />
             <div className="text-xl font-semibold text-slate-900">{absentToday}</div>
             <div className="text-xs text-slate-500">Yok</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ClockIcon className="w-4 h-4" className="text-orange-500 text-lg mb-1" />
+            <ClockIcon className="w-4 h-4 text-orange-500 text-lg mb-1" />
             <div className="text-xl font-semibold text-slate-900">{lateToday}</div>
             <div className="text-xs text-slate-500">Geç Kalan</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <UserGroupIcon className="w-4 h-4" className="text-blue-500 text-lg mb-1" />
+            <UserGroupIcon className="w-4 h-4 text-blue-500 text-lg mb-1" />
             <div className="text-xl font-semibold text-slate-900">
               {activeEmployees > 0 ? ((presentToday + lateToday) / activeEmployees * 100).toFixed(1) : 0}%
             </div>
@@ -411,7 +411,7 @@ export default function HRDashboardPage() {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <BuildingLibraryIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <BuildingLibraryIcon className="w-4 h-4 text-blue-500" />
             </div>
             <h3 className="text-base font-semibold text-slate-900">Departman Dağılımı</h3>
           </div>
@@ -434,7 +434,7 @@ export default function HRDashboardPage() {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <UserIcon className="w-4 h-4 text-violet-500" />
             </div>
             <h3 className="text-base font-semibold text-slate-900">Çalışma Türü Dağılımı</h3>
           </div>
@@ -544,7 +544,7 @@ export default function HRDashboardPage() {
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50">
-                          <GiftIcon className="w-4 h-4" className="text-red-500 text-sm" />
+                          <GiftIcon className="w-4 h-4 text-red-500 text-sm" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{holiday.name}</div>
@@ -570,7 +570,7 @@ export default function HRDashboardPage() {
         <Card className="mt-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <BellIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <BellIcon className="w-4 h-4 text-violet-500" />
             </div>
             <h3 className="text-base font-semibold text-slate-900">Sabitlenmiş Duyurular</h3>
           </div>
@@ -588,7 +588,7 @@ export default function HRDashboardPage() {
                 <List.Item className="!px-0">
                   <div className="flex items-start gap-3 w-full">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50 shrink-0">
-                      <BellIcon className="w-4 h-4" className="text-purple-500" />
+                      <BellIcon className="w-4 h-4 text-purple-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <Link href={`/hr/announcements/${announcement.id}`}>

@@ -90,7 +90,7 @@ export default function EditJobApplicationPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <DocumentTextIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Is Basvurusu</p>
                   <p className="text-sm text-white/60">Aday degerlendirme</p>
                 </div>
@@ -105,7 +105,7 @@ export default function EditJobApplicationPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Aday Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Aday Bilgileri</Text>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="firstName" rules={[{ required: true }]} className="mb-3"><Input placeholder="Ad" variant="filled" /></Form.Item></Col>
                   <Col span={12}><Form.Item name="lastName" rules={[{ required: true }]} className="mb-3"><Input placeholder="Soyad" variant="filled" /></Form.Item></Col>

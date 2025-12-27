@@ -104,7 +104,7 @@ export default function UnitsPage() {
       render: (baseUnitName: string, record) => (
         baseUnitName ? (
           <div className="flex items-center gap-2">
-            <LinkIcon className="w-4 h-4" className="text-slate-400" />
+            <LinkIcon className="w-4 h-4 text-slate-400" />
             <div>
               <div className="text-sm text-slate-700">{baseUnitName}</div>
               <div className="text-xs text-slate-500">
@@ -190,7 +190,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <CheckCircleIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{baseUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <LinkIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <LinkIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>
@@ -245,7 +245,7 @@ export default function UnitsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Birim ara... (ad, kod, sembol)"
-          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

@@ -198,7 +198,7 @@ export default function WorkLocationsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <MapPinIcon className="w-4 h-4" className="mr-2" />
+          <MapPinIcon className="w-4 h-4 mr-2" />
           Çalışma Lokasyonları
         </Title>
         <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-locations/new')}>

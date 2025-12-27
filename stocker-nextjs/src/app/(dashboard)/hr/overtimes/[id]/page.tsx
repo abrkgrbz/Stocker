@@ -185,7 +185,7 @@ export default function OvertimeDetailPage() {
             <Card className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <Title level={4} className="m-0">
-                  <ClockIcon className="w-4 h-4" className="mr-2" />
+                  <ClockIcon className="w-4 h-4 mr-2" />
                   Mesai Bilgileri
                 </Title>
                 <Tag color={statusInfo.color} className="text-base px-3 py-1">
@@ -249,7 +249,7 @@ export default function OvertimeDetailPage() {
             {(overtime.projectName || overtime.taskId || overtime.costCenter) && (
               <Card className="mb-6">
                 <Title level={4}>
-                  <DocumentTextIcon className="w-4 h-4" className="mr-2" />
+                  <DocumentTextIcon className="w-4 h-4 mr-2" />
                   Proje / Görev Bilgileri
                 </Title>
                 <Descriptions column={{ xs: 1, sm: 2 }} size="small">
@@ -279,7 +279,7 @@ export default function OvertimeDetailPage() {
               overtime.rejectionReason) && (
               <Card className="mb-6">
                 <Title level={4}>
-                  <UserIcon className="w-4 h-4" className="mr-2" />
+                  <UserIcon className="w-4 h-4 mr-2" />
                   Onay Bilgileri
                 </Title>
                 <Descriptions column={{ xs: 1, sm: 2 }} size="small">
@@ -330,7 +330,7 @@ export default function OvertimeDetailPage() {
             <Card className="mb-6">
               <div className="text-center py-4">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center mx-auto mb-3">
-                  <ClockIcon className="w-4 h-4" className="text-2xl text-white" />
+                  <ClockIcon className="w-4 h-4 text-2xl text-white" />
                 </div>
                 <Text strong className="text-lg block">
                   {overtime.employeeName}
@@ -368,7 +368,7 @@ export default function OvertimeDetailPage() {
             {!overtime.isCompensatoryTimeOff && (
               <Card className="mb-6">
                 <Title level={5}>
-                  <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
                   Ödeme Bilgileri
                 </Title>
                 <div className="space-y-3">

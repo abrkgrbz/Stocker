@@ -87,7 +87,7 @@ export default function Verify2FAPage() {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* Header */}
           <div style={{ textAlign: 'center' }}>
-            <ShieldCheckIcon className="w-4 h-4" style={{ fontSize: 48, color: '#1890ff' }} />
+            <ShieldCheckIcon className="w-12 h-12 text-blue-500" />
             <Title level={3} style={{ marginTop: 16, marginBottom: 8 }}>
               İki Faktörlü Doğrulama
             </Title>

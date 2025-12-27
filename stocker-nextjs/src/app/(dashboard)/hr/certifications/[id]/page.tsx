@@ -142,7 +142,7 @@ export default function CertificationDetailPage() {
             <Card className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <Title level={4} className="m-0">
-                  <TrophyIcon className="w-4 h-4" className="mr-2" />
+                  <TrophyIcon className="w-4 h-4 mr-2" />
                   Sertifika Bilgileri
                 </Title>
                 <Tag color={statusInfo.color} icon={statusInfo.icon} className="text-base px-3 py-1">
@@ -181,7 +181,7 @@ export default function CertificationDetailPage() {
             {certification.trainingRequired && (
               <Card className="mb-6">
                 <Title level={4}>
-                  <BookOpenIcon className="w-4 h-4" className="mr-2" />
+                  <BookOpenIcon className="w-4 h-4 mr-2" />
                   Eğitim Bilgileri
                 </Title>
                 <Row gutter={[16, 16]}>
@@ -331,7 +331,7 @@ export default function CertificationDetailPage() {
                 <div
                   className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-yellow-500 flex items-center justify-center mx-auto mb-3"
                 >
-                  <ShieldCheckIcon className="w-4 h-4" className="text-2xl text-white" />
+                  <ShieldCheckIcon className="w-4 h-4 text-2xl text-white" />
                 </div>
                 <Text strong className="text-lg block">
                   {certification.employeeName}
@@ -426,7 +426,7 @@ export default function CertificationDetailPage() {
             {(certification.certificationCost || certification.renewalCost) && (
               <Card className="mb-6">
                 <Title level={5}>
-                  <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
                   Maliyet
                 </Title>
                 <div className="space-y-3">

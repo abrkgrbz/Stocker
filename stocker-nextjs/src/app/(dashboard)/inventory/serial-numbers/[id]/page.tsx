@@ -361,7 +361,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <ShieldCheckIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
+                  <ShieldCheckIcon className="w-4 h-4 text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Garanti</p>
               </div>
@@ -379,7 +379,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CalendarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
+                  <CalendarIcon className="w-4 h-4 text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kalan Garanti
@@ -400,7 +400,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4" className="text-purple-600 text-lg" />
+                  <MapPinIcon className="w-4 h-4 text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Depo</p>
               </div>
@@ -475,7 +475,7 @@ export default function SerialNumberDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4" className="text-purple-600 text-xl" />
+                  <MapPinIcon className="w-4 h-4 text-purple-600 text-xl" />
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-slate-400 mb-1">Depo / Lokasyon</p>
@@ -546,7 +546,7 @@ export default function SerialNumberDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Üretim Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -557,7 +557,7 @@ export default function SerialNumberDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Teslim Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -569,7 +569,7 @@ export default function SerialNumberDetailPage() {
                 <div className="h-px bg-slate-100 my-2" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -590,7 +590,7 @@ export default function SerialNumberDetailPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4" className="text-slate-400" />
+                      <UserIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Müşteri ID</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -599,7 +599,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
+                      <DocumentTextIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Sipariş No</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -608,7 +608,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Satış Tarihi</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -619,7 +619,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <ShoppingCartIcon className="w-4 h-4" className="text-slate-400" />
+                      <ShoppingCartIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Satın Alma Siparişi</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

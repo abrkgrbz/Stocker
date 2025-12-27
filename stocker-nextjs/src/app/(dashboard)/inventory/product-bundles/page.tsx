@@ -278,7 +278,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <GiftIcon className="w-4 h-4" className="text-blue-500 text-lg" />
+              <GiftIcon className="w-4 h-4 text-blue-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Paket</Text>
@@ -289,7 +289,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-4 h-4" className="text-green-500 text-lg" />
+              <CheckCircleIcon className="w-4 h-4 text-green-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Aktif Paket</Text>
@@ -300,7 +300,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-4 h-4" className="text-purple-500 text-lg" />
+              <CheckCircleIcon className="w-4 h-4 text-purple-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Geçerli Paket</Text>
@@ -311,7 +311,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <GiftIcon className="w-4 h-4" className="text-orange-500 text-lg" />
+              <GiftIcon className="w-4 h-4 text-orange-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Değer</Text>
@@ -328,7 +328,7 @@ export default function ProductBundlesPage() {
         <Space wrap>
           <Input
             placeholder="Paket ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

@@ -273,7 +273,7 @@ export default function NewProductAttributePage() {
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: '#8b5cf615' }}
               >
-                <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+                <TagIcon className="w-4 h-4 text-violet-500" />
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-slate-800 m-0">Yeni Ürün Özelliği</h1>
@@ -311,7 +311,7 @@ export default function NewProductAttributePage() {
               {/* Attribute Type Selection */}
               <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TagIcon className="w-4 h-4" className="text-slate-400" />
+                  <TagIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Özellik Tipi
                   </span>
@@ -337,7 +337,7 @@ export default function NewProductAttributePage() {
               {/* Settings Toggles */}
               <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Cog6ToothIcon className="w-4 h-4" className="text-slate-400" />
+                  <Cog6ToothIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Ayarlar
                   </span>
@@ -360,7 +360,7 @@ export default function NewProductAttributePage() {
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <FunnelIcon className="w-4 h-4" className="text-blue-500" />
+                        <FunnelIcon className="w-4 h-4 text-blue-500" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-slate-700">Filtrelenebilir</div>
@@ -373,7 +373,7 @@ export default function NewProductAttributePage() {
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                        <EyeIcon className="w-4 h-4" className="text-green-500" />
+                        <EyeIcon className="w-4 h-4 text-green-500" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-slate-700">Görünür</div>
@@ -597,7 +597,7 @@ export default function NewProductAttributePage() {
                 <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <ListBulletIcon className="w-4 h-4" className="text-slate-400" />
+                      <ListBulletIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         Seçenekler
                         {options.length > 0 && (
@@ -618,7 +618,7 @@ export default function NewProductAttributePage() {
 
                   {options.length === 0 ? (
                     <div className="p-12 bg-slate-50 rounded-xl text-center border-2 border-dashed border-slate-200">
-                      <ListBulletIcon className="w-4 h-4" className="text-5xl text-slate-300 mb-3" />
+                      <ListBulletIcon className="w-4 h-4 text-5xl text-slate-300 mb-3" />
                       <div className="text-slate-500 mb-3 font-medium">Henüz seçenek eklenmedi</div>
                       <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                         İlk Seçeneği Ekle

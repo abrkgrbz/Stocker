@@ -410,7 +410,7 @@ export default function NewPurchaseInvoicePage() {
                         justifyContent: 'center',
                       }}
                     >
-                      <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <DocumentTextIcon className="w-16 h-16 text-white/90" />
                       <p className="mt-4 text-lg font-medium text-white/90">
                         Satın Alma Faturası
                       </p>
@@ -464,7 +464,7 @@ export default function NewPurchaseInvoicePage() {
                   {/* Currency & Tax Settings */}
                   <div className="mt-6 space-y-4">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
+                      <CurrencyDollarIcon className="w-4 h-4 mr-1" />
                       Para Birimi ve Vergiler
                     </div>
                     <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
@@ -511,7 +511,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <BuildingStorefrontIcon className="w-4 h-4" className="mr-1" />
+                            <BuildingStorefrontIcon className="w-4 h-4 mr-1" />
                             Temel Bilgiler
                           </span>
                         ),
@@ -576,7 +576,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'related',
                         label: (
                           <span>
-                            <LinkIcon className="w-4 h-4" className="mr-1" />
+                            <LinkIcon className="w-4 h-4 mr-1" />
                             İlişkili Belgeler
                           </span>
                         ),
@@ -615,7 +615,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'einvoice',
                         label: (
                           <span>
-                            <BuildingLibraryIcon className="w-4 h-4" className="mr-1" />
+                            <BuildingLibraryIcon className="w-4 h-4 mr-1" />
                             E-Fatura
                           </span>
                         ),
@@ -642,7 +642,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4 mr-1" />
                             Notlar
                           </span>
                         ),
@@ -677,7 +677,7 @@ export default function NewPurchaseInvoicePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <ListBulletIcon className="w-4 h-4" className="mr-1" />
+                        <ListBulletIcon className="w-4 h-4 mr-1" />
                         Fatura Kalemleri
                       </Text>
                       <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem} style={{ background: '#f59e0b' }}>

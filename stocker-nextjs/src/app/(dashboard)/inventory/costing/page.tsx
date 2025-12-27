@@ -708,7 +708,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <CurrencyDollarIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <CurrencyDollarIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Toplam Envanter Değeri</p>
@@ -726,7 +726,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <ChartPieIcon className="w-4 h-4" className="text-lg text-emerald-600" />
+                <ChartPieIcon className="w-4 h-4 text-lg text-emerald-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Toplam Ürün Sayısı</p>
@@ -744,7 +744,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <ChartBarIcon className="w-4 h-4" className="text-lg text-amber-600" />
+                <ChartBarIcon className="w-4 h-4 text-lg text-amber-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Dönem SMM</p>
@@ -769,9 +769,9 @@ export default function CostingPage() {
                   : 'bg-red-50'
               }`}>
                 {varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0 ? (
-                  <CheckCircleIcon className="w-4 h-4" className="text-lg text-emerald-600" />
+                  <CheckCircleIcon className="w-4 h-4 text-lg text-emerald-600" />
                 ) : (
-                  <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-red-600" />
+                  <ExclamationCircleIcon className="w-4 h-4 text-lg text-red-600" />
                 )}
               </div>
             </div>
@@ -798,7 +798,7 @@ export default function CostingPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <FunnelIcon className="w-4 h-4" className="text-slate-400" />
+            <FunnelIcon className="w-4 h-4 text-slate-400" />
             <span className="font-medium text-slate-700">Filtreler:</span>
           </div>
           <Select

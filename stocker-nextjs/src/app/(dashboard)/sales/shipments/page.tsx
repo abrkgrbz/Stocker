@@ -181,7 +181,7 @@ export default function ShipmentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             placeholder="Sevkiyat ara... (numara, müşteri)"
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear

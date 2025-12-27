@@ -222,12 +222,12 @@ export default function LotBatchesPage() {
           <div className="flex gap-1">
             {record.isExpired && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
-                <ExclamationTriangleIcon className="w-4 h-4" className="text-xs" /> Süresi Doldu
+                <ExclamationTriangleIcon className="w-4 h-4 text-xs" /> Süresi Doldu
               </span>
             )}
             {record.isQuarantined && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-300 text-slate-800">
-                <ExclamationCircleIcon className="w-4 h-4" className="text-xs" /> Karantinada
+                <ExclamationCircleIcon className="w-4 h-4 text-xs" /> Karantinada
               </span>
             )}
           </div>
@@ -467,7 +467,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <InboxIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <InboxIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
@@ -478,7 +478,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ClockIcon className="w-4 h-4" className="text-lg text-slate-700" />
+                <ClockIcon className="w-4 h-4 text-lg text-slate-700" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.pending}</div>
@@ -489,7 +489,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
-                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-slate-800" />
+                <ExclamationCircleIcon className="w-4 h-4 text-lg text-slate-800" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.quarantined}</div>
@@ -500,7 +500,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ExclamationTriangleIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <ExclamationTriangleIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.expiringSoon}</div>
@@ -511,7 +511,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <StopCircleIcon className="w-4 h-4" className="text-lg text-white" />
+                <StopCircleIcon className="w-4 h-4 text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>

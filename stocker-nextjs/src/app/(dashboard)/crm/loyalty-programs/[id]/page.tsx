@@ -141,7 +141,7 @@ export default function LoyaltyProgramDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {program.startDate ? dayjs(program.startDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -150,7 +150,7 @@ export default function LoyaltyProgramDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {program.endDate ? dayjs(program.endDate).format('DD/MM/YYYY') : 'Süresiz'}
                     </span>
@@ -175,7 +175,7 @@ export default function LoyaltyProgramDetailPage() {
               </p>
               <div className="flex flex-col items-center justify-center py-4">
                 <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center">
-                  <StarIcon className="w-4 h-4" className="text-3xl text-amber-600" />
+                  <StarIcon className="w-4 h-4 text-3xl text-amber-600" />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 mt-3">
                   {program.pointsPerSpend || 1} Puan
@@ -213,7 +213,7 @@ export default function LoyaltyProgramDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyIcon className="w-4 h-4" className="text-amber-500" />
+                <TrophyIcon className="w-4 h-4 text-amber-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Bonus Puanlar
                 </p>
@@ -251,7 +251,7 @@ export default function LoyaltyProgramDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <StarIcon className="w-4 h-4" className="text-purple-500" />
+                <StarIcon className="w-4 h-4 text-purple-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Kademeler
                 </p>
@@ -268,7 +268,7 @@ export default function LoyaltyProgramDetailPage() {
                           className="w-8 h-8 rounded-full flex items-center justify-center"
                           style={{ backgroundColor: tier.color || '#e2e8f0' }}
                         >
-                          <StarIcon className="w-4 h-4" className="text-white text-sm" />
+                          <StarIcon className="w-4 h-4 text-white text-sm" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-900">{tier.name}</p>

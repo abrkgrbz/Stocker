@@ -127,7 +127,7 @@ export default function ExpensesPage() {
       key: 'employee',
       render: (_, record: ExpenseDto) => (
         <Space>
-          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4 text-violet-500" />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -230,7 +230,7 @@ export default function ExpensesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <WalletIcon className="w-4 h-4" className="mr-2" />
+          <WalletIcon className="w-4 h-4 mr-2" />
           Harcama Yönetimi
         </Title>
         <Space>

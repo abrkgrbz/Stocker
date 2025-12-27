@@ -128,7 +128,7 @@ export default function LeavesPage() {
       key: 'employee',
       render: (_, record: LeaveDto) => (
         <Space>
-          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4 text-violet-500" />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),

@@ -111,7 +111,7 @@ export default function SupplierEvaluationsPage() {
       key: 'supplierName',
       render: (text, record) => (
         <Space>
-          <BuildingStorefrontIcon className="w-4 h-4" className="text-gray-400" />
+          <BuildingStorefrontIcon className="w-4 h-4 text-gray-400" />
           <div>
             <div className="font-medium">{text}</div>
             <div className="text-xs text-gray-400">{record.supplierCode}</div>
@@ -260,7 +260,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Toplam Değerlendirme"
               value={data?.totalCount || 0}
-              prefix={<StarIcon className="w-4 h-4" className="text-blue-500" />}
+              prefix={<StarIcon className="w-4 h-4 text-blue-500" />}
             />
           </Card>
         </Col>
@@ -270,7 +270,7 @@ export default function SupplierEvaluationsPage() {
               title="Ortalama Puan"
               value={avgScore}
               precision={1}
-              prefix={<StarIcon className="w-4 h-4" className="text-yellow-500" />}
+              prefix={<StarIcon className="w-4 h-4 text-yellow-500" />}
               suffix="/ 100"
             />
           </Card>
@@ -280,7 +280,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Üst Performans"
               value={topPerformers}
-              prefix={<TrophyIcon className="w-4 h-4" className="text-green-500" />}
+              prefix={<TrophyIcon className="w-4 h-4 text-green-500" />}
               suffix="tedarikçi"
             />
           </Card>
@@ -290,7 +290,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Onay Bekleyen"
               value={data?.items?.filter(i => i.status === 'Submitted').length || 0}
-              prefix={<ClockIcon className="w-4 h-4" className="text-orange-500" />}
+              prefix={<ClockIcon className="w-4 h-4 text-orange-500" />}
             />
           </Card>
         </Col>
@@ -301,7 +301,7 @@ export default function SupplierEvaluationsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Tedarikçi veya değerlendirme no ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}

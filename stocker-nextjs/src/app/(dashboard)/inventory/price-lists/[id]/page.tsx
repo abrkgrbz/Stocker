@@ -340,7 +340,7 @@ export default function PriceListDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center">
-                <CurrencyDollarIcon className="w-4 h-4" className="text-white text-lg" />
+                <CurrencyDollarIcon className="w-4 h-4 text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -404,7 +404,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4" className="text-amber-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4 text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Para Birimi
@@ -421,7 +421,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <ListBulletIcon className="w-4 h-4" className="text-white text-lg" />
+                  <ListBulletIcon className="w-4 h-4 text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Kalem
@@ -438,7 +438,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <TagIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
+                  <TagIcon className="w-4 h-4 text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ort. Fiyat
@@ -457,7 +457,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Cog6ToothIcon className="w-4 h-4" className="text-indigo-600 text-lg" />
+                  <Cog6ToothIcon className="w-4 h-4 text-indigo-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Öncelik
@@ -554,7 +554,7 @@ export default function PriceListDetailPage() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-xs text-slate-400">Başlangıç Tarihi</span>
                   </div>
                   <p className="text-sm font-medium text-slate-900">
@@ -565,7 +565,7 @@ export default function PriceListDetailPage() {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-xs text-slate-400">Bitiş Tarihi</span>
                   </div>
                   <p className="text-sm font-medium text-slate-900">
@@ -595,7 +595,7 @@ export default function PriceListDetailPage() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <ReceiptPercentIcon className="w-4 h-4" className="text-emerald-500" />
+                    <ReceiptPercentIcon className="w-4 h-4 text-emerald-500" />
                     <span className="text-xs text-slate-400">Genel İndirim</span>
                   </div>
                   <p className="text-xl font-bold text-emerald-600">
@@ -606,7 +606,7 @@ export default function PriceListDetailPage() {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <ReceiptPercentIcon className="w-4 h-4" className="text-red-500" />
+                    <ReceiptPercentIcon className="w-4 h-4 text-red-500" />
                     <span className="text-xs text-slate-400">Kar Marjı</span>
                   </div>
                   <p className="text-xl font-bold text-red-600">
@@ -671,7 +671,7 @@ export default function PriceListDetailPage() {
               </p>
               <div className="flex gap-8">
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                  <CalendarIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-sm text-slate-500">Oluşturulma:</span>
                   <span className="text-sm font-medium text-slate-900">
                     {dayjs(priceList.createdAt).format('DD/MM/YYYY HH:mm')}
@@ -679,7 +679,7 @@ export default function PriceListDetailPage() {
                 </div>
                 {priceList.updatedAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Güncelleme:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(priceList.updatedAt).format('DD/MM/YYYY HH:mm')}

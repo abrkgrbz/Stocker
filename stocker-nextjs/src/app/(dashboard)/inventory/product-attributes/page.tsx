@@ -109,7 +109,7 @@ export default function ProductAttributesPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: '#8b5cf615' }}
           >
-            <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+            <TagIcon className="w-4 h-4 text-violet-500" />
           </div>
           <div>
             <div
@@ -242,7 +242,7 @@ export default function ProductAttributesPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
             </button>
           </Dropdown>
         );
@@ -261,7 +261,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{attributes.length}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <TagIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{filterableAttributes}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <FunnelIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <FunnelIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -328,7 +328,7 @@ export default function ProductAttributesPage() {
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <Input
             placeholder="Özellik adı veya kodu ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear

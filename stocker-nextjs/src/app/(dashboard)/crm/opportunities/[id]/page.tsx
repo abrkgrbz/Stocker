@@ -289,7 +289,7 @@ export default function OpportunityDetailPage() {
                     <Timeline
                       items={[
                         {
-                          dot: <ClockIcon className="w-4 h-4" style={{ fontSize: '16px' }} />,
+                          dot: <ClockIcon className="w-4 h-4" />,
                           color: 'blue',
                           children: (
                             <>

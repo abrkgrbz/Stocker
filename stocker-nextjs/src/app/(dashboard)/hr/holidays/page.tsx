@@ -78,7 +78,7 @@ export default function HolidaysPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: HolidayDto) => (
         <Space>
-          <GiftIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <GiftIcon className="w-4 h-4 text-violet-500" />
           <a onClick={() => router.push(`/hr/holidays/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -172,7 +172,7 @@ export default function HolidaysPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CalendarIcon className="w-4 h-4" className="mr-2" />
+          <CalendarIcon className="w-4 h-4 mr-2" />
           Resmi Tatiller
         </Title>
         <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/holidays/new')}>

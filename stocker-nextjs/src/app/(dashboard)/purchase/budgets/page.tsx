@@ -246,7 +246,7 @@ export default function PurchaseBudgetsPage() {
               title="Toplam Bütçe"
               value={totalBudget}
               precision={2}
-              prefix={<WalletIcon className="w-4 h-4" className="text-blue-500" />}
+              prefix={<WalletIcon className="w-4 h-4 text-blue-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -258,7 +258,7 @@ export default function PurchaseBudgetsPage() {
               title="Kullanılan"
               value={totalUsed}
               precision={2}
-              prefix={<ExclamationCircleIcon className="w-4 h-4" className="text-orange-500" />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4 text-orange-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -270,7 +270,7 @@ export default function PurchaseBudgetsPage() {
               title="Kalan"
               value={totalRemaining}
               precision={2}
-              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4 text-green-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -281,7 +281,7 @@ export default function PurchaseBudgetsPage() {
             <Statistic
               title="Aktif Bütçe"
               value={data?.items?.filter(i => i.status === 'Active').length || 0}
-              prefix={<WalletIcon className="w-4 h-4" className="text-green-500" />}
+              prefix={<WalletIcon className="w-4 h-4 text-green-500" />}
             />
           </Card>
         </Col>
@@ -292,7 +292,7 @@ export default function PurchaseBudgetsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Kod veya ad ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

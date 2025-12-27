@@ -63,7 +63,7 @@ export default function NewPayrollPage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+                <CurrencyDollarIcon className="w-4 h-4 mr-2" />
                 Yeni Bordro
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir bordro kaydı oluşturun</p>

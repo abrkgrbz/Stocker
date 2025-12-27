@@ -121,7 +121,7 @@ export default function PriceListsPage() {
       width: 180,
       render: (text) => text ? (
         <Space>
-          <BuildingStorefrontIcon className="w-4 h-4" className="text-gray-400" />
+          <BuildingStorefrontIcon className="w-4 h-4 text-gray-400" />
           {text}
         </Space>
       ) : '-',
@@ -249,7 +249,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Toplam Liste"
               value={stats.total}
-              prefix={<CurrencyDollarIcon className="w-4 h-4" className="text-blue-500" />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4 text-blue-500" />}
             />
           </Card>
         </Col>
@@ -258,7 +258,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Aktif"
               value={stats.active}
-              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4 text-green-500" />}
             />
           </Card>
         </Col>
@@ -267,7 +267,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Pasif"
               value={stats.inactive}
-              prefix={<XCircleIcon className="w-4 h-4" className="text-gray-500" />}
+              prefix={<XCircleIcon className="w-4 h-4 text-gray-500" />}
             />
           </Card>
         </Col>
@@ -276,7 +276,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Süresi Dolmuş"
               value={stats.expired}
-              prefix={<ExclamationCircleIcon className="w-4 h-4" className="text-red-500" />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4 text-red-500" />}
             />
           </Card>
         </Col>
@@ -287,7 +287,7 @@ export default function PriceListsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Kod veya ad ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

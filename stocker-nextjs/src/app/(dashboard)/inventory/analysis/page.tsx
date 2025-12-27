@@ -111,7 +111,7 @@ const getTrendIcon = (trend: string) => {
   switch (trend?.toLowerCase()) {
     case 'improving':
     case 'up':
-      return <ArrowTrendingUpIcon className="w-4 h-4" className="text-slate-700" />;
+      return <ArrowTrendingUpIcon className="w-4 h-4 text-slate-700" />;
     case 'declining':
     case 'down':
       return <FallOutlined className="text-slate-400" />;
@@ -567,7 +567,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <CurrencyDollarIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4 text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalRevenue)}</div>
@@ -614,7 +614,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                        <ExclamationTriangleIcon className="w-4 h-4 text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{abcXyzData.highRiskProducts?.length || 0}</div>
@@ -751,7 +751,7 @@ export default function InventoryAnalysisPage() {
                 <div className="col-span-12 lg:col-span-6">
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
-                      <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600" />
+                      <ExclamationTriangleIcon className="w-4 h-4 text-slate-600" />
                       Yüksek Riskli Ürünler
                     </h3>
                     <Table
@@ -853,7 +853,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                        <ExclamationTriangleIcon className="w-4 h-4 text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatNumber(deadStockData.totalDeadStockItems)}</div>
@@ -864,7 +864,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <CurrencyDollarIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4 text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.totalDeadStockValue)}</div>
@@ -875,7 +875,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <ChartPieIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                        <ChartPieIcon className="w-4 h-4 text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">%{deadStockData.deadStockPercentage?.toFixed(1)}</div>
@@ -886,7 +886,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                        <CurrencyDollarIcon className="w-4 h-4" className="text-white text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4 text-white text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.potentialRecoveryValue)}</div>

@@ -288,7 +288,7 @@ export default function NewGoodsReceiptPage() {
       key: 'info',
       label: (
         <span>
-          <InformationCircleIcon className="w-4 h-4" className="mr-1" />
+          <InformationCircleIcon className="w-4 h-4 mr-1" />
           Temel Bilgiler
         </span>
       ),
@@ -488,7 +488,7 @@ export default function NewGoodsReceiptPage() {
       key: 'notes',
       label: (
         <span>
-          <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+          <DocumentTextIcon className="w-4 h-4 mr-1" />
           Notlar
         </span>
       ),
@@ -592,7 +592,7 @@ export default function NewGoodsReceiptPage() {
                       className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-4"
                       style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                     >
-                      <InboxIcon className="w-4 h-4" style={{ fontSize: 48, color: 'white' }} />
+                      <InboxIcon className="w-12 h-12 text-blue-500" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       Mal Alım Belgesi

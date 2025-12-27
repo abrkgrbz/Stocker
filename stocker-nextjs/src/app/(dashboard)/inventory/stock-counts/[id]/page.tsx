@@ -396,7 +396,7 @@ export default function StockCountDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-purple-600 flex items-center justify-center">
-                <DocumentMagnifyingGlassIcon className="w-4 h-4" className="text-white text-lg" />
+                <DocumentMagnifyingGlassIcon className="w-4 h-4 text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -435,7 +435,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <DocumentMagnifyingGlassIcon className="w-4 h-4" className="text-white text-lg" />
+                  <DocumentMagnifyingGlassIcon className="w-4 h-4 text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Kalem
@@ -452,7 +452,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <CheckCircleIcon className="w-4 h-4" className="text-purple-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4 text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sayılan
@@ -469,7 +469,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ExclamationCircleIcon className="w-4 h-4" className="text-amber-600 text-lg" />
+                  <ExclamationCircleIcon className="w-4 h-4 text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Farklı
@@ -497,7 +497,7 @@ export default function StockCountDetailPage() {
                   ) : stockCount.totalDifference < 0 ? (
                     <ArrowDownOutlined className="text-red-600 text-lg" />
                   ) : (
-                    <MinusIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                    <MinusIcon className="w-4 h-4 text-slate-600 text-lg" />
                   )}
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -561,7 +561,7 @@ export default function StockCountDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Sayım Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(stockCount.countDate).format('DD/MM/YYYY')}
                     </span>
@@ -570,7 +570,7 @@ export default function StockCountDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Depo</p>
                   <div className="flex items-center gap-2">
-                    <MapPinIcon className="w-4 h-4" className="text-slate-400 text-xs" />
+                    <MapPinIcon className="w-4 h-4 text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">{stockCount.warehouseName}</span>
                   </div>
                 </div>

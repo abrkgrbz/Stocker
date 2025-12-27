@@ -367,7 +367,7 @@ export default function JobPostingsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <DocumentTextIcon className="w-4 h-4" className="mr-2" />
+            <DocumentTextIcon className="w-4 h-4 mr-2" />
             İş İlanları
           </Title>
           <Text type="secondary">Tüm iş ilanlarını görüntüle ve yönet</Text>

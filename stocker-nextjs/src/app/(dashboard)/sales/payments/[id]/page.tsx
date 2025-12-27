@@ -170,7 +170,7 @@ export default function PaymentDetailPage() {
           <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
             Geri
           </Button>
-          <CurrencyDollarIcon className="w-4 h-4" className="text-3xl text-green-500" />
+          <CurrencyDollarIcon className="w-4 h-4 text-3xl text-green-500" />
           <div>
             <Title level={2} className="!mb-0">
               {payment.paymentNumber}

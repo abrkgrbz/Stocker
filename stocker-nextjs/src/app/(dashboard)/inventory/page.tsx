@@ -523,7 +523,7 @@ export default function InventoryDashboardPage() {
 
           <Link href="/inventory/products/new">
             <Button type="primary" className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900">
-              <PlusIcon className="w-4 h-4" className="mr-1" />
+              <PlusIcon className="w-4 h-4 mr-1" />
               Yeni Ürün
             </Button>
           </Link>

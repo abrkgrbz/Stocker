@@ -568,7 +568,7 @@ export default function BarcodesPage() {
       return (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
-            <ExclamationCircleIcon className="w-4 h-4" className="text-amber-600" />
+            <ExclamationCircleIcon className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-sm font-medium text-slate-900 mb-1">Barkod Bulunamadı</div>
           <div className="text-xs text-slate-500 font-mono mb-3">{lookupResult.searchedBarcode}</div>
@@ -605,7 +605,7 @@ export default function BarcodesPage() {
               {p.primaryImageUrl ? (
                 <img src={p.primaryImageUrl} alt={p.name} className="w-14 h-14 object-cover rounded" />
               ) : (
-                <ShoppingBagIcon className="w-4 h-4" className="text-2xl text-slate-400" />
+                <ShoppingBagIcon className="w-4 h-4 text-2xl text-slate-400" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -912,7 +912,7 @@ export default function BarcodesPage() {
             <div className="bg-white border border-slate-200 rounded-lg">
               <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <InboxIcon className="w-4 h-4" className="text-slate-400" />
+                  <InboxIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-sm font-medium text-slate-900">Tarama Sonucu</span>
                 </div>
                 {lastScannedBarcode && (
@@ -934,23 +934,23 @@ export default function BarcodesPage() {
               <div className="p-4">
                 <ul className="space-y-2 text-sm text-slate-600">
                   <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5" />
                     <span>Hardware scanner otomatik algılanır</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5" />
                     <span>Aynı barkod tarandığında miktar artar</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5" />
                     <span>Ses açıkken başarı/hata bildirimi alırsınız</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5" />
                     <span>Focus otomatik olarak korunur</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-500 mt-0.5" />
                     <span>Enter tuşu ile hızlı arama yapabilirsiniz</span>
                   </li>
                 </ul>
@@ -1314,7 +1314,7 @@ export default function BarcodesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                  <TagIcon className="w-4 h-4" className="text-xl text-slate-400" />
+                  <TagIcon className="w-4 h-4 text-xl text-slate-400" />
                 </div>
                 <span className="text-sm text-slate-500">Etiket oluşturun</span>
               </div>
@@ -1356,7 +1356,7 @@ export default function BarcodesPage() {
               {bulkProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                    <PrinterIcon className="w-4 h-4" className="text-xl text-slate-400" />
+                    <PrinterIcon className="w-4 h-4 text-xl text-slate-400" />
                   </div>
                   <span className="text-sm text-slate-500">Etiket yazdırmak için ürün ekleyin</span>
                 </div>
@@ -1514,7 +1514,7 @@ export default function BarcodesPage() {
             {autoGenResult ? (
               <div className="text-center">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-4">
-                  <CheckCircleIcon className="w-4 h-4" className="text-3xl text-emerald-600 mb-2" />
+                  <CheckCircleIcon className="w-4 h-4 text-3xl text-emerald-600 mb-2" />
                   <div className="text-sm text-slate-600 mb-2">Barkod Oluşturuldu</div>
                   <div className="text-2xl font-mono font-bold text-slate-900">{autoGenResult.barcode}</div>
                   {autoGenResult.saved ? (

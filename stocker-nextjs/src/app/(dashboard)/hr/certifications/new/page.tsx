@@ -47,7 +47,7 @@ export default function NewCertificationPage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ShieldCheckIcon className="w-4 h-4" className="mr-2" />
+                <ShieldCheckIcon className="w-4 h-4 mr-2" />
                 Yeni Sertifika
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir sertifika kaydı oluşturun</p>

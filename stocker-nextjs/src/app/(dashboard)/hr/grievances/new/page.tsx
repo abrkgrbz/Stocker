@@ -82,7 +82,7 @@ export default function NewGrievancePage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <ExclamationCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <ExclamationCircleIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Sikayet</p>
                   <p className="text-sm text-white/60">Calisan sikayeti</p>
                 </div>
@@ -97,7 +97,7 @@ export default function NewGrievancePage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Sikayet Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Calisan & Sikayet Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true, message: 'Calisan secimi zorunludur' }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>

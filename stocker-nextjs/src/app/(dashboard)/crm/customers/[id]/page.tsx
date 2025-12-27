@@ -365,7 +365,7 @@ export default function CustomerDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${customer.isActive ? 'bg-blue-600' : 'bg-slate-400'}`}>
-                <BuildingStorefrontIcon className="w-4 h-4" className="text-white text-lg" />
+                <BuildingStorefrontIcon className="w-4 h-4 text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function CustomerDetailPage() {
               {customer.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
+                    <DocumentTextIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Açıklama</p>
                   </div>
                   <p className="text-sm text-slate-700">{customer.description}</p>
@@ -527,7 +527,7 @@ export default function CustomerDetailPage() {
           <div className="col-span-12">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TagIcon className="w-4 h-4" className="text-slate-400" />
+                <TagIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Etiketler
                 </p>
@@ -540,7 +540,7 @@ export default function CustomerDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <MapPinIcon className="w-4 h-4" className="text-slate-400" />
+                <MapPinIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Adres Bilgileri
                 </p>
@@ -586,7 +586,7 @@ export default function CustomerDetailPage() {
                 <div className="mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <GlobeAltIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                      <GlobeAltIcon className="w-4 h-4 text-slate-600 text-lg" />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-slate-400 mb-0">Web Sitesi</p>
@@ -607,7 +607,7 @@ export default function CustomerDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -617,7 +617,7 @@ export default function CustomerDetailPage() {
                 {customer.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -667,7 +667,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50">
-                              <ClockIcon className="w-4 h-4" className="text-purple-600 text-lg" />
+                              <ClockIcon className="w-4 h-4 text-purple-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -702,7 +702,7 @@ export default function CustomerDetailPage() {
                         ) : timelineData.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <ClockIcon className="w-4 h-4" className="text-xl" />
+                              <ClockIcon className="w-4 h-4 text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Aktivite bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -779,7 +779,7 @@ export default function CustomerDetailPage() {
                         {!canCreateOrder && !modulesLoading && (
                           <div className="mb-6 p-4 bg-amber-50/50 border border-amber-200/50 rounded-lg flex items-center gap-3">
                             <div className="w-8 h-8 rounded-md flex items-center justify-center bg-amber-100">
-                              <LockClosedIcon className="w-4 h-4" className="text-amber-600 text-sm" />
+                              <LockClosedIcon className="w-4 h-4 text-amber-600 text-sm" />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-amber-800 m-0">Sipariş Oluşturma Kısıtlı</p>
@@ -794,7 +794,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50">
-                              <ShoppingBagIcon className="w-4 h-4" className="text-blue-600 text-lg" />
+                              <ShoppingBagIcon className="w-4 h-4 text-blue-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -832,7 +832,7 @@ export default function CustomerDetailPage() {
                         ) : !ordersData?.items?.length ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <ShoppingBagIcon className="w-4 h-4" className="text-xl" />
+                              <ShoppingBagIcon className="w-4 h-4 text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Sipariş bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -858,7 +858,7 @@ export default function CustomerDetailPage() {
                               >
                                 <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
-                                    <ShoppingBagIcon className="w-4 h-4" className="text-slate-500" />
+                                    <ShoppingBagIcon className="w-4 h-4 text-slate-500" />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
@@ -954,7 +954,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-50">
-                              <UserIcon className="w-4 h-4" className="text-indigo-600 text-lg" />
+                              <UserIcon className="w-4 h-4 text-indigo-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -990,7 +990,7 @@ export default function CustomerDetailPage() {
                         ) : !contactsData?.length ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <UserIcon className="w-4 h-4" className="text-xl" />
+                              <UserIcon className="w-4 h-4 text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Kişi bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -1107,7 +1107,7 @@ export default function CustomerDetailPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <PencilIcon className="w-4 h-4" className="text-blue-600" />
+            <PencilIcon className="w-4 h-4 text-blue-600" />
             <span>Müşteri Bilgilerini Düzenle</span>
           </div>
         }
@@ -1230,7 +1230,7 @@ export default function CustomerDetailPage() {
         {/* Modal Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50">
-            <ShoppingBagIcon className="w-4 h-4" className="text-blue-600 text-xl" />
+            <ShoppingBagIcon className="w-4 h-4 text-blue-600 text-xl" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 m-0">Yeni Sipariş Oluştur</h2>
@@ -1251,7 +1251,7 @@ export default function CustomerDetailPage() {
           <div className="bg-slate-50/50 border border-slate-200/50 p-4 rounded-xl mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
-                <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-500" />
+                <BuildingStorefrontIcon className="w-4 h-4 text-slate-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-900 m-0">{customer?.companyName}</p>
@@ -1400,7 +1400,7 @@ export default function CustomerDetailPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10">
-                      <CurrencyDollarIcon className="w-4 h-4" className="text-white" />
+                      <CurrencyDollarIcon className="w-4 h-4 text-white" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 m-0">Genel Toplam</p>
@@ -1419,7 +1419,7 @@ export default function CustomerDetailPage() {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 mb-6 bg-slate-50/50 border border-dashed border-slate-200 rounded-xl">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                <ShoppingBagIcon className="w-4 h-4" className="text-xl" />
+                <ShoppingBagIcon className="w-4 h-4 text-xl" />
               </div>
               <h3 className="text-sm font-medium text-slate-900 mb-1">Ürün eklenmedi</h3>
               <p className="text-sm text-slate-500 max-w-sm text-center">
@@ -1492,7 +1492,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <UserIcon className="w-4 h-4" className="text-slate-500 text-xs" />
+                <UserIcon className="w-4 h-4 text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Kişisel Bilgiler</span>
             </div>
@@ -1551,7 +1551,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <PhoneIcon className="w-4 h-4" className="text-slate-500 text-xs" />
+                <PhoneIcon className="w-4 h-4 text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">İletişim Bilgileri</span>
             </div>
@@ -1567,7 +1567,7 @@ export default function CustomerDetailPage() {
                   className="mb-0"
                 >
                   <Input
-                    prefix={<EnvelopeIcon className="w-4 h-4" className="text-slate-400" />}
+                    prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
                     placeholder="ahmet@firma.com"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1578,7 +1578,7 @@ export default function CustomerDetailPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
                   <Input
-                    prefix={<PhoneIcon className="w-4 h-4" className="text-slate-400" />}
+                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
                     placeholder="+90 212 123 4567"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1589,7 +1589,7 @@ export default function CustomerDetailPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Cep Telefonu</label>
                 <Form.Item name="mobilePhone" className="mb-0">
                   <Input
-                    prefix={<PhoneIcon className="w-4 h-4" className="text-slate-400" />}
+                    prefix={<PhoneIcon className="w-4 h-4 text-slate-400" />}
                     placeholder="+90 555 123 4567"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1602,7 +1602,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <TagIcon className="w-4 h-4" className="text-slate-500 text-xs" />
+                <TagIcon className="w-4 h-4 text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Ayarlar</span>
             </div>
@@ -1623,7 +1623,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <DocumentTextIcon className="w-4 h-4" className="text-slate-500 text-xs" />
+                <DocumentTextIcon className="w-4 h-4 text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Notlar</span>
             </div>

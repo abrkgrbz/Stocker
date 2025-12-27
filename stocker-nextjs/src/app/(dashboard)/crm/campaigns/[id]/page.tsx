@@ -148,7 +148,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.startDate ? dayjs(campaign.startDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -157,7 +157,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.endDate ? dayjs(campaign.endDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -166,7 +166,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Hedef Kitle</p>
                   <div className="flex items-center gap-1">
-                    <UserGroupIcon className="w-4 h-4" className="text-slate-400" />
+                    <UserGroupIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.targetAudience || '-'}
                     </span>
@@ -223,7 +223,7 @@ export default function CampaignDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <CurrencyDollarIcon className="w-4 h-4" className="text-slate-400" />
+                <CurrencyDollarIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Bütçe
                 </p>
@@ -249,7 +249,7 @@ export default function CampaignDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyIcon className="w-4 h-4" className="text-slate-400" />
+                <TrophyIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Yatırım Getirisi
                 </p>

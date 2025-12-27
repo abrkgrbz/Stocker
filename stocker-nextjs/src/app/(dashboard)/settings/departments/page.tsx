@@ -88,7 +88,7 @@ export default function DepartmentsPage() {
             className="w-8 h-8 rounded-md flex items-center justify-center"
             style={{ backgroundColor: '#8b5cf615' }}
           >
-            <BuildingOffice2Icon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+            <BuildingOffice2Icon className="w-4 h-4 text-violet-500" />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>

@@ -183,7 +183,7 @@ export default function OpportunitiesPage() {
 
         {opportunity.customerName && (
           <div className="mb-2 text-xs text-slate-600 flex items-center gap-1">
-            <UserIcon className="w-4 h-4" className="text-slate-400" />
+            <UserIcon className="w-4 h-4 text-slate-400" />
             <span>{opportunity.customerName}</span>
           </div>
         )}
@@ -258,7 +258,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
           </div>
           <div className="p-3 bg-slate-100 rounded-lg">
-            <ChartBarIcon className="w-4 h-4" className="text-2xl text-slate-600" />
+            <ChartBarIcon className="w-4 h-4 text-2xl text-slate-600" />
           </div>
         </div>
       </Card>
@@ -270,7 +270,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-emerald-600">₺{stats.totalValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-emerald-100 rounded-lg">
-            <CurrencyDollarIcon className="w-4 h-4" className="text-2xl text-emerald-600" />
+            <CurrencyDollarIcon className="w-4 h-4 text-2xl text-emerald-600" />
           </div>
         </div>
       </Card>
@@ -283,7 +283,7 @@ export default function OpportunitiesPage() {
             <div className="text-xs text-slate-500 mt-1">₺{stats.wonValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-green-100 rounded-lg">
-            <TrophyIcon className="w-4 h-4" className="text-2xl text-green-600" />
+            <TrophyIcon className="w-4 h-4 text-2xl text-green-600" />
           </div>
         </div>
       </Card>
@@ -295,7 +295,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-blue-600">{stats.avgProbability.toFixed(0)}%</div>
           </div>
           <div className="p-3 bg-blue-100 rounded-lg">
-            <ArrowTrendingUpIcon className="w-4 h-4" className="text-2xl text-blue-600" />
+            <ArrowTrendingUpIcon className="w-4 h-4 text-2xl text-blue-600" />
           </div>
         </div>
       </Card>
@@ -343,7 +343,7 @@ export default function OpportunitiesPage() {
         <div className="bg-white border-2 border-green-400 rounded-lg h-full">
           <div className="p-4 border-b border-green-200 bg-green-50">
             <div className="flex items-center gap-2">
-              <TrophyIcon className="w-4 h-4" className="text-green-500" />
+              <TrophyIcon className="w-4 h-4 text-green-500" />
               <span className="font-medium text-slate-900">Kazanıldı</span>
               <Tag color="green" className="ml-auto">{wonOpportunities.length}</Tag>
             </div>
@@ -367,7 +367,7 @@ export default function OpportunitiesPage() {
         <div className="bg-white border-2 border-red-400 rounded-lg h-full">
           <div className="p-4 border-b border-red-200 bg-red-50">
             <div className="flex items-center gap-2">
-              <StopCircleIcon className="w-4 h-4" className="text-red-500" />
+              <StopCircleIcon className="w-4 h-4 text-red-500" />
               <span className="font-medium text-slate-900">Kaybedildi</span>
               <Tag color="red" className="ml-auto">{lostOpportunities.length}</Tag>
             </div>
@@ -450,7 +450,7 @@ export default function OpportunitiesPage() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <Squares2X2Icon className="w-4 h-4" className="mr-1" />
+                <Squares2X2Icon className="w-4 h-4 mr-1" />
                 Kanban
               </button>
               <button
@@ -461,7 +461,7 @@ export default function OpportunitiesPage() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <ListBulletIcon className="w-4 h-4" className="mr-1" />
+                <ListBulletIcon className="w-4 h-4 mr-1" />
                 Grid
               </button>
             </div>
@@ -480,7 +480,7 @@ export default function OpportunitiesPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Fırsat ara..."
-          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear

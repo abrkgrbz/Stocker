@@ -368,7 +368,7 @@ export default function NewPurchaseReturnPage() {
       key: 'info',
       label: (
         <span>
-          <InformationCircleIcon className="w-4 h-4" className="mr-1" />
+          <InformationCircleIcon className="w-4 h-4 mr-1" />
           İade Bilgileri
         </span>
       ),
@@ -477,7 +477,7 @@ export default function NewPurchaseReturnPage() {
       key: 'documents',
       label: (
         <span>
-          <LinkIcon className="w-4 h-4" className="mr-1" />
+          <LinkIcon className="w-4 h-4 mr-1" />
           İlişkili Belgeler
         </span>
       ),
@@ -555,7 +555,7 @@ export default function NewPurchaseReturnPage() {
       key: 'notes',
       label: (
         <span>
-          <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+          <DocumentTextIcon className="w-4 h-4 mr-1" />
           Notlar
         </span>
       ),

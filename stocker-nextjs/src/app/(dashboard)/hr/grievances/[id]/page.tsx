@@ -41,7 +41,7 @@ export default function GrievanceDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <ExclamationCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ExclamationCircleIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{grievance.subject}</h3>
               <p className="text-sm text-white/60">{grievance.grievanceType}</p>
               <div className="mt-4 space-x-2">

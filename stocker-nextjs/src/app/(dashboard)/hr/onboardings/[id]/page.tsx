@@ -43,7 +43,7 @@ export default function OnboardingDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <RocketLaunchIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{onboarding.employeeName}</h3>
               <p className="text-sm text-white/60">Onboarding</p>
               <Tag color={statusColors[onboarding.status]} className="mt-4">{onboarding.status}</Tag>

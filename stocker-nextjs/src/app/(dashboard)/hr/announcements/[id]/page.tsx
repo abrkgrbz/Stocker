@@ -137,7 +137,7 @@ export default function AnnouncementDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              {announcement.isPinned && <MapPinIcon className="w-4 h-4" className="mr-2 text-orange-500" />}
+              {announcement.isPinned && <MapPinIcon className="w-4 h-4 mr-2 text-orange-500" />}
               {announcement.title}
             </Title>
             <Space>

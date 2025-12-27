@@ -59,7 +59,7 @@ export default function EditCertificationPage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ShieldCheckIcon className="w-4 h-4" className="mr-2" />
+                <ShieldCheckIcon className="w-4 h-4 mr-2" />
                 Sertifika Düzenle
               </h1>
               <p className="text-sm text-gray-400 m-0">{certification?.certificationName}</p>

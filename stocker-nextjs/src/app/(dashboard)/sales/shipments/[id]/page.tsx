@@ -397,7 +397,7 @@ export default function ShipmentDetailPage() {
             {/* Customer Info */}
             <Card>
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">
-                <UserIcon className="w-4 h-4" className="mr-2" />
+                <UserIcon className="w-4 h-4 mr-2" />
                 Müşteri
               </h3>
               <div className="space-y-3">
@@ -437,7 +437,7 @@ export default function ShipmentDetailPage() {
             {/* Shipping Address */}
             <Card>
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">
-                <MapPinIcon className="w-4 h-4" className="mr-2" />
+                <MapPinIcon className="w-4 h-4 mr-2" />
                 Teslimat Adresi
               </h3>
               <div className="space-y-1 text-sm text-slate-600">

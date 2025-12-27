@@ -100,7 +100,7 @@ export default function ShiftsPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: ShiftDto) => (
         <Space>
-          <ClockIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <ClockIcon className="w-4 h-4 text-violet-500" />
           <a onClick={() => router.push(`/hr/shifts/${record.id}`)}>{name}</a>
         </Space>
       ),

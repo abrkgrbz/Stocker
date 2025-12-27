@@ -450,7 +450,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-white" />
+                <ExclamationCircleIcon className="w-4 h-4 text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.critical}</div>
@@ -461,7 +461,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ExclamationTriangleIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <ExclamationTriangleIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.low}</div>
@@ -472,7 +472,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <CheckCircleIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <CheckCircleIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.normal}</div>
@@ -483,7 +483,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <InformationCircleIcon className="w-4 h-4" className="text-lg text-slate-500" />
+                <InformationCircleIcon className="w-4 h-4 text-lg text-slate-500" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.unconfigured}</div>

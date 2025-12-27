@@ -281,7 +281,7 @@ export default function EditProductAttributePage() {
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: '#8b5cf615' }}
               >
-                <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+                <TagIcon className="w-4 h-4 text-violet-500" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -322,7 +322,7 @@ export default function EditProductAttributePage() {
               {/* Basic Info */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TagIcon className="w-4 h-4" className="text-slate-400" />
+                  <TagIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Temel Bilgiler
                   </span>
@@ -386,7 +386,7 @@ export default function EditProductAttributePage() {
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                      <ListBulletIcon className="w-4 h-4" className="text-slate-400" />
+                      <ListBulletIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         Seçenekler
                         {options.length > 0 && (
@@ -421,7 +421,7 @@ export default function EditProductAttributePage() {
               {/* Settings */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Cog6ToothIcon className="w-4 h-4" className="text-slate-400" />
+                  <Cog6ToothIcon className="w-4 h-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Ayarlar
                   </span>

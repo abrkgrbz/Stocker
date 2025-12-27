@@ -134,7 +134,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large">
-            <ArrowPathIcon className="w-4 h-4" style={{ fontSize: '48px', color: '#1890ff' }} />
+            <ArrowPathIcon className="w-12 h-12 text-blue-500" />
             <Title level={4}>Bağlantı Doğrulanıyor...</Title>
           </Space>
         </Card>
@@ -156,7 +156,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <XCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: '#ff4d4f' }} />
+            <XCircleIcon className="w-16 h-16 text-white/90" />
             <div>
               <Title level={3}>Geçersiz Bağlantı</Title>
               <Paragraph type="secondary">{error}</Paragraph>
@@ -186,7 +186,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <CheckCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: '#52c41a' }} />
+            <CheckCircleIcon className="w-16 h-16 text-white/90" />
             <div>
               <Title level={3}>Şifre Başarıyla Sıfırlandı</Title>
               <Paragraph type="secondary">
@@ -219,11 +219,7 @@ function ResetPasswordContent() {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* Header */}
           <div style={{ textAlign: 'center' }}>
-            <LockClosedIcon className="w-4 h-4" style={{
-                fontSize: '48px',
-                color: '#1890ff',
-                marginBottom: '16px',
-              }}
+            <LockClosedIcon className="w-12 h-12 text-blue-500 mb-4"
             />
             <Title level={3} style={{ margin: 0 }}>
               Yeni Şifre Oluştur
@@ -338,7 +334,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <ArrowPathIcon className="w-4 h-4" style={{ fontSize: '48px', color: '#1890ff' }} />
+        <ArrowPathIcon className="w-12 h-12 text-blue-500" />
       </div>
     }>
       <ResetPasswordContent />

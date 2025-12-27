@@ -325,7 +325,7 @@ export default function NewPurchaseRequestPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                    <DocumentTextIcon className="w-16 h-16 text-white/90" />
                     <p className="mt-4 text-lg font-medium text-white/90">
                       Satın Alma Talebi
                     </p>
@@ -385,7 +385,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <InformationCircleIcon className="w-4 h-4" className="mr-1" />
+                            <InformationCircleIcon className="w-4 h-4 mr-1" />
                             Talep Bilgileri
                           </span>
                         ),
@@ -449,7 +449,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'budget',
                         label: (
                           <span>
-                            <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
+                            <CurrencyDollarIcon className="w-4 h-4 mr-1" />
                             Bütçe
                           </span>
                         ),
@@ -499,7 +499,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4 mr-1" />
                             Notlar
                           </span>
                         ),
@@ -526,7 +526,7 @@ export default function NewPurchaseRequestPage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <ListBulletIcon className="w-4 h-4" className="mr-1" />
+                        <ListBulletIcon className="w-4 h-4 mr-1" />
                         Talep Kalemleri
                       </Text>
                       <Text type="secondary" className="text-sm">

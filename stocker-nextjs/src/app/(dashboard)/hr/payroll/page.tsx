@@ -121,7 +121,7 @@ export default function PayrollPage() {
       key: 'employee',
       render: (_, record: PayrollDto) => (
         <Space>
-          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4 text-violet-500" />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -229,7 +229,7 @@ export default function PayrollPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+          <CurrencyDollarIcon className="w-4 h-4 mr-2" />
           Bordro Yönetimi
         </Title>
         <Space>

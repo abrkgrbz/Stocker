@@ -89,7 +89,7 @@ export default function EditEmployeeSkillPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <WrenchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
+                  <WrenchIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-gray-800">Yetkinlik</p>
                   <p className="text-sm text-gray-600">Calisan beceri ve yetenekleri</p>
                 </div>
@@ -105,7 +105,7 @@ export default function EditEmployeeSkillPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Yetkinlik Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Calisan & Yetkinlik Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>

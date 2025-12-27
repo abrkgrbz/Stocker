@@ -366,7 +366,7 @@ export default function NewStockTransferPage() {
               {/* Warehouses */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <InboxIcon className="w-4 h-4" className="mr-2" />
+                  <InboxIcon className="w-4 h-4 mr-2" />
                   Depolar
                 </label>
 
@@ -425,7 +425,7 @@ export default function NewStockTransferPage() {
               {/* Dates */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <CalendarIcon className="w-4 h-4" className="mr-2" />
+                  <CalendarIcon className="w-4 h-4 mr-2" />
                   Tarihler
                 </label>
 
@@ -463,7 +463,7 @@ export default function NewStockTransferPage() {
                     key: 'notes',
                     label: (
                       <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <DocumentTextIcon className="w-4 h-4" className="mr-2" />
+                        <DocumentTextIcon className="w-4 h-4 mr-2" />
                         Notlar ve Açıklama
                       </span>
                     ),

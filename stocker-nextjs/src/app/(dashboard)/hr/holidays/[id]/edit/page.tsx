@@ -97,7 +97,7 @@ export default function EditHolidayPage() {
               onClick={() => router.push(`/hr/holidays/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4" className="text-lg text-gray-600" />
+              <CalendarIcon className="w-4 h-4 text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Tatil Günü Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">{holiday.name}</p>

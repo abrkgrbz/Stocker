@@ -87,7 +87,7 @@ export default function EditWorkLocationPage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <MapPinIcon className="w-4 h-4" className="mr-2" />
+                <MapPinIcon className="w-4 h-4 mr-2" />
                 Lokasyonu Düzenle
               </h1>
               <p className="text-sm text-gray-400 m-0">{location.name}</p>

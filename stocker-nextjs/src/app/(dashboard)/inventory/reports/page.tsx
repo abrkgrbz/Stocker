@@ -296,7 +296,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
                   Toplam Stok Değeri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -307,7 +307,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <InboxIcon className="w-4 h-4" className="mr-2" />
+                  <InboxIcon className="w-4 h-4 mr-2" />
                   Toplam Stok Miktarı
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -318,7 +318,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <ChartBarIcon className="w-4 h-4" className="mr-2" />
+                  <ChartBarIcon className="w-4 h-4 mr-2" />
                   Ortalama Ürün Değeri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -708,7 +708,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-6">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <ExclamationTriangleIcon className="w-4 h-4" className="mr-2" />
+                  <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
                   Düşük Stoklu Ürünler
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -719,7 +719,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-6">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <InboxIcon className="w-4 h-4" className="mr-2" />
+                  <InboxIcon className="w-4 h-4 mr-2" />
                   Stokta Olmayan Ürünler
                 </p>
                 <div className="text-3xl font-bold text-slate-900">

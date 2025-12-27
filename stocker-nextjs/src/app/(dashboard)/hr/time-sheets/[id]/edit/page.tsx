@@ -85,7 +85,7 @@ export default function EditTimeSheetPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <ClockIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <ClockIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Puantaj</p>
                   <p className="text-sm text-white/60">Calisma saati takibi</p>
                 </div>
@@ -97,7 +97,7 @@ export default function EditTimeSheetPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Donem Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Calisan & Donem Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>
@@ -112,7 +112,7 @@ export default function EditTimeSheetPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><ClockIcon className="w-4 h-4" className="mr-1" /> Calisma Saatleri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><ClockIcon className="w-4 h-4 mr-1" /> Calisma Saatleri</Text>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="regularHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Normal saat" min={0} /></Form.Item></Col>
                   <Col span={12}><Form.Item name="overtimeHours" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Fazla mesai saat" min={0} /></Form.Item></Col>

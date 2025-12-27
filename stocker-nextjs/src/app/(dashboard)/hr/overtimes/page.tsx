@@ -361,7 +361,7 @@ export default function OvertimesPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <ClockIcon className="w-4 h-4" className="mr-2" />
+            <ClockIcon className="w-4 h-4 mr-2" />
             Fazla Mesailer
           </Title>
           <Text type="secondary">Fazla mesai taleplerini görüntüle ve yönet</Text>

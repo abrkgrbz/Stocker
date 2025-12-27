@@ -44,7 +44,7 @@ export default function TimeSheetDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <ClockIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ClockIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{timeSheet.employeeName}</h3>
               <p className="text-sm text-white/60">{timeSheet.status}</p>
               <Tag color={statusColors[timeSheet.status]} className="mt-4">{timeSheet.status}</Tag>

@@ -205,7 +205,7 @@ export default function UnitDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -215,7 +215,7 @@ export default function UnitDetailPage() {
                 {unit.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -259,7 +259,7 @@ export default function UnitDetailPage() {
                     className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     Temel Birim: {baseUnit.name} ({baseUnit.symbol})
-                    <ChevronRightIcon className="w-4 h-4" className="text-xs" />
+                    <ChevronRightIcon className="w-4 h-4 text-xs" />
                   </button>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function UnitDetailPage() {
                         <span className="text-xs text-slate-500">
                           1 {derived.symbol} = {derived.conversionFactor} {unit.symbol}
                         </span>
-                        <ChevronRightIcon className="w-4 h-4" className="text-slate-300 text-xs" />
+                        <ChevronRightIcon className="w-4 h-4 text-slate-300 text-xs" />
                       </div>
                     </div>
                   ))}

@@ -291,7 +291,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <ClipboardDocumentListIcon className="w-4 h-4" className="mr-2" />
+                <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
                 Toplam Log
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -302,7 +302,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <CalendarIcon className="w-4 h-4" className="mr-2" />
+                <CalendarIcon className="w-4 h-4 mr-2" />
                 Bugün
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -313,7 +313,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <ChartBarIcon className="w-4 h-4" className="mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" />
                 Bu Hafta
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -324,7 +324,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <GlobeAltIcon className="w-4 h-4" className="mr-2" />
+                <GlobeAltIcon className="w-4 h-4 mr-2" />
                 Bu Ay
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -339,7 +339,7 @@ export default function AuditTrailPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-5">
-                <FunnelIcon className="w-4 h-4" className="text-slate-500" />
+                <FunnelIcon className="w-4 h-4 text-slate-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Varlık Tipine Göre
                 </p>
@@ -392,7 +392,7 @@ export default function AuditTrailPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-5">
-                <UserGroupIcon className="w-4 h-4" className="text-slate-500" />
+                <UserGroupIcon className="w-4 h-4 text-slate-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   En Aktif Kullanıcılar
                 </p>
@@ -509,7 +509,7 @@ export default function AuditTrailPage() {
                 allowClear
                 value={filter.entityId}
                 onChange={(e) => handleFilterChange('entityId', e.target.value)}
-                prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+                prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
                 className="[&_.ant-input]:!border-slate-300"
               />
             </div>
@@ -773,7 +773,7 @@ export default function AuditTrailPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            <ClipboardDocumentListIcon className="w-4 h-4" className="mr-3" />
+            <ClipboardDocumentListIcon className="w-4 h-4 mr-3" />
             Envanter Denetim İzi
           </h1>
           <p className="text-sm text-slate-500 mt-1">

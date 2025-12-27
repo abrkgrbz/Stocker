@@ -334,7 +334,7 @@ export default function SerialNumbersPage() {
           {record.isUnderWarranty && (
             <div className="mt-1">
               <Tag className="text-xs bg-slate-900 text-white border-none">
-                <ShieldCheckIcon className="w-4 h-4" className="mr-1" />
+                <ShieldCheckIcon className="w-4 h-4 mr-1" />
                 Garanti: {record.remainingWarrantyDays} gün
               </Tag>
             </div>
@@ -574,7 +574,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                <CheckCircleIcon className="w-4 h-4" className="text-white text-lg" />
+                <CheckCircleIcon className="w-4 h-4 text-white text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.available}</div>
@@ -585,7 +585,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <LockClosedIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                <LockClosedIcon className="w-4 h-4 text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.reserved}</div>
@@ -596,7 +596,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ShoppingBagIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                <ShoppingBagIcon className="w-4 h-4 text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.sold}</div>
@@ -607,7 +607,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ShieldCheckIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                <ShieldCheckIcon className="w-4 h-4 text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.underWarranty}</div>
@@ -618,7 +618,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ExclamationCircleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                <ExclamationCircleIcon className="w-4 h-4 text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.defective}</div>
@@ -640,7 +640,7 @@ export default function SerialNumbersPage() {
         <Space wrap className="mb-4">
           <Input
             placeholder="Seri numarası ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchSerial}
             onChange={(e) => setSearchSerial(e.target.value)}
             className="w-52 [&_.ant-input]:!border-slate-200"

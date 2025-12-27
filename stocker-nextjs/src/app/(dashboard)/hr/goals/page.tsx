@@ -177,7 +177,7 @@ export default function GoalsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CursorArrowRaysIcon className="w-4 h-4" className="mr-2" />
+          <CursorArrowRaysIcon className="w-4 h-4 mr-2" />
           Performans Hedefleri
         </Title>
         <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/goals/new')}>

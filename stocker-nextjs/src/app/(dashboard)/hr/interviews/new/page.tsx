@@ -73,7 +73,7 @@ export default function NewInterviewPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <UserGroupIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <UserGroupIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Mulakat</p>
                   <p className="text-sm text-white/60">Is gorusmesi</p>
                 </div>
@@ -88,7 +88,7 @@ export default function NewInterviewPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Basvuru & Gorusmeci</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Basvuru & Gorusmeci</Text>
                 <Form.Item name="applicationId" rules={[{ required: true, message: 'Basvuru secimi zorunludur' }]} className="mb-3">
                   <Select showSearch placeholder="Basvuru secin" optionFilterProp="label" options={applications?.map((a: any) => ({ value: a.id, label: `${a.candidateName} - ${a.positionTitle}` }))} />
                 </Form.Item>

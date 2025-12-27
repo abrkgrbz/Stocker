@@ -222,7 +222,7 @@ export default function NewSupplierPaymentPage() {
                         justifyContent: 'center',
                       }}
                     >
-                      <WalletIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <WalletIcon className="w-16 h-16 text-white/90" />
                       <p className="mt-4 text-lg font-medium text-white/90">
                         Tedarikçi Ödemesi
                       </p>
@@ -280,7 +280,7 @@ export default function NewSupplierPaymentPage() {
                   {/* Currency Settings */}
                   <div className="mt-6 space-y-4">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
+                      <CurrencyDollarIcon className="w-4 h-4 mr-1" />
                       Para Birimi
                     </div>
                     <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
@@ -323,7 +323,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <BuildingStorefrontIcon className="w-4 h-4" className="mr-1" />
+                            <BuildingStorefrontIcon className="w-4 h-4 mr-1" />
                             Ödeme Bilgileri
                           </span>
                         ),
@@ -440,7 +440,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'bank',
                         label: (
                           <span>
-                            <BuildingLibraryIcon className="w-4 h-4" className="mr-1" />
+                            <BuildingLibraryIcon className="w-4 h-4 mr-1" />
                             Banka Bilgileri
                           </span>
                         ),
@@ -516,7 +516,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4 mr-1" />
                             Notlar
                           </span>
                         ),

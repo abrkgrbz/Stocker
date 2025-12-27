@@ -402,7 +402,7 @@ export default function NewProductBundlePage() {
               {/* Bundle Type Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <GiftIcon className="w-4 h-4" className="mr-1" /> Paket Türü
+                  <GiftIcon className="w-4 h-4 mr-1" /> Paket Türü
                 </Text>
                 <Form.Item name="bundleType" rules={[{ required: true }]} className="mb-2">
                   <Segmented
@@ -426,7 +426,7 @@ export default function NewProductBundlePage() {
               {/* Pricing Type */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CurrencyDollarIcon className="w-4 h-4" className="mr-1" /> Fiyatlandırma
+                  <CurrencyDollarIcon className="w-4 h-4 mr-1" /> Fiyatlandırma
                 </Text>
                 <Form.Item name="pricingType" rules={[{ required: true }]} className="mb-4">
                   <Select options={pricingTypes} variant="filled" size="large" />
@@ -487,7 +487,7 @@ export default function NewProductBundlePage() {
               {/* Settings */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <Cog6ToothIcon className="w-4 h-4" className="mr-1" /> Seçenekler
+                  <Cog6ToothIcon className="w-4 h-4 mr-1" /> Seçenekler
                 </Text>
                 <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
                   <div>
@@ -511,7 +511,7 @@ export default function NewProductBundlePage() {
                     key: 'validity',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <CalendarIcon className="w-4 h-4" className="mr-1" /> Geçerlilik Tarihleri
+                        <CalendarIcon className="w-4 h-4 mr-1" /> Geçerlilik Tarihleri
                       </Text>
                     ),
                     children: (
@@ -628,7 +628,7 @@ export default function NewProductBundlePage() {
 
                 {items.length === 0 ? (
                   <div className="p-12 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
-                    <GiftIcon className="w-4 h-4" className="text-5xl text-gray-300 mb-3" />
+                    <GiftIcon className="w-4 h-4 text-5xl text-gray-300 mb-3" />
                     <div className="text-gray-500 mb-3 font-medium">Henüz ürün eklenmedi</div>
                     <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
                       İlk Ürünü Ekle

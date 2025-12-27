@@ -170,7 +170,7 @@ export default function NewStockReservationPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ShoppingBagIcon className="w-4 h-4" className="mr-1" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4 mr-1" /> Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"
@@ -208,7 +208,7 @@ export default function NewStockReservationPage() {
                   <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                        <ShoppingBagIcon className="w-4 h-4" className="text-white text-xl" />
+                        <ShoppingBagIcon className="w-4 h-4 text-white text-xl" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
@@ -242,7 +242,7 @@ export default function NewStockReservationPage() {
               {/* Location */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <MapPinIcon className="w-4 h-4" className="mr-1" /> Depo & Lokasyon
+                  <MapPinIcon className="w-4 h-4 mr-1" /> Depo & Lokasyon
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -278,7 +278,7 @@ export default function NewStockReservationPage() {
               {/* Expiration */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Son Geçerlilik
+                  <CalendarIcon className="w-4 h-4 mr-1" /> Son Geçerlilik
                 </Text>
                 <Form.Item name="expirationDate" className="mb-0">
                   <DatePicker
@@ -322,7 +322,7 @@ export default function NewStockReservationPage() {
               {/* Reservation Type */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <LockClosedIcon className="w-4 h-4" className="mr-1" /> Rezervasyon Türü
+                  <LockClosedIcon className="w-4 h-4 mr-1" /> Rezervasyon Türü
                 </Text>
                 <Form.Item
                   name="reservationType"
@@ -359,7 +359,7 @@ export default function NewStockReservationPage() {
                     key: 'reference',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <DocumentTextIcon className="w-4 h-4" className="mr-1" /> Referans Dökümanı
+                        <DocumentTextIcon className="w-4 h-4 mr-1" /> Referans Dökümanı
                       </Text>
                     ),
                     children: (

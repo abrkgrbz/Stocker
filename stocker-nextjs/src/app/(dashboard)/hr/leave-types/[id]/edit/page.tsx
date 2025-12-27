@@ -106,7 +106,7 @@ export default function EditLeaveTypePage() {
               onClick={() => router.push(`/hr/leave-types/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <DocumentTextIcon className="w-4 h-4" className="text-lg text-gray-600" />
+              <DocumentTextIcon className="w-4 h-4 text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">İzin Türü Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

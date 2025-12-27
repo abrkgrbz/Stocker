@@ -144,7 +144,7 @@ export default function TerritoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Müşteri Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <UserGroupIcon className="w-4 h-4" className="text-slate-400" />
+                    <UserGroupIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {territory.customerCount || 0}
                     </span>
@@ -153,7 +153,7 @@ export default function TerritoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {territory.createdAt
                         ? dayjs(territory.createdAt).format('DD/MM/YYYY')
@@ -218,7 +218,7 @@ export default function TerritoryDetailPage() {
                 </p>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
                   <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    <GlobeAltIcon className="w-4 h-4" className="text-indigo-500" />
+                    <GlobeAltIcon className="w-4 h-4 text-indigo-500" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">

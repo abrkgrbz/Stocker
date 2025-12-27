@@ -549,7 +549,7 @@ export default function StockCountsPage() {
       render: (_, record) => (
         <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
           </button>
         </Dropdown>
       ),
@@ -567,7 +567,7 @@ export default function StockCountsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalCounts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <DocumentMagnifyingGlassIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <DocumentMagnifyingGlassIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>

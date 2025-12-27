@@ -92,7 +92,7 @@ export default function NewEmployeeAssetPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <ComputerDesktopIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <ComputerDesktopIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Varlik Atama</p>
                   <p className="text-sm text-white/60">Calisan ekipman yonetimi</p>
                 </div>
@@ -109,7 +109,7 @@ export default function NewEmployeeAssetPage() {
 
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Varlik Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Calisan & Varlik Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true, message: 'Calisan secimi zorunludur' }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>
@@ -130,7 +130,7 @@ export default function NewEmployeeAssetPage() {
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
 
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><CalendarIcon className="w-4 h-4 mr-1" /> Tarihler</Text>
                 <Row gutter={16}>
                   <Col span={8}><Form.Item name="assignedDate" rules={[{ required: true }]} className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Atama tarihi" /></Form.Item></Col>
                   <Col span={8}><Form.Item name="purchaseDate" className="mb-3"><DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Satin alma" /></Form.Item></Col>

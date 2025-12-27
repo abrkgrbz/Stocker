@@ -147,7 +147,7 @@ export default function CRMDashboardPage() {
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
                   {React.cloneElement(item.icon, { className: 'text-slate-500', style: { fontSize: 16 } })}
                 </div>
-                <ChevronRightIcon className="w-4 h-4" className="text-slate-300 text-xs group-hover:text-slate-500 transition-colors" />
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 text-xs group-hover:text-slate-500 transition-colors" />
               </div>
               <div className="text-2xl font-semibold text-slate-900 mb-1">
                 {item.count?.toLocaleString('tr-TR') || '0'}
@@ -262,7 +262,7 @@ export default function CRMDashboardPage() {
             ) : metrics.upcomingDeals.length === 0 ? (
               <div className="text-center py-10">
                 <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center mx-auto mb-3">
-                  <TrophyIcon className="w-4 h-4" className="text-slate-300" style={{ fontSize: 18 }} />
+                  <TrophyIcon className="w-4 h-4 text-slate-300" style={{ fontSize: 18 }} />
                 </div>
                 <h3 className="text-sm font-medium text-slate-600 mb-1">Yaklaşan fırsat yok</h3>
                 <p className="text-xs text-slate-400 mb-4">
@@ -281,7 +281,7 @@ export default function CRMDashboardPage() {
                     <div className="flex items-center justify-between py-3 hover:bg-slate-50 -mx-4 px-4 cursor-pointer transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                          <TrophyIcon className="w-4 h-4" className="text-slate-500" style={{ fontSize: 14 }} />
+                          <TrophyIcon className="w-4 h-4 text-slate-500" style={{ fontSize: 14 }} />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{deal.title}</div>

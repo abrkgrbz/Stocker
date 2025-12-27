@@ -275,7 +275,7 @@ export default function InvoiceDetailPage() {
           <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
             Geri
           </Button>
-          <DocumentTextIcon className="w-4 h-4" className="text-3xl text-green-500" />
+          <DocumentTextIcon className="w-4 h-4 text-3xl text-green-500" />
           <div>
             <Title level={2} className="!mb-0">
               {invoice.invoiceNumber}

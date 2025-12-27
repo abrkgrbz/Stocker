@@ -260,7 +260,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+              <CurrencyDollarIcon className="w-4 h-4 mr-2" />
               Toplam Stok Değeri
             </p>
             <div className="text-3xl font-bold text-slate-900">
@@ -279,7 +279,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <Squares2X2Icon className="w-4 h-4" className="mr-2" />
+              <Squares2X2Icon className="w-4 h-4 mr-2" />
               Toplam Ürün Sayısı
             </p>
             <div className="text-3xl font-bold text-slate-900">
@@ -291,7 +291,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <InboxIcon className="w-4 h-4" className="mr-2" />
+              <InboxIcon className="w-4 h-4 mr-2" />
               Toplam Miktar
             </p>
             <div className="text-3xl font-bold text-slate-900">
@@ -303,7 +303,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <ChartBarIcon className="w-4 h-4" className="mr-2" />
+              <ChartBarIcon className="w-4 h-4 mr-2" />
               Ortalama Birim Maliyet
             </p>
             <div className="text-3xl font-bold text-slate-900">
@@ -320,7 +320,7 @@ export default function InventoryAnalyticsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
             <div className="flex items-center justify-between mb-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <ChartBarIcon className="w-4 h-4" className="mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" />
                 Stok Hareket Trendi
               </p>
               <Select
@@ -361,7 +361,7 @@ export default function InventoryAnalyticsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
             <div className="flex items-center justify-between mb-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <ExclamationTriangleIcon className="w-4 h-4" className="mr-2" />
+                <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
                 Uyarılar
               </p>
               <Link href="/inventory/stock-alerts" className="text-xs text-slate-500 hover:text-slate-900">
@@ -375,11 +375,11 @@ export default function InventoryAnalyticsPage() {
                     <div key={index} className="p-3 bg-slate-50 rounded-lg">
                       <div className="flex items-start gap-3">
                         {alert.severity === 'Critical' ? (
-                          <ExclamationCircleIcon className="w-4 h-4" className="text-slate-900" />
+                          <ExclamationCircleIcon className="w-4 h-4 text-slate-900" />
                         ) : alert.severity === 'High' ? (
-                          <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600" />
+                          <ExclamationTriangleIcon className="w-4 h-4 text-slate-600" />
                         ) : (
-                          <InformationCircleIcon className="w-4 h-4" className="text-slate-400" />
+                          <InformationCircleIcon className="w-4 h-4 text-slate-400" />
                         )}
                         <div>
                           <p className="font-medium text-slate-900 text-sm">{alert.productName || alert.alertType}</p>
@@ -403,7 +403,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-              <ChartPieIcon className="w-4 h-4" className="mr-2" />
+              <ChartPieIcon className="w-4 h-4 mr-2" />
               Kategorilere Göre Dağılım
             </p>
             {categoryData.length > 0 ? (
@@ -438,7 +438,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-6">
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-              <BuildingStorefrontIcon className="w-4 h-4" className="mr-2" />
+              <BuildingStorefrontIcon className="w-4 h-4 mr-2" />
               Depolara Göre Dağılım
             </p>
             {warehouseData.length > 0 ? (
@@ -465,7 +465,7 @@ export default function InventoryAnalyticsPage() {
       {/* Top Products Table */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-          <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
+          <CurrencyDollarIcon className="w-4 h-4 mr-2" />
           En Değerli Ürünler (Top 15)
         </p>
         <Table
@@ -549,7 +549,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <ArrowTrendingUpIcon className="w-4 h-4" className="mr-2" />
+              <ArrowTrendingUpIcon className="w-4 h-4 mr-2" />
               En Yüksek Değerli Ürün
             </p>
             <div className="text-2xl font-bold text-slate-900">
@@ -571,7 +571,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <ChartBarIcon className="w-4 h-4" className="mr-2" />
+              <ChartBarIcon className="w-4 h-4 mr-2" />
               Medyan Ürün Değeri
             </p>
             <div className="text-2xl font-bold text-slate-900">
@@ -582,7 +582,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <ClockIcon className="w-4 h-4" className="mr-2" />
+              <ClockIcon className="w-4 h-4 mr-2" />
               Tarih
             </p>
             <div className="text-2xl font-bold text-slate-900">
@@ -595,7 +595,7 @@ export default function InventoryAnalyticsPage() {
       {/* Treemap */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-          <Squares2X2Icon className="w-4 h-4" className="mr-2" />
+          <Squares2X2Icon className="w-4 h-4 mr-2" />
           Kategori Bazlı Stok Değeri (Treemap)
         </p>
         {treemapData.length > 0 ? (
@@ -654,7 +654,7 @@ export default function InventoryAnalyticsPage() {
       {/* Category Table */}
       <div className="bg-white border border-slate-200 rounded-xl p-6">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-          <ChartPieIcon className="w-4 h-4" className="mr-2" />
+          <ChartPieIcon className="w-4 h-4 mr-2" />
           Kategori Bazlı Detaylı Rapor
         </p>
         <Table
@@ -792,7 +792,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-3">
             <div className="bg-slate-500 border border-slate-400 rounded-xl p-5 text-white">
               <p className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3">
-                <ArrowPathIcon className="w-4 h-4" className="mr-2" />
+                <ArrowPathIcon className="w-4 h-4 mr-2" />
                 Stok Devir Oranı
               </p>
               <div className="text-3xl font-bold">
@@ -827,7 +827,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-                <ChartBarIcon className="w-4 h-4" className="mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" />
                 Kategorilere Göre Devir Hızı
               </p>
               <ResponsiveContainer width="100%" height={300}>
@@ -858,7 +858,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
-                <ArrowPathIcon className="w-4 h-4" className="mr-2" />
+                <ArrowPathIcon className="w-4 h-4 mr-2" />
                 Stok Devir Performansı
               </p>
               <div className="text-center py-8">

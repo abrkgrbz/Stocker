@@ -253,7 +253,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Toplam Talep"
               value={stats.total}
-              prefix={<DocumentTextIcon className="w-4 h-4" className="text-blue-500" />}
+              prefix={<DocumentTextIcon className="w-4 h-4 text-blue-500" />}
             />
           </Card>
         </Col>
@@ -262,7 +262,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Taslak"
               value={stats.draft}
-              prefix={<PencilIcon className="w-4 h-4" className="text-gray-500" />}
+              prefix={<PencilIcon className="w-4 h-4 text-gray-500" />}
             />
           </Card>
         </Col>
@@ -271,7 +271,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Gönderildi"
               value={stats.sent}
-              prefix={<PaperAirplaneIcon className="w-4 h-4" className="text-blue-500" />}
+              prefix={<PaperAirplaneIcon className="w-4 h-4 text-blue-500" />}
             />
           </Card>
         </Col>
@@ -280,7 +280,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Kazanan Belirlendi"
               value={stats.awarded}
-              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4 text-green-500" />}
             />
           </Card>
         </Col>
@@ -291,7 +291,7 @@ export default function QuotationsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Teklif no veya başlık ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}

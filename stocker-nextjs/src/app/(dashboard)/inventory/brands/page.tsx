@@ -223,7 +223,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{brandsWithWebsite}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <GlobeAltIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <GlobeAltIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <InboxIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function BrandsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Marka ara... (ad, açıklama)"
-          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

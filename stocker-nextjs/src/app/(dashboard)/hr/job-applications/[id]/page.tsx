@@ -45,14 +45,14 @@ export default function JobApplicationDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <DocumentTextIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{application.fullName}</h3>
               <p className="text-sm text-white/60">{application.jobTitle}</p>
               <Tag color={statusColors[application.status]} className="mt-4">{application.status}</Tag>
             </Card>
             <Card className="mt-4" title="Iletisim">
-              <p><EnvelopeIcon className="w-4 h-4" className="mr-2" />{application.email || '-'}</p>
-              <p><PhoneIcon className="w-4 h-4" className="mr-2" />{application.phone || '-'}</p>
+              <p><EnvelopeIcon className="w-4 h-4 mr-2" />{application.email || '-'}</p>
+              <p><PhoneIcon className="w-4 h-4 mr-2" />{application.phone || '-'}</p>
             </Card>
           </Col>
           <Col xs={24} lg={16}>

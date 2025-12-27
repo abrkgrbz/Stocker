@@ -48,7 +48,7 @@ export default function EmployeeAssetDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <ComputerDesktopIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ComputerDesktopIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{asset.assetName}</h3>
               <p className="text-sm text-white/60">{asset.assetType}</p>
               <Tag color={statusColors[asset.status]} className="mt-4">{asset.status}</Tag>

@@ -133,7 +133,7 @@ export default function NewCareerPathPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <RocketLaunchIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">
                     Kariyer Plani
                   </p>
@@ -165,7 +165,7 @@ export default function NewCareerPathPage() {
               {/* Progress */}
               <div className="mb-6">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <TrophyIcon className="w-4 h-4" className="mr-1" /> Ilerleme
+                  <TrophyIcon className="w-4 h-4 mr-1" /> Ilerleme
                 </Text>
                 <Form.Item name="progressPercentage" className="mb-0">
                   <InputNumber
@@ -183,7 +183,7 @@ export default function NewCareerPathPage() {
               {/* Employee Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <UserIcon className="w-4 h-4" className="mr-1" /> Calisan Bilgileri
+                  <UserIcon className="w-4 h-4 mr-1" /> Calisan Bilgileri
                 </Text>
                 <Form.Item
                   name="employeeId"
@@ -250,7 +250,7 @@ export default function NewCareerPathPage() {
               {/* Dates */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler
+                  <CalendarIcon className="w-4 h-4 mr-1" /> Tarihler
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>

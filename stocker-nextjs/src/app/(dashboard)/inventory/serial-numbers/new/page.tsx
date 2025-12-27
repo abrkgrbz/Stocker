@@ -202,7 +202,7 @@ export default function NewSerialNumberPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ShoppingBagIcon className="w-4 h-4" className="mr-1" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4 mr-1" /> Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"
@@ -254,7 +254,7 @@ export default function NewSerialNumberPage() {
               {/* Location */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <MapPinIcon className="w-4 h-4" className="mr-1" /> Konum
+                  <MapPinIcon className="w-4 h-4 mr-1" /> Konum
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -293,7 +293,7 @@ export default function NewSerialNumberPage() {
                     key: 'additional',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <CalendarIcon className="w-4 h-4" className="mr-1" /> Ek Bilgiler
+                        <CalendarIcon className="w-4 h-4 mr-1" /> Ek Bilgiler
                       </Text>
                     ),
                     children: (

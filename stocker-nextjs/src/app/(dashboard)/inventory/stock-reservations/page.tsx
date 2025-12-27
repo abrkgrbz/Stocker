@@ -192,7 +192,7 @@ export default function StockReservationsPage() {
       render: (number: string) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <LockClosedIcon className="w-4 h-4" className="text-lg text-slate-600" />
+            <LockClosedIcon className="w-4 h-4 text-lg text-slate-600" />
           </div>
           <div>
             <div className="font-semibold text-slate-900">{number}</div>
@@ -332,7 +332,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <LockClosedIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <LockClosedIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
@@ -343,7 +343,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ClockIcon className="w-4 h-4" className="text-lg text-slate-700" />
+                <ClockIcon className="w-4 h-4 text-lg text-slate-700" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.active}</div>
@@ -354,7 +354,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
-                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-slate-800" />
+                <ExclamationCircleIcon className="w-4 h-4 text-lg text-slate-800" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.partial}</div>
@@ -365,7 +365,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <CheckIcon className="w-4 h-4" className="text-lg text-slate-600" />
+                <CheckIcon className="w-4 h-4 text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.fulfilled}</div>
@@ -376,7 +376,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <XMarkIcon className="w-4 h-4" className="text-lg text-slate-500" />
+                <XMarkIcon className="w-4 h-4 text-lg text-slate-500" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.cancelled}</div>
@@ -387,7 +387,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <ClockIcon className="w-4 h-4" className="text-lg text-white" />
+                <ClockIcon className="w-4 h-4 text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>
@@ -428,7 +428,7 @@ export default function StockReservationsPage() {
           />
           <Input
             placeholder="Rezervasyon ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -516,7 +516,7 @@ export default function StockReservationsPage() {
       <Modal
         title={
           <div className="flex items-center gap-2 text-slate-900">
-            <ExclamationCircleIcon className="w-4 h-4" className="text-slate-600" />
+            <ExclamationCircleIcon className="w-4 h-4 text-slate-600" />
             <span className="font-semibold">Rezervasyonu İptal Et</span>
           </div>
         }

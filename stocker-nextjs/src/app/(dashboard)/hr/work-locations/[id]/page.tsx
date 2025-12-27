@@ -106,7 +106,7 @@ export default function WorkLocationDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              <MapPinIcon className="w-4 h-4" className="mr-2" />
+              <MapPinIcon className="w-4 h-4 mr-2" />
               {location.name}
             </Title>
             <Space className="mt-1">

@@ -196,12 +196,12 @@ export default function TerritoryDetailPage() {
           <StatCard
             label="Bölge Tipi"
             value={typeLabels[territory.territoryType]}
-            icon={<GlobeAltIcon className="w-4 h-4" className="text-purple-500" />}
+            icon={<GlobeAltIcon className="w-4 h-4 text-purple-500" />}
           />
           <StatCard
             label="Müşteri Sayısı"
             value={territory.customerCount}
-            icon={<UserGroupIcon className="w-4 h-4" className="text-blue-500" />}
+            icon={<UserGroupIcon className="w-4 h-4 text-blue-500" />}
           />
           <StatCard
             label="Yıllık Hedef"
@@ -213,16 +213,16 @@ export default function TerritoryDetailPage() {
                   }).format(territory.annualTarget.amount)
                 : '-'
             }
-            icon={<CursorArrowRaysIcon className="w-4 h-4" className="text-green-500" />}
+            icon={<CursorArrowRaysIcon className="w-4 h-4 text-green-500" />}
           />
           <StatCard
             label="Durum"
             value={statusLabels[territory.status]}
             icon={
               territory.status === 'Active' ? (
-                <CheckCircleIcon className="w-4 h-4" className="text-emerald-500" />
+                <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
               ) : (
-                <StopCircleIcon className="w-4 h-4" className="text-slate-400" />
+                <StopCircleIcon className="w-4 h-4 text-slate-400" />
               )
             }
           />

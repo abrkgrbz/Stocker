@@ -352,7 +352,7 @@ export default function SupplierEvaluationDetailPage() {
                 marginBottom: '16px',
               }}
             >
-              <StarIcon className="w-4 h-4" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
+              <StarIcon className="w-12 h-12 text-blue-500" />
               <div className="text-white/90 font-medium mt-2">{evaluation.evaluationNumber}</div>
               <Tag color={status.color} className="mt-2">{status.text}</Tag>
             </div>

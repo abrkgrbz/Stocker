@@ -236,7 +236,7 @@ export default function DealDetailPage() {
                           transition={{ delay: 0.4 }}
                         >
                           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <DocumentTextIcon className="w-4 h-4" className="text-blue-500" />
+                            <DocumentTextIcon className="w-4 h-4 text-blue-500" />
                             Fırsat Bilgileri
                           </h3>
                           <Descriptions bordered column={1} size="middle">
@@ -289,7 +289,7 @@ export default function DealDetailPage() {
                             className="mt-6"
                           >
                             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                              <DocumentTextIcon className="w-4 h-4" className="text-blue-500" />
+                              <DocumentTextIcon className="w-4 h-4 text-blue-500" />
                               Açıklama
                             </h3>
                             <Card className="bg-gray-50 border border-gray-200 shadow-sm">
@@ -308,14 +308,14 @@ export default function DealDetailPage() {
                           transition={{ delay: 0.4 }}
                         >
                           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <ClockIcon className="w-4 h-4" className="text-blue-500" />
+                            <ClockIcon className="w-4 h-4 text-blue-500" />
                             Aktivite Geçmişi
                           </h3>
                           <Card className="border border-gray-200 shadow-sm">
                             <Timeline
                               items={[
                                 {
-                                  dot: <ClockIcon className="w-4 h-4" style={{ fontSize: '16px' }} />,
+                                  dot: <ClockIcon className="w-4 h-4" />,
                                   color: 'blue',
                                   children: (
                                     <>

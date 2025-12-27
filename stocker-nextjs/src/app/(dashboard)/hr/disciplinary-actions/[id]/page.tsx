@@ -99,7 +99,7 @@ export default function DisciplinaryActionDetailPage() {
               }}
               bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}
             >
-              <ExclamationTriangleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ExclamationTriangleIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{action.employeeName}</h3>
               <p className="text-sm text-white/60">{action.actionType}</p>
               <div className="mt-4 space-x-2">
@@ -110,7 +110,7 @@ export default function DisciplinaryActionDetailPage() {
 
             {action.investigatorName && (
               <Card className="mt-4" title="Sorusturmaci">
-                <p><UserIcon className="w-4 h-4" className="mr-2" />{action.investigatorName}</p>
+                <p><UserIcon className="w-4 h-4 mr-2" />{action.investigatorName}</p>
               </Card>
             )}
           </Col>

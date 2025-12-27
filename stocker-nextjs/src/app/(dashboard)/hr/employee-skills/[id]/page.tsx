@@ -43,7 +43,7 @@ export default function EmployeeSkillDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <WrenchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
+              <WrenchIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-gray-800">{skill.skillName}</h3>
               <p className="text-sm text-gray-600">{skill.category}</p>
               <Tag color={proficiencyColors[skill.proficiencyLevel]} className="mt-4">{skill.proficiencyLevel}</Tag>

@@ -337,7 +337,7 @@ export default function PurchaseRequestsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Title level={3} className="!mb-1 flex items-center gap-2">
-            <DocumentTextIcon className="w-4 h-4" className="text-purple-500" />
+            <DocumentTextIcon className="w-4 h-4 text-purple-500" />
             Satın Alma Talepleri
           </Title>
           <Text type="secondary">Departmanlardan gelen satın alma taleplerini yönetin</Text>
@@ -399,7 +399,7 @@ export default function PurchaseRequestsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Talep ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}

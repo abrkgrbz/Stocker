@@ -109,7 +109,7 @@ export default function DocumentsPage() {
       sorter: (a, b) => a.title.localeCompare(b.title),
       render: (title: string, record: EmployeeDocumentDto) => (
         <Space>
-          <DocumentIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+          <DocumentIcon className="w-4 h-4 text-blue-500" />
           <a onClick={() => router.push(`/hr/documents/${record.id}`)}>{title}</a>
         </Space>
       ),
@@ -212,7 +212,7 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <DocumentIcon className="w-4 h-4" className="mr-2" />
+          <DocumentIcon className="w-4 h-4 mr-2" />
           Belgeler
         </Title>
         <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/documents/new')}>

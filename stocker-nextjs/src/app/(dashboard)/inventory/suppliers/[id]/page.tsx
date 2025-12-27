@@ -186,7 +186,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <BuildingStorefrontIcon className="w-4 h-4" className="text-blue-500" />
+                      <BuildingStorefrontIcon className="w-4 h-4 text-blue-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -201,7 +201,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                      <EnvelopeIcon className="w-4 h-4" className="text-green-500" />
+                      <EnvelopeIcon className="w-4 h-4 text-green-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -216,7 +216,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-                      <PhoneIcon className="w-4 h-4" className="text-orange-500" />
+                      <PhoneIcon className="w-4 h-4 text-orange-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -231,7 +231,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
-                      <PhoneIcon className="w-4 h-4" className="text-cyan-500" />
+                      <PhoneIcon className="w-4 h-4 text-cyan-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -246,7 +246,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                      <GlobeAltIcon className="w-4 h-4" className="text-purple-500" />
+                      <GlobeAltIcon className="w-4 h-4 text-purple-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -266,7 +266,7 @@ export default function SupplierDetailPage() {
           {address && (
             <Card title="Adres Bilgileri">
               <div className="flex items-start gap-3">
-                <MapPinIcon className="w-4 h-4" className="text-gray-400 mt-1 text-lg" />
+                <MapPinIcon className="w-4 h-4 text-gray-400 mt-1 text-lg" />
                 <div>
                   {supplier.street && <div>{supplier.street}</div>}
                   <div>{[supplier.city, supplier.state].filter(Boolean).join(', ')}</div>

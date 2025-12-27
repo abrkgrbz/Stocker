@@ -116,13 +116,13 @@ export default function SuppliersPage() {
         <div className="text-sm">
           {record.phone && (
             <div className="flex items-center gap-1 text-slate-600">
-              <PhoneIcon className="w-4 h-4" className="text-slate-400" />
+              <PhoneIcon className="w-4 h-4 text-slate-400" />
               {record.phone}
             </div>
           )}
           {record.city && (
             <div className="flex items-center gap-1 text-slate-500 text-xs mt-1">
-              <MapPinIcon className="w-4 h-4" className="text-slate-400" />
+              <MapPinIcon className="w-4 h-4 text-slate-400" />
               {record.city}
             </div>
           )}
@@ -210,7 +210,7 @@ export default function SuppliersPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
             </button>
           </Dropdown>
         );
@@ -240,7 +240,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeSuppliers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <CheckCircleIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <InboxIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function SuppliersPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Tedarikçi ara... (ad, kod, şehir)"
-          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

@@ -174,7 +174,7 @@ export default function WarehouseDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <HomeIcon className="w-4 h-4" className="text-white text-lg" />
+                <HomeIcon className="w-4 h-4 text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4" className="text-blue-600 text-lg" />
+                  <MapPinIcon className="w-4 h-4 text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Lokasyonlar
@@ -245,7 +245,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Squares2X2Icon className="w-4 h-4" className="text-purple-600 text-lg" />
+                  <Squares2X2Icon className="w-4 h-4 text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ürün Çeşidi
@@ -262,7 +262,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4 text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Stok Değeri
@@ -332,7 +332,7 @@ export default function WarehouseDetailPage() {
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Yönetici</p>
                       <div className="flex items-center gap-1.5">
-                        <UserIcon className="w-4 h-4" className="text-slate-400 text-xs" />
+                        <UserIcon className="w-4 h-4 text-slate-400 text-xs" />
                         <span className="text-sm font-medium text-slate-900">{warehouse.manager}</span>
                       </div>
                     </div>
@@ -341,7 +341,7 @@ export default function WarehouseDetailPage() {
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Telefon</p>
                       <div className="flex items-center gap-1.5">
-                        <PhoneIcon className="w-4 h-4" className="text-slate-400 text-xs" />
+                        <PhoneIcon className="w-4 h-4 text-slate-400 text-xs" />
                         <span className="text-sm font-medium text-slate-900">{warehouse.phone}</span>
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export default function WarehouseDetailPage() {
               {address ? (
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <MapPinIcon className="w-4 h-4" className="text-slate-600 text-lg" />
+                    <MapPinIcon className="w-4 h-4 text-slate-600 text-lg" />
                   </div>
                   <div className="space-y-1">
                     {warehouse.street && (
@@ -399,7 +399,7 @@ export default function WarehouseDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -409,7 +409,7 @@ export default function WarehouseDetailPage() {
                 {warehouse.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -458,7 +458,7 @@ export default function WarehouseDetailPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <MapPinIcon className="w-4 h-4" className="text-slate-400 text-2xl" />
+                    <MapPinIcon className="w-4 h-4 text-slate-400 text-2xl" />
                   </div>
                   <p className="text-slate-500 mb-4">Bu depoda henüz lokasyon tanımlanmamış</p>
                   <Button

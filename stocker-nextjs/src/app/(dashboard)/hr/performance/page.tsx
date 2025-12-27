@@ -90,7 +90,7 @@ export default function PerformancePage() {
       key: 'employee',
       render: (_, record: PerformanceReviewDto) => (
         <Space>
-          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4 text-violet-500" />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -175,7 +175,7 @@ export default function PerformancePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <TrophyIcon className="w-4 h-4" className="mr-2" />
+          <TrophyIcon className="w-4 h-4 mr-2" />
           Performans Değerlendirme
         </Title>
         <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/performance/new')}>

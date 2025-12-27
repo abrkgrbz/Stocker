@@ -138,7 +138,7 @@ export default function WarehousesPage() {
       render: (_, record) => (
         record.city ? (
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <MapPinIcon className="w-4 h-4" className="text-slate-400" />
+            <MapPinIcon className="w-4 h-4 text-slate-400" />
             <span>{record.city}{record.state ? `, ${record.state}` : ''}</span>
           </div>
         ) : (
@@ -234,7 +234,7 @@ export default function WarehousesPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
             </button>
           </Dropdown>
         );
@@ -253,7 +253,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalWarehouses}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <BuildingStorefrontIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
+              <BuildingStorefrontIcon className="w-4 h-4 text-blue-500" />
             </div>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <MapPinIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <MapPinIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>

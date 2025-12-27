@@ -283,7 +283,7 @@ export default function PriceListsPage() {
       <Card className="mb-4">
         <Input
           placeholder="Fiyat listesi ara..."
-          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 300 }}

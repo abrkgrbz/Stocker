@@ -405,7 +405,7 @@ export default function StockMovementsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
             </button>
           </Dropdown>
         );
@@ -465,7 +465,7 @@ export default function StockMovementsPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <ArrowPathIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <ArrowPathIcon className="w-4 h-4 text-violet-500" />
             </div>
           </div>
         </div>

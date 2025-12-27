@@ -369,7 +369,7 @@ export default function NewProductVariantPage() {
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
                   <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <Cog6ToothIcon className="w-4 h-4" className="mr-1" /> Varyant Özellikleri
+                    <Cog6ToothIcon className="w-4 h-4 mr-1" /> Varyant Özellikleri
                   </Text>
                   <Button
                     type="text"
@@ -497,7 +497,7 @@ export default function NewProductVariantPage() {
               {/* Pricing Section */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CurrencyDollarIcon className="w-4 h-4" className="mr-1" /> Fiyatlandırma
+                  <CurrencyDollarIcon className="w-4 h-4 mr-1" /> Fiyatlandırma
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>

@@ -92,7 +92,7 @@ export default function LeaveTypesPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: LeaveTypeDto) => (
         <Space>
-          <DocumentTextIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+          <DocumentTextIcon className="w-4 h-4 text-violet-500" />
           <a onClick={() => router.push(`/hr/leave-types/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -177,7 +177,7 @@ export default function LeaveTypesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <DocumentTextIcon className="w-4 h-4" className="mr-2" />
+          <DocumentTextIcon className="w-4 h-4 mr-2" />
           İzin Türleri
         </Title>
         <Space>

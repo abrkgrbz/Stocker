@@ -58,7 +58,7 @@ export default function NewHolidayPage() {
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <CalendarIcon className="w-4 h-4" className="mr-2" />
+                <CalendarIcon className="w-4 h-4 mr-2" />
                 Yeni Tatil Günü
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir tatil günü ekleyin</p>

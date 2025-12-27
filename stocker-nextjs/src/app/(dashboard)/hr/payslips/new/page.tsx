@@ -72,7 +72,7 @@ export default function NewPayslipPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <CurrencyDollarIcon className="w-16 h-16 text-white/90" />
                   <p className="mt-4 text-lg font-medium text-white/90">Bordro</p>
                   <p className="text-sm text-white/60">Maas hesaplama</p>
                 </div>
@@ -85,7 +85,7 @@ export default function NewPayslipPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Donem Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4 mr-1" /> Calisan & Donem Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>
@@ -97,7 +97,7 @@ export default function NewPayslipPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><PlusCircleIcon className="w-4 h-4" className="mr-1" /> Kazanclar</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><PlusCircleIcon className="w-4 h-4 mr-1" /> Kazanclar</Text>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="basicSalary" rules={[{ required: true }]} className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Temel maas" prefix="₺" /></Form.Item></Col>
                   <Col span={12}><Form.Item name="overtimePay" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Fazla mesai" prefix="₺" /></Form.Item></Col>

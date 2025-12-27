@@ -99,7 +99,7 @@ export default function CareerPathDetailPage() {
               }}
               bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}
             >
-              <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <RocketLaunchIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">
                 {careerPath.employeeName}
               </h3>

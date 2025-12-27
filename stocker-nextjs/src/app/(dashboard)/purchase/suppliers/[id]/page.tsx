@@ -232,7 +232,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4 text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kredi Limiti
@@ -281,7 +281,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <ReceiptPercentIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
+                  <ReceiptPercentIcon className="w-4 h-4 text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İndirim Oranı
@@ -300,7 +300,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <StarIcon className="w-4 h-4" className="text-amber-600 text-lg" />
+                  <StarIcon className="w-4 h-4 text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Puan</p>
               </div>
@@ -317,7 +317,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-7">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-400" />
+                <BuildingStorefrontIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Firma Bilgileri
                 </p>
@@ -362,7 +362,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-5">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <PhoneIcon className="w-4 h-4" className="text-slate-400" />
+                <PhoneIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İletişim Bilgileri
                 </p>
@@ -370,7 +370,7 @@ export default function SupplierDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <PhoneIcon className="w-4 h-4" className="text-slate-500 text-sm" />
+                    <PhoneIcon className="w-4 h-4 text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Telefon</p>
@@ -379,7 +379,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <EnvelopeIcon className="w-4 h-4" className="text-slate-500 text-sm" />
+                    <EnvelopeIcon className="w-4 h-4 text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">E-posta</p>
@@ -388,7 +388,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <GlobeAltIcon className="w-4 h-4" className="text-slate-500 text-sm" />
+                    <GlobeAltIcon className="w-4 h-4 text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Web Sitesi</p>
@@ -409,7 +409,7 @@ export default function SupplierDetailPage() {
                 {supplier.fax && (
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <DocumentTextIcon className="w-4 h-4" className="text-slate-500 text-sm" />
+                      <DocumentTextIcon className="w-4 h-4 text-slate-500 text-sm" />
                     </div>
                     <div>
                       <p className="text-xs text-slate-400">Faks</p>
@@ -425,7 +425,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <MapPinIcon className="w-4 h-4" className="text-slate-400" />
+                <MapPinIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Adres</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -457,7 +457,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <BuildingLibraryIcon className="w-4 h-4" className="text-slate-400" />
+                <BuildingLibraryIcon className="w-4 h-4 text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Finansal Bilgiler
                 </p>
@@ -498,7 +498,7 @@ export default function SupplierDetailPage() {
             <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
+                  <DocumentTextIcon className="w-4 h-4 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Notlar
                   </p>
@@ -513,7 +513,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <UserIcon className="w-4 h-4" className="text-slate-400" />
+                  <UserIcon className="w-4 h-4 text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     İletişim Kişileri ({supplier.contacts?.length || 0})
                   </p>
@@ -580,7 +580,7 @@ export default function SupplierDetailPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                    <ShoppingCartIcon className="w-4 h-4" className="text-white text-lg" />
+                    <ShoppingCartIcon className="w-4 h-4 text-white text-lg" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">Siparişler</p>
@@ -607,7 +607,7 @@ export default function SupplierDetailPage() {
               <div className="flex gap-8">
                 {supplier.createdAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(supplier.createdAt).format('DD/MM/YYYY HH:mm')}
@@ -616,7 +616,7 @@ export default function SupplierDetailPage() {
                 )}
                 {supplier.updatedAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Güncelleme:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(supplier.updatedAt).format('DD/MM/YYYY HH:mm')}

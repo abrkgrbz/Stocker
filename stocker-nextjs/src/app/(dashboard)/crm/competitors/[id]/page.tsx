@@ -97,7 +97,7 @@ export default function CompetitorDetailPage() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{competitor.name}</h1>
                   <Tag color={threatInfo.color}>
-                    <ExclamationTriangleIcon className="w-4 h-4" className="mr-1" />
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
                     {threatInfo.label}
                   </Tag>
                 </div>
@@ -138,7 +138,7 @@ export default function CompetitorDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Tehdit Seviyesi</p>
                   <Tag color={threatInfo.color}>
-                    <ExclamationTriangleIcon className="w-4 h-4" className="mr-1" />
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
                     {threatInfo.label}
                   </Tag>
                 </div>
@@ -160,7 +160,7 @@ export default function CompetitorDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {competitor.createdAt
                         ? dayjs(competitor.createdAt).format('DD/MM/YYYY')
@@ -173,7 +173,7 @@ export default function CompetitorDetailPage() {
               {competitor.website && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <GlobeAltIcon className="w-4 h-4" className="text-slate-400" />
+                    <GlobeAltIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Website</p>
                   </div>
                   <a
@@ -233,7 +233,7 @@ export default function CompetitorDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyIcon className="w-4 h-4" className="text-emerald-500" />
+                <TrophyIcon className="w-4 h-4 text-emerald-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Güçlü Yönleri
                 </p>
@@ -249,7 +249,7 @@ export default function CompetitorDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <ExclamationTriangleIcon className="w-4 h-4" className="text-red-500" />
+                <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Zayıf Yönleri
                 </p>

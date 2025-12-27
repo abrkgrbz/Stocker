@@ -437,7 +437,7 @@ export default function StockAdjustmentsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
             </button>
           </Dropdown>
         );
@@ -540,7 +540,7 @@ export default function StockAdjustmentsPage() {
           trigger={['click']}
         >
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
           </button>
         </Dropdown>
       ),
@@ -686,7 +686,7 @@ export default function StockAdjustmentsPage() {
           />
           <Input
             placeholder="Ürün ara... (ad, kod)"
-            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}
@@ -740,7 +740,7 @@ export default function StockAdjustmentsPage() {
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <PlusIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+              <PlusIcon className="w-4 h-4 text-violet-500" />
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">Yeni Stok Düzeltme</div>
@@ -865,7 +865,7 @@ export default function StockAdjustmentsPage() {
           </Form.Item>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <ExclamationTriangleIcon className="w-4 h-4" className="text-amber-600 mt-0.5" />
+            <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 mt-0.5" />
             <div className="text-sm text-amber-800">
               <strong>Onaya Gönder:</strong> Düzeltme talebi oluşturulur ve onay bekler.<br />
               <strong>Direkt Uygula:</strong> Düzeltme anında sisteme uygulanır.
@@ -885,7 +885,7 @@ export default function StockAdjustmentsPage() {
               {selectedAdjustment?.status === 'Pending' ? (
                 <CheckIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
               ) : (
-                <DocumentTextIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
+                <DocumentTextIcon className="w-4 h-4 text-violet-500" />
               )}
             </div>
             <div>

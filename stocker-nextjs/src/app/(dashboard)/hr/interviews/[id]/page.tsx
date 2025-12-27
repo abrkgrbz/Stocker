@@ -40,7 +40,7 @@ export default function InterviewDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <UserGroupIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <UserGroupIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{interview.candidateName}</h3>
               <p className="text-sm text-white/60">{interview.interviewType}</p>
               <Tag color={statusColors[interview.status]} className="mt-4">{interview.status}</Tag>

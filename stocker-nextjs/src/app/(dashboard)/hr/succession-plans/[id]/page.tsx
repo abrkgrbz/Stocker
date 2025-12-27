@@ -43,7 +43,7 @@ export default function SuccessionPlanDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <StarIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <StarIcon className="w-16 h-16 text-white/90" />
               <h3 className="mt-4 text-lg font-medium text-white/90">{plan.positionTitle}</h3>
               <p className="text-sm text-white/60">{plan.departmentName}</p>
               <div className="mt-4 flex gap-2 justify-center">
@@ -76,7 +76,7 @@ export default function SuccessionPlanDetailPage() {
               </Descriptions>
             </Card>
 
-            <Card title={<><UserGroupIcon className="w-4 h-4" className="mr-2" />Plan Bilgileri</>} className="mb-4">
+            <Card title={<><UserGroupIcon className="w-4 h-4 mr-2" />Plan Bilgileri</>} className="mb-4">
               <Descriptions column={2} bordered size="small">
                 <Descriptions.Item label="Plan Sahibi">{plan.planOwnerName || '-'}</Descriptions.Item>
                 <Descriptions.Item label="HR Sorumlusu">{plan.hrResponsibleName || '-'}</Descriptions.Item>

@@ -368,7 +368,7 @@ export default function EditProductBundlePage() {
               {/* Paket Bilgileri */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  <GiftIcon className="w-4 h-4" className="mr-2" /> Paket Bilgileri
+                  <GiftIcon className="w-4 h-4 mr-2" /> Paket Bilgileri
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-4">

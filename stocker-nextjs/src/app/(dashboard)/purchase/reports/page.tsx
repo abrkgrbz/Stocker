@@ -223,7 +223,7 @@ export default function PurchaseReportsPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <Title level={2} className="!mb-1">
-              <ChartBarIcon className="w-4 h-4" className="mr-2" />
+              <ChartBarIcon className="w-4 h-4 mr-2" />
               Satın Alma Raporları
             </Title>
             <Text type="secondary">
@@ -276,7 +276,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><UserGroupIcon className="w-4 h-4" className="mr-2" />Aktif Tedarikçiler</span>}
+              title={<span><UserGroupIcon className="w-4 h-4 mr-2" />Aktif Tedarikçiler</span>}
               value={supplierSummary?.activeSuppliers || 0}
               suffix={`/ ${supplierSummary?.totalSuppliers || 0}`}
               valueStyle={{ color: '#10b981' }}
@@ -295,7 +295,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><ShoppingCartIcon className="w-4 h-4" className="mr-2" />Toplam Sipariş</span>}
+              title={<span><ShoppingCartIcon className="w-4 h-4 mr-2" />Toplam Sipariş</span>}
               value={orderSummary?.totalOrders || 0}
               valueStyle={{ color: '#3b82f6' }}
             />
@@ -309,7 +309,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><DocumentTextIcon className="w-4 h-4" className="mr-2" />Toplam Fatura</span>}
+              title={<span><DocumentTextIcon className="w-4 h-4 mr-2" />Toplam Fatura</span>}
               value={invoiceSummary?.totalInvoices || 0}
               valueStyle={{ color: '#8b5cf6' }}
             />
@@ -323,7 +323,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><CurrencyDollarIcon className="w-4 h-4" className="mr-2" />Toplam Tutar</span>}
+              title={<span><CurrencyDollarIcon className="w-4 h-4 mr-2" />Toplam Tutar</span>}
               value={orderSummary?.totalAmount || 0}
               precision={0}
               suffix="₺"
@@ -346,7 +346,7 @@ export default function PurchaseReportsPage() {
             key: 'overview',
             label: (
               <span>
-                <ChartBarIcon className="w-4 h-4" className="mr-1" />
+                <ChartBarIcon className="w-4 h-4 mr-1" />
                 Genel Bakış
               </span>
             ),
@@ -480,7 +480,7 @@ export default function PurchaseReportsPage() {
             key: 'suppliers',
             label: (
               <span>
-                <UserGroupIcon className="w-4 h-4" className="mr-1" />
+                <UserGroupIcon className="w-4 h-4 mr-1" />
                 Tedarikçi Performansı
               </span>
             ),
@@ -623,7 +623,7 @@ export default function PurchaseReportsPage() {
             key: 'orders',
             label: (
               <span>
-                <ShoppingCartIcon className="w-4 h-4" className="mr-1" />
+                <ShoppingCartIcon className="w-4 h-4 mr-1" />
                 Sipariş Analitiği
               </span>
             ),
@@ -704,7 +704,7 @@ export default function PurchaseReportsPage() {
             key: 'invoices',
             label: (
               <span>
-                <DocumentTextIcon className="w-4 h-4" className="mr-1" />
+                <DocumentTextIcon className="w-4 h-4 mr-1" />
                 Fatura Analitiği
               </span>
             ),
