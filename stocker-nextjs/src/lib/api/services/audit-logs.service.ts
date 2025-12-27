@@ -1,6 +1,7 @@
 /**
  * Audit Logs Service
  * Handles tenant audit log operations for security monitoring
+ * Uses /api/tenant/AuditLogs endpoints (tenant-specific, filtered by TenantCode)
  */
 
 import { apiClient } from '../client';
@@ -25,12 +26,17 @@ export interface AuditLogListItem {
 export interface AuditLogDetail extends AuditLogListItem {
   userId?: string;
   userAgent?: string;
-  requestId?: string;
-  metadata?: string;
-  durationMs?: number;
-  gdprCategory?: string;
-  retentionDays: number;
-  createdAt: string;
+  location?: string;
+  country?: string;
+  city?: string;
+  riskFactors?: string;
+  blockReason?: string;
+  sessionId?: string;
+  deviceFingerprint?: string;
+  requestPath?: string;
+  requestMethod?: string;
+  responseStatusCode?: number;
+  additionalData?: string;
 }
 
 export interface AuditLogsResponse {
@@ -47,7 +53,6 @@ export interface AuditLogStatistics {
   totalEvents: number;
   failedLogins: number;
   successfulOperations: number;
-  totalOperations: number;
   uniqueUsers: number;
   blockedEvents: number;
   highRiskEvents: number;
@@ -73,7 +78,6 @@ export interface AuditLogFilters {
   event?: string;
   severity?: string;
   email?: string;
-  tenantCode?: string;
   ipAddress?: string;
   minRiskScore?: number;
   maxRiskScore?: number;
@@ -96,6 +100,7 @@ export interface ApiResponseWrapper<T> {
 export const AuditLogsService = {
   /**
    * Get paginated audit logs with filtering
+   * Uses tenant endpoint - automatically filters by current user's tenant
    */
   async getAuditLogs(filters?: AuditLogFilters): Promise<AuditLogsResponse> {
     const params = new URLSearchParams();
@@ -105,7 +110,6 @@ export const AuditLogsService = {
     if (filters?.event) params.append('event', filters.event);
     if (filters?.severity) params.append('severity', filters.severity);
     if (filters?.email) params.append('email', filters.email);
-    if (filters?.tenantCode) params.append('tenantCode', filters.tenantCode);
     if (filters?.ipAddress) params.append('ipAddress', filters.ipAddress);
     if (filters?.minRiskScore !== undefined) params.append('minRiskScore', filters.minRiskScore.toString());
     if (filters?.maxRiskScore !== undefined) params.append('maxRiskScore', filters.maxRiskScore.toString());
@@ -115,7 +119,7 @@ export const AuditLogsService = {
     if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString());
 
     const queryString = params.toString();
-    const url = `/api/master/AuditLogs${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/tenant/AuditLogs${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<ApiResponseWrapper<AuditLogsResponse>>(url);
     return (response as ApiResponseWrapper<AuditLogsResponse>).data || response as AuditLogsResponse;
@@ -123,16 +127,18 @@ export const AuditLogsService = {
 
   /**
    * Get audit log by ID
+   * Uses tenant endpoint - ensures log belongs to current user's tenant
    */
   async getAuditLogById(id: string): Promise<AuditLogDetail> {
     const response = await apiClient.get<ApiResponseWrapper<AuditLogDetail>>(
-      `/api/master/AuditLogs/${id}`
+      `/api/tenant/AuditLogs/${id}`
     );
     return (response as ApiResponseWrapper<AuditLogDetail>).data || response as AuditLogDetail;
   },
 
   /**
    * Get audit log statistics for dashboard
+   * Uses tenant endpoint - statistics for current user's tenant only
    */
   async getStatistics(fromDate?: string, toDate?: string): Promise<AuditLogStatistics> {
     const params = new URLSearchParams();
@@ -140,7 +146,7 @@ export const AuditLogsService = {
     if (toDate) params.append('toDate', toDate);
 
     const queryString = params.toString();
-    const url = `/api/master/AuditLogs/statistics${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/tenant/AuditLogs/statistics${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<ApiResponseWrapper<AuditLogStatistics>>(url);
     return (response as ApiResponseWrapper<AuditLogStatistics>).data || response as AuditLogStatistics;
@@ -148,6 +154,7 @@ export const AuditLogsService = {
 
   /**
    * Get security events for security monitoring
+   * Derived from audit logs with security-relevant events
    */
   async getSecurityEvents(
     fromDate?: string,
@@ -155,21 +162,46 @@ export const AuditLogsService = {
     severity?: string,
     type?: string
   ): Promise<SecurityEvent[]> {
-    const params = new URLSearchParams();
-    if (fromDate) params.append('fromDate', fromDate);
-    if (toDate) params.append('toDate', toDate);
-    if (severity) params.append('severity', severity);
-    if (type) params.append('type', type);
+    // Use the main audit logs endpoint with appropriate filters
+    const filters: AuditLogFilters = {
+      fromDate,
+      toDate,
+      pageSize: 100, // Get latest security events
+    };
 
-    const queryString = params.toString();
-    const url = `/api/master/AuditLogs/security-events${queryString ? `?${queryString}` : ''}`;
+    // Filter by blocked or high risk for security events
+    if (severity === 'critical') {
+      filters.minRiskScore = 80;
+    } else if (severity === 'error' || severity === 'high') {
+      filters.minRiskScore = 60;
+    } else if (severity === 'warning') {
+      filters.minRiskScore = 40;
+    }
 
-    const response = await apiClient.get<ApiResponseWrapper<SecurityEvent[]>>(url);
-    return (response as ApiResponseWrapper<SecurityEvent[]>).data || response as SecurityEvent[];
+    if (type) {
+      filters.event = type;
+    }
+
+    const response = await this.getAuditLogs(filters);
+
+    // Map to SecurityEvent format
+    return response.logs.map(log => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      event: log.event,
+      severity: log.riskScore && log.riskScore >= 80 ? 'critical' :
+               log.riskScore && log.riskScore >= 60 ? 'error' :
+               log.riskScore && log.riskScore >= 40 ? 'warning' : 'info',
+      email: log.email,
+      ipAddress: log.ipAddress,
+      description: log.event,
+      blocked: log.blocked,
+    }));
   },
 
   /**
    * Export audit logs to CSV
+   * Uses tenant endpoint for tenant-specific export
    */
   async exportToCsv(filters?: AuditLogFilters): Promise<Blob> {
     const params = new URLSearchParams();
@@ -177,10 +209,9 @@ export const AuditLogsService = {
     if (filters?.toDate) params.append('toDate', filters.toDate);
     if (filters?.event) params.append('event', filters.event);
     if (filters?.email) params.append('email', filters.email);
-    if (filters?.tenantCode) params.append('tenantCode', filters.tenantCode);
 
     const queryString = params.toString();
-    const url = `/api/master/AuditLogs/export/csv${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/tenant/AuditLogs/export/csv${queryString ? `?${queryString}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -194,6 +225,7 @@ export const AuditLogsService = {
 
   /**
    * Export audit logs to Excel
+   * Uses tenant endpoint for tenant-specific export
    */
   async exportToExcel(filters?: AuditLogFilters): Promise<Blob> {
     const params = new URLSearchParams();
@@ -201,10 +233,9 @@ export const AuditLogsService = {
     if (filters?.toDate) params.append('toDate', filters.toDate);
     if (filters?.event) params.append('event', filters.event);
     if (filters?.email) params.append('email', filters.email);
-    if (filters?.tenantCode) params.append('tenantCode', filters.tenantCode);
 
     const queryString = params.toString();
-    const url = `/api/master/AuditLogs/export/excel${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/tenant/AuditLogs/export/excel${queryString ? `?${queryString}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',
