@@ -17,11 +17,13 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
   CheckCircleIcon,
   LinkIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  ScaleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useUnits, useDeleteUnit } from '@/lib/api/hooks/useInventory';
@@ -84,7 +86,7 @@ export default function UnitsPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: record.baseUnitId ? '#6366f115' : '#10b98115' }}
           >
-            <ColumnWidthOutlined style={{ color: record.baseUnitId ? '#6366f1' : '#10b981' }} />
+            <ScaleIcon className="w-5 h-5" style={{ color: record.baseUnitId ? '#6366f1' : '#10b981' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
@@ -179,7 +181,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <ColumnWidthOutlined style={{ color: '#10b981' }} />
+              <ScaleIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -212,7 +214,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{derivedUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <SwapOutlined style={{ color: '#f59e0b' }} />
+              <ArrowsRightLeftIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -220,7 +222,7 @@ export default function UnitsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ColumnWidthOutlined />}
+        icon={<ScaleIcon className="w-5 h-5" />}
         iconColor="#10b981"
         title="Birimler"
         description="Ürün ölçü birimlerini yönetin"

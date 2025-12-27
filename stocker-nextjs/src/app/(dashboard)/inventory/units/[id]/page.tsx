@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowsRightLeftIcon,
+  CalculatorIcon,
   CalendarIcon,
   CheckCircleIcon,
   ChevronRightIcon,
@@ -68,7 +70,7 @@ export default function UnitDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <CalculatorOutlined className="text-white text-lg" />
+                <CalculatorIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -127,7 +129,7 @@ export default function UnitDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <SwapOutlined className="text-slate-600 text-lg" />
+                  <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Dönüşüm Faktörü
@@ -145,7 +147,7 @@ export default function UnitDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <CalculatorOutlined className="text-slate-600 text-lg" />
+                  <CalculatorIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Türetilmiş Birim

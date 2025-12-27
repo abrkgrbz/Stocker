@@ -6,6 +6,8 @@ import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowUturnLeftIcon,
   CalendarIcon,
   CheckCircleIcon,
   ChevronRightIcon,
@@ -15,6 +17,7 @@ import {
   InboxIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
+  MinusCircleIcon,
   PlusCircleIcon,
   PrinterIcon,
   QuestionMarkCircleIcon,
@@ -50,21 +53,21 @@ const movementTypeConfig: Record<
     label: 'Satın Alma İade',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <RollbackOutlined />,
+    icon: <ArrowUturnLeftIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.SalesReturn]: {
     label: 'Satış İade',
     bgColor: 'bg-cyan-50',
     textColor: 'text-cyan-700',
-    icon: <RetweetOutlined />,
+    icon: <ArrowPathIcon className="w-4 h-4" />,
     direction: 'in',
   },
   [StockMovementType.Transfer]: {
     label: 'Transfer',
     bgColor: 'bg-purple-50',
     textColor: 'text-purple-700',
-    icon: <SwapOutlined />,
+    icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
     direction: 'neutral',
   },
   [StockMovementType.Production]: {
@@ -78,7 +81,7 @@ const movementTypeConfig: Record<
     label: 'Tüketim',
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
-    icon: <MinusCircleOutlined />,
+    icon: <MinusCircleIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.AdjustmentIncrease]: {
@@ -92,7 +95,7 @@ const movementTypeConfig: Record<
     label: 'Düzeltme (-)',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <MinusCircleOutlined />,
+    icon: <MinusCircleIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.Opening]: {
@@ -168,9 +171,9 @@ export default function StockMovementDetailPage() {
       case 'in':
         return <PlusCircleIcon className="w-4 h-4 text-emerald-600" />;
       case 'out':
-        return <MinusCircleOutlined className="text-red-600" />;
+        return <MinusCircleIcon className="w-4 h-4 text-red-600" />;
       default:
-        return <SwapOutlined className="text-purple-600" />;
+        return <ArrowsRightLeftIcon className="w-4 h-4 text-purple-600" />;
     }
   };
 
@@ -213,7 +216,7 @@ export default function StockMovementDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center">
-                <SwapOutlined className="text-white text-lg" />
+                <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -225,7 +228,7 @@ export default function StockMovementDetailPage() {
                     {config.label}
                   </Tag>
                   {movement.isReversed && (
-                    <Tag icon={<RollbackOutlined />} className="border-0 bg-red-50 text-red-700">
+                    <Tag icon={<ArrowUturnLeftIcon className="w-4 h-4" />} className="border-0 bg-red-50 text-red-700">
                       İptal Edildi
                     </Tag>
                   )}
@@ -366,7 +369,7 @@ export default function StockMovementDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   {movement.isReversed ? (
-                    <Tag icon={<RollbackOutlined />} className="border-0 bg-red-50 text-red-700">
+                    <Tag icon={<ArrowUturnLeftIcon className="w-4 h-4" />} className="border-0 bg-red-50 text-red-700">
                       İptal Edildi
                     </Tag>
                   ) : (

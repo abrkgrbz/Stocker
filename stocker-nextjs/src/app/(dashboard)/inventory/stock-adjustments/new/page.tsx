@@ -15,7 +15,10 @@ import {
   Alert,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowLeftIcon,
+  ArrowsRightLeftIcon,
+  ArrowUpIcon,
   CheckIcon,
   MapPinIcon,
   ShoppingBagIcon,
@@ -366,11 +369,11 @@ export default function NewStockAdjustmentPage() {
                         }}
                       >
                         {difference > 0 ? (
-                          <ArrowUpOutlined />
+                          <ArrowUpIcon className="w-5 h-5" />
                         ) : difference < 0 ? (
-                          <ArrowDownOutlined />
+                          <ArrowDownIcon className="w-5 h-5" />
                         ) : (
-                          <SwapOutlined />
+                          <ArrowsRightLeftIcon className="w-5 h-5" />
                         )}
                         {difference > 0 ? '+' : ''}
                         {difference}

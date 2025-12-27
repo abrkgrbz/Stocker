@@ -22,9 +22,12 @@ import type { UploadProps } from 'antd';
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowTopRightOnSquareIcon,
   ArrowUpTrayIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
+  ClockIcon,
   DocumentIcon,
   EllipsisHorizontalIcon,
   ExclamationCircleIcon,
@@ -460,18 +463,18 @@ export default function StockListPage() {
               items: [
                 {
                   key: 'history',
-                  icon: <HistoryOutlined />,
+                  icon: <ClockIcon className="w-4 h-4" />,
                   label: <Link href={`/inventory/stock-movements?productId=${record.productId}`}>Hareket Geçmişi</Link>,
                 },
                 {
                   key: 'adjust',
-                  icon: <SwapOutlined />,
+                  icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
                   label: <Link href={`/inventory/stock-adjustments/new?productId=${record.productId}&warehouseId=${record.warehouseId}`}>Stok Ayarlama</Link>,
                 },
                 { type: 'divider' },
                 {
                   key: 'transfer',
-                  icon: <ExportOutlined />,
+                  icon: <ArrowTopRightOnSquareIcon className="w-4 h-4" />,
                   label: <Link href={`/inventory/stock-transfers/new?productId=${record.productId}&sourceWarehouseId=${record.warehouseId}`}>Transfer Oluştur</Link>,
                 },
               ],

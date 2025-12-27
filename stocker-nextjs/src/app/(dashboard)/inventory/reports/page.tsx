@@ -14,7 +14,11 @@ import {
   message,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowUpIcon,
+  BoltIcon,
   ChartBarIcon,
   ChartPieIcon,
   CurrencyDollarIcon,
@@ -400,7 +404,7 @@ export default function InventoryReportsPage() {
       key: 'movements',
       label: (
         <span>
-          <SwapOutlined /> Hareketler
+          <ArrowsRightLeftIcon className="w-4 h-4" /> Hareketler
         </span>
       ),
       children: (
@@ -410,7 +414,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <SwapOutlined className="mr-2" />
+                  <ArrowsRightLeftIcon className="w-4 h-4 mr-2" />
                   Toplam Hareket
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -421,7 +425,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <ArrowUpOutlined className="mr-2" />
+                  <ArrowUpIcon className="w-4 h-4 mr-2" />
                   Giriş Hareketleri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -434,7 +438,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <ArrowDownOutlined className="mr-2" />
+                  <ArrowDownIcon className="w-4 h-4 mr-2" />
                   Çıkış Hareketleri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -807,7 +811,7 @@ export default function InventoryReportsPage() {
                 },
                 {
                   key: 'weekly-movements',
-                  icon: <SwapOutlined />,
+                  icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
                   label: 'Haftalık Hareket Raporu',
                   onClick: () => {
                     setDateRange([dayjs().subtract(7, 'day'), dayjs()]);
@@ -848,7 +852,7 @@ export default function InventoryReportsPage() {
             }}
             placement="bottomRight"
           >
-            <Button type="primary" icon={<ThunderboltOutlined />} className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900">
+            <Button type="primary" icon={<BoltIcon className="w-4 h-4" />} className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900">
               Hızlı Rapor Şablonları
             </Button>
           </Dropdown>

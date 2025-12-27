@@ -21,6 +21,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
   ChartBarIcon,
   ChartPieIcon,
   CheckCircleIcon,
@@ -580,7 +581,7 @@ export default function CostingPage() {
       key: 'variance',
       label: (
         <span className="flex items-center gap-2">
-          <SwapOutlined />
+          <ArrowsRightLeftIcon className="w-4 h-4" />
           Maliyet Sapması
         </span>
       ),
@@ -687,7 +688,6 @@ export default function CostingPage() {
         </div>
         <Space size="middle">
           <Button
-            icon={<CalculatorOutlined />}
             className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
             onClick={() => setCogsModalVisible(true)}
           >

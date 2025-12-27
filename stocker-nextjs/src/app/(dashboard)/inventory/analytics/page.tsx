@@ -15,9 +15,13 @@ import {
   Empty,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
+  ArrowUpIcon,
   BuildingStorefrontIcon,
   ChartBarIcon,
   ChartPieIcon,
@@ -269,7 +273,7 @@ export default function InventoryAnalyticsPage() {
             {valuationSummary?.valueChangePercent !== undefined && (
               <div className="mt-2">
                 <Tag className={valuationSummary.valueChangePercent >= 0 ? '!bg-slate-900 !text-white !border-slate-900' : '!bg-slate-400 !text-white !border-slate-400'}>
-                  {valuationSummary.valueChangePercent >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                  {valuationSummary.valueChangePercent >= 0 ? <ArrowUpIcon className="w-4 h-4" /> : <ArrowDownIcon className="w-4 h-4" />}
                   {formatPercentage(Math.abs(valuationSummary.valueChangePercent))} önceki aya göre
                 </Tag>
               </div>
@@ -560,7 +564,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <FallOutlined className="mr-2" />
+              <ArrowTrendingDownIcon className="w-4 h-4 mr-2" />
               En Düşük Değerli Ürün
             </p>
             <div className="text-2xl font-bold text-slate-900">
@@ -764,7 +768,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-3">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-white">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                <ArrowDownOutlined className="mr-2" />
+                <ArrowDownIcon className="w-4 h-4 mr-2" />
                 Toplam Giriş
               </p>
               <div className="text-3xl font-bold">
@@ -778,7 +782,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-3">
             <div className="bg-slate-700 border border-slate-600 rounded-xl p-5 text-white">
               <p className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                <ArrowUpOutlined className="mr-2" />
+                <ArrowUpIcon className="w-4 h-4 mr-2" />
                 Toplam Çıkış
               </p>
               <div className="text-3xl font-bold">
@@ -806,7 +810,7 @@ export default function InventoryAnalyticsPage() {
           <div className="col-span-3">
             <div className="bg-slate-300 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">
-                <SwapOutlined className="mr-2" />
+                <ArrowsRightLeftIcon className="w-4 h-4 mr-2" />
                 Günlük Ort. Hareket
               </p>
               <div className="text-3xl font-bold text-slate-900">

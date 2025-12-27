@@ -20,6 +20,7 @@ import {
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
   CheckCircleIcon,
   ClockIcon,
   DocumentIcon,
@@ -584,7 +585,7 @@ export default function StockTransfersPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalTransfers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <SwapOutlined style={{ color: '#3b82f6' }} />
+              <ArrowsRightLeftIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -629,7 +630,7 @@ export default function StockTransfersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<SwapOutlined />}
+        icon={<ArrowsRightLeftIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Stok Transferleri"
         description="Depolar arası stok transferlerini yönetin"

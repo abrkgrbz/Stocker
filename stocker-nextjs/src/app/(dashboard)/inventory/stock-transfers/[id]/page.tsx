@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Table, Tag, Spin, Empty, Timeline, Progress, Modal } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowsRightLeftIcon,
   CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -481,7 +482,7 @@ export default function StockTransferDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <SwapOutlined className="text-white text-lg" />
+                <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">

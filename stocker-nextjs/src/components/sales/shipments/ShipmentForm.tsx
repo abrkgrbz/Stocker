@@ -1,20 +1,18 @@
 'use client';
 
-/**
- * Shipment Form Component
- * Enterprise-grade design following Linear/Stripe/Vercel principles
- */
-
-import React from 'react';
-import { Form, Input, Select, DatePicker, InputNumber, Divider, Switch } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Select, DatePicker, Switch } from 'antd';
+import { TruckIcon } from '@heroicons/react/24/outline';
 import type { FormInstance } from 'antd';
 import type { SalesOrderListItem, ShipmentType, ShipmentPriority } from '@/lib/api/services/sales.service';
+import dayjs from 'dayjs';
 
 interface ShipmentFormProps {
   form: FormInstance;
   onFinish: (values: any) => void;
   loading?: boolean;
   isEdit?: boolean;
+  initialValues?: any;
   orders?: SalesOrderListItem[];
   carriers?: { id: string; name: string }[];
   warehouses?: { id: string; name: string }[];
@@ -41,210 +39,345 @@ export function ShipmentForm({
   onFinish,
   loading = false,
   isEdit = false,
+  initialValues,
   orders = [],
   carriers = [],
   warehouses = [],
 }: ShipmentFormProps) {
+  const [requiresSignature, setRequiresSignature] = useState(false);
+
+  useEffect(() => {
+    if (initialValues) {
+      form.setFieldsValue({
+        ...initialValues,
+        estimatedShipDate: initialValues.estimatedShipDate ? dayjs(initialValues.estimatedShipDate) : undefined,
+        estimatedDeliveryDate: initialValues.estimatedDeliveryDate ? dayjs(initialValues.estimatedDeliveryDate) : undefined,
+      });
+      setRequiresSignature(initialValues.requiresSignature ?? false);
+    } else {
+      form.setFieldsValue({
+        shipmentType: 'Standard',
+        priority: 'Normal',
+        requiresSignature: false,
+        shippingCountry: 'Türkiye',
+      });
+    }
+  }, [form, initialValues]);
+
   return (
     <Form
       form={form}
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      initialValues={{
-        shipmentType: 'Standard',
-        priority: 'Normal',
-        requiresSignature: false,
-        shippingCountry: 'Türkiye',
-      }}
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      {/* Order Selection */}
-      <div className="mb-6">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          SİPARİŞ
-        </h3>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-12">
-            <Form.Item
-              name="salesOrderId"
-              label="Sipariş"
-              rules={[{ required: true, message: 'Sipariş seçimi zorunludur' }]}
-            >
-              <Select
-                showSearch
-                placeholder="Sipariş seçin"
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                options={orders.map((o) => ({ value: o.id, label: `${o.orderNumber} - ${o.customerName}` }))}
-              />
-            </Form.Item>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Recipient Name + Signature Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Shipment Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <TruckIcon className="w-6 h-6 text-slate-500" />
+              </div>
+            </div>
+
+            {/* Recipient Name - Title Style */}
+            <div className="flex-1">
+              <Form.Item
+                name="recipientName"
+                rules={[{ required: true, message: 'Alıcı adı zorunludur' }]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Alıcı Adı Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <p className="text-sm text-slate-500 mt-1">
+                {isEdit ? 'Sevkiyatı düzenleyin' : 'Yeni sevkiyat oluşturun'}
+              </p>
+            </div>
+
+            {/* Signature Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {requiresSignature ? 'İmza Gerekli' : 'İmzasız'}
+                </span>
+                <Form.Item name="requiresSignature" valuePropName="checked" noStyle initialValue={false}>
+                  <Switch
+                    checked={requiresSignature}
+                    onChange={(val) => {
+                      setRequiresSignature(val);
+                      form.setFieldValue('requiresSignature', val);
+                    }}
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
+
+          {/* ─────────────── SİPARİŞ SEÇİMİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sipariş
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="salesOrderId"
+                  rules={[{ required: true, message: 'Sipariş seçimi zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Select
+                    showSearch
+                    placeholder="Sipariş seçin"
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={orders.map((o) => ({ value: o.id, label: `${o.orderNumber} - ${o.customerName}` }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── SEVKİYAT DETAYLARI ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sevkiyat Detayları
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sevkiyat Tipi</label>
+                <Form.Item name="shipmentType" className="mb-0">
+                  <Select
+                    options={shipmentTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Öncelik</label>
+                <Form.Item name="priority" className="mb-0">
+                  <Select
+                    options={priorityOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Depo</label>
+                <Form.Item name="warehouseId" className="mb-0">
+                  <Select
+                    showSearch
+                    placeholder="Depo seçin (opsiyonel)"
+                    optionFilterProp="children"
+                    allowClear
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Taşıyıcı</label>
+                <Form.Item name="carrierId" className="mb-0">
+                  <Select
+                    showSearch
+                    placeholder="Taşıyıcı seçin (opsiyonel)"
+                    optionFilterProp="children"
+                    allowClear
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={carriers.map((c) => ({ value: c.id, label: c.name }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Taşıyıcı Adı (Manuel)</label>
+                <Form.Item name="carrierName" className="mb-0">
+                  <Input
+                    placeholder="Taşıyıcı firma adı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tahmini Sevk Tarihi</label>
+                <Form.Item name="estimatedShipDate" className="mb-0">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD.MM.YYYY"
+                    placeholder="Tarih seçin"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tahmini Teslimat Tarihi</label>
+                <Form.Item name="estimatedDeliveryDate" className="mb-0">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD.MM.YYYY"
+                    placeholder="Tarih seçin"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ALICI VE TESLİMAT ADRESİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Alıcı ve Teslimat Adresi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Telefon</label>
+                <Form.Item name="recipientPhone" className="mb-0">
+                  <Input
+                    placeholder="Telefon numarası"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="recipientEmail" className="mb-0">
+                  <Input
+                    placeholder="E-posta adresi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres Satırı 1 <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="shippingAddressLine1"
+                  rules={[{ required: true, message: 'Adres zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Sokak adresi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Adres Satırı 2</label>
+                <Form.Item name="shippingAddressLine2" className="mb-0">
+                  <Input
+                    placeholder="Apartman, daire, vb."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Şehir <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="shippingCity"
+                  rules={[{ required: true, message: 'Şehir zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Şehir"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">İlçe</label>
+                <Form.Item name="shippingState" className="mb-0">
+                  <Input
+                    placeholder="İlçe"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Posta Kodu</label>
+                <Form.Item name="shippingPostalCode" className="mb-0">
+                  <Input
+                    placeholder="Posta kodu"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ülke <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="shippingCountry"
+                  rules={[{ required: true, message: 'Ülke zorunludur' }]}
+                  className="mb-0"
+                >
+                  <Input
+                    placeholder="Ülke"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslimat Talimatları</label>
+                <Form.Item name="deliveryInstructions" className="mb-0">
+                  <Input.TextArea
+                    rows={3}
+                    placeholder="Teslimat ile ilgili özel talimatlar..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Dahili Notlar</label>
+                <Form.Item name="internalNotes" className="mb-0">
+                  <Input.TextArea
+                    rows={3}
+                    placeholder="Şirket içi notlar..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <Divider className="my-6" />
-
-      {/* Shipment Details */}
-      <div className="mb-6">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          SEVKİYAT DETAYLARI
-        </h3>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-6">
-            <Form.Item name="shipmentType" label="Sevkiyat Tipi">
-              <Select options={shipmentTypeOptions} />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="priority" label="Öncelik">
-              <Select options={priorityOptions} />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="warehouseId" label="Depo">
-              <Select
-                showSearch
-                placeholder="Depo seçin (opsiyonel)"
-                optionFilterProp="children"
-                allowClear
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-              />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="carrierId" label="Taşıyıcı">
-              <Select
-                showSearch
-                placeholder="Taşıyıcı seçin (opsiyonel)"
-                optionFilterProp="children"
-                allowClear
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                options={carriers.map((c) => ({ value: c.id, label: c.name }))}
-              />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="carrierName" label="Taşıyıcı Adı (Manuel)">
-              <Input placeholder="Taşıyıcı firma adı" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="estimatedShipDate" label="Tahmini Sevk Tarihi">
-              <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih seçin" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="estimatedDeliveryDate" label="Tahmini Teslimat Tarihi">
-              <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih seçin" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="requiresSignature" label="İmza Gerekli" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-          </div>
-        </div>
-      </div>
-
-      <Divider className="my-6" />
-
-      {/* Recipient & Shipping Address */}
-      <div className="mb-6">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          ALICI VE TESLİMAT ADRESİ
-        </h3>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-6">
-            <Form.Item
-              name="recipientName"
-              label="Alıcı Adı"
-              rules={[{ required: true, message: 'Alıcı adı zorunludur' }]}
-            >
-              <Input placeholder="Alıcı adı soyadı" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="recipientPhone" label="Telefon">
-              <Input placeholder="Telefon numarası" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item name="recipientEmail" label="E-posta">
-              <Input placeholder="E-posta adresi" />
-            </Form.Item>
-          </div>
-          <div className="col-span-12">
-            <Form.Item
-              name="shippingAddressLine1"
-              label="Adres Satırı 1"
-              rules={[{ required: true, message: 'Adres zorunludur' }]}
-            >
-              <Input placeholder="Sokak adresi" />
-            </Form.Item>
-          </div>
-          <div className="col-span-12">
-            <Form.Item name="shippingAddressLine2" label="Adres Satırı 2">
-              <Input placeholder="Apartman, daire, vb." />
-            </Form.Item>
-          </div>
-          <div className="col-span-4">
-            <Form.Item
-              name="shippingCity"
-              label="Şehir"
-              rules={[{ required: true, message: 'Şehir zorunludur' }]}
-            >
-              <Input placeholder="Şehir" />
-            </Form.Item>
-          </div>
-          <div className="col-span-4">
-            <Form.Item name="shippingState" label="İlçe">
-              <Input placeholder="İlçe" />
-            </Form.Item>
-          </div>
-          <div className="col-span-4">
-            <Form.Item name="shippingPostalCode" label="Posta Kodu">
-              <Input placeholder="Posta kodu" />
-            </Form.Item>
-          </div>
-          <div className="col-span-6">
-            <Form.Item
-              name="shippingCountry"
-              label="Ülke"
-              rules={[{ required: true, message: 'Ülke zorunludur' }]}
-            >
-              <Input placeholder="Ülke" />
-            </Form.Item>
-          </div>
-        </div>
-      </div>
-
-      <Divider className="my-6" />
-
-      {/* Notes */}
-      <div className="mb-6">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-          NOTLAR
-        </h3>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-12">
-            <Form.Item name="deliveryInstructions" label="Teslimat Talimatları">
-              <Input.TextArea rows={3} placeholder="Teslimat ile ilgili özel talimatlar..." />
-            </Form.Item>
-          </div>
-          <div className="col-span-12">
-            <Form.Item name="internalNotes" label="Dahili Notlar">
-              <Input.TextArea rows={3} placeholder="Şirket içi notlar..." />
-            </Form.Item>
-          </div>
-        </div>
-      </div>
+      {/* Hidden submit button */}
+      <Form.Item hidden>
+        <button type="submit" />
+      </Form.Item>
     </Form>
   );
 }

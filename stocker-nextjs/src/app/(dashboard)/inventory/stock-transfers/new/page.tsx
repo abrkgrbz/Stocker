@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowsRightLeftIcon,
   CalendarIcon,
   CheckIcon,
   DocumentTextIcon,
@@ -287,7 +288,7 @@ export default function NewStockTransferPage() {
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
               >
-                <SwapOutlined style={{ fontSize: 18, color: 'white' }} />
+                <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Yeni Stok Transferi</h1>
@@ -393,7 +394,7 @@ export default function NewStockTransferPage() {
 
                   <div className="flex justify-center">
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                      <SwapOutlined className="text-gray-400 rotate-90" />
+                      <ArrowsRightLeftIcon className="w-4 h-4 text-gray-400 rotate-90" />
                     </div>
                   </div>
 
@@ -537,7 +538,7 @@ export default function NewStockTransferPage() {
                     className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all"
                     onClick={handleAddItem}
                   >
-                    <SwapOutlined className="text-4xl text-gray-300 mb-3" />
+                    <ArrowsRightLeftIcon className="w-10 h-10 text-gray-300 mb-3 mx-auto" />
                     <p className="text-gray-500 font-medium">Henüz ürün eklenmedi</p>
                     <p className="text-gray-400 text-sm mt-1">Transfer edilecek ürünleri ekleyin</p>
                   </div>

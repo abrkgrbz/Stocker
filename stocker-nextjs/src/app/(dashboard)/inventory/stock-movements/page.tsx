@@ -17,8 +17,12 @@ import {
   Spin,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ArrowUpIcon,
+  ArrowUturnLeftIcon,
   DocumentIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
@@ -275,8 +279,8 @@ export default function StockMovementsPage() {
       width: 140,
       render: (type: StockMovementType) => {
         const config = movementTypeConfig[type];
-        const icon = config.direction === 'in' ? <ArrowUpOutlined /> :
-                    config.direction === 'out' ? <ArrowDownOutlined /> :
+        const icon = config.direction === 'in' ? <ArrowUpIcon className="w-4 h-4" /> :
+                    config.direction === 'out' ? <ArrowDownIcon className="w-4 h-4" /> :
                     <ArrowPathIcon className="w-4 h-4" />;
         return (
           <Tag color={config.color} icon={icon}>
@@ -394,7 +398,7 @@ export default function StockMovementsPage() {
           },
           {
             key: 'reverse',
-            icon: <UndoOutlined />,
+            icon: <ArrowUturnLeftIcon className="w-4 h-4" />,
             label: 'Tersine Çevir',
             disabled: record.isReversed,
             danger: true,
@@ -430,7 +434,7 @@ export default function StockMovementsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalMovements}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <SwapOutlined style={{ color: '#3b82f6' }} />
+              <ArrowsRightLeftIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -441,7 +445,7 @@ export default function StockMovementsPage() {
               <div className="text-2xl font-semibold text-green-600">{totalInbound}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <ArrowUpOutlined style={{ color: '#10b981' }} />
+              <ArrowUpIcon className="w-5 h-5" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -452,7 +456,7 @@ export default function StockMovementsPage() {
               <div className="text-2xl font-semibold text-red-600">{totalOutbound}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <ArrowDownOutlined style={{ color: '#ef4444' }} />
+              <ArrowDownIcon className="w-5 h-5" style={{ color: '#ef4444' }} />
             </div>
           </div>
         </div>
@@ -473,7 +477,7 @@ export default function StockMovementsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<SwapOutlined />}
+        icon={<ArrowsRightLeftIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
         title="Stok Hareketleri"
         description="Tüm stok giriş, çıkış ve transferlerini görüntüleyin"
