@@ -27,7 +27,7 @@ export default function IndustriesSection() {
     {
       icon: <ShoppingBagIcon className="w-8 h-8" />,
       titleKey: 'ecommerce',
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-gray-600 to-gray-800',
     },
     {
       icon: <CubeIcon className="w-8 h-8" />,
@@ -42,7 +42,7 @@ export default function IndustriesSection() {
     {
       icon: <HomeIcon className="w-8 h-8" />,
       titleKey: 'wholesale',
-      color: 'from-indigo-500 to-blue-500',
+      color: 'from-gray-500 to-gray-700',
     },
     {
       icon: <TruckIcon className="w-8 h-8" />,
@@ -89,7 +89,7 @@ export default function IndustriesSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="inline-block mb-4 px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold"
+            className="inline-block mb-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold"
           >
             {t('landing.industries.badge')}
           </motion.div>
@@ -141,7 +141,7 @@ export default function IndustriesSection() {
               </motion.div>
 
               {/* Content */}
-              <h3 className="relative text-2xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600 group-hover:bg-clip-text transition-all duration-300">
+              <h3 className="relative text-2xl font-bold text-gray-900 mb-3 group-hover:text-black transition-all duration-300">
                 {t(`landing.industries.${industry.titleKey}.title`)}
               </h3>
               <p className="relative text-gray-600 leading-relaxed mb-6">
@@ -195,7 +195,7 @@ export default function IndustriesSection() {
             href="#contact"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-block px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            className="inline-block px-8 py-4 bg-black text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-800 transition-all duration-300"
           >
             {t('landing.industries.cta')}
           </motion.a>

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Button } from 'antd';
 import { RocketLaunchIcon, PlayCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -40,7 +39,7 @@ export default function AnimatedHero() {
   const { t } = useTranslations();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 pt-20">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-20">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -129,7 +128,7 @@ export default function AnimatedHero() {
             {t('landing.hero.title1')}
             <br />
             <motion.span
-              className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent inline-block"
+              className="bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent inline-block"
               animate={{
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
               }}
@@ -182,32 +181,23 @@ export default function AnimatedHero() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
           >
             <Link href="/register">
-              <motion.div
+              <motion.button
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.95 }}
+                className="h-14 px-8 text-lg font-semibold bg-white text-black rounded-full shadow-xl hover:shadow-2xl hover:bg-gray-100 transition-all duration-300 flex items-center gap-2"
               >
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<RocketLaunchIcon className="w-5 h-5" />}
-                  className="h-14 px-8 text-lg font-semibold !bg-purple-600 hover:!bg-purple-700 !border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
-                >
-                  {t('landing.hero.cta')}
-                </Button>
-              </motion.div>
+                <RocketLaunchIcon className="w-5 h-5" />
+                {t('landing.hero.cta')}
+              </motion.button>
             </Link>
-            <motion.div
+            <motion.button
               whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
+              className="h-14 px-8 text-lg font-semibold border-2 border-white text-white rounded-full hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-2"
             >
-              <Button
-                size="large"
-                icon={<PlayCircleIcon className="w-5 h-5" />}
-                className="h-14 px-8 text-lg font-semibold border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300"
-              >
-                {t('landing.hero.watchDemo')}
-              </Button>
-            </motion.div>
+              <PlayCircleIcon className="w-5 h-5" />
+              {t('landing.hero.watchDemo')}
+            </motion.button>
           </motion.div>
 
           {/* Trust Indicators */}
@@ -243,7 +233,7 @@ export default function AnimatedHero() {
             >
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-2 md:p-4">
                 <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl aspect-video flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-gray-700/20 to-gray-600/20 flex items-center justify-center">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
@@ -255,7 +245,7 @@ export default function AnimatedHero() {
                 </div>
               </div>
               {/* Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 blur-3xl opacity-20 -z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-500 to-gray-400 blur-3xl opacity-20 -z-10"></div>
             </motion.div>
           </motion.div>
         </motion.div>

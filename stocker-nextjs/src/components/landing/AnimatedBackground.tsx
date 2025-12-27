@@ -40,7 +40,7 @@ export default function AnimatedBackground() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
       {/* Static gradient orbs - always visible */}
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl" />
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gray-500/30 rounded-full blur-3xl" />
       <div className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-500/25 rounded-full blur-3xl" />
 
@@ -48,7 +48,7 @@ export default function AnimatedBackground() {
       {isMounted && (
         <>
           <motion.div
-            className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl"
+            className="absolute -top-40 -right-40 w-80 h-80 bg-gray-500/30 rounded-full blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.5, 0.3],
@@ -90,7 +90,7 @@ export default function AnimatedBackground() {
           {particlePositions.map((particle, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
+              className="absolute w-1 h-1 bg-gray-400/40 rounded-full"
               style={{
                 left: `${particle.left}%`,
                 top: `${particle.top}%`,

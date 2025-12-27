@@ -37,7 +37,7 @@ const features = [
       'Tahmin ve öngörüler',
       'Excel/PDF export',
     ],
-    color: 'from-purple-600 to-pink-600',
+    color: 'from-gray-600 to-gray-800',
   },
   {
     id: 'alerts',
@@ -81,7 +81,7 @@ export default function ProductDemo() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="text-gray-900">
               Güçlü Özellikler
             </span>
             {' '}ile Tanışın
@@ -115,7 +115,7 @@ export default function ProductDemo() {
                   <div className="flex items-start gap-4">
                     <div
                       className={`text-3xl ${
-                        activeFeature.id === feature.id ? 'text-white' : 'text-purple-400'
+                        activeFeature.id === feature.id ? 'text-white' : 'text-gray-400'
                       }`}
                     >
                       {feature.icon}

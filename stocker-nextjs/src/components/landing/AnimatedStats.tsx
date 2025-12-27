@@ -52,7 +52,7 @@ export default function AnimatedStats() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
-      className="mt-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl p-12 shadow-2xl relative overflow-hidden"
+      className="mt-24 bg-gradient-to-br from-gray-900 to-black rounded-3xl p-12 shadow-2xl relative overflow-hidden"
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -75,7 +75,7 @@ export default function AnimatedStats() {
             <div className="text-4xl md:text-5xl font-bold text-white mb-2">
               <AnimatedCounter value={stat.value} suffix={stat.suffix} />
             </div>
-            <div className="text-purple-100">{stat.label}</div>
+            <div className="text-gray-300">{stat.label}</div>
           </motion.div>
         ))}
       </div>

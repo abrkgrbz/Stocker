@@ -15,7 +15,7 @@ const values = [
     icon: <ShieldCheckIcon className="w-8 h-8" />,
     title: '%100 Güvenli',
     description: 'Verileriniz bankacılık seviyesinde şifreleme ile korunur',
-    color: 'from-purple-600 to-pink-600',
+    color: 'from-gray-600 to-gray-800',
   },
   {
     icon: <BoltIcon className="w-8 h-8" />,
@@ -41,7 +41,7 @@ export default function ParallaxSection() {
       {/* Parallax Background Elements */}
       <motion.div
         style={{ y: y1 }}
-        className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"
+        className="absolute top-20 left-10 w-72 h-72 bg-gray-500/10 rounded-full blur-3xl"
       />
       <motion.div
         style={{ y: y2 }}
@@ -55,7 +55,7 @@ export default function ParallaxSection() {
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Neden{' '}
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent">
               Stocker
             </span>
             ?
@@ -83,8 +83,8 @@ export default function ParallaxSection() {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
-                <div className="relative bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 hover:border-purple-500/50 transition-all">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-600/20 to-gray-800/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all" />
+                <div className="relative bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 hover:border-gray-500/50 transition-all">
                   <div
                     className={`w-16 h-16 bg-gradient-to-r ${value.color} rounded-xl flex items-center justify-center text-3xl text-white mb-6`}
                   >
