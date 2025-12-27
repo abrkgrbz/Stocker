@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CRMService } from '../services/crm.service';
+import { CRMService, type Activity } from '../services/crm.service';
 import { showSuccess, showError, showInfo, showApiError } from '@/lib/utils/notifications';
 import { queryOptions } from '../query-options';
 import type {
@@ -257,7 +257,7 @@ export function useActivities(filters?: any) {
 }
 
 export function useActivity(id: Guid) {
-  return useQuery({
+  return useQuery<Activity>({
     queryKey: crmKeys.activity(id),
     queryFn: () => CRMService.getActivity(Number(id)),
     ...queryOptions.detail({ enabled: !!id }),

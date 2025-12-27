@@ -16,48 +16,46 @@ import {
   ClockIcon,
   DocumentTextIcon,
   EnvelopeIcon,
-  ExclamationCircleIcon,
-  MapPinIcon,
   PencilIcon,
   PhoneIcon,
   UserIcon,
   UsersIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useActivity } from '@/lib/api/hooks/useCRM';
-import { ActivityType, ActivityStatus, ActivityPriority } from '@/lib/api/services/crm.types';
+import type { Activity } from '@/lib/api/services/crm.service';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
 
 dayjs.locale('tr');
 
-const typeLabels: Record<ActivityType, { label: string; color: string; icon: React.ReactNode }> = {
-  [ActivityType.Call]: { label: 'Arama', color: 'blue', icon: <PhoneIcon className="w-4 h-4" /> },
-  [ActivityType.Email]: { label: 'E-posta', color: 'cyan', icon: <EnvelopeIcon className="w-4 h-4" /> },
-  [ActivityType.Meeting]: { label: 'Toplantı', color: 'purple', icon: <UsersIcon className="w-4 h-4" /> },
-  [ActivityType.Task]: { label: 'Görev', color: 'orange', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  [ActivityType.Note]: { label: 'Not', color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> },
+type ActivityTypeStr = Activity['type'];
+type ActivityStatusStr = Activity['status'];
+type ActivityPriorityStr = NonNullable<Activity['priority']>;
+
+const typeLabels: Record<ActivityTypeStr, { label: string; color: string; icon: React.ReactNode }> = {
+  Call: { label: 'Arama', color: 'blue', icon: <PhoneIcon className="w-4 h-4" /> },
+  Email: { label: 'E-posta', color: 'cyan', icon: <EnvelopeIcon className="w-4 h-4" /> },
+  Meeting: { label: 'Toplantı', color: 'purple', icon: <UsersIcon className="w-4 h-4" /> },
+  Task: { label: 'Görev', color: 'orange', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Note: { label: 'Not', color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> },
 };
 
-const statusLabels: Record<ActivityStatus, { label: string; color: string }> = {
-  [ActivityStatus.Scheduled]: { label: 'Planlandı', color: 'default' },
-  [ActivityStatus.InProgress]: { label: 'Devam Ediyor', color: 'processing' },
-  [ActivityStatus.Completed]: { label: 'Tamamlandı', color: 'success' },
-  [ActivityStatus.Cancelled]: { label: 'İptal Edildi', color: 'error' },
+const statusLabels: Record<ActivityStatusStr, { label: string; color: string }> = {
+  Scheduled: { label: 'Planlandı', color: 'default' },
+  Completed: { label: 'Tamamlandı', color: 'success' },
+  Cancelled: { label: 'İptal Edildi', color: 'error' },
 };
 
-const priorityLabels: Record<ActivityPriority, { label: string; color: string }> = {
-  [ActivityPriority.Low]: { label: 'Düşük', color: 'default' },
-  [ActivityPriority.Normal]: { label: 'Normal', color: 'blue' },
-  [ActivityPriority.High]: { label: 'Yüksek', color: 'orange' },
-  [ActivityPriority.Urgent]: { label: 'Acil', color: 'red' },
+const priorityLabels: Record<ActivityPriorityStr, { label: string; color: string }> = {
+  Low: { label: 'Düşük', color: 'default' },
+  Medium: { label: 'Normal', color: 'blue' },
+  High: { label: 'Yüksek', color: 'orange' },
 };
 
 export default function ActivityDetailPage() {
   const router = useRouter();
   const params = useParams();
   const activityId = params.id as string;
-
   const { data: activity, isLoading, error } = useActivity(activityId);
 
   if (isLoading) {
@@ -78,11 +76,10 @@ export default function ActivityDetailPage() {
 
   const typeInfo = typeLabels[activity.type] || { label: activity.type, color: 'default', icon: <DocumentTextIcon className="w-4 h-4" /> };
   const statusInfo = statusLabels[activity.status] || { label: activity.status, color: 'default' };
-  const priorityInfo = priorityLabels[activity.priority] || { label: activity.priority, color: 'default' };
+  const priorityInfo = activity.priority ? (priorityLabels[activity.priority] || { label: activity.priority, color: 'default' }) : { label: '-', color: 'default' };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Glass Effect Sticky Header */}
       <div
         className="sticky top-0 z-50 px-8 py-4"
         style={{
@@ -101,14 +98,8 @@ export default function ActivityDetailPage() {
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
-              <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                  activity.isOverdue ? 'bg-red-100' : 'bg-blue-100'
-                }`}
-              >
-                <span className={`text-lg ${activity.isOverdue ? 'text-red-600' : 'text-blue-600'}`}>
-                  {typeInfo.icon}
-                </span>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-blue-100">
+                <span className="text-lg text-blue-600">{typeInfo.icon}</span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -116,18 +107,13 @@ export default function ActivityDetailPage() {
                     {activity.subject || activity.title}
                   </h1>
                   <Tag color={statusInfo.color}>{statusInfo.label}</Tag>
-                  {activity.isOverdue && (
-                    <Tag color="red" icon={<ExclamationCircleIcon className="w-3 h-3" />}>
-                      Gecikmiş
-                    </Tag>
-                  )}
                 </div>
                 <p className="text-sm text-slate-500 m-0">{typeInfo.label}</p>
               </div>
             </div>
           </div>
           <button
-            onClick={() => router.push(`/crm/activities/${activity.id}/edit`)}
+            onClick={() => router.push('/crm/activities/' + activity.id + '/edit')}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
             <PencilIcon className="w-4 h-4" />
@@ -136,7 +122,6 @@ export default function ActivityDetailPage() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-5xl mx-auto px-8 py-6">
         <div className="grid grid-cols-12 gap-6">
           {/* Main Info Card */}
@@ -167,67 +152,35 @@ export default function ActivityDetailPage() {
                   <Tag color={priorityInfo.color}>{priorityInfo.label}</Tag>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 mb-1">Planlanan Tarih</p>
+                  <p className="text-xs text-slate-400 mb-1">Başlangıç</p>
                   <div className="flex items-center gap-1">
                     <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
-                      {activity.scheduledAt
+                      {activity.startTime
+                        ? dayjs(activity.startTime).format('DD/MM/YYYY HH:mm')
+                        : activity.scheduledAt
                         ? dayjs(activity.scheduledAt).format('DD/MM/YYYY HH:mm')
                         : '-'}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
+                  <p className="text-xs text-slate-400 mb-1">Bitiş</p>
                   <div className="flex items-center gap-1">
                     <ClockIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
-                      {activity.dueAt
-                        ? dayjs(activity.dueAt).format('DD/MM/YYYY HH:mm')
+                      {activity.endTime
+                        ? dayjs(activity.endTime).format('DD/MM/YYYY HH:mm')
                         : '-'}
                     </span>
                   </div>
                 </div>
-                {activity.completedAt && (
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Tamamlanma Tarihi</p>
-                    <div className="flex items-center gap-1">
-                      <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-                      <span className="text-sm font-medium text-slate-900">
-                        {dayjs(activity.completedAt).format('DD/MM/YYYY HH:mm')}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {activity.location && (
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1">Konum</p>
-                    <div className="flex items-center gap-1">
-                      <MapPinIcon className="w-4 h-4 text-slate-400" />
-                      <span className="text-sm font-medium text-slate-900">{activity.location}</span>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {activity.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <p className="text-xs text-slate-400 mb-2">Açıklama</p>
                   <p className="text-sm text-slate-700">{activity.description}</p>
-                </div>
-              )}
-
-              {activity.notes && (
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                  <p className="text-xs text-slate-400 mb-2">Notlar</p>
-                  <p className="text-sm text-slate-700">{activity.notes}</p>
-                </div>
-              )}
-
-              {activity.outcome && (
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                  <p className="text-xs text-slate-400 mb-2">Sonuç</p>
-                  <p className="text-sm text-slate-700">{activity.outcome}</p>
                 </div>
               )}
             </div>
@@ -262,6 +215,17 @@ export default function ActivityDetailPage() {
                     </div>
                   </div>
                 )}
+                {activity.relatedToName && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{activity.relatedToName}</p>
+                      <p className="text-xs text-slate-500">İlişkili Kişi</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -276,53 +240,67 @@ export default function ActivityDetailPage() {
                 {activity.leadId && (
                   <div
                     className="p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => router.push(`/crm/leads/${activity.leadId}`)}
+                    onClick={() => router.push('/crm/leads/' + activity.leadId)}
                   >
                     <p className="text-xs text-slate-400 mb-1">Lead</p>
-                    <p className="text-sm font-medium text-blue-600">{activity.leadName || 'Görüntüle'}</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {activity.leadName || 'Görüntüle'}
+                    </p>
                   </div>
                 )}
                 {activity.customerId && (
                   <div
                     className="p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => router.push(`/crm/customers/${activity.customerId}`)}
+                    onClick={() => router.push('/crm/customers/' + activity.customerId)}
                   >
                     <p className="text-xs text-slate-400 mb-1">Müşteri</p>
-                    <p className="text-sm font-medium text-blue-600">{activity.customerName || 'Görüntüle'}</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {activity.customerName || 'Görüntüle'}
+                    </p>
                   </div>
                 )}
                 {activity.contactId && (
                   <div
                     className="p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => router.push(`/crm/contacts/${activity.contactId}`)}
+                    onClick={() => router.push('/crm/contacts/' + activity.contactId)}
                   >
                     <p className="text-xs text-slate-400 mb-1">Kişi</p>
-                    <p className="text-sm font-medium text-blue-600">{activity.contactName || 'Görüntüle'}</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {activity.contactName || 'Görüntüle'}
+                    </p>
                   </div>
                 )}
                 {activity.opportunityId && (
                   <div
                     className="p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => router.push(`/crm/opportunities/${activity.opportunityId}`)}
+                    onClick={() => router.push('/crm/opportunities/' + activity.opportunityId)}
                   >
                     <p className="text-xs text-slate-400 mb-1">Fırsat</p>
-                    <p className="text-sm font-medium text-blue-600">{activity.opportunityName || 'Görüntüle'}</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {activity.opportunityName || 'Görüntüle'}
+                    </p>
                   </div>
                 )}
                 {activity.dealId && (
                   <div
                     className="p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                    onClick={() => router.push(`/crm/deals/${activity.dealId}`)}
+                    onClick={() => router.push('/crm/deals/' + activity.dealId)}
                   >
                     <p className="text-xs text-slate-400 mb-1">Deal</p>
-                    <p className="text-sm font-medium text-blue-600">{activity.dealTitle || 'Görüntüle'}</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {activity.dealTitle || 'Görüntüle'}
+                    </p>
                   </div>
                 )}
-                {!activity.leadId && !activity.customerId && !activity.contactId && !activity.opportunityId && !activity.dealId && (
-                  <p className="text-sm text-slate-400 col-span-full text-center py-4">
-                    İlişkili kayıt bulunmuyor
-                  </p>
-                )}
+                {!activity.leadId &&
+                  !activity.customerId &&
+                  !activity.contactId &&
+                  !activity.opportunityId &&
+                  !activity.dealId && (
+                    <p className="text-sm text-slate-400 col-span-full text-center py-4">
+                      İlişkili kayıt bulunmuyor
+                    </p>
+                  )}
               </div>
             </div>
           </div>
