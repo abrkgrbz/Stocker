@@ -23,6 +23,7 @@ import {
   InboxIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import { useProducts, useCreateLotBatch } from '@/lib/api/hooks/useInventory';
 import type { CreateLotBatchDto } from '@/lib/api/services/inventory.types';
@@ -298,7 +299,7 @@ export default function NewLotBatchPage() {
                     key: 'supplier',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <TruckOutlined className="mr-1" /> Tedarikçi Bilgileri
+                        <TruckIcon className="w-4 h-4 mr-1 inline" /> Tedarikçi Bilgileri
                       </Text>
                     ),
                     children: (

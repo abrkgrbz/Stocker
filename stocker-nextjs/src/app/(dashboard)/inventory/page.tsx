@@ -19,6 +19,7 @@ import {
   PlusIcon,
   PrinterIcon,
   Squares2X2Icon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
@@ -621,7 +622,7 @@ export default function InventoryDashboardPage() {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       pendingTransfers > 0 ? 'bg-slate-700' : 'bg-slate-100'
                     }`}>
-                      <TruckOutlined className={`text-xl ${pendingTransfers > 0 ? 'text-white' : 'text-slate-400'}`} />
+                      <TruckIcon className={`w-5 h-5 ${pendingTransfers > 0 ? 'text-white' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-slate-900">{pendingTransfers}</div>
@@ -643,7 +644,7 @@ export default function InventoryDashboardPage() {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       expiringCount > 0 ? 'bg-slate-500' : 'bg-slate-100'
                     }`}>
-                      <ClockIcon className="w-4 h-4" className={`text-xl ${expiringCount > 0 ? 'text-white' : 'text-slate-400'}`} />
+                      <ClockIcon className={`w-5 h-5 ${expiringCount > 0 ? 'text-white' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-slate-900">{expiringCount}</div>
@@ -839,7 +840,7 @@ export default function InventoryDashboardPage() {
                 className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
             ) : (
-              <EmptyChart icon={TruckOutlined} message="Yolda transfer yok" />
+              <EmptyChart icon={TruckIcon} message="Yolda transfer yok" />
             )}
           </div>
         </div>

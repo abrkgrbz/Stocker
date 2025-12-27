@@ -7,11 +7,11 @@
 
 import React from 'react';
 import {
-  SendOutlined,
-  TruckOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  ClockIcon,
+  PaperAirplaneIcon,
+  TruckIcon,
+} from '@heroicons/react/24/outline';
 import { StatCard } from '@/components/ui/enterprise-page';
 import type { ShipmentListDto } from '@/lib/api/services/sales.service';
 
@@ -36,25 +36,25 @@ export function ShipmentsStats({ shipments, totalCount, loading = false }: Shipm
       <StatCard
         label="Toplam Sevkiyat"
         value={loading ? '-' : totalCount}
-        icon={<SendOutlined />}
+        icon={<PaperAirplaneIcon className="w-5 h-5" />}
         iconColor="#8b5cf6"
       />
       <StatCard
         label="Hazırlanıyor"
         value={loading ? '-' : pendingCount}
-        icon={<ClockCircleOutlined />}
+        icon={<ClockIcon className="w-5 h-5" />}
         iconColor="#eab308"
       />
       <StatCard
         label="Yolda"
         value={loading ? '-' : inTransitCount}
-        icon={<TruckOutlined />}
+        icon={<TruckIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
       />
       <StatCard
         label="Teslim Edildi"
         value={loading ? '-' : deliveredCount}
-        icon={<CheckCircleOutlined />}
+        icon={<CheckCircleIcon className="w-5 h-5" />}
         iconColor="#10b981"
       />
     </div>

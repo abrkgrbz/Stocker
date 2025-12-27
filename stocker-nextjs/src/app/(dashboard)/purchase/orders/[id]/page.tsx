@@ -31,6 +31,7 @@ import {
   PencilIcon,
   PrinterIcon,
   ShoppingCartIcon,
+  TruckIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -411,7 +412,7 @@ export default function PurchaseOrderDetailPage() {
               { title: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
               { title: 'Tedarikçi Onayı' },
               { title: 'Kısmen Alındı', icon: <InboxIcon className="w-4 h-4" /> },
-              { title: 'Teslim Alındı', icon: <TruckOutlined /> },
+              { title: 'Teslim Alındı', icon: <TruckIcon className="w-4 h-4" /> },
               { title: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
             ]}
           />

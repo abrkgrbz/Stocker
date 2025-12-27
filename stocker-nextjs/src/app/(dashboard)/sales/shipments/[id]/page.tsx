@@ -14,6 +14,7 @@ import {
   EllipsisHorizontalIcon,
   MapPinIcon,
   PaperAirplaneIcon,
+  TruckIcon,
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -260,7 +261,7 @@ export default function ShipmentDetailPage() {
           <StatCard
             label="Durum"
             value={statusConf.label}
-            icon={<TruckOutlined />}
+            icon={<TruckIcon className="w-5 h-5" />}
             iconColor="#06b6d4"
           />
           <StatCard
