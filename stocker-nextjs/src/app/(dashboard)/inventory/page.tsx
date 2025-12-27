@@ -4,7 +4,10 @@ import React, { useMemo, useState } from 'react';
 import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowsRightLeftIcon,
   BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ClipboardDocumentCheckIcon,
   ClockIcon,
   Cog6ToothIcon,
   DocumentIcon,
@@ -414,12 +417,12 @@ export default function InventoryDashboardPage() {
     {
       key: 'count',
       label: <Link href="/inventory/stock-counts/new">Sayım Başlat</Link>,
-      icon: <CheckSquareOutlined />,
+      icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />,
     },
     {
       key: 'adjustment',
       label: <Link href="/inventory/stock-adjustments/new">Stok Düzeltme</Link>,
-      icon: <SwapOutlined />,
+      icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
     },
     { type: 'divider' as const },
     {
@@ -516,7 +519,7 @@ export default function InventoryDashboardPage() {
           {/* Primary Actions */}
           <Link href="/inventory/stock-transfers/new">
             <Button className="!border-slate-300 !text-slate-700 hover:!text-slate-900 hover:!border-slate-400">
-              <SwapOutlined className="mr-1" />
+              <ArrowsRightLeftIcon className="w-4 h-4 mr-1" />
               Stok Transferi
             </Button>
           </Link>
@@ -786,7 +789,7 @@ export default function InventoryDashboardPage() {
                 className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
             ) : (
-              <EmptyChart icon={CheckSquareOutlined} message="Düşük stoklu ürün yok" />
+              <EmptyChart icon={CheckCircleIcon} message="Düşük stoklu ürün yok" />
             )}
           </div>
         </div>

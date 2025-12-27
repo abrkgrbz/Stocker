@@ -3,17 +3,18 @@
 import React, { useState, useMemo } from 'react';
 import { Drawer } from 'antd';
 import {
-  MailOutlined,
-  MessageOutlined,
-  CheckSquareOutlined,
-  EditOutlined,
-  BellOutlined,
-  ApiOutlined,
-  FileTextOutlined,
-  UserAddOutlined,
-  SearchOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
+  BellIcon,
+  ChatBubbleLeftIcon,
+  CheckBadgeIcon,
+  ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  UserPlusIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowActionType } from '@/lib/api/services/crm.types';
 
 interface ActionSelectorDrawerProps {
@@ -37,7 +38,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'SendEmail',
     title: 'E-posta Gönder',
     description: 'Otomatik e-posta bildirimi gönder',
-    icon: <MailOutlined />,
+    icon: <EnvelopeIcon className="w-5 h-5" />,
     iconColor: '#3b82f6',
     bgColor: 'bg-blue-50',
     category: 'communication',
@@ -46,7 +47,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'SendSMS',
     title: 'SMS Gönder',
     description: 'SMS bildirimi gönder',
-    icon: <MessageOutlined />,
+    icon: <ChatBubbleLeftIcon className="w-5 h-5" />,
     iconColor: '#14b8a6',
     bgColor: 'bg-teal-50',
     category: 'communication',
@@ -55,7 +56,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'SendNotification',
     title: 'Bildirim Gönder',
     description: 'Uygulama içi bildirim gönder',
-    icon: <BellOutlined />,
+    icon: <BellIcon className="w-5 h-5" />,
     iconColor: '#8b5cf6',
     bgColor: 'bg-violet-50',
     category: 'communication',
@@ -64,7 +65,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'CreateTask',
     title: 'Görev Oluştur',
     description: 'Otomatik görev oluştur ve ata',
-    icon: <CheckSquareOutlined />,
+    icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />,
     iconColor: '#22c55e',
     bgColor: 'bg-green-50',
     category: 'task',
@@ -73,7 +74,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'CreateActivity',
     title: 'Aktivite Oluştur',
     description: 'Yeni aktivite kaydı oluştur',
-    icon: <FileTextOutlined />,
+    icon: <DocumentTextIcon className="w-5 h-5" />,
     iconColor: '#6366f1',
     bgColor: 'bg-indigo-50',
     category: 'task',
@@ -82,7 +83,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'AssignToUser',
     title: 'Kullanıcıya Ata',
     description: 'Kaydı belirli kullanıcıya ata',
-    icon: <UserAddOutlined />,
+    icon: <UserPlusIcon className="w-5 h-5" />,
     iconColor: '#f97316',
     bgColor: 'bg-orange-50',
     category: 'task',
@@ -91,7 +92,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'UpdateField',
     title: 'Alan Güncelle',
     description: 'Kayıt alanını otomatik güncelle',
-    icon: <EditOutlined />,
+    icon: <PencilSquareIcon className="w-5 h-5" />,
     iconColor: '#eab308',
     bgColor: 'bg-yellow-50',
     category: 'data',
@@ -100,7 +101,7 @@ const actionTypes: ActionTypeCard[] = [
     type: 'CallWebhook',
     title: 'Webhook Çağır',
     description: 'Harici API/Webhook çağrısı yap',
-    icon: <ApiOutlined />,
+    icon: <LinkIcon className="w-5 h-5" />,
     iconColor: '#ec4899',
     bgColor: 'bg-pink-50',
     category: 'integration',
@@ -177,14 +178,14 @@ export default function ActionSelectorDrawer({ open, onClose, onSelect }: Action
             onClick={handleClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <CloseOutlined />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search Input */}
         <div className="px-6 pb-4">
           <div className="relative">
-            <SearchOutlined className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Aksiyon ara... (örn: mail, sms, görev)"
@@ -197,7 +198,7 @@ export default function ActionSelectorDrawer({ open, onClose, onSelect }: Action
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                <CloseOutlined className="text-xs" />
+                <XMarkIcon className="w-3 h-3" />
               </button>
             )}
           </div>
@@ -209,7 +210,7 @@ export default function ActionSelectorDrawer({ open, onClose, onSelect }: Action
         {Object.keys(groupedActions).length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-              <SearchOutlined className="text-2xl text-slate-400" />
+              <MagnifyingGlassIcon className="w-8 h-8 text-slate-400" />
             </div>
             <p className="text-slate-600 font-medium">Sonuç bulunamadı</p>
             <p className="text-sm text-slate-400 mt-1">

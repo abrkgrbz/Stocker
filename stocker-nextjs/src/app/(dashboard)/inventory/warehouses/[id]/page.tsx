@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty, Progress, Table } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowsPointingOutIcon,
   CalendarIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
@@ -283,7 +284,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ExpandOutlined className="text-amber-600 text-lg" />
+                  <ArrowsPointingOutIcon className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kapasite

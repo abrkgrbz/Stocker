@@ -19,13 +19,18 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowsPointingOutIcon,
+  CheckCircleIcon,
   CheckIcon,
   Cog6ToothIcon,
   EyeIcon,
   FunnelIcon,
+  HashtagIcon,
+  LanguageIcon,
   ListBulletIcon,
   PlusIcon,
   Squares2X2Icon,
+  SwatchIcon,
   TagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
@@ -347,7 +352,7 @@ export default function NewProductAttributePage() {
                   <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                        <CheckSquareOutlined className="text-red-500" />
+                        <CheckCircleIcon className="w-4 h-4 text-red-500" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-slate-700">Zorunlu Alan</div>
@@ -389,7 +394,7 @@ export default function NewProductAttributePage() {
               {attributeType === AttributeType.Size && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <ExpandOutlined className="text-violet-500" />
+                    <ArrowsPointingOutIcon className="w-5 h-5 text-violet-500" />
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       Hızlı Ekle - Bedenler
                     </span>
@@ -419,7 +424,7 @@ export default function NewProductAttributePage() {
               {attributeType === AttributeType.Color && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <BgColorsOutlined className="text-cyan-500" />
+                    <SwatchIcon className="w-5 h-5 text-cyan-500" />
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       Hızlı Ekle - Renkler
                     </span>
@@ -458,7 +463,7 @@ export default function NewProductAttributePage() {
                         key: 'validation',
                         label: (
                           <div className="flex items-center gap-2">
-                            <NumberOutlined className="text-slate-400" />
+                            <HashtagIcon className="w-4 h-4 text-slate-400" />
                             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                               Sayı Doğrulama
                             </span>
@@ -496,7 +501,7 @@ export default function NewProductAttributePage() {
                         key: 'validation',
                         label: (
                           <div className="flex items-center gap-2">
-                            <FontSizeOutlined className="text-slate-400" />
+                            <LanguageIcon className="w-4 h-4 text-slate-400" />
                             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                               Metin Doğrulama
                             </span>

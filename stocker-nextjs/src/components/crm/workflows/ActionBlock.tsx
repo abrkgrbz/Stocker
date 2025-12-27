@@ -2,18 +2,18 @@
 
 import React from 'react';
 import {
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-  ClockCircleOutlined,
-  MailOutlined,
-  MessageOutlined,
-  CheckSquareOutlined,
-  BellOutlined,
-  ApiOutlined,
-  FileTextOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons';
+  BellIcon,
+  ChatBubbleLeftIcon,
+  ClipboardDocumentCheckIcon,
+  ClockIcon,
+  DocumentDuplicateIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  UserPlusIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowActionType } from '@/lib/api/services/crm.types';
 
 export interface WorkflowActionConfig {
@@ -40,20 +40,20 @@ const actionTypeConfig: Record<
   WorkflowActionType,
   { label: string; icon: React.ReactNode; color: string; bgColor: string }
 > = {
-  SendEmail: { label: 'E-posta Gönder', icon: <MailOutlined />, color: '#3b82f6', bgColor: 'bg-blue-100' },
-  SendSMS: { label: 'SMS Gönder', icon: <MessageOutlined />, color: '#14b8a6', bgColor: 'bg-teal-100' },
-  CreateTask: { label: 'Görev Oluştur', icon: <CheckSquareOutlined />, color: '#22c55e', bgColor: 'bg-green-100' },
-  UpdateField: { label: 'Alan Güncelle', icon: <EditOutlined />, color: '#eab308', bgColor: 'bg-yellow-100' },
-  SendNotification: { label: 'Bildirim Gönder', icon: <BellOutlined />, color: '#8b5cf6', bgColor: 'bg-violet-100' },
-  CallWebhook: { label: 'Webhook Çağır', icon: <ApiOutlined />, color: '#ec4899', bgColor: 'bg-pink-100' },
-  CreateActivity: { label: 'Aktivite Oluştur', icon: <FileTextOutlined />, color: '#6366f1', bgColor: 'bg-indigo-100' },
-  AssignToUser: { label: 'Kullanıcıya Ata', icon: <UserAddOutlined />, color: '#f97316', bgColor: 'bg-orange-100' },
+  SendEmail: { label: 'E-posta Gönder', icon: <EnvelopeIcon className="w-4 h-4" />, color: '#3b82f6', bgColor: 'bg-blue-100' },
+  SendSMS: { label: 'SMS Gönder', icon: <ChatBubbleLeftIcon className="w-4 h-4" />, color: '#14b8a6', bgColor: 'bg-teal-100' },
+  CreateTask: { label: 'Görev Oluştur', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, color: '#22c55e', bgColor: 'bg-green-100' },
+  UpdateField: { label: 'Alan Güncelle', icon: <PencilSquareIcon className="w-4 h-4" />, color: '#eab308', bgColor: 'bg-yellow-100' },
+  SendNotification: { label: 'Bildirim Gönder', icon: <BellIcon className="w-4 h-4" />, color: '#8b5cf6', bgColor: 'bg-violet-100' },
+  CallWebhook: { label: 'Webhook Çağır', icon: <LinkIcon className="w-4 h-4" />, color: '#ec4899', bgColor: 'bg-pink-100' },
+  CreateActivity: { label: 'Aktivite Oluştur', icon: <DocumentTextIcon className="w-4 h-4" />, color: '#6366f1', bgColor: 'bg-indigo-100' },
+  AssignToUser: { label: 'Kullanıcıya Ata', icon: <UserPlusIcon className="w-4 h-4" />, color: '#f97316', bgColor: 'bg-orange-100' },
 };
 
 export default function ActionBlock({ action, index, onEdit, onDelete, onDuplicate }: ActionBlockProps) {
   const config = actionTypeConfig[action.type] || {
     label: action.type,
-    icon: <EditOutlined />,
+    icon: <PencilSquareIcon className="w-4 h-4" />,
     color: '#64748b',
     bgColor: 'bg-slate-100',
   };
@@ -175,7 +175,7 @@ export default function ActionBlock({ action, index, onEdit, onDelete, onDuplica
           {/* Delay Badge */}
           {action.delayMinutes && action.delayMinutes > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-600 rounded-md text-xs font-medium">
-              <ClockCircleOutlined className="text-[10px]" />
+              <ClockIcon className="w-3 h-3" />
               {action.delayMinutes} dk
             </span>
           )}
@@ -188,21 +188,21 @@ export default function ActionBlock({ action, index, onEdit, onDelete, onDuplica
             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Kopyala"
           >
-            <CopyOutlined className="text-sm" />
+            <DocumentDuplicateIcon className="w-4 h-4" />
           </button>
           <button
             onClick={onEdit}
             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="Düzenle"
           >
-            <EditOutlined className="text-sm" />
+            <PencilSquareIcon className="w-4 h-4" />
           </button>
           <button
             onClick={onDelete}
             className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Sil"
           >
-            <DeleteOutlined className="text-sm" />
+            <TrashIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

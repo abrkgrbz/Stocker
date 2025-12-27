@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch, Alert } from 'antd';
-import { NumberOutlined } from '@ant-design/icons';
+import { HashtagIcon } from '@heroicons/react/24/outline';
 import { useUnits } from '@/lib/api/hooks/useInventory';
 import type { UnitDto } from '@/lib/api/services/inventory.types';
 
@@ -60,7 +60,7 @@ export default function UnitForm({ form, initialValues, onFinish, loading }: Uni
             {/* Unit Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <NumberOutlined className="text-xl text-slate-500" />
+                <HashtagIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

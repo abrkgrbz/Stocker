@@ -3,18 +3,18 @@
 import React, { useEffect } from 'react';
 import { Drawer, Form, Input, InputNumber, Select } from 'antd';
 import {
-  SaveOutlined,
-  CloseOutlined,
-  MailOutlined,
-  MessageOutlined,
-  CheckSquareOutlined,
-  BellOutlined,
-  ApiOutlined,
-  FileTextOutlined,
-  UserAddOutlined,
-  EditOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+  BellIcon,
+  BookmarkIcon,
+  ChatBubbleLeftIcon,
+  ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  InformationCircleIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  UserPlusIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowActionType } from '@/lib/api/services/crm.types';
 import type { WorkflowActionConfig } from './ActionBlock';
 
@@ -29,14 +29,14 @@ interface ActionConfigDrawerProps {
 }
 
 const actionTypeConfig: Record<WorkflowActionType, { label: string; icon: React.ReactNode; color: string; bgColor: string }> = {
-  SendEmail: { label: 'E-posta Gönder', icon: <MailOutlined />, color: '#3b82f6', bgColor: 'bg-blue-100' },
-  SendSMS: { label: 'SMS Gönder', icon: <MessageOutlined />, color: '#14b8a6', bgColor: 'bg-teal-100' },
-  CreateTask: { label: 'Görev Oluştur', icon: <CheckSquareOutlined />, color: '#22c55e', bgColor: 'bg-green-100' },
-  UpdateField: { label: 'Alan Güncelle', icon: <EditOutlined />, color: '#eab308', bgColor: 'bg-yellow-100' },
-  SendNotification: { label: 'Bildirim Gönder', icon: <BellOutlined />, color: '#8b5cf6', bgColor: 'bg-violet-100' },
-  CallWebhook: { label: 'Webhook Çağır', icon: <ApiOutlined />, color: '#ec4899', bgColor: 'bg-pink-100' },
-  CreateActivity: { label: 'Aktivite Oluştur', icon: <FileTextOutlined />, color: '#6366f1', bgColor: 'bg-indigo-100' },
-  AssignToUser: { label: 'Kullanıcıya Ata', icon: <UserAddOutlined />, color: '#f97316', bgColor: 'bg-orange-100' },
+  SendEmail: { label: 'E-posta Gönder', icon: <EnvelopeIcon className="w-5 h-5" />, color: '#3b82f6', bgColor: 'bg-blue-100' },
+  SendSMS: { label: 'SMS Gönder', icon: <ChatBubbleLeftIcon className="w-5 h-5" />, color: '#14b8a6', bgColor: 'bg-teal-100' },
+  CreateTask: { label: 'Görev Oluştur', icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />, color: '#22c55e', bgColor: 'bg-green-100' },
+  UpdateField: { label: 'Alan Güncelle', icon: <PencilSquareIcon className="w-5 h-5" />, color: '#eab308', bgColor: 'bg-yellow-100' },
+  SendNotification: { label: 'Bildirim Gönder', icon: <BellIcon className="w-5 h-5" />, color: '#8b5cf6', bgColor: 'bg-violet-100' },
+  CallWebhook: { label: 'Webhook Çağır', icon: <LinkIcon className="w-5 h-5" />, color: '#ec4899', bgColor: 'bg-pink-100' },
+  CreateActivity: { label: 'Aktivite Oluştur', icon: <DocumentTextIcon className="w-5 h-5" />, color: '#6366f1', bgColor: 'bg-indigo-100' },
+  AssignToUser: { label: 'Kullanıcıya Ata', icon: <UserPlusIcon className="w-5 h-5" />, color: '#f97316', bgColor: 'bg-orange-100' },
 };
 
 export default function ActionConfigDrawer({
@@ -336,7 +336,7 @@ export default function ActionConfigDrawer({
 
             <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
               <div className="flex items-start gap-2">
-                <InfoCircleOutlined className="text-blue-500 mt-0.5" />
+                <InformationCircleIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-blue-700">Dinamik Atama</p>
                   <p className="text-xs text-blue-600 mt-1">
@@ -352,7 +352,7 @@ export default function ActionConfigDrawer({
         return (
           <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
             <div className="flex items-start gap-2">
-              <InfoCircleOutlined className="text-amber-500 mt-0.5" />
+              <InformationCircleIcon className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-amber-700">Geliştirme Aşamasında</p>
                 <p className="text-xs text-amber-600 mt-1">
@@ -401,7 +401,7 @@ export default function ActionConfigDrawer({
             onClick={handleClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <CloseOutlined />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -461,7 +461,7 @@ export default function ActionConfigDrawer({
           {/* Info Alert */}
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="flex items-start gap-2">
-              <InfoCircleOutlined className="text-slate-500 mt-0.5" />
+              <InformationCircleIcon className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-slate-700">Dinamik Değişkenler</p>
                 <p className="text-xs text-slate-500 mt-1">
@@ -480,14 +480,14 @@ export default function ActionConfigDrawer({
             onClick={handleClose}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <CloseOutlined className="text-xs" />
+            <XMarkIcon className="w-4 h-4" />
             İptal
           </button>
           <button
             onClick={() => form.submit()}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
           >
-            <SaveOutlined className="text-xs" />
+            <BookmarkIcon className="w-4 h-4" />
             Kaydet
           </button>
         </div>

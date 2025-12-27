@@ -19,6 +19,8 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   Cog6ToothIcon,
+  HashtagIcon,
+  LanguageIcon,
   ListBulletIcon,
   PlusIcon,
   TagIcon,
@@ -467,7 +469,7 @@ export default function EditProductAttributePage() {
               {attributeType === AttributeType.Number && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <NumberOutlined className="text-slate-400" />
+                    <HashtagIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       Sayısal Kısıtlamalar
                     </span>
@@ -493,7 +495,7 @@ export default function EditProductAttributePage() {
               {attributeType === AttributeType.Text && (
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <FontSizeOutlined className="text-slate-400" />
+                    <LanguageIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       Metin Kısıtlamaları
                     </span>

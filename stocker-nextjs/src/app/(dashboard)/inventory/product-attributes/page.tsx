@@ -14,16 +14,20 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowsPointingOutIcon,
   CalendarIcon,
   CheckCircleIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
   FunnelIcon,
+  HashtagIcon,
+  LanguageIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
   Squares2X2Icon,
+  SwatchIcon,
   TagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
@@ -39,14 +43,14 @@ import {
 import { showSuccess, confirmDelete } from '@/lib/utils/sweetalert';
 
 const attributeTypeConfig: Record<AttributeType, { color: string; label: string; icon: React.ReactNode }> = {
-  Text: { color: 'blue', label: 'Metin', icon: <FontSizeOutlined /> },
-  Number: { color: 'cyan', label: 'Sayı', icon: <NumberOutlined /> },
-  Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckSquareOutlined /> },
+  Text: { color: 'blue', label: 'Metin', icon: <LanguageIcon className="w-4 h-4" /> },
+  Number: { color: 'cyan', label: 'Sayı', icon: <HashtagIcon className="w-4 h-4" /> },
+  Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Date: { color: 'purple', label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
   Select: { color: 'orange', label: 'Seçim', icon: <ListBulletIcon className="w-4 h-4" /> },
   MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
-  Color: { color: 'red', label: 'Renk', icon: <BgColorsOutlined /> },
-  Size: { color: 'gold', label: 'Beden', icon: <ExpandOutlined /> },
+  Color: { color: 'red', label: 'Renk', icon: <SwatchIcon className="w-4 h-4" /> },
+  Size: { color: 'gold', label: 'Beden', icon: <ArrowsPointingOutIcon className="w-4 h-4" /> },
 };
 
 export default function ProductAttributesPage() {
