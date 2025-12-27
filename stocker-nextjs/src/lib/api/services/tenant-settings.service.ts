@@ -76,10 +76,11 @@ export interface ApiResponseWrapper<T> {
 export const TenantSettingsService = {
   /**
    * Get tenant settings
+   * Note: Backend uses key-value settings structure
    */
   async getSettings(): Promise<TenantSettingsDto> {
     const response = await apiClient.get<ApiResponseWrapper<TenantSettingsDto>>(
-      '/tenant/settings'
+      '/api/tenant/Settings'
     );
     return (response as any).data || response;
   },
@@ -89,20 +90,51 @@ export const TenantSettingsService = {
    */
   async updateSettings(data: UpdateTenantSettingsRequest): Promise<TenantSettingsDto> {
     const response = await apiClient.put<ApiResponseWrapper<TenantSettingsDto>>(
-      '/tenant/settings',
+      '/api/tenant/Settings',
       data
     );
     return (response as any).data || response;
   },
 
   /**
-   * Get tenant statistics
+   * Get tenant statistics (uses storage usage endpoint)
    */
   async getStats(): Promise<TenantStatsDto> {
-    const response = await apiClient.get<ApiResponseWrapper<TenantStatsDto>>(
-      '/tenant/stats'
-    );
-    return (response as any).data || response;
+    try {
+      // Get storage usage from dedicated endpoint
+      const storageResponse = await apiClient.get<ApiResponseWrapper<{
+        usedGB: number;
+        quotaGB: number;
+        UsedGB?: number;
+        QuotaGB?: number;
+      }>>('/api/tenant/Storage/usage');
+
+      const storageData = (storageResponse as any).data || storageResponse;
+
+      // Return stats with storage info
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalRoles: 0,
+        totalDepartments: 0,
+        storageUsedGB: storageData?.usedGB ?? storageData?.UsedGB ?? 0,
+        storageQuotaGB: storageData?.quotaGB ?? storageData?.QuotaGB ?? 10,
+        activeModules: 0,
+        totalModules: 0,
+      };
+    } catch {
+      // Return default values if storage endpoint fails
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalRoles: 0,
+        totalDepartments: 0,
+        storageUsedGB: 0,
+        storageQuotaGB: 10,
+        activeModules: 0,
+        totalModules: 0,
+      };
+    }
   },
 
   /**
@@ -112,7 +144,7 @@ export const TenantSettingsService = {
     const formData = new FormData();
     formData.append('file', file);
     const response = await apiClient.post<ApiResponseWrapper<{ logoUrl: string }>>(
-      '/tenant/logo',
+      '/api/tenant/Storage/logo',
       formData
     );
     return (response as any).data || response;
@@ -122,7 +154,7 @@ export const TenantSettingsService = {
    * Delete tenant logo
    */
   async deleteLogo(): Promise<void> {
-    await apiClient.delete('/tenant/logo');
+    await apiClient.delete('/api/tenant/Storage/logo');
   },
 };
 

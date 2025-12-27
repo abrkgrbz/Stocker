@@ -46,7 +46,7 @@ export const StorageService = {
    */
   async getStorageUsage(): Promise<StorageUsageResponse> {
     const response = await apiClient.get<ApiResponseWrapper<StorageUsageResponse>>(
-      '/tenant/storage/usage'
+      '/api/tenant/Storage/usage'
     );
     return (response as any).data || response;
   },
@@ -56,7 +56,7 @@ export const StorageService = {
    */
   async checkBucketExists(): Promise<BucketExistsResponse> {
     const response = await apiClient.get<ApiResponseWrapper<BucketExistsResponse>>(
-      '/tenant/storage/exists'
+      '/api/tenant/Storage/exists'
     );
     return (response as any).data || response;
   },
@@ -66,7 +66,7 @@ export const StorageService = {
    */
   async getBucketName(): Promise<BucketNameResponse> {
     const response = await apiClient.get<ApiResponseWrapper<BucketNameResponse>>(
-      '/tenant/storage/bucket-name'
+      '/api/tenant/Storage/bucket-name'
     );
     return (response as any).data || response;
   },

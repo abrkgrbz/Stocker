@@ -98,42 +98,42 @@ export class AuthService {
    * Check if email exists and get tenant info
    */
   async checkEmail(email: string): Promise<ApiResponse<CheckEmailResponse>> {
-    return apiClient.post<CheckEmailResponse>('/auth/check-email', { email });
+    return apiClient.post<CheckEmailResponse>('/api/auth/check-email', { email });
   }
 
   /**
    * Login with email and password
    */
   async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    return apiClient.post<LoginResponse>('/auth/login', data);
+    return apiClient.post<LoginResponse>('/api/auth/login', data);
   }
 
   /**
    * Verify 2FA code
    */
   async verify2FA(data: Verify2FARequest): Promise<ApiResponse<Verify2FAResponse>> {
-    return apiClient.post<Verify2FAResponse>('/auth/verify-2fa', data);
+    return apiClient.post<Verify2FAResponse>('/api/auth/verify-2fa', data);
   }
 
   /**
    * Setup 2FA for user
    */
   async setup2FA(): Promise<ApiResponse<Setup2FAResponse>> {
-    return apiClient.post<Setup2FAResponse>('/auth/setup-2fa');
+    return apiClient.post<Setup2FAResponse>('/api/auth/setup-2fa');
   }
 
   /**
    * Enable 2FA after verification
    */
   async enable2FA(code: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/enable-2fa', { code });
+    return apiClient.post('/api/auth/enable-2fa', { code });
   }
 
   /**
    * Disable 2FA
    */
   async disable2FA(code: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/disable-2fa', { code });
+    return apiClient.post('/api/auth/disable-2fa', { code });
   }
 
   /**
@@ -142,42 +142,42 @@ export class AuthService {
    * @param tenantCode - Optional workspace/tenant code for TenantUsers (employees)
    */
   async forgotPassword(email: string, tenantCode?: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/forgot-password', { email, tenantCode });
+    return apiClient.post('/api/auth/forgot-password', { email, tenantCode });
   }
 
   /**
    * Validate password reset token
    */
   async validateResetToken(token: string): Promise<ApiResponse<ValidateResetTokenResponse>> {
-    return apiClient.get<ValidateResetTokenResponse>('/auth/validate-reset-token', { token });
+    return apiClient.get<ValidateResetTokenResponse>('/api/auth/validate-reset-token', { token });
   }
 
   /**
    * Reset password with token
    */
   async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/reset-password', data);
+    return apiClient.post('/api/auth/reset-password', data);
   }
 
   /**
    * Refresh access token
    */
   async refreshToken(refreshToken: string): Promise<ApiResponse<RefreshTokenResponse>> {
-    return apiClient.post<RefreshTokenResponse>('/auth/refresh-token', { refreshToken });
+    return apiClient.post<RefreshTokenResponse>('/api/auth/refresh-token', { refreshToken });
   }
 
   /**
    * Logout
    */
   async logout(): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/auth/logout');
+    return apiClient.post('/api/auth/logout');
   }
 
   /**
    * Get current user profile
    */
   async getProfile(): Promise<ApiResponse<LoginResponse['user']>> {
-    return apiClient.get('/auth/profile');
+    return apiClient.get('/api/auth/profile');
   }
 
   /**
@@ -185,7 +185,7 @@ export class AuthService {
    * Returns registrationId for SignalR progress subscription
    */
   async verifyEmail(email: string, code: string): Promise<ApiResponse<{ success: boolean; registrationId: string; message?: string }>> {
-    return apiClient.post('/public/tenant-registration/verify-email', { email, code });
+    return apiClient.post('/api/public/tenant-registration/verify-email', { email, code });
   }
 
   /**
@@ -193,14 +193,14 @@ export class AuthService {
    * Note: Backend endpoint doesn't exist yet - needs to be implemented
    */
   async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/public/tenant-registration/resend-verification-email', { email });
+    return apiClient.post('/api/public/tenant-registration/resend-verification-email', { email });
   }
 
   /**
    * Register new tenant and admin user
    */
   async register(data: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
-    return apiClient.post('/public/tenant-registration/register', data);
+    return apiClient.post('/api/public/tenant-registration/register', data);
   }
 }
 

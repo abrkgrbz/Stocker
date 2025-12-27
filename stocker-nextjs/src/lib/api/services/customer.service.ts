@@ -41,49 +41,49 @@ export class CustomerService {
   async getCustomers(
     params?: PaginationParams & CustomerFilters
   ): Promise<ApiResponse<CustomerListResponse>> {
-    return apiClient.get<CustomerListResponse>('/customers', params);
+    return apiClient.get<CustomerListResponse>('/api/customers', params);
   }
 
   /**
    * Get single customer by ID
    */
   async getCustomer(id: string): Promise<ApiResponse<Customer>> {
-    return apiClient.get<Customer>(`/customers/${id}`);
+    return apiClient.get<Customer>(`/api/customers/${id}`);
   }
 
   /**
    * Create new customer
    */
   async createCustomer(data: CustomerFormData): Promise<ApiResponse<Customer>> {
-    return apiClient.post<Customer>('/customers', data);
+    return apiClient.post<Customer>('/api/customers', data);
   }
 
   /**
    * Update existing customer
    */
   async updateCustomer(id: string, data: Partial<CustomerFormData>): Promise<ApiResponse<Customer>> {
-    return apiClient.put<Customer>(`/customers/${id}`, data);
+    return apiClient.put<Customer>(`/api/customers/${id}`, data);
   }
 
   /**
    * Delete customer
    */
   async deleteCustomer(id: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.delete(`/customers/${id}`);
+    return apiClient.delete(`/api/customers/${id}`);
   }
 
   /**
    * Search customers
    */
   async searchCustomers(query: string): Promise<ApiResponse<Customer[]>> {
-    return apiClient.get<Customer[]>('/customers/search', { q: query });
+    return apiClient.get<Customer[]>('/api/customers/search', { q: query });
   }
 
   /**
    * Get customer by tax ID
    */
   async getCustomerByTaxId(taxId: string): Promise<ApiResponse<Customer | null>> {
-    return apiClient.get<Customer | null>('/customers/by-tax-id', { taxId });
+    return apiClient.get<Customer | null>('/api/customers/by-tax-id', { taxId });
   }
 
   /**
@@ -97,7 +97,7 @@ export class CustomerService {
     bySegment: Record<string, number>;
     byType: Record<string, number>;
   }>> {
-    return apiClient.get('/customers/stats');
+    return apiClient.get('/api/customers/stats');
   }
 
   /**
@@ -107,7 +107,7 @@ export class CustomerService {
     id: string,
     status: 'active' | 'inactive' | 'blocked'
   ): Promise<ApiResponse<Customer>> {
-    return apiClient.patch<Customer>(`/customers/${id}/status`, { status });
+    return apiClient.patch<Customer>(`/api/customers/${id}/status`, { status });
   }
 
   /**
@@ -117,7 +117,7 @@ export class CustomerService {
     id: string,
     params?: PaginationParams
   ): Promise<ApiResponse<any>> {
-    return apiClient.get(`/customers/${id}/transactions`, params);
+    return apiClient.get(`/api/customers/${id}/transactions`, params);
   }
 
   /**
@@ -129,7 +129,7 @@ export class CustomerService {
     availableCredit: number;
     overdueAmount: number;
   }>> {
-    return apiClient.get(`/customers/${id}/balance`);
+    return apiClient.get(`/api/customers/${id}/balance`);
   }
 }
 
