@@ -13,7 +13,7 @@ import FloatingActions from '@/components/landing/FloatingActions';
 export default function Home() {
   return (
     <LandingThemeProvider>
-      <main className="min-h-screen bg-white transition-colors duration-300">
+      <main className="landing-page min-h-screen bg-white transition-colors duration-300">
         <HeroSection />
         <FeaturesSection />
         <TestimonialsSection />

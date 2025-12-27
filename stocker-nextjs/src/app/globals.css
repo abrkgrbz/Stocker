@@ -184,6 +184,102 @@ body {
 }
 
 /* =====================================
+   LINK COLOR RESET FOR MARKETING PAGES
+   ===================================== */
+
+/* Override Ant Design's link color for pages that use Tailwind for styling */
+/* Use .landing-page, .auth-page, or .public-page class on the root container */
+
+.landing-page a,
+.auth-page a,
+.public-page a {
+  text-decoration: none;
+  color: inherit;
+  /* Reset Ant Design's background: transparent override */
+  background: revert-layer;
+}
+
+/* Ensure Tailwind text color classes work on links with higher specificity */
+/* Also handle buttons with dark backgrounds that should have white text */
+.landing-page a[class*="text-white"],
+.auth-page a[class*="text-white"],
+.public-page a[class*="text-white"],
+.landing-page a[class*="bg-slate-900"],
+.auth-page a[class*="bg-slate-900"],
+.public-page a[class*="bg-slate-900"],
+.landing-page a[class*="bg-slate-800"],
+.auth-page a[class*="bg-slate-800"],
+.public-page a[class*="bg-slate-800"],
+.landing-page a[class*="bg-gray-900"],
+.auth-page a[class*="bg-gray-900"],
+.public-page a[class*="bg-gray-900"],
+.landing-page a[class*="bg-black"],
+.auth-page a[class*="bg-black"],
+.public-page a[class*="bg-black"] {
+  color: rgb(255, 255, 255) !important;
+}
+
+.landing-page a[class*="text-slate-900"],
+.auth-page a[class*="text-slate-900"],
+.public-page a[class*="text-slate-900"] {
+  color: rgb(15, 23, 42) !important;
+}
+
+.landing-page a[class*="text-slate-700"],
+.auth-page a[class*="text-slate-700"],
+.public-page a[class*="text-slate-700"] {
+  color: rgb(51, 65, 85) !important;
+}
+
+.landing-page a[class*="text-slate-600"],
+.auth-page a[class*="text-slate-600"],
+.public-page a[class*="text-slate-600"] {
+  color: rgb(71, 85, 105) !important;
+}
+
+.landing-page a[class*="text-slate-500"],
+.auth-page a[class*="text-slate-500"],
+.public-page a[class*="text-slate-500"] {
+  color: rgb(100, 116, 139) !important;
+}
+
+.landing-page a[class*="text-slate-400"],
+.auth-page a[class*="text-slate-400"],
+.public-page a[class*="text-slate-400"] {
+  color: rgb(148, 163, 184) !important;
+}
+
+.landing-page a[class*="text-gray-900"],
+.auth-page a[class*="text-gray-900"],
+.public-page a[class*="text-gray-900"] {
+  color: rgb(17, 24, 39) !important;
+}
+
+.landing-page a[class*="text-gray-700"],
+.auth-page a[class*="text-gray-700"],
+.public-page a[class*="text-gray-700"] {
+  color: rgb(55, 65, 81) !important;
+}
+
+.landing-page a[class*="text-gray-600"],
+.auth-page a[class*="text-gray-600"],
+.public-page a[class*="text-gray-600"] {
+  color: rgb(75, 85, 99) !important;
+}
+
+.landing-page a[class*="text-gray-500"],
+.auth-page a[class*="text-gray-500"],
+.public-page a[class*="text-gray-500"] {
+  color: rgb(107, 114, 128) !important;
+}
+
+.landing-page a[class*="text-gray-400"],
+.auth-page a[class*="text-gray-400"],
+.public-page a[class*="text-gray-400"] {
+  color: rgb(156, 163, 175) !important;
+}
+
+/* =====================================
    LANDING PAGE ANIMATIONS
    ===================================== */
 

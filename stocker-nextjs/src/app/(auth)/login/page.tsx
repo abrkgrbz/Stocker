@@ -401,7 +401,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="auth-page min-h-screen flex">
       {/* Left Panel - Corporate Branding with Testimonial */}
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 relative overflow-hidden">
         {/* Subtle gradient overlay */}

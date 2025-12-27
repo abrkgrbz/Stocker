@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
   // Success state - Email sent
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
         {/* Dot Pattern Background */}
         <div
           className="fixed inset-0 pointer-events-none"
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
 
   // Form state
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
       {/* Dot Pattern Background */}
       <div
         className="fixed inset-0 pointer-events-none"

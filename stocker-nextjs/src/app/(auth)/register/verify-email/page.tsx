@@ -160,7 +160,7 @@ function VerifyEmailContent() {
   // Show success state before redirecting
   if (verifySuccess || redirecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="auth-page min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
             {/* Success Icon */}
@@ -283,7 +283,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="auth-page min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Yükleniyor...</p>
