@@ -3,12 +3,12 @@
 import React from 'react';
 import { Button, Dropdown, MenuProps } from 'antd';
 import {
-  MoreOutlined,
-  EditOutlined,
-  CopyOutlined,
-  InboxOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+  ArchiveBoxIcon,
+  DocumentDuplicateIcon,
+  EllipsisVerticalIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 
 interface QuickActionsProps {
   onEdit?: () => void;
@@ -28,19 +28,19 @@ export function QuickActions({
   const items: MenuProps['items'] = [
     onEdit && {
       key: 'edit',
-      icon: <EditOutlined />,
+      icon: <PencilSquareIcon className="w-4 h-4" />,
       label: 'Düzenle',
       onClick: onEdit,
     },
     onDuplicate && {
       key: 'duplicate',
-      icon: <CopyOutlined />,
+      icon: <DocumentDuplicateIcon className="w-4 h-4" />,
       label: 'Kopyala',
       onClick: onDuplicate,
     },
     onArchive && {
       key: 'archive',
-      icon: <InboxOutlined />,
+      icon: <ArchiveBoxIcon className="w-4 h-4" />,
       label: 'Arşivle',
       onClick: onArchive,
     },
@@ -50,7 +50,7 @@ export function QuickActions({
     },
     onDelete && {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       label: 'Sil',
       danger: true,
       onClick: onDelete,
@@ -59,7 +59,7 @@ export function QuickActions({
 
   return (
     <Dropdown menu={{ items }} trigger={['click']}>
-      <Button type="text" icon={<MoreOutlined />} />
+      <Button type="text" icon={<EllipsisVerticalIcon className="w-4 h-4" />} />
     </Dropdown>
   );
 }

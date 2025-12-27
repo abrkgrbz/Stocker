@@ -679,7 +679,7 @@ export default function InventoryDashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart icon={InboxOutlined} message="Henüz hareket verisi oluşmadı" />
+              <EmptyChart icon={InboxIcon} message="Henüz hareket verisi oluşmadı" />
             )}
           </div>
         </div>

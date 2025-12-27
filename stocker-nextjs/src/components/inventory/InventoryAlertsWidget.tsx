@@ -3,21 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, List, Tag, Typography, Button, Empty, Tabs, Tooltip, Drawer, Divider, Switch, message } from 'antd';
 import {
-  BellOutlined,
-  WarningOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
-  RightOutlined,
-  InboxOutlined,
-  ClockCircleOutlined,
-  ShoppingOutlined,
-  CalendarOutlined,
-  SwapOutlined,
-  FileSearchOutlined,
-  NotificationOutlined,
-  SoundOutlined,
-  WifiOutlined,
-} from '@ant-design/icons';
+  ArrowsRightLeftIcon,
+  BellAlertIcon,
+  BellIcon,
+  CalendarDaysIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  DocumentMagnifyingGlassIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+  InformationCircleIcon,
+  ShoppingBagIcon,
+  SpeakerWaveIcon,
+  WifiIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useInventoryAlerts, type InventoryAlert, type AlertType, type AlertSeverity } from '@/hooks/useInventoryAlerts';
 import { useStockAlerts } from '@/hooks/useStockAlerts';
@@ -26,19 +26,19 @@ const { Text, Title } = Typography;
 
 // Alert type icons and labels
 const alertTypeConfig: Record<AlertType, { icon: React.ReactNode; label: string; color: string }> = {
-  out_of_stock: { icon: <InboxOutlined />, label: 'Stok Tükendi', color: 'red' },
-  low_stock: { icon: <ShoppingOutlined />, label: 'Düşük Stok', color: 'orange' },
-  expired: { icon: <CalendarOutlined />, label: 'Süresi Doldu', color: 'red' },
-  expiring_soon: { icon: <ClockCircleOutlined />, label: 'SKT Yaklaşıyor', color: 'gold' },
-  pending_transfer: { icon: <SwapOutlined />, label: 'Bekleyen Transfer', color: 'blue' },
-  pending_count: { icon: <FileSearchOutlined />, label: 'Bekleyen Sayım', color: 'purple' },
+  out_of_stock: { icon: <InboxIcon className="w-4 h-4" />, label: 'Stok Tükendi', color: 'red' },
+  low_stock: { icon: <ShoppingBagIcon className="w-4 h-4" />, label: 'Düşük Stok', color: 'orange' },
+  expired: { icon: <CalendarDaysIcon className="w-4 h-4" />, label: 'Süresi Doldu', color: 'red' },
+  expiring_soon: { icon: <ClockIcon className="w-4 h-4" />, label: 'SKT Yaklaşıyor', color: 'gold' },
+  pending_transfer: { icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Bekleyen Transfer', color: 'blue' },
+  pending_count: { icon: <DocumentMagnifyingGlassIcon className="w-4 h-4" />, label: 'Bekleyen Sayım', color: 'purple' },
 };
 
 // Severity icons and colors
 const severityConfig: Record<AlertSeverity, { icon: React.ReactNode; color: string; bgColor: string }> = {
-  critical: { icon: <ExclamationCircleOutlined />, color: '#ff4d4f', bgColor: '#fff2f0' },
-  warning: { icon: <WarningOutlined />, color: '#faad14', bgColor: '#fffbe6' },
-  info: { icon: <InfoCircleOutlined />, color: '#1890ff', bgColor: '#e6f7ff' },
+  critical: { icon: <ExclamationCircleIcon className="w-4 h-4" />, color: '#ff4d4f', bgColor: '#fff2f0' },
+  warning: { icon: <ExclamationTriangleIcon className="w-4 h-4" />, color: '#faad14', bgColor: '#fffbe6' },
+  info: { icon: <InformationCircleIcon className="w-4 h-4" />, color: '#1890ff', bgColor: '#e6f7ff' },
 };
 
 interface AlertItemProps {
@@ -76,7 +76,7 @@ function AlertItem({ alert, onClick, showType = true }: AlertItemProps) {
             {alert.description}
           </Text>
         </div>
-        <RightOutlined className="text-gray-400 flex-shrink-0" />
+        <ChevronRightIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
       </div>
     </List.Item>
   );
@@ -302,7 +302,7 @@ export default function InventoryAlertsWidget({
           <Badge count={summary.total} size="small" offset={[-5, 5]}>
             <Button
               type="text"
-              icon={<BellOutlined className={hasCritical ? 'text-red-500' : ''} />}
+              icon={<BellIcon className={`w-4 h-4 ${hasCritical ? 'text-red-500' : ''}`} />}
               onClick={() => setDrawerOpen(true)}
             />
           </Badge>
@@ -317,7 +317,7 @@ export default function InventoryAlertsWidget({
         >
           {/* SignalR Connection Status */}
           <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${isSignalRConnected ? 'bg-green-50' : 'bg-gray-100'}`}>
-            <WifiOutlined className={isSignalRConnected ? 'text-green-500' : 'text-gray-400'} />
+            <WifiIcon className={`w-4 h-4 ${isSignalRConnected ? 'text-green-500' : 'text-gray-400'}`} />
             <Text type={isSignalRConnected ? 'success' : 'secondary'} className="text-xs">
               {isSignalRConnected ? 'Anlık bildirimler aktif' : 'Anlık bildirimler bağlanıyor...'}
             </Text>
@@ -330,7 +330,7 @@ export default function InventoryAlertsWidget({
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <NotificationOutlined className="text-blue-500" />
+                <BellAlertIcon className="w-4 h-4 text-blue-500" />
                 <Text strong>Tarayıcı Bildirimleri</Text>
               </div>
               <Switch
@@ -345,7 +345,7 @@ export default function InventoryAlertsWidget({
             {notificationsEnabled && (
               <Button
                 size="small"
-                icon={<SoundOutlined />}
+                icon={<SpeakerWaveIcon className="w-4 h-4" />}
                 onClick={handleTestNotification}
               >
                 Test Et
@@ -370,7 +370,7 @@ export default function InventoryAlertsWidget({
         title={
           showHeader ? (
             <div className="flex items-center gap-2">
-              <BellOutlined className={hasCritical ? 'text-red-500' : 'text-blue-500'} />
+              <BellIcon className={`w-4 h-4 ${hasCritical ? 'text-red-500' : 'text-blue-500'}`} />
               <span>Bildirimler</span>
               <Badge count={summary.total} size="small" />
             </div>
@@ -396,17 +396,17 @@ export default function InventoryAlertsWidget({
             {/* Summary badges */}
             <div className="flex flex-wrap gap-2 mb-3 px-2">
               {summary.critical > 0 && (
-                <Tag color="error" icon={<ExclamationCircleOutlined />}>
+                <Tag color="error" icon={<ExclamationCircleIcon className="w-3 h-3" />}>
                   {summary.critical} Kritik
                 </Tag>
               )}
               {summary.warning > 0 && (
-                <Tag color="warning" icon={<WarningOutlined />}>
+                <Tag color="warning" icon={<ExclamationTriangleIcon className="w-3 h-3" />}>
                   {summary.warning} Uyarı
                 </Tag>
               )}
               {summary.info > 0 && (
-                <Tag color="processing" icon={<InfoCircleOutlined />}>
+                <Tag color="processing" icon={<InformationCircleIcon className="w-3 h-3" />}>
                   {summary.info} Bilgi
                 </Tag>
               )}
@@ -432,7 +432,7 @@ export default function InventoryAlertsWidget({
       >
         {/* SignalR Connection Status */}
         <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${isSignalRConnected ? 'bg-green-50' : 'bg-gray-100'}`}>
-          <WifiOutlined className={isSignalRConnected ? 'text-green-500' : 'text-gray-400'} />
+          <WifiIcon className={`w-4 h-4 ${isSignalRConnected ? 'text-green-500' : 'text-gray-400'}`} />
           <Text type={isSignalRConnected ? 'success' : 'secondary'} className="text-xs">
             {isSignalRConnected ? 'Anlık bildirimler aktif' : 'Anlık bildirimler bağlanıyor...'}
           </Text>
@@ -445,7 +445,7 @@ export default function InventoryAlertsWidget({
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <NotificationOutlined className="text-blue-500" />
+              <BellAlertIcon className="w-4 h-4 text-blue-500" />
               <Text strong>Tarayıcı Bildirimleri</Text>
             </div>
             <Switch
@@ -460,7 +460,7 @@ export default function InventoryAlertsWidget({
           {notificationsEnabled && (
             <Button
               size="small"
-              icon={<SoundOutlined />}
+              icon={<SpeakerWaveIcon className="w-4 h-4" />}
               onClick={handleTestNotification}
             >
               Test Et

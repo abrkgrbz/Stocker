@@ -4,30 +4,30 @@ import React from 'react';
 import { Button, Dropdown, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  MoreOutlined,
-  EditOutlined,
-  EyeOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CopyOutlined,
-  InboxOutlined,
-  SendOutlined,
-  PrinterOutlined,
-  DownloadOutlined,
-  ReloadOutlined,
-  StarOutlined,
-  FlagOutlined,
-  LockOutlined,
-  UnlockOutlined,
-  UserAddOutlined,
-  ShareAltOutlined,
-  HistoryOutlined,
-  FileTextOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArchiveBoxIcon,
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  DocumentDuplicateIcon,
+  DocumentTextIcon,
+  EllipsisVerticalIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  FlagIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  PaperAirplaneIcon,
+  PencilSquareIcon,
+  PhoneIcon,
+  PrinterIcon,
+  ShareIcon,
+  StarIcon,
+  TrashIcon,
+  UserPlusIcon,
+  XCircleIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -128,33 +128,33 @@ export interface RowActionsProps {
 /** Eylem tiplerine göre varsayılan konfigürasyonlar */
 const ACTION_PRESETS: Record<ActionType, { icon: React.ReactNode; variant: ActionVariant; label: string }> = {
   // Temel CRUD
-  view: { icon: <EyeOutlined />, variant: 'default', label: 'Görüntüle' },
-  edit: { icon: <EditOutlined />, variant: 'primary', label: 'Düzenle' },
-  delete: { icon: <DeleteOutlined />, variant: 'danger', label: 'Sil' },
-  duplicate: { icon: <CopyOutlined />, variant: 'default', label: 'Kopyala' },
+  view: { icon: <EyeIcon className="w-4 h-4" />, variant: 'default', label: 'Görüntüle' },
+  edit: { icon: <PencilSquareIcon className="w-4 h-4" />, variant: 'primary', label: 'Düzenle' },
+  delete: { icon: <TrashIcon className="w-4 h-4" />, variant: 'danger', label: 'Sil' },
+  duplicate: { icon: <DocumentDuplicateIcon className="w-4 h-4" />, variant: 'default', label: 'Kopyala' },
   // Durum değişiklikleri
-  complete: { icon: <CheckCircleOutlined />, variant: 'success', label: 'Tamamla' },
-  cancel: { icon: <CloseCircleOutlined />, variant: 'danger', label: 'İptal Et' },
-  approve: { icon: <CheckCircleOutlined />, variant: 'success', label: 'Onayla' },
-  reject: { icon: <CloseCircleOutlined />, variant: 'danger', label: 'Reddet' },
-  archive: { icon: <InboxOutlined />, variant: 'warning', label: 'Arşivle' },
-  restore: { icon: <ReloadOutlined />, variant: 'success', label: 'Geri Yükle' },
+  complete: { icon: <CheckCircleIcon className="w-4 h-4" />, variant: 'success', label: 'Tamamla' },
+  cancel: { icon: <XCircleIcon className="w-4 h-4" />, variant: 'danger', label: 'İptal Et' },
+  approve: { icon: <CheckCircleIcon className="w-4 h-4" />, variant: 'success', label: 'Onayla' },
+  reject: { icon: <XCircleIcon className="w-4 h-4" />, variant: 'danger', label: 'Reddet' },
+  archive: { icon: <ArchiveBoxIcon className="w-4 h-4" />, variant: 'warning', label: 'Arşivle' },
+  restore: { icon: <ArrowPathIcon className="w-4 h-4" />, variant: 'success', label: 'Geri Yükle' },
   // İletişim
-  send: { icon: <SendOutlined />, variant: 'primary', label: 'Gönder' },
-  email: { icon: <MailOutlined />, variant: 'default', label: 'E-posta Gönder' },
-  call: { icon: <PhoneOutlined />, variant: 'default', label: 'Ara' },
-  schedule: { icon: <CalendarOutlined />, variant: 'primary', label: 'Planla' },
+  send: { icon: <PaperAirplaneIcon className="w-4 h-4" />, variant: 'primary', label: 'Gönder' },
+  email: { icon: <EnvelopeIcon className="w-4 h-4" />, variant: 'default', label: 'E-posta Gönder' },
+  call: { icon: <PhoneIcon className="w-4 h-4" />, variant: 'default', label: 'Ara' },
+  schedule: { icon: <CalendarIcon className="w-4 h-4" />, variant: 'primary', label: 'Planla' },
   // Diğer
-  print: { icon: <PrinterOutlined />, variant: 'default', label: 'Yazdır' },
-  download: { icon: <DownloadOutlined />, variant: 'default', label: 'İndir' },
-  share: { icon: <ShareAltOutlined />, variant: 'default', label: 'Paylaş' },
-  lock: { icon: <LockOutlined />, variant: 'warning', label: 'Kilitle' },
-  unlock: { icon: <UnlockOutlined />, variant: 'success', label: 'Kilidi Aç' },
-  assign: { icon: <UserAddOutlined />, variant: 'primary', label: 'Ata' },
-  history: { icon: <HistoryOutlined />, variant: 'default', label: 'Geçmiş' },
-  notes: { icon: <FileTextOutlined />, variant: 'default', label: 'Notlar' },
-  favorite: { icon: <StarOutlined />, variant: 'warning', label: 'Favorilere Ekle' },
-  flag: { icon: <FlagOutlined />, variant: 'warning', label: 'İşaretle' },
+  print: { icon: <PrinterIcon className="w-4 h-4" />, variant: 'default', label: 'Yazdır' },
+  download: { icon: <ArrowDownTrayIcon className="w-4 h-4" />, variant: 'default', label: 'İndir' },
+  share: { icon: <ShareIcon className="w-4 h-4" />, variant: 'default', label: 'Paylaş' },
+  lock: { icon: <LockClosedIcon className="w-4 h-4" />, variant: 'warning', label: 'Kilitle' },
+  unlock: { icon: <LockOpenIcon className="w-4 h-4" />, variant: 'success', label: 'Kilidi Aç' },
+  assign: { icon: <UserPlusIcon className="w-4 h-4" />, variant: 'primary', label: 'Ata' },
+  history: { icon: <ClockIcon className="w-4 h-4" />, variant: 'default', label: 'Geçmiş' },
+  notes: { icon: <DocumentTextIcon className="w-4 h-4" />, variant: 'default', label: 'Notlar' },
+  favorite: { icon: <StarIcon className="w-4 h-4" />, variant: 'warning', label: 'Favorilere Ekle' },
+  flag: { icon: <FlagIcon className="w-4 h-4" />, variant: 'warning', label: 'İşaretle' },
   custom: { icon: null, variant: 'default', label: '' },
 };
 
@@ -316,7 +316,7 @@ export function RowActions({
               `}
               aria-label="Daha fazla işlem"
             >
-              <MoreOutlined className={size === 'small' ? 'text-base' : 'text-lg'} />
+              <EllipsisVerticalIcon className={size === 'small' ? 'w-4 h-4' : 'w-5 h-5'} />
             </button>
           </Tooltip>
         </Dropdown>

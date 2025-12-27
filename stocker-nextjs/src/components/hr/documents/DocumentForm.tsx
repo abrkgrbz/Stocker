@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Select, DatePicker, Input, Row, Col, Typography, Upload, message } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
-import { FileOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons';
+import { InboxIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { EmployeeDocumentDto } from '@/lib/api/services/hr.types';
 import { DocumentType } from '@/lib/api/services/hr.types';
@@ -112,7 +112,7 @@ export default function DocumentForm({ form, initialValues, onFinish, loading, o
               }}
             >
               <p className="ant-upload-drag-icon">
-                <InboxOutlined style={{ fontSize: '48px', color: '#667eea' }} />
+                <InboxIcon className="w-12 h-12 text-indigo-500" />
               </p>
               <p className="ant-upload-text" style={{ color: '#374151', fontWeight: 500 }}>
                 Dosya Yükle

@@ -14,14 +14,14 @@ import {
   TreeSelect,
 } from 'antd';
 import {
-  PlusOutlined,
-  TagOutlined,
-  ShopOutlined,
-  SettingOutlined,
-  DeleteOutlined,
-  InboxOutlined,
-  PictureOutlined,
-} from '@ant-design/icons';
+  BuildingStorefrontIcon,
+  Cog6ToothIcon,
+  InboxIcon,
+  PhotoIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useCategoryTree, useBrands, useUnits, useWarehouses, useLocations } from '@/lib/api/hooks/useInventory';
 import { ProductType } from '@/lib/api/services/inventory.types';
 import type { ProductDto, CategoryTreeDto, InitialStockEntryDto } from '@/lib/api/services/inventory.types';
@@ -132,7 +132,7 @@ function StockEntryRow({
           <Button
             type="text"
             size="small"
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={onRemove}
             danger
           />
@@ -348,7 +348,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                     </button>
                   </>
                 ) : (
-                  <PictureOutlined className="text-2xl text-slate-400" />
+                  <PhotoIcon className="w-6 h-6 text-slate-400" />
                 )}
               </div>
 
@@ -392,7 +392,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                     type="button"
                     className="w-7 h-7 rounded border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 hover:border-slate-400 hover:text-slate-500 transition-colors"
                   >
-                    <PlusOutlined className="text-xs" />
+                    <PlusIcon className="w-3 h-3" />
                   </button>
                 </Upload>
               </div>
@@ -500,7 +500,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                     treeData={categoryTreeData}
                     showSearch
                     treeNodeFilterProp="title"
-                    suffixIcon={<TagOutlined className="text-slate-400" />}
+                    suffixIcon={<TagIcon className="w-4 h-4 text-slate-400" />}
                     treeLine={{ showLeafIcon: false }}
                     treeDefaultExpandAll
                     dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
@@ -509,7 +509,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                       <>
                         {menu}
                         <Divider className="my-1" />
-                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-slate-600">
+                        <Button type="text" icon={<PlusIcon className="w-4 h-4" />} size="small" block className="text-left text-slate-600">
                           Yeni Ekle
                         </Button>
                       </>
@@ -526,14 +526,14 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    suffixIcon={<ShopOutlined className="text-slate-400" />}
+                    suffixIcon={<BuildingStorefrontIcon className="w-4 h-4 text-slate-400" />}
                     options={brands.map((b) => ({ value: b.id, label: b.name }))}
                     className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                     dropdownRender={(menu) => (
                       <>
                         {menu}
                         <Divider className="my-1" />
-                        <Button type="text" icon={<PlusOutlined />} size="small" block className="text-left text-slate-600">
+                        <Button type="text" icon={<PlusIcon className="w-4 h-4" />} size="small" block className="text-left text-slate-600">
                           Yeni Ekle
                         </Button>
                       </>
@@ -755,7 +755,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                 <Button
                   type="dashed"
                   size="small"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={addStockEntry}
                   className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
                 >
@@ -789,7 +789,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                   className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all"
                   onClick={addStockEntry}
                 >
-                  <InboxOutlined className="text-2xl text-slate-400 mb-2" />
+                  <InboxIcon className="w-6 h-6 text-slate-400 mb-2 mx-auto" />
                   <div className="text-sm text-slate-500">
                     Başlangıç stoku eklemek için tıklayın
                   </div>
@@ -812,7 +812,7 @@ export default function ProductForm({ form, initialValues, onFinish, loading }: 
                   key: 'advanced',
                   label: (
                     <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                      <SettingOutlined /> Gelişmiş Ayarlar
+                      <Cog6ToothIcon className="w-4 h-4" /> Gelişmiş Ayarlar
                     </h3>
                   ),
                   children: (

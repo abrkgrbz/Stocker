@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import { InboxIcon } from '@heroicons/react/24/outline';
 import {
   TeamOutlined,
   DashboardOutlined,
@@ -27,7 +28,6 @@ import {
   SettingOutlined,
   FileOutlined,
   ThunderboltOutlined,
-  InboxOutlined,
   AppstoreOutlined,
   TagsOutlined,
   TrademarkOutlined,
@@ -162,7 +162,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
   },
   inventory: {
     title: 'Envanter',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
     color: colors.semantic.success.default, // Was '#10b981' -> Now Semantic Success (Emerald)
     moduleCode: 'inventory',
     description: 'Stok ve depo yönetimi',
@@ -185,7 +185,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         icon: <SwapOutlined />,
         label: 'Stok İşlemleri',
         children: [
-          { key: '/inventory/stock', icon: <InboxOutlined />, label: 'Stok Görünümü' },
+          { key: '/inventory/stock', icon: <InboxIcon className="w-4 h-4" />, label: 'Stok Görünümü' },
           { key: '/inventory/warehouses', icon: <HomeOutlined />, label: 'Depolar' },
           { key: '/inventory/stock-movements', icon: <SwapOutlined />, label: 'Hareketler' },
           { key: '/inventory/stock-transfers', icon: <SwapOutlined />, label: 'Transferler' },
@@ -199,7 +199,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         label: 'İzleme & Takip',
         children: [
           { key: '/inventory/serial-numbers', icon: <BarcodeOutlined />, label: 'Seri Numaraları' },
-          { key: '/inventory/lot-batches', icon: <InboxOutlined />, label: 'Lot/Parti' },
+          { key: '/inventory/lot-batches', icon: <InboxIcon className="w-4 h-4" />, label: 'Lot/Parti' },
           { key: '/inventory/stock-reservations', icon: <LockOutlined />, label: 'Rezervasyonlar' },
           { key: '/inventory/stock-alerts', icon: <WarningOutlined />, label: 'Uyarılar' },
         ],
@@ -309,7 +309,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         icon: <SwapOutlined />,
         label: 'Lojistik',
         children: [
-          { key: '/sales/reservations', icon: <InboxOutlined />, label: 'Stok Rezervasyonları' },
+          { key: '/sales/reservations', icon: <InboxIcon className="w-4 h-4" />, label: 'Stok Rezervasyonları' },
           { key: '/sales/backorders', icon: <ClockCircleOutlined />, label: 'Bekleyen Siparişler' },
           { key: '/sales/delivery-notes', icon: <FileTextOutlined />, label: 'İrsaliyeler' },
         ],
@@ -390,7 +390,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
           { key: '/hr/departments', icon: <ApartmentOutlined />, label: 'Departmanlar' },
           { key: '/hr/positions', icon: <SafetyCertificateOutlined />, label: 'Pozisyonlar' },
           { key: '/hr/employee-skills', icon: <ToolOutlined />, label: 'Yetkinlikler' },
-          { key: '/hr/employee-assets', icon: <InboxOutlined />, label: 'Zimmetler' },
+          { key: '/hr/employee-assets', icon: <InboxIcon className="w-4 h-4" />, label: 'Zimmetler' },
           { key: '/hr/employee-benefits', icon: <HeartOutlined />, label: 'Yan Haklar' },
         ],
       },
@@ -510,7 +510,7 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         label: 'Siparişler',
         children: [
           { key: '/purchase/orders', icon: <ShoppingCartOutlined />, label: 'Satın Alma Siparişleri' },
-          { key: '/purchase/goods-receipts', icon: <InboxOutlined />, label: 'Mal Alım Belgeleri' },
+          { key: '/purchase/goods-receipts', icon: <InboxIcon className="w-4 h-4" />, label: 'Mal Alım Belgeleri' },
         ],
       },
       {
