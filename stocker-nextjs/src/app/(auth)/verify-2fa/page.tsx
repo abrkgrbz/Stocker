@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Card, Input, Button, Space, Typography, Alert, Divider } from 'antd';
 import {
   ShieldCheckIcon,
+  DevicePhoneMobileIcon,
+  KeyIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
@@ -122,7 +124,7 @@ export default function Verify2FAPage() {
                 setCode(value);
               }}
               onKeyPress={handleKeyPress}
-              prefix={useBackupCode ? <KeyOutlined /> : <MobileOutlined />}
+              prefix={useBackupCode ? <KeyIcon className="w-5 h-5 text-slate-400" /> : <DevicePhoneMobileIcon className="w-5 h-5 text-slate-400" />}
               style={{
                 fontSize: useBackupCode ? 16 : 24,
                 textAlign: 'center',

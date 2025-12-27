@@ -1,52 +1,175 @@
 'use client';
 
-import React, { useState } from 'react';
+/**
+ * Announcements List Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Typography,
-  Button,
-  Space,
-  Card,
-  Table,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Dropdown,
-  Modal,
-  Input,
-  Select,
-} from 'antd';
 import {
   BellIcon,
   CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
   PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+  PencilIcon,
   TrashIcon,
+  EllipsisHorizontalIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
-import type { ColumnsType } from 'antd/es/table';
 import { useAnnouncements, useDeleteAnnouncement } from '@/lib/api/hooks/useHR';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
+import {
+  PageContainer,
+  ListPageHeader,
+  Card,
+  StatCard,
+} from '@/components/patterns';
+import { Input, Badge, Spinner } from '@/components/primitives';
+import { ConfirmModal } from '@/components/primitives/overlay';
 
-const { Title, Paragraph } = Typography;
+// Stats Component
+function AnnouncementsStats({
+  total,
+  published,
+  pinned,
+  loading,
+}: {
+  total: number;
+  published: number;
+  pinned: number;
+  loading: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <StatCard
+        title="Toplam Duyuru"
+        value={total}
+        icon={<BellIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        loading={loading}
+      />
+      <StatCard
+        title="Yayında"
+        value={published}
+        icon={<CheckCircleIcon className="w-5 h-5" />}
+        iconColor="#22c55e"
+        loading={loading}
+      />
+      <StatCard
+        title="Sabitlenmiş"
+        value={pinned}
+        icon={<MapPinIcon className="w-5 h-5" />}
+        iconColor="#f59e0b"
+        loading={loading}
+      />
+    </div>
+  );
+}
+
+// Priority Badge Component
+function PriorityBadge({ priority }: { priority?: string }) {
+  const config: Record<string, { variant: 'default' | 'info' | 'warning' | 'error'; text: string }> = {
+    Low: { variant: 'default', text: 'Düşük' },
+    Normal: { variant: 'info', text: 'Normal' },
+    High: { variant: 'warning', text: 'Yüksek' },
+    Urgent: { variant: 'error', text: 'Acil' },
+  };
+  const { variant, text } = config[priority || ''] || { variant: 'default' as const, text: priority || '-' };
+  return <Badge variant={variant}>{text}</Badge>;
+}
+
+// Status Badge Component
+function PublishStatusBadge({ isPublished }: { isPublished: boolean }) {
+  return (
+    <Badge variant={isPublished ? 'success' : 'default'}>
+      {isPublished ? 'Yayında' : 'Taslak'}
+    </Badge>
+  );
+}
+
+// Action Menu Component
+function ActionMenu({
+  announcement,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  announcement: AnnouncementDto;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+      >
+        <EllipsisHorizontalIcon className="w-5 h-5" />
+      </button>
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
+            <button
+              onClick={() => { onView(); setIsOpen(false); }}
+              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+            >
+              <EyeIcon className="w-4 h-4" />
+              Görüntüle
+            </button>
+            <button
+              onClick={() => { onEdit(); setIsOpen(false); }}
+              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+            >
+              <PencilIcon className="w-4 h-4" />
+              Düzenle
+            </button>
+            <div className="border-t border-slate-100 my-1" />
+            <button
+              onClick={() => { onDelete(); setIsOpen(false); }}
+              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+            >
+              <TrashIcon className="w-4 h-4" />
+              Sil
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AnnouncementsPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; announcement: AnnouncementDto | null }>({
+    open: false,
+    announcement: null,
+  });
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchText), 300);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   // API Hooks
   const { data: announcements = [], isLoading } = useAnnouncements();
   const deleteAnnouncement = useDeleteAnnouncement();
 
-  // Filter announcements by search text
+  // Filter announcements
   const filteredAnnouncements = announcements.filter(
     (a) =>
-      a.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      a.content?.toLowerCase().includes(searchText.toLowerCase())
+      a.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      a.content?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   // Stats
@@ -54,198 +177,158 @@ export default function AnnouncementsPage() {
   const publishedAnnouncements = announcements.filter((a) => a.isPublished).length;
   const pinnedAnnouncements = announcements.filter((a) => a.isPinned).length;
 
-  const handleDelete = (announcement: AnnouncementDto) => {
-    Modal.confirm({
-      title: 'Duyuruyu Sil',
-      content: `"${announcement.title}" duyurusunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      okText: 'Sil',
-      okType: 'danger',
-      cancelText: 'İptal',
-      onOk: async () => {
-        try {
-          await deleteAnnouncement.mutateAsync(announcement.id);
-        } catch (error) {
-          // Error handled by hook
-        }
-      },
-    });
+  const handleDelete = async () => {
+    if (!deleteModal.announcement) return;
+    try {
+      await deleteAnnouncement.mutateAsync(deleteModal.announcement.id);
+      setDeleteModal({ open: false, announcement: null });
+    } catch {
+      // Error handled by hook
+    }
   };
-
-  const getPriorityConfig = (priority?: string) => {
-    const priorityMap: Record<string, { color: string; text: string }> = {
-      Low: { color: 'default', text: 'Düşük' },
-      Normal: { color: 'blue', text: 'Normal' },
-      High: { color: 'orange', text: 'Yüksek' },
-      Urgent: { color: 'red', text: 'Acil' },
-    };
-    return priorityMap[priority || ''] || { color: 'default', text: priority || '-' };
-  };
-
-  const columns: ColumnsType<AnnouncementDto> = [
-    {
-      title: 'Başlık',
-      dataIndex: 'title',
-      key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title),
-      render: (title: string, record: AnnouncementDto) => (
-        <Space>
-          {record.isPinned && <PushpinOutlined style={{ color: '#faad14' }} />}
-          <BellIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
-          <a onClick={() => router.push(`/hr/announcements/${record.id}`)}>{title}</a>
-        </Space>
-      ),
-    },
-    {
-      title: 'İçerik',
-      dataIndex: 'content',
-      key: 'content',
-      ellipsis: true,
-      render: (content: string) => (
-        <Paragraph ellipsis={{ rows: 1 }} style={{ margin: 0 }}>
-          {content}
-        </Paragraph>
-      ),
-    },
-    {
-      title: 'Öncelik',
-      dataIndex: 'priority',
-      key: 'priority',
-      width: 100,
-      render: (priority: string) => {
-        const config = getPriorityConfig(priority);
-        return <Tag color={config.color}>{config.text}</Tag>;
-      },
-    },
-    {
-      title: 'Tarih',
-      dataIndex: 'publishDate',
-      key: 'date',
-      width: 120,
-      sorter: (a, b) => dayjs(a.publishDate).unix() - dayjs(b.publishDate).unix(),
-      render: (date: string) => dayjs(date).format('DD.MM.YYYY'),
-    },
-    {
-      title: 'Durum',
-      dataIndex: 'isPublished',
-      key: 'isPublished',
-      width: 100,
-      render: (isPublished: boolean) => (
-        <Tag color={isPublished ? 'green' : 'default'}>{isPublished ? 'Yayında' : 'Taslak'}</Tag>
-      ),
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 80,
-      render: (_, record: AnnouncementDto) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'view',
-                icon: <EyeIcon className="w-4 h-4" />,
-                label: 'Görüntüle',
-                onClick: () => router.push(`/hr/announcements/${record.id}`),
-              },
-              {
-                key: 'edit',
-                icon: <PencilIcon className="w-4 h-4" />,
-                label: 'Düzenle',
-                onClick: () => router.push(`/hr/announcements/${record.id}/edit`),
-              },
-              { type: 'divider' },
-              {
-                key: 'delete',
-                icon: <TrashIcon className="w-4 h-4" />,
-                label: 'Sil',
-                danger: true,
-                onClick: () => handleDelete(record),
-              },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-        </Dropdown>
-      ),
-    },
-  ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2} style={{ margin: 0 }}>
-          <BellIcon className="w-4 h-4" className="mr-2" />
-          Duyurular
-        </Title>
-        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/announcements/new')}>
-          Yeni Duyuru
-        </Button>
-      </div>
-
+    <PageContainer maxWidth="7xl">
       {/* Stats */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Toplam Duyuru"
-              value={totalAnnouncements}
-              prefix={<BellIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#7c3aed' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Yayında"
-              value={publishedAnnouncements}
-              prefix={<CheckCircleIcon className="w-4 h-4" />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small">
-            <Statistic
-              title="Sabitlenmiş"
-              value={pinnedAnnouncements}
-              prefix={<PushpinOutlined />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <AnnouncementsStats
+        total={totalAnnouncements}
+        published={publishedAnnouncements}
+        pinned={pinnedAnnouncements}
+        loading={isLoading}
+      />
 
-      {/* Filters */}
-      <Card className="mb-4">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="Duyuru ara..."
-              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-        </Row>
-      </Card>
+      {/* Header */}
+      <ListPageHeader
+        icon={<BellIcon className="w-5 h-5" />}
+        iconColor="#7c3aed"
+        title="Duyurular"
+        description="Şirket duyurularını yönetin"
+        itemCount={totalAnnouncements}
+        primaryAction={{
+          label: 'Yeni Duyuru',
+          onClick: () => router.push('/hr/announcements/new'),
+          icon: <PlusIcon className="w-4 h-4" />,
+        }}
+        secondaryActions={
+          <button
+            onClick={() => window.location.reload()}
+            disabled={isLoading}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        }
+      />
+
+      {/* Search */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
+        <Input
+          placeholder="Duyuru ara... (başlık veya içerik)"
+          prefix={<MagnifyingGlassIcon className="w-5 h-5 text-slate-400" />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          size="lg"
+        />
+      </div>
 
       {/* Table */}
       <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredAnnouncements}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} duyuru`,
-          }}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spinner size="lg" />
+          </div>
+        ) : filteredAnnouncements.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+            <BellIcon className="w-12 h-12 mb-4 text-slate-300" />
+            <p className="text-lg font-medium">Duyuru bulunamadı</p>
+            <p className="text-sm">Arama kriterlerinizi değiştirin veya yeni duyuru ekleyin.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    Başlık
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    İçerik
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-24">
+                    Öncelik
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-28">
+                    Tarih
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider w-24">
+                    Durum
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider w-16">
+                    İşlem
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredAnnouncements.map((announcement) => (
+                  <tr
+                    key={announcement.id}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {announcement.isPinned && (
+                          <MapPinIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        )}
+                        <button
+                          onClick={() => router.push(`/hr/announcements/${announcement.id}`)}
+                          className="text-sm font-medium text-slate-900 hover:text-violet-600 transition-colors text-left"
+                        >
+                          {announcement.title}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-sm text-slate-600 truncate max-w-xs">
+                        {announcement.content}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <PriorityBadge priority={announcement.priority} />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {dayjs(announcement.publishDate).format('DD.MM.YYYY')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <PublishStatusBadge isPublished={announcement.isPublished} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <ActionMenu
+                        announcement={announcement}
+                        onView={() => router.push(`/hr/announcements/${announcement.id}`)}
+                        onEdit={() => router.push(`/hr/announcements/${announcement.id}/edit`)}
+                        onDelete={() => setDeleteModal({ open: true, announcement })}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false, announcement: null })}
+        onConfirm={handleDelete}
+        title="Duyuruyu Sil"
+        message={`"${deleteModal.announcement?.title}" duyurusunu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Sil"
+        cancelText="İptal"
+        variant="danger"
+        loading={deleteAnnouncement.isPending}
+      />
+    </PageContainer>
   );
 }
