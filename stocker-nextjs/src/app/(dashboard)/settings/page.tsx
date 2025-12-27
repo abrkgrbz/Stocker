@@ -90,7 +90,7 @@ const settingsGroups = [
         description: 'Veri yedekleme ve kurtarma işlemleri',
         icon: CloudUpload,
         path: '/settings/backup',
-        enabled: false,
+        enabled: true,
       },
     ],
   },
