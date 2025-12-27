@@ -15,7 +15,7 @@ import type {
   PagedResult,
 } from '../types';
 
-const BASE_URL = '/sales/salesterritories';
+const BASE_URL = '/sales/territories';
 
 export const territoryService = {
   /**

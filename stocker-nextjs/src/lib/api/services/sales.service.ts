@@ -2074,79 +2074,79 @@ export class SalesService {
   // =====================================
 
   static async getSalesTerritories(params?: SalesTerritoryQueryParams): Promise<PagedResult<SalesTerritoryListDto>> {
-    return ApiService.get<PagedResult<SalesTerritoryListDto>>('/sales/salesterritories', { params });
+    return ApiService.get<PagedResult<SalesTerritoryListDto>>('/sales/territories', { params });
   }
 
   static async getSalesTerritory(id: string): Promise<SalesTerritoryDto> {
-    return ApiService.get<SalesTerritoryDto>(`/sales/salesterritories/${id}`);
+    return ApiService.get<SalesTerritoryDto>(`/sales/territories/${id}`);
   }
 
   static async getSalesTerritoryByCode(code: string): Promise<SalesTerritoryDto> {
-    return ApiService.get<SalesTerritoryDto>(`/sales/salesterritories/by-code/${code}`);
+    return ApiService.get<SalesTerritoryDto>(`/sales/territories/by-code/${code}`);
   }
 
   static async getChildTerritories(parentId: string): Promise<SalesTerritoryListDto[]> {
-    return ApiService.get<SalesTerritoryListDto[]>(`/sales/salesterritories/${parentId}/children`);
+    return ApiService.get<SalesTerritoryListDto[]>(`/sales/territories/${parentId}/children`);
   }
 
   static async getRootTerritories(): Promise<SalesTerritoryListDto[]> {
-    return ApiService.get<SalesTerritoryListDto[]>('/sales/salesterritories/roots');
+    return ApiService.get<SalesTerritoryListDto[]>('/sales/territories/roots');
   }
 
   static async createSalesTerritory(data: CreateSalesTerritoryCommand): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>('/sales/salesterritories', data);
+    return ApiService.post<SalesTerritoryDto>('/sales/territories', data);
   }
 
   static async updateSalesTerritory(id: string, data: UpdateSalesTerritoryCommand): Promise<SalesTerritoryDto> {
-    return ApiService.put<SalesTerritoryDto>(`/sales/salesterritories/${id}`, data);
+    return ApiService.put<SalesTerritoryDto>(`/sales/territories/${id}`, data);
   }
 
   static async deleteSalesTerritory(id: string): Promise<void> {
-    return ApiService.delete<void>(`/sales/salesterritories/${id}`);
+    return ApiService.delete<void>(`/sales/territories/${id}`);
   }
 
   static async activateTerritory(id: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/activate`);
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/activate`);
   }
 
   static async deactivateTerritory(id: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/deactivate`);
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/deactivate`);
   }
 
   static async suspendTerritory(id: string, reason: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/suspend`, { reason });
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/suspend`, { reason });
   }
 
   static async assignManager(id: string, managerId: string, managerName: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/manager`, { managerId, managerName });
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/manager`, { managerId, managerName });
   }
 
   static async removeManager(id: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/manager/remove`);
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/manager/remove`);
   }
 
   static async assignSalesRep(id: string, data: AssignSalesRepCommand): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/assignments`, data);
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/assignments`, data);
   }
 
   static async removeAssignment(id: string, assignmentId: string): Promise<SalesTerritoryDto> {
-    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/assignments/${assignmentId}`);
+    return ApiService.delete<SalesTerritoryDto>(`/sales/territories/${id}/assignments/${assignmentId}`);
   }
 
   static async assignCustomer(id: string, data: AssignCustomerToTerritoryCommand): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/customers`, data);
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/customers`, data);
   }
 
   static async removeCustomer(id: string, customerId: string): Promise<SalesTerritoryDto> {
-    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/customers/${customerId}`);
+    return ApiService.delete<SalesTerritoryDto>(`/sales/territories/${id}/customers/${customerId}`);
   }
 
   static async addPostalCode(id: string, postalCode: string, areaName?: string): Promise<SalesTerritoryDto> {
-    return ApiService.post<SalesTerritoryDto>(`/sales/salesterritories/${id}/postal-codes`, { postalCode, areaName });
+    return ApiService.post<SalesTerritoryDto>(`/sales/territories/${id}/postal-codes`, { postalCode, areaName });
   }
 
   static async removePostalCode(id: string, postalCodeId: string): Promise<SalesTerritoryDto> {
-    return ApiService.delete<SalesTerritoryDto>(`/sales/salesterritories/${id}/postal-codes/${postalCodeId}`);
+    return ApiService.delete<SalesTerritoryDto>(`/sales/territories/${id}/postal-codes/${postalCodeId}`);
   }
 
   // =====================================
