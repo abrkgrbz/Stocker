@@ -18,6 +18,8 @@ import {
   PlusCircleIcon,
   PrinterIcon,
   QuestionMarkCircleIcon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
   WrenchIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -34,14 +36,14 @@ const movementTypeConfig: Record<
     label: 'Satın Alma',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <ShoppingCartOutlined />,
+    icon: <ShoppingCartIcon className="w-4 h-4" />,
     direction: 'in',
   },
   [StockMovementType.Sales]: {
     label: 'Satış',
     bgColor: 'bg-blue-50',
     textColor: 'text-blue-700',
-    icon: <ShoppingOutlined />,
+    icon: <ShoppingBagIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.PurchaseReturn]: {
@@ -428,7 +430,7 @@ export default function StockMovementDetailPage() {
                 onClick={() => router.push(`/inventory/products/${movement.productId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <ShoppingOutlined className="text-white text-xl" />
+                  <ShoppingBagIcon className="w-4 h-4" className="text-white text-xl" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{movement.productName}</p>

@@ -4,21 +4,21 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Table, Space, Tag, Modal, message, Avatar, Dropdown, Empty, Input } from 'antd';
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  UserGroupIcon,
-  UserIcon,
+  ArrowDownTrayIcon,
   ArrowPathIcon,
   BuildingOffice2Icon,
-  EllipsisVerticalIcon,
+  CheckCircleIcon,
   DocumentDuplicateIcon,
+  EllipsisVerticalIcon,
   EnvelopeIcon,
-  ArrowDownTrayIcon,
-  MagnifyingGlassIcon,
   EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+  UserIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';

@@ -5,18 +5,18 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Tag, Modal, Empty } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  TrashIcon,
-  Squares2X2Icon,
-  QrCodeIcon,
-  CurrencyDollarIcon,
-  ShoppingBagIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   CalendarIcon,
-  StarIcon,
-  ScaleIcon,
+  CheckCircleIcon,
   ChevronRightIcon,
+  CurrencyDollarIcon,
+  PencilIcon,
+  QrCodeIcon,
+  ScaleIcon,
+  ShoppingBagIcon,
+  Squares2X2Icon,
+  StarIcon,
+  TrashIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import {

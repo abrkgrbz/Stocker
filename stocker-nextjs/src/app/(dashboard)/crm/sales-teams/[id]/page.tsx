@@ -11,16 +11,16 @@ import { Empty, Tag, Progress } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  UsersIcon,
   CalendarIcon,
-  UserIcon,
-  EnvelopeIcon,
-  CurrencyDollarIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  StarIcon,
+  CurrencyDollarIcon,
+  EnvelopeIcon,
   GlobeAltIcon,
+  PencilIcon,
+  StarIcon,
+  UserIcon,
+  UsersIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useSalesTeam } from '@/lib/api/hooks/useCRM';
 import { SalesTeamRole } from '@/lib/api/services/crm.types';

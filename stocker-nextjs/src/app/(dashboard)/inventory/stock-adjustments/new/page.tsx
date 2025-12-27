@@ -18,6 +18,7 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   MapPinIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import {
   useWarehouses,
@@ -185,7 +186,7 @@ export default function NewStockAdjustmentPage() {
               {/* Product Selection */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  <ShoppingOutlined className="mr-2" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4" className="mr-2" /> Ürün Seçimi
                 </h3>
                 <Form.Item
                   name="productId"
@@ -223,7 +224,7 @@ export default function NewStockAdjustmentPage() {
                   <div className="p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl mt-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-                        <ShoppingOutlined className="text-white text-xl" />
+                        <ShoppingBagIcon className="w-4 h-4" className="text-white text-xl" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>

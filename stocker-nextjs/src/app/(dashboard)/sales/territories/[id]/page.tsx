@@ -15,6 +15,7 @@ import {
   EllipsisHorizontalIcon,
   GlobeAltIcon,
   PencilIcon,
+  StopCircleIcon,
   TrashIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -100,7 +101,7 @@ export default function TerritoryDetailPage() {
   if (isActive) {
     actionMenuItems.push({
       key: 'deactivate',
-      icon: <StopOutlined />,
+      icon: <StopCircleIcon className="w-4 h-4" />,
       label: 'Pasifleştir',
       onClick: handleDeactivate,
     });
@@ -221,7 +222,7 @@ export default function TerritoryDetailPage() {
               territory.status === 'Active' ? (
                 <CheckCircleIcon className="w-4 h-4" className="text-emerald-500" />
               ) : (
-                <StopOutlined className="text-slate-400" />
+                <StopCircleIcon className="w-4 h-4" className="text-slate-400" />
               )
             }
           />

@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowTrendingUpIcon,
   ChartBarIcon,
   ChartPieIcon,
   CurrencyDollarIcon,
@@ -110,7 +111,7 @@ const getTrendIcon = (trend: string) => {
   switch (trend?.toLowerCase()) {
     case 'improving':
     case 'up':
-      return <RiseOutlined className="text-slate-700" />;
+      return <ArrowTrendingUpIcon className="w-4 h-4" className="text-slate-700" />;
     case 'declining':
     case 'down':
       return <FallOutlined className="text-slate-400" />;

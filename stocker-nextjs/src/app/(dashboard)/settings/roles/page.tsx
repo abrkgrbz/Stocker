@@ -12,15 +12,15 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Tooltip, Dropdown } from 'antd';
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  LockClosedIcon,
-  UsersIcon,
-  ShieldCheckIcon,
   EllipsisVerticalIcon,
-  MagnifyingGlassIcon,
   EyeIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import { useRoles, useDeleteRole } from '@/hooks/useRoles';

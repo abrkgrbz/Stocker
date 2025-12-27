@@ -10,12 +10,15 @@ import { useRouter } from 'next/navigation';
 import { Spin, Tag, Progress, Space, Button, Modal, message, Input } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowTrendingUpIcon,
   ChartBarIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
+  ListBulletIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   Squares2X2Icon,
+  StopCircleIcon,
   TrophyIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
@@ -39,9 +42,9 @@ const statusConfig: Record<OpportunityStatus, { color: string; label: string; ic
   Qualification: { color: 'cyan', label: 'Nitelendirme', icon: <CheckCircleIcon className="w-4 h-4" /> },
   NeedsAnalysis: { color: 'geekblue', label: 'İhtiyaç Analizi', icon: <ChartBarIcon className="w-4 h-4" /> },
   Proposal: { color: 'purple', label: 'Teklif', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
-  Negotiation: { color: 'orange', label: 'Müzakere', icon: <RiseOutlined /> },
+  Negotiation: { color: 'orange', label: 'Müzakere', icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
   ClosedWon: { color: 'green', label: 'Kazanıldı', icon: <TrophyIcon className="w-4 h-4" /> },
-  ClosedLost: { color: 'red', label: 'Kaybedildi', icon: <StopOutlined /> },
+  ClosedLost: { color: 'red', label: 'Kaybedildi', icon: <StopCircleIcon className="w-4 h-4" /> },
 };
 
 export default function OpportunitiesPage() {
@@ -208,7 +211,7 @@ export default function OpportunitiesPage() {
             <Button
               danger
               size="small"
-              icon={<StopOutlined />}
+              icon={<StopCircleIcon className="w-4 h-4" />}
               onClick={(e) => {
                 e.stopPropagation();
                 handleLose(opportunity);
@@ -292,7 +295,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-blue-600">{stats.avgProbability.toFixed(0)}%</div>
           </div>
           <div className="p-3 bg-blue-100 rounded-lg">
-            <RiseOutlined className="text-2xl text-blue-600" />
+            <ArrowTrendingUpIcon className="w-4 h-4" className="text-2xl text-blue-600" />
           </div>
         </div>
       </Card>
@@ -364,7 +367,7 @@ export default function OpportunitiesPage() {
         <div className="bg-white border-2 border-red-400 rounded-lg h-full">
           <div className="p-4 border-b border-red-200 bg-red-50">
             <div className="flex items-center gap-2">
-              <StopOutlined className="text-red-500" />
+              <StopCircleIcon className="w-4 h-4" className="text-red-500" />
               <span className="font-medium text-slate-900">Kaybedildi</span>
               <Tag color="red" className="ml-auto">{lostOpportunities.length}</Tag>
             </div>
@@ -458,7 +461,7 @@ export default function OpportunitiesPage() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <UnorderedListOutlined className="mr-1" />
+                <ListBulletIcon className="w-4 h-4" className="mr-1" />
                 Grid
               </button>
             </div>

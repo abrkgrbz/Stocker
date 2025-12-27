@@ -19,6 +19,7 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   Cog6ToothIcon,
+  ListBulletIcon,
   PlusIcon,
   TagIcon,
   TrashIcon,
@@ -385,7 +386,7 @@ export default function EditProductAttributePage() {
                 <div className="bg-white border border-slate-200 rounded-xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                      <UnorderedListOutlined className="text-slate-400" />
+                      <ListBulletIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         Seçenekler
                         {options.length > 0 && (

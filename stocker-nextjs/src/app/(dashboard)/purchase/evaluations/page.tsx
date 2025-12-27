@@ -28,6 +28,7 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  StarIcon,
   TrashIcon,
   TrophyIcon,
   XCircleIcon,
@@ -259,7 +260,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Toplam Değerlendirme"
               value={data?.totalCount || 0}
-              prefix={<StarOutlined className="text-blue-500" />}
+              prefix={<StarIcon className="w-4 h-4" className="text-blue-500" />}
             />
           </Card>
         </Col>
@@ -269,7 +270,7 @@ export default function SupplierEvaluationsPage() {
               title="Ortalama Puan"
               value={avgScore}
               precision={1}
-              prefix={<StarOutlined className="text-yellow-500" />}
+              prefix={<StarIcon className="w-4 h-4" className="text-yellow-500" />}
               suffix="/ 100"
             />
           </Card>

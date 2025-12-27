@@ -20,15 +20,15 @@ import {
   Statistic,
 } from 'antd';
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
   EllipsisVerticalIcon,
   EyeIcon,
-  CheckIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
   XMarkIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {

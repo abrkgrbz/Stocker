@@ -24,7 +24,9 @@ import {
   EllipsisHorizontalIcon,
   ExclamationCircleIcon,
   LockClosedIcon,
+  PauseCircleIcon,
   PencilIcon,
+  PlayCircleIcon,
   TrashIcon,
   WalletIcon,
   XCircleIcon,
@@ -45,7 +47,7 @@ const { Title, Text, Paragraph } = Typography;
 
 const statusConfig: Record<PurchaseBudgetStatus, { color: string; text: string; icon: React.ReactNode }> = {
   Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
-  PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleOutlined /> },
+  PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleIcon className="w-4 h-4" /> },
   Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Active: { color: 'green', text: 'Aktif', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockClosedIcon className="w-4 h-4" /> },
@@ -251,7 +253,7 @@ export default function PurchaseBudgetDetailPage() {
           {budget.status === 'Approved' && (
             <Button
               type="primary"
-              icon={<PlayCircleOutlined />}
+              icon={<PlayCircleIcon className="w-4 h-4" />}
               onClick={handleActivate}
               loading={activateMutation.isPending}
             >

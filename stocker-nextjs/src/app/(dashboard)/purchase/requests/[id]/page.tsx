@@ -30,6 +30,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   PrinterIcon,
+  ShoppingCartIcon,
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -161,7 +162,7 @@ export default function PurchaseRequestDetailPage() {
   const handleConvertToOrder = () => {
     Modal.confirm({
       title: 'Siparişe Dönüştür',
-      icon: <ShoppingCartOutlined style={{ color: '#1890ff' }} />,
+      icon: <ShoppingCartIcon className="w-4 h-4" style={{ color: '#1890ff' }} />,
       content: 'Bu talebi satın alma siparişine dönüştürmek istiyor musunuz? Tedarikçi seçimi sonraki adımda yapılacaktır.',
       okText: 'Dönüştür',
       cancelText: 'Vazgeç',
@@ -209,7 +210,7 @@ export default function PurchaseRequestDetailPage() {
     },
     request.status === 'Approved' && {
       key: 'convert',
-      icon: <ShoppingCartOutlined />,
+      icon: <ShoppingCartIcon className="w-4 h-4" />,
       label: 'Siparişe Dönüştür',
       onClick: handleConvertToOrder,
     },
@@ -361,7 +362,7 @@ export default function PurchaseRequestDetailPage() {
               { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor', icon: <ClockIcon className="w-4 h-4" /> },
               { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'Siparişe Dönüştürüldü', icon: <ShoppingCartOutlined /> },
+              { title: 'Siparişe Dönüştürüldü', icon: <ShoppingCartIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

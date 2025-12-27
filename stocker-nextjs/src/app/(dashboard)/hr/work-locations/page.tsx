@@ -26,6 +26,7 @@ import {
   MapPinIcon,
   PencilIcon,
   PlusIcon,
+  StopCircleIcon,
   TrashIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -170,7 +171,7 @@ export default function WorkLocationsPage() {
               },
               {
                 key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
+                icon: record.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 onClick: () => handleToggleActive(record),
               },

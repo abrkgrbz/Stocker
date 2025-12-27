@@ -18,12 +18,12 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
   CalendarIcon,
-  TrashIcon,
   CheckCircleIcon,
-  XCircleIcon,
+  PencilIcon,
+  TrashIcon,
   UserIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import {

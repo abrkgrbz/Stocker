@@ -17,12 +17,12 @@ import {
 import { Spinner } from '@/components/primitives';
 import {
   BellIcon,
-  CheckIcon,
-  TrashIcon,
-  EllipsisVerticalIcon,
   CheckCircleIcon,
+  CheckIcon,
+  EllipsisVerticalIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
+  TrashIcon,
   TrophyIcon,
 } from '@heroicons/react/24/outline';
 import { CRMService } from '@/lib/api/services/crm.service';

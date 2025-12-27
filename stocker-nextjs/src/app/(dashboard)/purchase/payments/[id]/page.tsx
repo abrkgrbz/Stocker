@@ -29,6 +29,7 @@ import {
   DocumentTextIcon,
   EllipsisHorizontalIcon,
   PencilIcon,
+  PlayCircleIcon,
   PrinterIcon,
   WalletIcon,
   XCircleIcon,
@@ -212,7 +213,7 @@ export default function SupplierPaymentDetailPage() {
     },
     payment.status === 'Approved' && {
       key: 'process',
-      icon: <PlayCircleOutlined />,
+      icon: <PlayCircleIcon className="w-4 h-4" />,
       label: 'İşle',
       onClick: handleProcess,
     },
@@ -305,7 +306,7 @@ export default function SupplierPaymentDetailPage() {
               { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
               { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'İşlendi', icon: <PlayCircleOutlined /> },
+              { title: 'İşlendi', icon: <PlayCircleIcon className="w-4 h-4" /> },
               { title: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ]}
           />

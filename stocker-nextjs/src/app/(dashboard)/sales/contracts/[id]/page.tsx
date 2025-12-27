@@ -12,6 +12,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon,
   CheckCircleIcon,
+  PauseCircleIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -161,7 +162,7 @@ export default function ContractDetailPage() {
                 <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={handleRenew} loading={renewMutation.isPending}>
                   Yenile
                 </Button>
-                <Button icon={<PauseCircleOutlined />} onClick={handleSuspend} loading={suspendMutation.isPending}>
+                <Button icon={<PauseCircleIcon className="w-4 h-4" />} onClick={handleSuspend} loading={suspendMutation.isPending}>
                   Askıya Al
                 </Button>
               </>

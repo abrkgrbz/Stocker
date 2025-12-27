@@ -22,6 +22,7 @@ import {
   CheckIcon,
   MapPinIcon,
   PlusIcon,
+  ShoppingBagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -201,7 +202,7 @@ export default function NewSerialNumberPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ShoppingOutlined className="mr-1" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4" className="mr-1" /> Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"

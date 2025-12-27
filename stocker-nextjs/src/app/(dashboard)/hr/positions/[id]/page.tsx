@@ -19,13 +19,13 @@ import {
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  NoSymbolIcon,
   PencilIcon,
   ShieldCheckIcon,
-  UsersIcon,
   TrashIcon,
-  CheckCircleIcon,
-  NoSymbolIcon,
-  CurrencyDollarIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {
   usePosition,

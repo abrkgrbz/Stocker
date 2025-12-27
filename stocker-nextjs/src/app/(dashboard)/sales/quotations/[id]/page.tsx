@@ -21,6 +21,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   PrinterIcon,
+  ShoppingCartIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
@@ -212,7 +213,7 @@ export default function QuotationDetailPage() {
             </Button>
           )}
           {quotation.status === 'Accepted' && (
-            <Button type="primary" icon={<ShoppingCartOutlined />} onClick={handleConvertToOrder}>
+            <Button type="primary" icon={<ShoppingCartIcon className="w-4 h-4" />} onClick={handleConvertToOrder}>
               Siparişe Dönüştür
             </Button>
           )}

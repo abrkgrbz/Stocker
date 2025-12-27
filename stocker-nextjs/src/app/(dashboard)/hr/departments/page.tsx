@@ -18,19 +18,19 @@ import {
 } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
-  PlusIcon,
   ArrowPathIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
-  EllipsisVerticalIcon,
+  Bars3Icon,
   BuildingOfficeIcon,
   CheckCircleIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
   NoSymbolIcon,
-  UsersIcon,
-  Bars3Icon,
+  PencilIcon,
+  PlusIcon,
   RectangleGroupIcon,
+  TrashIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {
   useDepartments,

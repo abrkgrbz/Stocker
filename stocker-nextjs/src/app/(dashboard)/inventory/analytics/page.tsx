@@ -17,6 +17,7 @@ import {
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowTrendingUpIcon,
   BuildingStorefrontIcon,
   ChartBarIcon,
   ChartPieIcon,
@@ -548,7 +549,7 @@ export default function InventoryAnalyticsPage() {
         <div className="col-span-3">
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-              <RiseOutlined className="mr-2" />
+              <ArrowTrendingUpIcon className="w-4 h-4" className="mr-2" />
               En Yüksek Değerli Ürün
             </p>
             <div className="text-2xl font-bold text-slate-900">

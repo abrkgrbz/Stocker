@@ -11,16 +11,16 @@ import { Empty, Tag, Progress } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
+  ArrowsRightLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  MicrophoneIcon,
   PencilIcon,
   PhoneIcon,
-  CalendarIcon,
-  ClockIcon,
-  UserIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  MicrophoneIcon,
   StarIcon,
-  ArrowsRightLeftIcon,
+  UserIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useCallLog } from '@/lib/api/hooks/useCRM';
 import { CallDirection, CallType, CallStatus, CallOutcome } from '@/lib/api/services/crm.types';

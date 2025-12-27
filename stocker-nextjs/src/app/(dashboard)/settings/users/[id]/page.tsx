@@ -14,20 +14,20 @@ import { useQuery } from '@tanstack/react-query';
 import { Empty, Tag, Timeline } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  UsersIcon,
-  ShieldCheckIcon,
   CalendarIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  LockClosedIcon,
   ClockIcon,
-  Cog6ToothIcon,
   ClockIcon as HistoryIcon,
+  Cog6ToothIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
   PaperAirplaneIcon,
+  PencilIcon,
+  PhoneIcon,
+  ShieldCheckIcon,
+  UserIcon,
+  UsersIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import { getUserById, formatDate, getRoleLabel, type User } from '@/lib/api/users';

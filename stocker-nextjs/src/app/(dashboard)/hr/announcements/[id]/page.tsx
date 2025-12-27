@@ -21,7 +21,9 @@ import {
   BellIcon,
   CalendarIcon,
   CheckCircleIcon,
+  MapPinIcon,
   PencilIcon,
+  StopCircleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -135,7 +137,7 @@ export default function AnnouncementDetailPage() {
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              {announcement.isPinned && <PushpinOutlined className="mr-2 text-orange-500" />}
+              {announcement.isPinned && <MapPinIcon className="w-4 h-4" className="mr-2 text-orange-500" />}
               {announcement.title}
             </Title>
             <Space>
@@ -149,7 +151,7 @@ export default function AnnouncementDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={announcement.isPublished ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
+            icon={announcement.isPublished ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleTogglePublish}
           >
             {announcement.isPublished ? 'Yayından Kaldır' : 'Yayınla'}
@@ -233,7 +235,7 @@ export default function AnnouncementDetailPage() {
               </Descriptions.Item>
               <Descriptions.Item label="Sabitlenmiş">
                 {announcement.isPinned ? (
-                  <Tag color="orange" icon={<PushpinOutlined />}>Evet</Tag>
+                  <Tag color="orange" icon={<MapPinIcon className="w-4 h-4" />}>Evet</Tag>
                 ) : (
                   <Tag>Hayır</Tag>
                 )}

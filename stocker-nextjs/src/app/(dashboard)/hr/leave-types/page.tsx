@@ -24,6 +24,7 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  StopCircleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
@@ -149,7 +150,7 @@ export default function LeaveTypesPage() {
               },
               {
                 key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
+                icon: record.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 onClick: () => handleToggleActive(record),
               },

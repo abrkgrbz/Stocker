@@ -19,6 +19,7 @@ import {
   EllipsisHorizontalIcon,
   EyeIcon,
   FunnelIcon,
+  ListBulletIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
@@ -42,7 +43,7 @@ const attributeTypeConfig: Record<AttributeType, { color: string; label: string;
   Number: { color: 'cyan', label: 'Sayı', icon: <NumberOutlined /> },
   Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckSquareOutlined /> },
   Date: { color: 'purple', label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
-  Select: { color: 'orange', label: 'Seçim', icon: <UnorderedListOutlined /> },
+  Select: { color: 'orange', label: 'Seçim', icon: <ListBulletIcon className="w-4 h-4" /> },
   MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
   Color: { color: 'red', label: 'Renk', icon: <BgColorsOutlined /> },
   Size: { color: 'gold', label: 'Beden', icon: <ExpandOutlined /> },
@@ -293,7 +294,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalOptions}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <UnorderedListOutlined style={{ color: '#f59e0b' }} />
+              <ListBulletIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>

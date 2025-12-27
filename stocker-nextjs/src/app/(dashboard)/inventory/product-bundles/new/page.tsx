@@ -29,6 +29,7 @@ import {
   CurrencyDollarIcon,
   GiftIcon,
   PlusIcon,
+  ReceiptPercentIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useProducts, useCreateProductBundle } from '@/lib/api/hooks/useInventory';
@@ -457,7 +458,7 @@ export default function NewProductBundlePage() {
                           precision={2}
                           placeholder="İndirim %"
                           variant="filled"
-                          addonAfter={<PercentageOutlined />}
+                          addonAfter={<ReceiptPercentIcon className="w-4 h-4" />}
                         />
                       </Form.Item>
                     </Col>

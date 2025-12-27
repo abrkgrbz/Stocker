@@ -19,16 +19,16 @@ import {
 } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
-  PlusIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  FolderIcon,
+  ListBulletIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
-  TrashIcon,
-  ArrowPathIcon,
-  TagIcon,
-  FolderIcon,
+  PlusIcon,
   Squares2X2Icon,
-  ListBulletIcon,
-  CheckCircleIcon,
+  TagIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useCategories, useCategoryTree, useDeleteCategory } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto, CategoryTreeDto } from '@/lib/api/services/inventory.types';

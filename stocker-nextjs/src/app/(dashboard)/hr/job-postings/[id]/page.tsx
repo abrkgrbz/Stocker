@@ -22,12 +22,14 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  FireIcon,
   MapPinIcon,
   PaperAirplaneIcon,
   PencilIcon,
+  StopCircleIcon,
   UserGroupIcon,
-  EyeIcon,
-  EyeSlashIcon,
 } from '@heroicons/react/24/outline';
 import {
   useJobPosting,
@@ -109,8 +111,8 @@ export default function JobPostingDetailPage() {
               <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
                 <DocumentTextIcon className="w-4 h-4" />
                 {jobPosting.title}
-                {jobPosting.isUrgent && <FireOutlined style={{ color: '#ff4d4f' }} />}
-                {jobPosting.isFeatured && <PushpinOutlined style={{ color: '#faad14' }} />}
+                {jobPosting.isUrgent && <FireIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
+                {jobPosting.isFeatured && <MapPinIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
               </h1>
               <p className="text-sm text-gray-400 m-0">{jobPosting.postingCode}</p>
             </div>
@@ -135,7 +137,7 @@ export default function JobPostingDetailPage() {
                   Yayından Kaldır
                 </Button>
                 <Button
-                  icon={<StopOutlined />}
+                  icon={<StopCircleIcon className="w-4 h-4" />}
                   onClick={() => closeJobPosting.mutateAsync(id)}
                   loading={closeJobPosting.isPending}
                   danger

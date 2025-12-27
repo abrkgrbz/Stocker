@@ -25,10 +25,13 @@ import {
   DocumentTextIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
+  FireIcon,
   MagnifyingGlassIcon,
+  MapPinIcon,
   PaperAirplaneIcon,
   PencilIcon,
   PlusIcon,
+  StopCircleIcon,
   TrashIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -207,12 +210,12 @@ export default function JobPostingsPage() {
           <Text strong>{code}</Text>
           {record.isUrgent && (
             <Tooltip title="Acil">
-              <FireOutlined style={{ color: '#ff4d4f' }} />
+              <FireIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />
             </Tooltip>
           )}
           {record.isFeatured && (
             <Tooltip title="Öne Çıkan">
-              <PushpinOutlined style={{ color: '#faad14' }} />
+              <MapPinIcon className="w-4 h-4" style={{ color: '#faad14' }} />
             </Tooltip>
           )}
         </Space>
@@ -334,7 +337,7 @@ export default function JobPostingsPage() {
           });
           menuItems.push({
             key: 'close',
-            icon: <StopOutlined />,
+            icon: <StopCircleIcon className="w-4 h-4" />,
             label: 'İlanı Kapat',
             onClick: () => handleClose(record),
           });

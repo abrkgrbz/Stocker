@@ -23,6 +23,8 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
+  ReceiptPercentIcon,
+  ShoppingCartIcon,
   TrophyIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -160,7 +162,7 @@ export default function OpportunityDetailPage() {
                 ₺{opportunity.amount.toLocaleString('tr-TR')}
               </div>
               <div className="flex items-center justify-end gap-2 text-white/90">
-                <PercentageOutlined />
+                <ReceiptPercentIcon className="w-4 h-4" />
                 <span>Olasılık: {opportunity.probability}%</span>
               </div>
             </div>
@@ -211,7 +213,7 @@ export default function OpportunityDetailPage() {
             <Statistic
               title="Ürün Sayısı"
               value={opportunityProducts.length}
-              prefix={<ShoppingCartOutlined />}
+              prefix={<ShoppingCartIcon className="w-4 h-4" />}
             />
             {opportunityProducts.length > 0 && (
               <div className="text-sm text-gray-500 mt-2">
@@ -308,7 +310,7 @@ export default function OpportunityDetailPage() {
               key: 'products',
               label: (
                 <span>
-                  <ShoppingCartOutlined />
+                  <ShoppingCartIcon className="w-4 h-4" />
                   Ürünler ({opportunityProducts.length})
                 </span>
               ),

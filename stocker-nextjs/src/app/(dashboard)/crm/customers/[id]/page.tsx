@@ -20,6 +20,7 @@ import {
   PencilIcon,
   PhoneIcon,
   PlusIcon,
+  ShoppingBagIcon,
   TagIcon,
   TrashIcon,
   UserGroupIcon,
@@ -763,7 +764,7 @@ export default function CustomerDetailPage() {
                     key: 'orders',
                     label: (
                       <span className="flex items-center gap-2 py-1">
-                        <ShoppingOutlined />
+                        <ShoppingBagIcon className="w-4 h-4" />
                         Siparişler
                         {ordersData?.totalCount ? (
                           <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
@@ -793,7 +794,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-50">
-                              <ShoppingOutlined className="text-blue-600 text-lg" />
+                              <ShoppingBagIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -831,7 +832,7 @@ export default function CustomerDetailPage() {
                         ) : !ordersData?.items?.length ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <ShoppingOutlined className="text-xl" />
+                              <ShoppingBagIcon className="w-4 h-4" className="text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Sipariş bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -857,7 +858,7 @@ export default function CustomerDetailPage() {
                               >
                                 <div className="flex items-center gap-4">
                                   <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
-                                    <ShoppingOutlined className="text-slate-500" />
+                                    <ShoppingBagIcon className="w-4 h-4" className="text-slate-500" />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
@@ -1229,7 +1230,7 @@ export default function CustomerDetailPage() {
         {/* Modal Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50">
-            <ShoppingOutlined className="text-blue-600 text-xl" />
+            <ShoppingBagIcon className="w-4 h-4" className="text-blue-600 text-xl" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 m-0">Yeni Sipariş Oluştur</h2>
@@ -1418,7 +1419,7 @@ export default function CustomerDetailPage() {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 mb-6 bg-slate-50/50 border border-dashed border-slate-200 rounded-xl">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                <ShoppingOutlined className="text-xl" />
+                <ShoppingBagIcon className="w-4 h-4" className="text-xl" />
               </div>
               <h3 className="text-sm font-medium text-slate-900 mb-1">Ürün eklenmedi</h3>
               <p className="text-sm text-slate-500 max-w-sm text-center">
@@ -1448,7 +1449,7 @@ export default function CustomerDetailPage() {
               {createOrder.isPending ? (
                 <Spin size="small" className="text-white" />
               ) : (
-                <ShoppingOutlined />
+                <ShoppingBagIcon className="w-4 h-4" />
               )}
               Sipariş Oluştur
             </button>

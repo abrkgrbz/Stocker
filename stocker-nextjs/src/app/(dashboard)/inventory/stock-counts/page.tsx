@@ -28,6 +28,7 @@ import {
   ExclamationCircleIcon,
   EyeIcon,
   PencilIcon,
+  PlayCircleIcon,
   PlusIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -65,7 +66,7 @@ const { RangePicker } = DatePicker;
 // Stock count status configuration
 const statusConfig: Record<StockCountStatus, { color: string; label: string; icon: React.ReactNode }> = {
   Draft: { color: 'default', label: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
-  InProgress: { color: 'processing', label: 'Devam Ediyor', icon: <PlayCircleOutlined /> },
+  InProgress: { color: 'processing', label: 'Devam Ediyor', icon: <PlayCircleIcon className="w-4 h-4" /> },
   Completed: { color: 'blue', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
@@ -400,7 +401,7 @@ export default function StockCountsPage() {
         items.push(
           {
             key: 'start',
-            icon: <PlayCircleOutlined />,
+            icon: <PlayCircleIcon className="w-4 h-4" />,
             label: 'Başlat',
             onClick: () => handleStart(stockCount),
           },
@@ -579,7 +580,7 @@ export default function StockCountsPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inProgressCounts > 0 ? '#3b82f615' : '#64748b15' }}>
-              <PlayCircleOutlined style={{ color: inProgressCounts > 0 ? '#3b82f6' : '#64748b' }} />
+              <PlayCircleIcon className="w-4 h-4" style={{ color: inProgressCounts > 0 ? '#3b82f6' : '#64748b' }} />
             </div>
           </div>
         </div>

@@ -22,6 +22,7 @@ import {
   EyeIcon,
   PencilIcon,
   PlusIcon,
+  StarIcon,
   TrashIcon,
   TrophyIcon,
   UserIcon,
@@ -199,7 +200,7 @@ export default function PerformancePage() {
             <Statistic
               title="Ortalama Puan"
               value={avgScore}
-              prefix={<StarOutlined />}
+              prefix={<StarIcon className="w-4 h-4" />}
               suffix="/ 10"
               valueStyle={{ color: '#faad14' }}
             />

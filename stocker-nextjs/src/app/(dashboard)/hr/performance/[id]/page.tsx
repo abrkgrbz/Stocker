@@ -20,6 +20,7 @@ import {
 import {
   ArrowLeftIcon,
   PencilIcon,
+  StarIcon,
   TrashIcon,
   TrophyIcon,
   UserIcon,
@@ -133,7 +134,7 @@ export default function PerformanceDetailPage() {
                 <Statistic
                   title="Genel Puan"
                   value={review.overallScore || 0}
-                  prefix={<StarOutlined />}
+                  prefix={<StarIcon className="w-4 h-4" />}
                   suffix="/ 10"
                   valueStyle={{ color: '#faad14' }}
                 />

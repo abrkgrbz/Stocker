@@ -19,6 +19,7 @@ import {
 import {
   ArrowLeftIcon,
   CheckIcon,
+  StarIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -164,7 +165,7 @@ export default function EditSupplierEvaluationPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #faad14 0%, #fa8c16 100%)' }}
               >
-                <StarOutlined style={{ fontSize: 24 }} />
+                <StarIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">

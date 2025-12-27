@@ -22,6 +22,7 @@ import {
   ExclamationTriangleIcon,
   MapPinIcon,
   ShieldCheckIcon,
+  ShoppingCartIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -57,13 +58,13 @@ const statusConfig: Record<
     label: 'Rezerve',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <ShoppingCartOutlined />,
+    icon: <ShoppingCartIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Sold]: {
     label: 'Satıldı',
     bgColor: 'bg-purple-50',
     textColor: 'text-purple-700',
-    icon: <ShoppingCartOutlined />,
+    icon: <ShoppingCartIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Returned]: {
     label: 'İade Edildi',
@@ -295,7 +296,7 @@ export default function SerialNumberDetailPage() {
             {canSell && (
               <Button
                 type="primary"
-                icon={<ShoppingCartOutlined />}
+                icon={<ShoppingCartIcon className="w-4 h-4" />}
                 onClick={() => setSellModalOpen(true)}
                 style={{ background: '#1e293b', borderColor: '#1e293b' }}
               >
@@ -618,7 +619,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <ShoppingCartOutlined className="text-slate-400" />
+                      <ShoppingCartIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Satın Alma Siparişi</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

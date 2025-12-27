@@ -26,6 +26,7 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   LinkIcon,
+  ListBulletIcon,
   PlusIcon,
   TrashIcon,
   XMarkIcon,
@@ -676,7 +677,7 @@ export default function NewPurchaseInvoicePage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <UnorderedListOutlined className="mr-1" />
+                        <ListBulletIcon className="w-4 h-4" className="mr-1" />
                         Fatura Kalemleri
                       </Text>
                       <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem} style={{ background: '#f59e0b' }}>

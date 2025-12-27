@@ -30,6 +30,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   PrinterIcon,
+  ShoppingCartIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -363,7 +364,7 @@ export default function PurchaseOrderDetailPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }}
               >
-                <ShoppingCartOutlined style={{ fontSize: 24 }} />
+                <ShoppingCartIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">

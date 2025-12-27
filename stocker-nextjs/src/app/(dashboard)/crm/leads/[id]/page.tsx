@@ -11,18 +11,18 @@ import { Empty, Tag, Progress } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  GlobeAltIcon,
   CalendarIcon,
-  UsersIcon,
-  TrophyIcon,
-  FireIcon,
   CheckCircleIcon,
-  XCircleIcon,
+  EnvelopeIcon,
+  FireIcon,
+  GlobeAltIcon,
   MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  TrophyIcon,
+  UserIcon,
+  UsersIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useLead } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';

@@ -11,14 +11,14 @@ import { Empty, Tag, Progress } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  UsersIcon,
+  ArrowPathIcon,
   CalendarIcon,
   CheckCircleIcon,
-  XCircleIcon,
   FunnelIcon,
+  PencilIcon,
   UserIcon,
-  ArrowPathIcon,
+  UsersIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useSegment, useSegmentMembers } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';

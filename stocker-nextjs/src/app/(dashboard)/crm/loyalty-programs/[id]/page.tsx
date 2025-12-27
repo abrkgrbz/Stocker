@@ -175,7 +175,7 @@ export default function LoyaltyProgramDetailPage() {
               </p>
               <div className="flex flex-col items-center justify-center py-4">
                 <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center">
-                  <StarOutlined className="text-3xl text-amber-600" />
+                  <StarIcon className="w-4 h-4" className="text-3xl text-amber-600" />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 mt-3">
                   {program.pointsPerSpend || 1} Puan

@@ -25,6 +25,7 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   InformationCircleIcon,
+  ListBulletIcon,
   PaperAirplaneIcon,
   PlusIcon,
   TrashIcon,
@@ -525,7 +526,7 @@ export default function NewPurchaseRequestPage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <UnorderedListOutlined className="mr-1" />
+                        <ListBulletIcon className="w-4 h-4" className="mr-1" />
                         Talep Kalemleri
                       </Text>
                       <Text type="secondary" className="text-sm">

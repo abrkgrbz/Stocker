@@ -33,6 +33,8 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   ShieldCheckIcon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
   TrashIcon,
   WrenchIcon,
   XCircleIcon,
@@ -70,13 +72,13 @@ const statusConfig: Record<SerialNumberStatus, { color: string; label: string; i
   Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleIcon className="w-4 h-4" /> },
   InStock: { color: '#334155', label: 'Stokta', icon: <BarcodeOutlined /> },
   Reserved: { color: '#475569', label: 'Rezerve', icon: <LockClosedIcon className="w-4 h-4" /> },
-  Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingOutlined /> },
+  Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingBagIcon className="w-4 h-4" /> },
   Returned: { color: '#94a3b8', label: 'İade', icon: <RollbackOutlined /> },
   Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
   InRepair: { color: '#475569', label: 'Tamirde', icon: <WrenchIcon className="w-4 h-4" /> },
   Scrapped: { color: '#1e293b', label: 'Hurda', icon: <TrashIcon className="w-4 h-4" /> },
   Lost: { color: '#94a3b8', label: 'Kayıp', icon: <ExclamationTriangleIcon className="w-4 h-4" /> },
-  OnLoan: { color: '#64748b', label: 'Ödünç', icon: <ShoppingCartOutlined /> },
+  OnLoan: { color: '#64748b', label: 'Ödünç', icon: <ShoppingCartIcon className="w-4 h-4" /> },
   InTransit: { color: '#334155', label: 'Taşımada', icon: <ClockIcon className="w-4 h-4" /> },
 };
 
@@ -407,7 +409,7 @@ export default function SerialNumbersPage() {
           });
           menuItems.push({
             key: 'sell',
-            icon: <ShoppingOutlined />,
+            icon: <ShoppingBagIcon className="w-4 h-4" />,
             label: 'Sat',
             onClick: () => handleSellClick(record),
           });
@@ -422,7 +424,7 @@ export default function SerialNumbersPage() {
           });
           menuItems.push({
             key: 'sell',
-            icon: <ShoppingOutlined />,
+            icon: <ShoppingBagIcon className="w-4 h-4" />,
             label: 'Sat',
             onClick: () => handleSellClick(record),
           });
@@ -495,7 +497,7 @@ export default function SerialNumbersPage() {
       key: 'sold',
       label: (
         <span className="flex items-center gap-2">
-          <ShoppingOutlined />
+          <ShoppingBagIcon className="w-4 h-4" />
           Satılan
           <Badge count={stats.sold} showZero style={{ backgroundColor: '#64748b' }} />
         </span>
@@ -594,7 +596,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ShoppingOutlined className="text-slate-600 text-lg" />
+                <ShoppingBagIcon className="w-4 h-4" className="text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.sold}</div>

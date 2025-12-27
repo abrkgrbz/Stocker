@@ -17,15 +17,15 @@ import {
   Input,
 } from 'antd';
 import {
-  PlusIcon,
+  CheckCircleIcon,
   ClockIcon,
   EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
   EyeIcon,
-  CheckCircleIcon,
-  StopIcon,
   MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  StopIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useShifts, useDeleteShift, useActivateShift, useDeactivateShift } from '@/lib/api/hooks/useHR';

@@ -11,18 +11,18 @@ import { Empty, Tag } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
   ArrowLeftIcon,
-  PencilIcon,
   CalendarIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ClockIcon,
-  UserIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  UsersIcon,
   DocumentTextIcon,
-  MapPinIcon,
+  EnvelopeIcon,
   ExclamationCircleIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  UserIcon,
+  UsersIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useActivity } from '@/lib/api/hooks/useCRM';
 import { ActivityType, ActivityStatus, ActivityPriority } from '@/lib/api/services/crm.types';

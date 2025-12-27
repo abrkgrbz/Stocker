@@ -35,6 +35,7 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   PrinterIcon,
+  ShoppingBagIcon,
   TagIcon,
   TrashIcon,
   XCircleIcon,
@@ -604,7 +605,7 @@ export default function BarcodesPage() {
               {p.primaryImageUrl ? (
                 <img src={p.primaryImageUrl} alt={p.name} className="w-14 h-14 object-cover rounded" />
               ) : (
-                <ShoppingOutlined className="text-2xl text-slate-400" />
+                <ShoppingBagIcon className="w-4 h-4" className="text-2xl text-slate-400" />
               )}
             </div>
             <div className="flex-1 min-w-0">

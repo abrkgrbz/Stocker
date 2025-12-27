@@ -30,6 +30,7 @@ import {
   InboxIcon,
   PlusIcon,
   ShieldCheckIcon,
+  StopCircleIcon,
   TrashIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -66,7 +67,7 @@ const statusConfig: Record<LotBatchStatus, { color: string; bgColor: string; lab
   Rejected: { color: '#475569', bgColor: '#f1f5f9', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
   Exhausted: { color: '#94a3b8', bgColor: '#f8fafc', label: 'Tükendi', icon: <TrashIcon className="w-4 h-4" /> },
   Expired: { color: '#64748b', bgColor: '#f1f5f9', label: 'Tarihi Geçti', icon: <ExclamationTriangleIcon className="w-4 h-4" /> },
-  Recalled: { color: '#334155', bgColor: '#e2e8f0', label: 'Geri Çağrıldı', icon: <StopOutlined /> },
+  Recalled: { color: '#334155', bgColor: '#e2e8f0', label: 'Geri Çağrıldı', icon: <StopCircleIcon className="w-4 h-4" /> },
 };
 
 export default function LotBatchesPage() {
@@ -423,7 +424,7 @@ export default function LotBatchesPage() {
       key: 'expired',
       label: (
         <span className="flex items-center gap-2">
-          <StopOutlined />
+          <StopCircleIcon className="w-4 h-4" />
           Süresi Dolanlar
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-500 text-white">
             {stats.expired}
@@ -510,7 +511,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <StopOutlined className="text-lg text-white" />
+                <StopCircleIcon className="w-4 h-4" className="text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>

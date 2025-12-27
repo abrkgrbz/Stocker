@@ -26,6 +26,7 @@ import {
   MapPinIcon,
   MinusIcon,
   PencilIcon,
+  PlayCircleIcon,
   PrinterIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -43,7 +44,7 @@ import dayjs from 'dayjs';
 
 const statusConfig: Record<StockCountStatus, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
   Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <PencilIcon className="w-4 h-4" /> },
-  InProgress: { label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <PlayCircleOutlined /> },
+  InProgress: { label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <PlayCircleIcon className="w-4 h-4" /> },
   Completed: { label: 'Tamamlandı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Approved: { label: 'Onaylandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Rejected: { label: 'Reddedildi', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <XCircleIcon className="w-4 h-4" /> },
@@ -199,7 +200,7 @@ export default function StockCountDetailPage() {
           <Button
             key="start"
             type="primary"
-            icon={<PlayCircleOutlined />}
+            icon={<PlayCircleIcon className="w-4 h-4" />}
             onClick={handleStart}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >

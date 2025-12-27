@@ -13,11 +13,11 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Table, Tooltip } from 'antd';
 import {
-  PlusIcon,
+  BuildingOffice2Icon,
   PencilIcon,
+  PlusIcon,
   TrashIcon,
   UsersIcon,
-  BuildingOffice2Icon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {

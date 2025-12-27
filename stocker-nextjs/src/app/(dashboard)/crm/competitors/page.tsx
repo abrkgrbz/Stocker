@@ -9,15 +9,15 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select, Progress } from 'antd';
 import {
-  PlusIcon,
   ArrowPathIcon,
   BuildingOffice2Icon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  GlobeAltIcon,
   MagnifyingGlassIcon,
   PencilIcon,
+  PlusIcon,
   TrophyIcon,
-  ExclamationTriangleIcon,
-  GlobeAltIcon,
-  EyeIcon,
 } from '@heroicons/react/24/outline';
 import {
   showDeleteSuccess,
@@ -256,7 +256,7 @@ export default function CompetitorsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => handleView(record)}
             className="text-blue-600 hover:text-blue-700"
           >
@@ -265,7 +265,7 @@ export default function CompetitorsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => handleEdit(record)}
           >
             Düzenle

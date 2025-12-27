@@ -22,6 +22,7 @@ import {
   CheckCircleIcon,
   DocumentTextIcon,
   PencilIcon,
+  StopCircleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -118,7 +119,7 @@ export default function LeaveTypeDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={leaveType.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
+            icon={leaveType.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {leaveType.isActive ? 'Pasifleştir' : 'Aktifleştir'}

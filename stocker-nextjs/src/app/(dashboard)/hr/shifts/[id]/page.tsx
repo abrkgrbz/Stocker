@@ -17,11 +17,12 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
-  ClockIcon,
-  TrashIcon,
   CheckCircleIcon,
+  ClockIcon,
+  PencilIcon,
+  StopCircleIcon,
   StopIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
   useShift,
@@ -146,12 +147,12 @@ export default function ShiftDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={shift.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={shift.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleOutlined />}
             onClick={handleToggleActive}
           >
             {shift.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/shifts/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/shifts/${id}/edit`)}>
             Düzenle
           </Button>
           <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>

@@ -23,6 +23,7 @@ import {
   Cog6ToothIcon,
   EyeIcon,
   FunnelIcon,
+  ListBulletIcon,
   PlusIcon,
   Squares2X2Icon,
   TagIcon,
@@ -596,7 +597,7 @@ export default function NewProductAttributePage() {
                 <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <UnorderedListOutlined className="text-slate-400" />
+                      <ListBulletIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         Seçenekler
                         {options.length > 0 && (
@@ -617,7 +618,7 @@ export default function NewProductAttributePage() {
 
                   {options.length === 0 ? (
                     <div className="p-12 bg-slate-50 rounded-xl text-center border-2 border-dashed border-slate-200">
-                      <UnorderedListOutlined className="text-5xl text-slate-300 mb-3" />
+                      <ListBulletIcon className="w-4 h-4" className="text-5xl text-slate-300 mb-3" />
                       <div className="text-slate-500 mb-3 font-medium">Henüz seçenek eklenmedi</div>
                       <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                         İlk Seçeneği Ekle

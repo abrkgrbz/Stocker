@@ -8,8 +8,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  PlusIcon,
   ArrowPathIcon,
+  PlusIcon,
   ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import { PageContainer, ListPageHeader } from '@/components/patterns';

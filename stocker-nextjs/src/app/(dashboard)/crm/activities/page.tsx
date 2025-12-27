@@ -17,21 +17,21 @@ import {
 } from 'antd';
 import { showSuccess, showError, showApiError } from '@/lib/utils/notifications';
 import {
-  PlusIcon,
   ArrowPathIcon,
-  CheckCircleIcon,
-  CalendarIcon,
   BoltIcon,
-  TrophyIcon,
-  FireIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  UsersIcon,
-  DocumentTextIcon,
+  CalendarIcon,
+  CheckCircleIcon,
   ClockIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  FireIcon,
   PencilIcon,
+  PhoneIcon,
+  PlusIcon,
   TrashIcon,
+  TrophyIcon,
   UserIcon,
+  UsersIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { Activity } from '@/lib/api/services/crm.service';

@@ -25,6 +25,7 @@ import {
   MapPinIcon,
   PencilIcon,
   PhoneIcon,
+  StopCircleIcon,
   TrashIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -120,7 +121,7 @@ export default function WorkLocationDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={location.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
+            icon={location.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
             loading={activateLocation.isPending || deactivateLocation.isPending}
           >
@@ -173,7 +174,7 @@ export default function WorkLocationDetailPage() {
                 <Statistic
                   title="Durum"
                   value={location.isActive ? 'Aktif' : 'Pasif'}
-                  prefix={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <StopOutlined />}
+                  prefix={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <StopCircleIcon className="w-4 h-4" />}
                   valueStyle={{ color: location.isActive ? '#52c41a' : '#8c8c8c', fontSize: 16 }}
                 />
               </Card>

@@ -17,18 +17,18 @@ import {
 } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
-  PlusIcon,
   ArrowPathIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
-  EllipsisVerticalIcon,
-  ShieldCheckIcon,
   CheckCircleIcon,
-  NoSymbolIcon,
-  UsersIcon,
   CurrencyDollarIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  NoSymbolIcon,
+  PencilIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {
   usePositions,

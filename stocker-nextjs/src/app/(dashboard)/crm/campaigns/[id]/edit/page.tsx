@@ -3,7 +3,13 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleIcon, XCircleIcon, ClockIcon, PlayCircleIcon, PauseCircleIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  PauseCircleIcon,
+  PlayCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { CampaignForm } from '@/components/crm/campaigns';
 import { useCampaign, useUpdateCampaign } from '@/lib/api/hooks/useCRM';

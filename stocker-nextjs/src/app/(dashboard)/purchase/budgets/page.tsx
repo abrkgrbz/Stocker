@@ -24,6 +24,7 @@ import {
   EyeIcon,
   LockClosedIcon,
   MagnifyingGlassIcon,
+  PauseCircleIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
@@ -39,7 +40,7 @@ const { Title, Text } = Typography;
 
 const statusConfig: Record<PurchaseBudgetStatus, { color: string; text: string; icon: React.ReactNode }> = {
   Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
-  PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleOutlined /> },
+  PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleIcon className="w-4 h-4" /> },
   Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Active: { color: 'green', text: 'Aktif', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockClosedIcon className="w-4 h-4" /> },

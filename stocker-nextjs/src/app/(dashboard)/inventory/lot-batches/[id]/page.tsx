@@ -23,6 +23,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InboxIcon,
+  StopCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   useLotBatch,
@@ -60,13 +61,13 @@ const statusConfig: Record<
     label: 'Karantinada',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <StopOutlined />,
+    icon: <StopCircleIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Rejected]: {
     label: 'Reddedildi',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <StopOutlined />,
+    icon: <StopCircleIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Exhausted]: {
     label: 'Tükendi',
@@ -213,7 +214,7 @@ export default function LotBatchDetailPage() {
               </Button>
             )}
             {lotBatch.status === 'Approved' && !lotBatch.isQuarantined && (
-              <Button danger icon={<StopOutlined />} onClick={() => setQuarantineModalOpen(true)}>
+              <Button danger icon={<StopCircleIcon className="w-4 h-4" />} onClick={() => setQuarantineModalOpen(true)}>
                 Karantinaya Al
               </Button>
             )}

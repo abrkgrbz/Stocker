@@ -7,20 +7,20 @@ import { Spinner } from '@/components/primitives';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
-  NoSymbolIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  TableCellsIcon,
-  StarIcon,
   CurrencyDollarIcon,
+  EllipsisVerticalIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  NoSymbolIcon,
+  PencilIcon,
+  PhoneIcon,
+  PlusIcon,
+  StarIcon,
+  TableCellsIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
   useSuppliers,

@@ -25,6 +25,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   MinusIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -410,7 +411,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <ShoppingCartOutlined className="text-lg text-amber-600" />
+                        <ShoppingCartIcon className="w-4 h-4" className="text-lg text-amber-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Sipariş Gerekli</p>
@@ -609,7 +610,7 @@ export default function ForecastingPage() {
       key: 'suggestions',
       label: (
         <span className="flex items-center gap-2">
-          <ShoppingCartOutlined />
+          <ShoppingCartIcon className="w-4 h-4" />
           Sipariş Önerileri
           {suggestions?.pendingCount && suggestions.pendingCount > 0 && (
             <Badge count={suggestions.pendingCount} className="ml-2" />

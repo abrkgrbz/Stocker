@@ -25,6 +25,7 @@ import {
   DocumentTextIcon,
   LockClosedIcon,
   MapPinIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import {
   useWarehouses,
@@ -169,7 +170,7 @@ export default function NewStockReservationPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <ShoppingOutlined className="mr-1" /> Ürün Seçimi
+                  <ShoppingBagIcon className="w-4 h-4" className="mr-1" /> Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"
@@ -207,7 +208,7 @@ export default function NewStockReservationPage() {
                   <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                        <ShoppingOutlined className="text-white text-xl" />
+                        <ShoppingBagIcon className="w-4 h-4" className="text-white text-xl" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>

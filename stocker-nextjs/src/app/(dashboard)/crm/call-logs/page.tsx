@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Table, Tag, Input, Select } from 'antd';
 import {
-  PlusIcon,
-  ArrowPathIcon,
-  PhoneIcon,
-  MagnifyingGlassIcon,
   ArrowDownIcon,
+  ArrowPathIcon,
   ArrowUpIcon,
   CheckCircleIcon,
   EyeIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { PhoneIcon as PhoneIconSolid } from '@heroicons/react/24/solid';
 import {
@@ -252,7 +252,7 @@ export default function CallLogsPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/crm/call-logs/${record.id}`)}
             className="text-blue-600 hover:text-blue-700"
           >

@@ -107,6 +107,23 @@ ICON_MAP = {
     "CloudUploadOutlined": "CloudArrowUpIcon",
     "CloudDownloadOutlined": "CloudArrowDownIcon",
     "SyncOutlined": "ArrowPathIcon",
+    "PushpinOutlined": "MapPinIcon",
+    "PlayCircleOutlined": "PlayCircleIcon",
+    "PauseCircleOutlined": "PauseCircleIcon",
+    "StopOutlined": "StopCircleIcon",
+    "FireOutlined": "FireIcon",
+    "ShoppingOutlined": "ShoppingBagIcon",
+    "ShoppingCartOutlined": "ShoppingCartIcon",
+    "RiseOutlined": "ArrowTrendingUpIcon",
+    "FallOutlined": "ArrowTrendingDownIcon",
+    "PercentageOutlined": "ReceiptPercentIcon",
+    "UnorderedListOutlined": "ListBulletIcon",
+    "OrderedListOutlined": "ListBulletIcon",
+    "StarOutlined": "StarIcon",
+    "MobileOutlined": "DevicePhoneMobileIcon",
+    "KeyOutlined": "KeyIcon",
+    "EyeTwoTone": "EyeIcon",
+    "EyeInvisibleOutlined": "EyeSlashIcon",
 }
 
 def process_file(filepath):

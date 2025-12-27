@@ -4,15 +4,15 @@ import React, { useState, useEffect, use } from 'react';
 import { Empty, Modal, message } from 'antd';
 import { Spinner } from '@/components/primitives';
 import {
-  BoltIcon,
   ArrowLeftIcon,
-  PlayCircleIcon,
-  PauseCircleIcon,
-  PlusIcon,
+  BoltIcon,
   BookmarkIcon,
-  ClockIcon,
-  CheckCircleIcon,
   ChartBarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  PauseCircleIcon,
+  PlayCircleIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import { CRMService } from '@/lib/api/services/crm.service';

@@ -26,6 +26,7 @@ import {
   PencilIcon,
   PlusIcon,
   StarIcon,
+  StopCircleIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -102,7 +103,7 @@ export default function PriceListsPage() {
     },
     {
       key: 'default',
-      icon: record.isDefault ? <StarIcon className="w-4 h-4" /> : <StarOutlined />,
+      icon: record.isDefault ? <StarIcon className="w-4 h-4" /> : <StarIcon className="w-4 h-4" />,
       label: record.isDefault ? 'Varsayilan' : 'Varsayilan Yap',
       disabled: record.isDefault,
       onClick: () => handleSetDefault(record.id),
@@ -112,7 +113,7 @@ export default function PriceListsPage() {
     },
     {
       key: 'toggle',
-      icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
+      icon: record.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />,
       label: record.isActive ? 'Pasif Yap' : 'Aktif Yap',
       onClick: () => record.isActive ? handleDeactivate(record.id) : handleActivate(record.id),
     },

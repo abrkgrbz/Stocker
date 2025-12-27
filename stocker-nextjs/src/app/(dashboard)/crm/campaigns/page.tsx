@@ -16,23 +16,23 @@ import {
   confirmDelete,
 } from '@/lib/utils/sweetalert';
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  PlayCircleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  EnvelopeIcon,
-  CurrencyDollarIcon,
-  UserPlusIcon,
-  ArrowPathIcon,
-  TrophyIcon,
-  EllipsisHorizontalIcon,
-  ArrowUpIcon,
   ArrowDownIcon,
+  ArrowPathIcon,
+  ArrowUpIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
   DocumentDuplicateIcon,
-  MagnifyingGlassIcon,
+  EllipsisHorizontalIcon,
+  EnvelopeIcon,
   EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlayCircleIcon,
+  PlusIcon,
+  TrashIcon,
+  TrophyIcon,
+  UserPlusIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -189,7 +189,7 @@ export default function CampaignsPage() {
       dataIndex: 'name',
       key: 'name',
       render: (text, record) => {
-        const typeConfig = campaignTypeLabels[record.type] || { icon: <TrophyOutlined />, color: 'blue' };
+        const typeConfig = campaignTypeLabels[record.type] || { icon: <TrophyIcon className="w-4 h-4" />, color: 'blue' };
         return (
           <div className="flex items-center gap-3">
             <div

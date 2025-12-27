@@ -18,17 +18,17 @@ import {
   Col,
 } from 'antd';
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
   EllipsisVerticalIcon,
   EyeIcon,
-  PencilIcon,
-  CheckIcon,
-  XMarkIcon,
-  TrashIcon,
-  ArrowPathIcon,
   InboxIcon,
-  CurrencyDollarIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import {

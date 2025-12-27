@@ -215,7 +215,7 @@ export default function WarehousesPage() {
           },
           {
             key: 'setDefault',
-            icon: <StarOutlined />,
+            icon: <StarIcon className="w-4 h-4" />,
             label: 'Varsayılan Yap',
             disabled: record.isDefault,
             onClick: () => handleSetDefault(record),

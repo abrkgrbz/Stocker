@@ -9,6 +9,7 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
+  ShoppingCartIcon,
   WalletIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
@@ -104,7 +105,7 @@ export default function SalesDashboardPage() {
             <Statistic
               title="Toplam Sipariş"
               value={salesStats?.totalOrders ?? 0}
-              prefix={<ShoppingCartOutlined style={{ color: '#1890ff' }} />}
+              prefix={<ShoppingCartIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
               loading={salesStatsLoading}
             />
             <div style={{ marginTop: 8 }}>

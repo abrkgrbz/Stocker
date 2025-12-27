@@ -16,11 +16,11 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
   CheckIcon,
-  XMarkIcon,
-  InboxIcon,
   CurrencyDollarIcon,
+  InboxIcon,
+  PencilIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import { useRouter, useParams } from 'next/navigation';

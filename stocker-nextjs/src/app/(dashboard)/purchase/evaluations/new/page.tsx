@@ -19,6 +19,7 @@ import {
   ArrowLeftIcon,
   BuildingStorefrontIcon,
   CheckIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
@@ -153,7 +154,7 @@ export default function NewSupplierEvaluationPage() {
                   justifyContent: 'center',
                 }}
               >
-                <StarOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <StarIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
                 <p className="mt-4 text-lg font-medium text-white/90">Tedarikçi Değerlendirmesi</p>
                 <p className="text-sm text-white/60">Performans kriterlerini puanlayın</p>
               </div>

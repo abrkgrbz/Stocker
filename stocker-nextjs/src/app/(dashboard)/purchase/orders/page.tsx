@@ -18,20 +18,20 @@ import {
 import { Spinner } from '@/components/primitives';
 import type { MenuProps } from 'antd';
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
-  ShoppingCartIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  PaperAirplaneIcon,
   ArrowPathIcon,
-  TableCellsIcon,
+  CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  EllipsisVerticalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PlusIcon,
+  ShoppingCartIcon,
+  TableCellsIcon,
+  TrashIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableProps } from 'antd';

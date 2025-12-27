@@ -12,8 +12,8 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
-  PencilIcon,
   CheckIcon,
+  PencilIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';

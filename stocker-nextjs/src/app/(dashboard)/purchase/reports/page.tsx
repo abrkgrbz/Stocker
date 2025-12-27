@@ -27,6 +27,7 @@ import {
   DocumentTextIcon,
   ExclamationTriangleIcon,
   PrinterIcon,
+  ShoppingCartIcon,
   TrophyIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
@@ -294,7 +295,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><ShoppingCartOutlined className="mr-2" />Toplam Sipariş</span>}
+              title={<span><ShoppingCartIcon className="w-4 h-4" className="mr-2" />Toplam Sipariş</span>}
               value={orderSummary?.totalOrders || 0}
               valueStyle={{ color: '#3b82f6' }}
             />
@@ -622,7 +623,7 @@ export default function PurchaseReportsPage() {
             key: 'orders',
             label: (
               <span>
-                <ShoppingCartOutlined className="mr-1" />
+                <ShoppingCartIcon className="w-4 h-4" className="mr-1" />
                 Sipariş Analitiği
               </span>
             ),

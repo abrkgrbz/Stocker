@@ -21,6 +21,7 @@ import {
   GiftIcon,
   PencilIcon,
   PlusIcon,
+  ShoppingCartIcon,
   Squares2X2Icon,
   TrashIcon,
   XCircleIcon,
@@ -349,7 +350,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <ShoppingCartOutlined className="text-emerald-600 text-lg" />
+                  <ShoppingCartIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Tasarruf

@@ -25,6 +25,10 @@ import {
   MapPinIcon,
   PencilIcon,
   PhoneIcon,
+  ReceiptPercentIcon,
+  ShoppingCartIcon,
+  StarIcon,
+  StopCircleIcon,
   UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -65,7 +69,7 @@ const statusConfig: Record<
     label: 'Bloklu',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <StopOutlined />,
+    icon: <StopCircleIcon className="w-4 h-4" />,
   },
   OnHold: {
     label: 'Beklemede',
@@ -127,13 +131,13 @@ export default function SupplierDetailPage() {
     },
     supplier.status === 'Active' && {
       key: 'deactivate',
-      icon: <StopOutlined />,
+      icon: <StopCircleIcon className="w-4 h-4" />,
       label: 'Devre Dışı Bırak',
       onClick: () => deactivateSupplier.mutate(supplierId),
     },
     supplier.status !== 'Blacklisted' && {
       key: 'block',
-      icon: <StopOutlined />,
+      icon: <StopCircleIcon className="w-4 h-4" />,
       label: 'Blokla',
       danger: true,
       onClick: () => blockSupplier.mutate({ id: supplierId, reason: 'Manual block' }),
@@ -277,7 +281,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <PercentageOutlined className="text-emerald-600 text-lg" />
+                  <ReceiptPercentIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İndirim Oranı
@@ -296,7 +300,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <StarOutlined className="text-amber-600 text-lg" />
+                  <StarIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Puan</p>
               </div>
@@ -576,7 +580,7 @@ export default function SupplierDetailPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                    <ShoppingCartOutlined className="text-white text-lg" />
+                    <ShoppingCartIcon className="w-4 h-4" className="text-white text-lg" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">Siparişler</p>

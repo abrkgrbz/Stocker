@@ -28,6 +28,7 @@ import {
   ExclamationCircleIcon,
   PaperAirplaneIcon,
   PencilIcon,
+  ShoppingCartIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
@@ -260,7 +261,7 @@ export default function QuotationDetailPage() {
           {quotation.status === 'Awarded' && (
             <Button
               type="primary"
-              icon={<ShoppingCartOutlined />}
+              icon={<ShoppingCartIcon className="w-4 h-4" />}
               onClick={handleConvertToOrder}
               loading={convertMutation.isPending}
             >

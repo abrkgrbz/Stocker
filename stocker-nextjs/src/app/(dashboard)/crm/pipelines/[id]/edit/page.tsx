@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleIcon, XCircleIcon, StarIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon,
+  StarIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { PipelineForm } from '@/components/crm/pipelines';
 import { usePipeline, useUpdatePipeline } from '@/lib/api/hooks/useCRM';

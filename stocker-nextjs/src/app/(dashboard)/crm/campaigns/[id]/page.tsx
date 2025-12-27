@@ -14,7 +14,9 @@ import {
   CheckCircleIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
+  PauseCircleIcon,
   PencilIcon,
+  PlayCircleIcon,
   TrophyIcon,
   UserGroupIcon,
   UserPlusIcon,
@@ -28,16 +30,16 @@ dayjs.locale('tr');
 
 const statusLabels: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Planned: { label: 'Planlandı', color: 'default', icon: <CalendarIcon className="w-4 h-4" /> },
-  InProgress: { label: 'Devam Ediyor', color: 'processing', icon: <PlayCircleOutlined /> },
+  InProgress: { label: 'Devam Ediyor', color: 'processing', icon: <PlayCircleIcon className="w-4 h-4" /> },
   Completed: { label: 'Tamamlandı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Aborted: { label: 'İptal Edildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
-  OnHold: { label: 'Beklemede', color: 'warning', icon: <PauseCircleOutlined /> },
+  OnHold: { label: 'Beklemede', color: 'warning', icon: <PauseCircleIcon className="w-4 h-4" /> },
 };
 
 const typeLabels: Record<string, { label: string; icon: React.ReactNode }> = {
   Email: { label: 'E-posta', icon: <EnvelopeIcon className="w-4 h-4" /> },
   SocialMedia: { label: 'Sosyal Medya', icon: <UserPlusIcon className="w-4 h-4" /> },
-  Webinar: { label: 'Webinar', icon: <PlayCircleOutlined /> },
+  Webinar: { label: 'Webinar', icon: <PlayCircleIcon className="w-4 h-4" /> },
   Event: { label: 'Etkinlik', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Conference: { label: 'Konferans', icon: <UserGroupIcon className="w-4 h-4" /> },
   Advertisement: { label: 'Reklam', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
