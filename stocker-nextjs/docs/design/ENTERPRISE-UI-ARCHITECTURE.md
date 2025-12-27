@@ -117,12 +117,63 @@ import { FormSection, FormField, FormActions } from '@/components/patterns';
 import { cn } from '@/lib/cn';
 ```
 
+## Icon System
+
+### Heroicons Migration (Completed)
+All Ant Design icons have been migrated to Heroicons for consistency and bundle optimization.
+
+| Ant Design Icon | Heroicon Replacement | Usage |
+|-----------------|---------------------|-------|
+| FieldTimeOutlined | ClockIcon | Time/schedule actions |
+| CloseCircleOutlined | XCircleIcon | Cancel/close actions |
+| CheckCircleOutlined | CheckCircleIcon | Complete/success actions |
+| EditOutlined | PencilIcon | Edit actions |
+| DeleteOutlined | TrashIcon | Delete actions |
+| PlusOutlined | PlusIcon | Add actions |
+| ArrowLeftOutlined | ArrowLeftIcon | Back navigation |
+| SearchOutlined | MagnifyingGlassIcon | Search |
+| FilterOutlined | FunnelIcon | Filter |
+| DownloadOutlined | ArrowDownTrayIcon | Download |
+
+### Icon Usage Pattern
+```tsx
+import { ClockIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+
+// In JSX
+<Button icon={<ClockIcon className="w-4 h-4" />}>
+  Reschedule
+</Button>
+```
+
+## Logging Standards
+
+### Structured Logger Service
+All console.log statements have been migrated to a structured logger service for production-grade logging.
+
+```tsx
+import logger from '@/lib/utils/logger';
+
+// Usage patterns
+logger.debug('Operation details', { component: 'ComponentName', metadata: { key: value } });
+logger.info('Operation completed', { component: 'ComponentName' });
+logger.warn('Warning condition', { component: 'ComponentName' });
+logger.error('Operation failed', error, { component: 'ComponentName' });
+```
+
+### Logger Levels
+| Level | Purpose |
+|-------|---------|
+| debug | Development debugging, detailed state |
+| info | Normal operations, milestones |
+| warn | Potential issues, deprecations |
+| error | Failures, exceptions |
+
 ## Dependencies
 
 | Package | Purpose |
 |---------|---------|
 | @headlessui/react | Accessible UI primitives |
-| @heroicons/react | Icon system |
+| @heroicons/react | Icon system (migrated from @ant-design/icons) |
 | clsx | Conditional classes |
 | tailwind-merge | Class conflict resolution |
 
@@ -158,7 +209,9 @@ src/
 │   │   └── index.ts
 │   └── ...
 ├── lib/
-│   └── cn.ts                 # Class name utility
+│   ├── cn.ts                 # Class name utility
+│   └── utils/
+│       └── logger.ts         # Structured logging service
 └── theme/                    # Design tokens
     ├── colors.ts
     ├── tokens.ts
