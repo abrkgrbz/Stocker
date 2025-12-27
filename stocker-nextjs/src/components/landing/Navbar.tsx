@@ -107,7 +107,7 @@ export default function Navbar() {
                 <Button
                   type="primary"
                   icon={<RocketLaunchIcon className="w-4 h-4" />}
-                  className="h-10 px-6 bg-purple-600 hover:bg-purple-700 border-0 font-medium shadow-md"
+                  className="h-10 px-6 !bg-purple-600 hover:!bg-purple-700 !border-0 font-medium shadow-md"
                 >
                   {t('landing.navbar.getStarted')}
                 </Button>
@@ -171,7 +171,7 @@ export default function Navbar() {
                     icon={<RocketLaunchIcon className="w-4 h-4" />}
                     block
                     size="large"
-                    className="bg-purple-600 hover:bg-purple-700 border-0"
+                    className="!bg-purple-600 hover:!bg-purple-700 !border-0"
                   >
                     {t('landing.navbar.getStarted')}
                   </Button>

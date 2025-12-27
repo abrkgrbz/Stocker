@@ -5,23 +5,16 @@ import {
   Form,
   Input,
   Select,
-  Row,
-  Col,
-  Typography,
   InputNumber,
   DatePicker,
   Button,
   Table,
-  Space,
-  Divider,
-  Card,
+  Tooltip,
 } from 'antd';
 import {
   ShoppingCartIcon,
   PlusIcon,
   TrashIcon,
-  UserIcon,
-  CalendarIcon,
 } from '@heroicons/react/24/outline';
 import { useSuppliers } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseOrderDto, PurchaseOrderType, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
@@ -29,7 +22,6 @@ import { SupplierStatus } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 interface PurchaseOrderFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -180,6 +172,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           value={record.productName}
           onChange={(e) => handleItemChange(record.key, 'productName', e.target.value)}
           variant="borderless"
+          className="!text-slate-700"
         />
       ),
     },
@@ -194,6 +187,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           value={record.productCode}
           onChange={(e) => handleItemChange(record.key, 'productCode', e.target.value)}
           variant="borderless"
+          className="!text-slate-700"
         />
       ),
     },
@@ -209,6 +203,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           onChange={(val) => handleItemChange(record.key, 'quantity', val || 1)}
           variant="borderless"
           style={{ width: '100%' }}
+          className="[&_.ant-input-number-input]:!text-slate-700"
         />
       ),
     },
@@ -226,6 +221,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
           parser={(value) => value?.replace(/,/g, '') as unknown as number}
           style={{ width: '100%' }}
+          className="[&_.ant-input-number-input]:!text-slate-700"
         />
       ),
     },
@@ -242,6 +238,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
           onChange={(val) => handleItemChange(record.key, 'discount', val || 0)}
           variant="borderless"
           style={{ width: '100%' }}
+          className="[&_.ant-input-number-input]:!text-slate-700"
         />
       ),
     },
@@ -264,6 +261,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
             { value: 18, label: '18%' },
             { value: 20, label: '20%' },
           ]}
+          className="[&_.ant-select-selection-item]:!text-slate-700"
         />
       ),
     },
@@ -274,7 +272,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
       width: 130,
       align: 'right' as const,
       render: (_: any, record: OrderItem) => (
-        <Text strong>{record.lineTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+        <span className="font-semibold text-slate-800">{record.lineTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
       ),
     },
     {
@@ -282,12 +280,14 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
       key: 'actions',
       width: 50,
       render: (_: any, record: OrderItem) => (
-        <Button
-          type="text"
-          icon={<TrashIcon className="w-4 h-4" />}
-          danger
-          onClick={() => handleRemoveItem(record.key)}
-        />
+        <Tooltip title="Kalemi Sil">
+          <Button
+            type="text"
+            icon={<TrashIcon className="w-4 h-4" />}
+            danger
+            onClick={() => handleRemoveItem(record.key)}
+          />
+        </Tooltip>
       ),
     },
   ];
@@ -298,87 +298,59 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
       layout="vertical"
       onFinish={handleSubmit}
       disabled={loading}
-      className="purchase-order-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Summary (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Order Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShoppingCartIcon className="w-16 h-16 text-white/90" />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Satın Alma Siparişi
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Title + Grand Total
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Order Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <ShoppingCartIcon className="w-6 h-6 text-slate-500" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-slate-900">
+                {initialValues ? `Sipariş: ${initialValues.orderNumber}` : 'Yeni Satın Alma Siparişi'}
+              </h1>
+              <p className="text-sm text-slate-500 mt-1">
+                Tedarikçiden ürün siparişi oluşturun
               </p>
-              <p className="text-sm text-white/60">
-                Tedarikçiye sipariş oluşturun
-              </p>
+            </div>
+
+            {/* Grand Total Display */}
+            <div className="flex-shrink-0">
+              <div className="bg-slate-100 px-6 py-3 rounded-lg text-right">
+                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Genel Toplam</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  ₺{grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Order Summary */}
-          <Card size="small" className="mb-4">
-            <div className="space-y-3">
-              <div className="flex justify-between text-gray-600">
-                <span>Ara Toplam</span>
-                <span>{subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>İskonto</span>
-                <span className="text-red-500">-{totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>KDV</span>
-                <span>{totalTax.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-              <Divider className="my-2" />
-              <div className="flex justify-between text-lg font-semibold">
-                <span>Genel Toplam</span>
-                <span className="text-green-600">{grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-            </div>
-          </Card>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.items?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kalem</div>
-              </div>
-              <div className="p-4 bg-blue-50/50 rounded-xl text-center">
-                <div className="text-sm font-semibold text-blue-600">
-                  {initialValues.orderNumber}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Sipariş No</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Basic Info Section */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 flex items-center">
-              <UserIcon className="w-4 h-4 mr-1" /> Tedarikçi ve Sipariş Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+          {/* ─────────────── TEDARİKÇİ BİLGİLERİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tedarikçi Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="supplierId"
                   rules={[{ required: true, message: 'Tedarikçi seçin' }]}
@@ -386,82 +358,85 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
                 >
                   <Select
                     placeholder="Tedarikçi seçin"
-                    variant="filled"
                     showSearch
                     optionFilterProp="label"
                     options={suppliers.map(s => ({
                       value: s.id,
                       label: `${s.name} (${s.code})`,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sipariş Tipi</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş Tipi</label>
                 <Form.Item name="orderType" className="mb-0">
                   <Select
                     placeholder="Tip seçin"
-                    variant="filled"
                     options={orderTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          <Row gutter={16} className="mb-6">
-            <Col span={8}>
-              <div className="text-xs text-gray-400 mb-1 flex items-center">
-                <CalendarIcon className="w-3 h-3 mr-1" /> Sipariş Tarihi
+          {/* ─────────────── TARİH VE PARA BİRİMİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tarih ve Para Birimi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş Tarihi</label>
+                <Form.Item name="orderDate" className="mb-0">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD.MM.YYYY"
+                    placeholder="Tarih seçin"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
               </div>
-              <Form.Item name="orderDate" className="mb-0">
-                <DatePicker
-                  style={{ width: '100%' }}
-                  format="DD.MM.YYYY"
-                  variant="filled"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <div className="text-xs text-gray-400 mb-1">Beklenen Teslim Tarihi</div>
-              <Form.Item name="expectedDeliveryDate" className="mb-0">
-                <DatePicker
-                  style={{ width: '100%' }}
-                  format="DD.MM.YYYY"
-                  variant="filled"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <div className="text-xs text-gray-400 mb-1">Para Birimi</div>
-              <Form.Item name="currency" className="mb-0">
-                <Select
-                  variant="filled"
-                  options={currencyOptions}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Beklenen Teslim Tarihi</label>
+                <Form.Item name="expectedDeliveryDate" className="mb-0">
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    format="DD.MM.YYYY"
+                    placeholder="Tarih seçin"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0">
+                  <Select
+                    options={currencyOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-6" />
-
-          {/* Order Items */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          {/* ─────────────── SİPARİŞ KALEMLERİ ─────────────── */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Sipariş Kalemleri
-              </Text>
+              </h3>
               <Button
                 type="dashed"
                 icon={<PlusIcon className="w-4 h-4" />}
                 onClick={handleAddItem}
                 size="small"
+                className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
               >
                 Kalem Ekle
               </Button>
             </div>
-
             <Table
               dataSource={items}
               columns={itemColumns}
@@ -469,47 +444,98 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
               size="small"
               scroll={{ x: 900 }}
               locale={{ emptyText: 'Henüz kalem eklenmedi' }}
+              className="[&_.ant-table-thead>tr>th]:!bg-slate-50 [&_.ant-table-thead>tr>th]:!text-slate-600 [&_.ant-table-thead>tr>th]:!font-medium [&_.ant-table-thead>tr>th]:!border-slate-200 [&_.ant-table-tbody>tr>td]:!border-slate-100"
             />
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-6" />
-
-          {/* Additional Info */}
-          <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Ek Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Tedarikçi Referans No</div>
-                <Form.Item name="supplierReference" className="mb-0">
-                  <Input placeholder="Tedarikçi referans no" variant="filled" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Teslim Adresi</div>
-                <Form.Item name="deliveryAddress" className="mb-0">
-                  <Input placeholder="Teslim adresi" variant="filled" />
-                </Form.Item>
-              </Col>
-            </Row>
+          {/* ─────────────── SİPARİŞ ÖZETİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sipariş Özeti
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-3">
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div className="text-xl font-semibold text-slate-800">
+                    ₺{subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Ara Toplam</div>
+                </div>
+              </div>
+              <div className="col-span-3">
+                <div className="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+                  <div className="text-xl font-semibold text-red-600">
+                    -₺{totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">İskonto</div>
+                </div>
+              </div>
+              <div className="col-span-3">
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 text-center">
+                  <div className="text-xl font-semibold text-amber-600">
+                    ₺{totalTax.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">KDV</div>
+                </div>
+              </div>
+              <div className="col-span-3">
+                <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
+                  <div className="text-xl font-semibold text-emerald-600">
+                    ₺{grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">Genel Toplam</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <Row gutter={16}>
-            <Col span={24}>
-              <div className="text-xs text-gray-400 mb-1">Notlar</div>
-              <Form.Item name="notes" className="mb-0">
-                <TextArea
-                  placeholder="Sipariş hakkında notlar..."
-                  variant="filled"
-                  autoSize={{ minRows: 3, maxRows: 6 }}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
+          {/* ─────────────── EK BİLGİLER ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Ek Bilgiler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Tedarikçi Referans No</label>
+                <Form.Item name="supplierReference" className="mb-0">
+                  <Input
+                    placeholder="Tedarikçi referans no"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslim Adresi</label>
+                <Form.Item name="deliveryAddress" className="mb-0">
+                  <Input
+                    placeholder="Teslim adresi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    placeholder="Sipariş hakkında notlar..."
+                    rows={3}
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

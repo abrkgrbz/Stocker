@@ -6,28 +6,15 @@ import {
   Input,
   InputNumber,
   Select,
-  Row,
-  Col,
-  Typography,
   DatePicker,
   Button,
-  Card,
-  Divider,
   Table,
-  Space,
   Tooltip,
-  Empty,
 } from 'antd';
 import {
   PlusIcon,
   TrashIcon,
-  UserIcon,
-  CalendarIcon,
   ShoppingCartIcon,
-  DocumentTextIcon,
-  MapPinIcon,
-  CurrencyDollarIcon,
-  ReceiptPercentIcon,
 } from '@heroicons/react/24/outline';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { useProducts } from '@/lib/api/hooks/useInventory';
@@ -36,7 +23,7 @@ import type { ProductDto } from '@/lib/api/services/inventory.types';
 import type { SalesOrder } from '@/lib/api/services/sales.service';
 import dayjs from 'dayjs';
 
-const { Text } = Typography;
+const { TextArea } = Input;
 
 interface OrderItem {
   key: string;
@@ -85,7 +72,6 @@ const unitOptions = [
 
 export default function SalesOrderForm({ form, initialValues, onFinish, loading }: SalesOrderFormProps) {
   const [customerSearch, setCustomerSearch] = useState('');
-  const [productSearch, setProductSearch] = useState('');
   const [items, setItems] = useState<OrderItem[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState('TRY');
 
@@ -185,7 +171,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
               productCode: product.code,
               productName: product.name,
               unitPrice: product.unitPrice || 0,
-              unit: 'Adet', // Default unit
+              unit: 'Adet',
             }
           : item
       ));
@@ -300,28 +286,29 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
             placeholder="Ürün seçin"
             loading={productsLoading}
             filterOption={false}
-            onSearch={setProductSearch}
             onChange={(value) => value && handleProductSelect(Number(value), record.key)}
             value={record.productId}
             options={productOptions}
-            style={{ width: '100%' }}
+            className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
             size="small"
             allowClear
           />
-          <Input
-            placeholder="veya manuel girin"
-            value={record.productCode}
-            onChange={(e) => updateItem(record.key, 'productCode', e.target.value)}
-            size="small"
-            style={{ width: '45%', marginRight: '5%' }}
-          />
-          <Input
-            placeholder="Ürün adı"
-            value={record.productName}
-            onChange={(e) => updateItem(record.key, 'productName', e.target.value)}
-            size="small"
-            style={{ width: '50%' }}
-          />
+          <div className="flex gap-1">
+            <Input
+              placeholder="Kod"
+              value={record.productCode}
+              onChange={(e) => updateItem(record.key, 'productCode', e.target.value)}
+              size="small"
+              className="!w-[45%] !bg-slate-50 !border-slate-300"
+            />
+            <Input
+              placeholder="Ürün adı"
+              value={record.productName}
+              onChange={(e) => updateItem(record.key, 'productName', e.target.value)}
+              size="small"
+              className="!w-[55%] !bg-slate-50 !border-slate-300"
+            />
+          </div>
         </div>
       ),
     },
@@ -335,7 +322,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           value={record.quantity}
           onChange={(value) => updateItem(record.key, 'quantity', value || 0)}
           size="small"
-          style={{ width: '100%' }}
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -349,7 +336,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           onChange={(value) => updateItem(record.key, 'unit', value)}
           options={unitOptions}
           size="small"
-          style={{ width: '100%' }}
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
         />
       ),
     },
@@ -364,7 +351,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           value={record.unitPrice}
           onChange={(value) => updateItem(record.key, 'unitPrice', value || 0)}
           size="small"
-          style={{ width: '100%' }}
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
           prefix={selectedCurrency === 'TRY' ? '₺' : selectedCurrency === 'USD' ? '$' : '€'}
         />
       ),
@@ -380,8 +367,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           value={record.discountRate}
           onChange={(value) => updateItem(record.key, 'discountRate', value || 0)}
           size="small"
-          style={{ width: '100%' }}
-          suffix="%"
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -395,7 +381,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           onChange={(value) => updateItem(record.key, 'vatRate', value)}
           options={vatOptions}
           size="small"
-          style={{ width: '100%' }}
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
         />
       ),
     },
@@ -410,7 +396,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
         const afterDiscount = lineTotal - discount;
         const vat = afterDiscount * (record.vatRate / 100);
         return (
-          <Text strong>{formatCurrency(afterDiscount + vat)}</Text>
+          <span className="font-medium text-slate-900">{formatCurrency(afterDiscount + vat)}</span>
         );
       },
     },
@@ -438,120 +424,65 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
       form={form}
       layout="vertical"
       disabled={loading}
-      className="sales-order-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Order Summary (35%) */}
-        <Col xs={24} lg={9}>
-          {/* Order Totals Card */}
-          <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl">
-            <div className="flex items-center gap-2 mb-4">
-              <CurrencyDollarIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Sipariş Özeti
-              </Text>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Title + Total
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Order Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <ShoppingCartIcon className="w-6 h-6 text-slate-500" />
+              </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Text className="text-gray-500">Ara Toplam</Text>
-                <Text className="text-lg">{formatCurrency(calculations.subTotal)}</Text>
-              </div>
-              {calculations.totalItemDiscount > 0 && (
-                <div className="flex justify-between items-center">
-                  <Text className="text-gray-500">Satır İndirimi</Text>
-                  <Text className="text-red-500">-{formatCurrency(calculations.totalItemDiscount)}</Text>
+
+            {/* Order Title */}
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-slate-900">
+                {initialValues ? `Sipariş: ${initialValues.orderNumber}` : 'Yeni Sipariş'}
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                {items.length} kalem | {initialValues ? 'Siparişi düzenleyin' : 'Yeni satış siparişi oluşturun'}
+              </p>
+            </div>
+
+            {/* Total Display */}
+            <div className="flex-shrink-0">
+              <div className="bg-slate-100 px-6 py-3 rounded-xl text-center">
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                  Genel Toplam
                 </div>
-              )}
-              {calculations.orderDiscount > 0 && (
-                <div className="flex justify-between items-center">
-                  <Text className="text-gray-500">Sipariş İndirimi</Text>
-                  <Text className="text-red-500">-{formatCurrency(calculations.orderDiscount)}</Text>
+                <div className="text-2xl font-bold text-slate-900">
+                  {formatCurrency(calculations.grandTotal)}
                 </div>
-              )}
-              <div className="flex justify-between items-center">
-                <Text className="text-gray-500">KDV Toplam</Text>
-                <Text>{formatCurrency(calculations.totalVat)}</Text>
-              </div>
-              <Divider className="my-3" />
-              <div className="flex justify-between items-center">
-                <Text strong className="text-base">Genel Toplam</Text>
-                <Text strong className="text-2xl text-green-600">{formatCurrency(calculations.grandTotal)}</Text>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Order Discount */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <ReceiptPercentIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Sipariş İndirimi
-              </Text>
-            </div>
-            <Form.Item name="discountRate" className="mb-0">
-              <InputNumber
-                min={0}
-                max={100}
-                style={{ width: '100%' }}
-                placeholder="0"
-                addonAfter="%"
-                size="large"
-              />
-            </Form.Item>
-          </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY: High-Density Grid Layout
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Notes */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <DocumentTextIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Notlar
-              </Text>
-            </div>
-            <Form.Item name="notes" className="mb-0">
-              <Input.TextArea
-                rows={4}
-                placeholder="Sipariş notlarını buraya yazın..."
-                style={{ resize: 'none' }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gray-50/70 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.items?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kalem Sayısı</div>
-              </div>
-              <div className="p-4 bg-gray-50/70 rounded-xl text-center">
-                <div className="text-sm font-semibold text-gray-800">
-                  {initialValues.orderNumber}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Sipariş No</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (65%) */}
-        <Col xs={24} lg={15}>
-          {/* Customer Section */}
+          {/* ─────────────── MÜŞTERİ BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <UserIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Müşteri Bilgileri
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={12}>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Müşteri Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="customerId"
                   rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Select
                     showSearch
@@ -561,131 +492,121 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
                     onSearch={setCustomerSearch}
                     onChange={handleCustomerSelect}
                     options={customerOptions}
-                    size="large"
                     notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="customerEmail" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="customerEmail" className="mb-0">
                   <Input
                     placeholder="E-posta adresi"
-                    size="large"
                     type="email"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Dates and Currency */}
+          {/* ─────────────── TARİH VE PARA BİRİMİ ─────────────── */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <CalendarIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Tarih ve Para Birimi
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={8}>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tarih ve Para Birimi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="orderDate"
-                  rules={[{ required: true, message: 'Zorunlu' }]}
-                  className="mb-3"
+                  rules={[{ required: true, message: 'Sipariş tarihi zorunludur' }]}
+                  className="mb-0"
                 >
                   <DatePicker
-                    style={{ width: '100%' }}
-                    format="DD.MM.YYYY"
-                    placeholder="Sipariş Tarihi"
-                    size="large"
+                    format="DD/MM/YYYY"
+                    placeholder="Tarih seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="deliveryDate" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslim Tarihi</label>
+                <Form.Item name="deliveryDate" className="mb-0">
                   <DatePicker
-                    style={{ width: '100%' }}
-                    format="DD.MM.YYYY"
-                    placeholder="Teslim Tarihi"
-                    size="large"
+                    format="DD/MM/YYYY"
+                    placeholder="Tarih seçin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="currency" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0">
                   <Select
                     options={currencyOptions}
-                    size="large"
                     onChange={setSelectedCurrency}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Sales Person */}
-          <div className="mb-8">
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Satış Temsilcisi</div>
-                <Form.Item name="salesPersonName" className="mb-0">
-                  <Input placeholder="Satış temsilcisi adı" size="large" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Addresses */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPinIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Adresler
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Teslimat Adresi</div>
-                <Form.Item name="shippingAddress" className="mb-3">
-                  <Input.TextArea rows={3} placeholder="Teslimat adresi" style={{ resize: 'none' }} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Fatura Adresi</div>
-                <Form.Item name="billingAddress" className="mb-3">
-                  <Input.TextArea rows={3} placeholder="Fatura adresi" style={{ resize: 'none' }} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Order Items */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <ShoppingCartIcon className="w-5 h-5 text-gray-500" />
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Sipariş Kalemleri ({items.length})
-                </Text>
               </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Satış Temsilcisi</label>
+                <Form.Item name="salesPersonName" className="mb-0">
+                  <Input
+                    placeholder="Satış temsilcisi adı"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ADRESLER ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Adresler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslimat Adresi</label>
+                <Form.Item name="shippingAddress" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Teslimat adresi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fatura Adresi</label>
+                <Form.Item name="billingAddress" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Fatura adresi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── SİPARİŞ KALEMLERİ ─────────────── */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Sipariş Kalemleri ({items.length})
+              </h3>
               <Button
                 type="primary"
+                size="small"
                 icon={<PlusIcon className="w-4 h-4" />}
                 onClick={addItem}
-                size="small"
-                style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
               >
                 Kalem Ekle
               </Button>
             </div>
-
-            <Card className="shadow-sm" styles={{ body: { padding: 0 } }}>
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
               <Table
                 columns={itemColumns}
                 dataSource={items}
@@ -693,19 +614,105 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
                 pagination={false}
                 size="small"
                 scroll={{ x: 900 }}
-                locale={{
-                  emptyText: (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description="Henüz kalem eklenmedi"
-                    />
-                  ),
-                }}
+                locale={{ emptyText: 'Henüz kalem eklenmedi' }}
+                className="[&_.ant-table-thead>tr>th]:!bg-slate-50 [&_.ant-table-thead>tr>th]:!text-slate-600 [&_.ant-table-thead>tr>th]:!font-medium [&_.ant-table-thead>tr>th]:!border-slate-200"
               />
-            </Card>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── SİPARİŞ ÖZETİ ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Sipariş Özeti
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş İndirimi (%)</label>
+                <Form.Item name="discountRate" className="mb-0">
+                  <InputNumber
+                    min={0}
+                    max={100}
+                    placeholder="0"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">Ara Toplam:</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(calculations.subTotal)}</span>
+                  </div>
+                  {calculations.totalItemDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Satır İndirimi:</span>
+                      <span className="text-red-600">-{formatCurrency(calculations.totalItemDiscount)}</span>
+                    </div>
+                  )}
+                  {calculations.orderDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Sipariş İndirimi:</span>
+                      <span className="text-red-600">-{formatCurrency(calculations.orderDiscount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600">KDV Toplam:</span>
+                    <span className="font-medium text-slate-900">{formatCurrency(calculations.totalVat)}</span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-3">
+                    <div className="flex justify-between text-lg">
+                      <span className="font-semibold text-slate-900">Genel Toplam:</span>
+                      <span className="font-bold text-slate-900">{formatCurrency(calculations.grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── NOTLAR ─────────────── */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Notlar
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Sipariş notlarını buraya yazın..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats for Edit Mode */}
+          {initialValues && (
+            <div className="mt-8">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Sipariş Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="text-xs text-slate-500 mb-1">Sipariş Numarası</div>
+                    <div className="text-sm font-semibold text-slate-900">{initialValues.orderNumber}</div>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="text-xs text-slate-500 mb-1">Kalem Sayısı</div>
+                    <div className="text-sm font-semibold text-slate-900">{initialValues.items?.length || 0}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

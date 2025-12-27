@@ -6,15 +6,9 @@ import {
   Input,
   InputNumber,
   Select,
-  Row,
-  Col,
-  Typography,
   DatePicker,
   Button,
-  Card,
-  Divider,
   Table,
-  Space,
   Tooltip,
   Empty,
   Switch,
@@ -22,14 +16,7 @@ import {
 import {
   PlusIcon,
   TrashIcon,
-  UserIcon,
-  CalendarIcon,
-  ShoppingCartIcon,
   DocumentTextIcon,
-  MapPinIcon,
-  CurrencyDollarIcon,
-  ReceiptPercentIcon,
-  BuildingLibraryIcon,
 } from '@heroicons/react/24/outline';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { useProducts } from '@/lib/api/hooks/useInventory';
@@ -38,7 +25,7 @@ import type { ProductDto } from '@/lib/api/services/inventory.types';
 import type { Invoice } from '@/lib/api/services/invoice.service';
 import dayjs from 'dayjs';
 
-const { Text } = Typography;
+const { TextArea } = Input;
 
 interface InvoiceItem {
   key: string;
@@ -141,7 +128,6 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
       });
       setSelectedCurrency(initialValues.currency || 'TRY');
       setIsEInvoice(initialValues.isEInvoice || false);
-      // Convert invoice items to our format
       if (initialValues.items) {
         setItems(initialValues.items.map((item, index) => ({
           key: `item-${index}`,
@@ -165,7 +151,6 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
         discountRate: 0,
         isEInvoice: false,
       });
-      // Add one empty item by default
       setItems([{
         key: 'item-0',
         productCode: '',
@@ -428,7 +413,7 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
         const afterDiscount = lineTotal - discount;
         const vat = afterDiscount * (record.vatRate / 100);
         return (
-          <Text strong>{formatCurrency(afterDiscount + vat)}</Text>
+          <span className="font-medium">{formatCurrency(afterDiscount + vat)}</span>
         );
       },
     },
@@ -456,283 +441,207 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
       form={form}
       layout="vertical"
       disabled={loading}
-      className="invoice-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Invoice Summary (35%) */}
-        <Col xs={24} lg={9}>
-          {/* Invoice Totals Card */}
-          <div className="mb-6 p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl">
-            <div className="flex items-center gap-2 mb-4">
-              <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Fatura Özeti
-              </Text>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+
+        {/* ═══════════════════════════════════════════════════════════════
+            HEADER: Icon + Title + E-Invoice Toggle
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Invoice Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <DocumentTextIcon className="w-6 h-6 text-slate-500" />
+              </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Text className="text-gray-500">Ara Toplam</Text>
-                <Text className="text-lg">{formatCurrency(calculations.subTotal)}</Text>
-              </div>
-              {calculations.totalItemDiscount > 0 && (
-                <div className="flex justify-between items-center">
-                  <Text className="text-gray-500">Satır İndirimi</Text>
-                  <Text className="text-red-500">-{formatCurrency(calculations.totalItemDiscount)}</Text>
-                </div>
-              )}
-              {calculations.invoiceDiscount > 0 && (
-                <div className="flex justify-between items-center">
-                  <Text className="text-gray-500">Fatura İndirimi</Text>
-                  <Text className="text-red-500">-{formatCurrency(calculations.invoiceDiscount)}</Text>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <Text className="text-gray-500">KDV Toplam</Text>
-                <Text>{formatCurrency(calculations.totalVat)}</Text>
-              </div>
-              <Divider className="my-3" />
-              <div className="flex justify-between items-center">
-                <Text strong className="text-base">Genel Toplam</Text>
-                <Text strong className="text-2xl text-green-600">{formatCurrency(calculations.grandTotal)}</Text>
+
+            {/* Invoice Info */}
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-slate-900">
+                {initialValues ? `Fatura: ${initialValues.invoiceNumber}` : 'Yeni Fatura'}
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                {items.length} kalem | {formatCurrency(calculations.grandTotal)}
+              </p>
+            </div>
+
+            {/* E-Invoice Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isEInvoice ? 'E-Fatura' : 'Normal Fatura'}
+                </span>
+                <Switch
+                  checked={isEInvoice}
+                  onChange={setIsEInvoice}
+                />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* E-Invoice Toggle */}
-          <div className="mb-6 flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-            <div>
-              <Text strong className="text-gray-700">E-Fatura</Text>
-              <div className="text-xs text-gray-400 mt-0.5">
-                {isEInvoice ? 'E-Fatura olarak kesilecek' : 'Normal fatura olarak kesilecek'}
-              </div>
-            </div>
-            <Switch
-              checked={isEInvoice}
-              onChange={setIsEInvoice}
-              checkedChildren="Evet"
-              unCheckedChildren="Hayır"
-              style={{
-                backgroundColor: isEInvoice ? '#52c41a' : '#d9d9d9',
-                minWidth: '70px'
-              }}
-            />
-          </div>
+        {/* ═══════════════════════════════════════════════════════════════
+            FORM BODY
+        ═══════════════════════════════════════════════════════════════ */}
+        <div className="px-8 py-6">
 
-          {/* Invoice Discount */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <ReceiptPercentIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Fatura İndirimi
-              </Text>
-            </div>
-            <Form.Item name="discountRate" className="mb-0">
-              <InputNumber
-                min={0}
-                max={100}
-                style={{ width: '100%' }}
-                placeholder="0"
-                addonAfter="%"
-                size="large"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Notes */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <DocumentTextIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Notlar
-              </Text>
-            </div>
-            <Form.Item name="notes" className="mb-0">
-              <Input.TextArea
-                rows={4}
-                placeholder="Fatura notlarını buraya yazın..."
-                style={{ resize: 'none' }}
-              />
-            </Form.Item>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-gray-50/70 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.items?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Kalem Sayısı</div>
-              </div>
-              <div className="p-4 bg-gray-50/70 rounded-xl text-center">
-                <div className="text-sm font-semibold text-gray-800">
-                  {initialValues.invoiceNumber}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Fatura No</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (65%) */}
-        <Col xs={24} lg={15}>
-          {/* Customer Section */}
+          {/* ─────────────── MÜŞTERİ BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <UserIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Müşteri Bilgileri
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={12}>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Müşteri Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="customerId"
                   rules={[{ required: true, message: 'Müşteri seçimi zorunludur' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Select
                     showSearch
-                    placeholder="Müşteri seçin veya arayın"
+                    placeholder="Müşteri seçin"
                     loading={customersLoading}
                     filterOption={false}
                     onSearch={setCustomerSearch}
                     onChange={handleCustomerSelect}
                     options={customerOptions}
-                    size="large"
-                    notFoundContent={customersLoading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="customerEmail" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                <Form.Item name="customerEmail" className="mb-0">
                   <Input
                     placeholder="E-posta adresi"
-                    size="large"
                     type="email"
+                    className="!bg-slate-50 !border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="customerTaxNumber" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vergi Numarası</label>
+                <Form.Item name="customerTaxNumber" className="mb-0">
                   <Input
                     placeholder="Vergi numarası"
-                    size="large"
-                    prefix={<BuildingLibraryIcon className="w-4 h-4 text-gray-400" />}
+                    className="!bg-slate-50 !border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="type" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fatura Tipi</label>
+                <Form.Item name="type" className="mb-0">
                   <Select
                     options={typeOptions}
-                    size="large"
                     placeholder="Fatura Tipi"
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Dates and Currency */}
+          {/* ─────────────── TARİH VE PARA BİRİMİ ─────────────── */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <CalendarIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Tarih ve Para Birimi
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={8}>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Tarih ve Para Birimi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fatura Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="invoiceDate"
                   rules={[{ required: true, message: 'Zorunlu' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <DatePicker
                     style={{ width: '100%' }}
                     format="DD.MM.YYYY"
                     placeholder="Fatura Tarihi"
-                    size="large"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Vade Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="dueDate"
                   rules={[{ required: true, message: 'Zorunlu' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <DatePicker
                     style={{ width: '100%' }}
                     format="DD.MM.YYYY"
                     placeholder="Vade Tarihi"
-                    size="large"
+                    className="[&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="currency" className="mb-3">
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                <Form.Item name="currency" className="mb-0">
                   <Select
                     options={currencyOptions}
-                    size="large"
                     onChange={setSelectedCurrency}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Address & Payment Terms */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPinIcon className="w-5 h-5 text-gray-500" />
-              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Adres ve Ödeme
-              </Text>
-            </div>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Müşteri Adresi</div>
-                <Form.Item name="customerAddress" className="mb-3">
-                  <Input.TextArea rows={3} placeholder="Müşteri adresi" style={{ resize: 'none' }} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Ödeme Koşulları</div>
-                <Form.Item name="paymentTerms" className="mb-3">
-                  <Input.TextArea rows={3} placeholder="Ödeme koşulları" style={{ resize: 'none' }} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Invoice Items */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <ShoppingCartIcon className="w-5 h-5 text-gray-500" />
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Fatura Kalemleri ({items.length})
-                </Text>
               </div>
+            </div>
+          </div>
+
+          {/* ─────────────── ADRES VE ÖDEME ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Adres ve Ödeme
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri Adresi</label>
+                <Form.Item name="customerAddress" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Müşteri adresi"
+                    className="!bg-slate-50 !border-slate-300 !resize-none"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ödeme Koşulları</label>
+                <Form.Item name="paymentTerms" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Ödeme koşulları"
+                    className="!bg-slate-50 !border-slate-300 !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── FATURA KALEMLERİ ─────────────── */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Fatura Kalemleri ({items.length})
+              </h3>
               <Button
                 type="primary"
                 icon={<PlusIcon className="w-4 h-4" />}
                 onClick={addItem}
                 size="small"
-                style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
+                className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
               >
                 Kalem Ekle
               </Button>
             </div>
 
-            <Card className="shadow-sm" styles={{ body: { padding: 0 } }}>
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
               <Table
                 columns={itemColumns}
                 dataSource={items}
@@ -749,14 +658,122 @@ export default function InvoiceForm({ form, initialValues, onFinish, loading }: 
                   ),
                 }}
               />
-            </Card>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ─────────────── ÖZET VE NOTLAR ─────────────── */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Fatura Özeti
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              {/* Sol: İndirim ve Notlar */}
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Fatura İndirimi (%)</label>
+                <Form.Item name="discountRate" className="mb-4">
+                  <InputNumber
+                    min={0}
+                    max={100}
+                    style={{ width: '100%' }}
+                    placeholder="0"
+                    addonAfter="%"
+                    className="[&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
+                  />
+                </Form.Item>
+
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Fatura notları..."
+                    className="!bg-slate-50 !border-slate-300 !resize-none"
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Sağ: Toplam Özeti */}
+              <div className="col-span-6">
+                <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">Ara Toplam</span>
+                      <span className="font-medium text-slate-800">{formatCurrency(calculations.subTotal)}</span>
+                    </div>
+                    {calculations.totalItemDiscount > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-600">Satır İndirimi</span>
+                        <span className="text-red-600">-{formatCurrency(calculations.totalItemDiscount)}</span>
+                      </div>
+                    )}
+                    {calculations.invoiceDiscount > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-600">Fatura İndirimi</span>
+                        <span className="text-red-600">-{formatCurrency(calculations.invoiceDiscount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">KDV Toplam</span>
+                      <span className="font-medium text-slate-800">{formatCurrency(calculations.totalVat)}</span>
+                    </div>
+                    <div className="border-t border-slate-200 pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-slate-700">Genel Toplam</span>
+                        <span className="text-2xl font-bold text-slate-900">{formatCurrency(calculations.grandTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ─────────────── DÜZENLEME MODU İSTATİSTİKLERİ ─────────────── */}
+          {initialValues && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Fatura Durumu
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-4">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-lg font-semibold text-slate-800">
+                      {initialValues.invoiceNumber}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Fatura No</div>
+                  </div>
+                </div>
+                <div className="col-span-4">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-lg font-semibold text-slate-800">
+                      {initialValues.items?.length || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Kalem Sayısı</div>
+                  </div>
+                </div>
+                <div className="col-span-4">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className={`text-lg font-semibold ${initialValues.status === 'Paid' ? 'text-green-600' : initialValues.status === 'Overdue' ? 'text-red-600' : 'text-amber-600'}`}>
+                      {initialValues.status === 'Draft' && 'Taslak'}
+                      {initialValues.status === 'Issued' && 'Kesildi'}
+                      {initialValues.status === 'Sent' && 'Gönderildi'}
+                      {initialValues.status === 'Paid' && 'Ödendi'}
+                      {initialValues.status === 'PartiallyPaid' && 'Kısmi Ödeme'}
+                      {initialValues.status === 'Overdue' && 'Vadesi Geçmiş'}
+                      {initialValues.status === 'Cancelled' && 'İptal'}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Durum</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>
-        <Button htmlType="submit" />
+        <button type="submit" />
       </Form.Item>
     </Form>
   );

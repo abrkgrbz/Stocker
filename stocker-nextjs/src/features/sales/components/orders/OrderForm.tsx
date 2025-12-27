@@ -15,9 +15,6 @@ import {
   DatePicker,
   InputNumber,
   Button,
-  Divider,
-  Space,
-  Card as AntCard,
   Table,
   Popconfirm,
 } from 'antd';
@@ -26,6 +23,7 @@ import {
   TrashIcon,
   DocumentCheckIcon,
   XMarkIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import { PageContainer } from '@/components/ui/enterprise-page';
 import { useCreateSalesOrder, useUpdateSalesOrder, useSalesOrder } from '../../hooks';
@@ -34,10 +32,11 @@ import type {
   CreateSalesOrderCommand,
   UpdateSalesOrderCommand,
   CreateSalesOrderItemCommand,
-  SalesOrder,
 } from '../../types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+
+const { TextArea } = Input;
 
 interface OrderFormProps {
   orderId?: string;
@@ -230,6 +229,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           value={record.productCode}
           onChange={(e) => updateItem(record.key, 'productCode', e.target.value)}
           placeholder="Kod"
+          className="!bg-slate-50 !border-slate-300"
         />
       ),
     },
@@ -242,6 +242,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           value={record.productName}
           onChange={(e) => updateItem(record.key, 'productName', e.target.value)}
           placeholder="Ürün adı"
+          className="!bg-slate-50 !border-slate-300"
         />
       ),
     },
@@ -261,7 +262,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
             { value: 'M', label: 'Metre' },
             { value: 'Kutu', label: 'Kutu' },
           ]}
-          style={{ width: '100%' }}
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
         />
       ),
     },
@@ -275,7 +276,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           value={record.quantity}
           onChange={(value) => updateItem(record.key, 'quantity', value || 0)}
           min={1}
-          style={{ width: '100%' }}
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -291,7 +292,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           min={0}
           formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
           parser={(value) => parseFloat(value?.replace(/,/g, '') || '0')}
-          style={{ width: '100%' }}
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -306,7 +307,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           onChange={(value) => updateItem(record.key, 'discountRate', value || 0)}
           min={0}
           max={100}
-          style={{ width: '100%' }}
+          className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300"
         />
       ),
     },
@@ -325,7 +326,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
             { value: 10, label: '10%' },
             { value: 20, label: '20%' },
           ]}
-          style={{ width: '100%' }}
+          className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300"
         />
       ),
     },
@@ -336,7 +337,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
       width: 120,
       align: 'right',
       render: (_, record) => (
-        <span className="font-medium">{formatCurrency(record.lineTotal)}</span>
+        <span className="font-medium text-slate-900">{formatCurrency(record.lineTotal)}</span>
       ),
     },
     {
@@ -368,17 +369,6 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
 
   return (
     <PageContainer maxWidth="6xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          {mode === 'create' ? 'Yeni Sipariş' : 'Siparişi Düzenle'}
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {mode === 'create'
-            ? 'Yeni bir satış siparişi oluşturun'
-            : `Sipariş #${existingOrder?.orderNumber}`}
-        </p>
-      </div>
-
       <Form
         form={form}
         layout="vertical"
@@ -387,123 +377,259 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           currency: 'TRY',
           orderDate: dayjs(),
         }}
+        className="w-full"
+        scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
       >
-        {/* Customer & Date Section */}
-        <AntCard title="Müşteri Bilgileri" className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Form.Item
-              name="customerName"
-              label="Müşteri Adı"
-              rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
-            >
-              <Input placeholder="Müşteri adını girin" />
-            </Form.Item>
-            <Form.Item name="customerEmail" label="E-posta">
-              <Input type="email" placeholder="ornek@email.com" />
-            </Form.Item>
-            <Form.Item name="currency" label="Para Birimi">
-              <Select
-                options={[
-                  { value: 'TRY', label: '₺ TRY' },
-                  { value: 'USD', label: '$ USD' },
-                  { value: 'EUR', label: '€ EUR' },
-                ]}
-              />
-            </Form.Item>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Form.Item name="orderDate" label="Sipariş Tarihi">
-              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-            </Form.Item>
-            <Form.Item name="deliveryDate" label="Teslim Tarihi">
-              <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
-            </Form.Item>
-          </div>
-        </AntCard>
+        {/* Main Card */}
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
 
-        {/* Items Section */}
-        <AntCard
-          title="Sipariş Kalemleri"
-          className="mb-6"
-          extra={
-            <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
-              Kalem Ekle
-            </Button>
-          }
-        >
-          <Table
-            columns={itemColumns}
-            dataSource={items}
-            rowKey="key"
-            pagination={false}
-            scroll={{ x: 900 }}
-            locale={{ emptyText: 'Henüz ürün eklenmedi' }}
-          />
-        </AntCard>
+          {/* ═══════════════════════════════════════════════════════════════
+              HEADER: Icon + Title + Total
+          ═══════════════════════════════════════════════════════════════ */}
+          <div className="px-8 py-6 border-b border-slate-200">
+            <div className="flex items-center gap-6">
+              {/* Order Icon */}
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                  <ShoppingCartIcon className="w-6 h-6 text-slate-500" />
+                </div>
+              </div>
 
-        {/* Summary Section */}
-        <AntCard title="Özet" className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Form.Item name="shippingAddress" label="Teslimat Adresi">
-                <Input.TextArea rows={3} placeholder="Teslimat adresi" />
-              </Form.Item>
-              <Form.Item name="notes" label="Notlar">
-                <Input.TextArea rows={3} placeholder="Sipariş notları" />
-              </Form.Item>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Ara Toplam:</span>
-                  <span className="font-medium">{formatCurrency(totals.subTotal)}</span>
-                </div>
-                <div className="flex justify-between text-sm items-center">
-                  <span className="text-slate-600">Sipariş İskontosu (%):</span>
-                  <Form.Item name="discountRate" noStyle>
-                    <InputNumber
-                      min={0}
-                      max={100}
-                      style={{ width: 80 }}
-                      onChange={() => form.validateFields()}
-                    />
-                  </Form.Item>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">İskonto Tutarı:</span>
-                  <span className="text-red-600">-{formatCurrency(totals.orderDiscount)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">KDV:</span>
-                  <span className="font-medium">{formatCurrency(totals.vatAmount)}</span>
-                </div>
-                <Divider className="my-2" />
-                <div className="flex justify-between text-lg">
-                  <span className="font-semibold text-slate-900">Genel Toplam:</span>
-                  <span className="font-bold text-indigo-600">{formatCurrency(totals.grandTotal)}</span>
+              {/* Order Title */}
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {mode === 'create' ? 'Yeni Sipariş' : `Sipariş: ${existingOrder?.orderNumber}`}
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  {items.length} kalem | {mode === 'create' ? 'Yeni satış siparişi oluşturun' : 'Siparişi düzenleyin'}
+                </p>
+              </div>
+
+              {/* Total Display */}
+              <div className="flex-shrink-0">
+                <div className="bg-slate-100 px-6 py-3 rounded-xl text-center">
+                  <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                    Genel Toplam
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {formatCurrency(totals.grandTotal)}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </AntCard>
 
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3">
-          <Button
-            icon={<XMarkIcon className="w-4 h-4" />}
-            onClick={() => router.back()}
-          >
-            İptal
-          </Button>
-          <Button
-            type="primary"
-            icon={<DocumentCheckIcon className="w-4 h-4" />}
-            htmlType="submit"
-            loading={createMutation.isPending || updateMutation.isPending}
-          >
-            {mode === 'create' ? 'Sipariş Oluştur' : 'Değişiklikleri Kaydet'}
-          </Button>
+          {/* ═══════════════════════════════════════════════════════════════
+              FORM BODY: High-Density Grid Layout
+          ═══════════════════════════════════════════════════════════════ */}
+          <div className="px-8 py-6">
+
+            {/* ─────────────── MÜŞTERİ BİLGİLERİ ─────────────── */}
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Müşteri Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Müşteri Adı <span className="text-red-500">*</span></label>
+                  <Form.Item
+                    name="customerName"
+                    rules={[{ required: true, message: 'Müşteri adı zorunludur' }]}
+                    className="mb-0"
+                  >
+                    <Input
+                      placeholder="Müşteri adını girin"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">E-posta</label>
+                  <Form.Item name="customerEmail" className="mb-0">
+                    <Input
+                      type="email"
+                      placeholder="ornek@email.com"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Para Birimi</label>
+                  <Form.Item name="currency" className="mb-0">
+                    <Select
+                      options={[
+                        { value: 'TRY', label: '₺ TRY' },
+                        { value: 'USD', label: '$ USD' },
+                        { value: 'EUR', label: '€ EUR' },
+                      ]}
+                      className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+
+            {/* ─────────────── TARİH BİLGİLERİ ─────────────── */}
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Tarih Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sipariş Tarihi</label>
+                  <Form.Item name="orderDate" className="mb-0">
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="Tarih seçin"
+                      className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslim Tarihi</label>
+                  <Form.Item name="deliveryDate" className="mb-0">
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="Tarih seçin"
+                      className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+
+            {/* ─────────────── SİPARİŞ KALEMLERİ ─────────────── */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between pb-2 mb-4 border-b border-slate-100">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Sipariş Kalemleri
+                </h3>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusIcon className="w-4 h-4" />}
+                  onClick={addItem}
+                >
+                  Kalem Ekle
+                </Button>
+              </div>
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <Table
+                  columns={itemColumns}
+                  dataSource={items}
+                  rowKey="key"
+                  pagination={false}
+                  scroll={{ x: 900 }}
+                  locale={{ emptyText: 'Henüz ürün eklenmedi' }}
+                  className="[&_.ant-table-thead>tr>th]:!bg-slate-50 [&_.ant-table-thead>tr>th]:!text-slate-600 [&_.ant-table-thead>tr>th]:!font-medium [&_.ant-table-thead>tr>th]:!border-slate-200"
+                />
+              </div>
+            </div>
+
+            {/* ─────────────── ADRES VE NOTLAR ─────────────── */}
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Adres ve Notlar
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Teslimat Adresi</label>
+                  <Form.Item name="shippingAddress" className="mb-0">
+                    <TextArea
+                      rows={3}
+                      placeholder="Teslimat adresi"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Notlar</label>
+                  <Form.Item name="notes" className="mb-0">
+                    <TextArea
+                      rows={3}
+                      placeholder="Sipariş notları"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+
+            {/* ─────────────── SİPARİŞ ÖZETİ ─────────────── */}
+            <div>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Sipariş Özeti
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="text-xs text-slate-500 mb-1">Sipariş İskontosu (%)</div>
+                    <Form.Item name="discountRate" className="mb-0">
+                      <InputNumber
+                        min={0}
+                        max={100}
+                        placeholder="0"
+                        onChange={() => form.validateFields()}
+                        className="!w-full [&.ant-input-number]:!bg-white [&.ant-input-number]:!border-slate-300"
+                      />
+                    </Form.Item>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Ara Toplam:</span>
+                      <span className="font-medium text-slate-900">{formatCurrency(totals.subTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">İskonto Tutarı:</span>
+                      <span className="text-red-600">-{formatCurrency(totals.orderDiscount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">KDV:</span>
+                      <span className="font-medium text-slate-900">{formatCurrency(totals.vatAmount)}</span>
+                    </div>
+                    <div className="border-t border-slate-200 pt-3">
+                      <div className="flex justify-between text-lg">
+                        <span className="font-semibold text-slate-900">Genel Toplam:</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(totals.grandTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════
+              FOOTER: Action Buttons
+          ═══════════════════════════════════════════════════════════════ */}
+          <div className="px-8 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl">
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                icon={<XMarkIcon className="w-4 h-4" />}
+                onClick={() => router.back()}
+              >
+                İptal
+              </Button>
+              <Button
+                type="primary"
+                icon={<DocumentCheckIcon className="w-4 h-4" />}
+                htmlType="submit"
+                loading={createMutation.isPending || updateMutation.isPending}
+              >
+                {mode === 'create' ? 'Sipariş Oluştur' : 'Değişiklikleri Kaydet'}
+              </Button>
+            </div>
+          </div>
+
         </div>
+
+        {/* Hidden submit */}
+        <Form.Item hidden>
+          <button type="submit" />
+        </Form.Item>
       </Form>
     </PageContainer>
   );

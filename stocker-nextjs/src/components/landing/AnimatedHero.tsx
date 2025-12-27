@@ -190,7 +190,7 @@ export default function AnimatedHero() {
                   type="primary"
                   size="large"
                   icon={<RocketLaunchIcon className="w-5 h-5" />}
-                  className="h-14 px-8 text-lg font-semibold bg-purple-600 hover:bg-purple-700 border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
+                  className="h-14 px-8 text-lg font-semibold !bg-purple-600 hover:!bg-purple-700 !border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
                 >
                   {t('landing.hero.cta')}
                 </Button>
