@@ -7,6 +7,8 @@ import {
   CheckCircleIcon,
   LockClosedIcon,
   XCircleIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -132,7 +134,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large">
-            <ArrowPathIcon className="w-4 h-4" spin style={{ fontSize: '48px', color: '#1890ff' }} />
+            <ArrowPathIcon className="w-4 h-4" style={{ fontSize: '48px', color: '#1890ff' }} />
             <Title level={4}>Bağlantı Doğrulanıyor...</Title>
           </Space>
         </Card>
@@ -262,7 +264,7 @@ function ResetPasswordContent() {
                 prefix={<LockClosedIcon className="w-4 h-4" />}
                 placeholder="Yeni şifrenizi girin"
                 size="large"
-                iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                iconRender={visible => (visible ? <EyeIcon className="w-4 h-4" /> : <EyeSlashIcon className="w-4 h-4" />)}
                 onChange={e => setPassword(e.target.value)}
               />
             </Form.Item>
@@ -292,7 +294,7 @@ function ResetPasswordContent() {
                 prefix={<LockClosedIcon className="w-4 h-4" />}
                 placeholder="Şifrenizi tekrar girin"
                 size="large"
-                iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                iconRender={visible => (visible ? <EyeIcon className="w-4 h-4" /> : <EyeSlashIcon className="w-4 h-4" />)}
               />
             </Form.Item>
 
@@ -336,7 +338,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <ArrowPathIcon className="w-4 h-4" spin style={{ fontSize: '48px', color: '#1890ff' }} />
+        <ArrowPathIcon className="w-4 h-4" style={{ fontSize: '48px', color: '#1890ff' }} />
       </div>
     }>
       <ResetPasswordContent />

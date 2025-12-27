@@ -328,7 +328,7 @@ export default function JobPostingsPage() {
         } else if (record.status === 'Published') {
           menuItems.push({
             key: 'unpublish',
-            icon: <EyeInvisibleOutlined />,
+            icon: <EyeSlashIcon className="w-4 h-4" />,
             label: 'Yayından Kaldır',
             onClick: () => handleUnpublish(record),
           });

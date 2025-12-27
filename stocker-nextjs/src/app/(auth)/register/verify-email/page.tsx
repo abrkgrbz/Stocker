@@ -166,7 +166,7 @@ function VerifyEmailContent() {
             {/* Success Icon */}
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircleIcon className="w-4 h-4" className="text-4xl text-green-600" />
+                <CheckCircleIcon className="w-12 h-12 text-green-600" />
               </div>
             </div>
 
@@ -196,7 +196,7 @@ function VerifyEmailContent() {
           {/* Icon */}
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-              <EnvelopeIcon className="w-4 h-4" className="text-4xl text-blue-600" />
+              <EnvelopeIcon className="w-12 h-12 text-blue-600" />
             </div>
           </div>
 

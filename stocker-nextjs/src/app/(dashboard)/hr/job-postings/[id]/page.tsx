@@ -26,6 +26,8 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   UserGroupIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from '@heroicons/react/24/outline';
 import {
   useJobPosting,
@@ -126,7 +128,7 @@ export default function JobPostingDetailPage() {
             {jobPosting.status === 'Published' && (
               <>
                 <Button
-                  icon={<EyeInvisibleOutlined />}
+                  icon={<EyeSlashIcon className="w-4 h-4" />}
                   onClick={() => unpublishJobPosting.mutateAsync(id)}
                   loading={unpublishJobPosting.isPending}
                 >
