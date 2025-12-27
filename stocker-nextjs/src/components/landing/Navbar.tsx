@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from 'antd';
-import { Bars3Icon, XMarkIcon, RocketLaunchIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,7 +66,7 @@ export default function Navbar() {
             </motion.div>
           </Link>
 
-          {/* Desktop Menu */}
+          {/* Desktop Menu - Navigation Links */}
           <div className="hidden md:flex items-center gap-8">
             {menuItems.map((item, index) => (
               <motion.a
@@ -76,8 +75,10 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`font-medium transition-colors hover:text-purple-600 ${
-                  isScrolled ? 'text-gray-700' : 'text-white'
+                className={`text-sm font-medium transition-colors ${
+                  isScrolled
+                    ? 'text-gray-900 hover:text-black'
+                    : 'text-white hover:text-gray-200'
                 }`}
               >
                 {item.name}
@@ -85,33 +86,34 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Desktop CTA Buttons - Proper Button Styling */}
+          <div className="hidden md:flex items-center gap-4">
             <LanguageSwitcher isScrolled={isScrolled} />
+
+            {/* Sign In - Secondary/Ghost Button */}
             <Link href={loginUrl}>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  icon={<ArrowRightOnRectangleIcon className="w-4 h-4" />}
-                  className={`h-10 px-6 font-medium border-2 transition-all ${
-                    isScrolled
-                      ? 'border-purple-600 text-purple-600 hover:bg-purple-50'
-                      : 'border-white text-white hover:bg-white/10'
-                  }`}
-                >
-                  {t('landing.navbar.signIn')}
-                </Button>
-              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`text-sm font-medium px-4 py-2 rounded-md transition-all ${
+                  isScrolled
+                    ? 'text-gray-700 hover:text-black hover:bg-gray-100'
+                    : 'text-white hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {t('landing.navbar.signIn')}
+              </motion.button>
             </Link>
+
+            {/* Get Started - Primary Button (High Contrast) */}
             <Link href={registerUrl}>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="primary"
-                  icon={<RocketLaunchIcon className="w-4 h-4" />}
-                  className="h-10 px-6 !bg-purple-600 hover:!bg-purple-700 !border-0 font-medium shadow-md"
-                >
-                  {t('landing.navbar.getStarted')}
-                </Button>
-              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="text-sm font-medium bg-black text-white px-5 py-2.5 rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all"
+              >
+                {t('landing.navbar.getStarted')}
+              </motion.button>
             </Link>
           </div>
 
@@ -146,7 +148,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block py-2 text-gray-700 font-medium hover:text-purple-600 transition-colors"
+                  className="block py-2 text-gray-900 font-medium hover:text-black transition-colors"
                 >
                   {item.name}
                 </motion.a>
@@ -155,26 +157,19 @@ export default function Navbar() {
                 <div className="flex justify-center pb-3">
                   <LanguageSwitcher isScrolled={true} />
                 </div>
+
+                {/* Mobile Sign In - Secondary/Ghost Button */}
                 <Link href={loginUrl} onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    icon={<ArrowRightOnRectangleIcon className="w-4 h-4" />}
-                    block
-                    size="large"
-                    className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
-                  >
+                  <button className="w-full text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 px-4 py-3 rounded-md transition-all border border-gray-300">
                     {t('landing.navbar.signIn')}
-                  </Button>
+                  </button>
                 </Link>
+
+                {/* Mobile Get Started - Primary Button (High Contrast) */}
                 <Link href={registerUrl} onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    type="primary"
-                    icon={<RocketLaunchIcon className="w-4 h-4" />}
-                    block
-                    size="large"
-                    className="!bg-purple-600 hover:!bg-purple-700 !border-0"
-                  >
+                  <button className="w-full text-sm font-medium bg-black text-white px-5 py-3 rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl transition-all">
                     {t('landing.navbar.getStarted')}
-                  </Button>
+                  </button>
                 </Link>
               </div>
             </div>
