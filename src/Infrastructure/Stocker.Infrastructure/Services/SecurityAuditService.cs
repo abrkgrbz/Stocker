@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Stocker.Application.Common.Interfaces;
 using Stocker.Domain.Master.Entities;
+using System.Net;
 using System.Text.Json;
 
 namespace Stocker.Infrastructure.Services;
@@ -31,7 +32,7 @@ public class SecurityAuditService : ISecurityAuditService
                 evt.Email ?? "unknown",
                 evt.TenantCode,
                 evt.UserId,
-                evt.IpAddress,
+                NormalizeIpAddress(evt.IpAddress),
                 evt.UserAgent);
 
             if (!string.IsNullOrEmpty(evt.RequestId))
@@ -73,7 +74,7 @@ public class SecurityAuditService : ISecurityAuditService
                 evt.Event,
                 evt.Email,
                 evt.TenantCode,
-                evt.IpAddress,
+                NormalizeIpAddress(evt.IpAddress),
                 evt.RiskScore,
                 evt.Blocked);
 
@@ -260,5 +261,31 @@ public class SecurityAuditService : ISecurityAuditService
         if (userAgent.Contains("Safari")) return "Safari";
         if (userAgent.Contains("Edge")) return "Edge";
         return "Unknown";
+    }
+
+    /// <summary>
+    /// Normalizes IP address by removing IPv6 prefix from IPv4-mapped addresses
+    /// Converts "::ffff:10.0.1.4" to "10.0.1.4"
+    /// </summary>
+    private static string? NormalizeIpAddress(string? ipAddress)
+    {
+        if (string.IsNullOrEmpty(ipAddress))
+            return ipAddress;
+
+        // Try to parse as IP address
+        if (IPAddress.TryParse(ipAddress, out var parsedIp))
+        {
+            // If it's an IPv4-mapped IPv6 address, extract the IPv4 part
+            if (parsedIp.IsIPv4MappedToIPv6)
+            {
+                return parsedIp.MapToIPv4().ToString();
+            }
+
+            // Return the normalized IP address
+            return parsedIp.ToString();
+        }
+
+        // If parsing fails, return as-is
+        return ipAddress;
     }
 }
