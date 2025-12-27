@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Input, Button, Row, Col, Space } from 'antd';
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 interface LeadsFiltersProps {
   searchText: string;
@@ -51,7 +51,7 @@ export function LeadsFilters({
         <Col flex="auto">
           <Input
             placeholder="Potansiyel müşteri ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => onSearchChange(e.target.value)}
             allowClear
@@ -59,7 +59,7 @@ export function LeadsFilters({
           />
         </Col>
         <Col>
-          <Button icon={<FilterOutlined />} size="large">
+          <Button icon={<FunnelIcon className="w-4 h-4" />} size="large">
             Filtrele
           </Button>
         </Col>

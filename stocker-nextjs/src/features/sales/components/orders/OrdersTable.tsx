@@ -10,16 +10,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Input, Select, DatePicker, Dropdown, Modal, Skeleton } from 'antd';
 import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  FilePdfOutlined,
-  ShoppingCartOutlined,
-} from '@ant-design/icons';
+  MagnifyingGlassIcon,
+  EyeIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
+  DocumentIcon,
+  ShoppingCartIcon,
+} from '@heroicons/react/24/outline';
 import { Card, DataTableWrapper, EmptyState } from '@/components/ui/enterprise-page';
 import { OrderStatusBadge, orderStatusConfig } from './OrderStatusBadge';
 import {
@@ -219,7 +219,7 @@ export function OrdersTable({
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: orderStatusConfig[record.status as SalesOrderStatus]?.bgColor || '#64748b15' }}
           >
-            <ShoppingCartOutlined style={{ color: orderStatusConfig[record.status as SalesOrderStatus]?.color || '#64748b' }} />
+            <ShoppingCartIcon className="w-4 h-4" style={{ color: orderStatusConfig[record.status as SalesOrderStatus]?.color || '#64748b' }} />
           </div>
           <div>
             <div
@@ -285,7 +285,7 @@ export function OrdersTable({
         const menuItems: MenuProps['items'] = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => router.push(`/sales/orders/${record.id}`),
           },
@@ -295,20 +295,20 @@ export function OrdersTable({
           menuItems.push(
             {
               key: 'edit',
-              icon: <EditOutlined />,
+              icon: <PencilIcon className="w-4 h-4" />,
               label: 'Düzenle',
               onClick: () => router.push(`/sales/orders/${record.id}/edit`),
             },
             {
               key: 'approve',
-              icon: <CheckOutlined />,
+              icon: <CheckIcon className="w-4 h-4" />,
               label: 'Onayla',
               onClick: () => handleApprove(record.id),
             },
             { type: 'divider' },
             {
               key: 'delete',
-              icon: <DeleteOutlined />,
+              icon: <TrashIcon className="w-4 h-4" />,
               label: 'Sil',
               danger: true,
               onClick: () => handleDelete(record),
@@ -319,7 +319,7 @@ export function OrdersTable({
         if (record.status !== 'Cancelled' && record.status !== 'Completed') {
           menuItems.push({
             key: 'cancel',
-            icon: <CloseOutlined />,
+            icon: <XMarkIcon className="w-4 h-4" />,
             label: 'İptal Et',
             danger: true,
             onClick: () => handleCancelClick(record),
@@ -329,7 +329,7 @@ export function OrdersTable({
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -383,7 +383,7 @@ export function OrdersTable({
     return (
       <Card>
         <EmptyState
-          icon={<ShoppingCartOutlined className="w-6 h-6" />}
+          icon={<ShoppingCartIcon className="w-6 h-6" />}
           title="Veriler yüklenemedi"
           description={error?.message || 'Siparişler yüklenirken bir hata oluştu'}
           action={{
@@ -400,7 +400,7 @@ export function OrdersTable({
     return (
       <Card>
         <EmptyState
-          icon={<ShoppingCartOutlined className="w-6 h-6" />}
+          icon={<ShoppingCartIcon className="w-6 h-6" />}
           title="Henüz sipariş yok"
           description="İlk siparişinizi oluşturmak için 'Yeni Sipariş' butonuna tıklayın"
           action={{
@@ -427,7 +427,7 @@ export function OrdersTable({
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
               >
-                <FilePdfOutlined />
+                <DocumentIcon className="w-4 h-4" />
                 PDF İndir
               </button>
               <button
@@ -435,7 +435,7 @@ export function OrdersTable({
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md hover:bg-slate-50 disabled:opacity-50"
               >
-                <CheckOutlined />
+                <CheckIcon className="w-4 h-4" />
                 Onayla
               </button>
               <button
@@ -443,7 +443,7 @@ export function OrdersTable({
                 disabled={bulkLoading}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
               >
-                <DeleteOutlined />
+                <TrashIcon className="w-4 h-4" />
                 Sil
               </button>
               <button
@@ -463,7 +463,7 @@ export function OrdersTable({
           <div className="flex flex-col md:flex-row gap-4">
             <Input
               placeholder="Sipariş ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               allowClear
               style={{ maxWidth: 300 }}
               onChange={(e) => updateFilters({ searchTerm: e.target.value, page: 1 })}

@@ -3,8 +3,10 @@
 import React, { useMemo, useState } from 'react';
 import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowPathIcon,
   ArrowsRightLeftIcon,
+  ArrowUpIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
   ClipboardDocumentCheckIcon,
@@ -718,7 +720,7 @@ export default function InventoryDashboardPage() {
                 </div>
               </>
             ) : (
-              <EmptyChart icon={SearchOutlined} message="Henüz ürün eklenmemiş" />
+              <EmptyChart icon={MagnifyingGlassIcon} message="Henüz ürün eklenmemiş" />
             )}
           </div>
         </div>
@@ -741,7 +743,7 @@ export default function InventoryDashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart icon={AppstoreOutlined} message="Henüz ürün eklenmemiş" />
+              <EmptyChart icon={Squares2X2Icon} message="Henüz ürün eklenmemiş" />
             )}
           </div>
         </div>
@@ -765,7 +767,7 @@ export default function InventoryDashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart icon={AppstoreOutlined} message="Henüz kategori eklenmemiş" />
+              <EmptyChart icon={Squares2X2Icon} message="Henüz kategori eklenmemiş" />
             )}
           </div>
         </div>
@@ -815,7 +817,7 @@ export default function InventoryDashboardPage() {
                 className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               />
             ) : (
-              <EmptyChart icon={ClockCircleOutlined} message="SKT yaklaşan ürün yok" />
+              <EmptyChart icon={ClockIcon} message="SKT yaklaşan ürün yok" />
             )}
           </div>
         </div>
@@ -924,7 +926,7 @@ export default function InventoryDashboardPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="flex items-center gap-2 text-slate-600 mb-1">
-                          <ArrowDownOutlined className="text-slate-900" />
+                          <ArrowDownIcon className="w-4 h-4 text-slate-900" />
                           <span className="text-sm">Toplam Giriş</span>
                         </div>
                         <div className="text-xl font-bold text-slate-900">{kpisData.totalInboundMovements}</div>
@@ -932,7 +934,7 @@ export default function InventoryDashboardPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 text-slate-600 mb-1">
-                          <ArrowUpOutlined className="text-slate-500" />
+                          <ArrowUpIcon className="w-4 h-4 text-slate-500" />
                           <span className="text-sm">Toplam Çıkış</span>
                         </div>
                         <div className="text-xl font-bold text-slate-900">{kpisData.totalOutboundMovements}</div>
@@ -952,21 +954,21 @@ export default function InventoryDashboardPage() {
                           <div className="text-sm text-slate-500 mb-1">Devir Hızı</div>
                           <div className={`text-xl font-bold ${kpisData.comparison.turnoverChange >= 0 ? 'text-slate-900' : 'text-slate-500'}`}>
                             {kpisData.comparison.turnoverChange >= 0 ? '+' : ''}{kpisData.comparison.turnoverChange.toFixed(1)}%
-                            {kpisData.comparison.turnoverTrend === 'Up' ? <ArrowUpOutlined className="ml-1" /> : kpisData.comparison.turnoverTrend === 'Down' ? <ArrowDownOutlined className="ml-1" /> : null}
+                            {kpisData.comparison.turnoverTrend === 'Up' ? <ArrowUpIcon className="w-4 h-4 ml-1 inline" /> : kpisData.comparison.turnoverTrend === 'Down' ? <ArrowDownIcon className="w-4 h-4 ml-1 inline" /> : null}
                           </div>
                         </div>
                         <div>
                           <div className="text-sm text-slate-500 mb-1">Stok Değeri</div>
                           <div className={`text-xl font-bold ${kpisData.comparison.stockValueChange >= 0 ? 'text-slate-900' : 'text-slate-500'}`}>
                             {kpisData.comparison.stockValueChange >= 0 ? '+' : ''}{kpisData.comparison.stockValueChange.toFixed(1)}%
-                            {kpisData.comparison.stockValueTrend === 'Up' ? <ArrowUpOutlined className="ml-1" /> : kpisData.comparison.stockValueTrend === 'Down' ? <ArrowDownOutlined className="ml-1" /> : null}
+                            {kpisData.comparison.stockValueTrend === 'Up' ? <ArrowUpIcon className="w-4 h-4 ml-1 inline" /> : kpisData.comparison.stockValueTrend === 'Down' ? <ArrowDownIcon className="w-4 h-4 ml-1 inline" /> : null}
                           </div>
                         </div>
                         <div>
                           <div className="text-sm text-slate-500 mb-1">Hareketler</div>
                           <div className={`text-xl font-bold ${kpisData.comparison.movementsChange >= 0 ? 'text-slate-900' : 'text-slate-500'}`}>
                             {kpisData.comparison.movementsChange >= 0 ? '+' : ''}{kpisData.comparison.movementsChange.toFixed(1)}%
-                            {kpisData.comparison.movementsTrend === 'Up' ? <ArrowUpOutlined className="ml-1" /> : kpisData.comparison.movementsTrend === 'Down' ? <ArrowDownOutlined className="ml-1" /> : null}
+                            {kpisData.comparison.movementsTrend === 'Up' ? <ArrowUpIcon className="w-4 h-4 ml-1 inline" /> : kpisData.comparison.movementsTrend === 'Down' ? <ArrowDownIcon className="w-4 h-4 ml-1 inline" /> : null}
                           </div>
                         </div>
                       </div>

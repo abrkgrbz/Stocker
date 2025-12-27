@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Input, Button, Space } from 'antd';
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 interface CustomersFiltersProps {
   searchText: string;
@@ -15,14 +15,14 @@ export function CustomersFilters({ searchText, onSearchChange }: CustomersFilter
       <div className="flex gap-4">
         <Input
           placeholder="İsim, e-posta veya telefona göre ara..."
-          prefix={<SearchOutlined />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
           value={searchText}
           onChange={(e) => onSearchChange(e.target.value)}
           style={{ flex: 1 }}
           size="large"
           allowClear
         />
-        <Button icon={<FilterOutlined />} size="large">
+        <Button icon={<FunnelIcon className="w-4 h-4" />} size="large">
           Filtreler
         </Button>
       </div>

@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { InboxIcon } from '@heroicons/react/24/outline';
+import { InboxIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import {
   TeamOutlined,
   DashboardOutlined,
@@ -28,7 +28,6 @@ import {
   SettingOutlined,
   FileOutlined,
   ThunderboltOutlined,
-  AppstoreOutlined,
   TagsOutlined,
   TrademarkOutlined,
   SkinOutlined,
@@ -170,10 +169,10 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
       { key: '/inventory', icon: <DashboardOutlined />, label: 'Dashboard' },
       {
         key: 'inv-products',
-        icon: <AppstoreOutlined />,
+        icon: <Squares2X2Icon className="w-4 h-4" />,
         label: 'Ürün Yönetimi',
         children: [
-          { key: '/inventory/products', icon: <AppstoreOutlined />, label: 'Ürünler' },
+          { key: '/inventory/products', icon: <Squares2X2Icon className="w-4 h-4" />, label: 'Ürünler' },
           { key: '/inventory/categories', icon: <TagsOutlined />, label: 'Kategoriler' },
           { key: '/inventory/brands', icon: <TrademarkOutlined />, label: 'Markalar' },
           { key: '/inventory/product-variants', icon: <SkinOutlined />, label: 'Varyantlar' },
@@ -551,12 +550,12 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
   },
   modules: {
     title: 'Modüller',
-    icon: <AppstoreOutlined />,
+    icon: <Squares2X2Icon className="w-4 h-4" />,
     color: colors.semantic.info.dark, // Cyan/Teal for modules
     moduleCode: null, // Always enabled
     description: 'Modül yönetimi',
     items: [
-      { key: '/modules', icon: <AppstoreOutlined />, label: 'Modül Yönetimi' },
+      { key: '/modules', icon: <Squares2X2Icon className="w-4 h-4" />, label: 'Modül Yönetimi' },
     ],
   },
 };

@@ -21,7 +21,7 @@ import {
   ArrowUturnLeftIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
-  EllipsisVerticalIcon,
+  EllipsisHorizontalIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -286,7 +286,7 @@ export default function PurchaseReturnsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -298,14 +298,14 @@ export default function PurchaseReturnsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Title level={3} className="!mb-1 flex items-center gap-2">
-            <RollbackOutlined className="text-orange-500" />
+            <ArrowUturnLeftIcon className="w-5 h-5 text-orange-500" />
             Satın Alma İadeleri
           </Title>
           <Text type="secondary">Tedarikçilere yapılan iadeleri yönetin</Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/returns/new')}
         >
@@ -318,7 +318,7 @@ export default function PurchaseReturnsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Belge ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}
@@ -348,10 +348,10 @@ export default function PurchaseReturnsPage() {
           />
           <div className="flex-1" />
           <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
+            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
           </Tooltip>
           <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
+            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
           </Tooltip>
         </div>
       </Card>

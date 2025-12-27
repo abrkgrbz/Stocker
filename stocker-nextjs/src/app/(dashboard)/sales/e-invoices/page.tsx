@@ -33,6 +33,7 @@ import {
   CloudArrowUpIcon,
   ClockIcon,
   Cog6ToothIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useInvoices, useSetEInvoice } from '@/lib/api/hooks/useInvoices';
@@ -225,7 +226,7 @@ export default function EInvoicePage() {
           <Tooltip title="Detay">
             <Button
               size="small"
-              icon={<FileTextOutlined />}
+              icon={<DocumentTextIcon className="w-4 h-4" />}
               onClick={() => router.push(`/sales/invoices/${record.id}`)}
             />
           </Tooltip>
@@ -257,7 +258,7 @@ export default function EInvoicePage() {
             <Statistic
               title="Toplam E-Fatura"
               value={eInvoices.length}
-              prefix={<FileTextOutlined style={{ color: '#1890ff' }} />}
+              prefix={<DocumentTextIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
             />
           </Card>
         </Col>
@@ -266,7 +267,7 @@ export default function EInvoicePage() {
             <Statistic
               title="Gönderilmeyi Bekleyen"
               value={pendingEInvoices.length}
-              prefix={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
             />
           </Card>
         </Col>
@@ -275,7 +276,7 @@ export default function EInvoicePage() {
             <Statistic
               title="Bu Ay Gönderilen"
               value={eInvoices.filter(inv => dayjs(inv.invoiceDate).isSame(dayjs(), 'month')).length}
-              prefix={<SendOutlined style={{ color: '#52c41a' }} />}
+              prefix={<PaperAirplaneIcon className="w-4 h-4" style={{ color: '#52c41a' }} />}
             />
           </Card>
         </Col>
@@ -284,7 +285,7 @@ export default function EInvoicePage() {
             <Statistic
               title="Reddedilen"
               value={0}
-              prefix={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+              prefix={<XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
             />
           </Card>
         </Col>
@@ -297,7 +298,7 @@ export default function EInvoicePage() {
         type="info"
         showIcon
         action={
-          <Button size="small" icon={<SettingOutlined />} onClick={() => setSettingsModalOpen(true)}>
+          <Button size="small" icon={<Cog6ToothIcon className="w-4 h-4" />} onClick={() => setSettingsModalOpen(true)}>
             Ayarlar
           </Button>
         }
@@ -310,7 +311,7 @@ export default function EInvoicePage() {
           <Col xs={24} sm={12} md={6}>
             <Input
               placeholder="Fatura no, müşteri ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               allowClear
@@ -339,7 +340,7 @@ export default function EInvoicePage() {
           </Col>
           <Col xs={24} sm={12} md={8}>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+              <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
                 Yenile
               </Button>
               {selectedInvoices.length > 0 && (
@@ -417,12 +418,12 @@ export default function EInvoicePage() {
               key: 'history',
               label: (
                 <span>
-                  <HistoryOutlined /> Gönderim Geçmişi
+                  <ClockIcon className="w-4 h-4" /> Gönderim Geçmişi
                 </span>
               ),
               children: (
                 <div style={{ padding: 40, textAlign: 'center' }}>
-                  <HistoryOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+                  <ClockIcon className="w-12 h-12" style={{ color: '#d9d9d9' }} />
                   <div style={{ marginTop: 16 }}>
                     <Text type="secondary">E-Fatura gönderim geçmişi entegrasyon sonrası görüntülenecektir.</Text>
                   </div>

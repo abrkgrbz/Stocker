@@ -10,18 +10,18 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Input, Select, DatePicker, Dropdown, Modal, Skeleton } from 'antd';
 import {
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  SendOutlined,
-  CopyOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  MagnifyingGlassIcon,
+  EyeIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
+  PaperAirplaneIcon,
+  DocumentDuplicateIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 import { Card, DataTableWrapper, EmptyState } from '@/components/ui/enterprise-page';
 import { QuotationStatusBadge, quotationStatusConfig } from './QuotationStatusBadge';
 import {
@@ -182,7 +182,7 @@ export function QuotationsTable({
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => router.push(`/sales/quotations/${record.id}`),
       },
@@ -192,19 +192,19 @@ export function QuotationsTable({
       items.push(
         {
           key: 'edit',
-          icon: <EditOutlined />,
+          icon: <PencilIcon className="w-4 h-4" />,
           label: 'Düzenle',
           onClick: () => router.push(`/sales/quotations/${record.id}/edit`),
         },
         {
           key: 'approve',
-          icon: <CheckOutlined />,
+          icon: <CheckIcon className="w-4 h-4" />,
           label: 'Onayla',
           onClick: () => handleApprove(record.id),
         },
         {
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => handleDelete(record.id),
@@ -215,7 +215,7 @@ export function QuotationsTable({
     if (record.status === 'Approved') {
       items.push({
         key: 'send',
-        icon: <SendOutlined />,
+        icon: <PaperAirplaneIcon className="w-4 h-4" />,
         label: 'Gönder',
         onClick: () => handleSend(record.id),
       });
@@ -225,13 +225,13 @@ export function QuotationsTable({
       items.push(
         {
           key: 'accept',
-          icon: <CheckOutlined />,
+          icon: <CheckIcon className="w-4 h-4" />,
           label: 'Kabul Et',
           onClick: () => handleAccept(record.id),
         },
         {
           key: 'reject',
-          icon: <CloseOutlined />,
+          icon: <XMarkIcon className="w-4 h-4" />,
           label: 'Reddet',
           danger: true,
           onClick: () => handleRejectClick(record),
@@ -242,7 +242,7 @@ export function QuotationsTable({
     if (record.status === 'Accepted') {
       items.push({
         key: 'convert',
-        icon: <ShoppingCartOutlined />,
+        icon: <ShoppingCartIcon className="w-4 h-4" />,
         label: 'Siparişe Dönüştür',
         onClick: () => handleConvertToOrder(record.id),
       });
@@ -250,7 +250,7 @@ export function QuotationsTable({
 
     items.push({
       key: 'duplicate',
-      icon: <CopyOutlined />,
+      icon: <DocumentDuplicateIcon className="w-4 h-4" />,
       label: 'Kopyala',
       onClick: () => router.push(`/sales/quotations/new?copyFrom=${record.id}`),
     });
@@ -258,7 +258,7 @@ export function QuotationsTable({
     if (!['Cancelled', 'ConvertedToOrder', 'Rejected'].includes(record.status)) {
       items.push({
         key: 'cancel',
-        icon: <CloseOutlined />,
+        icon: <XMarkIcon className="w-4 h-4" />,
         label: 'İptal Et',
         danger: true,
         onClick: () => handleCancelClick(record),
@@ -278,7 +278,7 @@ export function QuotationsTable({
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: '#6366f115' }}
           >
-            <FileTextOutlined style={{ color: '#6366f1' }} />
+            <DocumentTextIcon className="w-4 h-4" style={{ color: '#6366f1' }} />
           </div>
           <div>
             <div
@@ -354,7 +354,7 @@ export function QuotationsTable({
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <MoreOutlined className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4" />
           </button>
         </Dropdown>
       ),
@@ -407,7 +407,7 @@ export function QuotationsTable({
     return (
       <Card>
         <EmptyState
-          icon={<FileTextOutlined className="w-6 h-6" />}
+          icon={<DocumentTextIcon className="w-6 h-6" />}
           title="Veriler yüklenemedi"
           description={error?.message || 'Teklifler yüklenirken bir hata oluştu'}
           action={{
@@ -424,7 +424,7 @@ export function QuotationsTable({
     return (
       <Card>
         <EmptyState
-          icon={<FileTextOutlined className="w-6 h-6" />}
+          icon={<DocumentTextIcon className="w-6 h-6" />}
           title="Henüz teklif yok"
           description="İlk teklifinizi oluşturmak için 'Yeni Teklif' butonuna tıklayın"
           action={{
@@ -444,7 +444,7 @@ export function QuotationsTable({
           <div className="flex flex-col md:flex-row gap-4">
             <Input
               placeholder="Teklif ara..."
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
               allowClear
               style={{ maxWidth: 300 }}
               onChange={(e) => updateFilters({ searchTerm: e.target.value, page: 1 })}

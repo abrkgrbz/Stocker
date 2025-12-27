@@ -18,11 +18,11 @@ import {
   Col,
 } from 'antd';
 import {
-  FilterOutlined,
-  ClearOutlined,
-  SearchOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
+  FunnelIcon,
+  TrashIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -227,7 +227,7 @@ export function AdvancedFilterDrawer({
       title={
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FilterOutlined className="text-blue-500" />
+            <FunnelIcon className="w-4 h-4 text-blue-500" />
             <span>{title}</span>
             {activeFiltersCount > 0 && (
               <Tag color="blue">{activeFiltersCount} aktif</Tag>
@@ -242,14 +242,14 @@ export function AdvancedFilterDrawer({
       extra={
         <Button
           type="text"
-          icon={<CloseOutlined />}
+          icon={<XMarkIcon className="w-4 h-4" />}
           onClick={onClose}
         />
       }
       footer={
         <div className="flex justify-between">
           <Button
-            icon={<ClearOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={handleReset}
           >
             Temizle
@@ -258,7 +258,7 @@ export function AdvancedFilterDrawer({
             <Button onClick={onClose}>İptal</Button>
             <Button
               type="primary"
-              icon={<SearchOutlined />}
+              icon={<MagnifyingGlassIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
             >
               Filtrele
