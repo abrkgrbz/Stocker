@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface InlineLoaderProps {
   text?: string;
@@ -16,7 +16,7 @@ export default function InlineLoader({
   return (
     <div className="inline-flex items-center gap-2">
       <Spin
-        indicator={<LoadingOutlined style={{ fontSize }} spin />}
+        indicator={<ArrowPathIcon className="animate-spin" style={{ width: fontSize, height: fontSize }} />}
         size={size}
       />
       {text && <span className="text-gray-600">{text}</span>}

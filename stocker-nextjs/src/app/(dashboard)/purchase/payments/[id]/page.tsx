@@ -1,22 +1,18 @@
 'use client';
 
+/**
+ * Supplier Payment Detail Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
-  Typography,
-  Spin,
-  Descriptions,
   Tag,
-  Row,
-  Col,
-  Statistic,
-  Empty,
+  Spin,
   Dropdown,
-  Space,
-  Steps,
   Modal,
+  Descriptions,
   Timeline,
 } from 'antd';
 import type { TimelineItemProps } from 'antd';
@@ -25,6 +21,7 @@ import {
   ArrowPathIcon,
   BuildingLibraryIcon,
   CheckCircleIcon,
+  CreditCardIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
@@ -47,28 +44,21 @@ import type { SupplierPaymentStatus, PaymentMethod } from '@/lib/api/services/pu
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
-const statusColors: Record<SupplierPaymentStatus, string> = {
-  Draft: 'default',
-  PendingApproval: 'blue',
-  Approved: 'cyan',
-  Rejected: 'red',
-  Processed: 'geekblue',
-  Completed: 'green',
-  Cancelled: 'default',
-  Failed: 'error',
+type StatusConfig = {
+  color: string;
+  label: string;
+  bgColor: string;
 };
 
-const statusLabels: Record<SupplierPaymentStatus, string> = {
-  Draft: 'Taslak',
-  PendingApproval: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  Processed: 'İşlendi',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
-  Failed: 'Başarısız',
+const statusConfig: Record<SupplierPaymentStatus, StatusConfig> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: 'bg-slate-100' },
+  PendingApproval: { color: '#f59e0b', label: 'Onay Bekliyor', bgColor: 'bg-amber-100' },
+  Approved: { color: '#06b6d4', label: 'Onaylandı', bgColor: 'bg-cyan-100' },
+  Rejected: { color: '#ef4444', label: 'Reddedildi', bgColor: 'bg-red-100' },
+  Processed: { color: '#6366f1', label: 'İşlendi', bgColor: 'bg-indigo-100' },
+  Completed: { color: '#22c55e', label: 'Tamamlandı', bgColor: 'bg-emerald-100' },
+  Cancelled: { color: '#94a3b8', label: 'İptal', bgColor: 'bg-slate-100' },
+  Failed: { color: '#dc2626', label: 'Başarısız', bgColor: 'bg-red-100' },
 };
 
 const methodLabels: Record<PaymentMethod, string> = {
@@ -83,7 +73,7 @@ const methodLabels: Record<PaymentMethod, string> = {
 const methodIcons: Record<PaymentMethod, React.ReactNode> = {
   Cash: <CurrencyDollarIcon className="w-4 h-4" />,
   BankTransfer: <BuildingLibraryIcon className="w-4 h-4" />,
-  CreditCard: <CreditCardOutlined />,
+  CreditCard: <CreditCardIcon className="w-4 h-4" />,
   Check: <WalletIcon className="w-4 h-4" />,
   DirectDebit: <ArrowPathIcon className="w-4 h-4" />,
   Other: <WalletIcon className="w-4 h-4" />,
@@ -126,7 +116,7 @@ export default function SupplierPaymentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -134,13 +124,18 @@ export default function SupplierPaymentDetailPage() {
 
   if (!payment) {
     return (
-      <div className="p-8">
-        <Empty description="Ödeme belgesi bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/payments')}>
-            Ödemelere Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <WalletIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Ödeme belgesi bulunamadı</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu ödeme silinmiş veya erişim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/payments')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Ödemelere Dön
+        </button>
       </div>
     );
   }
@@ -191,6 +186,10 @@ export default function SupplierPaymentDetailPage() {
     }).format(amount);
   };
 
+  const currentStatus = statusConfig[payment.status as SupplierPaymentStatus] || statusConfig.Draft;
+  const currentStep = getStatusStep(payment.status as SupplierPaymentStatus);
+  const isRejectedOrCancelled = ['Rejected', 'Cancelled', 'Failed'].includes(payment.status);
+
   const actionMenuItems = [
     payment.status === 'Draft' && {
       key: 'submit',
@@ -238,140 +237,163 @@ export default function SupplierPaymentDetailPage() {
     },
   ].filter(Boolean) as MenuProps['items'];
 
+  // Custom progress steps
+  const progressSteps = [
+    { key: 'draft', label: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
+    { key: 'pending', label: 'Onay Bekliyor', icon: <DocumentTextIcon className="w-4 h-4" /> },
+    { key: 'approved', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+    { key: 'processed', label: 'İşlendi', icon: <PlayCircleIcon className="w-4 h-4" /> },
+    { key: 'completed', label: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50/30">
-      {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push('/purchase/payments')}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/purchase/payments')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <WalletIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                  {payment.paymentNumber}
-                  <Tag color={statusColors[payment.status as SupplierPaymentStatus]}>
-                    {statusLabels[payment.status as SupplierPaymentStatus]}
-                  </Tag>
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {payment.supplierName} • {dayjs(payment.paymentDate).format('DD.MM.YYYY')}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <WalletIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-semibold text-slate-900">{payment.paymentNumber}</h1>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${currentStatus.bgColor}`}
+                      style={{ color: currentStatus.color }}
+                    >
+                      {currentStatus.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    {payment.supplierName} • {dayjs(payment.paymentDate).format('DD.MM.YYYY')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Space>
-            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
-            </Dropdown>
-            {payment.status === 'Draft' && (
-              <Button
-                type="primary"
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => router.push(`/purchase/payments/${paymentId}/edit`)}
-              >
-                Düzenle
-              </Button>
-            )}
-          </Space>
+            <div className="flex items-center gap-3">
+              <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                  İşlemler
+                </button>
+              </Dropdown>
+              {payment.status === 'Draft' && (
+                <button
+                  onClick={() => router.push(`/purchase/payments/${paymentId}/edit`)}
+                  className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                  Düzenle
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Progress Steps */}
-        <Card className="mb-6">
-          <Steps
-            current={getStatusStep(payment.status as SupplierPaymentStatus)}
-            status={['Rejected', 'Cancelled', 'Failed'].includes(payment.status) ? 'error' : 'process'}
-            items={[
-              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
-              { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'İşlendi', icon: <PlayCircleIcon className="w-4 h-4" /> },
-              { title: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
-            ]}
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            {progressSteps.map((step, index) => {
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep;
+              const isError = isRejectedOrCancelled && index === 0;
 
-        {/* Statistics */}
-        <Row gutter={16} className="mb-6">
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Ödeme Tutarı"
-                value={payment.amount}
-                precision={2}
-                prefix={methodIcons[payment.method as PaymentMethod]}
-                suffix={payment.currency || 'TRY'}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Ödeme Yöntemi"
-                value={methodLabels[payment.method as PaymentMethod] || payment.method}
-                valueStyle={{ fontSize: '16px' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Ödeme Tipi"
-                value={typeLabels[payment.type] || payment.type}
-                valueStyle={{ fontSize: '16px' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Mutabakat"
-                value={payment.isReconciled ? 'Yapıldı' : 'Bekliyor'}
-                valueStyle={{
-                  color: payment.isReconciled ? '#52c41a' : '#faad14',
-                  fontSize: '16px'
-                }}
-              />
-            </Card>
-          </Col>
-        </Row>
+              return (
+                <React.Fragment key={step.key}>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                        isError
+                          ? 'bg-red-100 text-red-600'
+                          : isCompleted
+                          ? 'bg-slate-900 text-white'
+                          : isActive
+                          ? 'bg-slate-900 text-white'
+                          : 'bg-slate-100 text-slate-400'
+                      }`}
+                    >
+                      {step.icon}
+                    </div>
+                    <span
+                      className={`mt-2 text-xs font-medium ${
+                        isActive || isCompleted ? 'text-slate-900' : 'text-slate-400'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < progressSteps.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 mx-2 ${
+                        isCompleted ? 'bg-slate-900' : 'bg-slate-200'
+                      }`}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
 
-        <Row gutter={16}>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              {methodIcons[payment.method as PaymentMethod]}
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ödeme Tutarı</span>
+            </div>
+            <p className="text-2xl font-semibold text-emerald-600">
+              {formatCurrency(payment.amount, payment.currency)}
+            </p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Ödeme Yöntemi</div>
+            <p className="text-lg font-semibold text-slate-900">
+              {methodLabels[payment.method as PaymentMethod] || payment.method}
+            </p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Ödeme Tipi</div>
+            <p className="text-lg font-semibold text-slate-900">
+              {typeLabels[payment.type] || payment.type}
+            </p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Mutabakat</div>
+            <p className={`text-lg font-semibold ${payment.isReconciled ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {payment.isReconciled ? 'Yapıldı' : 'Bekliyor'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-6">
           {/* Left Column */}
-          <Col xs={24} lg={16}>
+          <div className="col-span-8 space-y-6">
             {/* Payment Details */}
-            <Card title="Ödeme Detayları" className="mb-6">
-              <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-slate-900 mb-4">Ödeme Detayları</h3>
+              <Descriptions column={2} size="small" className="[&_.ant-descriptions-item-label]:!text-slate-500">
                 <Descriptions.Item label="Ödeme No">{payment.paymentNumber}</Descriptions.Item>
                 <Descriptions.Item label="Ödeme Tarihi">
                   {dayjs(payment.paymentDate).format('DD.MM.YYYY')}
                 </Descriptions.Item>
                 <Descriptions.Item label="Tutar">
-                  <Text strong style={{ color: '#52c41a', fontSize: 16 }}>
+                  <span className="font-semibold text-emerald-600">
                     {formatCurrency(payment.amount, payment.currency)}
-                  </Text>
+                  </span>
                 </Descriptions.Item>
                 {payment.currency !== 'TRY' && payment.exchangeRate && (
                   <>
@@ -382,10 +404,10 @@ export default function SupplierPaymentDetailPage() {
                   </>
                 )}
                 <Descriptions.Item label="Ödeme Yöntemi">
-                  <Space>
+                  <span className="flex items-center gap-2">
                     {methodIcons[payment.method as PaymentMethod]}
                     {methodLabels[payment.method as PaymentMethod] || payment.method}
-                  </Space>
+                  </span>
                 </Descriptions.Item>
                 <Descriptions.Item label="Ödeme Tipi">
                   {typeLabels[payment.type] || payment.type}
@@ -401,12 +423,13 @@ export default function SupplierPaymentDetailPage() {
                   </Descriptions.Item>
                 )}
               </Descriptions>
-            </Card>
+            </div>
 
             {/* Bank Details */}
             {(payment.bankName || payment.iban || payment.checkNumber) && (
-              <Card title="Banka / Ödeme Bilgileri" className="mb-6">
-                <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Banka / Ödeme Bilgileri</h3>
+                <Descriptions column={2} size="small" className="[&_.ant-descriptions-item-label]:!text-slate-500">
                   {payment.bankName && (
                     <Descriptions.Item label="Banka">{payment.bankName}</Descriptions.Item>
                   )}
@@ -428,66 +451,68 @@ export default function SupplierPaymentDetailPage() {
                     </Descriptions.Item>
                   )}
                 </Descriptions>
-              </Card>
+              </div>
             )}
 
             {/* Notes */}
             {(payment.notes || payment.internalNotes) && (
-              <Card title="Notlar" size="small">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Notlar</h3>
                 {payment.notes && (
                   <div className="mb-4">
-                    <Text strong>Genel Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{payment.notes}</Paragraph>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Genel Not</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{payment.notes}</p>
                   </div>
                 )}
                 {payment.internalNotes && (
                   <div>
-                    <Text strong>Dahili Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{payment.internalNotes}</Paragraph>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Dahili Not</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{payment.internalNotes}</p>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
-          </Col>
+          </div>
 
           {/* Right Column */}
-          <Col xs={24} lg={8}>
+          <div className="col-span-4 space-y-6">
             {/* Supplier Info */}
-            <Card title="Tedarikçi Bilgileri" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Tedarikçi">
-                  <a onClick={() => router.push(`/purchase/suppliers/${payment.supplierId}`)}>
-                    {payment.supplierName}
-                  </a>
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-slate-900 mb-4">Tedarikçi Bilgileri</h3>
+              <button
+                onClick={() => router.push(`/purchase/suppliers/${payment.supplierId}`)}
+                className="text-sm text-slate-900 hover:text-slate-600 transition-colors"
+              >
+                {payment.supplierName}
+              </button>
+            </div>
 
             {/* Related Invoice */}
             {payment.purchaseInvoiceNumber && (
-              <Card title="İlişkili Fatura" size="small" className="mb-4">
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Fatura No">
-                    <a onClick={() => router.push(`/purchase/invoices/${payment.purchaseInvoiceId}`)}>
-                      {payment.purchaseInvoiceNumber}
-                    </a>
-                  </Descriptions.Item>
-                </Descriptions>
-              </Card>
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">İlişkili Fatura</h3>
+                <button
+                  onClick={() => router.push(`/purchase/invoices/${payment.purchaseInvoiceId}`)}
+                  className="text-sm text-slate-900 hover:text-slate-600 transition-colors"
+                >
+                  {payment.purchaseInvoiceNumber}
+                </button>
+              </div>
             )}
 
             {/* Process History */}
-            <Card title="İşlem Geçmişi" size="small" className="mb-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-slate-900 mb-4">İşlem Geçmişi</h3>
               <Timeline
                 items={[
                   {
                     color: 'gray',
                     children: (
                       <div>
-                        <Text strong>Oluşturuldu</Text>
-                        <div className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-slate-900">Oluşturuldu</p>
+                        <p className="text-xs text-slate-500">
                           {dayjs(payment.createdAt).format('DD.MM.YYYY HH:mm')}
-                        </div>
+                        </p>
                       </div>
                     ),
                   },
@@ -495,27 +520,27 @@ export default function SupplierPaymentDetailPage() {
                     color: 'blue',
                     children: (
                       <div>
-                        <Text strong>Onaylandı</Text>
+                        <p className="text-sm font-medium text-slate-900">Onaylandı</p>
                         {payment.approvedByName && (
-                          <div className="text-xs">{payment.approvedByName}</div>
+                          <p className="text-xs text-slate-600">{payment.approvedByName}</p>
                         )}
-                        <div className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {dayjs(payment.approvalDate).format('DD.MM.YYYY HH:mm')}
-                        </div>
+                        </p>
                       </div>
                     ),
                   },
                   payment.processedDate && {
-                    color: 'geekblue',
+                    color: 'purple',
                     children: (
                       <div>
-                        <Text strong>İşlendi</Text>
+                        <p className="text-sm font-medium text-slate-900">İşlendi</p>
                         {payment.processedByName && (
-                          <div className="text-xs">{payment.processedByName}</div>
+                          <p className="text-xs text-slate-600">{payment.processedByName}</p>
                         )}
-                        <div className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {dayjs(payment.processedDate).format('DD.MM.YYYY HH:mm')}
-                        </div>
+                        </p>
                       </div>
                     ),
                   },
@@ -523,42 +548,41 @@ export default function SupplierPaymentDetailPage() {
                     color: 'green',
                     children: (
                       <div>
-                        <Text strong>Mutabakat Yapıldı</Text>
+                        <p className="text-sm font-medium text-slate-900">Mutabakat Yapıldı</p>
                         {payment.reconciliationReference && (
-                          <div className="text-xs">{payment.reconciliationReference}</div>
+                          <p className="text-xs text-slate-600">{payment.reconciliationReference}</p>
                         )}
-                        <div className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {dayjs(payment.reconciliationDate).format('DD.MM.YYYY HH:mm')}
-                        </div>
+                        </p>
                       </div>
                     ),
                   },
                 ].filter(Boolean) as TimelineItemProps[]}
               />
-            </Card>
+            </div>
 
             {/* Reconciliation Info */}
             {payment.isReconciled && (
-              <Card title="Mutabakat Bilgileri" size="small" className="mb-4">
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Durum">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Mutabakat Bilgileri</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
                     <Tag color="green">Mutabakat Yapıldı</Tag>
-                  </Descriptions.Item>
+                  </div>
                   {payment.reconciliationDate && (
-                    <Descriptions.Item label="Tarih">
+                    <p className="text-xs text-slate-500">
                       {dayjs(payment.reconciliationDate).format('DD.MM.YYYY HH:mm')}
-                    </Descriptions.Item>
+                    </p>
                   )}
                   {payment.reconciliationReference && (
-                    <Descriptions.Item label="Referans">
-                      {payment.reconciliationReference}
-                    </Descriptions.Item>
+                    <p className="text-xs text-slate-600">{payment.reconciliationReference}</p>
                   )}
-                </Descriptions>
-              </Card>
+                </div>
+              </div>
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
     </div>
   );

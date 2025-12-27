@@ -3,13 +3,13 @@
 import React from 'react';
 import { Typography, Space, Empty, Button } from 'antd';
 import {
-  MailOutlined,
-  EyeOutlined,
-  LinkOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
+  EnvelopeIcon,
+  EyeIcon,
+  LinkIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import { formatCurrency, formatPercent } from '@/lib/crm';
 import type { Campaign } from '@/lib/api/services/crm.service';
@@ -37,7 +37,7 @@ export function CampaignPerformance({
         <Empty
           image={
             <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
-              <MailOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+              <EnvelopeIcon className="w-5 h-5 text-slate-300" />
             </div>
           }
           imageStyle={{ height: 60 }}
@@ -52,7 +52,7 @@ export function CampaignPerformance({
               <Link href="/crm/campaigns">
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
                 >
                   Yeni Kampanya
@@ -108,7 +108,7 @@ export function CampaignPerformance({
                   </div>
                 </div>
                 <div className={`flex items-center gap-1 ${roiPositive ? 'text-slate-900' : 'text-slate-400'} font-bold text-sm`}>
-                  {roiPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                  {roiPositive ? <ArrowUpIcon className="w-4 h-4" /> : <ArrowDownIcon className="w-4 h-4" />}
                   {formatPercent(roi)} ROI
                 </div>
               </div>
@@ -118,7 +118,7 @@ export function CampaignPerformance({
                 <div className="text-center">
                   <div className="text-xs text-slate-400 mb-1">Teslim</div>
                   <div className="flex items-center justify-center gap-1">
-                    <MailOutlined className="text-slate-500" />
+                    <EnvelopeIcon className="w-4 h-4 text-slate-500" />
                     <Text strong className="text-slate-900">{campaign.deliveredCount}</Text>
                   </div>
                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
@@ -131,7 +131,7 @@ export function CampaignPerformance({
                 <div className="text-center">
                   <div className="text-xs text-slate-400 mb-1">Açılma</div>
                   <div className="flex items-center justify-center gap-1">
-                    <EyeOutlined className="text-slate-500" />
+                    <EyeIcon className="w-4 h-4 text-slate-500" />
                     <Text strong className="text-slate-900">{campaign.openedCount}</Text>
                   </div>
                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
@@ -144,7 +144,7 @@ export function CampaignPerformance({
                 <div className="text-center">
                   <div className="text-xs text-slate-400 mb-1">Tıklama</div>
                   <div className="flex items-center justify-center gap-1">
-                    <LinkOutlined className="text-slate-500" />
+                    <LinkIcon className="w-4 h-4 text-slate-500" />
                     <Text strong className="text-slate-900">{campaign.clickedCount}</Text>
                   </div>
                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">

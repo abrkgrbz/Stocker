@@ -7,7 +7,12 @@
 
 import React from 'react';
 import { Spin } from 'antd';
-import { FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import {
+  DocumentTextIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import { StatCard } from '@/components/ui/enterprise-page';
 import type { CustomerContractListDto } from '@/lib/api/services/sales.service';
 
@@ -45,25 +50,25 @@ export function ContractsStats({ contracts, totalCount, loading = false }: Contr
       <StatCard
         label="Toplam Sözleşme"
         value={totalCount}
-        icon={<FileTextOutlined />}
+        icon={<DocumentTextIcon className="w-5 h-5" />}
         iconColor="#6366f1"
       />
       <StatCard
         label="Aktif Sözleşme"
         value={activeCount}
-        icon={<CheckCircleOutlined />}
+        icon={<CheckCircleIcon className="w-5 h-5" />}
         iconColor="#10b981"
       />
       <StatCard
         label="Bekleyen"
         value={pendingCount}
-        icon={<ClockCircleOutlined />}
+        icon={<ClockIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
       />
       <StatCard
         label="30 Gün İçinde Sona Erecek"
         value={expiringCount}
-        icon={<WarningOutlined />}
+        icon={<ExclamationTriangleIcon className="w-5 h-5" />}
         iconColor="#ef4444"
       />
     </div>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select } from 'antd';
-import { ShareAltOutlined, UserOutlined } from '@ant-design/icons';
+import { ShareIcon, UserIcon } from '@heroicons/react/24/outline';
 import type { ReferralDto } from '@/lib/api/services/crm.types';
 import { ReferralType, ReferralStatus, ReferralRewardType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
@@ -88,7 +88,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
             {/* Referral Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <ShareAltOutlined className="text-xl text-slate-500" />
+                <ShareIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -216,7 +216,7 @@ export default function ReferralForm({ form, initialValues, onFinish, loading }:
                 >
                   <Input
                     placeholder="—"
-                    prefix={<UserOutlined className="text-slate-400" />}
+                    prefix={<UserIcon className="w-4 h-4 text-slate-400" />}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>

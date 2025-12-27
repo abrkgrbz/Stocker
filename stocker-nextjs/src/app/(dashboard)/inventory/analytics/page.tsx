@@ -964,7 +964,7 @@ export default function InventoryAnalyticsPage() {
             />
             <Tooltip title="Yenile">
               <Button
-                icon={<ArrowPathIcon className="w-4 h-4" spin={isLoading} />}
+                icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
                 onClick={() => refetchDashboard()}
                 className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
               />

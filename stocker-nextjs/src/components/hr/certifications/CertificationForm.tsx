@@ -13,11 +13,11 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  SafetyCertificateOutlined,
-  DollarOutlined,
-  BookOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+  ShieldCheckIcon,
+  CurrencyDollarIcon,
+  BookOpenIcon,
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { CertificationDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -133,9 +133,7 @@ export default function CertificationForm({
                 justifyContent: 'center',
               }}
             >
-              <SafetyCertificateOutlined
-                style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }}
-              />
+              <ShieldCheckIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">
                 Sertifika Bilgileri
               </p>
@@ -335,7 +333,7 @@ export default function CertificationForm({
           {/* Basic Info */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <TrophyOutlined className="mr-1" /> Temel Bilgiler
+              <TrophyIcon className="w-4 h-4 mr-1 inline" /> Temel Bilgiler
             </Text>
             <Row gutter={16}>
               <Col span={12}>
@@ -486,7 +484,7 @@ export default function CertificationForm({
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <BookOutlined className="mr-1" /> Eğitim Bilgileri
+                  <BookOpenIcon className="w-4 h-4 mr-1 inline" /> Eğitim Bilgileri
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -596,7 +594,7 @@ export default function CertificationForm({
           <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Maliyet Bilgileri
+              <CurrencyDollarIcon className="w-4 h-4 mr-1 inline" /> Maliyet Bilgileri
             </Text>
             <Row gutter={16}>
               <Col span={12}>

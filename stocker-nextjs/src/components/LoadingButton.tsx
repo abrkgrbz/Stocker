@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button, ButtonProps } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface LoadingButtonProps extends ButtonProps {
   loading?: boolean;
@@ -20,7 +20,7 @@ export default function LoadingButton({
     <Button
       {...props}
       disabled={disabled || loading}
-      icon={loading ? <LoadingOutlined spin /> : icon}
+      icon={loading ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : icon}
     >
       {children}
     </Button>

@@ -14,13 +14,13 @@ import {
   Card,
 } from 'antd';
 import {
-  UserOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  BankOutlined,
-  FileTextOutlined,
-  CreditCardOutlined,
-} from '@ant-design/icons';
+  UserIcon,
+  CalendarIcon,
+  CurrencyDollarIcon,
+  BuildingLibraryIcon,
+  DocumentTextIcon,
+  CreditCardIcon,
+} from '@heroicons/react/24/outline';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { useInvoices } from '@/lib/api/hooks/useInvoices';
 import type { Customer } from '@/lib/api/services/crm.service';
@@ -156,7 +156,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Payment Amount Card */}
           <div className="mb-6 p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <DollarOutlined className="text-green-600" />
+              <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Ödeme Tutarı
               </Text>
@@ -174,7 +174,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Description */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <FileTextOutlined className="text-gray-500" />
+              <DocumentTextIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Açıklama
               </Text>
@@ -212,7 +212,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Customer & Invoice Section */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <UserOutlined className="text-gray-500" />
+              <UserIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Müşteri ve Fatura
               </Text>
@@ -260,7 +260,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Date and Currency */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <CalendarOutlined className="text-gray-500" />
+              <CalendarIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Tarih ve Para Birimi
               </Text>
@@ -298,7 +298,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Payment Method and Amount */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <CreditCardOutlined className="text-gray-500" />
+              <CreditCardIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Ödeme Detayları
               </Text>
@@ -345,7 +345,7 @@ export default function PaymentForm({ form, initialValues, onFinish, loading, pr
           {/* Bank Details */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <BankOutlined className="text-gray-500" />
+              <BuildingLibraryIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Banka Bilgileri
               </Text>

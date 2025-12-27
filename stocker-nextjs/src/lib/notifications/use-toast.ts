@@ -2,12 +2,11 @@
 
 import { toast as sonnerToast } from 'sonner';
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  InfoCircleOutlined,
-  WarningOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  XCircleIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 
 export interface ToastOptions {
   title?: string;

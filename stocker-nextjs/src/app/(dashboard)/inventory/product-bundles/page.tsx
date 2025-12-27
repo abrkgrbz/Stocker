@@ -113,7 +113,7 @@ export default function ProductBundlesPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ background: '#f59e0b15' }}
           >
-            <GiftIcon className="w-4 h-4" style={{ fontSize: 18, color: '#f59e0b' }} />
+            <GiftIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
           </div>
           <div>
             <div className="font-medium text-gray-900">{name}</div>
@@ -221,9 +221,9 @@ export default function ProductBundlesPage() {
             {isActive ? 'Aktif' : 'Pasif'}
           </Tag>
           {record.isValid ? (
-            <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981', fontSize: 12 }} />
+            <CheckCircleIcon className="w-3 h-3" style={{ color: '#10b981' }} />
           ) : (
-            <XCircleIcon className="w-4 h-4" style={{ color: '#ef4444', fontSize: 12 }} />
+            <XCircleIcon className="w-3 h-3" style={{ color: '#ef4444' }} />
           )}
         </Space>
       ),
@@ -278,7 +278,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <GiftIcon className="w-4 h-4 text-blue-500 text-lg" />
+              <GiftIcon className="w-5 h-5 text-blue-500" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Paket</Text>
@@ -289,7 +289,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-4 h-4 text-green-500 text-lg" />
+              <CheckCircleIcon className="w-5 h-5 text-green-500" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Aktif Paket</Text>
@@ -300,7 +300,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <CheckCircleIcon className="w-4 h-4 text-purple-500 text-lg" />
+              <CheckCircleIcon className="w-5 h-5 text-purple-500" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Geçerli Paket</Text>
@@ -311,7 +311,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <GiftIcon className="w-4 h-4 text-orange-500 text-lg" />
+              <GiftIcon className="w-5 h-5 text-orange-500" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Değer</Text>

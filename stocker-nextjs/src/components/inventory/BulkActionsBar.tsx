@@ -3,16 +3,17 @@
 import React from 'react';
 import { Button, Space, Dropdown, Typography, Progress, Tooltip, Modal, Tag } from 'antd';
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  SendOutlined,
-  ExclamationCircleOutlined,
-  LoadingOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  XCircleIcon,
+  TrashIcon,
+  ArrowDownTrayIcon,
+  PaperAirplaneIcon,
+  ExclamationCircleIcon,
+  ArrowPathIcon,
+  DocumentIcon,
+  TableCellsIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import type { MenuProps } from 'antd';
 
 const { Text } = Typography;
@@ -64,7 +65,7 @@ export default function BulkActionsBar({
 
       Modal.confirm({
         title: action.confirmTitle || 'İşlemi Onayla',
-        icon: action.danger ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />,
+        icon: action.danger ? <ExclamationCircleIcon className="w-5 h-5" /> : <CheckCircleIcon className="w-5 h-5" />,
         content,
         okText: action.label,
         okType: action.danger ? 'danger' : 'primary',
@@ -87,13 +88,13 @@ export default function BulkActionsBar({
     ? [
         {
           key: 'pdf',
-          icon: <FilePdfOutlined />,
+          icon: <DocumentIcon className="w-4 h-4" />,
           label: 'Seçilenleri PDF İndir',
           onClick: () => onExportSelected('pdf'),
         },
         {
           key: 'excel',
-          icon: <FileExcelOutlined />,
+          icon: <TableCellsIcon className="w-4 h-4" />,
           label: 'Seçilenleri Excel İndir',
           onClick: () => onExportSelected('excel'),
         },
@@ -124,7 +125,7 @@ export default function BulkActionsBar({
         {/* Progress indicator when executing */}
         {isExecuting && progressTotal > 0 && (
           <div className="flex items-center gap-2 ml-4">
-            <LoadingOutlined className="text-blue-500" />
+            <ArrowPathIcon className="w-4 h-4 text-blue-500 animate-spin" />
             <Progress
               percent={Math.round((progress / progressTotal) * 100)}
               size="small"
@@ -161,7 +162,7 @@ export default function BulkActionsBar({
         {/* Export dropdown */}
         {onExportSelected && exportMenuItems.length > 0 && (
           <Dropdown menu={{ items: exportMenuItems }} disabled={isExecuting}>
-            <Button icon={<DownloadOutlined />} disabled={isExecuting}>
+            <Button icon={<ArrowDownTrayIcon className="w-4 h-4" />} disabled={isExecuting}>
               Dışa Aktar
             </Button>
           </Dropdown>
@@ -177,7 +178,7 @@ export default function BulkActionsBar({
         {/* Clear selection */}
         <Button
           type="text"
-          icon={<CloseCircleOutlined />}
+          icon={<XCircleIcon className="w-4 h-4" />}
           onClick={onClearSelection}
           disabled={isExecuting}
         >
@@ -198,7 +199,7 @@ export const createTransferBulkActions = (
   {
     key: 'approve',
     label: 'Onayla',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
     confirmTitle: 'Transferleri Onayla',
     confirmContent: (count) => `${count} transfer onaylanacak. Devam etmek istiyor musunuz?`,
     onClick: onApprove,
@@ -206,7 +207,7 @@ export const createTransferBulkActions = (
   {
     key: 'ship',
     label: 'Sevk Et',
-    icon: <SendOutlined />,
+    icon: <PaperAirplaneIcon className="w-4 h-4" />,
     confirmTitle: 'Transferleri Sevk Et',
     confirmContent: (count) => `${count} transfer sevk edilecek. Devam etmek istiyor musunuz?`,
     onClick: onShip,
@@ -214,7 +215,7 @@ export const createTransferBulkActions = (
   {
     key: 'reject',
     label: 'Reddet',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
     danger: true,
     confirmTitle: 'Transferleri Reddet',
     confirmContent: (count) => `${count} transfer reddedilecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
@@ -223,7 +224,7 @@ export const createTransferBulkActions = (
   {
     key: 'cancel',
     label: 'İptal Et',
-    icon: <DeleteOutlined />,
+    icon: <TrashIcon className="w-4 h-4" />,
     danger: true,
     confirmTitle: 'Transferleri İptal Et',
     confirmContent: (count) => `${count} transfer iptal edilecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,
@@ -240,7 +241,7 @@ export const createCountBulkActions = (
   {
     key: 'start',
     label: 'Başlat',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
     confirmTitle: 'Sayımları Başlat',
     confirmContent: (count) => `${count} sayım başlatılacak. Devam etmek istiyor musunuz?`,
     onClick: onStart,
@@ -248,7 +249,7 @@ export const createCountBulkActions = (
   {
     key: 'complete',
     label: 'Tamamla',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
     confirmTitle: 'Sayımları Tamamla',
     confirmContent: (count) => `${count} sayım tamamlanacak. Devam etmek istiyor musunuz?`,
     onClick: onComplete,
@@ -256,7 +257,7 @@ export const createCountBulkActions = (
   {
     key: 'approve',
     label: 'Onayla',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
     confirmTitle: 'Sayımları Onayla',
     confirmContent: (count) => `${count} sayım onaylanacak ve stok miktarları güncellenecek. Devam etmek istiyor musunuz?`,
     onClick: onApprove,
@@ -264,7 +265,7 @@ export const createCountBulkActions = (
   {
     key: 'cancel',
     label: 'İptal Et',
-    icon: <DeleteOutlined />,
+    icon: <TrashIcon className="w-4 h-4" />,
     danger: true,
     confirmTitle: 'Sayımları İptal Et',
     confirmContent: (count) => `${count} sayım iptal edilecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?`,

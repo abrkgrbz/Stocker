@@ -13,10 +13,10 @@ import {
   InputNumber,
 } from 'antd';
 import {
-  CalculatorOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+  CalculatorIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useWarehouses, useProducts, useLocations } from '@/lib/api/hooks/useInventory';
 import { StockCountType, type StockCountDto, type CreateStockCountItemDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
@@ -164,7 +164,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(index)}
         />
       ),
@@ -191,7 +191,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
             {/* Stock Count Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <CalculatorOutlined className="text-xl text-slate-500" />
+                <CalculatorIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -428,7 +428,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
               </h3>
               <Button
                 type="dashed"
-                icon={<PlusOutlined />}
+                icon={<PlusIcon className="w-4 h-4" />}
                 onClick={handleAddItem}
                 size="small"
                 className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
@@ -453,7 +453,7 @@ export default function StockCountForm({ form, initialValues, onFinish, loading 
               >
                 <Button
                   type="dashed"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={handleAddItem}
                   className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
                 >

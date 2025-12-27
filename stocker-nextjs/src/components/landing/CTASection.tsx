@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { RocketOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { RocketLaunchIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function CTASection() {
@@ -55,7 +55,7 @@ export default function CTASection() {
             <Link href="/register">
               <Button
                 size="large"
-                icon={<RocketOutlined />}
+                icon={<RocketLaunchIcon className="w-5 h-5" />}
                 className="btn-neon-green h-20 px-12 text-lg shadow-2xl rounded-xl flex flex-col items-center"
               >
                 <span className="font-bold text-xl">14 Gün Ücretsiz Deneyin</span>
@@ -65,7 +65,7 @@ export default function CTASection() {
             <Link href="/demo">
               <Button
                 size="large"
-                icon={<ArrowRightOutlined />}
+                icon={<ArrowRightIcon className="w-5 h-5" />}
                 className="btn-ghost-white h-20 px-12 text-lg rounded-xl"
               >
                 Canlı Demo İzle

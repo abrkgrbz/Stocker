@@ -177,7 +177,7 @@ export default function LotBatchDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <InboxIcon className="w-4 h-4 text-white text-lg" />
+                <InboxIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <InboxIcon className="w-4 h-4 text-white text-lg" />
+                  <InboxIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Başlangıç
@@ -280,7 +280,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <InboxIcon className="w-4 h-4 text-blue-600 text-lg" />
+                  <InboxIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mevcut</p>
               </div>
@@ -295,7 +295,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ExclamationCircleIcon className="w-4 h-4 text-amber-600 text-lg" />
+                  <ExclamationCircleIcon className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rezerve</p>
               </div>
@@ -312,7 +312,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kullanılabilir
@@ -478,7 +478,7 @@ export default function LotBatchDetailPage() {
                 <div className="h-px bg-slate-100 my-2" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" className={lotBatch.isExpired ? 'text-red-500' : 'text-slate-400'} />
+                    <CalendarIcon className={`w-4 h-4 ${lotBatch.isExpired ? 'text-red-500' : 'text-slate-400'}`} />
                     <span className="text-sm text-slate-500">Son Kullanma</span>
                   </div>
                   <span

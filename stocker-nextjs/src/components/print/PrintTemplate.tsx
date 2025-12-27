@@ -2,7 +2,7 @@
 
 import React, { useRef, ReactNode } from 'react';
 import { Button, Modal } from 'antd';
-import { PrinterOutlined, DownloadOutlined, CloseOutlined } from '@ant-design/icons';
+import { PrinterIcon, ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface PrintTemplateProps {
   children: ReactNode;
@@ -191,10 +191,10 @@ export function PrintTemplate({ children, title, visible, onClose }: PrintTempla
       onCancel={onClose}
       width={900}
       footer={[
-        <Button key="close" onClick={onClose} icon={<CloseOutlined />}>
+        <Button key="close" onClick={onClose} icon={<XMarkIcon className="w-4 h-4" />}>
           Kapat
         </Button>,
-        <Button key="print" type="primary" onClick={handlePrint} icon={<PrinterOutlined />}>
+        <Button key="print" type="primary" onClick={handlePrint} icon={<PrinterIcon className="w-4 h-4" />}>
           Yazdır
         </Button>,
       ]}

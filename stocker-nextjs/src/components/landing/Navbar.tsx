@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from 'antd';
-import { MenuOutlined, CloseOutlined, RocketOutlined, LoginOutlined } from '@ant-design/icons';
+import { Bars3Icon, XMarkIcon, RocketLaunchIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -91,7 +91,7 @@ export default function Navbar() {
             <Link href={loginUrl}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
-                  icon={<LoginOutlined />}
+                  icon={<ArrowRightOnRectangleIcon className="w-4 h-4" />}
                   className={`h-10 px-6 font-medium border-2 transition-all ${
                     isScrolled
                       ? 'border-purple-600 text-purple-600 hover:bg-purple-50'
@@ -106,7 +106,7 @@ export default function Navbar() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="primary"
-                  icon={<RocketOutlined />}
+                  icon={<RocketLaunchIcon className="w-4 h-4" />}
                   className="h-10 px-6 bg-purple-600 hover:bg-purple-700 border-0 font-medium shadow-md"
                 >
                   {t('landing.navbar.getStarted')}
@@ -122,7 +122,7 @@ export default function Navbar() {
               isScrolled ? 'text-gray-900 hover:bg-gray-100' : 'text-white hover:bg-white/10'
             }`}
           >
-            {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+            {isMobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
         </div>
       </div>
@@ -157,7 +157,7 @@ export default function Navbar() {
                 </div>
                 <Link href={loginUrl} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
-                    icon={<LoginOutlined />}
+                    icon={<ArrowRightOnRectangleIcon className="w-4 h-4" />}
                     block
                     size="large"
                     className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50"
@@ -168,7 +168,7 @@ export default function Navbar() {
                 <Link href={registerUrl} onClick={() => setIsMobileMenuOpen(false)}>
                   <Button
                     type="primary"
-                    icon={<RocketOutlined />}
+                    icon={<RocketLaunchIcon className="w-4 h-4" />}
                     block
                     size="large"
                     className="bg-purple-600 hover:bg-purple-700 border-0"

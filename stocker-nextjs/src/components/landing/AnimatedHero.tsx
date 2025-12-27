@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { RocketOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { RocketLaunchIcon, PlayCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useTranslations } from '@/lib/i18n';
@@ -189,7 +189,7 @@ export default function AnimatedHero() {
                 <Button
                   type="primary"
                   size="large"
-                  icon={<RocketOutlined />}
+                  icon={<RocketLaunchIcon className="w-5 h-5" />}
                   className="h-14 px-8 text-lg font-semibold bg-purple-600 hover:bg-purple-700 border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
                 >
                   {t('landing.hero.cta')}
@@ -202,7 +202,7 @@ export default function AnimatedHero() {
             >
               <Button
                 size="large"
-                icon={<PlayCircleOutlined />}
+                icon={<PlayCircleIcon className="w-5 h-5" />}
                 className="h-14 px-8 text-lg font-semibold border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300"
               >
                 {t('landing.hero.watchDemo')}

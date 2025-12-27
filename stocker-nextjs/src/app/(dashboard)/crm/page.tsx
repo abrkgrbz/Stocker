@@ -147,7 +147,7 @@ export default function CRMDashboardPage() {
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
                   {React.cloneElement(item.icon, { className: 'text-slate-500', style: { fontSize: 16 } })}
                 </div>
-                <ChevronRightIcon className="w-4 h-4 text-slate-300 text-xs group-hover:text-slate-500 transition-colors" />
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
               </div>
               <div className="text-2xl font-semibold text-slate-900 mb-1">
                 {item.count?.toLocaleString('tr-TR') || '0'}

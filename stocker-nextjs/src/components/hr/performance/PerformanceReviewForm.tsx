@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, Input, Row, Col, Typography, Rate } from 'antd';
-import { TrophyOutlined } from '@ant-design/icons';
+import { TrophyIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceReviewDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -54,7 +54,7 @@ export default function PerformanceReviewForm({ form, initialValues, onFinish, l
                 justifyContent: 'center',
               }}
             >
-              <TrophyOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <TrophyIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Performans Değerlendirmesi</p>
               <p className="text-sm text-white/60">Çalışan performansını değerlendirin</p>
             </div>

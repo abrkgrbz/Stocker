@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GlobalOutlined, CheckOutlined } from '@ant-design/icons';
+import { GlobeAltIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { Locale, localeNames } from '@/lib/i18n/config';
 import { getCurrentLocale, setLocale } from '@/lib/i18n';
 
@@ -36,7 +36,7 @@ export default function LanguageSwitcher({ isScrolled = false }: LanguageSwitche
             : 'text-white hover:bg-white/10'
         }`}
       >
-        <GlobalOutlined className="text-lg" />
+        <GlobeAltIcon className="w-5 h-5" />
         <span className="text-sm font-medium uppercase">{currentLocale}</span>
       </motion.button>
 
@@ -76,7 +76,7 @@ export default function LanguageSwitcher({ isScrolled = false }: LanguageSwitche
                     <span className="font-medium">{name}</span>
                   </div>
                   {currentLocale === locale && (
-                    <CheckOutlined className="text-purple-600" />
+                    <CheckIcon className="w-4 h-4 text-purple-600" />
                   )}
                 </motion.button>
               ))}

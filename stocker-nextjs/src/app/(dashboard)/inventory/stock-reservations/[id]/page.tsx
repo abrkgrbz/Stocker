@@ -214,7 +214,7 @@ export default function StockReservationDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-orange-600 flex items-center justify-center">
-                <LockClosedIcon className="w-4 h-4 text-white text-lg" />
+                <LockClosedIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <LockClosedIcon className="w-4 h-4 text-white text-lg" />
+                  <LockClosedIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam
@@ -275,7 +275,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Karşılanan
@@ -292,7 +292,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                  <ClockIcon className="w-4 h-4 text-orange-600 text-lg" />
+                  <ClockIcon className="w-5 h-5 text-orange-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kalan
@@ -350,7 +350,7 @@ export default function StockReservationDetailPage() {
                 onClick={() => router.push(`/inventory/products/${reservation.productId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-orange-600 flex items-center justify-center">
-                  <Squares2X2Icon className="w-4 h-4 text-white text-xl" />
+                  <Squares2X2Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{reservation.productName}</p>
@@ -358,7 +358,7 @@ export default function StockReservationDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
-                  <ChevronRightIcon className="w-4 h-4 text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -399,7 +399,7 @@ export default function StockReservationDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Rezervasyon Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(reservation.reservationDate).format('DD/MM/YYYY HH:mm')}
                     </span>

@@ -8,7 +8,7 @@
 
 import { useEffect } from 'react';
 import { Drawer, Form, Input, Button, message } from 'antd';
-import { ApartmentOutlined } from '@ant-design/icons';
+import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 const { TextArea } = Input;
 
@@ -105,7 +105,7 @@ export function DepartmentDrawer({ open, department, onClose, onSubmit }: Depart
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <ApartmentOutlined style={{ fontSize: 20, color: 'white' }} />
+            <BuildingOfficeIcon className="w-5 h-5 text-white" />
           </div>
           <span>{isEditMode ? 'Departman Düzenle' : 'Yeni Departman Oluştur'}</span>
         </div>

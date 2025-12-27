@@ -1,25 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Card,
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Dropdown,
-  Typography,
-  Row,
-  Col,
-  Statistic,
-  Select,
-  Modal,
-  Switch,
-} from 'antd';
+import { Table, Input, Select, Dropdown, Modal, Spin, Switch } from 'antd';
 import {
   BuildingStorefrontIcon,
   CheckCircleIcon,
+  ChevronRightIcon,
   CurrencyDollarIcon,
   EllipsisHorizontalIcon,
   ExclamationCircleIcon,
@@ -31,6 +17,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import {
   usePriceLists,
@@ -40,17 +27,15 @@ import {
 } from '@/lib/api/hooks/usePurchase';
 import type { PriceListListDto, PriceListStatus } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
-
-const statusConfig: Record<PriceListStatus, { color: string; text: string }> = {
-  Draft: { color: 'default', text: 'Taslak' },
-  PendingApproval: { color: 'orange', text: 'Onay Bekliyor' },
-  Approved: { color: 'blue', text: 'Onaylandı' },
-  Active: { color: 'green', text: 'Aktif' },
-  Inactive: { color: 'gray', text: 'Pasif' },
-  Expired: { color: 'red', text: 'Süresi Doldu' },
-  Superseded: { color: 'purple', text: 'Yenilendi' },
-  Rejected: { color: 'volcano', text: 'Reddedildi' },
+const statusConfig: Record<PriceListStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  PendingApproval: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Onay Bekliyor' },
+  Approved: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Onaylandı' },
+  Active: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Aktif' },
+  Inactive: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Pasif' },
+  Expired: { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu' },
+  Superseded: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Yenilendi' },
+  Rejected: { bg: 'bg-rose-100', text: 'text-rose-700', label: 'Reddedildi' },
 };
 
 export default function PriceListsPage() {
@@ -74,7 +59,6 @@ export default function PriceListsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Fiyat Listesi Silinecek',
-      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu fiyat listesini silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -98,13 +82,12 @@ export default function PriceListsPage() {
       key: 'code',
       width: 120,
       render: (text, record) => (
-        <Button
-          type="link"
+        <button
           onClick={() => router.push(`/purchase/price-lists/${record.id}`)}
-          className="p-0 font-medium"
+          className="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors"
         >
           {text}
-        </Button>
+        </button>
       ),
     },
     {
@@ -112,7 +95,14 @@ export default function PriceListsPage() {
       dataIndex: 'name',
       key: 'name',
       ellipsis: true,
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text, record) => (
+        <div>
+          <div className="text-sm font-medium text-slate-900">{text}</div>
+          {record.isDefault && (
+            <span className="text-xs text-blue-600">Varsayılan</span>
+          )}
+        </div>
+      ),
     },
     {
       title: 'Tedarikçi',
@@ -120,20 +110,26 @@ export default function PriceListsPage() {
       key: 'supplierName',
       width: 180,
       render: (text) => text ? (
-        <Space>
-          <BuildingStorefrontIcon className="w-4 h-4 text-gray-400" />
-          {text}
-        </Space>
-      ) : '-',
+        <div className="flex items-center gap-2">
+          <BuildingStorefrontIcon className="w-4 h-4 text-slate-400" />
+          <span className="text-sm text-slate-600">{text}</span>
+        </div>
+      ) : (
+        <span className="text-sm text-slate-400">-</span>
+      ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 130,
       render: (status: PriceListStatus) => {
         const config = statusConfig[status];
-        return <Tag color={config.color}>{config.text}</Tag>;
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
+        );
       },
     },
     {
@@ -142,6 +138,7 @@ export default function PriceListsPage() {
       key: 'currency',
       width: 100,
       align: 'center',
+      render: (text) => <span className="text-sm text-slate-600">{text}</span>,
     },
     {
       title: 'Ürün Sayısı',
@@ -149,7 +146,11 @@ export default function PriceListsPage() {
       key: 'itemCount',
       width: 120,
       align: 'center',
-      render: (count) => <Tag color="blue">{count} ürün</Tag>,
+      render: (count) => (
+        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+          {count} ürün
+        </span>
+      ),
     },
     {
       title: 'Geçerlilik',
@@ -157,8 +158,10 @@ export default function PriceListsPage() {
       width: 180,
       render: (_, record) => (
         <div className="text-sm">
-          <div>{record.effectiveFrom ? new Date(record.effectiveFrom).toLocaleDateString('tr-TR') : '-'}</div>
-          <div className="text-gray-400">
+          <div className="text-slate-600">
+            {record.effectiveFrom ? new Date(record.effectiveFrom).toLocaleDateString('tr-TR') : '-'}
+          </div>
+          <div className="text-xs text-slate-400">
             {record.effectiveTo ? new Date(record.effectiveTo).toLocaleDateString('tr-TR') : 'Süresiz'}
           </div>
         </div>
@@ -175,13 +178,14 @@ export default function PriceListsPage() {
           onChange={() => handleToggleStatus(record.id, record.status === 'Active')}
           loading={activateMutation.isPending || deactivateMutation.isPending}
           disabled={record.status === 'Expired'}
+          size="small"
         />
       ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 50,
       align: 'center',
       render: (_, record) => (
         <Dropdown
@@ -197,6 +201,7 @@ export default function PriceListsPage() {
                 key: 'edit',
                 label: 'Düzenle',
                 icon: <PencilIcon className="w-4 h-4" />,
+                disabled: record.status !== 'Draft' && record.status !== 'Inactive',
                 onClick: () => router.push(`/purchase/price-lists/${record.id}/edit`),
               },
               { type: 'divider' },
@@ -211,7 +216,9 @@ export default function PriceListsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          </button>
         </Dropdown>
       ),
     },
@@ -224,110 +231,124 @@ export default function PriceListsPage() {
     expired: data?.items?.filter(i => i.status === 'Expired').length || 0,
   };
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="mb-1">Fiyat Listeleri</Title>
-          <Text type="secondary">Tedarikçi fiyat listelerini yönetin</Text>
-        </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/price-lists/new')}
-        >
-          Yeni Fiyat Listesi
-        </Button>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Spin size="large" />
       </div>
+    );
+  }
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Toplam Liste"
-              value={stats.total}
-              prefix={<CurrencyDollarIcon className="w-4 h-4 text-blue-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Aktif"
-              value={stats.active}
-              prefix={<CheckCircleIcon className="w-4 h-4 text-green-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Pasif"
-              value={stats.inactive}
-              prefix={<XCircleIcon className="w-4 h-4 text-gray-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Süresi Dolmuş"
-              value={stats.expired}
-              prefix={<ExclamationCircleIcon className="w-4 h-4 text-red-500" />}
-            />
-          </Card>
-        </Col>
-      </Row>
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">Fiyat Listeleri</h1>
+              <p className="text-sm text-slate-500 mt-1">Tedarikçi fiyat listelerini yönetin</p>
+            </div>
+            <Link href="/purchase/price-lists/new">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                Yeni Fiyat Listesi
+              </button>
+            </Link>
+          </div>
+        </div>
 
-      {/* Filters */}
-      <Card bordered={false} className="shadow-sm mb-6">
-        <Space wrap size="middle">
-          <Input
-            placeholder="Kod veya ad ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
-            allowClear
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link href="/purchase/price-lists">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <CurrencyDollarIcon className="w-4 h-4 text-blue-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+              </div>
+              <div className="text-2xl font-semibold text-slate-900 mb-1">{stats.total}</div>
+              <div className="text-sm text-slate-500">Toplam Liste</div>
+            </div>
+          </Link>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aktif</span>
+            </div>
+            <div className="text-2xl font-semibold text-emerald-600">{stats.active}</div>
+            <div className="text-sm text-slate-500">Aktif Liste</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-slate-400" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pasif</span>
+            </div>
+            <div className="text-2xl font-semibold text-slate-600">{stats.inactive}</div>
+            <div className="text-sm text-slate-500">Pasif Liste</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Süresi Dolmuş</span>
+            </div>
+            <div className="text-2xl font-semibold text-red-600">{stats.expired}</div>
+            <div className="text-sm text-slate-500">Süresi Dolmuş</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Kod veya ad ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-72"
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              className="w-40"
+              allowClear
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusConfig).map(([key, value]) => ({
+                value: key,
+                label: value.label,
+              }))}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={data?.items || []}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: data?.totalCount || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayıt`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+            scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
           />
-          <Select
-            placeholder="Durum"
-            style={{ width: 150 }}
-            allowClear
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusConfig).map(([key, value]) => ({
-              value: key,
-              label: value.text,
-            }))}
-          />
-        </Space>
-      </Card>
-
-      {/* Table */}
-      <Card bordered={false} className="shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={data?.items || []}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: data?.totalCount || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kayıt`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-          }}
-          scroll={{ x: 1100 }}
-        />
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

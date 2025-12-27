@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, Input, Row, Col, Typography, InputNumber, Slider } from 'antd';
-import { AimOutlined } from '@ant-design/icons';
+import { RocketLaunchIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceGoalDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -73,7 +73,7 @@ export default function GoalForm({ form, initialValues, onFinish, loading }: Goa
                 justifyContent: 'center',
               }}
             >
-              <AimOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <RocketLaunchIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Performans Hedefi</p>
               <p className="text-sm text-white/60">Çalışan hedeflerini belirleyin</p>
             </div>

@@ -837,7 +837,7 @@ export default function StockListPage() {
             disabled={importStockMutation.isPending}
           >
             <p className="ant-upload-drag-icon">
-              <InboxIcon className="w-4 h-4 text-5xl text-slate-400" />
+              <InboxIcon className="w-12 h-12 text-slate-400" />
             </p>
             <p className="ant-upload-text text-slate-700">
               Excel dosyasını buraya sürükleyin veya tıklayarak seçin
@@ -858,12 +858,12 @@ export default function StockListPage() {
             <div className="mt-5">
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 text-lg mb-1" />
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600 mb-1" />
                   <p className="text-xs text-emerald-700">Başarılı</p>
                   <p className="text-xl font-bold text-emerald-600">{importStockMutation.data.successCount}</p>
                 </div>
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                  <ExclamationCircleIcon className="w-4 h-4 text-red-600 text-lg mb-1" />
+                  <ExclamationCircleIcon className="w-5 h-5 text-red-600 mb-1" />
                   <p className="text-xs text-red-700">Hata</p>
                   <p className="text-xl font-bold text-red-600">{importStockMutation.data.errorCount}</p>
                 </div>

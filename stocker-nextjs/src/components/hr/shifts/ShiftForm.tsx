@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, TimePicker, InputNumber, Row, Col, Typography, Switch } from 'antd';
-import { ClockCircleOutlined } from '@ant-design/icons';
+import { ClockIcon } from '@heroicons/react/24/outline';
 import type { ShiftDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
@@ -56,7 +56,7 @@ export default function ShiftForm({ form, initialValues, onFinish, loading }: Sh
                 justifyContent: 'center',
               }}
             >
-              <ClockCircleOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ClockIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Vardiya Bilgileri</p>
               <p className="text-sm text-white/60">Çalışma saatlerini düzenleyin</p>
             </div>

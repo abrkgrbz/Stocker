@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Switch } from 'antd';
-import { TrademarkOutlined, LinkOutlined } from '@ant-design/icons';
+import { BuildingOfficeIcon, LinkIcon } from '@heroicons/react/24/outline';
 import type { BrandDto } from '@/lib/api/services/inventory.types';
 
 const { TextArea } = Input;
@@ -44,7 +44,7 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
             {/* Brand Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <TrademarkOutlined className="text-xl text-slate-500" />
+                <BuildingOfficeIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 
@@ -140,7 +140,7 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
                 <Form.Item name="website" className="mb-0">
                   <Input
                     placeholder="https://www.example.com"
-                    prefix={<LinkOutlined className="text-slate-400" />}
+                    prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
@@ -150,7 +150,7 @@ export default function BrandForm({ form, initialValues, onFinish, loading }: Br
                 <Form.Item name="logoUrl" className="mb-0">
                   <Input
                     placeholder="https://www.example.com/logo.png"
-                    prefix={<LinkOutlined className="text-slate-400" />}
+                    prefix={<LinkIcon className="w-4 h-4 text-slate-400" />}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>

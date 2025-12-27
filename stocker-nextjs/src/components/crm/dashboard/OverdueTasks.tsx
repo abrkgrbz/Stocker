@@ -3,14 +3,14 @@
 import React from 'react';
 import { Typography, Space, Empty, Alert } from 'antd';
 import {
-  WarningOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined
-} from '@ant-design/icons';
+  ExclamationTriangleIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import type { Activity } from '@/lib/api/services/crm.service';
 
@@ -22,10 +22,10 @@ interface OverdueTasksProps {
 }
 
 const activityIcons: Record<string, any> = {
-  Call: PhoneOutlined,
-  Email: MailOutlined,
-  Meeting: TeamOutlined,
-  Task: FileTextOutlined,
+  Call: PhoneIcon,
+  Email: EnvelopeIcon,
+  Meeting: UserGroupIcon,
+  Task: DocumentTextIcon,
 };
 
 export function OverdueTasks({
@@ -56,7 +56,7 @@ export function OverdueTasks({
         <Empty
           image={
             <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
-              <CheckCircleOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+              <CheckCircleIcon className="w-5 h-5 text-slate-300" />
             </div>
           }
           imageStyle={{ height: 60 }}
@@ -79,7 +79,7 @@ export function OverdueTasks({
     <AnimatedCard
       title={
         <div className="flex items-center gap-2">
-          <WarningOutlined className="text-slate-500" />
+          <ExclamationTriangleIcon className="w-5 h-5 text-slate-500" />
           <span>Gecikmiş Görevler</span>
           <span className="px-2 py-0.5 text-xs rounded-full bg-slate-900 text-white">
             {overdueActivities.length}
@@ -94,14 +94,14 @@ export function OverdueTasks({
           message={`${criticalCount} kritik görev 7 günden fazla gecikmiş`}
           type="warning"
           showIcon
-          icon={<WarningOutlined />}
+          icon={<ExclamationTriangleIcon className="w-5 h-5" />}
           className="mb-3 !bg-slate-50 !border-slate-200"
         />
       )}
 
       <Space direction="vertical" style={{ width: '100%' }} size="small">
         {overdueActivities.slice(0, 6).map((activity) => {
-          const Icon = activityIcons[activity.type] || FileTextOutlined;
+          const Icon = activityIcons[activity.type] || DocumentTextIcon;
           const daysOverdue = activity.scheduledAt ? getDaysOverdue(activity.scheduledAt) : 0;
           const isCritical = daysOverdue > 7;
           const dueDate = activity.scheduledAt ? new Date(activity.scheduledAt).toLocaleDateString('tr-TR') : 'N/A';
@@ -117,7 +117,7 @@ export function OverdueTasks({
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${isCritical ? 'bg-slate-200' : 'bg-slate-100'}`}>
-                  <Icon className={`text-base ${isCritical ? 'text-slate-700' : 'text-slate-500'}`} />
+                  <Icon className={`w-4 h-4 ${isCritical ? 'text-slate-700' : 'text-slate-500'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -131,7 +131,7 @@ export function OverdueTasks({
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                    <CalendarOutlined />
+                    <CalendarIcon className="w-3 h-3" />
                     <span>Termin: {dueDate}</span>
                     {activity.relatedToName && (
                       <>

@@ -14,10 +14,10 @@ import {
   TimePicker,
 } from 'antd';
 import {
-  ClockCircleOutlined,
-  FileTextOutlined,
-  AlertOutlined,
-} from '@ant-design/icons';
+  ClockIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { OvertimeDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -141,9 +141,7 @@ export default function OvertimeForm({
                 justifyContent: 'center',
               }}
             >
-              <ClockCircleOutlined
-                style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }}
-              />
+              <ClockIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">
                 Fazla Mesai Talebi
               </p>
@@ -158,7 +156,7 @@ export default function OvertimeForm({
             <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
               <div>
                 <Text strong className="text-gray-700">
-                  <AlertOutlined className="mr-1 text-red-500" /> Acil Durum
+                  <ExclamationTriangleIcon className="w-4 h-4 mr-1 text-red-500 inline" /> Acil Durum
                 </Text>
                 <div className="text-xs text-gray-400 mt-0.5">
                   Acil durum mesaisi mi?
@@ -341,7 +339,7 @@ export default function OvertimeForm({
           {/* Date & Time */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <ClockCircleOutlined className="mr-1" /> Tarih ve Saat
+              <ClockIcon className="w-4 h-4 mr-1 inline" /> Tarih ve Saat
             </Text>
             <Row gutter={16}>
               <Col span={8}>
@@ -439,7 +437,7 @@ export default function OvertimeForm({
           {/* Project Info */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <FileTextOutlined className="mr-1" /> Proje / Görev Bilgileri
+              <DocumentTextIcon className="w-4 h-4 mr-1 inline" /> Proje / Görev Bilgileri
             </Text>
             <Row gutter={16}>
               <Col span={12}>

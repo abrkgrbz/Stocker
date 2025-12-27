@@ -1,29 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Card,
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Dropdown,
-  Typography,
-  Row,
-  Col,
-  Statistic,
-  Select,
-  Modal,
-  Rate,
-  Progress,
-} from 'antd';
+import { Table, Input, Select, Dropdown, Modal, Spin, Progress } from 'antd';
 import {
   BuildingStorefrontIcon,
-  CheckCircleIcon,
+  ChevronRightIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PencilIcon,
@@ -31,27 +14,25 @@ import {
   StarIcon,
   TrashIcon,
   TrophyIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import { useSupplierEvaluations, useDeleteSupplierEvaluation } from '@/lib/api/hooks/usePurchase';
 import type { SupplierEvaluationListDto, EvaluationStatus } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
-
-const statusConfig: Record<EvaluationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
-  Submitted: { color: 'blue', text: 'Gönderildi', icon: <ClockIcon className="w-4 h-4" /> },
-  Approved: { color: 'green', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Rejected: { color: 'red', text: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+const statusConfig: Record<EvaluationStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Submitted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
+  Approved: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Onaylandı' },
+  Rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' },
 };
 
 const getScoreColor = (score: number) => {
-  if (score >= 80) return '#52c41a';
-  if (score >= 60) return '#1890ff';
-  if (score >= 40) return '#faad14';
-  return '#ff4d4f';
+  if (score >= 80) return '#10b981';
+  if (score >= 60) return '#3b82f6';
+  if (score >= 40) return '#f59e0b';
+  return '#ef4444';
 };
 
 const getScoreLabel = (score: number) => {
@@ -80,7 +61,6 @@ export default function SupplierEvaluationsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Değerlendirme Silinecek',
-      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu değerlendirmeyi silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -96,13 +76,12 @@ export default function SupplierEvaluationsPage() {
       key: 'evaluationNumber',
       width: 150,
       render: (text, record) => (
-        <Button
-          type="link"
+        <button
           onClick={() => router.push(`/purchase/evaluations/${record.id}`)}
-          className="p-0 font-medium"
+          className="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors"
         >
           {text}
-        </Button>
+        </button>
       ),
     },
     {
@@ -110,13 +89,15 @@ export default function SupplierEvaluationsPage() {
       dataIndex: 'supplierName',
       key: 'supplierName',
       render: (text, record) => (
-        <Space>
-          <BuildingStorefrontIcon className="w-4 h-4 text-gray-400" />
-          <div>
-            <div className="font-medium">{text}</div>
-            <div className="text-xs text-gray-400">{record.supplierCode}</div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+            <BuildingStorefrontIcon className="w-4 h-4 text-slate-500" />
           </div>
-        </Space>
+          <div>
+            <div className="text-sm font-medium text-slate-900">{text}</div>
+            <div className="text-xs text-slate-500">{record.supplierCode}</div>
+          </div>
+        </div>
       ),
     },
     {
@@ -124,6 +105,7 @@ export default function SupplierEvaluationsPage() {
       dataIndex: 'evaluationPeriod',
       key: 'evaluationPeriod',
       width: 120,
+      render: (text) => <span className="text-sm text-slate-600">{text || '-'}</span>,
     },
     {
       title: 'Durum',
@@ -133,9 +115,9 @@ export default function SupplierEvaluationsPage() {
       render: (status: EvaluationStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.text}
-          </Tag>
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
         );
       },
     },
@@ -145,13 +127,13 @@ export default function SupplierEvaluationsPage() {
       key: 'overallScore',
       width: 180,
       render: (score: number) => (
-        <div>
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Progress
               percent={score}
               size="small"
               strokeColor={getScoreColor(score)}
-              format={() => `${score.toFixed(0)}`}
+              format={() => <span className="text-xs font-medium">{score.toFixed(0)}</span>}
               style={{ width: 100 }}
             />
           </div>
@@ -169,10 +151,13 @@ export default function SupplierEvaluationsPage() {
       align: 'center',
       render: (rank: number | null) =>
         rank ? (
-          <Tag color={rank <= 3 ? 'gold' : 'default'} icon={rank <= 3 ? <TrophyIcon className="w-4 h-4" /> : null}>
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${rank <= 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+            {rank <= 3 && <TrophyIcon className="w-3 h-3" />}
             #{rank}
-          </Tag>
-        ) : '-',
+          </span>
+        ) : (
+          <span className="text-sm text-slate-400">-</span>
+        ),
     },
     {
       title: 'Değerlendiren',
@@ -180,18 +165,23 @@ export default function SupplierEvaluationsPage() {
       key: 'evaluatorName',
       width: 150,
       ellipsis: true,
+      render: (text) => <span className="text-sm text-slate-600">{text || '-'}</span>,
     },
     {
       title: 'Tarih',
       dataIndex: 'evaluationDate',
       key: 'evaluationDate',
-      width: 120,
-      render: (date) => new Date(date).toLocaleDateString('tr-TR'),
+      width: 100,
+      render: (date) => (
+        <span className="text-sm text-slate-500">
+          {new Date(date).toLocaleDateString('tr-TR')}
+        </span>
+      ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 50,
       align: 'center',
       render: (_, record) => (
         <Dropdown
@@ -223,7 +213,9 @@ export default function SupplierEvaluationsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          </button>
         </Dropdown>
       ),
     },
@@ -235,113 +227,126 @@ export default function SupplierEvaluationsPage() {
     : 0;
   const topPerformers = data?.items?.filter(i => i.overallScore >= 80).length || 0;
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="mb-1">Tedarikçi Değerlendirmeleri</Title>
-          <Text type="secondary">Tedarikçi performanslarını değerlendirin ve karşılaştırın</Text>
-        </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/evaluations/new')}
-        >
-          Yeni Değerlendirme
-        </Button>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Spin size="large" />
       </div>
+    );
+  }
 
-      {/* Stats */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Toplam Değerlendirme"
-              value={data?.totalCount || 0}
-              prefix={<StarIcon className="w-4 h-4 text-blue-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Ortalama Puan"
-              value={avgScore}
-              precision={1}
-              prefix={<StarIcon className="w-4 h-4 text-yellow-500" />}
-              suffix="/ 100"
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Üst Performans"
-              value={topPerformers}
-              prefix={<TrophyIcon className="w-4 h-4 text-green-500" />}
-              suffix="tedarikçi"
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Onay Bekleyen"
-              value={data?.items?.filter(i => i.status === 'Submitted').length || 0}
-              prefix={<ClockIcon className="w-4 h-4 text-orange-500" />}
-            />
-          </Card>
-        </Col>
-      </Row>
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">Tedarikçi Değerlendirmeleri</h1>
+              <p className="text-sm text-slate-500 mt-1">Tedarikçi performanslarını değerlendirin ve karşılaştırın</p>
+            </div>
+            <Link href="/purchase/evaluations/new">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                Yeni Değerlendirme
+              </button>
+            </Link>
+          </div>
+        </div>
 
-      {/* Filters */}
-      <Card bordered={false} className="shadow-sm mb-6">
-        <Space wrap size="middle">
-          <Input
-            placeholder="Tedarikçi veya değerlendirme no ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link href="/purchase/evaluations">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <StarIcon className="w-4 h-4 text-amber-600" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+              </div>
+              <div className="text-2xl font-semibold text-slate-900 mb-1">{data?.totalCount || 0}</div>
+              <div className="text-sm text-slate-500">Toplam Değerlendirme</div>
+            </div>
+          </Link>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ortalama</span>
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">{avgScore.toFixed(1)}</div>
+            <div className="text-sm text-slate-500">Puan / 100</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Üst Performans</span>
+            </div>
+            <div className="text-2xl font-semibold text-emerald-600">{topPerformers}</div>
+            <div className="text-sm text-slate-500">80+ Puan</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bekleyen</span>
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">
+              {data?.items?.filter(i => i.status === 'Submitted').length || 0}
+            </div>
+            <div className="text-sm text-slate-500">Onay Bekliyor</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Tedarikçi veya değerlendirme no ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-72"
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              className="w-40"
+              allowClear
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusConfig).map(([key, value]) => ({
+                value: key,
+                label: value.label,
+              }))}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={data?.items || []}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: data?.totalCount || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayıt`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+            scroll={{ x: 1200 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
           />
-          <Select
-            placeholder="Durum"
-            style={{ width: 150 }}
-            allowClear
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusConfig).map(([key, value]) => ({
-              value: key,
-              label: value.text,
-            }))}
-          />
-        </Space>
-      </Card>
-
-      {/* Table */}
-      <Card bordered={false} className="shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={data?.items || []}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: data?.totalCount || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kayıt`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

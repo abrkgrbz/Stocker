@@ -19,16 +19,16 @@ import {
   Divider,
 } from 'antd';
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  SendOutlined,
-  ExclamationCircleOutlined,
-  FileTextOutlined,
-  MessageOutlined,
-  HistoryOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  UserIcon,
+  PaperAirplaneIcon,
+  ExclamationCircleIcon,
+  DocumentTextIcon,
+  ChatBubbleLeftIcon,
+  ClockIcon as HistoryIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 
 const { Text, Title, Paragraph } = Typography;
@@ -90,11 +90,11 @@ export interface ApprovalWorkflowProps {
 }
 
 const statusConfig = {
-  pending: { color: 'default', icon: <ClockCircleOutlined />, label: 'Bekliyor' },
-  approved: { color: 'success', icon: <CheckCircleOutlined />, label: 'Onaylandı' },
-  rejected: { color: 'error', icon: <CloseCircleOutlined />, label: 'Reddedildi' },
-  skipped: { color: 'default', icon: <ClockCircleOutlined />, label: 'Atlandı' },
-  waiting: { color: 'processing', icon: <ClockCircleOutlined />, label: 'Sırada' },
+  pending: { color: 'default', icon: <ClockIcon className="w-4 h-4" />, label: 'Bekliyor' },
+  approved: { color: 'success', icon: <CheckCircleIcon className="w-4 h-4" />, label: 'Onaylandı' },
+  rejected: { color: 'error', icon: <XCircleIcon className="w-4 h-4" />, label: 'Reddedildi' },
+  skipped: { color: 'default', icon: <ClockIcon className="w-4 h-4" />, label: 'Atlandı' },
+  waiting: { color: 'processing', icon: <ClockIcon className="w-4 h-4" />, label: 'Sırada' },
 };
 
 const documentTypeLabels: Record<string, string> = {
@@ -168,12 +168,12 @@ export function ApprovalWorkflow({
   // Get icon for step
   const getStepIcon = (step: ApprovalStep) => {
     if (step.status === 'approved') {
-      return <CheckCircleOutlined className="text-green-500" />;
+      return <CheckCircleIcon className="w-4 h-4 text-green-500" />;
     }
     if (step.status === 'rejected') {
-      return <CloseCircleOutlined className="text-red-500" />;
+      return <XCircleIcon className="w-4 h-4 text-red-500" />;
     }
-    return <ClockCircleOutlined className="text-gray-400" />;
+    return <ClockIcon className="w-4 h-4 text-gray-400" />;
   };
 
   // Format currency
@@ -197,18 +197,18 @@ export function ApprovalWorkflow({
           key: item.id,
           color: item.action === 'approved' ? 'green' : item.action === 'rejected' ? 'red' : 'blue',
           dot: item.action === 'approved' ? (
-            <CheckCircleOutlined />
+            <CheckCircleIcon className="w-4 h-4" />
           ) : item.action === 'rejected' ? (
-            <CloseCircleOutlined />
+            <XCircleIcon className="w-4 h-4" />
           ) : item.action === 'comment' ? (
-            <MessageOutlined />
+            <ChatBubbleLeftIcon className="w-4 h-4" />
           ) : (
-            <SendOutlined />
+            <PaperAirplaneIcon className="w-4 h-4" />
           ),
           children: (
             <div>
               <div className="flex items-center gap-2">
-                <Avatar size="small" icon={<UserOutlined />} />
+                <Avatar size="small" icon={<UserIcon className="w-4 h-4" />} />
                 <Text strong>{item.actorName}</Text>
                 <Tag color={
                   item.action === 'approved' ? 'green' :
@@ -264,7 +264,7 @@ export function ApprovalWorkflow({
             <Button
               type="primary"
               size="small"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={() => setApproveModalVisible(true)}
             >
               Onayla
@@ -274,7 +274,7 @@ export function ApprovalWorkflow({
             <Button
               danger
               size="small"
-              icon={<CloseCircleOutlined />}
+              icon={<XCircleIcon className="w-4 h-4" />}
               onClick={() => setRejectModalVisible(true)}
             >
               Reddet
@@ -290,14 +290,14 @@ export function ApprovalWorkflow({
       title={
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileTextOutlined className="text-blue-500" />
+            <DocumentTextIcon className="w-5 h-5 text-blue-500" />
             <span>Onay Akışı</span>
           </div>
           {showHistory && history.length > 0 && (
             <Button
               type="text"
               size="small"
-              icon={<HistoryOutlined />}
+              icon={<HistoryIcon className="w-4 h-4" />}
               onClick={() => setHistoryModalVisible(true)}
             >
               Geçmiş ({history.length})
@@ -362,7 +362,7 @@ export function ApprovalWorkflow({
               <div className="text-xs">
                 {step.approverName && (
                   <div className="flex items-center gap-1">
-                    <UserOutlined className="text-gray-400" />
+                    <UserIcon className="w-3 h-3 text-gray-400" />
                     <span>{step.approverName}</span>
                   </div>
                 )}
@@ -376,8 +376,8 @@ export function ApprovalWorkflow({
                 )}
                 {step.notes && (
                   <Tooltip title={step.notes}>
-                    <div className="text-blue-500 truncate max-w-[150px] cursor-help">
-                      <MessageOutlined className="mr-1" />
+                    <div className="text-blue-500 truncate max-w-[150px] cursor-help flex items-center">
+                      <ChatBubbleLeftIcon className="w-3 h-3 mr-1" />
                       {step.notes}
                     </div>
                   </Tooltip>
@@ -395,7 +395,7 @@ export function ApprovalWorkflow({
         <Alert
           type="info"
           showIcon
-          icon={<ExclamationCircleOutlined />}
+          icon={<ExclamationCircleIcon className="w-5 h-5" />}
           message="Onayınız Bekleniyor"
           description="Bu belge sizin onayınızı bekliyor. Lütfen belgeyi inceleyip onaylayın veya reddedin."
           className="mb-4"
@@ -409,7 +409,7 @@ export function ApprovalWorkflow({
           {canSubmit && (
             <Button
               type="primary"
-              icon={<SendOutlined />}
+              icon={<PaperAirplaneIcon className="w-4 h-4" />}
               onClick={onSubmit}
             >
               Onaya Gönder
@@ -429,7 +429,7 @@ export function ApprovalWorkflow({
           {canReject && (
             <Button
               danger
-              icon={<CloseCircleOutlined />}
+              icon={<XCircleIcon className="w-4 h-4" />}
               onClick={() => setRejectModalVisible(true)}
             >
               Reddet
@@ -438,7 +438,7 @@ export function ApprovalWorkflow({
           {canApprove && (
             <Button
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={() => setApproveModalVisible(true)}
             >
               Onayla
@@ -451,7 +451,7 @@ export function ApprovalWorkflow({
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <CheckCircleOutlined className="text-green-500" />
+            <CheckCircleIcon className="w-5 h-5 text-green-500" />
             <span>Belgeyi Onayla</span>
           </div>
         }
@@ -463,7 +463,7 @@ export function ApprovalWorkflow({
         }}
         okText="Onayla"
         cancelText="İptal"
-        okButtonProps={{ icon: <CheckCircleOutlined /> }}
+        okButtonProps={{ icon: <CheckCircleIcon className="w-4 h-4" /> }}
       >
         <div className="py-4">
           <Alert
@@ -495,7 +495,7 @@ export function ApprovalWorkflow({
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <CloseCircleOutlined className="text-red-500" />
+            <XCircleIcon className="w-5 h-5 text-red-500" />
             <span>Belgeyi Reddet</span>
           </div>
         }
@@ -507,7 +507,7 @@ export function ApprovalWorkflow({
         }}
         okText="Reddet"
         cancelText="İptal"
-        okButtonProps={{ danger: true, icon: <CloseCircleOutlined />, disabled: !rejectReason.trim() }}
+        okButtonProps={{ danger: true, icon: <XCircleIcon className="w-4 h-4" />, disabled: !rejectReason.trim() }}
       >
         <div className="py-4">
           <Alert
@@ -535,7 +535,7 @@ export function ApprovalWorkflow({
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <ExclamationCircleOutlined className="text-orange-500" />
+            <ExclamationCircleIcon className="w-5 h-5 text-orange-500" />
             <span>Belgeyi İptal Et</span>
           </div>
         }
@@ -576,7 +576,7 @@ export function ApprovalWorkflow({
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <HistoryOutlined className="text-blue-500" />
+            <HistoryIcon className="w-5 h-5 text-blue-500" />
             <span>İşlem Geçmişi</span>
           </div>
         }

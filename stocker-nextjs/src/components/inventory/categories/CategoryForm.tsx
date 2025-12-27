@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch } from 'antd';
-import { TagsOutlined } from '@ant-design/icons';
+import { TagIcon } from '@heroicons/react/24/outline';
 import { useCategories } from '@/lib/api/hooks/useInventory';
 import type { CategoryDto } from '@/lib/api/services/inventory.types';
 
@@ -57,7 +57,7 @@ export default function CategoryForm({ form, initialValues, onFinish, loading }:
             {/* Category Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <TagsOutlined className="text-xl text-slate-500" />
+                <TagIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

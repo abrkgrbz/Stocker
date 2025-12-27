@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, InputNumber, Input, Row, Col, Typography } from 'antd';
-import { WalletOutlined } from '@ant-design/icons';
+import { WalletIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { ExpenseDto } from '@/lib/api/services/hr.types';
 import { ExpenseType } from '@/lib/api/services/hr.types';
@@ -55,7 +55,7 @@ export default function ExpenseForm({ form, initialValues, onFinish, loading }: 
                 justifyContent: 'center',
               }}
             >
-              <WalletOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <WalletIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Harcama Kaydı</p>
               <p className="text-sm text-white/60">Gider takibi yapın</p>
             </div>

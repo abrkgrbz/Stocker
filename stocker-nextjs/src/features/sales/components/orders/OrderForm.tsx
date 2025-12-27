@@ -22,11 +22,11 @@ import {
   Popconfirm,
 } from 'antd';
 import {
-  PlusOutlined,
-  DeleteOutlined,
-  SaveOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  TrashIcon,
+  DocumentCheckIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { PageContainer } from '@/components/ui/enterprise-page';
 import { useCreateSalesOrder, useUpdateSalesOrder, useSalesOrder } from '../../hooks';
 import { showSuccess, showError } from '@/lib/utils/sweetalert';
@@ -350,7 +350,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           okText="Evet"
           cancelText="Hayır"
         >
-          <Button type="text" danger icon={<DeleteOutlined />} />
+          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} />
         </Popconfirm>
       ),
     },
@@ -426,7 +426,7 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
           title="Sipariş Kalemleri"
           className="mb-6"
           extra={
-            <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+            <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
               Kalem Ekle
             </Button>
           }
@@ -490,14 +490,14 @@ export function OrderForm({ orderId, mode }: OrderFormProps) {
         {/* Actions */}
         <div className="flex items-center justify-end gap-3">
           <Button
-            icon={<CloseOutlined />}
+            icon={<XMarkIcon className="w-4 h-4" />}
             onClick={() => router.back()}
           >
             İptal
           </Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<DocumentCheckIcon className="w-4 h-4" />}
             htmlType="submit"
             loading={createMutation.isPending || updateMutation.isPending}
           >

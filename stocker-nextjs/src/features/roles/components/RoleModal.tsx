@@ -25,15 +25,15 @@ import {
   Select,
 } from 'antd';
 import {
-  SaveOutlined,
-  CloseOutlined,
-  LockOutlined,
-  CheckCircleOutlined,
-  InfoCircleOutlined,
-  DownOutlined,
-  RightOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+  DocumentCheckIcon,
+  XMarkIcon,
+  LockClosedIcon,
+  CheckCircleIcon,
+  InformationCircleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import { useCreateRole, useUpdateRole, useRoles } from '@/hooks/useRoles';
 import {
   AVAILABLE_RESOURCES,
@@ -217,7 +217,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
               justifyContent: 'center',
             }}
           >
-            <LockOutlined style={{ fontSize: 20, color: '#1890ff' }} />
+            <LockClosedIcon className="w-5 h-5" style={{ color: '#1890ff' }} />
           </div>
           <div>
             <Title level={4} style={{ margin: 0 }}>
@@ -247,13 +247,13 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
             gap: 8,
           }}
         >
-          <Button size="large" icon={<CloseOutlined />} onClick={onClose}>
+          <Button size="large" icon={<XMarkIcon className="w-4 h-4" />} onClick={onClose}>
             İptal
           </Button>
           <Button
             size="large"
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<DocumentCheckIcon className="w-4 h-4" />}
             loading={createMutation.isPending || updateMutation.isPending}
             onClick={handleSubmit}
           >
@@ -271,7 +271,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
           size="small"
           title={
             <Space>
-              <InfoCircleOutlined style={{ color: '#1890ff', fontSize: 18 }} />
+              <InformationCircleIcon className="w-5 h-5" style={{ color: '#1890ff' }} />
               <Text strong style={{ fontSize: 16 }}>Temel Bilgiler</Text>
             </Space>
           }
@@ -301,7 +301,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
           size="small"
           title={
             <Space>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#52c41a' }} />
               <span>Yetkiler</span>
               <Badge count={selectedPermissions.length} style={{ backgroundColor: '#52c41a' }} />
             </Space>
@@ -331,7 +331,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
               }
               type="warning"
               showIcon
-              icon={<WarningOutlined />}
+              icon={<ExclamationTriangleIcon className="w-4 h-4" />}
               style={{ marginBottom: 16, backgroundColor: '#fff7e6', borderColor: '#ffc53d' }}
             />
           )}
@@ -345,7 +345,7 @@ export function RoleModal({ open, role, onClose }: RoleModalProps) {
             accordion
             ghost
             expandIcon={({ isActive }) => (
-              isActive ? <DownOutlined /> : <RightOutlined />
+              isActive ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />
             )}
           >
             {groupedPermissions.map((resource) => (

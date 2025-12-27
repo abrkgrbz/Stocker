@@ -4,7 +4,6 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
-  Button,
   Typography,
   Spin,
   Descriptions,
@@ -22,6 +21,7 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowUturnLeftIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
@@ -30,6 +30,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   PrinterIcon,
+  TruckIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -62,23 +63,23 @@ const statusColors: Record<PurchaseReturnStatus, string> = {
 const statusLabels: Record<PurchaseReturnStatus, string> = {
   Draft: 'Taslak',
   Pending: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
+  Approved: 'Onaylandi',
   Rejected: 'Reddedildi',
-  Shipped: 'Gönderildi',
-  Received: 'Teslim Alındı',
-  Completed: 'Tamamlandı',
-  Cancelled: 'İptal',
+  Shipped: 'Gonderildi',
+  Received: 'Teslim Alindi',
+  Completed: 'Tamamlandi',
+  Cancelled: 'Iptal',
 };
 
 const reasonLabels: Record<PurchaseReturnReason, string> = {
   Defective: 'Kusurlu',
-  WrongItem: 'Yanlış Ürün',
-  WrongQuantity: 'Yanlış Miktar',
-  Damaged: 'Hasarlı',
+  WrongItem: 'Yanlis Urun',
+  WrongQuantity: 'Yanlis Miktar',
+  Damaged: 'Hasarli',
   QualityIssue: 'Kalite Sorunu',
-  Expired: 'Vadesi Geçmiş',
-  NotAsDescribed: 'Tanımlandığı Gibi Değil',
-  Other: 'Diğer',
+  Expired: 'Vadesi Gecmis',
+  NotAsDescribed: 'Tanimlandigi Gibi Degil',
+  Other: 'Diger',
 };
 
 const reasonColors: Record<PurchaseReturnReason, string> = {
@@ -94,17 +95,17 @@ const reasonColors: Record<PurchaseReturnReason, string> = {
 
 const typeLabels: Record<string, string> = {
   Standard: 'Standart',
-  Defective: 'Kusurlu Ürün',
+  Defective: 'Kusurlu Urun',
   Warranty: 'Garanti',
-  Exchange: 'Değişim',
+  Exchange: 'Degisim',
 };
 
 const refundMethodLabels: Record<string, string> = {
   Credit: 'Alacak',
   BankTransfer: 'Havale/EFT',
-  Check: 'Çek',
+  Check: 'Cek',
   Cash: 'Nakit',
-  Replacement: 'Ürün Değişimi',
+  Replacement: 'Urun Degisimi',
 };
 
 const getStatusStep = (status: PurchaseReturnStatus): number => {
@@ -137,7 +138,10 @@ export default function PurchaseReturnDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mb-4">
+          <ArrowUturnLeftIcon className="w-8 h-8 text-white" />
+        </div>
         <Spin size="large" />
       </div>
     );
@@ -145,12 +149,18 @@ export default function PurchaseReturnDetailPage() {
 
   if (!purchaseReturn) {
     return (
-      <div className="p-8">
-        <Empty description="İade belgesi bulunamadı" />
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center mb-4">
+          <ArrowUturnLeftIcon className="w-8 h-8 text-white" />
+        </div>
+        <Empty description="Iade belgesi bulunamadi" />
         <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/returns')}>
-            İadelere Dön
-          </Button>
+          <button
+            onClick={() => router.push('/purchase/returns')}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Iadelere Don
+          </button>
         </div>
       </div>
     );
@@ -162,32 +172,32 @@ export default function PurchaseReturnDetailPage() {
 
   const handleReject = () => {
     Modal.confirm({
-      title: 'İade Talebini Reddet',
-      content: 'Bu iade talebini reddetmek istediğinizden emin misiniz?',
+      title: 'Iade Talebini Reddet',
+      content: 'Bu iade talebini reddetmek istediginizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
-      cancelText: 'Vazgeç',
+      cancelText: 'Vazgec',
       onOk: () => rejectReturn.mutate({ id: returnId, reason: 'Manuel ret' }),
     });
   };
 
   const handleCancel = () => {
     Modal.confirm({
-      title: 'İade Talebini İptal Et',
-      content: 'Bu iade talebini iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
+      title: 'Iade Talebini Iptal Et',
+      content: 'Bu iade talebini iptal etmek istediginizden emin misiniz?',
+      okText: 'Iptal Et',
       okType: 'danger',
-      cancelText: 'Vazgeç',
+      cancelText: 'Vazgec',
       onOk: () => cancelReturn.mutate({ id: returnId, reason: 'Manuel iptal' }),
     });
   };
 
   const handleShip = () => {
     Modal.confirm({
-      title: 'İade Gönderimi',
-      content: 'İadeyi gönderildi olarak işaretlemek istediğinizden emin misiniz?',
-      okText: 'Gönder',
-      cancelText: 'Vazgeç',
+      title: 'Iade Gonderimi',
+      content: 'Iadeyi gonderildi olarak isaretlemek istediginizden emin misiniz?',
+      okText: 'Gonder',
+      cancelText: 'Vazgec',
       onOk: () => shipReturn.mutate({
         id: returnId,
         trackingNumber: `TRK-${Date.now()}`,
@@ -225,7 +235,7 @@ export default function PurchaseReturnDetailPage() {
     purchaseReturn.status === 'Draft' && {
       key: 'submit',
       icon: <CheckCircleIcon className="w-4 h-4" />,
-      label: 'Onaya Gönder',
+      label: 'Onaya Gonder',
       onClick: handleSubmitForApproval,
     },
     purchaseReturn.status === 'Pending' && {
@@ -244,31 +254,31 @@ export default function PurchaseReturnDetailPage() {
     purchaseReturn.status === 'Approved' && {
       key: 'ship',
       icon: <PaperAirplaneIcon className="w-4 h-4" />,
-      label: 'Gönder',
+      label: 'Gonder',
       onClick: handleShip,
     },
     purchaseReturn.status === 'Shipped' && {
       key: 'receive',
       icon: <InboxIcon className="w-4 h-4" />,
-      label: 'Teslim Alındı',
+      label: 'Teslim Alindi',
       onClick: handleReceive,
     },
     purchaseReturn.status === 'Received' && {
       key: 'refund',
       icon: <CurrencyDollarIcon className="w-4 h-4" />,
-      label: 'İade İşle',
+      label: 'Iade Isle',
       onClick: handleProcessRefund,
     },
     {
       key: 'print',
       icon: <PrinterIcon className="w-4 h-4" />,
-      label: 'Yazdır',
+      label: 'Yazdir',
     },
     { type: 'divider' },
     !['Cancelled', 'Completed'].includes(purchaseReturn.status) && {
       key: 'cancel',
       icon: <XCircleIcon className="w-4 h-4" />,
-      label: 'İptal Et',
+      label: 'Iptal Et',
       danger: true,
       onClick: handleCancel,
     },
@@ -282,13 +292,13 @@ export default function PurchaseReturnDetailPage() {
       render: (_: any, __: any, index: number) => index + 1,
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       dataIndex: 'productName',
       key: 'productName',
       render: (name: string, record: PurchaseReturnItemDto) => (
         <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-xs text-gray-500">{record.productCode}</div>
+          <div className="font-medium text-slate-900">{name}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
         </div>
       ),
     },
@@ -297,24 +307,28 @@ export default function PurchaseReturnDetailPage() {
       dataIndex: 'quantity',
       key: 'quantity',
       align: 'center' as const,
-      render: (qty: number, record: PurchaseReturnItemDto) => `${qty} ${record.unit}`,
+      render: (qty: number, record: PurchaseReturnItemDto) => (
+        <span className="text-slate-700">{qty} {record.unit}</span>
+      ),
     },
     {
       title: 'Birim Fiyat',
       dataIndex: 'unitPrice',
       key: 'unitPrice',
       align: 'right' as const,
-      render: (price: number) => `${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`,
+      render: (price: number) => (
+        <span className="text-slate-700">{price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+      ),
     },
     {
       title: 'KDV',
       key: 'vat',
       align: 'right' as const,
       render: (_: any, record: PurchaseReturnItemDto) => (
-        <span>
+        <span className="text-slate-600">
           %{record.vatRate}
-          <div className="text-xs text-gray-500">
-            {record.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+          <div className="text-xs text-slate-400">
+            {record.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </div>
         </span>
       ),
@@ -335,129 +349,125 @@ export default function PurchaseReturnDetailPage() {
       key: 'totalAmount',
       align: 'right' as const,
       render: (amount: number) => (
-        <Text strong className="text-red-600">
-          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        <Text strong className="text-slate-900">
+          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
         </Text>
       ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push('/purchase/returns')}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/purchase/returns')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <RollbackOutlined style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                  {purchaseReturn.returnNumber}
-                  <Tag color={statusColors[purchaseReturn.status as PurchaseReturnStatus]}>
-                    {statusLabels[purchaseReturn.status as PurchaseReturnStatus]}
-                  </Tag>
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {purchaseReturn.supplierName} • {dayjs(purchaseReturn.returnDate).format('DD.MM.YYYY')}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
+                  <ArrowUturnLeftIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    {purchaseReturn.returnNumber}
+                    <Tag color={statusColors[purchaseReturn.status as PurchaseReturnStatus]}>
+                      {statusLabels[purchaseReturn.status as PurchaseReturnStatus]}
+                    </Tag>
+                  </h1>
+                  <p className="text-sm text-slate-500">
+                    {purchaseReturn.supplierName} - {dayjs(purchaseReturn.returnDate).format('DD.MM.YYYY')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Space>
-            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
-            </Dropdown>
-            {purchaseReturn.status === 'Draft' && (
-              <Button
-                type="primary"
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => router.push(`/purchase/returns/${returnId}/edit`)}
-              >
-                Düzenle
-              </Button>
-            )}
-          </Space>
+            <Space>
+              <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                  Islemler
+                </button>
+              </Dropdown>
+              {purchaseReturn.status === 'Draft' && (
+                <button
+                  onClick={() => router.push(`/purchase/returns/${returnId}/edit`)}
+                  className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                  Duzenle
+                </button>
+              )}
+            </Space>
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-8 py-8">
         {/* Progress Steps */}
-        <Card className="mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
           <Steps
             current={getStatusStep(purchaseReturn.status as PurchaseReturnStatus)}
             status={['Rejected', 'Cancelled'].includes(purchaseReturn.status) ? 'error' : 'process'}
             items={[
               { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'Gönderildi', icon: <CarOutlined /> },
-              { title: 'Teslim Alındı', icon: <InboxIcon className="w-4 h-4" /> },
-              { title: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+              { title: 'Onaylandi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+              { title: 'Gonderildi', icon: <TruckIcon className="w-4 h-4" /> },
+              { title: 'Teslim Alindi', icon: <InboxIcon className="w-4 h-4" /> },
+              { title: 'Tamamlandi', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ]}
           />
-        </Card>
+        </div>
 
         {/* Statistics */}
         <Row gutter={16} className="mb-6">
           <Col xs={12} sm={6}>
-            <Card size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
               <Statistic
-                title="İade Tutarı"
+                title={<span className="text-slate-500">Iade Tutari</span>}
                 value={purchaseReturn.totalAmount}
                 precision={2}
                 suffix={purchaseReturn.currency || 'TRY'}
-                valueStyle={{ color: '#ef4444' }}
+                valueStyle={{ color: '#0f172a' }}
               />
-            </Card>
+            </div>
           </Col>
           <Col xs={12} sm={6}>
-            <Card size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
               <Statistic
-                title="İade Edilen"
+                title={<span className="text-slate-500">Iade Edilen</span>}
                 value={purchaseReturn.refundAmount}
                 precision={2}
                 suffix={purchaseReturn.currency || 'TRY'}
                 valueStyle={{ color: purchaseReturn.refundAmount > 0 ? '#22c55e' : '#9ca3af' }}
               />
-            </Card>
+            </div>
           </Col>
           <Col xs={12} sm={6}>
-            <Card size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
               <Statistic
-                title="İade Sebebi"
+                title={<span className="text-slate-500">Iade Sebebi</span>}
                 value={reasonLabels[purchaseReturn.reason as PurchaseReturnReason] || purchaseReturn.reason}
-                valueStyle={{ fontSize: '16px' }}
+                valueStyle={{ fontSize: '16px', color: '#0f172a' }}
               />
-            </Card>
+            </div>
           </Col>
           <Col xs={12} sm={6}>
-            <Card size="small">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
               <Statistic
-                title="Toplam Kalem"
+                title={<span className="text-slate-500">Toplam Kalem</span>}
                 value={(purchaseReturn.items || []).length}
                 suffix="adet"
+                valueStyle={{ color: '#0f172a' }}
               />
-            </Card>
+            </div>
           </Col>
         </Row>
 
@@ -465,171 +475,199 @@ export default function PurchaseReturnDetailPage() {
           {/* Left Column */}
           <Col xs={24} lg={16}>
             {/* Return Items */}
-            <Card title="İade Kalemleri" className="mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Iade Kalemleri</h3>
               <Table
                 dataSource={purchaseReturn.items || []}
                 columns={itemColumns}
                 rowKey="id"
                 pagination={false}
                 size="small"
+                className="border border-slate-200 rounded-lg overflow-hidden"
                 summary={() => (
                   <Table.Summary>
-                    <Table.Summary.Row>
+                    <Table.Summary.Row className="bg-slate-50">
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text strong>Ara Toplam</Text>
+                        <Text strong className="text-slate-600">Ara Toplam</Text>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text strong>{purchaseReturn.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <Text strong className="text-slate-900">{purchaseReturn.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</Text>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
-                    <Table.Summary.Row>
+                    <Table.Summary.Row className="bg-slate-50">
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text>KDV Toplam</Text>
+                        <Text className="text-slate-600">KDV Toplam</Text>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text>{purchaseReturn.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <Text className="text-slate-700">{purchaseReturn.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</Text>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
-                    <Table.Summary.Row style={{ background: '#fef2f2' }}>
+                    <Table.Summary.Row className="bg-slate-100">
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text strong style={{ fontSize: 16 }}>İade Tutarı</Text>
+                        <Text strong className="text-slate-700 text-base">Iade Tutari</Text>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text strong style={{ fontSize: 16, color: '#ef4444' }}>
-                          {purchaseReturn.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {purchaseReturn.currency || '₺'}
+                        <Text strong className="text-slate-900 text-base">
+                          {purchaseReturn.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {purchaseReturn.currency || ''}
                         </Text>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                   </Table.Summary>
                 )}
               />
-            </Card>
+            </div>
 
             {/* Notes */}
             {(purchaseReturn.notes || purchaseReturn.internalNotes || purchaseReturn.reasonDetails) && (
-              <Card title="Notlar" size="small">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Notlar</h3>
                 {purchaseReturn.reasonDetails && (
                   <div className="mb-4">
-                    <Text strong>Sebep Detayı:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{purchaseReturn.reasonDetails}</Paragraph>
+                    <Text strong className="text-slate-700">Sebep Detayi:</Text>
+                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap text-slate-600">{purchaseReturn.reasonDetails}</Paragraph>
                   </div>
                 )}
                 {purchaseReturn.notes && (
                   <div className="mb-4">
-                    <Text strong>Genel Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{purchaseReturn.notes}</Paragraph>
+                    <Text strong className="text-slate-700">Genel Not:</Text>
+                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap text-slate-600">{purchaseReturn.notes}</Paragraph>
                   </div>
                 )}
                 {purchaseReturn.internalNotes && (
                   <div>
-                    <Text strong>Dahili Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{purchaseReturn.internalNotes}</Paragraph>
+                    <Text strong className="text-slate-700">Dahili Not:</Text>
+                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap text-slate-600">{purchaseReturn.internalNotes}</Paragraph>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
           </Col>
 
           {/* Right Column */}
           <Col xs={24} lg={8}>
             {/* Supplier Info */}
-            <Card title="Tedarikçi Bilgileri" size="small" className="mb-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 mb-4">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Tedarikci Bilgileri</h3>
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="Tedarikçi">
-                  <a onClick={() => router.push(`/purchase/suppliers/${purchaseReturn.supplierId}`)}>
+                <Descriptions.Item label={<span className="text-slate-500">Tedarikci</span>}>
+                  <a
+                    onClick={() => router.push(`/purchase/suppliers/${purchaseReturn.supplierId}`)}
+                    className="text-slate-900 hover:text-slate-600"
+                  >
                     {purchaseReturn.supplierName}
                   </a>
                 </Descriptions.Item>
               </Descriptions>
-            </Card>
+            </div>
 
             {/* Return Info */}
-            <Card title="İade Bilgileri" size="small" className="mb-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6 mb-4">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Iade Bilgileri</h3>
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="İade No">{purchaseReturn.returnNumber}</Descriptions.Item>
+                <Descriptions.Item label={<span className="text-slate-500">Iade No</span>}>
+                  <span className="text-slate-900">{purchaseReturn.returnNumber}</span>
+                </Descriptions.Item>
                 {purchaseReturn.rmaNumber && (
-                  <Descriptions.Item label="RMA No">{purchaseReturn.rmaNumber}</Descriptions.Item>
+                  <Descriptions.Item label={<span className="text-slate-500">RMA No</span>}>
+                    <span className="text-slate-900">{purchaseReturn.rmaNumber}</span>
+                  </Descriptions.Item>
                 )}
-                <Descriptions.Item label="İade Tarihi">
-                  {dayjs(purchaseReturn.returnDate).format('DD.MM.YYYY')}
+                <Descriptions.Item label={<span className="text-slate-500">Iade Tarihi</span>}>
+                  <span className="text-slate-900">{dayjs(purchaseReturn.returnDate).format('DD.MM.YYYY')}</span>
                 </Descriptions.Item>
-                <Descriptions.Item label="Tip">
-                  {typeLabels[purchaseReturn.type] || purchaseReturn.type}
+                <Descriptions.Item label={<span className="text-slate-500">Tip</span>}>
+                  <span className="text-slate-900">{typeLabels[purchaseReturn.type] || purchaseReturn.type}</span>
                 </Descriptions.Item>
-                <Descriptions.Item label="Sebep">
+                <Descriptions.Item label={<span className="text-slate-500">Sebep</span>}>
                   <Tag color={reasonColors[purchaseReturn.reason as PurchaseReturnReason] || 'default'}>
                     {reasonLabels[purchaseReturn.reason as PurchaseReturnReason] || purchaseReturn.reason}
                   </Tag>
                 </Descriptions.Item>
                 {purchaseReturn.refundMethod && (
-                  <Descriptions.Item label="İade Yöntemi">
-                    {refundMethodLabels[purchaseReturn.refundMethod] || purchaseReturn.refundMethod}
+                  <Descriptions.Item label={<span className="text-slate-500">Iade Yontemi</span>}>
+                    <span className="text-slate-900">{refundMethodLabels[purchaseReturn.refundMethod] || purchaseReturn.refundMethod}</span>
                   </Descriptions.Item>
                 )}
               </Descriptions>
-            </Card>
+            </div>
 
             {/* Related Documents */}
             {(purchaseReturn.purchaseOrderNumber || purchaseReturn.goodsReceiptNumber || purchaseReturn.purchaseInvoiceNumber) && (
-              <Card title="İlişkili Belgeler" size="small" className="mb-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-4">Iliskili Belgeler</h3>
                 <Descriptions column={1} size="small">
                   {purchaseReturn.purchaseOrderNumber && (
-                    <Descriptions.Item label="Sipariş No">
-                      <a onClick={() => router.push(`/purchase/orders/${purchaseReturn.purchaseOrderId}`)}>
+                    <Descriptions.Item label={<span className="text-slate-500">Siparis No</span>}>
+                      <a
+                        onClick={() => router.push(`/purchase/orders/${purchaseReturn.purchaseOrderId}`)}
+                        className="text-slate-900 hover:text-slate-600"
+                      >
                         {purchaseReturn.purchaseOrderNumber}
                       </a>
                     </Descriptions.Item>
                   )}
                   {purchaseReturn.goodsReceiptNumber && (
-                    <Descriptions.Item label="Mal Alım No">
-                      <a onClick={() => router.push(`/purchase/goods-receipts/${purchaseReturn.goodsReceiptId}`)}>
+                    <Descriptions.Item label={<span className="text-slate-500">Mal Alim No</span>}>
+                      <a
+                        onClick={() => router.push(`/purchase/goods-receipts/${purchaseReturn.goodsReceiptId}`)}
+                        className="text-slate-900 hover:text-slate-600"
+                      >
                         {purchaseReturn.goodsReceiptNumber}
                       </a>
                     </Descriptions.Item>
                   )}
                   {purchaseReturn.purchaseInvoiceNumber && (
-                    <Descriptions.Item label="Fatura No">
-                      <a onClick={() => router.push(`/purchase/invoices/${purchaseReturn.purchaseInvoiceId}`)}>
+                    <Descriptions.Item label={<span className="text-slate-500">Fatura No</span>}>
+                      <a
+                        onClick={() => router.push(`/purchase/invoices/${purchaseReturn.purchaseInvoiceId}`)}
+                        className="text-slate-900 hover:text-slate-600"
+                      >
                         {purchaseReturn.purchaseInvoiceNumber}
                       </a>
                     </Descriptions.Item>
                   )}
                 </Descriptions>
-              </Card>
+              </div>
             )}
 
             {/* Shipping Info */}
             {purchaseReturn.isShipped && (
-              <Card title="Gönderim Bilgileri" size="small" className="mb-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-4">
+                <h3 className="text-sm font-semibold text-slate-900 mb-4">Gonderim Bilgileri</h3>
                 <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Durum">
-                    <Tag color="green">Gönderildi</Tag>
+                  <Descriptions.Item label={<span className="text-slate-500">Durum</span>}>
+                    <Tag color="green">Gonderildi</Tag>
                   </Descriptions.Item>
                   {purchaseReturn.shippedDate && (
-                    <Descriptions.Item label="Gönderim Tarihi">
-                      {dayjs(purchaseReturn.shippedDate).format('DD.MM.YYYY')}
+                    <Descriptions.Item label={<span className="text-slate-500">Gonderim Tarihi</span>}>
+                      <span className="text-slate-900">{dayjs(purchaseReturn.shippedDate).format('DD.MM.YYYY')}</span>
                     </Descriptions.Item>
                   )}
                   {purchaseReturn.shippingCarrier && (
-                    <Descriptions.Item label="Kargo">{purchaseReturn.shippingCarrier}</Descriptions.Item>
+                    <Descriptions.Item label={<span className="text-slate-500">Kargo</span>}>
+                      <span className="text-slate-900">{purchaseReturn.shippingCarrier}</span>
+                    </Descriptions.Item>
                   )}
                   {purchaseReturn.trackingNumber && (
-                    <Descriptions.Item label="Takip No">{purchaseReturn.trackingNumber}</Descriptions.Item>
+                    <Descriptions.Item label={<span className="text-slate-500">Takip No</span>}>
+                      <span className="text-slate-900">{purchaseReturn.trackingNumber}</span>
+                    </Descriptions.Item>
                   )}
                 </Descriptions>
-              </Card>
+              </div>
             )}
 
             {/* Process History */}
-            <Card title="İşlem Geçmişi" size="small" className="mb-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-sm font-semibold text-slate-900 mb-4">Islem Gecmisi</h3>
               <Timeline
                 items={[
                   {
                     color: 'gray',
                     children: (
                       <div>
-                        <Text strong>Oluşturuldu</Text>
-                        <div className="text-xs text-gray-500">
+                        <Text strong className="text-slate-900">Olusturuldu</Text>
+                        <div className="text-xs text-slate-500">
                           {dayjs(purchaseReturn.createdAt).format('DD.MM.YYYY HH:mm')}
                         </div>
                       </div>
@@ -639,11 +677,11 @@ export default function PurchaseReturnDetailPage() {
                     color: 'blue',
                     children: (
                       <div>
-                        <Text strong>Onaylandı</Text>
+                        <Text strong className="text-slate-900">Onaylandi</Text>
                         {purchaseReturn.approvedByName && (
-                          <div className="text-xs">{purchaseReturn.approvedByName}</div>
+                          <div className="text-xs text-slate-600">{purchaseReturn.approvedByName}</div>
                         )}
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-500">
                           {dayjs(purchaseReturn.approvalDate).format('DD.MM.YYYY HH:mm')}
                         </div>
                       </div>
@@ -653,8 +691,8 @@ export default function PurchaseReturnDetailPage() {
                     color: 'geekblue',
                     children: (
                       <div>
-                        <Text strong>Gönderildi</Text>
-                        <div className="text-xs text-gray-500">
+                        <Text strong className="text-slate-900">Gonderildi</Text>
+                        <div className="text-xs text-slate-500">
                           {dayjs(purchaseReturn.shippedDate).format('DD.MM.YYYY HH:mm')}
                         </div>
                       </div>
@@ -664,8 +702,8 @@ export default function PurchaseReturnDetailPage() {
                     color: 'purple',
                     children: (
                       <div>
-                        <Text strong>Teslim Alındı</Text>
-                        <div className="text-xs text-gray-500">
+                        <Text strong className="text-slate-900">Teslim Alindi</Text>
+                        <div className="text-xs text-slate-500">
                           {dayjs(purchaseReturn.receivedDate).format('DD.MM.YYYY HH:mm')}
                         </div>
                       </div>
@@ -675,11 +713,11 @@ export default function PurchaseReturnDetailPage() {
                     color: 'green',
                     children: (
                       <div>
-                        <Text strong>İade Edildi</Text>
+                        <Text strong className="text-slate-900">Iade Edildi</Text>
                         {purchaseReturn.refundReference && (
-                          <div className="text-xs">{purchaseReturn.refundReference}</div>
+                          <div className="text-xs text-slate-600">{purchaseReturn.refundReference}</div>
                         )}
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-500">
                           {dayjs(purchaseReturn.refundDate).format('DD.MM.YYYY HH:mm')}
                         </div>
                       </div>
@@ -687,7 +725,7 @@ export default function PurchaseReturnDetailPage() {
                   },
                 ].filter(Boolean) as TimelineItemProps[]}
               />
-            </Card>
+            </div>
           </Col>
         </Row>
       </div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { ReloadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowPathIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
 interface RouteErrorProps {
@@ -62,13 +62,13 @@ export default function RouteError({ error, reset }: RouteErrorProps) {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
             type="primary"
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={reset}
           >
             Tekrar Dene
           </Button>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeftIcon className="w-4 h-4" />}
             onClick={() => router.back()}
           >
             Geri Dön

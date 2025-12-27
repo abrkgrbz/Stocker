@@ -83,7 +83,7 @@ export default function SupplierDetailPage() {
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
               >
-                <BuildingStorefrontIcon className="w-4 h-4" style={{ fontSize: 20, color: 'white' }} />
+                <BuildingStorefrontIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function SupplierDetailPage() {
           {address && (
             <Card title="Adres Bilgileri">
               <div className="flex items-start gap-3">
-                <MapPinIcon className="w-4 h-4 text-gray-400 mt-1 text-lg" />
+                <MapPinIcon className="w-5 h-5 text-gray-400 mt-1" />
                 <div>
                   {supplier.street && <div>{supplier.street}</div>}
                   <div>{[supplier.city, supplier.state].filter(Boolean).join(', ')}</div>

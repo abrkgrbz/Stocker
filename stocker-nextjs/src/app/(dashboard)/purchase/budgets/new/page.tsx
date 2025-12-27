@@ -1,30 +1,17 @@
 'use client';
 
 import React from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  Select,
-  Button,
-  Row,
-  Col,
-  Typography,
-  DatePicker,
-  InputNumber,
-  Divider,
-} from 'antd';
+import { Form, Input, Select, DatePicker, InputNumber, message } from 'antd';
 import {
   ArrowLeftIcon,
   CheckIcon,
   WalletIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
 import { useCreatePurchaseBudget } from '@/lib/api/hooks/usePurchase';
 import type { CreatePurchaseBudgetDto, BudgetType } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
@@ -62,221 +49,239 @@ export default function NewPurchaseBudgetPage() {
 
     try {
       await createMutation.mutateAsync(data);
+      message.success('Bütçe başarıyla oluşturuldu');
       router.push('/purchase/budgets');
     } catch (error) {
       // Error handled by hook
     }
   };
 
+  const handleCancel = () => {
+    router.push('/purchase/budgets');
+  };
+
+  const isLoading = createMutation.isPending;
+
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
-        <div>
-          <Title level={3} className="mb-1">Yeni Satın Alma Bütçesi</Title>
-          <Text type="secondary">Departman veya kategori bazlı bütçe tanımlayın</Text>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                  <WalletIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">Yeni Satın Alma Bütçesi</h1>
+                  <p className="text-sm text-slate-500">Departman veya kategori bazlı bütçe tanımlayın</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                İptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          currency: 'TRY',
-          budgetType: 'Department',
-          alertThreshold: 80,
-        }}
-      >
-        <Row gutter={24}>
-          {/* Left Panel */}
-          <Col xs={24} lg={10}>
-            <Card bordered={false} className="shadow-sm mb-6">
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #722ed1 0%, #1890ff 100%)',
-                  borderRadius: '12px',
-                  padding: '32px 20px',
-                  minHeight: '180px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <WalletIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
-                <p className="mt-4 text-lg font-medium text-white/90">Satın Alma Bütçesi</p>
-                <p className="text-sm text-white/60">Harcama limitlerini belirleyin</p>
+      {/* Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            currency: 'TRY',
+            budgetType: 'Department',
+            alertThreshold: 80,
+          }}
+        >
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Panel */}
+            <div className="col-span-12 lg:col-span-4 space-y-6">
+              {/* Visual Card */}
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-8 text-white">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center mb-4">
+                    <WalletIcon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">Satın Alma Bütçesi</h3>
+                  <p className="text-sm text-white/70">Harcama limitlerini belirleyin</p>
+                </div>
               </div>
-            </Card>
 
-            {/* Budget Amount */}
-            <Card title="Bütçe Tutarı" bordered={false} className="shadow-sm">
-              <Form.Item
-                name="totalAmount"
-                label="Toplam Bütçe"
-                rules={[{ required: true, message: 'Tutar zorunludur' }]}
-              >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  precision={2}
-                  placeholder="0.00"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value: string | undefined) => Number(value?.replace(/,/g, '') ?? 0)}
-                  addonAfter={
-                    <Form.Item name="currency" noStyle>
-                      <Select style={{ width: 80 }}>
-                        <Select.Option value="TRY">TRY</Select.Option>
-                        <Select.Option value="USD">USD</Select.Option>
-                        <Select.Option value="EUR">EUR</Select.Option>
-                      </Select>
-                    </Form.Item>
-                  }
-                />
-              </Form.Item>
+              {/* Budget Amount */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 className="text-sm font-medium text-slate-900 mb-4">Bütçe Tutarı</h2>
 
-              <Form.Item
-                name="alertThreshold"
-                label="Uyarı Eşiği (%)"
-                help="Bu yüzdeyi aştığında uyarı gönderilir"
-              >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  max={100}
-                  placeholder="80"
-                  addonAfter="%"
-                />
-              </Form.Item>
-            </Card>
-          </Col>
+                <Form.Item
+                  name="totalAmount"
+                  label={<span className="text-xs text-slate-500">Toplam Bütçe</span>}
+                  rules={[{ required: true, message: 'Tutar zorunludur' }]}
+                >
+                  <InputNumber
+                    className="w-full"
+                    min={0}
+                    precision={2}
+                    placeholder="0.00"
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value: string | undefined) => Number(value?.replace(/,/g, '') ?? 0)}
+                    addonAfter={
+                      <Form.Item name="currency" noStyle>
+                        <Select style={{ width: 80 }}>
+                          <Select.Option value="TRY">TRY</Select.Option>
+                          <Select.Option value="USD">USD</Select.Option>
+                          <Select.Option value="EUR">EUR</Select.Option>
+                        </Select>
+                      </Form.Item>
+                    }
+                  />
+                </Form.Item>
 
-          {/* Right Panel */}
-          <Col xs={24} lg={14}>
-            <Card bordered={false} className="shadow-sm mb-6">
-              {/* Name - Hero Input */}
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Bütçe adı zorunludur' },
-                  { max: 200, message: 'En fazla 200 karakter' },
-                ]}
-                className="mb-4"
-              >
-                <Input
-                  placeholder="Bütçe adı"
-                  variant="borderless"
-                  style={{
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    padding: '0',
-                    color: '#1a1a1a',
-                  }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
+                <Form.Item
+                  name="alertThreshold"
+                  label={<span className="text-xs text-slate-500">Uyarı Eşiği (%)</span>}
+                  help="Bu yüzdeyi aştığında uyarı gönderilir"
+                >
+                  <InputNumber
+                    className="w-full"
+                    min={0}
+                    max={100}
+                    placeholder="80"
+                    addonAfter="%"
+                  />
+                </Form.Item>
+              </div>
+            </div>
 
-              <Form.Item name="description" className="mb-6">
-                <TextArea
-                  placeholder="Bütçe hakkında açıklama..."
-                  variant="borderless"
-                  autoSize={{ minRows: 2, maxRows: 4 }}
-                  style={{ fontSize: '15px', padding: '0', color: '#666' }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
+            {/* Right Panel */}
+            <div className="col-span-12 lg:col-span-8">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                {/* Name - Hero Input */}
+                <Form.Item
+                  name="name"
+                  rules={[
+                    { required: true, message: 'Bütçe adı zorunludur' },
+                    { max: 200, message: 'En fazla 200 karakter' },
+                  ]}
+                  className="mb-4"
+                >
+                  <Input
+                    placeholder="Bütçe adı"
+                    className="!text-2xl !font-semibold !border-0 !shadow-none !px-0 placeholder:text-slate-300"
+                  />
+                </Form.Item>
 
-              <Divider />
+                <Form.Item name="description" className="mb-6">
+                  <TextArea
+                    placeholder="Bütçe hakkında açıklama..."
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    className="!border-0 !shadow-none !px-0 !text-slate-600 placeholder:text-slate-300"
+                  />
+                </Form.Item>
 
-              <Row gutter={16}>
-                <Col span={12}>
+                <div className="h-px bg-slate-100 my-6" />
+
+                <div className="grid grid-cols-2 gap-4">
                   <Form.Item
                     name="code"
-                    label="Bütçe Kodu"
+                    label={<span className="text-xs text-slate-500">Bütçe Kodu</span>}
                     rules={[{ required: true, message: 'Zorunlu' }]}
                   >
                     <Input placeholder="BUD-2024-001" />
                   </Form.Item>
-                </Col>
-                <Col span={12}>
+
                   <Form.Item
                     name="budgetType"
-                    label="Bütçe Tipi"
+                    label={<span className="text-xs text-slate-500">Bütçe Tipi</span>}
                     rules={[{ required: true, message: 'Zorunlu' }]}
                   >
                     <Select placeholder="Tip seçin" options={budgetTypeOptions} />
                   </Form.Item>
-                </Col>
-              </Row>
+                </div>
 
-              <Form.Item
-                name="period"
-                label="Bütçe Dönemi"
-                rules={[{ required: true, message: 'Dönem seçimi zorunludur' }]}
-              >
-                <RangePicker
-                  style={{ width: '100%' }}
-                  format="DD.MM.YYYY"
-                  placeholder={['Başlangıç', 'Bitiş']}
-                />
-              </Form.Item>
+                <Form.Item
+                  name="period"
+                  label={<span className="text-xs text-slate-500">Bütçe Dönemi</span>}
+                  rules={[{ required: true, message: 'Dönem seçimi zorunludur' }]}
+                >
+                  <RangePicker
+                    className="w-full"
+                    format="DD.MM.YYYY"
+                    placeholder={['Başlangıç', 'Bitiş']}
+                  />
+                </Form.Item>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="departmentId" label="Departman">
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item
+                    name="departmentId"
+                    label={<span className="text-xs text-slate-500">Departman</span>}
+                  >
                     <Select
                       placeholder="Departman seçin"
                       allowClear
                       showSearch
                       optionFilterProp="children"
                     >
-                      {/* TODO: Load departments from API */}
                       <Select.Option value="dept-1">Üretim</Select.Option>
                       <Select.Option value="dept-2">Pazarlama</Select.Option>
                       <Select.Option value="dept-3">İK</Select.Option>
                       <Select.Option value="dept-4">IT</Select.Option>
                     </Select>
                   </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="categoryId" label="Kategori">
+
+                  <Form.Item
+                    name="categoryId"
+                    label={<span className="text-xs text-slate-500">Kategori</span>}
+                  >
                     <Select
                       placeholder="Kategori seçin"
                       allowClear
                       showSearch
                       optionFilterProp="children"
                     >
-                      {/* TODO: Load categories from API */}
                       <Select.Option value="cat-1">Hammadde</Select.Option>
                       <Select.Option value="cat-2">Ofis Malzemeleri</Select.Option>
                       <Select.Option value="cat-3">IT Ekipmanları</Select.Option>
                     </Select>
                   </Form.Item>
-                </Col>
-              </Row>
+                </div>
 
-              <Form.Item name="notes" label="Notlar">
-                <TextArea rows={3} placeholder="Ek notlar ve açıklamalar..." />
-              </Form.Item>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={() => router.back()}>İptal</Button>
-          <Button
-            type="primary"
-            icon={<CheckIcon className="w-4 h-4" />}
-            htmlType="submit"
-            loading={createMutation.isPending}
-          >
-            Kaydet
-          </Button>
-        </div>
-      </Form>
+                <Form.Item
+                  name="notes"
+                  label={<span className="text-xs text-slate-500">Notlar</span>}
+                >
+                  <TextArea rows={3} placeholder="Ek notlar ve açıklamalar..." />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

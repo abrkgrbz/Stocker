@@ -2,23 +2,23 @@
 
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { RocketOutlined, SafetyOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { RocketLaunchIcon, ShieldCheckIcon, BoltIcon } from '@heroicons/react/24/outline';
 
 const values = [
   {
-    icon: <RocketOutlined />,
+    icon: <RocketLaunchIcon className="w-8 h-8" />,
     title: 'Hızlı Kurulum',
     description: '5 dakikada başlayın, kredi kartı gerektirmez',
     color: 'from-blue-600 to-cyan-600',
   },
   {
-    icon: <SafetyOutlined />,
+    icon: <ShieldCheckIcon className="w-8 h-8" />,
     title: '%100 Güvenli',
     description: 'Verileriniz bankacılık seviyesinde şifreleme ile korunur',
     color: 'from-purple-600 to-pink-600',
   },
   {
-    icon: <ThunderboltOutlined />,
+    icon: <BoltIcon className="w-8 h-8" />,
     title: '7/24 Destek',
     description: 'Her zaman yanınızdayız, anında yardım alın',
     color: 'from-orange-600 to-red-600',

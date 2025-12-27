@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface PageLoaderProps {
   tip?: string;
@@ -20,7 +20,7 @@ export default function PageLoader({
   return (
     <div className={containerClass}>
       <Spin
-        indicator={<LoadingOutlined style={{ fontSize: size === 'large' ? 48 : size === 'default' ? 32 : 24 }} spin />}
+        indicator={<ArrowPathIcon className="animate-spin" style={{ width: size === 'large' ? 48 : size === 'default' ? 32 : 24, height: size === 'large' ? 48 : size === 'default' ? 32 : 24 }} />}
         tip={tip}
         size={size}
       />

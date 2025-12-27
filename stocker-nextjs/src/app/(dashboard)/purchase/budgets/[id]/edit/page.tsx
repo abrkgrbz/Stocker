@@ -2,50 +2,26 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Form,
-  Button,
-  Card,
-  Input,
-  Select,
-  DatePicker,
-  InputNumber,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  Empty,
-  Tag,
-  Slider,
-  message,
-} from 'antd';
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  WalletIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import {
-  usePurchaseBudget,
-  useUpdatePurchaseBudget,
-} from '@/lib/api/hooks/usePurchase';
+import { Form, Input, Select, DatePicker, InputNumber, Slider, Spin, message } from 'antd';
+import { ArrowLeftIcon, CheckIcon, WalletIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { usePurchaseBudget, useUpdatePurchaseBudget } from '@/lib/api/hooks/usePurchase';
 import { useDepartments } from '@/lib/api/hooks/useHR';
-import type { PurchaseBudgetStatus, PurchaseBudgetType } from '@/lib/api/services/purchase.types';
+import type { PurchaseBudgetStatus } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-const statusConfig: Record<PurchaseBudgetStatus, { color: string; text: string }> = {
-  Draft: { color: 'default', text: 'Taslak' },
-  PendingApproval: { color: 'orange', text: 'Onay Bekliyor' },
-  Approved: { color: 'blue', text: 'Onaylandı' },
-  Active: { color: 'green', text: 'Aktif' },
-  Frozen: { color: 'cyan', text: 'Donduruldu' },
-  Exhausted: { color: 'red', text: 'Tükendi' },
-  Closed: { color: 'gray', text: 'Kapatıldı' },
-  Rejected: { color: 'volcano', text: 'Reddedildi' },
-  Cancelled: { color: 'magenta', text: 'İptal Edildi' },
+const statusConfig: Record<PurchaseBudgetStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  PendingApproval: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Onay Bekliyor' },
+  Approved: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Onaylandı' },
+  Active: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Aktif' },
+  Frozen: { bg: 'bg-cyan-100', text: 'text-cyan-700', label: 'Donduruldu' },
+  Exhausted: { bg: 'bg-red-100', text: 'text-red-700', label: 'Tükendi' },
+  Closed: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Kapatıldı' },
+  Rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' },
+  Cancelled: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'İptal Edildi' },
 };
 
 const budgetTypeOptions = [
@@ -97,7 +73,7 @@ export default function EditPurchaseBudgetPage() {
 
   if (budgetLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -105,12 +81,15 @@ export default function EditPurchaseBudgetPage() {
 
   if (!budget) {
     return (
-      <div className="p-8">
-        <Empty description="Bütçe bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/budgets')}>
-            Bütçelere Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <WalletIcon className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Bütçe bulunamadı</h3>
+          <Link href="/purchase/budgets">
+            <button className="text-sm text-slate-600 hover:text-slate-900">← Listeye dön</button>
+          </Link>
         </div>
       </div>
     );
@@ -118,12 +97,16 @@ export default function EditPurchaseBudgetPage() {
 
   if (budget.status !== 'Draft') {
     return (
-      <div className="p-8">
-        <Empty description="Bu bütçe düzenlenemez. Sadece taslak bütçeler düzenlenebilir." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/purchase/budgets/${budgetId}`)}>
-            Bütçeye Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <WalletIcon className="w-6 h-6 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Bu bütçe düzenlenemez</h3>
+          <p className="text-sm text-slate-500 mb-4">Sadece taslak bütçeler düzenlenebilir.</p>
+          <Link href={`/purchase/budgets/${budgetId}`}>
+            <button className="text-sm text-slate-600 hover:text-slate-900">← Bütçeye dön</button>
+          </Link>
         </div>
       </div>
     );
@@ -148,210 +131,195 @@ export default function EditPurchaseBudgetPage() {
     }
   };
 
-  const handleCancel = () => {
-    router.push(`/purchase/budgets/${budgetId}`);
-  };
-
-  const isLoading = updateBudget.isPending;
   const status = statusConfig[budget.status as PurchaseBudgetStatus] || statusConfig.Draft;
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #722ed1 0%, #1890ff 100%)' }}
-              >
-                <WalletIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Bütçeyi Düzenle
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {budget.code || budget.budgetCode}
-                </p>
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href={`/purchase/budgets/${budgetId}`}>
+                <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                  <ArrowLeftIcon className="w-5 h-5 text-slate-500" />
+                </button>
+              </Link>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <WalletIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">Bütçeyi Düzenle</h1>
+                  <p className="text-sm text-slate-500">{budget.code || budget.budgetCode}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet
-            </Button>
+            <div className="flex items-center gap-3">
+              <Link href={`/purchase/budgets/${budgetId}`}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <XMarkIcon className="w-4 h-4" />
+                  İptal
+                </button>
+              </Link>
+              <button
+                onClick={() => form.submit()}
+                disabled={updateBudget.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                Kaydet
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-5xl mx-auto px-8 py-8">
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-        >
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <Form form={form} layout="vertical" onFinish={handleSave}>
           {/* Read-Only Info */}
-          <Card title="Bütçe Bilgileri (Salt Okunur)" className="mb-6">
-            <Row gutter={16}>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Durum</Text>
-                  <Tag color={status.color}>{status.text}</Tag>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Bütçe Bilgileri (Salt Okunur)</h2>
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Durum</div>
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${status.bg} ${status.text}`}>
+                  {status.label}
+                </span>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Kullanılan</div>
+                <div className={`text-sm font-medium ${budget.usedAmount > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                  {(budget.usedAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {budget.currency}
                 </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Kullanılan</Text>
-                  <Text strong style={{ color: budget.usedAmount > 0 ? '#f5222d' : '#52c41a' }}>
-                    {(budget.usedAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {budget.currency}
-                  </Text>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 mb-1">Kalan</div>
+                <div className="text-sm font-medium text-emerald-600">
+                  {(budget.remainingAmount || budget.availableAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {budget.currency}
                 </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Kalan</Text>
-                  <Text strong style={{ color: '#52c41a' }}>
-                    {(budget.remainingAmount || budget.availableAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {budget.currency}
-                  </Text>
-                </div>
-              </Col>
-            </Row>
-          </Card>
+              </div>
+            </div>
+          </div>
 
           {/* Editable Fields */}
-          <Card title="Bütçe Detayları" className="mb-6">
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-6">Bütçe Detayları</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item
+                name="code"
+                label={<span className="text-xs text-slate-500">Bütçe Kodu</span>}
+                rules={[{ required: true, message: 'Kod zorunludur' }]}
+              >
+                <Input placeholder="BTJ-2024-001" />
+              </Form.Item>
+
+              <Form.Item
+                name="name"
+                label={<span className="text-xs text-slate-500">Bütçe Adı</span>}
+                rules={[{ required: true, message: 'Ad zorunludur' }]}
+              >
+                <Input placeholder="Bütçe adı" />
+              </Form.Item>
+
+              <div className="col-span-2">
                 <Form.Item
-                  name="code"
-                  label="Bütçe Kodu"
-                  rules={[{ required: true, message: 'Kod zorunludur' }]}
+                  name="description"
+                  label={<span className="text-xs text-slate-500">Açıklama</span>}
                 >
-                  <Input placeholder="BTJ-2024-001" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="name"
-                  label="Bütçe Adı"
-                  rules={[{ required: true, message: 'Ad zorunludur' }]}
-                >
-                  <Input placeholder="Bütçe adı" />
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name="description" label="Açıklama">
                   <TextArea rows={2} placeholder="Bütçe açıklaması..." />
                 </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item
-                  name="budgetType"
-                  label="Bütçe Tipi"
-                  rules={[{ required: true, message: 'Tip seçin' }]}
+              </div>
+
+              <Form.Item
+                name="budgetType"
+                label={<span className="text-xs text-slate-500">Bütçe Tipi</span>}
+                rules={[{ required: true, message: 'Tip seçin' }]}
+              >
+                <Select options={budgetTypeOptions} placeholder="Tip seçin" />
+              </Form.Item>
+
+              <Form.Item
+                name="year"
+                label={<span className="text-xs text-slate-500">Yıl</span>}
+              >
+                <InputNumber className="w-full" min={2020} max={2099} placeholder="2024" />
+              </Form.Item>
+
+              <Form.Item
+                name="quarter"
+                label={<span className="text-xs text-slate-500">Çeyrek</span>}
+              >
+                <Select placeholder="Seçin" allowClear>
+                  <Select.Option value={1}>Q1</Select.Option>
+                  <Select.Option value={2}>Q2</Select.Option>
+                  <Select.Option value={3}>Q3</Select.Option>
+                  <Select.Option value={4}>Q4</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="departmentId"
+                label={<span className="text-xs text-slate-500">Departman</span>}
+              >
+                <Select
+                  placeholder="Departman seçin"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  loading={departmentsLoading}
                 >
-                  <Select options={budgetTypeOptions} placeholder="Tip seçin" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item name="year" label="Yıl">
-                  <InputNumber
-                    className="w-full"
-                    min={2020}
-                    max={2099}
-                    placeholder="2024"
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item name="quarter" label="Çeyrek">
-                  <Select placeholder="Seçin" allowClear>
-                    <Select.Option value={1}>Q1</Select.Option>
-                    <Select.Option value={2}>Q2</Select.Option>
-                    <Select.Option value={3}>Q3</Select.Option>
-                    <Select.Option value={4}>Q4</Select.Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item name="departmentId" label="Departman">
-                  <Select
-                    placeholder="Departman seçin"
-                    allowClear
-                    showSearch
-                    optionFilterProp="children"
-                    loading={departmentsLoading}
-                  >
-                    {departmentsData?.map((dept: any) => (
-                      <Select.Option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item name="periodStart" label="Dönem Başlangıcı">
-                  <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={8}>
-                <Form.Item name="periodEnd" label="Dönem Bitişi">
-                  <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
+                  {departmentsData?.map((dept: any) => (
+                    <Select.Option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="periodStart"
+                label={<span className="text-xs text-slate-500">Dönem Başlangıcı</span>}
+              >
+                <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih" />
+              </Form.Item>
+
+              <Form.Item
+                name="periodEnd"
+                label={<span className="text-xs text-slate-500">Dönem Bitişi</span>}
+              >
+                <DatePicker className="w-full" format="DD.MM.YYYY" placeholder="Tarih" />
+              </Form.Item>
+
+              <Form.Item
+                name="totalAmount"
+                label={<span className="text-xs text-slate-500">Toplam Bütçe</span>}
+                rules={[{ required: true, message: 'Tutar zorunludur' }]}
+              >
+                <InputNumber
+                  className="w-full"
+                  min={0}
+                  precision={2}
+                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => (parseFloat(value!.replace(/\$\s?|(,*)/g, '')) || 0) as unknown as 0}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="currency"
+                label={<span className="text-xs text-slate-500">Para Birimi</span>}
+              >
+                <Select options={currencyOptions} placeholder="Seçin" />
+              </Form.Item>
+
+              <div className="col-span-2">
                 <Form.Item
-                  name="totalAmount"
-                  label="Toplam Bütçe"
-                  rules={[{ required: true, message: 'Tutar zorunludur' }]}
+                  name="alertThreshold"
+                  label={<span className="text-xs text-slate-500">Uyarı Eşiği (%)</span>}
                 >
-                  <InputNumber
-                    className="w-full"
-                    min={0}
-                    precision={2}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => (parseFloat(value!.replace(/\$\s?|(,*)/g, '')) || 0) as unknown as 0}
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item name="currency" label="Para Birimi">
-                  <Select options={currencyOptions} placeholder="Seçin" />
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name="alertThreshold" label="Uyarı Eşiği (%)">
                   <Slider
                     min={50}
                     max={100}
@@ -364,14 +332,18 @@ export default function EditPurchaseBudgetPage() {
                     }}
                   />
                 </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name="notes" label="Notlar">
+              </div>
+
+              <div className="col-span-2">
+                <Form.Item
+                  name="notes"
+                  label={<span className="text-xs text-slate-500">Notlar</span>}
+                >
                   <TextArea rows={3} placeholder="Ek notlar..." />
                 </Form.Item>
-              </Col>
-            </Row>
-          </Card>
+              </div>
+            </div>
+          </div>
         </Form>
       </div>
     </div>

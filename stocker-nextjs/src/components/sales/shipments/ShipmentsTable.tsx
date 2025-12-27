@@ -8,13 +8,13 @@
 import React from 'react';
 import { Table, Dropdown, Button } from 'antd';
 import {
-  MoreOutlined,
-  EyeOutlined,
-  SendOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  RollbackOutlined,
-} from '@ant-design/icons';
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PaperAirplaneIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowUturnLeftIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -75,7 +75,7 @@ export function ShipmentsTable({
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => handleView(record.id),
       },
@@ -86,7 +86,7 @@ export function ShipmentsTable({
     if (canShip && onShip) {
       items.push({
         key: 'ship',
-        icon: <SendOutlined />,
+        icon: <PaperAirplaneIcon className="w-4 h-4" />,
         label: 'Sevk Et',
         onClick: () => onShip(record.id),
       });
@@ -97,7 +97,7 @@ export function ShipmentsTable({
     if (canDeliver && onDeliver) {
       items.push({
         key: 'deliver',
-        icon: <CheckCircleOutlined />,
+        icon: <CheckCircleIcon className="w-4 h-4" />,
         label: 'Teslim Edildi',
         onClick: () => onDeliver(record.id),
       });
@@ -106,7 +106,7 @@ export function ShipmentsTable({
     if (record.status === 'Delivered' && onReturn) {
       items.push({
         key: 'return',
-        icon: <RollbackOutlined />,
+        icon: <ArrowUturnLeftIcon className="w-4 h-4" />,
         label: 'İade Al',
         onClick: () => onReturn(record.id),
       });
@@ -119,7 +119,7 @@ export function ShipmentsTable({
         { type: 'divider' },
         {
           key: 'cancel',
-          icon: <CloseCircleOutlined />,
+          icon: <XCircleIcon className="w-4 h-4" />,
           label: 'İptal Et',
           danger: true,
           onClick: () => onCancel(record.id),
@@ -211,7 +211,7 @@ export function ShipmentsTable({
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
           <Button
             type="text"
-            icon={<MoreOutlined />}
+            icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
             className="text-slate-400 hover:text-slate-600"
           />
         </Dropdown>

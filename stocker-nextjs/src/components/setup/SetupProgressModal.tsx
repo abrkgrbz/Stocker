@@ -3,16 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Progress, Steps, Typography, Space, Spin, Result, Button } from 'antd';
 import {
-  LoadingOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DatabaseOutlined,
-  TableOutlined,
-  CloudUploadOutlined,
-  SettingOutlined,
-  RocketOutlined,
-  SafetyCertificateOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CircleStackIcon,
+  TableCellsIcon,
+  CloudArrowUpIcon,
+  Cog6ToothIcon,
+  RocketLaunchIcon,
+  ShieldCheckIcon,
+} from '@heroicons/react/24/outline';
 import { useSetupProgress, SetupStep } from '@/lib/hooks/use-setup-progress';
 
 const { Title, Text, Paragraph } = Typography;
@@ -35,47 +35,47 @@ const stepConfigs: Record<SetupStep, StepConfig> = {
   initializing: {
     title: 'Başlatılıyor',
     description: 'Kurulum hazırlanıyor...',
-    icon: <LoadingOutlined />,
+    icon: <ArrowPathIcon className="w-5 h-5 animate-spin" />,
   },
   'creating-database': {
     title: 'Veritabanı',
     description: 'Veritabanı oluşturuluyor...',
-    icon: <DatabaseOutlined />,
+    icon: <CircleStackIcon className="w-5 h-5" />,
   },
   'running-migrations': {
     title: 'Tablolar',
     description: 'Tablolar oluşturuluyor...',
-    icon: <TableOutlined />,
+    icon: <TableCellsIcon className="w-5 h-5" />,
   },
   'seeding-data': {
     title: 'Veriler',
     description: 'Temel veriler yükleniyor...',
-    icon: <CloudUploadOutlined />,
+    icon: <CloudArrowUpIcon className="w-5 h-5" />,
   },
   'configuring-modules': {
     title: 'Modüller',
     description: 'Modüller yapılandırılıyor...',
-    icon: <SettingOutlined />,
+    icon: <Cog6ToothIcon className="w-5 h-5" />,
   },
   'creating-storage': {
     title: 'Depolama',
     description: 'Depolama alanı hazırlanıyor...',
-    icon: <SafetyCertificateOutlined />,
+    icon: <ShieldCheckIcon className="w-5 h-5" />,
   },
   'activating-tenant': {
     title: 'Aktivasyon',
     description: 'Hesap aktifleştiriliyor...',
-    icon: <RocketOutlined />,
+    icon: <RocketLaunchIcon className="w-5 h-5" />,
   },
   completed: {
     title: 'Tamamlandı',
     description: 'Kurulum başarıyla tamamlandı!',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-5 h-5" />,
   },
   failed: {
     title: 'Hata',
     description: 'Kurulum sırasında bir hata oluştu',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-5 h-5" />,
   },
 };
 
@@ -163,7 +163,7 @@ export const SetupProgressModal: React.FC<SetupProgressModalProps> = ({
           status="success"
           title="Kurulum Tamamlandı!"
           subTitle="Hesabınız başarıyla oluşturuldu. Yönlendiriliyorsunuz..."
-          icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+          icon={<CheckCircleIcon className="w-12 h-12" style={{ color: '#52c41a' }} />}
         />
       );
     }
@@ -175,7 +175,7 @@ export const SetupProgressModal: React.FC<SetupProgressModalProps> = ({
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} spin />} />
+          <Spin indicator={<ArrowPathIcon className="w-12 h-12 animate-spin" style={{ color: '#1890ff' }} />} />
           <Title level={3} style={{ marginTop: 24, marginBottom: 8 }}>
             Hesabınız Hazırlanıyor
           </Title>
@@ -236,7 +236,7 @@ export const SetupProgressModal: React.FC<SetupProgressModalProps> = ({
               status,
               icon:
                 index === currentIndex ? (
-                  <Spin indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />} />
+                  <Spin indicator={<ArrowPathIcon className="w-4 h-4 animate-spin" />} />
                 ) : undefined,
             };
           })}

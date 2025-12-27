@@ -267,7 +267,7 @@ export default function ProductBundleDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <GiftIcon className="w-4 h-4 text-white text-lg" />
+                <GiftIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -314,7 +314,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-amber-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Paket Fiyatı
@@ -333,7 +333,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Squares2X2Icon className="w-4 h-4 text-purple-600 text-lg" />
+                  <Squares2X2Icon className="w-5 h-5 text-purple-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ürün Sayısı
@@ -350,7 +350,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <ShoppingCartIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <ShoppingCartIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Tasarruf
@@ -374,7 +374,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CalendarIcon className="w-4 h-4 text-blue-600 text-lg" />
+                  <CalendarIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Geçerlilik
@@ -573,7 +573,7 @@ export default function ProductBundleDetailPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <GiftIcon className="w-4 h-4 text-slate-400 text-2xl" />
+                    <GiftIcon className="w-8 h-8 text-slate-400" />
                   </div>
                   <p className="text-slate-500 mb-4">Bu pakette henüz ürün yok</p>
                   <Button

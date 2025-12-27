@@ -522,7 +522,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <InboxIcon className="w-4 h-4 text-white text-lg" />
+                  <InboxIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Talep Edilen
@@ -541,7 +541,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <RocketLaunchIcon className="w-4 h-4 text-blue-600 text-lg" />
+                  <RocketLaunchIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sevk Edilen
@@ -560,7 +560,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Teslim Alınan
@@ -579,7 +579,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                  <ExclamationCircleIcon className="w-4 h-4 text-red-600 text-lg" />
+                  <ExclamationCircleIcon className="w-5 h-5 text-red-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fark</p>
               </div>
@@ -600,7 +600,7 @@ export default function StockTransferDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4 text-blue-600 text-xl" />
+                  <MapPinIcon className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
                   <button
@@ -624,7 +624,7 @@ export default function StockTransferDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4 text-emerald-600 text-xl" />
+                  <MapPinIcon className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
                   <button
@@ -780,7 +780,7 @@ export default function StockTransferDetailPage() {
               {transfer.referenceNumber ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <DocumentTextIcon className="w-4 h-4 text-purple-600 text-lg" />
+                    <DocumentTextIcon className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{transfer.referenceNumber}</p>

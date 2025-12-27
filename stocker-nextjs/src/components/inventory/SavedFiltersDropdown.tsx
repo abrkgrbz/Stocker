@@ -17,17 +17,17 @@ import {
   message,
 } from 'antd';
 import {
-  FilterOutlined,
-  SaveOutlined,
-  DeleteOutlined,
-  StarOutlined,
-  StarFilled,
-  HistoryOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  DownOutlined,
-} from '@ant-design/icons';
+  FunnelIcon,
+  DocumentCheckIcon,
+  TrashIcon,
+  StarIcon,
+  ClockIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import {
   useSavedFilters,
   type FilterEntityType,
@@ -170,9 +170,9 @@ export default function SavedFiltersDropdown({
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {filter.isDefault ? (
-          <StarFilled className="text-yellow-500 flex-shrink-0" />
+          <StarIconSolid className="w-4 h-4 text-yellow-500 flex-shrink-0" />
         ) : (
-          <FilterOutlined className="text-gray-400 flex-shrink-0" />
+          <FunnelIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
         )}
         <span className="truncate">{filter.name}</span>
         {activeFilter?.id === filter.id && (
@@ -186,7 +186,7 @@ export default function SavedFiltersDropdown({
           <Button
             type="text"
             size="small"
-            icon={filter.isDefault ? <StarFilled className="text-yellow-500" /> : <StarOutlined />}
+            icon={filter.isDefault ? <StarIconSolid className="w-4 h-4 text-yellow-500" /> : <StarIcon className="w-4 h-4" />}
             onClick={(e) => handleSetDefault(filter, e)}
           />
         </Tooltip>
@@ -194,7 +194,7 @@ export default function SavedFiltersDropdown({
           <Button
             type="text"
             size="small"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={(e) => handleEditFilter(filter, e)}
           />
         </Tooltip>
@@ -203,7 +203,7 @@ export default function SavedFiltersDropdown({
             type="text"
             size="small"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={(e) => handleDeleteFilter(filter, e)}
           />
         </Tooltip>
@@ -237,7 +237,7 @@ export default function SavedFiltersDropdown({
           <div className="p-2">
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<DocumentCheckIcon className="w-4 h-4" />}
               onClick={openSaveModal}
               block
               ghost
@@ -254,14 +254,14 @@ export default function SavedFiltersDropdown({
         <>
           <div className="px-3 py-2 bg-blue-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CheckOutlined className="text-blue-500" />
+              <CheckIcon className="w-4 h-4 text-blue-500" />
               <span className="font-medium text-blue-700">{activeFilter.name}</span>
             </div>
             <Tooltip title="Filtreyi Temizle">
               <Button
                 type="text"
                 size="small"
-                icon={<CloseOutlined />}
+                icon={<XMarkIcon className="w-4 h-4" />}
                 onClick={handleClearFilter}
               />
             </Tooltip>
@@ -317,11 +317,11 @@ export default function SavedFiltersDropdown({
         trigger={['click']}
         disabled={disabled}
       >
-        <Button icon={<FilterOutlined />}>
+        <Button icon={<FunnelIcon className="w-4 h-4" />}>
           <Space>
             {activeFilter ? activeFilter.name : 'Filtreler'}
             {activeFilter && <Tag color="blue" className="ml-1 mr-0">{Object.keys(activeFilter.filters).length}</Tag>}
-            <DownOutlined />
+            <ChevronDownIcon className="w-4 h-4" />
           </Space>
         </Button>
       </Dropdown>

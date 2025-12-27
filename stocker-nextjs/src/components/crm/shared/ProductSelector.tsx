@@ -17,7 +17,7 @@ import {
   message,
   Popconfirm,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { PlusIcon, TrashIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Guid } from '@/lib/api/services/crm.types';
 
@@ -123,7 +123,7 @@ export function ProductSelector({
       key: 'productName',
       render: (name: string) => (
         <Space>
-          <ShoppingCartOutlined style={{ color: '#1890ff' }} />
+          <ShoppingCartIcon className="w-4 h-4 text-blue-500" />
           <Text strong>{name || 'Ürün'}</Text>
         </Space>
       ),
@@ -184,7 +184,7 @@ export function ProductSelector({
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             size="small"
           />
         </Popconfirm>
@@ -198,7 +198,7 @@ export function ProductSelector({
       <Card>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           onClick={() => setIsModalVisible(true)}
           size="large"
           block
@@ -217,7 +217,7 @@ export function ProductSelector({
           <Card
             title={
               <Space>
-                <ShoppingCartOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                <ShoppingCartIcon className="w-5 h-5 text-blue-500" />
                 <span>Ürünler ({products.length})</span>
               </Space>
             }

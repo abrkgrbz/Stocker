@@ -9,7 +9,7 @@
 import React from 'react';
 import { Skeleton } from 'antd';
 import { StatCard } from '@/components/ui/enterprise-page';
-import { AimOutlined, DollarOutlined, RiseOutlined, TeamOutlined } from '@ant-design/icons';
+import { FlagIcon, CurrencyDollarIcon, ArrowTrendingUpIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useSalesTargetStatistics } from '../../hooks';
 
 interface TargetStatisticsProps {
@@ -48,13 +48,13 @@ export function TargetStatistics({ className }: TargetStatisticsProps) {
       <StatCard
         label="Toplam Hedef"
         value={formatCurrency(stats.totalTargetAmount)}
-        icon={<AimOutlined />}
+        icon={<FlagIcon className="w-5 h-5" />}
         iconColor="#6366f1"
       />
       <StatCard
         label="Toplam Gerçekleşen"
         value={formatCurrency(stats.totalAchievedAmount)}
-        icon={<DollarOutlined />}
+        icon={<CurrencyDollarIcon className="w-5 h-5" />}
         iconColor="#10b981"
         trend={{
           value: overallProgress - 100,
@@ -64,13 +64,13 @@ export function TargetStatistics({ className }: TargetStatisticsProps) {
       <StatCard
         label="Genel Başarı"
         value={`%${Math.round(stats.averageProgress)}`}
-        icon={<RiseOutlined />}
+        icon={<ArrowTrendingUpIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
       />
       <StatCard
         label="Hedefi Aşanlar"
         value={`${stats.achievedCount} / ${stats.totalTargets}`}
-        icon={<TeamOutlined />}
+        icon={<UserGroupIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
       />
     </div>

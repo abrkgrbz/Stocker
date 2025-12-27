@@ -105,7 +105,7 @@ const defaultWidgetVisibility: WidgetVisibility = {
 // Empty State Component
 const EmptyChart = ({ icon: Icon, message }: { icon: React.ComponentType<any>; message: string }) => (
   <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-slate-400">
-    <Icon className="text-4xl mb-3" />
+    <Icon className="w-10 h-10 mb-3" />
     <span className="text-sm">{message}</span>
   </div>
 );
@@ -508,7 +508,7 @@ export default function InventoryDashboardPage() {
           </Select>
 
           <Button
-            icon={<ArrowPathIcon className="w-4 h-4" spin={isLoading} />}
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
             onClick={handleRefresh}
             className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
           />
@@ -602,7 +602,7 @@ export default function InventoryDashboardPage() {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       lowStockCount > 0 ? 'bg-slate-900' : 'bg-slate-100'
                     }`}>
-                      <ExclamationTriangleIcon className="w-4 h-4" className={`text-xl ${lowStockCount > 0 ? 'text-white' : 'text-slate-400'}`} />
+                      <ExclamationTriangleIcon className={`w-5 h-5 ${lowStockCount > 0 ? 'text-white' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-slate-900">{lowStockCount}</div>

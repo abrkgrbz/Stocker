@@ -400,7 +400,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <ChartBarIcon className="w-4 h-4 text-lg text-slate-600" />
+                        <ChartBarIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Analiz Edilen Ürün</p>
@@ -411,7 +411,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <ShoppingCartIcon className="w-4 h-4 text-lg text-amber-600" />
+                        <ShoppingCartIcon className="w-5 h-5 text-amber-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Sipariş Gerekli</p>
@@ -424,7 +424,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <ExclamationTriangleIcon className="w-4 h-4 text-lg text-red-600" />
+                        <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Risk Altında</p>
@@ -437,7 +437,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <ExclamationCircleIcon className="w-4 h-4 text-lg text-red-600" />
+                        <ExclamationCircleIcon className="w-5 h-5 text-red-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Stokta Yok</p>

@@ -259,7 +259,7 @@ export default function UnitDetailPage() {
                     className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     Temel Birim: {baseUnit.name} ({baseUnit.symbol})
-                    <ChevronRightIcon className="w-4 h-4 text-xs" />
+                    <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function UnitDetailPage() {
                         <span className="text-xs text-slate-500">
                           1 {derived.symbol} = {derived.conversionFactor} {unit.symbol}
                         </span>
-                        <ChevronRightIcon className="w-4 h-4 text-slate-300 text-xs" />
+                        <ChevronRightIcon className="w-4 h-4 text-slate-300" />
                       </div>
                     </div>
                   ))}

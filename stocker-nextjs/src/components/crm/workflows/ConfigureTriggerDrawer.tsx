@@ -11,21 +11,21 @@ import {
   InputNumber,
 } from 'antd';
 import {
-  ThunderboltOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  ClockCircleOutlined,
-  CloseOutlined,
-  InfoCircleOutlined,
-  CalendarOutlined,
-  PlusCircleOutlined,
-  FormOutlined,
-  SwapOutlined,
-  RocketOutlined,
-  FilterOutlined,
-  DollarOutlined,
-  FieldTimeOutlined,
-} from '@ant-design/icons';
+  BoltIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ClockIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  CalendarIcon,
+  PlusCircleIcon,
+  DocumentTextIcon,
+  ArrowsRightLeftIcon,
+  RocketLaunchIcon,
+  FunnelIcon,
+  CurrencyDollarIcon,
+  CalendarDaysIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 import type { Step1FormData } from './CreateWorkflowDrawer';
 import ConditionBuilder, {
@@ -81,63 +81,63 @@ const triggerTypeConfig: Record<
 > = {
   Manual: {
     label: 'Manuel Tetikleyici',
-    icon: <ThunderboltOutlined />,
+    icon: <BoltIcon className="w-5 h-5" />,
     color: '#64748b',
     bgColor: 'bg-slate-100',
     description: 'Kullanıcı tarafından manuel olarak başlatılır',
   },
   Scheduled: {
     label: 'Zamanlanmış',
-    icon: <ClockCircleOutlined />,
+    icon: <ClockIcon className="w-5 h-5" />,
     color: '#f97316',
     bgColor: 'bg-orange-100',
     description: 'Belirli zamanlarda otomatik çalışır',
   },
   EntityCreated: {
     label: 'Kayıt Oluşturulduğunda',
-    icon: <PlusCircleOutlined />,
+    icon: <PlusCircleIcon className="w-5 h-5" />,
     color: '#22c55e',
     bgColor: 'bg-green-100',
     description: 'Yeni kayıt oluşturulduğunda tetiklenir',
   },
   EntityUpdated: {
     label: 'Kayıt Güncellendiğinde',
-    icon: <FormOutlined />,
+    icon: <DocumentTextIcon className="w-5 h-5" />,
     color: '#3b82f6',
     bgColor: 'bg-blue-100',
     description: 'Kayıt güncellendiğinde tetiklenir',
   },
   StatusChanged: {
     label: 'Durum Değiştiğinde',
-    icon: <SwapOutlined />,
+    icon: <ArrowsRightLeftIcon className="w-5 h-5" />,
     color: '#8b5cf6',
     bgColor: 'bg-violet-100',
     description: 'Status alanı değiştiğinde tetiklenir',
   },
   DealStageChanged: {
     label: 'Anlaşma Aşaması Değiştiğinde',
-    icon: <RocketOutlined />,
+    icon: <RocketLaunchIcon className="w-5 h-5" />,
     color: '#6366f1',
     bgColor: 'bg-indigo-100',
     description: 'Anlaşma aşaması değiştiğinde tetiklenir',
   },
   FieldCondition: {
     label: 'Alan Koşulu Sağlandığında',
-    icon: <FilterOutlined />,
+    icon: <FunnelIcon className="w-5 h-5" />,
     color: '#ef4444',
     bgColor: 'bg-red-100',
     description: 'Belirli alan koşulu sağlandığında tetiklenir',
   },
   AmountThreshold: {
     label: 'Tutar Eşiği Aşıldığında',
-    icon: <DollarOutlined />,
+    icon: <CurrencyDollarIcon className="w-5 h-5" />,
     color: '#eab308',
     bgColor: 'bg-yellow-100',
     description: 'Belirli tutar eşiği aşıldığında tetiklenir',
   },
   DueDateEvent: {
     label: 'Vade Tarihi Yaklaştığında',
-    icon: <FieldTimeOutlined />,
+    icon: <CalendarDaysIcon className="w-5 h-5" />,
     color: '#ec4899',
     bgColor: 'bg-pink-100',
     description: 'Vade tarihi yaklaştığında veya geçtiğinde tetiklenir',
@@ -286,9 +286,9 @@ export default function ConfigureTriggerDrawer({
         <label className="block text-sm font-medium text-slate-700 mb-3">Zamanlama Tipi</label>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { value: 'once', label: 'Bir Kez', icon: <CalendarOutlined /> },
-            { value: 'recurring', label: 'Tekrar Eden', icon: <ClockCircleOutlined /> },
-            { value: 'cron', label: 'Gelişmiş (Cron)', icon: <ThunderboltOutlined /> },
+            { value: 'once', label: 'Bir Kez', icon: <CalendarIcon className="w-5 h-5" /> },
+            { value: 'recurring', label: 'Tekrar Eden', icon: <ClockIcon className="w-5 h-5" /> },
+            { value: 'cron', label: 'Gelişmiş (Cron)', icon: <BoltIcon className="w-5 h-5" /> },
           ].map((option) => (
             <button
               key={option.value}
@@ -302,7 +302,7 @@ export default function ConfigureTriggerDrawer({
                 }
               `}
             >
-              <span className={`text-lg ${scheduleType === option.value ? 'text-slate-900' : 'text-slate-400'}`}>
+              <span className={scheduleType === option.value ? 'text-slate-900' : 'text-slate-400'}>
                 {option.icon}
               </span>
               <span className={`text-sm font-medium ${scheduleType === option.value ? 'text-slate-900' : 'text-slate-600'}`}>
@@ -472,7 +472,7 @@ export default function ConfigureTriggerDrawer({
 
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
             <div className="flex items-start gap-2">
-              <InfoCircleOutlined className="text-slate-500 mt-0.5" />
+              <InformationCircleIcon className="w-5 h-5 text-slate-500 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-slate-700">Cron Expression Örnekleri</p>
                 <ul className="text-xs text-slate-500 mt-2 space-y-1">
@@ -498,7 +498,7 @@ export default function ConfigureTriggerDrawer({
       <div className="space-y-4">
         <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
           <div className="flex items-start gap-2">
-            <InfoCircleOutlined className="text-blue-500 mt-0.5" />
+            <InformationCircleIcon className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-700">Gelişmiş Koşul Oluşturucu</p>
               <p className="text-xs text-blue-600 mt-1">
@@ -521,7 +521,7 @@ export default function ConfigureTriggerDrawer({
   const renderManualConfig = () => (
     <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center">
       <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-        <ThunderboltOutlined className="text-2xl text-slate-400" />
+        <BoltIcon className="w-8 h-8 text-slate-400" />
       </div>
       <h3 className="text-lg font-medium text-slate-900 mb-2">Manuel Tetikleyici</h3>
       <p className="text-sm text-slate-500">
@@ -549,7 +549,7 @@ export default function ConfigureTriggerDrawer({
           <div className="flex items-center gap-3">
             {config && (
               <div className={`w-10 h-10 ${config.bgColor} rounded-lg flex items-center justify-center`}>
-                <span style={{ color: config.color }} className="text-lg">
+                <span style={{ color: config.color }}>
                   {config.icon}
                 </span>
               </div>
@@ -563,7 +563,7 @@ export default function ConfigureTriggerDrawer({
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <CloseOutlined />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -599,7 +599,7 @@ export default function ConfigureTriggerDrawer({
             onClick={onBack}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <ArrowLeftOutlined className="text-xs" />
+            <ArrowLeftIcon className="w-4 h-4" />
             Geri
           </button>
           <div className="flex items-center gap-3">
@@ -614,7 +614,7 @@ export default function ConfigureTriggerDrawer({
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
             >
               İleri: Aksiyonları Ekle
-              <ArrowRightOutlined className="text-xs" />
+              <ArrowRightIcon className="w-4 h-4" />
             </button>
           </div>
         </div>

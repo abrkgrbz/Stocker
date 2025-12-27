@@ -13,15 +13,15 @@ import {
   Tabs,
 } from 'antd';
 import {
-  ShopOutlined,
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  GlobalOutlined,
-  BankOutlined,
-  EnvironmentOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  BuildingStorefrontIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  GlobeAltIcon,
+  BuildingLibraryIcon,
+  MapPinIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 import type { SupplierDto, SupplierType, SupplierStatus } from '@/lib/api/services/purchase.types';
 
 const { TextArea } = Input;
@@ -110,7 +110,7 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                 justifyContent: 'center',
               }}
             >
-              <ShopOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <BuildingStorefrontIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">
                 Tedarikçi Bilgileri
               </p>
@@ -225,8 +225,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               {
                 key: 'basic',
                 label: (
-                  <span>
-                    <ShopOutlined className="mr-1" />
+                  <span className="flex items-center">
+                    <BuildingStorefrontIcon className="w-4 h-4 mr-1" />
                     Temel Bilgiler
                   </span>
                 ),
@@ -284,8 +284,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               {
                 key: 'contact',
                 label: (
-                  <span>
-                    <UserOutlined className="mr-1" />
+                  <span className="flex items-center">
+                    <UserIcon className="w-4 h-4 mr-1" />
                     İletişim
                   </span>
                 ),
@@ -293,8 +293,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                   <div className="space-y-6">
                     <Row gutter={16}>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">
-                          <UserOutlined className="mr-1" />
+                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                          <UserIcon className="w-3 h-3 mr-1" />
                           İlgili Kişi
                         </div>
                         <Form.Item name="contactPerson" className="mb-0">
@@ -311,8 +311,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
 
                     <Row gutter={16}>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">
-                          <MailOutlined className="mr-1" />
+                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                          <EnvelopeIcon className="w-3 h-3 mr-1" />
                           E-posta *
                         </div>
                         <Form.Item
@@ -327,8 +327,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">
-                          <PhoneOutlined className="mr-1" />
+                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                          <PhoneIcon className="w-3 h-3 mr-1" />
                           Telefon
                         </div>
                         <Form.Item name="phone" className="mb-0">
@@ -339,8 +339,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
 
                     <Row gutter={16}>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">
-                          <PhoneOutlined className="mr-1" />
+                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                          <PhoneIcon className="w-3 h-3 mr-1" />
                           Faks
                         </div>
                         <Form.Item name="fax" className="mb-0">
@@ -348,8 +348,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <div className="text-xs text-gray-400 mb-1">
-                          <GlobalOutlined className="mr-1" />
+                        <div className="text-xs text-gray-400 mb-1 flex items-center">
+                          <GlobeAltIcon className="w-3 h-3 mr-1" />
                           Web Sitesi
                         </div>
                         <Form.Item name="website" className="mb-0">
@@ -363,8 +363,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               {
                 key: 'address',
                 label: (
-                  <span>
-                    <EnvironmentOutlined className="mr-1" />
+                  <span className="flex items-center">
+                    <MapPinIcon className="w-4 h-4 mr-1" />
                     Adres
                   </span>
                 ),
@@ -418,8 +418,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               {
                 key: 'financial',
                 label: (
-                  <span>
-                    <BankOutlined className="mr-1" />
+                  <span className="flex items-center">
+                    <BuildingLibraryIcon className="w-4 h-4 mr-1" />
                     Finansal
                   </span>
                 ),
@@ -505,8 +505,8 @@ export default function SupplierForm({ form, initialValues, onFinish, loading }:
               {
                 key: 'notes',
                 label: (
-                  <span>
-                    <FileTextOutlined className="mr-1" />
+                  <span className="flex items-center">
+                    <DocumentTextIcon className="w-4 h-4 mr-1" />
                     Notlar
                   </span>
                 ),

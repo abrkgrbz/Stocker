@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Select, TimePicker, Row, Col, Typography } from 'antd';
-import { FieldTimeOutlined } from '@ant-design/icons';
+import { ClockIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -54,7 +54,7 @@ export default function AttendanceCheckInForm({ form, initialValues, onFinish, l
                 justifyContent: 'center',
               }}
             >
-              <FieldTimeOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ClockIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Manuel Giriş Kaydı</p>
               <p className="text-sm text-white/60">Çalışan için giriş kaydı oluşturun</p>
             </div>

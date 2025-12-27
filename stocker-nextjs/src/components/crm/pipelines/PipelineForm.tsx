@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch, Button, Card, Tag } from 'antd';
 import {
-  FunnelPlotOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons';
+  FunnelIcon,
+  PlusIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { Pipeline } from '@/lib/api/services/crm.service';
 
 const { TextArea } = Input;
@@ -107,7 +107,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
             {/* Pipeline Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <FunnelPlotOutlined className="text-xl text-slate-500" />
+                <FunnelIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -245,7 +245,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                               type="text"
                               danger
                               size="small"
-                              icon={<DeleteOutlined />}
+                              icon={<TrashIcon className="w-4 h-4" />}
                               onClick={() => remove(field.name)}
                               className="ml-auto"
                             />
@@ -317,7 +317,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                                 form.setFieldsValue({ stages: newStages });
                               }} />
                               <span className="text-xs text-green-700">
-                                <CheckCircleOutlined className="mr-1" />
+                                <CheckCircleIcon className="w-3.5 h-3.5 inline mr-1" />
                                 Kazanıldı
                               </span>
                             </div>
@@ -336,7 +336,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                                 form.setFieldsValue({ stages: newStages });
                               }} />
                               <span className="text-xs text-red-700">
-                                <CloseCircleOutlined className="mr-1" />
+                                <XCircleIcon className="w-3.5 h-3.5 inline mr-1" />
                                 Kaybedildi
                               </span>
                             </div>
@@ -350,7 +350,7 @@ export default function PipelineForm({ form, initialValues, onFinish, loading }:
                     type="dashed"
                     onClick={() => add({ name: '', probability: 50, color: '#1890ff', isWon: false, isLost: false })}
                     block
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     className="mt-3 !border-slate-300 !text-slate-600 hover:!border-slate-400 hover:!text-slate-700"
                   >
                     Yeni Aşama Ekle

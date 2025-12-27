@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Select, Input, Space, Button, Typography } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import type { WorkflowActionType } from '@/lib/api/services/crm.types';
 
 const { TextArea } = Input;
@@ -373,7 +373,7 @@ export default function WorkflowActionBuilder({
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => onRemove(index)}
           size="small"
         />

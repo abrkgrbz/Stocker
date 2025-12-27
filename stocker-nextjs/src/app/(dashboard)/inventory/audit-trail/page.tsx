@@ -782,7 +782,7 @@ export default function AuditTrailPage() {
         </div>
         <Space>
           <Button
-            icon={<ArrowPathIcon className="w-4 h-4" spin={logsLoading || dashboardLoading} />}
+            icon={<ArrowPathIcon className={`w-4 h-4 ${logsLoading || dashboardLoading ? 'animate-spin' : ''}`} />}
             onClick={() => {
               refetchLogs();
               refetchDashboard();

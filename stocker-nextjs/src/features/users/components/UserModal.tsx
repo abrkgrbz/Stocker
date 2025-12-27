@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { Drawer, Form, Input, Select, Switch, Row, Col, message, Button, Space, Spin } from 'antd';
-import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined, SendOutlined } from '@ant-design/icons';
+import { UserIcon, EnvelopeIcon, PhoneIcon, UserGroupIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import { getRoles, type Role } from '@/lib/api/roles';
 import { getDepartments, type Department } from '@/lib/api/departments';
@@ -116,7 +116,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <UserOutlined style={{ fontSize: 20, color: '#0f172a' }} />
+            <UserIcon className="w-5 h-5" style={{ color: '#0f172a' }} />
           </div>
           <span>{isEditMode ? 'Kullanıcı Düzenle' : 'Kullanıcı Davet Et'}</span>
         </div>
@@ -215,7 +215,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           >
             <Input
               size="large"
-              prefix={<MailOutlined style={{ color: '#64748b' }} />}
+              prefix={<EnvelopeIcon className="w-4 h-4" style={{ color: '#64748b' }} />}
               placeholder="ahmet.yilmaz@example.com"
               style={{ borderRadius: 8 }}
             />
@@ -234,7 +234,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
           >
             <Input
               size="large"
-              prefix={<PhoneOutlined style={{ color: '#64748b' }} />}
+              prefix={<PhoneIcon className="w-4 h-4" style={{ color: '#64748b' }} />}
               placeholder="+90 555 123 4567"
               style={{ borderRadius: 8 }}
             />
@@ -255,7 +255,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               gap: 12,
             }}
           >
-            <SendOutlined style={{ color: '#0284c7', fontSize: 18, marginTop: 2 }} />
+            <PaperAirplaneIcon className="w-5 h-5" style={{ color: '#0284c7', marginTop: 2 }} />
             <div>
               <div style={{ fontWeight: 500, color: '#0c4a6e', marginBottom: 4 }}>
                 Davet E-postası Gönderilecek
@@ -326,7 +326,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               {departments?.map((department) => (
                 <Option key={department.id} value={department.id}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <TeamOutlined style={{ color: '#64748b' }} />
+                    <UserGroupIcon className="w-4 h-4" style={{ color: '#64748b' }} />
                     <div>
                       <div>{department.name}</div>
                       {department.code && (

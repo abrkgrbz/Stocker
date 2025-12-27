@@ -3,15 +3,15 @@
 import React, { useState } from 'react';
 import { Drawer, Form, Input, Select } from 'antd';
 import {
-  ThunderboltOutlined,
-  CloseOutlined,
-  ArrowRightOutlined,
-  ClockCircleOutlined,
-  PlusCircleOutlined,
-  EditOutlined,
-  SyncOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  BoltIcon,
+  XMarkIcon,
+  ArrowRightIcon,
+  ClockIcon,
+  PlusCircleIcon,
+  PencilIcon,
+  ArrowPathIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 
 const { TextArea } = Input;
@@ -50,35 +50,35 @@ const triggerTypes = [
     value: 'Manual',
     label: 'Manuel',
     description: 'Elle başlatılır',
-    icon: <UserOutlined />,
+    icon: <UserIcon className="w-5 h-5" />,
     color: 'bg-slate-50 text-slate-600',
   },
   {
     value: 'Scheduled',
     label: 'Zamanlanmış',
     description: 'Belirli zamanlarda otomatik çalışır',
-    icon: <ClockCircleOutlined />,
+    icon: <ClockIcon className="w-5 h-5" />,
     color: 'bg-orange-50 text-orange-600',
   },
   {
     value: 'EntityCreated',
     label: 'Kayıt Oluşturulduğunda',
     description: 'Yeni kayıt eklendiğinde',
-    icon: <PlusCircleOutlined />,
+    icon: <PlusCircleIcon className="w-5 h-5" />,
     color: 'bg-green-50 text-green-600',
   },
   {
     value: 'EntityUpdated',
     label: 'Kayıt Güncellendiğinde',
     description: 'Mevcut kayıt güncellendiğinde',
-    icon: <EditOutlined />,
+    icon: <PencilIcon className="w-5 h-5" />,
     color: 'bg-blue-50 text-blue-600',
   },
   {
     value: 'StatusChanged',
     label: 'Durum Değiştiğinde',
     description: 'Status alanı değiştiğinde',
-    icon: <SyncOutlined />,
+    icon: <ArrowPathIcon className="w-5 h-5" />,
     color: 'bg-purple-50 text-purple-600',
   },
 ];
@@ -132,7 +132,7 @@ export default function CreateWorkflowDrawer({
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center">
-              <ThunderboltOutlined className="text-white text-lg" />
+              <BoltIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Yeni Workflow</h2>
@@ -143,7 +143,7 @@ export default function CreateWorkflowDrawer({
             onClick={handleClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <CloseOutlined />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -374,7 +374,7 @@ export default function CreateWorkflowDrawer({
             className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
           >
             İleri: Tetikleyiciyi Yapılandır
-            <ArrowRightOutlined />
+            <ArrowRightIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

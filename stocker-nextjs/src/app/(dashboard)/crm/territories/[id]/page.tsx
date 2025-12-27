@@ -88,8 +88,7 @@ export default function TerritoryDetailPage() {
                   territory.isActive ? 'bg-emerald-100' : 'bg-slate-100'
                 }`}
               >
-                <GlobeAltIcon className="w-4 h-4" className={`text-lg ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
-                />
+                <GlobeAltIcon className={`w-5 h-5 ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -184,8 +183,7 @@ export default function TerritoryDetailPage() {
                     territory.isActive ? 'bg-emerald-100' : 'bg-slate-100'
                   }`}
                 >
-                  <MapPinIcon className="w-4 h-4" className={`text-3xl ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
-                  />
+                  <MapPinIcon className={`w-8 h-8 ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 mt-3">{territory.name}</p>
                 <Tag color={typeInfo.color} className="mt-2">

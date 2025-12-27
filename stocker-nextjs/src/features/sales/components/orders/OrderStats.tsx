@@ -9,11 +9,11 @@
 import React, { useMemo } from 'react';
 import { Skeleton } from 'antd';
 import {
-  ShoppingCartOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ShoppingCartIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline';
 import type { SalesOrderListItem } from '../../types';
 
 interface OrderStatsProps {
@@ -78,7 +78,7 @@ export function OrderStats({ orders, totalCount, isLoading }: OrderStatsProps) {
       <StatCard
         title="Toplam Sipariş"
         value={stats.total}
-        icon={<ShoppingCartOutlined />}
+        icon={<ShoppingCartIcon className="w-5 h-5" />}
         iconBg="#6366f115"
         iconColor="#6366f1"
         isLoading={isLoading}
@@ -86,7 +86,7 @@ export function OrderStats({ orders, totalCount, isLoading }: OrderStatsProps) {
       <StatCard
         title="Taslak"
         value={stats.draft}
-        icon={<ClockCircleOutlined />}
+        icon={<ClockIcon className="w-5 h-5" />}
         iconBg={stats.draft > 0 ? '#f59e0b15' : '#64748b15'}
         iconColor={stats.draft > 0 ? '#f59e0b' : '#64748b'}
         isLoading={isLoading}
@@ -94,7 +94,7 @@ export function OrderStats({ orders, totalCount, isLoading }: OrderStatsProps) {
       <StatCard
         title="İşlemde"
         value={stats.pending}
-        icon={<CheckCircleOutlined />}
+        icon={<CheckCircleIcon className="w-5 h-5" />}
         iconBg="#3b82f615"
         iconColor="#3b82f6"
         isLoading={isLoading}
@@ -102,7 +102,7 @@ export function OrderStats({ orders, totalCount, isLoading }: OrderStatsProps) {
       <StatCard
         title="Toplam Tutar"
         value={formatCurrency(stats.totalValue)}
-        icon={<DollarOutlined />}
+        icon={<CurrencyDollarIcon className="w-5 h-5" />}
         iconBg="#10b98115"
         iconColor="#10b981"
         isLoading={isLoading}

@@ -4,13 +4,13 @@ import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  ApiOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  CloudServerOutlined,
-  DollarOutlined,
-  DatabaseOutlined,
-} from '@ant-design/icons';
+  CpuChipIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+  CloudIcon,
+  CurrencyDollarIcon,
+  CircleStackIcon,
+} from '@heroicons/react/24/outline';
 import { useTranslations } from '@/lib/i18n';
 
 export default function IntegrationsSection() {
@@ -21,37 +21,37 @@ export default function IntegrationsSection() {
   const integrations = [
     {
       categoryKey: 'erp',
-      icon: <DatabaseOutlined />,
+      icon: <CircleStackIcon className="w-6 h-6" />,
       systems: ['SAP', 'Oracle ERP', 'Microsoft Dynamics', 'Logo', 'Netsis'],
       color: 'from-blue-600 to-blue-800',
     },
     {
       categoryKey: 'ecommerce',
-      icon: <ShoppingCartOutlined />,
+      icon: <ShoppingCartIcon className="w-6 h-6" />,
       systems: ['Trendyol', 'Hepsiburada', 'N11', 'Gittigidiyor', 'Amazon TR'],
       color: 'from-purple-600 to-pink-600',
     },
     {
       categoryKey: 'accounting',
-      icon: <FileTextOutlined />,
+      icon: <DocumentTextIcon className="w-6 h-6" />,
       systems: ['Logo', 'Mikro', 'Eta', 'Nebim', 'Zirve'],
       color: 'from-green-600 to-emerald-600',
     },
     {
       categoryKey: 'payment',
-      icon: <DollarOutlined />,
+      icon: <CurrencyDollarIcon className="w-6 h-6" />,
       systems: ['iyzico', 'PayTR', 'Payu', 'Stripe', 'PayPal'],
       color: 'from-orange-600 to-red-600',
     },
     {
       categoryKey: 'cargo',
-      icon: <CloudServerOutlined />,
+      icon: <CloudIcon className="w-6 h-6" />,
       systems: ['Aras Kargo', 'Yurtiçi', 'MNG', 'PTT', 'UPS'],
       color: 'from-indigo-600 to-purple-600',
     },
     {
       categoryKey: 'api',
-      icon: <ApiOutlined />,
+      icon: <CpuChipIcon className="w-6 h-6" />,
       systems: ['REST API', 'Webhooks', 'GraphQL', 'Custom Integration', 'Zapier'],
       color: 'from-gray-700 to-gray-900',
     },
@@ -209,7 +209,7 @@ export default function IntegrationsSection() {
             transition={{ duration: 0.6, delay: 1 }}
             className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6"
           >
-            <ApiOutlined className="text-5xl" />
+            <CpuChipIcon className="w-12 h-12" />
           </motion.div>
           <h3 className="text-3xl font-bold mb-4">
             {t('landing.integrations.apiTitle')}

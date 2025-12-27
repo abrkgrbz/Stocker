@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Card, Row, Col, Button, Space, Divider, message } from 'antd';
-import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { DocumentCheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { FormField } from '@/components/forms/FormField';
 import { useFormBuilder } from '@/hooks/useFormBuilder';
 import { customerSchema, type CustomerFormData } from '../schemas/customer-schema';
@@ -327,7 +327,7 @@ export function CustomerForm({
         {onCancel && (
           <Button
             size="large"
-            icon={<CloseOutlined />}
+            icon={<XMarkIcon className="w-4 h-4" />}
             onClick={onCancel}
             disabled={isSubmitting || loading}
           >
@@ -338,7 +338,7 @@ export function CustomerForm({
           type="primary"
           size="large"
           htmlType="submit"
-          icon={<SaveOutlined />}
+          icon={<DocumentCheckIcon className="w-4 h-4" />}
           loading={isSubmitting || loading}
           disabled={!isDirty}
         >

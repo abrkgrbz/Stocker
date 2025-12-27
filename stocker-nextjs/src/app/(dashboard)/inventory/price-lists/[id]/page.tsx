@@ -340,7 +340,7 @@ export default function PriceListDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center">
-                <CurrencyDollarIcon className="w-4 h-4 text-white text-lg" />
+                <CurrencyDollarIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -404,7 +404,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-amber-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Para Birimi
@@ -421,7 +421,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <ListBulletIcon className="w-4 h-4 text-white text-lg" />
+                  <ListBulletIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Kalem
@@ -438,7 +438,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <TagIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <TagIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ort. Fiyat
@@ -457,7 +457,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Cog6ToothIcon className="w-4 h-4 text-indigo-600 text-lg" />
+                  <Cog6ToothIcon className="w-5 h-5 text-indigo-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Öncelik

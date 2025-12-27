@@ -3,18 +3,18 @@
 import React from 'react';
 import { Table, Tag, Dropdown, Button, Avatar } from 'antd';
 import {
-  MoreOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  StarOutlined,
-  SwapOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  EllipsisHorizontalIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  StarIcon,
+  ArrowsRightLeftIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { Lead } from '@/lib/api/services/crm.service';
 import { CRM_COLORS, CRM_STATUS_LABELS } from '@/lib/crm/constants';
@@ -141,12 +141,12 @@ export function LeadsTable({
       render: (_, record) => (
         <div className="space-y-1">
           <div className="text-sm flex items-center gap-2 text-slate-700">
-            <MailOutlined className="text-slate-400" />
+            <EnvelopeIcon className="w-4 h-4 text-slate-400" />
             <span className="truncate">{record.email}</span>
           </div>
           {record.phone && (
             <div className="text-xs flex items-center gap-2 text-slate-500">
-              <PhoneOutlined className="text-slate-400" />
+              <PhoneIcon className="w-4 h-4 text-slate-400" />
               <span>{record.phone}</span>
             </div>
           )}
@@ -199,7 +199,7 @@ export function LeadsTable({
       sorter: (a, b) => a.score - b.score,
       render: (score: number) => (
         <div className="flex items-center gap-1">
-          <StarOutlined className={score >= 70 ? 'text-slate-900' : 'text-slate-300'} />
+          <StarIcon className={`w-4 h-4 ${score >= 70 ? 'text-slate-900' : 'text-slate-300'}`} />
           <span className={score >= 70 ? 'font-medium text-slate-900' : 'text-slate-500'}>{score}</span>
         </div>
       ),
@@ -225,7 +225,7 @@ export function LeadsTable({
                     {
                       key: 'view',
                       label: 'Görüntüle',
-                      icon: <EyeOutlined />,
+                      icon: <EyeIcon className="w-4 h-4" />,
                       onClick: () => onView(record),
                     },
                   ]
@@ -233,7 +233,7 @@ export function LeadsTable({
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record),
               },
               ...(record.status !== 'Qualified' && record.status !== 'Converted' && onQualify
@@ -241,7 +241,7 @@ export function LeadsTable({
                     {
                       key: 'qualify',
                       label: 'Nitelikli İşaretle',
-                      icon: <CheckCircleOutlined />,
+                      icon: <CheckCircleIcon className="w-4 h-4" />,
                       onClick: () => onQualify(record),
                     },
                   ]
@@ -251,7 +251,7 @@ export function LeadsTable({
                     {
                       key: 'disqualify',
                       label: 'Niteliksiz İşaretle',
-                      icon: <StopOutlined />,
+                      icon: <NoSymbolIcon className="w-4 h-4" />,
                       onClick: () => onDisqualify(record),
                     },
                   ]
@@ -259,7 +259,7 @@ export function LeadsTable({
               {
                 key: 'convert',
                 label: 'Müşteriye Dönüştür',
-                icon: <SwapOutlined />,
+                icon: <ArrowsRightLeftIcon className="w-4 h-4" />,
                 disabled: record.status === 'Converted',
                 onClick: () => onConvert(record),
               },
@@ -269,14 +269,14 @@ export function LeadsTable({
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 onClick: () => onDelete(record.id, record),
               },
             ],
           }}
         >
-          <Button type="text" icon={<MoreOutlined />} className="hover:bg-slate-100" />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="hover:bg-slate-100" />
         </Dropdown>
       ),
     },

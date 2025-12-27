@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Row, Col, Typography, Switch } from 'antd';
-import { CalendarOutlined } from '@ant-design/icons';
+import { CalendarIcon } from '@heroicons/react/24/outline';
 import type { HolidayDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
@@ -55,7 +55,7 @@ export default function HolidayForm({ form, initialValues, onFinish, loading }: 
                 justifyContent: 'center',
               }}
             >
-              <CalendarOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <CalendarIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Tatil Günü</p>
               <p className="text-sm text-white/60">Resmi tatil tanımlayın</p>
             </div>

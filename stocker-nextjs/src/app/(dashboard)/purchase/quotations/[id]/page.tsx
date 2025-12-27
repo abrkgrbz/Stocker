@@ -1,37 +1,20 @@
 'use client';
 
 import React from 'react';
-import {
-  Card,
-  Descriptions,
-  Button,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Table,
-  Space,
-  Spin,
-  Dropdown,
-  Modal,
-  Divider,
-  Progress,
-  Timeline,
-} from 'antd';
+import { Table, Dropdown, Modal, Spin } from 'antd';
 import {
   ArrowLeftIcon,
   BuildingStorefrontIcon,
   CheckCircleIcon,
-  ClockIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
   PaperAirplaneIcon,
   PencilIcon,
   ShoppingCartIcon,
-  XCircleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   useQuotation,
   useSendQuotationToSuppliers,
@@ -41,21 +24,19 @@ import {
 } from '@/lib/api/hooks/usePurchase';
 import type { QuotationStatus, QuotationSupplierDto } from '@/lib/api/services/purchase.types';
 
-const { Title, Text, Paragraph } = Typography;
-
-const statusConfig: Record<QuotationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
-  Sent: { color: 'blue', text: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
-  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockIcon className="w-4 h-4" /> },
-  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockIcon className="w-4 h-4" /> },
-  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Cancelled: { color: 'red', text: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
-  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+const statusConfig: Record<QuotationStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Sent: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
+  PartiallyResponded: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Kısmi Yanıt' },
+  FullyResponded: { bg: 'bg-cyan-100', text: 'text-cyan-700', label: 'Tam Yanıt' },
+  UnderReview: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'İnceleniyor' },
+  Evaluated: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Değerlendirildi' },
+  SupplierSelected: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Tedarikçi Seçildi' },
+  Awarded: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Kazanan Belirlendi' },
+  Converted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Siparişe Dönüştü' },
+  Cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'İptal' },
+  Closed: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Kapatıldı' },
+  Expired: { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu' },
 };
 
 export default function QuotationDetailPage() {
@@ -71,7 +52,7 @@ export default function QuotationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -79,8 +60,16 @@ export default function QuotationDetailPage() {
 
   if (!quotation) {
     return (
-      <div className="p-6">
-        <Text type="danger">Teklif talebi bulunamadı</Text>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <DocumentTextIcon className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Teklif talebi bulunamadı</h3>
+          <Link href="/purchase/quotations">
+            <button className="text-sm text-slate-600 hover:text-slate-900">← Listeye dön</button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -126,6 +115,7 @@ export default function QuotationDetailPage() {
       title: 'Ürün',
       dataIndex: 'productName',
       key: 'productName',
+      render: (text: string) => <span className="text-sm font-medium text-slate-900">{text}</span>,
     },
     {
       title: 'Miktar',
@@ -133,18 +123,21 @@ export default function QuotationDetailPage() {
       key: 'quantity',
       width: 100,
       align: 'right' as const,
+      render: (qty: number) => <span className="text-sm text-slate-600">{qty}</span>,
     },
     {
       title: 'Birim',
       dataIndex: 'unit',
       key: 'unit',
       width: 100,
+      render: (text: string) => <span className="text-sm text-slate-600">{text}</span>,
     },
     {
       title: 'Özellikler',
       dataIndex: 'specifications',
       key: 'specifications',
       ellipsis: true,
+      render: (text: string) => <span className="text-sm text-slate-500">{text || '-'}</span>,
     },
   ];
 
@@ -154,34 +147,36 @@ export default function QuotationDetailPage() {
       dataIndex: 'supplierName',
       key: 'supplierName',
       render: (text: string, record: QuotationSupplierDto) => (
-        <Space>
-          <BuildingStorefrontIcon className="w-4 h-4" />
-          <span>{text}</span>
-          {record.isSelected && <Tag color="green">Kazanan</Tag>}
-        </Space>
+        <div className="flex items-center gap-2">
+          <BuildingStorefrontIcon className="w-4 h-4 text-slate-400" />
+          <span className="text-sm font-medium text-slate-900">{text}</span>
+          {record.isSelected && (
+            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
+              Kazanan
+            </span>
+          )}
+        </div>
       ),
     },
     {
       title: 'Durum',
       dataIndex: 'status',
       key: 'status',
-      width: 140,
+      width: 120,
       render: (status: string) => {
-        const statusColors: Record<string, string> = {
-          Pending: 'default',
-          Sent: 'blue',
-          Responded: 'green',
-          Declined: 'red',
-          Selected: 'purple',
+        const config: Record<string, { bg: string; text: string; label: string }> = {
+          Pending: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Bekliyor' },
+          Sent: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
+          Responded: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Yanıtladı' },
+          Declined: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddetti' },
+          Selected: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Seçildi' },
         };
-        const statusTexts: Record<string, string> = {
-          Pending: 'Bekliyor',
-          Sent: 'Gönderildi',
-          Responded: 'Yanıtladı',
-          Declined: 'Reddetti',
-          Selected: 'Seçildi',
-        };
-        return <Tag color={statusColors[status]}>{statusTexts[status] || status}</Tag>;
+        const c = config[status] || config.Pending;
+        return (
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${c.bg} ${c.text}`}>
+            {c.label}
+          </span>
+        );
       },
     },
     {
@@ -190,245 +185,289 @@ export default function QuotationDetailPage() {
       key: 'quotedAmount',
       width: 140,
       align: 'right' as const,
-      render: (amount: number) =>
-        amount ? amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-',
+      render: (amount: number) => (
+        <span className="text-sm font-medium text-slate-900">
+          {amount ? amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-'}
+        </span>
+      ),
     },
     {
       title: 'Yanıt Tarihi',
       dataIndex: 'respondedAt',
       key: 'respondedAt',
-      width: 140,
-      render: (date: string) => (date ? new Date(date).toLocaleDateString('tr-TR') : '-'),
+      width: 120,
+      render: (date: string) => (
+        <span className="text-sm text-slate-500">
+          {date ? new Date(date).toLocaleDateString('tr-TR') : '-'}
+        </span>
+      ),
     },
     {
-      title: 'İşlem',
+      title: '',
       key: 'action',
-      width: 100,
+      width: 80,
       render: (_: any, record: QuotationSupplierDto) =>
         record.status === 'Responded' && quotation.status !== 'Awarded' && (
-          <Button
-            type="link"
-            size="small"
+          <button
             onClick={() => handleSelectSupplier(record.supplierId)}
+            className="text-sm text-blue-600 hover:text-blue-700"
           >
             Seç
-          </Button>
+          </button>
         ),
     },
   ];
 
-  // Calculate response progress
   const totalSuppliers = quotation.suppliers?.length || 0;
   const respondedSuppliers = quotation.suppliers?.filter(s => s.status === 'Responded').length || 0;
   const responseProgress = totalSuppliers > 0 ? (respondedSuppliers / totalSuppliers) * 100 : 0;
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
-          <div>
-            <div className="flex items-center gap-3">
-              <Title level={3} className="mb-0">{quotation.quotationNumber}</Title>
-              <Tag color={status.color} icon={status.icon}>
-                {status.text}
-              </Tag>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link href="/purchase/quotations">
+                <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                  <ArrowLeftIcon className="w-5 h-5 text-slate-500" />
+                </button>
+              </Link>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-slate-900">{quotation.quotationNumber}</h1>
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${status.bg} ${status.text}`}>
+                    {status.label}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">{quotation.title}</p>
+              </div>
             </div>
-            <Text type="secondary">{quotation.title}</Text>
+
+            <div className="flex items-center gap-2">
+              {quotation.status === 'Draft' && (
+                <>
+                  <Link href={`/purchase/quotations/${id}/edit`}>
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                      <PencilIcon className="w-4 h-4" />
+                      Düzenle
+                    </button>
+                  </Link>
+                  <button
+                    onClick={handleSendToSuppliers}
+                    disabled={sendMutation.isPending}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+                  >
+                    <PaperAirplaneIcon className="w-4 h-4" />
+                    Tedarikçilere Gönder
+                  </button>
+                </>
+              )}
+              {quotation.status === 'Awarded' && (
+                <button
+                  onClick={handleConvertToOrder}
+                  disabled={convertMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+                >
+                  <ShoppingCartIcon className="w-4 h-4" />
+                  Sipariş Oluştur
+                </button>
+              )}
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'cancel',
+                      label: 'İptal Et',
+                      icon: <XMarkIcon className="w-4 h-4" />,
+                      danger: true,
+                      disabled: quotation.status === 'Cancelled' || quotation.status === 'Closed',
+                      onClick: handleCancel,
+                    },
+                  ],
+                }}
+              >
+                <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                  <EllipsisHorizontalIcon className="w-5 h-5 text-slate-500" />
+                </button>
+              </Dropdown>
+            </div>
           </div>
         </div>
 
-        <Space>
-          {quotation.status === 'Draft' && (
-            <>
-              <Button
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => router.push(`/purchase/quotations/${id}/edit`)}
-              >
-                Düzenle
-              </Button>
-              <Button
-                type="primary"
-                icon={<PaperAirplaneIcon className="w-4 h-4" />}
-                onClick={handleSendToSuppliers}
-                loading={sendMutation.isPending}
-              >
-                Tedarikçilere Gönder
-              </Button>
-            </>
-          )}
-          {quotation.status === 'Awarded' && (
-            <Button
-              type="primary"
-              icon={<ShoppingCartIcon className="w-4 h-4" />}
-              onClick={handleConvertToOrder}
-              loading={convertMutation.isPending}
-            >
-              Sipariş Oluştur
-            </Button>
-          )}
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'cancel',
-                  label: 'İptal Et',
-                  icon: <XCircleIcon className="w-4 h-4" />,
-                  danger: true,
-                  disabled: quotation.status === 'Cancelled' || quotation.status === 'Closed',
-                  onClick: handleCancel,
-                },
-              ],
-            }}
-          >
-            <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
-          </Dropdown>
-        </Space>
-      </div>
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left Column */}
+          <div className="col-span-12 lg:col-span-8 space-y-6">
+            {/* Basic Info */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-slate-900 mb-4">Teklif Talebi Bilgileri</h2>
 
-      <Row gutter={24}>
-        {/* Left Column */}
-        <Col xs={24} lg={16}>
-          {/* Basic Info */}
-          <Card title="Teklif Talebi Bilgileri" bordered={false} className="shadow-sm mb-6">
-            <Descriptions column={2} size="small">
-              <Descriptions.Item label="Başlık">{quotation.title}</Descriptions.Item>
-              <Descriptions.Item label="Talep No">{quotation.quotationNumber}</Descriptions.Item>
-              <Descriptions.Item label="Son Teklif Tarihi">
-                {quotation.responseDeadline
-                  ? new Date(quotation.responseDeadline).toLocaleDateString('tr-TR')
-                  : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Geçerlilik Süresi">
-                {quotation.validityPeriod} gün
-              </Descriptions.Item>
-              <Descriptions.Item label="Para Birimi">{quotation.currency}</Descriptions.Item>
-              <Descriptions.Item label="Ödeme Koşulları">{quotation.paymentTerms || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Teslimat Yeri" span={2}>
-                {quotation.deliveryLocation || '-'}
-              </Descriptions.Item>
-            </Descriptions>
-            {quotation.description && (
-              <>
-                <Divider />
-                <Paragraph className="text-gray-600">{quotation.description}</Paragraph>
-              </>
-            )}
-          </Card>
-
-          {/* Items */}
-          <Card title="Ürünler" bordered={false} className="shadow-sm mb-6">
-            <Table
-              columns={itemColumns}
-              dataSource={quotation.items || []}
-              rowKey="id"
-              pagination={false}
-              size="small"
-            />
-          </Card>
-
-          {/* Suppliers */}
-          <Card title="Tedarikçiler" bordered={false} className="shadow-sm">
-            {totalSuppliers > 0 && (
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-500 mb-2">
-                  <span>Yanıt Durumu</span>
-                  <span>{respondedSuppliers} / {totalSuppliers} yanıt</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Başlık</div>
+                  <div className="text-sm text-slate-900">{quotation.title}</div>
                 </div>
-                <Progress percent={responseProgress} showInfo={false} />
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Talep No</div>
+                  <div className="text-sm text-slate-900">{quotation.quotationNumber}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Son Teklif Tarihi</div>
+                  <div className="text-sm text-slate-900">
+                    {quotation.responseDeadline
+                      ? new Date(quotation.responseDeadline).toLocaleDateString('tr-TR')
+                      : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Geçerlilik Süresi</div>
+                  <div className="text-sm text-slate-900">{quotation.validityPeriod} gün</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Para Birimi</div>
+                  <div className="text-sm text-slate-900">{quotation.currency}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500 mb-1">Ödeme Koşulları</div>
+                  <div className="text-sm text-slate-900">{quotation.paymentTerms || '-'}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-xs text-slate-500 mb-1">Teslimat Yeri</div>
+                  <div className="text-sm text-slate-900">{quotation.deliveryLocation || '-'}</div>
+                </div>
               </div>
-            )}
-            <Table
-              columns={supplierColumns}
-              dataSource={quotation.suppliers || []}
-              rowKey="supplierId"
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
 
-        {/* Right Column */}
-        <Col xs={24} lg={8}>
-          {/* Status Card */}
-          <Card bordered={false} className="shadow-sm mb-6">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
-                borderRadius: '12px',
-                padding: '24px',
-                textAlign: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <DocumentTextIcon className="w-12 h-12 text-blue-500" />
-              <div className="text-white/90 font-medium mt-2">{quotation.quotationNumber}</div>
-              <Tag color={status.color} className="mt-2">{status.text}</Tag>
+              {quotation.description && (
+                <>
+                  <div className="h-px bg-slate-100 my-4" />
+                  <p className="text-sm text-slate-600">{quotation.description}</p>
+                </>
+              )}
             </div>
 
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="Oluşturulma">
-                {quotation.createdAt ? new Date(quotation.createdAt).toLocaleDateString('tr-TR') : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Son Güncelleme">
-                {quotation.updatedAt ? new Date(quotation.updatedAt).toLocaleDateString('tr-TR') : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Oluşturan">{quotation.createdByName || '-'}</Descriptions.Item>
-            </Descriptions>
-          </Card>
+            {/* Items */}
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">Ürünler</h2>
+              </div>
+              <Table
+                columns={itemColumns}
+                dataSource={quotation.items || []}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+              />
+            </div>
 
-          {/* Notes */}
-          {quotation.notes && (
-            <Card title="Notlar" bordered={false} className="shadow-sm mb-6">
-              <Paragraph className="text-gray-600 mb-0">{quotation.notes}</Paragraph>
-            </Card>
-          )}
-
-          {/* Timeline - Simplified */}
-          <Card title="İşlem Geçmişi" bordered={false} className="shadow-sm">
-            <Timeline
-              items={[
-                {
-                  color: 'green',
-                  children: (
-                    <div>
-                      <div className="font-medium">Oluşturuldu</div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(quotation.createdAt).toLocaleString('tr-TR')}
-                      </div>
+            {/* Suppliers */}
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-slate-900">Tedarikçiler</h2>
+                  <span className="text-xs text-slate-500">
+                    {respondedSuppliers} / {totalSuppliers} yanıt
+                  </span>
+                </div>
+                {totalSuppliers > 0 && (
+                  <div className="mt-3">
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all"
+                        style={{ width: `${responseProgress}%` }}
+                      />
                     </div>
-                  ),
-                },
-                ...(quotation.status !== 'Draft'
-                  ? [
-                      {
-                        color: 'blue',
-                        children: (
-                          <div>
-                            <div className="font-medium">Tedarikçilere Gönderildi</div>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(quotation.status === 'Awarded'
-                  ? [
-                      {
-                        color: 'purple',
-                        children: (
-                          <div>
-                            <div className="font-medium">Kazanan Belirlendi</div>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          </Card>
-        </Col>
-      </Row>
+                  </div>
+                )}
+              </div>
+              <Table
+                columns={supplierColumns}
+                dataSource={quotation.suppliers || []}
+                rowKey="supplierId"
+                pagination={false}
+                size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="col-span-12 lg:col-span-4 space-y-6">
+            {/* Status Card */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center mb-4">
+                  <DocumentTextIcon className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-lg font-semibold text-slate-900">{quotation.quotationNumber}</div>
+                <span className={`mt-2 px-2 py-0.5 text-xs font-medium rounded-full ${status.bg} ${status.text}`}>
+                  {status.label}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                  <span className="text-xs text-slate-500">Oluşturulma</span>
+                  <span className="text-sm text-slate-900">
+                    {quotation.createdAt ? new Date(quotation.createdAt).toLocaleDateString('tr-TR') : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                  <span className="text-xs text-slate-500">Son Güncelleme</span>
+                  <span className="text-sm text-slate-900">
+                    {quotation.updatedAt ? new Date(quotation.updatedAt).toLocaleDateString('tr-TR') : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-xs text-slate-500">Oluşturan</span>
+                  <span className="text-sm text-slate-900">{quotation.createdByName || '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {quotation.notes && (
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 className="text-sm font-medium text-slate-900 mb-3">Notlar</h2>
+                <p className="text-sm text-slate-600">{quotation.notes}</p>
+              </div>
+            )}
+
+            {/* Timeline */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-slate-900 mb-4">İşlem Geçmişi</h2>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5" />
+                  <div>
+                    <div className="text-sm font-medium text-slate-900">Oluşturuldu</div>
+                    <div className="text-xs text-slate-500">
+                      {new Date(quotation.createdAt).toLocaleString('tr-TR')}
+                    </div>
+                  </div>
+                </div>
+                {quotation.status !== 'Draft' && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5" />
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">Tedarikçilere Gönderildi</div>
+                    </div>
+                  </div>
+                )}
+                {quotation.status === 'Awarded' && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5" />
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">Kazanan Belirlendi</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

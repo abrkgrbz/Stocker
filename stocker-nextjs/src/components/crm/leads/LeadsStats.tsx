@@ -7,7 +7,14 @@
 
 import React from 'react';
 import { Row, Col } from 'antd';
-import { UserAddOutlined, StarOutlined, RocketOutlined, CheckCircleOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import {
+  UserPlusIcon,
+  StarIcon,
+  RocketLaunchIcon,
+  CheckCircleIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+} from '@heroicons/react/24/outline';
 import type { Lead } from '@/lib/api/services/crm.service';
 
 interface LeadsStatsProps {
@@ -26,7 +33,7 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
     {
       title: 'Toplam Lead',
       value: leads.length.toLocaleString('tr-TR'),
-      icon: UserAddOutlined,
+      icon: UserPlusIcon,
       change: '+18%',
       changePositive: true,
       subtitle: 'Bu ay',
@@ -34,7 +41,7 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
     {
       title: 'Yeni Lead',
       value: newLeads.toLocaleString('tr-TR'),
-      icon: RocketOutlined,
+      icon: RocketLaunchIcon,
       change: '+32%',
       changePositive: true,
       subtitle: 'İşleme hazır',
@@ -42,7 +49,7 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
     {
       title: 'Nitelikli Lead',
       value: qualifiedLeads.toLocaleString('tr-TR'),
-      icon: CheckCircleOutlined,
+      icon: CheckCircleIcon,
       change: `${qualificationRate.toFixed(1)}%`,
       changePositive: qualificationRate > 20,
       subtitle: 'Nitelik oranı',
@@ -50,7 +57,7 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
     {
       title: 'Ortalama Puan',
       value: `${avgScore}/100`,
-      icon: StarOutlined,
+      icon: StarIcon,
       change: '+5 puan',
       changePositive: true,
       subtitle: 'Lead kalitesi',
@@ -78,7 +85,7 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
             <div className="bg-white border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors">
               {/* Icon - Top Left, Small, Gray */}
               <div className="flex items-start justify-between mb-3">
-                <Icon className="text-lg text-slate-400" />
+                <Icon className="w-5 h-5 text-slate-400" />
               </div>
 
               {/* Value - Large & Bold */}
@@ -95,9 +102,9 @@ export function LeadsStats({ leads, loading = false }: LeadsStatsProps) {
                   stat.changePositive ? 'text-emerald-600' : 'text-red-500'
                 }`}>
                   {stat.changePositive ? (
-                    <ArrowUpOutlined className="text-[10px]" />
+                    <ArrowUpIcon className="w-3 h-3" />
                   ) : (
-                    <ArrowDownOutlined className="text-[10px]" />
+                    <ArrowDownIcon className="w-3 h-3" />
                   )}
                   {stat.change}
                 </span>

@@ -4,19 +4,14 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Form,
-  Button,
-  Card,
   Input,
   Select,
   DatePicker,
   InputNumber,
   Row,
   Col,
-  Typography,
-  Divider,
   Table,
   Spin,
-  Empty,
   Tag,
   message,
 } from 'antd';
@@ -30,13 +25,12 @@ import { usePurchaseRequest, useUpdatePurchaseRequest } from '@/lib/api/hooks/us
 import type { PurchaseRequestPriority } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const priorityOptions = [
-  { value: 'Low', label: 'Düşük' },
+  { value: 'Low', label: 'Dusuk' },
   { value: 'Normal', label: 'Normal' },
-  { value: 'High', label: 'Yüksek' },
+  { value: 'High', label: 'Yuksek' },
   { value: 'Urgent', label: 'Acil' },
 ];
 
@@ -72,7 +66,7 @@ export default function EditPurchaseRequestPage() {
 
   if (requestLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -80,26 +74,36 @@ export default function EditPurchaseRequestPage() {
 
   if (!request) {
     return (
-      <div className="p-8">
-        <Empty description="Talep bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/requests')}>
-            Taleplere Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <DocumentTextIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Talep bulunamadi</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu talep silinmis veya erisim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/requests')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Taleplere Don
+        </button>
       </div>
     );
   }
 
   if (request.status !== 'Draft') {
     return (
-      <div className="p-8">
-        <Empty description="Bu talep düzenlenemez. Sadece taslak talepler düzenlenebilir." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/purchase/requests/${requestId}`)}>
-            Talebe Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <DocumentTextIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Bu talep duzenlenemez</h2>
+        <p className="text-sm text-slate-500 mb-4">Sadece taslak talepler duzenlenebilir.</p>
+        <button
+          onClick={() => router.push(`/purchase/requests/${requestId}`)}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Talebe Don
+        </button>
       </div>
     );
   }
@@ -118,7 +122,7 @@ export default function EditPurchaseRequestPage() {
           notes: values.notes,
         },
       });
-      message.success('Talep başarıyla güncellendi');
+      message.success('Talep basariyla guncellendi');
       router.push(`/purchase/requests/${requestId}`);
     } catch (error) {
       // Error handled by hook
@@ -133,14 +137,14 @@ export default function EditPurchaseRequestPage() {
 
   const itemColumns = [
     {
-      title: 'Ürün',
+      title: 'Urun',
       dataIndex: 'productName',
       key: 'productName',
       render: (name: string, record: any) => (
         <div>
-          <div className="font-medium">{name}</div>
+          <div className="text-sm font-medium text-slate-900">{name}</div>
           {record.productCode && (
-            <div className="text-xs text-gray-500">{record.productCode}</div>
+            <div className="text-xs text-slate-500">{record.productCode}</div>
           )}
         </div>
       ),
@@ -151,7 +155,9 @@ export default function EditPurchaseRequestPage() {
       key: 'quantity',
       width: 100,
       align: 'center' as const,
-      render: (qty: number, record: any) => `${qty} ${record.unit || 'Adet'}`,
+      render: (qty: number, record: any) => (
+        <span className="text-sm text-slate-900">{qty} {record.unit || 'Adet'}</span>
+      ),
     },
     {
       title: 'Tahmini Birim Fiyat',
@@ -159,7 +165,11 @@ export default function EditPurchaseRequestPage() {
       key: 'estimatedUnitPrice',
       width: 150,
       align: 'right' as const,
-      render: (price: number) => `${(price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`,
+      render: (price: number) => (
+        <span className="text-sm text-slate-900">
+          {(price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+        </span>
+      ),
     },
     {
       title: 'Toplam',
@@ -168,214 +178,230 @@ export default function EditPurchaseRequestPage() {
       width: 150,
       align: 'right' as const,
       render: (amount: number) => (
-        <span className="font-medium">
-          {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        <span className="text-sm font-semibold text-slate-900">
+          {(amount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
         </span>
       ),
     },
     {
-      title: 'Tercih Edilen Tedarikçi',
+      title: 'Tercih Edilen Tedarikci',
       dataIndex: 'preferredSupplierName',
       key: 'preferredSupplierName',
       width: 180,
-      render: (name: string) => name || '-',
+      render: (name: string) => (
+        <span className="text-sm text-slate-500">{name || '-'}</span>
+      ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Talebi Düzenle
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {request.requestNumber}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <DocumentTextIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    Talebi Duzenle
+                  </h1>
+                  <p className="text-sm text-slate-500">
+                    {request.requestNumber}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Iptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-5xl mx-auto px-8 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSave}
         >
           {/* Read-Only Info */}
-          <Card title="Talep Bilgileri (Salt Okunur)" className="mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Talep Bilgileri (Salt Okunur)</h2>
             <Row gutter={16}>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Talep No</Text>
-                  <Text strong>{request.requestNumber}</Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Talep No</span>
+                  <span className="text-sm font-medium text-slate-900">{request.requestNumber}</span>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Talep Eden</Text>
-                  <Text strong>{request.requestedByName || '-'}</Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Talep Eden</span>
+                  <span className="text-sm font-medium text-slate-900">{request.requestedByName || '-'}</span>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Talep Tarihi</Text>
-                  <Text strong>{dayjs(request.requestDate).format('DD.MM.YYYY')}</Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Talep Tarihi</span>
+                  <span className="text-sm font-medium text-slate-900">{dayjs(request.requestDate).format('DD.MM.YYYY')}</span>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Departman</Text>
-                  <Text strong>{request.departmentName || '-'}</Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Departman</span>
+                  <span className="text-sm font-medium text-slate-900">{request.departmentName || '-'}</span>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Kalem Sayısı</Text>
-                  <Text strong>{request.items?.length || 0}</Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Kalem Sayisi</span>
+                  <span className="text-sm font-medium text-slate-900">{request.items?.length || 0}</span>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Tahmini Tutar</Text>
-                  <Text strong style={{ color: '#8b5cf6', fontSize: 18 }}>
-                    {(request.estimatedTotalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || '₺'}
-                  </Text>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-1">Tahmini Tutar</span>
+                  <span className="text-lg font-semibold text-slate-900">
+                    {(request.estimatedTotalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || 'TL'}
+                  </span>
                 </div>
               </Col>
             </Row>
-          </Card>
+          </div>
 
           {/* Editable Fields */}
-          <Card title="Düzenlenebilir Alanlar" className="mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-4">Duzenlenebilir Alanlar</h2>
             <Row gutter={16}>
               <Col xs={24} md={8}>
                 <Form.Item
                   name="priority"
-                  label="Öncelik"
-                  rules={[{ required: true, message: 'Öncelik seçin' }]}
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Oncelik</span>}
+                  rules={[{ required: true, message: 'Oncelik secin' }]}
                 >
                   <Select options={priorityOptions} />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <Form.Item name="requiredDate" label="Gerekli Tarih">
+                <Form.Item
+                  name="requiredDate"
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gerekli Tarih</span>}
+                >
                   <DatePicker
                     className="w-full"
                     format="DD.MM.YYYY"
-                    placeholder="Tarih seçin"
+                    placeholder="Tarih secin"
                   />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <Form.Item name="budgetCode" label="Bütçe Kodu">
-                  <Input placeholder="ör: BTC-2024-001" />
+                <Form.Item
+                  name="budgetCode"
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Butce Kodu</span>}
+                >
+                  <Input placeholder="or: BTC-2024-001" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item name="budgetAmount" label="Bütçe Tutarı">
+                <Form.Item
+                  name="budgetAmount"
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Butce Tutari</span>}
+                >
                   <InputNumber
                     className="w-full"
                     formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={value => (parseFloat(value!.replace(/\$\s?|(,*)/g, '')) || 0) as unknown as 0}
                     precision={2}
                     min={0}
-                    addonAfter="₺"
+                    addonAfter="TL"
                   />
                 </Form.Item>
               </Col>
               <Col xs={24}>
                 <Form.Item
                   name="purpose"
-                  label="Amaç"
-                  rules={[{ required: true, message: 'Amaç belirtin' }]}
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Amac</span>}
+                  rules={[{ required: true, message: 'Amac belirtin' }]}
                 >
-                  <TextArea rows={2} placeholder="Bu talebin amacını açıklayın..." />
+                  <TextArea rows={2} placeholder="Bu talebin amacini aciklayin..." />
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item name="justification" label="Gerekçe">
-                  <TextArea rows={2} placeholder="Talebin gerekçesini detaylı açıklayın..." />
+                <Form.Item
+                  name="justification"
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gerekce</span>}
+                >
+                  <TextArea rows={2} placeholder="Talebin gerekcesini detayli aciklayin..." />
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item name="notes" label="Notlar">
+                <Form.Item
+                  name="notes"
+                  label={<span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Notlar</span>}
+                >
                   <TextArea rows={2} placeholder="Ek notlar..." />
                 </Form.Item>
               </Col>
             </Row>
-          </Card>
+          </div>
 
           {/* Items (Read-Only) */}
-          <Card title="Talep Kalemleri (Salt Okunur)" className="mb-6">
-            <Text type="secondary" className="block mb-4">
-              Kalemleri düzenlemek için lütfen talebi silin ve yeni bir talep oluşturun.
-            </Text>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100">
+              <h2 className="text-sm font-medium text-slate-900">Talep Kalemleri (Salt Okunur)</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Kalemleri duzenlemek icin lutfen talebi silin ve yeni bir talep olusturun.
+              </p>
+            </div>
             <Table
               columns={itemColumns}
               dataSource={request.items || []}
               rowKey="id"
               pagination={false}
+              size="small"
+              className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
               summary={() => (request.items?.length || 0) > 0 ? (
-                <Table.Summary.Row>
+                <Table.Summary.Row className="bg-slate-900">
                   <Table.Summary.Cell index={0} colSpan={3}>
-                    <Text strong>Toplam ({request.items?.length} kalem)</Text>
+                    <span className="text-sm font-medium text-white">Toplam ({request.items?.length} kalem)</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
-                    <Text strong style={{ fontSize: 16, color: '#8b5cf6' }}>
-                      {(request.estimatedTotalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                    </Text>
+                    <span className="text-base font-semibold text-white">
+                      {(request.estimatedTotalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                    </span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={2} />
                 </Table.Summary.Row>
               ) : null}
             />
-          </Card>
+          </div>
         </Form>
       </div>
     </div>

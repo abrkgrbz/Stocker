@@ -284,7 +284,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Birim Maliyet
@@ -302,7 +302,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Maliyet
@@ -320,7 +320,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <CalendarIcon className="w-4 h-4 text-slate-600 text-lg" />
+                  <CalendarIcon className="w-5 h-5 text-slate-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İşlem Tarihi
@@ -357,7 +357,7 @@ export default function StockMovementDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Hareket Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(movement.movementDate).format('DD/MM/YYYY HH:mm')}
                     </span>
@@ -430,7 +430,7 @@ export default function StockMovementDetailPage() {
                 onClick={() => router.push(`/inventory/products/${movement.productId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <ShoppingBagIcon className="w-4 h-4 text-white text-xl" />
+                  <ShoppingBagIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{movement.productName}</p>
@@ -438,7 +438,7 @@ export default function StockMovementDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
-                  <ChevronRightIcon className="w-4 h-4 text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -486,7 +486,7 @@ export default function StockMovementDetailPage() {
                 onClick={() => router.push(`/inventory/warehouses/${movement.warehouseId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <MapPinIcon className="w-4 h-4 text-white text-xl" />
+                  <MapPinIcon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{movement.warehouseName}</p>
@@ -494,7 +494,7 @@ export default function StockMovementDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Depoya Git</span>
-                  <ChevronRightIcon className="w-4 h-4 text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -523,7 +523,7 @@ export default function StockMovementDetailPage() {
                 </p>
                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
                   <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <DocumentTextIcon className="w-4 h-4 text-amber-600 text-xl" />
+                    <DocumentTextIcon className="w-5 h-5 text-amber-600" />
                   </div>
                   <div className="flex-1">
                     {movement.referenceDocumentType && (

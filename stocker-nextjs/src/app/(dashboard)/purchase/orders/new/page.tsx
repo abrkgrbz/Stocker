@@ -1,8 +1,13 @@
 'use client';
 
+/**
+ * New Purchase Order Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Form, Button, Spin } from 'antd';
+import { Form, Spin } from 'antd';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -11,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import PurchaseOrderForm from '@/components/purchase/orders/PurchaseOrderForm';
 import { useCreatePurchaseOrder, useSubmitPurchaseOrder } from '@/lib/api/hooks/usePurchase';
+import { PageContainer } from '@/components/ui/enterprise-page';
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
@@ -54,65 +60,61 @@ export default function NewPurchaseOrderPage() {
   const isLoading = createOrder.isPending || submitOrder.isPending;
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0">
-                Yeni Satın Alma Siparişi
-              </h1>
-              <p className="text-sm text-gray-500 m-0">
-                Tedarikçiye sipariş oluşturun
-              </p>
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">
+                  Yeni Satın Alma Siparişi
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Tedarikçiye sipariş oluşturun
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={createOrder.isPending}
-            >
-              Taslak Kaydet
-            </Button>
-            <Button
-              type="primary"
-              icon={<PaperAirplaneIcon className="w-4 h-4" />}
-              onClick={handleSaveAndSubmit}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet ve Onaya Gönder
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                İptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {createOrder.isPending ? 'Kaydediliyor...' : 'Taslak Kaydet'}
+              </button>
+              <button
+                onClick={handleSaveAndSubmit}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <PaperAirplaneIcon className="w-4 h-4" />
+                {isLoading ? 'İşleniyor...' : 'Kaydet ve Onaya Gönder'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-8">
           <Spin spinning={isLoading}>
             <PurchaseOrderForm
               form={form}

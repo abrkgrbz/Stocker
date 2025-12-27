@@ -19,16 +19,16 @@ import {
   Empty,
 } from 'antd';
 import {
-  PlusOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  EnvironmentOutlined,
-  DollarOutlined,
-  PercentageOutlined,
-} from '@ant-design/icons';
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+  CalendarIcon,
+  ShoppingCartIcon,
+  DocumentTextIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  ReceiptPercentIcon,
+} from '@heroicons/react/24/outline';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { Customer } from '@/lib/api/services/crm.service';
@@ -423,7 +423,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={() => removeItem(record.key)}
             disabled={items.length === 1}
             size="small"
@@ -446,7 +446,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Order Totals Card */}
           <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <DollarOutlined className="text-gray-500" />
+              <CurrencyDollarIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Sipariş Özeti
               </Text>
@@ -483,7 +483,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Order Discount */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <PercentageOutlined className="text-gray-500" />
+              <ReceiptPercentIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Sipariş İndirimi
               </Text>
@@ -503,7 +503,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Notes */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <FileTextOutlined className="text-gray-500" />
+              <DocumentTextIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Notlar
               </Text>
@@ -541,7 +541,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Customer Section */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <UserOutlined className="text-gray-500" />
+              <UserIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Müşteri Bilgileri
               </Text>
@@ -581,7 +581,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Dates and Currency */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <CalendarOutlined className="text-gray-500" />
+              <CalendarIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Tarih ve Para Birimi
               </Text>
@@ -641,7 +641,7 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           {/* Addresses */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <EnvironmentOutlined className="text-gray-500" />
+              <MapPinIcon className="w-5 h-5 text-gray-500" />
               <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Adresler
               </Text>
@@ -669,14 +669,14 @@ export default function SalesOrderForm({ form, initialValues, onFinish, loading 
           <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <ShoppingCartOutlined className="text-gray-500" />
+                <ShoppingCartIcon className="w-5 h-5 text-gray-500" />
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Sipariş Kalemleri ({items.length})
                 </Text>
               </div>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<PlusIcon className="w-4 h-4" />}
                 onClick={addItem}
                 size="small"
                 style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}

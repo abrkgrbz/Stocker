@@ -257,7 +257,7 @@ export default function HRDashboardPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             <Link href="/hr/employees">
               <button className="px-3 py-2 text-sm font-medium text-white bg-violet-600 rounded-md hover:bg-violet-700 transition-colors flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function HRDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${pendingLeaves > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
-                  <CalendarIcon className="w-4 h-4" className={pendingLeaves > 0 ? 'text-orange-500' : 'text-slate-400'} />
+                  <CalendarIcon className={`w-5 h-5 ${pendingLeaves > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-slate-900">{pendingLeaves}</div>
@@ -342,7 +342,7 @@ export default function HRDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeTrainings > 0 ? 'bg-blue-50' : 'bg-slate-50'}`}>
-                  <BookOpenIcon className="w-4 h-4" className={activeTrainings > 0 ? 'text-blue-500' : 'text-slate-400'} />
+                  <BookOpenIcon className={`w-5 h-5 ${activeTrainings > 0 ? 'text-blue-500' : 'text-slate-400'}`} />
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-slate-900">{activeTrainings}</div>
@@ -358,7 +358,7 @@ export default function HRDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeAnnouncements > 0 ? 'bg-purple-50' : 'bg-slate-50'}`}>
-                  <BellIcon className="w-4 h-4" className={activeAnnouncements > 0 ? 'text-purple-500' : 'text-slate-400'} />
+                  <BellIcon className={`w-5 h-5 ${activeAnnouncements > 0 ? 'text-purple-500' : 'text-slate-400'}`} />
                 </div>
                 <div>
                   <div className="text-lg font-semibold text-slate-900">{activeAnnouncements}</div>
@@ -381,22 +381,22 @@ export default function HRDashboardPage() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <CheckCircleIcon className="w-4 h-4 text-green-500 text-lg mb-1" />
+            <CheckCircleIcon className="w-5 h-5 text-green-500 mb-1" />
             <div className="text-xl font-semibold text-slate-900">{presentToday}</div>
             <div className="text-xs text-slate-500">Mevcut</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ExclamationTriangleIcon className="w-4 h-4 text-red-500 text-lg mb-1" />
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-500 mb-1" />
             <div className="text-xl font-semibold text-slate-900">{absentToday}</div>
             <div className="text-xs text-slate-500">Yok</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <ClockIcon className="w-4 h-4 text-orange-500 text-lg mb-1" />
+            <ClockIcon className="w-5 h-5 text-orange-500 mb-1" />
             <div className="text-xl font-semibold text-slate-900">{lateToday}</div>
             <div className="text-xs text-slate-500">Geç Kalan</div>
           </div>
           <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <UserGroupIcon className="w-4 h-4 text-blue-500 text-lg mb-1" />
+            <UserGroupIcon className="w-5 h-5 text-blue-500 mb-1" />
             <div className="text-xl font-semibold text-slate-900">
               {activeEmployees > 0 ? ((presentToday + lateToday) / activeEmployees * 100).toFixed(1) : 0}%
             </div>
@@ -544,7 +544,7 @@ export default function HRDashboardPage() {
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50">
-                          <GiftIcon className="w-4 h-4 text-red-500 text-sm" />
+                          <GiftIcon className="w-4 h-4 text-red-500" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-900">{holiday.name}</div>

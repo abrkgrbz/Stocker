@@ -7,7 +7,12 @@
 
 import React from 'react';
 import { Spin } from 'antd';
-import { GlobalOutlined, CheckCircleOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  GlobeAltIcon,
+  CheckCircleIcon,
+  UserGroupIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { StatCard } from '@/components/ui/enterprise-page';
 import type { SalesTerritoryListDto } from '@/lib/api/services/sales.service';
 
@@ -39,25 +44,25 @@ export function TerritoriesStats({ territories, totalCount, loading = false }: T
       <StatCard
         label="Toplam Bölge"
         value={totalCount}
-        icon={<GlobalOutlined />}
+        icon={<GlobeAltIcon className="w-5 h-5" />}
         iconColor="#6366f1"
       />
       <StatCard
         label="Aktif Bölge"
         value={activeCount}
-        icon={<CheckCircleOutlined />}
+        icon={<CheckCircleIcon className="w-5 h-5" />}
         iconColor="#10b981"
       />
       <StatCard
         label="Satış Temsilcisi"
         value={totalSalesReps}
-        icon={<TeamOutlined />}
+        icon={<UserGroupIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
       />
       <StatCard
         label="Toplam Müşteri"
         value={totalCustomers}
-        icon={<UserOutlined />}
+        icon={<UserIcon className="w-5 h-5" />}
         iconColor="#3b82f6"
       />
     </div>

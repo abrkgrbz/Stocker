@@ -605,7 +605,7 @@ export default function BarcodesPage() {
               {p.primaryImageUrl ? (
                 <img src={p.primaryImageUrl} alt={p.name} className="w-14 h-14 object-cover rounded" />
               ) : (
-                <ShoppingBagIcon className="w-4 h-4 text-2xl text-slate-400" />
+                <ShoppingBagIcon className="w-8 h-8 text-slate-400" />
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -1314,7 +1314,7 @@ export default function BarcodesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                  <TagIcon className="w-4 h-4 text-xl text-slate-400" />
+                  <TagIcon className="w-6 h-6 text-slate-400" />
                 </div>
                 <span className="text-sm text-slate-500">Etiket oluşturun</span>
               </div>
@@ -1356,7 +1356,7 @@ export default function BarcodesPage() {
               {bulkProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                    <PrinterIcon className="w-4 h-4 text-xl text-slate-400" />
+                    <PrinterIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <span className="text-sm text-slate-500">Etiket yazdırmak için ürün ekleyin</span>
                 </div>
@@ -1514,7 +1514,7 @@ export default function BarcodesPage() {
             {autoGenResult ? (
               <div className="text-center">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-4">
-                  <CheckCircleIcon className="w-4 h-4 text-3xl text-emerald-600 mb-2" />
+                  <CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-2" />
                   <div className="text-sm text-slate-600 mb-2">Barkod Oluşturuldu</div>
                   <div className="text-2xl font-mono font-bold text-slate-900">{autoGenResult.barcode}</div>
                   {autoGenResult.saved ? (

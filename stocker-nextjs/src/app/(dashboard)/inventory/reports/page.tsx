@@ -905,7 +905,7 @@ export default function InventoryReportsPage() {
                 Sıfırla
               </Button>
               <Button
-                icon={<ArrowPathIcon className="w-4 h-4" spin={productsLoading} />}
+                icon={<ArrowPathIcon className={`w-4 h-4 ${productsLoading ? 'animate-spin' : ''}`} />}
                 onClick={() => refetchProducts()}
                 className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
               />

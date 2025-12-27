@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, DatePicker } from 'antd';
-import { CalendarOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { CalendarIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 import type { MeetingDto } from '@/lib/api/services/crm.types';
 import { MeetingType, MeetingPriority, MeetingLocationType } from '@/lib/api/services/crm.types';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
@@ -108,7 +108,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
             {/* Meeting Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <CalendarOutlined className="text-xl text-slate-500" />
+                <CalendarIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -326,7 +326,7 @@ export default function MeetingForm({ form, initialValues, onFinish, loading }: 
                   <Form.Item name="onlineMeetingLink" className="mb-0">
                     <Input
                       placeholder="https://..."
-                      prefix={<VideoCameraOutlined className="text-slate-400" />}
+                      prefix={<VideoCameraIcon className="w-4 h-4 text-slate-400" />}
                       className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                     />
                   </Form.Item>

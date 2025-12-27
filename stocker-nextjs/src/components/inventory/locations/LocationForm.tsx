@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Switch, InputNumber, Select } from 'antd';
-import { EnvironmentOutlined, HomeOutlined } from '@ant-design/icons';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import { useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 
@@ -49,7 +49,7 @@ export default function LocationForm({ form, initialValues, onFinish, loading, d
             {/* Location Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <EnvironmentOutlined className="text-xl text-slate-500" />
+                <MapPinIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 

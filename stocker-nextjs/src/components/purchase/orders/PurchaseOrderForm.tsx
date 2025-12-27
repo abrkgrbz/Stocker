@@ -17,12 +17,12 @@ import {
   Card,
 } from 'antd';
 import {
-  ShoppingCartOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ShoppingCartIcon,
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
 import { useSuppliers } from '@/lib/api/hooks/usePurchase';
 import type { PurchaseOrderDto, PurchaseOrderType, PurchaseOrderItemDto } from '@/lib/api/services/purchase.types';
 import { SupplierStatus } from '@/lib/api/services/purchase.types';
@@ -284,7 +284,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
       render: (_: any, record: OrderItem) => (
         <Button
           type="text"
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           danger
           onClick={() => handleRemoveItem(record.key)}
         />
@@ -317,7 +317,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
                 justifyContent: 'center',
               }}
             >
-              <ShoppingCartOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ShoppingCartIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">
                 Satın Alma Siparişi
               </p>
@@ -373,8 +373,8 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
         <Col xs={24} lg={14}>
           {/* Basic Info Section */}
           <div className="mb-6">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <UserOutlined className="mr-1" /> Tedarikçi ve Sipariş Bilgileri
+            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 flex items-center">
+              <UserIcon className="w-4 h-4 mr-1" /> Tedarikçi ve Sipariş Bilgileri
             </Text>
             <Row gutter={16}>
               <Col span={12}>
@@ -411,8 +411,8 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
 
           <Row gutter={16} className="mb-6">
             <Col span={8}>
-              <div className="text-xs text-gray-400 mb-1">
-                <CalendarOutlined className="mr-1" /> Sipariş Tarihi
+              <div className="text-xs text-gray-400 mb-1 flex items-center">
+                <CalendarIcon className="w-3 h-3 mr-1" /> Sipariş Tarihi
               </div>
               <Form.Item name="orderDate" className="mb-0">
                 <DatePicker
@@ -454,7 +454,7 @@ export default function PurchaseOrderForm({ form, initialValues, onFinish, loadi
               </Text>
               <Button
                 type="dashed"
-                icon={<PlusOutlined />}
+                icon={<PlusIcon className="w-4 h-4" />}
                 onClick={handleAddItem}
                 size="small"
               >

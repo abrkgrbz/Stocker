@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Row, Col, Typography, Switch } from 'antd';
-import { FileTextOutlined } from '@ant-design/icons';
+import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import type { LeaveTypeDto } from '@/lib/api/services/hr.types';
 
 const { TextArea } = Input;
@@ -55,7 +55,7 @@ export default function LeaveTypeForm({ form, initialValues, onFinish, loading }
                 justifyContent: 'center',
               }}
             >
-              <FileTextOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <DocumentTextIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">İzin Türü</p>
               <p className="text-sm text-white/60">İzin politikalarını tanımlayın</p>
             </div>

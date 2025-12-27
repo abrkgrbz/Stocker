@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Form,
-  Button,
   Input,
   Select,
   DatePicker,
@@ -25,6 +24,7 @@ import {
   InformationCircleIcon,
   PlusIcon,
   TrashIcon,
+  TruckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useCreateGoodsReceipt, useSuppliers, usePurchaseOrders } from '@/lib/api/hooks/usePurchase';
@@ -52,18 +52,18 @@ interface ReceiptItem {
 
 const typeOptions = [
   { value: 'Standard', label: 'Standart' },
-  { value: 'PartialDelivery', label: 'Kısmi Teslimat' },
-  { value: 'ReturnReceipt', label: 'İade Alımı' },
-  { value: 'DirectDelivery', label: 'Doğrudan Teslimat' },
+  { value: 'PartialDelivery', label: 'Kismi Teslimat' },
+  { value: 'ReturnReceipt', label: 'Iade Alimi' },
+  { value: 'DirectDelivery', label: 'Dogrudan Teslimat' },
   { value: 'Consignment', label: 'Konsinye' },
 ];
 
 const conditionOptions = [
-  { value: 'Good', label: 'İyi' },
-  { value: 'Damaged', label: 'Hasarlı' },
+  { value: 'Good', label: 'Iyi' },
+  { value: 'Damaged', label: 'Hasarli' },
   { value: 'Defective', label: 'Kusurlu' },
-  { value: 'Expired', label: 'Vadesi Geçmiş' },
-  { value: 'Other', label: 'Diğer' },
+  { value: 'Expired', label: 'Vadesi Gecmis' },
+  { value: 'Other', label: 'Diger' },
 ];
 
 export default function NewGoodsReceiptPage() {
@@ -168,7 +168,7 @@ export default function NewGoodsReceiptPage() {
           notes: item.notes,
         })),
       });
-      message.success('Mal alım belgesi başarıyla oluşturuldu');
+      message.success('Mal alim belgesi basariyla olusturuldu');
       router.push('/purchase/goods-receipts');
     } catch (error) {
       // Error handled by hook
@@ -183,12 +183,12 @@ export default function NewGoodsReceiptPage() {
 
   const itemColumns = [
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 220,
       render: (record: ReceiptItem) => (
         <Select
-          placeholder="Ürün seçin"
+          placeholder="Urun secin"
           showSearch
           optionFilterProp="children"
           value={record.productId}
@@ -211,7 +211,7 @@ export default function NewGoodsReceiptPage() {
       width: 70,
     },
     {
-      title: 'Sipariş Mik.',
+      title: 'Siparis Mik.',
       key: 'orderedQuantity',
       width: 100,
       render: (record: ReceiptItem) => (
@@ -225,7 +225,7 @@ export default function NewGoodsReceiptPage() {
       ),
     },
     {
-      title: 'Alınan Mik.',
+      title: 'Alinan Mik.',
       key: 'receivedQuantity',
       width: 100,
       render: (record: ReceiptItem) => (
@@ -273,12 +273,12 @@ export default function NewGoodsReceiptPage() {
       key: 'actions',
       width: 50,
       render: (record: ReceiptItem) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
+        <button
           onClick={() => removeItem(record.key)}
-        />
+          className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
       ),
     },
   ];
@@ -287,8 +287,8 @@ export default function NewGoodsReceiptPage() {
     {
       key: 'info',
       label: (
-        <span>
-          <InformationCircleIcon className="w-4 h-4 mr-1" />
+        <span className="flex items-center gap-1.5">
+          <InformationCircleIcon className="w-4 h-4" />
           Temel Bilgiler
         </span>
       ),
@@ -297,15 +297,15 @@ export default function NewGoodsReceiptPage() {
           {/* Basic Info Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-700">Belge Bilgileri</span>
+              <div className="w-1 h-4 bg-slate-900 rounded-full"></div>
+              <span className="text-sm font-medium text-slate-700">Belge Bilgileri</span>
             </div>
             <Row gutter={16}>
               <Col xs={24} md={12}>
-                <div className="text-xs text-gray-400 mb-1">Satın Alma Siparişi</div>
+                <div className="text-xs text-slate-400 mb-1">Satin Alma Siparisi</div>
                 <Form.Item name="purchaseOrderId" className="mb-4">
                   <Select
-                    placeholder="Sipariş seçin (opsiyonel)"
+                    placeholder="Siparis secin (opsiyonel)"
                     allowClear
                     showSearch
                     optionFilterProp="children"
@@ -322,14 +322,14 @@ export default function NewGoodsReceiptPage() {
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <div className="text-xs text-gray-400 mb-1">Tedarikçi *</div>
+                <div className="text-xs text-slate-400 mb-1">Tedarikci *</div>
                 <Form.Item
                   name="supplierId"
                   className="mb-4"
-                  rules={[{ required: true, message: 'Tedarikçi seçin' }]}
+                  rules={[{ required: true, message: 'Tedarikci secin' }]}
                 >
                   <Select
-                    placeholder="Tedarikçi seçin"
+                    placeholder="Tedarikci secin"
                     showSearch
                     optionFilterProp="children"
                     variant="filled"
@@ -344,30 +344,30 @@ export default function NewGoodsReceiptPage() {
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Belge Tarihi *</div>
+                <div className="text-xs text-slate-400 mb-1">Belge Tarihi *</div>
                 <Form.Item
                   name="receiptDate"
                   className="mb-4"
-                  rules={[{ required: true, message: 'Tarih seçin' }]}
+                  rules={[{ required: true, message: 'Tarih secin' }]}
                 >
                   <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Belge Tipi</div>
+                <div className="text-xs text-slate-400 mb-1">Belge Tipi</div>
                 <Form.Item name="type" className="mb-4">
                   <Select options={typeOptions} variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Depo *</div>
+                <div className="text-xs text-slate-400 mb-1">Depo *</div>
                 <Form.Item
                   name="warehouseId"
                   className="mb-4"
-                  rules={[{ required: true, message: 'Depo seçin' }]}
+                  rules={[{ required: true, message: 'Depo secin' }]}
                 >
                   <Select
-                    placeholder="Depo seçin"
+                    placeholder="Depo secin"
                     showSearch
                     optionFilterProp="children"
                     variant="filled"
@@ -384,14 +384,14 @@ export default function NewGoodsReceiptPage() {
             </Row>
           </div>
 
-          {/* Gradient Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent"></div>
+          {/* Divider */}
+          <div className="h-px bg-slate-200"></div>
 
           {/* Quality Check */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-700">Kalite Kontrol</span>
+              <div className="w-1 h-4 bg-slate-900 rounded-full"></div>
+              <span className="text-sm font-medium text-slate-700">Kalite Kontrol</span>
             </div>
             <Form.Item
               name="requiresQualityCheck"
@@ -400,7 +400,7 @@ export default function NewGoodsReceiptPage() {
             >
               <div className="flex items-center gap-3">
                 <Switch />
-                <span className="text-sm text-gray-600">Kalite kontrolü gerekli</span>
+                <span className="text-sm text-slate-600">Kalite kontrolu gerekli</span>
               </div>
             </Form.Item>
           </div>
@@ -410,8 +410,8 @@ export default function NewGoodsReceiptPage() {
     {
       key: 'delivery',
       label: (
-        <span>
-          <CarOutlined className="mr-1" />
+        <span className="flex items-center gap-1.5">
+          <TruckIcon className="w-4 h-4" />
           Teslimat
         </span>
       ),
@@ -420,36 +420,36 @@ export default function NewGoodsReceiptPage() {
           {/* Delivery Info */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-700">Teslimat Bilgileri</span>
+              <div className="w-1 h-4 bg-slate-900 rounded-full"></div>
+              <span className="text-sm font-medium text-slate-700">Teslimat Bilgileri</span>
             </div>
             <Row gutter={16}>
               <Col xs={24} md={12}>
-                <div className="text-xs text-gray-400 mb-1">İrsaliye No</div>
+                <div className="text-xs text-slate-400 mb-1">Irsaliye No</div>
                 <Form.Item name="deliveryNoteNumber" className="mb-4">
-                  <Input placeholder="İrsaliye numarası" variant="filled" />
+                  <Input placeholder="Irsaliye numarasi" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <div className="text-xs text-gray-400 mb-1">Teslimat Tarihi</div>
+                <div className="text-xs text-slate-400 mb-1">Teslimat Tarihi</div>
                 <Form.Item name="deliveryDate" className="mb-4">
                   <DatePicker className="w-full" format="DD.MM.YYYY" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Taşıyıcı</div>
+                <div className="text-xs text-slate-400 mb-1">Tasiyici</div>
                 <Form.Item name="carrierName" className="mb-4">
-                  <Input placeholder="Kargo/taşıyıcı firma" variant="filled" />
+                  <Input placeholder="Kargo/tasiyici firma" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Şoför</div>
+                <div className="text-xs text-slate-400 mb-1">Sofor</div>
                 <Form.Item name="driverName" className="mb-4">
-                  <Input placeholder="Şoför adı" variant="filled" />
+                  <Input placeholder="Sofor adi" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={24} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Araç Plakası</div>
+                <div className="text-xs text-slate-400 mb-1">Arac Plakasi</div>
                 <Form.Item name="vehiclePlate" className="mb-4">
                   <Input placeholder="Plaka" variant="filled" />
                 </Form.Item>
@@ -457,24 +457,24 @@ export default function NewGoodsReceiptPage() {
             </Row>
           </div>
 
-          {/* Gradient Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent"></div>
+          {/* Divider */}
+          <div className="h-px bg-slate-200"></div>
 
           {/* Package Info */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-700">Paket Bilgileri</span>
+              <div className="w-1 h-4 bg-slate-900 rounded-full"></div>
+              <span className="text-sm font-medium text-slate-700">Paket Bilgileri</span>
             </div>
             <Row gutter={16}>
               <Col xs={12} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Toplam Paket</div>
+                <div className="text-xs text-slate-400 mb-1">Toplam Paket</div>
                 <Form.Item name="totalPackages" className="mb-0">
                   <InputNumber min={0} className="w-full" placeholder="0" variant="filled" />
                 </Form.Item>
               </Col>
               <Col xs={12} md={8}>
-                <div className="text-xs text-gray-400 mb-1">Toplam Ağırlık (kg)</div>
+                <div className="text-xs text-slate-400 mb-1">Toplam Agirlik (kg)</div>
                 <Form.Item name="totalWeight" className="mb-0">
                   <InputNumber min={0} step={0.1} className="w-full" placeholder="0.00" variant="filled" />
                 </Form.Item>
@@ -487,14 +487,14 @@ export default function NewGoodsReceiptPage() {
     {
       key: 'notes',
       label: (
-        <span>
-          <DocumentTextIcon className="w-4 h-4 mr-1" />
+        <span className="flex items-center gap-1.5">
+          <DocumentTextIcon className="w-4 h-4" />
           Notlar
         </span>
       ),
       children: (
         <div>
-          <div className="text-xs text-gray-400 mb-1">Genel Not</div>
+          <div className="text-xs text-slate-400 mb-1">Genel Not</div>
           <Form.Item name="notes" className="mb-0">
             <TextArea rows={4} placeholder="Genel notlar..." variant="filled" />
           </Form.Item>
@@ -505,72 +505,64 @@ export default function NewGoodsReceiptPage() {
 
   if (isDataLoading) {
     return (
-      <div className="min-h-screen bg-gray-50/30 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <InboxIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Yeni Mal Alım Belgesi
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  Tedarikçiden mal alımı kaydedin
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <InboxIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    Yeni Mal Alim Belgesi
+                  </h1>
+                  <p className="text-sm text-slate-500">
+                    Tedarikçiden mal alimi kaydedin
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Iptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
@@ -586,35 +578,32 @@ export default function NewGoodsReceiptPage() {
             <Col xs={24} lg={9}>
               <div className="sticky top-28 space-y-6">
                 {/* Visual Card */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div className="bg-white border border-slate-200 rounded-xl p-8">
                   <div className="text-center mb-6">
-                    <div
-                      className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-4"
-                      style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-                    >
-                      <InboxIcon className="w-12 h-12 text-blue-500" />
+                    <div className="w-24 h-24 mx-auto rounded-xl bg-slate-900 flex items-center justify-center mb-4">
+                      <InboxIcon className="w-12 h-12 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                      Mal Alım Belgesi
+                    <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                      Mal Alim Belgesi
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Tedarikçiden alınan ürünler
+                    <p className="text-sm text-slate-500">
+                      Tedarikçiden alinan urunler
                     </p>
                   </div>
 
                   {/* Summary Stats */}
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-500">Kalem Sayısı</span>
-                      <span className="font-medium">{items.length}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-sm text-slate-500">Kalem Sayisi</span>
+                      <span className="font-medium text-slate-900">{items.length}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-sm text-gray-500">Toplam Alınan Miktar</span>
-                      <span className="font-medium">{getTotalReceivedQuantity()}</span>
+                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                      <span className="text-sm text-slate-500">Toplam Alinan Miktar</span>
+                      <span className="font-medium text-slate-900">{getTotalReceivedQuantity()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-3 bg-purple-50 rounded-lg px-3 -mx-3">
-                      <span className="text-sm font-medium text-purple-700">Durum</span>
-                      <span className="text-sm font-semibold text-purple-600">
+                    <div className="flex justify-between items-center py-3 bg-slate-50 rounded-lg px-3 -mx-3">
+                      <span className="text-sm font-medium text-slate-700">Durum</span>
+                      <span className="text-sm font-semibold text-slate-600">
                         {items.length > 0 ? 'Kalem eklendi' : 'Kalem bekleniyor'}
                       </span>
                     </div>
@@ -622,24 +611,24 @@ export default function NewGoodsReceiptPage() {
                 </div>
 
                 {/* Info Card */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-100">
-                  <h4 className="text-sm font-semibold text-purple-800 mb-3">Mal Alım İşlem Akışı</h4>
-                  <ul className="space-y-2 text-sm text-purple-700">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3">Mal Alim Islem Akisi</h4>
+                  <ul className="space-y-2 text-sm text-slate-700">
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">1</span>
-                      <span>Sipariş ile ilişkilendirme (opsiyonel)</span>
+                      <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-slate-700 shrink-0 mt-0.5">1</span>
+                      <span>Siparis ile iliskilendirme (opsiyonel)</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">2</span>
-                      <span>Alınan ürünlerin kaydedilmesi</span>
+                      <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-slate-700 shrink-0 mt-0.5">2</span>
+                      <span>Alinan urunlerin kaydedilmesi</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">3</span>
-                      <span>Stok miktarlarının otomatik güncellenmesi</span>
+                      <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-slate-700 shrink-0 mt-0.5">3</span>
+                      <span>Stok miktarlarinin otomatik guncellenmesi</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs font-bold text-purple-700 shrink-0 mt-0.5">4</span>
-                      <span>Kalite kontrolü (gerekirse)</span>
+                      <span className="w-5 h-5 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold text-slate-700 shrink-0 mt-0.5">4</span>
+                      <span>Kalite kontrolu (gerekirse)</span>
                     </li>
                   </ul>
                 </div>
@@ -648,22 +637,27 @@ export default function NewGoodsReceiptPage() {
 
             {/* Right Panel - Form Content */}
             <Col xs={24} lg={15}>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+              <div className="bg-white border border-slate-200 rounded-xl p-8">
                 <Tabs items={tabItems} className="supplier-form-tabs" />
 
-                {/* Gradient Divider */}
-                <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent my-6"></div>
+                {/* Divider */}
+                <div className="h-px bg-slate-200 my-6"></div>
 
                 {/* Items Section */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-700">Alınan Kalemler</span>
+                      <div className="w-1 h-4 bg-slate-900 rounded-full"></div>
+                      <span className="text-sm font-medium text-slate-700">Alinan Kalemler</span>
                     </div>
-                    <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
+                    <button
+                      type="button"
+                      onClick={addItem}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      <PlusIcon className="w-4 h-4" />
                       Kalem Ekle
-                    </Button>
+                    </button>
                   </div>
 
                   <Table
@@ -673,16 +667,16 @@ export default function NewGoodsReceiptPage() {
                     pagination={false}
                     size="small"
                     scroll={{ x: 800 }}
-                    className="border border-gray-100 rounded-lg overflow-hidden"
-                    locale={{ emptyText: 'Henüz kalem eklenmedi. "Kalem Ekle" butonuna tıklayın.' }}
+                    className="border border-slate-200 rounded-lg overflow-hidden"
+                    locale={{ emptyText: 'Henuz kalem eklenmedi. "Kalem Ekle" butonuna tiklayin.' }}
                     summary={() => items.length > 0 ? (
                       <Table.Summary>
-                        <Table.Summary.Row className="bg-purple-50">
+                        <Table.Summary.Row className="bg-slate-50">
                           <Table.Summary.Cell index={0} colSpan={3} align="right">
-                            <span className="font-semibold text-purple-700">Toplam Alınan</span>
+                            <span className="font-semibold text-slate-700">Toplam Alinan</span>
                           </Table.Summary.Cell>
                           <Table.Summary.Cell index={1} align="center">
-                            <span className="font-bold text-purple-600">{getTotalReceivedQuantity()}</span>
+                            <span className="font-bold text-slate-900">{getTotalReceivedQuantity()}</span>
                           </Table.Summary.Cell>
                           <Table.Summary.Cell index={2} colSpan={3} />
                         </Table.Summary.Row>

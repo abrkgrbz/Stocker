@@ -3,11 +3,8 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Button,
-  Space,
   Tag,
   Spin,
-  Empty,
   Table,
   Dropdown,
 } from 'antd';
@@ -110,11 +107,18 @@ export default function SupplierDetailPage() {
 
   if (!supplier) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
-        <Empty description="Tedarikçi bulunamadı" />
-        <Button onClick={() => router.push('/purchase/suppliers')} className="mt-4">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <BuildingStorefrontIcon className="w-8 h-8 text-slate-400" />
+        </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Tedarikçi bulunamadı</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu tedarikçi silinmiş veya erişim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/suppliers')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
           Tedarikçilere Dön
-        </Button>
+        </button>
       </div>
     );
   }
@@ -162,69 +166,58 @@ export default function SupplierDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(248, 250, 252, 0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push('/purchase/suppliers')}
-              className="text-slate-600 hover:text-slate-900"
-            >
-              Geri
-            </Button>
-            <div className="h-6 w-px bg-slate-200" />
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
-                {supplier.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-slate-900 m-0">{supplier.name}</h1>
-                  <Tag
-                    icon={status.icon}
-                    className={`border-0 ${status.bgColor} ${status.textColor}`}
-                  >
-                    {status.label}
-                  </Tag>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/purchase/suppliers')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center text-white font-semibold text-lg">
+                  {supplier.name.charAt(0).toUpperCase()}
                 </div>
-                <p className="text-sm text-slate-500 m-0">
-                  {supplier.code} • {typeLabels[supplier.type as SupplierType]}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-semibold text-slate-900">{supplier.name}</h1>
+                    <Tag
+                      icon={status.icon}
+                      className={`border-0 ${status.bgColor} ${status.textColor}`}
+                    >
+                      {status.label}
+                    </Tag>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    {supplier.code} • {typeLabels[supplier.type as SupplierType]}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-          <Space>
-            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button
-                icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
-                className="border-slate-200 text-slate-700 hover:border-slate-300"
+            <div className="flex items-center gap-3">
+              <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                  İşlemler
+                </button>
+              </Dropdown>
+              <button
+                onClick={() => router.push(`/purchase/suppliers/${supplierId}/edit`)}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
               >
-                İşlemler
-              </Button>
-            </Dropdown>
-            <Button
-              type="primary"
-              icon={<PencilIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/purchase/suppliers/${supplierId}/edit`)}
-              style={{ background: '#1e293b', borderColor: '#1e293b' }}
-            >
-              Düzenle
-            </Button>
-          </Space>
+                <PencilIcon className="w-4 h-4" />
+                Düzenle
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-12 gap-6">
           {/* KPI Cards Row */}
@@ -232,7 +225,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-4 h-4 text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kredi Limiti
@@ -255,7 +248,7 @@ export default function SupplierDetailPage() {
                     (supplier.currentBalance || 0) > 0 ? 'bg-amber-100' : 'bg-emerald-100'
                   }`}
                 >
-                  <BuildingLibraryIcon className="w-4 h-4" className={`text-lg ${
+                  <BuildingLibraryIcon className={`w-5 h-5 ${
                       (supplier.currentBalance || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
                     }`}
                   />
@@ -281,7 +274,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <ReceiptPercentIcon className="w-4 h-4 text-emerald-600 text-lg" />
+                  <ReceiptPercentIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İndirim Oranı
@@ -300,7 +293,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <StarIcon className="w-4 h-4 text-amber-600 text-lg" />
+                  <StarIcon className="w-5 h-5 text-amber-600" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Puan</p>
               </div>
@@ -370,7 +363,7 @@ export default function SupplierDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <PhoneIcon className="w-4 h-4 text-slate-500 text-sm" />
+                    <PhoneIcon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Telefon</p>
@@ -379,7 +372,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <EnvelopeIcon className="w-4 h-4 text-slate-500 text-sm" />
+                    <EnvelopeIcon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">E-posta</p>
@@ -388,7 +381,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <GlobeAltIcon className="w-4 h-4 text-slate-500 text-sm" />
+                    <GlobeAltIcon className="w-4 h-4 text-slate-500" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Web Sitesi</p>
@@ -409,7 +402,7 @@ export default function SupplierDetailPage() {
                 {supplier.fax && (
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <DocumentTextIcon className="w-4 h-4 text-slate-500 text-sm" />
+                      <DocumentTextIcon className="w-4 h-4 text-slate-500" />
                     </div>
                     <div>
                       <p className="text-xs text-slate-400">Faks</p>
@@ -579,21 +572,20 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                    <ShoppingCartIcon className="w-4 h-4 text-white text-lg" />
+                  <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
+                    <ShoppingCartIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">Siparişler</p>
                     <p className="text-xs text-slate-500">Bu tedarikçiye ait tüm siparişleri görüntüle</p>
                   </div>
                 </div>
-                <Button
-                  type="primary"
+                <button
                   onClick={() => router.push(`/purchase/orders?supplierId=${supplierId}`)}
-                  style={{ background: '#1e293b', borderColor: '#1e293b' }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
                 >
                   Siparişleri Gör
-                </Button>
+                </button>
               </div>
             </div>
           </div>

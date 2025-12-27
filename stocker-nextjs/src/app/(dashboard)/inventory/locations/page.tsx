@@ -225,7 +225,7 @@ export default function LocationsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -303,7 +303,7 @@ export default function LocationsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />

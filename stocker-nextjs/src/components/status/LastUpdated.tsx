@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ClockIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export interface LastUpdatedProps {
   /**
@@ -79,13 +79,13 @@ export default function LastUpdated({
 
   return (
     <div className={`inline-flex items-center gap-1.5 text-gray-500 ${className}`}>
-      {showIcon && <ClockCircleOutlined className={iconSize} />}
+      {showIcon && <ClockIcon className={`${size === 'small' ? 'w-3 h-3' : 'w-4 h-4'}`} />}
       <span className={textSize}>
         {prefix}: {relativeTime}
       </span>
       {refreshInterval > 0 && (
-        <ReloadOutlined
-          className={`${iconSize} opacity-50`}
+        <ArrowPathIcon
+          className={`${size === 'small' ? 'w-3 h-3' : 'w-4 h-4'} opacity-50`}
           title="Otomatik yenileniyor"
         />
       )}

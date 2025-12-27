@@ -90,7 +90,7 @@ export default function CompetitorDetailPage() {
                   competitor.isActive ? 'bg-red-100' : 'bg-slate-100'
                 }`}
               >
-                <CursorArrowRaysIcon className="w-4 h-4" className={`text-lg ${competitor.isActive ? 'text-red-600' : 'text-slate-400'}`}
+                <CursorArrowRaysIcon className={`w-5 h-5 ${competitor.isActive ? 'text-red-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>

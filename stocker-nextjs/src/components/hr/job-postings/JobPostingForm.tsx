@@ -13,11 +13,11 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  FileTextOutlined,
-  DollarOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
-} from '@ant-design/icons';
+  DocumentTextIcon,
+  CurrencyDollarIcon,
+  MapPinIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import { useDepartments, usePositions, useEmployees, useWorkLocations } from '@/lib/api/hooks/useHR';
 import type { JobPostingDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -146,9 +146,7 @@ export default function JobPostingForm({
                 justifyContent: 'center',
               }}
             >
-              <FileTextOutlined
-                style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }}
-              />
+              <DocumentTextIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">İş İlanı</p>
               <p className="text-sm text-white/60">
                 Yeni pozisyonlar için ilan oluşturun
@@ -294,7 +292,7 @@ export default function JobPostingForm({
           {/* Basic Info */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <TeamOutlined className="mr-1" /> Temel Bilgiler
+              <UserGroupIcon className="w-4 h-4 mr-1 inline" /> Temel Bilgiler
             </Text>
             <Row gutter={16}>
               <Col span={12}>
@@ -417,7 +415,7 @@ export default function JobPostingForm({
           {/* Location Info */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <EnvironmentOutlined className="mr-1" /> Konum Bilgileri
+              <MapPinIcon className="w-4 h-4 mr-1 inline" /> Konum Bilgileri
             </Text>
             <Row gutter={16}>
               <Col span={8}>
@@ -457,7 +455,7 @@ export default function JobPostingForm({
           {/* Salary Info */}
           <div className="mb-8">
             <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <DollarOutlined className="mr-1" /> Maaş Bilgileri
+              <CurrencyDollarIcon className="w-4 h-4 mr-1 inline" /> Maaş Bilgileri
             </Text>
             <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl mb-4">
               <div>

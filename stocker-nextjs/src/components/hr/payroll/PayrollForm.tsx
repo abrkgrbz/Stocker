@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Form, Select, DatePicker, InputNumber, Input, Row, Col, Typography, Button, Switch, Tooltip, Collapse, Tag } from 'antd';
-import { DollarOutlined, CalculatorOutlined, InfoCircleOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { CurrencyDollarIcon, CalculatorIcon, InformationCircleIcon, BoltIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { PayrollDto } from '@/lib/api/services/hr.types';
 import {
@@ -157,9 +157,9 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
               }}
             >
               {autoCalculate ? (
-                <ThunderboltOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <BoltIcon className="w-14 h-14 text-white/90" />
               ) : (
-                <DollarOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <CurrencyDollarIcon className="w-14 h-14 text-white/90" />
               )}
               <p className="mt-3 text-lg font-medium text-white/90">
                 {autoCalculate ? 'Otomatik Hesaplama' : 'Manuel Giriş'}
@@ -174,10 +174,10 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
           <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CalculatorOutlined className="text-violet-600" />
+                <CalculatorIcon className="w-4 h-4 text-violet-600" />
                 <span className="text-sm font-medium text-gray-700">Otomatik Hesaplama</span>
                 <Tooltip title="Açık olduğunda SGK, Gelir Vergisi ve Damga Vergisi 2024 parametreleriyle otomatik hesaplanır.">
-                  <InfoCircleOutlined className="text-gray-400 cursor-help" />
+                  <InformationCircleIcon className="w-4 h-4 text-gray-400 cursor-help" />
                 </Tooltip>
               </div>
               <Switch
@@ -259,7 +259,7 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
           {autoCalculate && grossSalary > 0 && (
             <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
               <div className="flex items-center gap-2 mb-2">
-                <InfoCircleOutlined className="text-gray-500" />
+                <InformationCircleIcon className="w-4 h-4 text-gray-500" />
                 <span className="text-xs font-medium text-gray-600">Vergi Dilimi Bilgisi</span>
               </div>
               <div className="flex items-center gap-2">
@@ -460,7 +460,7 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
                     <div className="text-xs text-gray-400 mb-1">
                       Kümülatif Brüt (Önceki Aylar)
                       <Tooltip title="Bu çalışanın yılbaşından bu aya kadar toplam brüt kazancı. Doğru vergi dilimi hesaplaması için gereklidir.">
-                        <InfoCircleOutlined className="ml-1 text-gray-400 cursor-help" />
+                        <InformationCircleIcon className="w-4 h-4 ml-1 text-gray-400 cursor-help inline" />
                       </Tooltip>
                     </div>
                     <Form.Item name="cumulativeGross" className="mb-4">
@@ -478,7 +478,7 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
                     <div className="text-xs text-gray-400 mb-1">
                       Asgari Ücret İstisnası
                       <Tooltip title="2024'te asgari ücret kadar gelir vergiden muaftır.">
-                        <InfoCircleOutlined className="ml-1 text-gray-400 cursor-help" />
+                        <InformationCircleIcon className="w-4 h-4 ml-1 text-gray-400 cursor-help inline" />
                       </Tooltip>
                     </div>
                     <Form.Item name="applyMinWageExemption" valuePropName="checked" className="mb-4">
@@ -563,7 +563,7 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
             <>
               <div className="mb-8 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <div className="flex items-center gap-2 mb-3">
-                  <InfoCircleOutlined className="text-blue-600" />
+                  <InformationCircleIcon className="w-4 h-4 text-blue-600" />
                   <Text className="text-xs font-medium text-blue-700">2024 Vergi Parametreleri</Text>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">

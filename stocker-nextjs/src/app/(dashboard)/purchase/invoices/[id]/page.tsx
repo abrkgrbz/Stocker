@@ -1,24 +1,18 @@
 'use client';
 
+/**
+ * Purchase Invoice Detail Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ */
+
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Card,
-  Button,
-  Typography,
-  Spin,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Statistic,
   Table,
-  Empty,
+  Tag,
+  Spin,
   Dropdown,
-  Space,
-  Steps,
   Modal,
-  Progress,
 } from 'antd';
 import {
   ArrowLeftIcon,
@@ -44,26 +38,14 @@ import type { PurchaseInvoiceStatus, PurchaseInvoiceItemDto } from '@/lib/api/se
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
-const statusColors: Record<PurchaseInvoiceStatus, string> = {
-  Draft: 'default',
-  PendingApproval: 'orange',
-  Approved: 'purple',
-  Rejected: 'red',
-  PartiallyPaid: 'geekblue',
-  Paid: 'green',
-  Cancelled: 'default',
-};
-
-const statusLabels: Record<PurchaseInvoiceStatus, string> = {
-  Draft: 'Taslak',
-  PendingApproval: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
-  Rejected: 'Reddedildi',
-  PartiallyPaid: 'Kısmen Ödendi',
-  Paid: 'Ödendi',
-  Cancelled: 'İptal',
+const statusConfig: Record<PurchaseInvoiceStatus, { color: string; label: string; bgColor: string; tagColor: string }> = {
+  Draft: { color: '#64748b', label: 'Taslak', bgColor: '#64748b15', tagColor: 'default' },
+  PendingApproval: { color: '#f59e0b', label: 'Onay Bekliyor', bgColor: '#f59e0b15', tagColor: 'orange' },
+  Approved: { color: '#8b5cf6', label: 'Onaylandı', bgColor: '#8b5cf615', tagColor: 'purple' },
+  Rejected: { color: '#ef4444', label: 'Reddedildi', bgColor: '#ef444415', tagColor: 'red' },
+  PartiallyPaid: { color: '#3b82f6', label: 'Kısmen Ödendi', bgColor: '#3b82f615', tagColor: 'blue' },
+  Paid: { color: '#10b981', label: 'Ödendi', bgColor: '#10b98115', tagColor: 'green' },
+  Cancelled: { color: '#64748b', label: 'İptal', bgColor: '#64748b15', tagColor: 'default' },
 };
 
 const typeLabels: Record<string, string> = {
@@ -102,7 +84,7 @@ export default function PurchaseInvoiceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -110,13 +92,18 @@ export default function PurchaseInvoiceDetailPage() {
 
   if (!invoice) {
     return (
-      <div className="p-8">
-        <Empty description="Fatura bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/invoices')}>
-            Faturalara Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <DocumentTextIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Fatura bulunamadı</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu fatura silinmiş veya erişim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/invoices')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Faturalara Dön
+        </button>
       </div>
     );
   }
@@ -209,7 +196,9 @@ export default function PurchaseInvoiceDetailPage() {
       title: '#',
       key: 'index',
       width: 50,
-      render: (_: any, __: any, index: number) => index + 1,
+      render: (_: any, __: any, index: number) => (
+        <span className="text-sm text-slate-500">{index + 1}</span>
+      ),
     },
     {
       title: 'Ürün',
@@ -217,8 +206,8 @@ export default function PurchaseInvoiceDetailPage() {
       key: 'productName',
       render: (name: string, record: PurchaseInvoiceItemDto) => (
         <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-xs text-gray-500">{record.productCode}</div>
+          <div className="text-sm font-medium text-slate-900">{name}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
         </div>
       ),
     },
@@ -227,28 +216,34 @@ export default function PurchaseInvoiceDetailPage() {
       dataIndex: 'quantity',
       key: 'quantity',
       align: 'center' as const,
-      render: (qty: number, record: PurchaseInvoiceItemDto) => `${qty} ${record.unit}`,
+      render: (qty: number, record: PurchaseInvoiceItemDto) => (
+        <span className="text-sm text-slate-900">{qty} {record.unit}</span>
+      ),
     },
     {
       title: 'Birim Fiyat',
       dataIndex: 'unitPrice',
       key: 'unitPrice',
       align: 'right' as const,
-      render: (price: number) => `${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`,
+      render: (price: number) => (
+        <span className="text-sm text-slate-900">
+          {price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        </span>
+      ),
     },
     {
       title: 'İskonto',
       key: 'discount',
       align: 'right' as const,
       render: (_: any, record: PurchaseInvoiceItemDto) => (
-        <span>
-          {record.discountRate > 0 ? `%${record.discountRate}` : '-'}
+        <div>
+          <span className="text-sm text-slate-500">{record.discountRate > 0 ? `%${record.discountRate}` : '-'}</span>
           {record.discountAmount > 0 && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-red-500">
               -{record.discountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
             </div>
           )}
-        </span>
+        </div>
       ),
     },
     {
@@ -256,12 +251,12 @@ export default function PurchaseInvoiceDetailPage() {
       key: 'vat',
       align: 'right' as const,
       render: (_: any, record: PurchaseInvoiceItemDto) => (
-        <span>
-          %{record.vatRate}
-          <div className="text-xs text-gray-500">
+        <div>
+          <span className="text-sm text-slate-500">%{record.vatRate}</span>
+          <div className="text-xs text-slate-400">
             {record.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
           </div>
-        </span>
+        </div>
       ),
     },
     {
@@ -270,321 +265,409 @@ export default function PurchaseInvoiceDetailPage() {
       key: 'totalAmount',
       align: 'right' as const,
       render: (amount: number) => (
-        <Text strong>{amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+        <span className="text-sm font-semibold text-slate-900">
+          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        </span>
       ),
     },
   ];
 
+  // Progress steps
+  const progressSteps = [
+    { key: 'draft', label: 'Taslak', icon: DocumentTextIcon },
+    { key: 'pending', label: 'Onay Bekliyor', icon: null },
+    { key: 'approved', label: 'Onaylandı', icon: CheckCircleIcon },
+    { key: 'partial', label: 'Kısmen Ödendi', icon: null },
+    { key: 'paid', label: 'Ödendi', icon: CurrencyDollarIcon },
+  ];
+
+  const currentStep = getStatusStep(invoice.status as PurchaseInvoiceStatus);
+
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push('/purchase/invoices')}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/purchase/invoices')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                  {invoice.invoiceNumber}
-                  <Tag color={statusColors[invoice.status as PurchaseInvoiceStatus]}>
-                    {statusLabels[invoice.status as PurchaseInvoiceStatus]}
-                  </Tag>
-                  {isOverdue && (
-                    <Tag color="red" icon={<ExclamationCircleIcon className="w-4 h-4" />}>
-                      Vadesi Geçmiş
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: statusConfig[invoice.status as PurchaseInvoiceStatus]?.bgColor }}
+                >
+                  <DocumentTextIcon
+                    className="w-5 h-5"
+                    style={{ color: statusConfig[invoice.status as PurchaseInvoiceStatus]?.color }}
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-semibold text-slate-900">{invoice.invoiceNumber}</h1>
+                    <Tag color={statusConfig[invoice.status as PurchaseInvoiceStatus]?.tagColor}>
+                      {statusConfig[invoice.status as PurchaseInvoiceStatus]?.label}
                     </Tag>
-                  )}
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {invoice.supplierName} • {dayjs(invoice.invoiceDate).format('DD.MM.YYYY')}
-                </p>
+                    {isOverdue && (
+                      <Tag color="red" icon={<ExclamationCircleIcon className="w-3 h-3" />}>
+                        Vadesi Geçmiş
+                      </Tag>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    {invoice.supplierName} • {dayjs(invoice.invoiceDate).format('DD.MM.YYYY')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Space>
-            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
-            </Dropdown>
-            {invoice.status === 'Draft' && (
-              <Button
-                type="primary"
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => router.push(`/purchase/invoices/${invoiceId}/edit`)}
-              >
-                Düzenle
-              </Button>
-            )}
-          </Space>
+            <div className="flex items-center gap-3">
+              <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                  İşlemler
+                </button>
+              </Dropdown>
+              {invoice.status === 'Draft' && (
+                <button
+                  onClick={() => router.push(`/purchase/invoices/${invoiceId}/edit`)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                  Düzenle
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Progress Steps */}
-        <Card className="mb-6">
-          <Steps
-            current={getStatusStep(invoice.status as PurchaseInvoiceStatus)}
-            status={['Rejected', 'Cancelled'].includes(invoice.status) ? 'error' : 'process'}
-            items={[
-              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
-              { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'Kısmen Ödendi' },
-              { title: 'Ödendi', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
-            ]}
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            {progressSteps.map((step, index) => {
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep && currentStep >= 0;
+              const isError = ['Rejected', 'Cancelled'].includes(invoice.status) && index === 1;
+
+              return (
+                <React.Fragment key={step.key}>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                        isError ? 'bg-red-100 text-red-600' :
+                        isCompleted ? 'bg-slate-900 text-white' :
+                        isActive ? 'bg-slate-100 text-slate-900 ring-2 ring-slate-900' :
+                        'bg-slate-100 text-slate-400'
+                      }`}
+                    >
+                      {step.icon ? (
+                        <step.icon className="w-5 h-5" />
+                      ) : (
+                        <span className="text-sm font-medium">{index + 1}</span>
+                      )}
+                    </div>
+                    <span className={`text-xs font-medium ${
+                      isError ? 'text-red-600' :
+                      isCompleted || isActive ? 'text-slate-900' : 'text-slate-400'
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < progressSteps.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-4 ${
+                      isCompleted ? 'bg-slate-900' : 'bg-slate-200'
+                    }`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Statistics */}
-        <Row gutter={16} className="mb-6">
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Tutar"
-                value={invoice.totalAmount}
-                precision={2}
-                suffix={invoice.currency || '₺'}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Ödenen"
-                value={invoice.paidAmount}
-                precision={2}
-                suffix="₺"
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Kalan"
-                value={invoice.remainingAmount}
-                precision={2}
-                suffix="₺"
-                valueStyle={{ color: invoice.remainingAmount > 0 ? '#fa8c16' : '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <div className="mb-2">
-                <Text type="secondary">Ödeme Durumu</Text>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Toplam Tutar</div>
+            <div className="text-2xl font-semibold text-slate-900">
+              {invoice.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency || '₺'}
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Ödenen</div>
+            <div className="text-2xl font-semibold text-emerald-600">
+              {invoice.paidAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Kalan</div>
+            <div className={`text-2xl font-semibold ${invoice.remainingAmount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              {invoice.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Ödeme Durumu</div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    paymentPercentage === 100 ? 'bg-emerald-500' : 'bg-slate-900'
+                  }`}
+                  style={{ width: `${paymentPercentage}%` }}
+                />
               </div>
-              <Progress
-                percent={paymentPercentage}
-                status={paymentPercentage === 100 ? 'success' : 'active'}
-                format={(percent) => `%${percent}`}
-              />
-            </Card>
-          </Col>
-        </Row>
+              <span className="text-sm font-medium text-slate-900">%{paymentPercentage}</span>
+            </div>
+          </div>
+        </div>
 
-        <Row gutter={16}>
-          {/* Left Column */}
-          <Col xs={24} lg={16}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Invoice Items */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Invoice Items */}
-            <Card title="Fatura Kalemleri" className="mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">Fatura Kalemleri</h2>
+              </div>
               <Table
                 dataSource={invoice.items || []}
                 columns={itemColumns}
                 rowKey="id"
                 pagination={false}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                 summary={() => (
                   <Table.Summary>
-                    <Table.Summary.Row>
+                    <Table.Summary.Row className="bg-slate-50">
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text strong>Ara Toplam</Text>
+                        <span className="text-sm font-medium text-slate-700">Ara Toplam:</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text strong>{invoice.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <span className="text-sm text-slate-900">
+                          {invoice.subTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        </span>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                     {invoice.discountAmount > 0 && (
                       <Table.Summary.Row>
                         <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>İskonto {invoice.discountRate > 0 && `(%${invoice.discountRate})`}</Text>
+                          <span className="text-sm text-slate-500">
+                            İskonto {invoice.discountRate > 0 && `(%${invoice.discountRate})`}:
+                          </span>
                         </Table.Summary.Cell>
                         <Table.Summary.Cell index={1} align="right">
-                          <Text type="success">-{invoice.discountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                          <span className="text-sm text-red-600">
+                            -{invoice.discountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                          </span>
                         </Table.Summary.Cell>
                       </Table.Summary.Row>
                     )}
                     <Table.Summary.Row>
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text>KDV Toplam</Text>
+                        <span className="text-sm text-slate-500">KDV Toplam:</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text>{invoice.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                        <span className="text-sm text-slate-900">
+                          {invoice.vatAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                        </span>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                     {invoice.withholdingTaxAmount > 0 && (
                       <Table.Summary.Row>
                         <Table.Summary.Cell index={0} colSpan={6} align="right">
-                          <Text>Stopaj</Text>
+                          <span className="text-sm text-slate-500">Stopaj:</span>
                         </Table.Summary.Cell>
                         <Table.Summary.Cell index={1} align="right">
-                          <Text type="danger">-{invoice.withholdingTaxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+                          <span className="text-sm text-red-600">
+                            -{invoice.withholdingTaxAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                          </span>
                         </Table.Summary.Cell>
                       </Table.Summary.Row>
                     )}
-                    <Table.Summary.Row style={{ background: '#fafafa' }}>
+                    <Table.Summary.Row className="bg-slate-900">
                       <Table.Summary.Cell index={0} colSpan={6} align="right">
-                        <Text strong style={{ fontSize: 16 }}>Genel Toplam</Text>
+                        <span className="text-sm font-medium text-white">Genel Toplam:</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
+                        <span className="text-base font-semibold text-white">
                           {invoice.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {invoice.currency || '₺'}
-                        </Text>
+                        </span>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                   </Table.Summary>
                 )}
               />
-            </Card>
+            </div>
 
             {/* Notes */}
             {(invoice.notes || invoice.internalNotes) && (
-              <Card title="Notlar" size="small">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 className="text-sm font-medium text-slate-900 mb-4">Notlar</h2>
                 {invoice.notes && (
                   <div className="mb-4">
-                    <Text strong>Genel Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{invoice.notes}</Paragraph>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Genel Not</span>
+                    <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{invoice.notes}</p>
                   </div>
                 )}
                 {invoice.internalNotes && (
                   <div>
-                    <Text strong>Dahili Not:</Text>
-                    <Paragraph className="mt-1 mb-0 whitespace-pre-wrap">{invoice.internalNotes}</Paragraph>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Dahili Not</span>
+                    <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap">{invoice.internalNotes}</p>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
-          </Col>
+          </div>
 
-          {/* Right Column */}
-          <Col xs={24} lg={8}>
+          {/* Right Column - Info Cards */}
+          <div className="space-y-6">
             {/* Supplier Info */}
-            <Card title="Tedarikçi Bilgileri" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Tedarikçi">
-                  <a onClick={() => router.push(`/purchase/suppliers/${invoice.supplierId}`)}>
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Tedarikçi Bilgileri</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Tedarikçi</span>
+                  <button
+                    onClick={() => router.push(`/purchase/suppliers/${invoice.supplierId}`)}
+                    className="text-sm font-medium text-slate-900 hover:text-slate-700"
+                  >
                     {invoice.supplierName}
-                  </a>
-                </Descriptions.Item>
+                  </button>
+                </div>
                 {invoice.supplierTaxNumber && (
-                  <Descriptions.Item label="Vergi No">{invoice.supplierTaxNumber}</Descriptions.Item>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Vergi No</span>
+                    <span className="text-sm text-slate-900">{invoice.supplierTaxNumber}</span>
+                  </div>
                 )}
-              </Descriptions>
-            </Card>
+              </div>
+            </div>
 
             {/* Invoice Info */}
-            <Card title="Fatura Bilgileri" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Fatura No">{invoice.invoiceNumber}</Descriptions.Item>
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Fatura Bilgileri</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Fatura No</span>
+                  <span className="text-sm font-medium text-slate-900">{invoice.invoiceNumber}</span>
+                </div>
                 {invoice.supplierInvoiceNumber && (
-                  <Descriptions.Item label="Tedarikçi Fatura No">{invoice.supplierInvoiceNumber}</Descriptions.Item>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Tedarikçi Fatura No</span>
+                    <span className="text-sm text-slate-900">{invoice.supplierInvoiceNumber}</span>
+                  </div>
                 )}
-                <Descriptions.Item label="Fatura Tarihi">
-                  {dayjs(invoice.invoiceDate).format('DD.MM.YYYY')}
-                </Descriptions.Item>
-                <Descriptions.Item label="Vade Tarihi">
-                  {invoice.dueDate ? (
-                    <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-                      {dayjs(invoice.dueDate).format('DD.MM.YYYY')}
-                    </span>
-                  ) : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Tip">
-                  {typeLabels[invoice.type] || invoice.type}
-                </Descriptions.Item>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Fatura Tarihi</span>
+                  <span className="text-sm text-slate-900">{dayjs(invoice.invoiceDate).format('DD.MM.YYYY')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Vade Tarihi</span>
+                  <span className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-900'}`}>
+                    {invoice.dueDate ? dayjs(invoice.dueDate).format('DD.MM.YYYY') : '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Tip</span>
+                  <span className="text-sm text-slate-900">{typeLabels[invoice.type] || invoice.type}</span>
+                </div>
                 {invoice.currency !== 'TRY' && invoice.exchangeRate && (
                   <>
-                    <Descriptions.Item label="Para Birimi">{invoice.currency}</Descriptions.Item>
-                    <Descriptions.Item label="Kur">{invoice.exchangeRate}</Descriptions.Item>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Para Birimi</span>
+                      <span className="text-sm text-slate-900">{invoice.currency}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Kur</span>
+                      <span className="text-sm text-slate-900">{invoice.exchangeRate}</span>
+                    </div>
                   </>
                 )}
-              </Descriptions>
-            </Card>
+              </div>
+            </div>
 
             {/* Related Documents */}
             {(invoice.purchaseOrderNumber || invoice.goodsReceiptNumber) && (
-              <Card title="İlişkili Belgeler" size="small" className="mb-4">
-                <Descriptions column={1} size="small">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">İlişkili Belgeler</h3>
+                <div className="space-y-3">
                   {invoice.purchaseOrderNumber && (
-                    <Descriptions.Item label="Sipariş No">
-                      <a onClick={() => router.push(`/purchase/orders/${invoice.purchaseOrderId}`)}>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Sipariş No</span>
+                      <button
+                        onClick={() => router.push(`/purchase/orders/${invoice.purchaseOrderId}`)}
+                        className="text-sm font-medium text-slate-900 hover:text-slate-700"
+                      >
                         {invoice.purchaseOrderNumber}
-                      </a>
-                    </Descriptions.Item>
+                      </button>
+                    </div>
                   )}
                   {invoice.goodsReceiptNumber && (
-                    <Descriptions.Item label="Mal Alım No">
-                      <a onClick={() => router.push(`/purchase/goods-receipts/${invoice.goodsReceiptId}`)}>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Mal Alım No</span>
+                      <button
+                        onClick={() => router.push(`/purchase/goods-receipts/${invoice.goodsReceiptId}`)}
+                        className="text-sm font-medium text-slate-900 hover:text-slate-700"
+                      >
                         {invoice.goodsReceiptNumber}
-                      </a>
-                    </Descriptions.Item>
+                      </button>
+                    </div>
                   )}
-                </Descriptions>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* E-Invoice Info */}
             {invoice.eInvoiceId && (
-              <Card title="E-Fatura Bilgileri" size="small" className="mb-4">
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="E-Fatura ID">{invoice.eInvoiceId}</Descriptions.Item>
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">E-Fatura Bilgileri</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">E-Fatura ID</span>
+                    <span className="text-sm text-slate-900">{invoice.eInvoiceId}</span>
+                  </div>
                   {invoice.eInvoiceUUID && (
-                    <Descriptions.Item label="E-Fatura UUID">{invoice.eInvoiceUUID}</Descriptions.Item>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">E-Fatura UUID</span>
+                      <span className="text-sm text-slate-900 truncate max-w-[150px]">{invoice.eInvoiceUUID}</span>
+                    </div>
                   )}
                   {invoice.eInvoiceStatus && (
-                    <Descriptions.Item label="Durum">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Durum</span>
                       <Tag>{invoice.eInvoiceStatus}</Tag>
-                    </Descriptions.Item>
+                    </div>
                   )}
-                </Descriptions>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* Approval Info */}
             {invoice.approvalDate && (
-              <Card title="Onay Bilgileri" size="small" className="mb-4">
-                <Descriptions column={1} size="small">
-                  <Descriptions.Item label="Onay Tarihi">
-                    {dayjs(invoice.approvalDate).format('DD.MM.YYYY HH:mm')}
-                  </Descriptions.Item>
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Onay Bilgileri</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Onay Tarihi</span>
+                    <span className="text-sm text-slate-900">{dayjs(invoice.approvalDate).format('DD.MM.YYYY HH:mm')}</span>
+                  </div>
                   {invoice.approvedByName && (
-                    <Descriptions.Item label="Onaylayan">{invoice.approvedByName}</Descriptions.Item>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-500">Onaylayan</span>
+                      <span className="text-sm text-slate-900">{invoice.approvedByName}</span>
+                    </div>
                   )}
-                </Descriptions>
-              </Card>
+                </div>
+              </div>
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
 
       {/* Print Modal */}

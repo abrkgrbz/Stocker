@@ -10,12 +10,12 @@ import type { EventClickArg, DateSelectArg, EventContentArg } from '@fullcalenda
 import type { Activity } from '@/lib/api/services/crm.service';
 import { Card, Badge, Tooltip } from 'antd';
 import {
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  PhoneIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 
 // Activity type configuration
@@ -24,31 +24,31 @@ const activityConfig: Record<
   { icon: React.ReactNode; color: string; bgColor: string; borderColor: string }
 > = {
   Call: {
-    icon: <PhoneOutlined />,
+    icon: <PhoneIcon className="w-4 h-4" />,
     color: '#1890ff',
     bgColor: '#e6f4ff',
     borderColor: '#1890ff',
   },
   Email: {
-    icon: <MailOutlined />,
+    icon: <EnvelopeIcon className="w-4 h-4" />,
     color: '#13c2c2',
     bgColor: '#e6fffb',
     borderColor: '#13c2c2',
   },
   Meeting: {
-    icon: <TeamOutlined />,
+    icon: <UserGroupIcon className="w-4 h-4" />,
     color: '#52c41a',
     bgColor: '#f6ffed',
     borderColor: '#52c41a',
   },
   Task: {
-    icon: <FileTextOutlined />,
+    icon: <DocumentTextIcon className="w-4 h-4" />,
     color: '#fa8c16',
     bgColor: '#fff7e6',
     borderColor: '#fa8c16',
   },
   Note: {
-    icon: <FileTextOutlined />,
+    icon: <DocumentTextIcon className="w-4 h-4" />,
     color: '#8c8c8c',
     bgColor: '#fafafa',
     borderColor: '#d9d9d9',
@@ -142,7 +142,7 @@ export function ActivityCalendar({
           </div>
           {!eventInfo.view.type.includes('list') && eventInfo.event.start && (
             <div className="fc-event-time text-xs opacity-75 truncate">
-              <ClockCircleOutlined className="mr-1" />
+              <ClockIcon className="w-3 h-3 mr-1 inline" />
               {dayjs(eventInfo.event.start).format('HH:mm')}
             </div>
           )}

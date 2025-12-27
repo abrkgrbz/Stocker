@@ -1,35 +1,28 @@
 'use client';
 
 import React from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import {
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-  Typography,
-  Spin,
-  Divider,
-  Timeline,
-} from 'antd';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { Spin } from 'antd';
+import { PageContainer } from '@/components/patterns';
 import {
   ArrowLeftIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon,
+  CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  DocumentTextIcon,
   EyeIcon,
-  EyeSlashIcon,
   FireIcon,
   MapPinIcon,
   PaperAirplaneIcon,
   PencilIcon,
+  StarIcon,
   StopCircleIcon,
+  TagIcon,
   UserGroupIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
   useJobPosting,
@@ -39,31 +32,70 @@ import {
 } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
 // Status options
-const statusOptions: Record<string, { label: string; color: string }> = {
-  Draft: { label: 'Taslak', color: 'default' },
-  Published: { label: 'Yayında', color: 'green' },
-  Closed: { label: 'Kapalı', color: 'red' },
-  OnHold: { label: 'Beklemede', color: 'orange' },
-  Filled: { label: 'Dolu', color: 'blue' },
+const statusOptions: Record<string, { label: string; bgColor: string; textColor: string }> = {
+  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-700' },
+  Published: { label: 'Yayında', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700' },
+  Closed: { label: 'Kapalı', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+  OnHold: { label: 'Beklemede', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
+  Filled: { label: 'Dolu', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
 };
 
+// Helper components
+function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="py-3 border-b border-slate-100 last:border-0">
+      <dt className="text-xs font-medium text-slate-500 mb-1">{label}</dt>
+      <dd className="text-sm text-slate-900">{value || '-'}</dd>
+    </div>
+  );
+}
+
+function DateItem({ label, date }: { label: string; date?: string }) {
+  return (
+    <div className="py-3 border-b border-slate-100 last:border-0">
+      <dt className="text-xs font-medium text-slate-500 mb-1">{label}</dt>
+      <dd className="text-sm text-slate-900">
+        {date ? dayjs(date).format('DD.MM.YYYY') : '-'}
+      </dd>
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number | string;
+  color: string;
+}) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-xs text-slate-500">{label}</p>
+          <p className="text-xl font-semibold text-slate-900">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function JobPostingDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
 
-  const { data: jobPosting, isLoading } = useJobPosting(id);
+  const { data: jobPosting, isLoading, error } = useJobPosting(id);
   const publishJobPosting = usePublishJobPosting();
   const unpublishJobPosting = useUnpublishJobPosting();
   const closeJobPosting = useCloseJobPosting();
-
-  const formatDate = (date?: string) => {
-    if (!date) return '-';
-    return dayjs(date).format('DD.MM.YYYY');
-  };
 
   const formatCurrency = (value?: number) => {
     if (!value) return '-';
@@ -72,377 +104,359 @@ export default function JobPostingDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" />
-      </div>
+      <PageContainer>
+        <div className="flex items-center justify-center py-12">
+          <Spin />
+        </div>
+      </PageContainer>
     );
   }
 
-  if (!jobPosting) {
+  if (error || !jobPosting) {
     return (
-      <div className="p-6">
-        <Text>İlan bulunamadı.</Text>
-      </div>
+      <PageContainer>
+        <div className="text-center py-12">
+          <p className="text-slate-500">İş ilanı bulunamadı</p>
+          <Link href="/hr/job-postings" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Listeye Dön
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 
-  const statusInfo = statusOptions[jobPosting.status] || { label: jobPosting.status, color: 'default' };
+  const statusInfo = statusOptions[jobPosting.status] || { label: jobPosting.status, bgColor: 'bg-slate-100', textColor: 'text-slate-700' };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+    <PageContainer>
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href="/hr/job-postings"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          İş İlanları
+        </Link>
+
+        <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
+              <BriefcaseIcon className="w-6 h-6 text-slate-600" />
+            </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                <DocumentTextIcon className="w-4 h-4" />
-                {jobPosting.title}
-                {jobPosting.isUrgent && <FireIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
-                {jobPosting.isFeatured && <MapPinIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
-              </h1>
-              <p className="text-sm text-gray-400 m-0">{jobPosting.postingCode}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold text-slate-900">{jobPosting.title}</h1>
+                {jobPosting.isUrgent && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
+                    <FireIcon className="w-3 h-3" />
+                    Acil
+                  </span>
+                )}
+                {jobPosting.isFeatured && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                    <StarIcon className="w-3 h-3" />
+                    Öne Çıkan
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-500 mt-1">
+                {jobPosting.postingCode} • {jobPosting.departmentName}
+              </p>
             </div>
           </div>
-          <Space>
+
+          <div className="flex items-center gap-2">
             {jobPosting.status === 'Draft' && (
-              <Button
-                icon={<PaperAirplaneIcon className="w-4 h-4" />}
+              <button
                 onClick={() => publishJobPosting.mutateAsync(id)}
-                loading={publishJobPosting.isPending}
+                disabled={publishJobPosting.isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50"
               >
-                Yayınla
-              </Button>
+                <PaperAirplaneIcon className="w-4 h-4" />
+                {publishJobPosting.isPending ? 'Yayınlanıyor...' : 'Yayınla'}
+              </button>
             )}
             {jobPosting.status === 'Published' && (
               <>
-                <Button
-                  icon={<EyeSlashIcon className="w-4 h-4" />}
+                <button
                   onClick={() => unpublishJobPosting.mutateAsync(id)}
-                  loading={unpublishJobPosting.isPending}
+                  disabled={unpublishJobPosting.isPending}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
                 >
-                  Yayından Kaldır
-                </Button>
-                <Button
-                  icon={<StopCircleIcon className="w-4 h-4" />}
+                  <XMarkIcon className="w-4 h-4" />
+                  {unpublishJobPosting.isPending ? 'Kaldırılıyor...' : 'Yayından Kaldır'}
+                </button>
+                <button
                   onClick={() => closeJobPosting.mutateAsync(id)}
-                  loading={closeJobPosting.isPending}
-                  danger
+                  disabled={closeJobPosting.isPending}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
                 >
-                  Kapat
-                </Button>
+                  <StopCircleIcon className="w-4 h-4" />
+                  {closeJobPosting.isPending ? 'Kapatılıyor...' : 'Kapat'}
+                </button>
               </>
             )}
-            <Button
-              type="primary"
-              icon={<PencilIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/hr/job-postings/${id}/edit`)}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-              }}
+            <Link
+              href={`/hr/job-postings/${id}/edit`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
             >
+              <PencilIcon className="w-4 h-4" />
               Düzenle
-            </Button>
-          </Space>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        {/* Stats */}
-        <Row gutter={[16, 16]} className="mb-6">
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Başvurular"
-                value={jobPosting.totalApplications || 0}
-                prefix={<UserGroupIcon className="w-4 h-4" />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Görüntülenme"
-                value={jobPosting.viewsCount || 0}
-                prefix={<DocumentTextIcon className="w-4 h-4" />}
-                valueStyle={{ color: '#7c3aed' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="İşe Alınan"
-                value={jobPosting.hiredCount || 0}
-                prefix={<CheckCircleIcon className="w-4 h-4" />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Açık Pozisyon"
-                value={jobPosting.numberOfOpenings || 0}
-                prefix={<UserGroupIcon className="w-4 h-4" />}
-                valueStyle={{ color: '#faad14' }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        <Row gutter={[24, 24]}>
-          {/* Left Column - Main Info */}
-          <Col xs={24} lg={16}>
-            {/* Basic Info */}
-            <Card className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <Title level={4} className="m-0">Temel Bilgiler</Title>
-                <Tag color={statusInfo.color} className="text-base px-3 py-1">
-                  {statusInfo.label}
-                </Tag>
-              </div>
-              <Descriptions column={{ xs: 1, sm: 2, md: 2 }} bordered size="small">
-                <Descriptions.Item label="Departman">{jobPosting.departmentName}</Descriptions.Item>
-                <Descriptions.Item label="Pozisyon">{jobPosting.positionTitle || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Çalışma Tipi">
-                  <Tag>{jobPosting.employmentType}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Deneyim Seviyesi">
-                  <Tag>{jobPosting.experienceLevel}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="İşe Alım Yöneticisi">
-                  {jobPosting.hiringManagerName || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Uzaktan Çalışma">
-                  {jobPosting.remoteWorkType === 'Remote' ? 'Uzaktan' :
-                   jobPosting.remoteWorkType === 'Hybrid' ? 'Hibrit' : 'Ofiste'}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-
-            {/* Description */}
-            <Card className="mb-6">
-              <Title level={4}>Açıklama</Title>
-              <Paragraph>{jobPosting.description || '-'}</Paragraph>
-            </Card>
-
-            {/* Requirements & Responsibilities */}
-            {(jobPosting.requirements || jobPosting.responsibilities) && (
-              <Card className="mb-6">
-                <Title level={4}>Gereksinimler ve Sorumluluklar</Title>
-                {jobPosting.requirements && (
-                  <>
-                    <Text strong>Gereksinimler:</Text>
-                    <Paragraph className="mt-2 whitespace-pre-line">
-                      {jobPosting.requirements}
-                    </Paragraph>
-                  </>
-                )}
-                {jobPosting.responsibilities && (
-                  <>
-                    <Divider />
-                    <Text strong>Sorumluluklar:</Text>
-                    <Paragraph className="mt-2 whitespace-pre-line">
-                      {jobPosting.responsibilities}
-                    </Paragraph>
-                  </>
-                )}
-              </Card>
-            )}
-
-            {/* Qualifications */}
-            {(jobPosting.qualifications || jobPosting.preferredQualifications) && (
-              <Card className="mb-6">
-                <Title level={4}>Nitelikler</Title>
-                {jobPosting.qualifications && (
-                  <>
-                    <Text strong>Aranan Nitelikler:</Text>
-                    <Paragraph className="mt-2 whitespace-pre-line">
-                      {jobPosting.qualifications}
-                    </Paragraph>
-                  </>
-                )}
-                {jobPosting.preferredQualifications && (
-                  <>
-                    <Divider />
-                    <Text strong>Tercih Edilen:</Text>
-                    <Paragraph className="mt-2 whitespace-pre-line">
-                      {jobPosting.preferredQualifications}
-                    </Paragraph>
-                  </>
-                )}
-              </Card>
-            )}
-
-            {/* Benefits */}
-            {jobPosting.benefits && (
-              <Card className="mb-6">
-                <Title level={4}>Yan Haklar</Title>
-                <Paragraph className="whitespace-pre-line">
-                  {jobPosting.benefits}
-                </Paragraph>
-              </Card>
-            )}
-          </Col>
-
-          {/* Right Column - Sidebar */}
-          <Col xs={24} lg={8}>
-            {/* Location */}
-            <Card className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPinIcon className="w-4 h-4 text-lg" />
-                <Title level={5} className="m-0">Konum</Title>
-              </div>
-              <div className="space-y-2">
-                {jobPosting.workLocationName && (
-                  <div>
-                    <Text type="secondary">Çalışma Lokasyonu: </Text>
-                    <Text>{jobPosting.workLocationName}</Text>
-                  </div>
-                )}
-                {jobPosting.city && (
-                  <div>
-                    <Text type="secondary">Şehir: </Text>
-                    <Text>{jobPosting.city}</Text>
-                  </div>
-                )}
-                {jobPosting.country && (
-                  <div>
-                    <Text type="secondary">Ülke: </Text>
-                    <Text>{jobPosting.country}</Text>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Salary */}
-            {jobPosting.showSalary && (jobPosting.salaryMin || jobPosting.salaryMax) && (
-              <Card className="mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <CurrencyDollarIcon className="w-4 h-4 text-lg" />
-                  <Title level={5} className="m-0">Maaş Bilgisi</Title>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <Text type="secondary">Aralık: </Text>
-                    <Text strong>
-                      {formatCurrency(jobPosting.salaryMin)} - {formatCurrency(jobPosting.salaryMax)}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text type="secondary">Periyot: </Text>
-                    <Text>{jobPosting.salaryPeriod}</Text>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* Dates */}
-            <Card className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <ClockIcon className="w-4 h-4 text-lg" />
-                <Title level={5} className="m-0">Tarihler</Title>
-              </div>
-              <Timeline
-                items={[
-                  {
-                    color: 'gray',
-                    children: (
-                      <div>
-                        <Text type="secondary">Oluşturulma</Text>
-                        <div><Text>{formatDate(jobPosting.createdAt)}</Text></div>
-                      </div>
-                    ),
-                  },
-                  ...(jobPosting.postedDate ? [{
-                    color: 'green',
-                    children: (
-                      <div>
-                        <Text type="secondary">Yayın Tarihi</Text>
-                        <div><Text>{formatDate(jobPosting.postedDate)}</Text></div>
-                      </div>
-                    ),
-                  }] : []),
-                  ...(jobPosting.applicationDeadline ? [{
-                    color: dayjs(jobPosting.applicationDeadline).isBefore(dayjs()) ? 'red' : 'blue',
-                    children: (
-                      <div>
-                        <Text type="secondary">Son Başvuru</Text>
-                        <div><Text>{formatDate(jobPosting.applicationDeadline)}</Text></div>
-                      </div>
-                    ),
-                  }] : []),
-                  ...(jobPosting.expectedStartDate ? [{
-                    color: 'purple',
-                    children: (
-                      <div>
-                        <Text type="secondary">Beklenen Başlangıç</Text>
-                        <div><Text>{formatDate(jobPosting.expectedStartDate)}</Text></div>
-                      </div>
-                    ),
-                  }] : []),
-                  ...(jobPosting.closedDate ? [{
-                    color: 'red',
-                    children: (
-                      <div>
-                        <Text type="secondary">Kapanış Tarihi</Text>
-                        <div><Text>{formatDate(jobPosting.closedDate)}</Text></div>
-                      </div>
-                    ),
-                  }] : []),
-                ]}
-              />
-            </Card>
-
-            {/* Tags & Keywords */}
-            {(jobPosting.tags || jobPosting.keywords) && (
-              <Card className="mb-6">
-                <Title level={5}>Etiketler</Title>
-                {jobPosting.tags && (
-                  <div className="mb-2">
-                    {jobPosting.tags.split(',').map((tag, idx) => (
-                      <Tag key={idx} className="mb-1">{tag.trim()}</Tag>
-                    ))}
-                  </div>
-                )}
-                {jobPosting.keywords && (
-                  <div>
-                    <Text type="secondary" className="text-xs">Anahtar Kelimeler: </Text>
-                    <Text className="text-xs">{jobPosting.keywords}</Text>
-                  </div>
-                )}
-              </Card>
-            )}
-
-            {/* Internal Notes */}
-            {jobPosting.internalNotes && (
-              <Card className="mb-6">
-                <Title level={5}>İç Notlar</Title>
-                <Paragraph className="text-sm text-gray-600">
-                  {jobPosting.internalNotes}
-                </Paragraph>
-              </Card>
-            )}
-          </Col>
-        </Row>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          icon={UserGroupIcon}
+          label="Başvurular"
+          value={jobPosting.totalApplications || 0}
+          color="bg-blue-500"
+        />
+        <StatCard
+          icon={EyeIcon}
+          label="Görüntülenme"
+          value={jobPosting.viewsCount || 0}
+          color="bg-purple-500"
+        />
+        <StatCard
+          icon={CheckCircleIcon}
+          label="İşe Alınan"
+          value={jobPosting.hiredCount || 0}
+          color="bg-emerald-500"
+        />
+        <StatCard
+          icon={BriefcaseIcon}
+          label="Açık Pozisyon"
+          value={jobPosting.numberOfOpenings || 0}
+          color="bg-amber-500"
+        />
       </div>
-    </div>
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Basic Info */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-medium text-slate-900">Temel Bilgiler</h2>
+              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                {statusInfo.label}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <InfoItem label="Departman" value={jobPosting.departmentName} />
+              <InfoItem label="Pozisyon" value={jobPosting.positionTitle} />
+              <InfoItem
+                label="Çalışma Tipi"
+                value={
+                  <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                    {jobPosting.employmentType}
+                  </span>
+                }
+              />
+              <InfoItem
+                label="Deneyim Seviyesi"
+                value={
+                  <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                    {jobPosting.experienceLevel}
+                  </span>
+                }
+              />
+              <InfoItem label="İşe Alım Yöneticisi" value={jobPosting.hiringManagerName} />
+              <InfoItem
+                label="Uzaktan Çalışma"
+                value={
+                  jobPosting.remoteWorkType === 'Remote' ? 'Uzaktan' :
+                  jobPosting.remoteWorkType === 'Hybrid' ? 'Hibrit' : 'Ofiste'
+                }
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-3 border-b border-slate-100">
+              Açıklama
+            </h2>
+            <p className="text-sm text-slate-600 whitespace-pre-line">
+              {jobPosting.description || '-'}
+            </p>
+          </div>
+
+          {/* Requirements & Responsibilities */}
+          {(jobPosting.requirements || jobPosting.responsibilities) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-slate-900 mb-4 pb-3 border-b border-slate-100">
+                Gereksinimler ve Sorumluluklar
+              </h2>
+              {jobPosting.requirements && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-medium text-slate-700 mb-2">Gereksinimler</h3>
+                  <p className="text-sm text-slate-600 whitespace-pre-line">
+                    {jobPosting.requirements}
+                  </p>
+                </div>
+              )}
+              {jobPosting.responsibilities && (
+                <div>
+                  <h3 className="text-xs font-medium text-slate-700 mb-2">Sorumluluklar</h3>
+                  <p className="text-sm text-slate-600 whitespace-pre-line">
+                    {jobPosting.responsibilities}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Qualifications */}
+          {(jobPosting.qualifications || jobPosting.preferredQualifications) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-slate-900 mb-4 pb-3 border-b border-slate-100">
+                Nitelikler
+              </h2>
+              {jobPosting.qualifications && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-medium text-slate-700 mb-2">Aranan Nitelikler</h3>
+                  <p className="text-sm text-slate-600 whitespace-pre-line">
+                    {jobPosting.qualifications}
+                  </p>
+                </div>
+              )}
+              {jobPosting.preferredQualifications && (
+                <div>
+                  <h3 className="text-xs font-medium text-slate-700 mb-2">Tercih Edilen</h3>
+                  <p className="text-sm text-slate-600 whitespace-pre-line">
+                    {jobPosting.preferredQualifications}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Benefits */}
+          {jobPosting.benefits && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-slate-900 mb-4 pb-3 border-b border-slate-100">
+                Yan Haklar
+              </h2>
+              <p className="text-sm text-slate-600 whitespace-pre-line">
+                {jobPosting.benefits}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Location */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+              <MapPinIcon className="w-4 h-4 text-slate-500" />
+              <h2 className="text-sm font-medium text-slate-900">Konum</h2>
+            </div>
+            <div className="space-y-0">
+              <InfoItem label="Çalışma Lokasyonu" value={jobPosting.workLocationName} />
+              <InfoItem label="Şehir" value={jobPosting.city} />
+              <InfoItem label="Ülke" value={jobPosting.country} />
+            </div>
+          </div>
+
+          {/* Salary */}
+          {jobPosting.showSalary && (jobPosting.salaryMin || jobPosting.salaryMax) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+                <CurrencyDollarIcon className="w-4 h-4 text-slate-500" />
+                <h2 className="text-sm font-medium text-slate-900">Maaş Bilgisi</h2>
+              </div>
+              <div className="space-y-0">
+                <InfoItem
+                  label="Aralık"
+                  value={
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(jobPosting.salaryMin)} - {formatCurrency(jobPosting.salaryMax)}
+                    </span>
+                  }
+                />
+                <InfoItem label="Periyot" value={jobPosting.salaryPeriod} />
+              </div>
+            </div>
+          )}
+
+          {/* Dates */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+              <ClockIcon className="w-4 h-4 text-slate-500" />
+              <h2 className="text-sm font-medium text-slate-900">Tarihler</h2>
+            </div>
+            <div className="space-y-0">
+              <DateItem label="Oluşturulma" date={jobPosting.createdAt} />
+              {jobPosting.postedDate && (
+                <DateItem label="Yayın Tarihi" date={jobPosting.postedDate} />
+              )}
+              {jobPosting.applicationDeadline && (
+                <div className="py-3 border-b border-slate-100">
+                  <dt className="text-xs font-medium text-slate-500 mb-1">Son Başvuru</dt>
+                  <dd className={`text-sm font-medium ${
+                    dayjs(jobPosting.applicationDeadline).isBefore(dayjs())
+                      ? 'text-red-600'
+                      : 'text-slate-900'
+                  }`}>
+                    {dayjs(jobPosting.applicationDeadline).format('DD.MM.YYYY')}
+                  </dd>
+                </div>
+              )}
+              {jobPosting.expectedStartDate && (
+                <DateItem label="Beklenen Başlangıç" date={jobPosting.expectedStartDate} />
+              )}
+              {jobPosting.closedDate && (
+                <DateItem label="Kapanış Tarihi" date={jobPosting.closedDate} />
+              )}
+            </div>
+          </div>
+
+          {/* Tags */}
+          {(jobPosting.tags || jobPosting.keywords) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+                <TagIcon className="w-4 h-4 text-slate-500" />
+                <h2 className="text-sm font-medium text-slate-900">Etiketler</h2>
+              </div>
+              {jobPosting.tags && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {jobPosting.tags.split(',').map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      {tag.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {jobPosting.keywords && (
+                <p className="text-xs text-slate-500">
+                  <span className="font-medium">Anahtar Kelimeler:</span> {jobPosting.keywords}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Internal Notes */}
+          {jobPosting.internalNotes && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+              <h2 className="text-sm font-medium text-amber-900 mb-2">İç Notlar</h2>
+              <p className="text-sm text-amber-800">
+                {jobPosting.internalNotes}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </PageContainer>
   );
 }

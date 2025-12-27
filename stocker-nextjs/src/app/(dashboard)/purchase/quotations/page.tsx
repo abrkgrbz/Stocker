@@ -1,29 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Card,
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Dropdown,
-  Typography,
-  Row,
-  Col,
-  Statistic,
-  DatePicker,
-  Select,
-  Tooltip,
-  Modal,
-} from 'antd';
+import { Table, Input, Select, Dropdown, Modal, Spin } from 'antd';
 import {
   CheckCircleIcon,
+  ChevronRightIcon,
   ClockIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
-  ExclamationCircleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -33,26 +17,24 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import { useQuotations, useDeleteQuotation, useCancelQuotation } from '@/lib/api/hooks/usePurchase';
 import type { QuotationListDto, QuotationStatus } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
-
-const statusConfig: Record<QuotationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
-  Sent: { color: 'blue', text: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
-  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockIcon className="w-4 h-4" /> },
-  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockIcon className="w-4 h-4" /> },
-  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  Cancelled: { color: 'red', text: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
-  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+const statusConfig: Record<QuotationStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Sent: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
+  PartiallyResponded: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Kısmi Yanıt' },
+  FullyResponded: { bg: 'bg-cyan-100', text: 'text-cyan-700', label: 'Tam Yanıt' },
+  UnderReview: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'İnceleniyor' },
+  Evaluated: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Değerlendirildi' },
+  SupplierSelected: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Tedarikçi Seçildi' },
+  Awarded: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Kazanan Belirlendi' },
+  Converted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Siparişe Dönüştü' },
+  Cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'İptal' },
+  Closed: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Kapatıldı' },
+  Expired: { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu' },
 };
 
 export default function QuotationsPage() {
@@ -62,7 +44,7 @@ export default function QuotationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading, refetch } = useQuotations({
+  const { data, isLoading } = useQuotations({
     page: currentPage,
     pageSize,
     searchTerm: searchText || undefined,
@@ -75,7 +57,6 @@ export default function QuotationsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Teklif Talebi Silinecek',
-      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu teklif talebini silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -87,7 +68,6 @@ export default function QuotationsPage() {
   const handleCancel = (id: string) => {
     Modal.confirm({
       title: 'Teklif Talebi İptal Edilecek',
-      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu teklif talebini iptal etmek istediğinize emin misiniz?',
       okText: 'İptal Et',
       okType: 'danger',
@@ -103,13 +83,12 @@ export default function QuotationsPage() {
       key: 'quotationNumber',
       width: 140,
       render: (text, record) => (
-        <Button
-          type="link"
+        <button
           onClick={() => router.push(`/purchase/quotations/${record.id}`)}
-          className="p-0 font-medium"
+          className="text-sm font-medium text-slate-900 hover:text-slate-700 transition-colors"
         >
           {text}
-        </Button>
+        </button>
       ),
     },
     {
@@ -117,11 +96,7 @@ export default function QuotationsPage() {
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      render: (text) => (
-        <Tooltip title={text}>
-          <Text strong>{text}</Text>
-        </Tooltip>
-      ),
+      render: (text) => <span className="text-sm font-medium text-slate-900">{text}</span>,
     },
     {
       title: 'Durum',
@@ -131,50 +106,52 @@ export default function QuotationsPage() {
       render: (status: QuotationStatus) => {
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon}>
-            {config.text}
-          </Tag>
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+            {config.label}
+          </span>
         );
       },
     },
     {
-      title: 'Tedarikçi Sayısı',
+      title: 'Tedarikçi',
       dataIndex: 'supplierCount',
       key: 'supplierCount',
-      width: 130,
+      width: 100,
       align: 'center',
-      render: (count) => (
-        <Tag color="blue">{count} Tedarikçi</Tag>
-      ),
+      render: (count) => <span className="text-sm text-slate-600">{count}</span>,
     },
     {
-      title: 'Ürün Sayısı',
+      title: 'Ürün',
       dataIndex: 'itemCount',
       key: 'itemCount',
-      width: 120,
+      width: 80,
       align: 'center',
-      render: (count) => (
-        <Tag color="purple">{count} Ürün</Tag>
+      render: (count) => <span className="text-sm text-slate-600">{count}</span>,
+    },
+    {
+      title: 'Son Teklif',
+      dataIndex: 'responseDeadline',
+      key: 'responseDeadline',
+      width: 120,
+      render: (date) => (
+        <span className="text-sm text-slate-600">
+          {date ? new Date(date).toLocaleDateString('tr-TR') : '-'}
+        </span>
       ),
     },
     {
-      title: 'Son Teklif Tarihi',
-      dataIndex: 'responseDeadline',
-      key: 'responseDeadline',
-      width: 150,
-      render: (date) => date ? new Date(date).toLocaleDateString('tr-TR') : '-',
-    },
-    {
-      title: 'Oluşturulma',
+      title: 'Tarih',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 120,
-      render: (date) => new Date(date).toLocaleDateString('tr-TR'),
+      width: 100,
+      render: (date) => (
+        <span className="text-sm text-slate-500">{new Date(date).toLocaleDateString('tr-TR')}</span>
+      ),
     },
     {
-      title: 'İşlemler',
+      title: '',
       key: 'actions',
-      width: 80,
+      width: 50,
       align: 'center',
       render: (_, record) => (
         <Dropdown
@@ -214,13 +191,14 @@ export default function QuotationsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
+          <button className="p-1 hover:bg-slate-100 rounded transition-colors">
+            <EllipsisHorizontalIcon className="w-5 h-5 text-slate-400" />
+          </button>
         </Dropdown>
       ),
     },
   ];
 
-  // Calculate stats from data
   const stats = {
     total: data?.totalCount || 0,
     draft: data?.items?.filter(i => i.status === 'Draft').length || 0,
@@ -228,114 +206,124 @@ export default function QuotationsPage() {
     awarded: data?.items?.filter(i => i.status === 'Awarded').length || 0,
   };
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Title level={3} className="mb-1">Teklif Talepleri (RFQ)</Title>
-          <Text type="secondary">Tedarikçilerden teklif isteklerini yönetin</Text>
-        </div>
-        <Button
-          type="primary"
-          icon={<PlusIcon className="w-4 h-4" />}
-          size="large"
-          onClick={() => router.push('/purchase/quotations/new')}
-        >
-          Yeni Teklif Talebi
-        </Button>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Spin size="large" />
       </div>
+    );
+  }
 
-      {/* Stats Cards */}
-      <Row gutter={16} className="mb-6">
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Toplam Talep"
-              value={stats.total}
-              prefix={<DocumentTextIcon className="w-4 h-4 text-blue-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Taslak"
-              value={stats.draft}
-              prefix={<PencilIcon className="w-4 h-4 text-gray-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Gönderildi"
-              value={stats.sent}
-              prefix={<PaperAirplaneIcon className="w-4 h-4 text-blue-500" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} className="shadow-sm">
-            <Statistic
-              title="Kazanan Belirlendi"
-              value={stats.awarded}
-              prefix={<CheckCircleIcon className="w-4 h-4 text-green-500" />}
-            />
-          </Card>
-        </Col>
-      </Row>
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">Teklif Talepleri (RFQ)</h1>
+              <p className="text-sm text-slate-500 mt-1">Tedarikçilerden teklif isteklerini yönetin</p>
+            </div>
+            <Link href="/purchase/quotations/new">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                Yeni Teklif Talebi
+              </button>
+            </Link>
+          </div>
+        </div>
 
-      {/* Filters */}
-      <Card bordered={false} className="shadow-sm mb-6">
-        <Space wrap size="middle">
-          <Input
-            placeholder="Teklif no veya başlık ara..."
-            prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
-            allowClear
-          />
-          <Select
-            placeholder="Durum"
-            style={{ width: 180 }}
-            allowClear
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={Object.entries(statusConfig).map(([key, value]) => ({
-              value: key,
-              label: value.text,
-            }))}
-          />
-          <RangePicker
-            placeholder={['Başlangıç', 'Bitiş']}
-            format="DD.MM.YYYY"
-          />
-        </Space>
-      </Card>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link href="/purchase/quotations">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <DocumentTextIcon className="w-4 h-4 text-slate-500" />
+                </div>
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+              </div>
+              <div className="text-2xl font-semibold text-slate-900 mb-1">{stats.total}</div>
+              <div className="text-sm text-slate-500">Toplam Talep</div>
+            </div>
+          </Link>
 
-      {/* Table */}
-      <Card bordered={false} className="shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={data?.items || []}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total: data?.totalCount || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Toplam ${total} kayıt`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-slate-400" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Taslak</span>
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">{stats.draft}</div>
+            <div className="text-sm text-slate-500">Bekleyen</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gönderildi</span>
+            </div>
+            <div className="text-2xl font-semibold text-slate-900">{stats.sent}</div>
+            <div className="text-sm text-slate-500">Yanıt Beklenen</div>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Kazanan</span>
+            </div>
+            <div className="text-2xl font-semibold text-emerald-600">{stats.awarded}</div>
+            <div className="text-sm text-slate-500">Belirlendi</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Teklif no veya başlık ara..."
+              prefix={<MagnifyingGlassIcon className="w-4 h-4 text-slate-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-72"
+              allowClear
+            />
+            <Select
+              placeholder="Durum"
+              className="w-44"
+              allowClear
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={Object.entries(statusConfig).map(([key, value]) => ({
+                value: key,
+                label: value.label,
+              }))}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={data?.items || []}
+            rowKey="id"
+            loading={isLoading}
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: data?.totalCount || 0,
+              showSizeChanger: true,
+              showTotal: (total) => `Toplam ${total} kayıt`,
+              onChange: (page, size) => {
+                setCurrentPage(page);
+                setPageSize(size);
+              },
+            }}
+            scroll={{ x: 1000 }}
+            className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -85,8 +85,7 @@ export default function LoyaltyProgramDetailPage() {
                   program.isActive ? 'bg-amber-100' : 'bg-slate-100'
                 }`}
               >
-                <GiftIcon className="w-4 h-4" className={`text-lg ${program.isActive ? 'text-amber-600' : 'text-slate-400'}`}
-                />
+                <GiftIcon className={`w-5 h-5 ${program.isActive ? 'text-amber-600' : 'text-slate-400'}`} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -175,7 +174,7 @@ export default function LoyaltyProgramDetailPage() {
               </p>
               <div className="flex flex-col items-center justify-center py-4">
                 <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center">
-                  <StarIcon className="w-4 h-4 text-3xl text-amber-600" />
+                  <StarIcon className="w-8 h-8 text-amber-600" />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 mt-3">
                   {program.pointsPerSpend || 1} Puan
@@ -268,7 +267,7 @@ export default function LoyaltyProgramDetailPage() {
                           className="w-8 h-8 rounded-full flex items-center justify-center"
                           style={{ backgroundColor: tier.color || '#e2e8f0' }}
                         >
-                          <StarIcon className="w-4 h-4 text-white text-sm" />
+                          <StarIcon className="w-4 h-4 text-white" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-900">{tier.name}</p>

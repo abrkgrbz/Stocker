@@ -96,7 +96,7 @@ export default function SuppliersPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
               {record.isPreferred && (
-                <StarIcon className="w-4 h-4" style={{ fontSize: 12, color: '#f59e0b' }} />
+                <StarIcon className="w-3 h-3 text-amber-500" />
               )}
             </div>
             {record.code && (
@@ -210,7 +210,7 @@ export default function SuppliersPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <EllipsisHorizontalIcon className="w-4 h-4 text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" />
             </button>
           </Dropdown>
         );
@@ -286,7 +286,7 @@ export default function SuppliersPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
         }
       />

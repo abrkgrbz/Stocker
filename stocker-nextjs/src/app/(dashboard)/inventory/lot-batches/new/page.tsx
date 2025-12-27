@@ -183,7 +183,7 @@ export default function NewLotBatchPage() {
                   <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <InboxIcon className="w-4 h-4 text-white text-xl" />
+                        <InboxIcon className="w-6 h-6 text-white" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>

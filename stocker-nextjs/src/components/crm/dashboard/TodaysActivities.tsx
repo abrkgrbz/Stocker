@@ -3,15 +3,15 @@
 import React from 'react';
 import { Typography, Space, Empty, Badge, Button } from 'antd';
 import {
-  CalendarOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  PlusOutlined
-} from '@ant-design/icons';
+  CalendarIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import type { Activity } from '@/lib/api/services/crm.service';
 
@@ -23,10 +23,10 @@ interface TodaysActivitiesProps {
 }
 
 const activityIcons: Record<string, any> = {
-  Call: PhoneOutlined,
-  Email: MailOutlined,
-  Meeting: TeamOutlined,
-  Task: FileTextOutlined,
+  Call: PhoneIcon,
+  Email: EnvelopeIcon,
+  Meeting: UserGroupIcon,
+  Task: DocumentTextIcon,
 };
 
 export function TodaysActivities({
@@ -56,7 +56,7 @@ export function TodaysActivities({
         <Empty
           image={
             <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
-              <CalendarOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+              <CalendarIcon className="w-5 h-5 text-slate-300" />
             </div>
           }
           imageStyle={{ height: 60 }}
@@ -71,7 +71,7 @@ export function TodaysActivities({
               <Link href="/crm/activities">
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
                 >
                   Aktivite Planla
@@ -97,18 +97,18 @@ export function TodaysActivities({
     >
       <div className="mb-3 flex gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <CheckCircleOutlined className="text-slate-400" />
+          <CheckCircleIcon className="w-4 h-4 text-slate-400" />
           <Text type="secondary">{completedCount} Tamamlandı</Text>
         </div>
         <div className="flex items-center gap-2">
-          <ClockCircleOutlined className="text-slate-600" />
+          <ClockIcon className="w-4 h-4 text-slate-600" />
           <Text type="secondary">{pendingCount} Bekliyor</Text>
         </div>
       </div>
 
       <Space direction="vertical" style={{ width: '100%' }} size="small">
         {todaysActivities.slice(0, 8).map((activity) => {
-          const Icon = activityIcons[activity.type] || FileTextOutlined;
+          const Icon = activityIcons[activity.type] || DocumentTextIcon;
           const time = new Intl.DateTimeFormat('tr-TR', {
             hour: '2-digit',
             minute: '2-digit'
@@ -124,7 +124,7 @@ export function TodaysActivities({
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${isCompleted ? 'bg-slate-100' : 'bg-slate-100'}`}>
-                  <Icon className={`text-base ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`} />
+                  <Icon className={`w-4 h-4 ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -135,11 +135,11 @@ export function TodaysActivities({
                       {activity.subject}
                     </Text>
                     {isCompleted && (
-                      <CheckCircleOutlined className="text-slate-400 flex-shrink-0" />
+                      <CheckCircleIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
-                    <ClockCircleOutlined />
+                    <ClockIcon className="w-3 h-3" />
                     <span>{time}</span>
                     {activity.relatedToName && (
                       <>

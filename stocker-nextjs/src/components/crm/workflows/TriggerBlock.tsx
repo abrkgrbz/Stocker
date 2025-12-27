@@ -2,18 +2,18 @@
 
 import React from 'react';
 import {
-  EditOutlined,
-  ClockCircleOutlined,
-  ThunderboltOutlined,
-  CalendarOutlined,
-  PlusCircleOutlined,
-  FormOutlined,
-  SwapOutlined,
-  DollarOutlined,
-  FieldTimeOutlined,
-  FilterOutlined,
-  RocketOutlined,
-} from '@ant-design/icons';
+  PencilIcon,
+  ClockIcon,
+  BoltIcon,
+  CalendarIcon,
+  PlusCircleIcon,
+  DocumentTextIcon,
+  ArrowsRightLeftIcon,
+  CurrencyDollarIcon,
+  CalendarDaysIcon,
+  FunnelIcon,
+  RocketLaunchIcon,
+} from '@heroicons/react/24/outline';
 import type { WorkflowTriggerType } from '@/lib/api/services/crm.types';
 import type { TriggerConfiguration } from './ConfigureTriggerDrawer';
 
@@ -29,63 +29,63 @@ const triggerTypeConfig: Record<
 > = {
   Manual: {
     label: 'Manuel Tetikleyici',
-    icon: <ThunderboltOutlined />,
+    icon: <BoltIcon className="w-5 h-5" />,
     color: '#64748b',
     bgColor: 'bg-slate-100',
     description: 'Kullanıcı tarafından manuel olarak başlatılır',
   },
   Scheduled: {
     label: 'Zamanlanmış',
-    icon: <ClockCircleOutlined />,
+    icon: <ClockIcon className="w-5 h-5" />,
     color: '#f97316',
     bgColor: 'bg-orange-100',
     description: 'Belirli zamanlarda otomatik çalışır',
   },
   EntityCreated: {
     label: 'Kayıt Oluşturulduğunda',
-    icon: <PlusCircleOutlined />,
+    icon: <PlusCircleIcon className="w-5 h-5" />,
     color: '#22c55e',
     bgColor: 'bg-green-100',
     description: 'Yeni kayıt oluşturulduğunda tetiklenir',
   },
   EntityUpdated: {
     label: 'Kayıt Güncellendiğinde',
-    icon: <FormOutlined />,
+    icon: <DocumentTextIcon className="w-5 h-5" />,
     color: '#3b82f6',
     bgColor: 'bg-blue-100',
     description: 'Kayıt güncellendiğinde tetiklenir',
   },
   StatusChanged: {
     label: 'Durum Değiştiğinde',
-    icon: <SwapOutlined />,
+    icon: <ArrowsRightLeftIcon className="w-5 h-5" />,
     color: '#8b5cf6',
     bgColor: 'bg-violet-100',
     description: 'Status alanı değiştiğinde tetiklenir',
   },
   DealStageChanged: {
     label: 'Anlaşma Aşaması Değiştiğinde',
-    icon: <RocketOutlined />,
+    icon: <RocketLaunchIcon className="w-5 h-5" />,
     color: '#6366f1',
     bgColor: 'bg-indigo-100',
     description: 'Anlaşma aşaması değiştiğinde tetiklenir',
   },
   FieldCondition: {
     label: 'Alan Koşulu Sağlandığında',
-    icon: <FilterOutlined />,
+    icon: <FunnelIcon className="w-5 h-5" />,
     color: '#ef4444',
     bgColor: 'bg-red-100',
     description: 'Belirli alan koşulu sağlandığında tetiklenir',
   },
   AmountThreshold: {
     label: 'Tutar Eşiği Aşıldığında',
-    icon: <DollarOutlined />,
+    icon: <CurrencyDollarIcon className="w-5 h-5" />,
     color: '#eab308',
     bgColor: 'bg-yellow-100',
     description: 'Belirli tutar eşiği aşıldığında tetiklenir',
   },
   DueDateEvent: {
     label: 'Vade Tarihi Yaklaştığında',
-    icon: <FieldTimeOutlined />,
+    icon: <CalendarDaysIcon className="w-5 h-5" />,
     color: '#ec4899',
     bgColor: 'bg-pink-100',
     description: 'Vade tarihi yaklaştığında veya geçtiğinde tetiklenir',
@@ -95,7 +95,7 @@ const triggerTypeConfig: Record<
 export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
   const config = triggerTypeConfig[trigger.type] || {
     label: trigger.type,
-    icon: <ThunderboltOutlined />,
+    icon: <BoltIcon className="w-5 h-5" />,
     color: '#64748b',
     bgColor: 'bg-slate-100',
     description: 'Workflow tetikleyicisi',
@@ -109,7 +109,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
         return (
           <div className="flex items-center gap-2 mt-3">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
-              <CalendarOutlined className="text-[10px]" />
+              <CalendarIcon className="w-3 h-3" />
               {new Date(scheduledConfig.executeAt).toLocaleString('tr-TR')}
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
         return (
           <div className="mt-3 space-y-1.5">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
-              <ClockCircleOutlined className="text-[10px]" />
+              <ClockIcon className="w-3 h-3" />
               {scheduleText} - {time}
             </div>
             {scheduledConfig.recurrence.timezone && (
@@ -151,7 +151,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
         return (
           <div className="flex items-center gap-2 mt-3">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-md text-xs font-medium">
-              <ClockCircleOutlined className="text-[10px]" />
+              <ClockIcon className="w-3 h-3" />
               Cron: {scheduledConfig.cronExpression}
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
       return (
         <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
           <div className="flex items-center gap-2">
-            <FilterOutlined className="text-blue-500 text-sm" />
+            <FunnelIcon className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium text-blue-700">Koşullu Tetikleme</span>
           </div>
           <p className="text-xs text-blue-600 mt-1">
@@ -193,7 +193,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-violet-100 text-violet-700 rounded-md text-xs font-semibold uppercase tracking-wide">
-            <ThunderboltOutlined className="text-[10px]" />
+            <BoltIcon className="w-3 h-3" />
             Tetikleyici
           </span>
           {trigger.entityType && (
@@ -207,7 +207,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
           onClick={onEdit}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
         >
-          <EditOutlined className="text-[11px]" />
+          <PencilIcon className="w-3.5 h-3.5" />
           Düzenle
         </button>
       </div>
@@ -215,7 +215,7 @@ export default function TriggerBlock({ trigger, onEdit }: TriggerBlockProps) {
       {/* Icon & Title */}
       <div className="flex items-center gap-3 mb-2">
         <div className={`w-10 h-10 ${config.bgColor} rounded-lg flex items-center justify-center`}>
-          <span style={{ color: config.color }} className="text-lg">
+          <span style={{ color: config.color }}>
             {config.icon}
           </span>
         </div>

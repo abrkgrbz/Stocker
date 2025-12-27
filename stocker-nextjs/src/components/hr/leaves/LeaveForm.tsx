@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Form, Select, DatePicker, Input, Row, Col, Typography } from 'antd';
-import { CalendarOutlined } from '@ant-design/icons';
+import { CalendarIcon } from '@heroicons/react/24/outline';
 import { useEmployees, useLeaveTypes } from '@/lib/api/hooks/useHR';
 import type { LeaveDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -58,7 +58,7 @@ export default function LeaveForm({ form, initialValues, onFinish, loading }: Le
                 justifyContent: 'center',
               }}
             >
-              <CalendarOutlined style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
+              <CalendarIcon className="w-16 h-16 text-black/60" />
               <p className="mt-4 text-lg font-medium text-gray-700">İzin Talebi</p>
               <p className="text-sm text-gray-500">Çalışanlar için izin kaydı</p>
             </div>

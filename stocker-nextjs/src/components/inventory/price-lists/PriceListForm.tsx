@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Switch, Select, InputNumber, DatePicker, Table } from 'antd';
-import { DollarOutlined } from '@ant-design/icons';
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import type { PriceListDto, PriceListItemDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -120,7 +120,7 @@ export default function PriceListForm({ form, initialValues, onFinish, loading }
             {/* Price List Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <DollarOutlined className="text-xl text-slate-500" />
+                <CurrencyDollarIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, InputNumber, Row, Col, Typography, Switch, Select } from 'antd';
-import { BookOutlined } from '@ant-design/icons';
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 import type { TrainingDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
@@ -58,7 +58,7 @@ export default function TrainingForm({ form, initialValues, onFinish, loading }:
                 justifyContent: 'center',
               }}
             >
-              <BookOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <BookOpenIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Eğitim Programı</p>
               <p className="text-sm text-white/60">Çalışan gelişimi için eğitim tanımlayın</p>
             </div>

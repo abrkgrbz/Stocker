@@ -4,15 +4,12 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Form,
-  Button,
   Input,
   Select,
   DatePicker,
   InputNumber,
   Row,
   Col,
-  Typography,
-  Divider,
   Table,
   Spin,
   message,
@@ -35,13 +32,12 @@ import { useCreatePurchaseRequest, useSubmitPurchaseRequest, useSuppliers } from
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { CreatePurchaseRequestDto, CreatePurchaseRequestItemDto, PurchaseRequestPriority } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const priorityOptions = [
-  { value: 'Low', label: 'Düşük' },
+  { value: 'Low', label: 'Dusuk' },
   { value: 'Normal', label: 'Normal' },
-  { value: 'High', label: 'Yüksek' },
+  { value: 'High', label: 'Yuksek' },
   { value: 'Urgent', label: 'Acil' },
 ];
 
@@ -175,14 +171,14 @@ export default function NewPurchaseRequestPage() {
 
   const itemColumns = [
     {
-      title: 'Ürün',
+      title: 'Urun',
       dataIndex: 'productName',
       key: 'productName',
       render: (name: string, record: RequestItem) => (
         <div>
-          <div className="font-medium">{name}</div>
+          <div className="font-medium text-slate-900">{name}</div>
           {record.productCode && (
-            <div className="text-xs text-gray-500">{record.productCode}</div>
+            <div className="text-xs text-slate-500">{record.productCode}</div>
           )}
         </div>
       ),
@@ -193,7 +189,9 @@ export default function NewPurchaseRequestPage() {
       key: 'quantity',
       width: 100,
       align: 'center' as const,
-      render: (qty: number, record: RequestItem) => `${qty} ${record.unit}`,
+      render: (qty: number, record: RequestItem) => (
+        <span className="text-sm text-slate-900">{qty} {record.unit}</span>
+      ),
     },
     {
       title: 'Tahmini Birim Fiyat',
@@ -201,7 +199,11 @@ export default function NewPurchaseRequestPage() {
       key: 'estimatedUnitPrice',
       width: 150,
       align: 'right' as const,
-      render: (price: number) => `${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`,
+      render: (price: number) => (
+        <span className="text-sm text-slate-900">
+          {price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+        </span>
+      ),
     },
     {
       title: 'Toplam',
@@ -210,17 +212,19 @@ export default function NewPurchaseRequestPage() {
       width: 150,
       align: 'right' as const,
       render: (amount: number) => (
-        <span className="font-medium">
-          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+        <span className="text-sm font-semibold text-slate-900">
+          {amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
         </span>
       ),
     },
     {
-      title: 'Tercih Edilen Tedarikçi',
+      title: 'Tercih Edilen Tedarikci',
       dataIndex: 'preferredSupplierName',
       key: 'preferredSupplierName',
       width: 180,
-      render: (name: string) => name || '-',
+      render: (name: string) => (
+        <span className="text-sm text-slate-500">{name || '-'}</span>
+      ),
     },
     {
       title: '',
@@ -228,124 +232,108 @@ export default function NewPurchaseRequestPage() {
       width: 60,
       render: (_: any, record: RequestItem) => (
         <Popconfirm
-          title="Bu kalemi silmek istediğinizden emin misiniz?"
+          title="Bu kalemi silmek istediginizden emin misiniz?"
           onConfirm={() => handleRemoveItem(record.key)}
           okText="Sil"
-          cancelText="İptal"
+          cancelText="Iptal"
         >
-          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} />
+          <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+            <TrashIcon className="w-4 h-4" />
+          </button>
         </Popconfirm>
       ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Yeni Satın Alma Talebi
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  Departman ihtiyaçlarınız için talep oluşturun
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <DocumentTextIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    Yeni Satin Alma Talebi
+                  </h1>
+                  <p className="text-sm text-slate-500">
+                    Departman ihtiyaclariniz icin talep olusturun
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={handleSaveDraft}
-              loading={createRequest.isPending}
-            >
-              Taslak Kaydet
-            </Button>
-            <Button
-              type="primary"
-              icon={<PaperAirplaneIcon className="w-4 h-4" />}
-              onClick={handleSaveAndSubmit}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet ve Onaya Gönder
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Iptal
+              </button>
+              <button
+                onClick={handleSaveDraft}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {createRequest.isPending ? 'Kaydediliyor...' : 'Taslak Kaydet'}
+              </button>
+              <button
+                onClick={handleSaveAndSubmit}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <PaperAirplaneIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet ve Onaya Gonder'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <Spin spinning={isLoading}>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="bg-white border border-slate-200 rounded-xl p-8">
             <Row gutter={48}>
               {/* Left Panel - Visual & Summary */}
               <Col xs={24} lg={10}>
                 {/* Visual Representation */}
                 <div className="mb-8">
-                  <div
-                    style={{
-                      background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-                      borderRadius: '16px',
-                      padding: '40px 20px',
-                      minHeight: '200px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
+                  <div className="bg-slate-900 rounded-xl p-10 flex flex-col items-center justify-center min-h-[200px]">
                     <DocumentTextIcon className="w-16 h-16 text-white/90" />
                     <p className="mt-4 text-lg font-medium text-white/90">
-                      Satın Alma Talebi
+                      Satin Alma Talebi
                     </p>
                     <p className="text-sm text-white/60">
-                      Departman ihtiyaçlarını talep edin
+                      Departman ihtiyaclarini talep edin
                     </p>
                   </div>
                 </div>
 
                 {/* Summary Card */}
-                <div className="bg-gray-50/50 rounded-xl p-4 mb-6">
+                <div className="bg-slate-50 rounded-xl p-4 mb-6">
                   <div className="space-y-3">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Kalem Sayısı</span>
-                      <span className="font-medium">{items.length}</span>
+                    <div className="flex justify-between text-slate-600">
+                      <span className="text-sm">Kalem Sayisi</span>
+                      <span className="text-sm font-medium text-slate-900">{items.length}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Tahmini Toplam</span>
-                      <span className="font-semibold text-purple-600">
-                        {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                    <div className="flex justify-between text-slate-600">
+                      <span className="text-sm">Tahmini Toplam</span>
+                      <span className="text-sm font-semibold text-slate-900">
+                        {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
                       </span>
                     </div>
                   </div>
@@ -353,17 +341,17 @@ export default function NewPurchaseRequestPage() {
 
                 {/* Priority Indicator */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-purple-50/50 rounded-xl text-center">
-                    <div className="text-2xl font-semibold text-purple-600">
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-2xl font-semibold text-slate-900">
                       {items.length}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">Toplam Kalem</div>
+                    <div className="text-xs text-slate-500 mt-1">Toplam Kalem</div>
                   </div>
-                  <div className="p-4 bg-green-50/50 rounded-xl text-center">
-                    <div className="text-sm font-semibold text-green-600 truncate">
-                      {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} ₺
+                  <div className="p-4 bg-slate-50 rounded-xl text-center">
+                    <div className="text-sm font-semibold text-slate-900 truncate">
+                      {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 0 })} TL
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">Tahmini Tutar</div>
+                    <div className="text-xs text-slate-500 mt-1">Tahmini Tutar</div>
                   </div>
                 </div>
               </Col>
@@ -384,8 +372,8 @@ export default function NewPurchaseRequestPage() {
                       {
                         key: 'basic',
                         label: (
-                          <span>
-                            <InformationCircleIcon className="w-4 h-4 mr-1" />
+                          <span className="flex items-center gap-1.5">
+                            <InformationCircleIcon className="w-4 h-4" />
                             Talep Bilgileri
                           </span>
                         ),
@@ -393,22 +381,22 @@ export default function NewPurchaseRequestPage() {
                           <div className="space-y-4">
                             <Row gutter={16}>
                               <Col span={12}>
-                                <div className="text-xs text-gray-400 mb-1">Öncelik *</div>
+                                <div className="text-xs text-slate-400 mb-1">Oncelik *</div>
                                 <Form.Item
                                   name="priority"
-                                  rules={[{ required: true, message: 'Öncelik seçin' }]}
+                                  rules={[{ required: true, message: 'Oncelik secin' }]}
                                   className="mb-0"
                                 >
                                   <Select options={priorityOptions} variant="filled" />
                                 </Form.Item>
                               </Col>
                               <Col span={12}>
-                                <div className="text-xs text-gray-400 mb-1">Gerekli Tarih</div>
+                                <div className="text-xs text-slate-400 mb-1">Gerekli Tarih</div>
                                 <Form.Item name="requiredDate" className="mb-0">
                                   <DatePicker
                                     className="w-full"
                                     format="DD.MM.YYYY"
-                                    placeholder="Tarih seçin"
+                                    placeholder="Tarih secin"
                                     variant="filled"
                                   />
                                 </Form.Item>
@@ -416,29 +404,29 @@ export default function NewPurchaseRequestPage() {
                             </Row>
                             <Row gutter={16}>
                               <Col span={24}>
-                                <div className="text-xs text-gray-400 mb-1">Departman</div>
+                                <div className="text-xs text-slate-400 mb-1">Departman</div>
                                 <Form.Item name="departmentName" className="mb-0">
-                                  <Input placeholder="Departman adı" variant="filled" />
+                                  <Input placeholder="Departman adi" variant="filled" />
                                 </Form.Item>
                               </Col>
                             </Row>
                             <Row gutter={16}>
                               <Col span={24}>
-                                <div className="text-xs text-gray-400 mb-1">Amaç *</div>
+                                <div className="text-xs text-slate-400 mb-1">Amac *</div>
                                 <Form.Item
                                   name="purpose"
-                                  rules={[{ required: true, message: 'Amaç belirtin' }]}
+                                  rules={[{ required: true, message: 'Amac belirtin' }]}
                                   className="mb-0"
                                 >
-                                  <TextArea rows={2} placeholder="Bu talebin amacını açıklayın..." variant="filled" />
+                                  <TextArea rows={2} placeholder="Bu talebin amacini aciklayin..." variant="filled" />
                                 </Form.Item>
                               </Col>
                             </Row>
                             <Row gutter={16}>
                               <Col span={24}>
-                                <div className="text-xs text-gray-400 mb-1">Gerekçe</div>
+                                <div className="text-xs text-slate-400 mb-1">Gerekce</div>
                                 <Form.Item name="justification" className="mb-0">
-                                  <TextArea rows={2} placeholder="Talebin gerekçesini detaylı açıklayın..." variant="filled" />
+                                  <TextArea rows={2} placeholder="Talebin gerekcesini detayli aciklayin..." variant="filled" />
                                 </Form.Item>
                               </Col>
                             </Row>
@@ -448,22 +436,22 @@ export default function NewPurchaseRequestPage() {
                       {
                         key: 'budget',
                         label: (
-                          <span>
-                            <CurrencyDollarIcon className="w-4 h-4 mr-1" />
-                            Bütçe
+                          <span className="flex items-center gap-1.5">
+                            <CurrencyDollarIcon className="w-4 h-4" />
+                            Butce
                           </span>
                         ),
                         children: (
                           <div className="space-y-4">
                             <Row gutter={16}>
                               <Col span={12}>
-                                <div className="text-xs text-gray-400 mb-1">Bütçe Kodu</div>
+                                <div className="text-xs text-slate-400 mb-1">Butce Kodu</div>
                                 <Form.Item name="budgetCode" className="mb-0">
-                                  <Input placeholder="ör: BTC-2024-001" variant="filled" />
+                                  <Input placeholder="or: BTC-2024-001" variant="filled" />
                                 </Form.Item>
                               </Col>
                               <Col span={12}>
-                                <div className="text-xs text-gray-400 mb-1">Bütçe Tutarı</div>
+                                <div className="text-xs text-slate-400 mb-1">Butce Tutari</div>
                                 <Form.Item name="budgetAmount" className="mb-0">
                                   <InputNumber
                                     className="w-full"
@@ -472,21 +460,21 @@ export default function NewPurchaseRequestPage() {
                                     precision={2}
                                     min={0}
                                     variant="filled"
-                                    addonAfter="₺"
+                                    addonAfter="TL"
                                   />
                                 </Form.Item>
                               </Col>
                             </Row>
                             <Row gutter={16}>
                               <Col span={12}>
-                                <div className="text-xs text-gray-400 mb-1">Para Birimi</div>
+                                <div className="text-xs text-slate-400 mb-1">Para Birimi</div>
                                 <Form.Item name="currency" className="mb-0">
                                   <Select
                                     variant="filled"
                                     options={[
-                                      { value: 'TRY', label: '₺ TRY' },
+                                      { value: 'TRY', label: 'TL TRY' },
                                       { value: 'USD', label: '$ USD' },
-                                      { value: 'EUR', label: '€ EUR' },
+                                      { value: 'EUR', label: 'EUR' },
                                     ]}
                                   />
                                 </Form.Item>
@@ -498,8 +486,8 @@ export default function NewPurchaseRequestPage() {
                       {
                         key: 'notes',
                         label: (
-                          <span>
-                            <DocumentTextIcon className="w-4 h-4 mr-1" />
+                          <span className="flex items-center gap-1.5">
+                            <DocumentTextIcon className="w-4 h-4" />
                             Notlar
                           </span>
                         ),
@@ -507,9 +495,9 @@ export default function NewPurchaseRequestPage() {
                           <div className="space-y-4">
                             <Row gutter={16}>
                               <Col span={24}>
-                                <div className="text-xs text-gray-400 mb-1">Genel Notlar</div>
+                                <div className="text-xs text-slate-400 mb-1">Genel Notlar</div>
                                 <Form.Item name="notes" className="mb-0">
-                                  <TextArea rows={4} placeholder="Ek notlar veya açıklamalar..." variant="filled" />
+                                  <TextArea rows={4} placeholder="Ek notlar veya aciklamalar..." variant="filled" />
                                 </Form.Item>
                               </Col>
                             </Row>
@@ -520,33 +508,33 @@ export default function NewPurchaseRequestPage() {
                   />
 
                   {/* Divider */}
-                  <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent my-6" />
+                  <div className="h-px bg-slate-200 my-6" />
 
                   {/* Request Items Section */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <ListBulletIcon className="w-4 h-4 mr-1" />
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                        <ListBulletIcon className="w-4 h-4" />
                         Talep Kalemleri
-                      </Text>
-                      <Text type="secondary" className="text-sm">
-                        Toplam: <Text strong style={{ color: '#a855f7' }}>
-                          {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                        </Text>
-                      </Text>
+                      </span>
+                      <span className="text-sm text-slate-500">
+                        Toplam: <span className="font-semibold text-slate-900">
+                          {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                        </span>
+                      </span>
                     </div>
 
                     {/* Add Item Form */}
-                    <div className="bg-gray-50/50 rounded-xl p-4 mb-4">
+                    <div className="bg-slate-50 rounded-xl p-4 mb-4">
                       <Form form={itemForm} layout="vertical">
                         <Row gutter={16}>
                           <Col xs={24} md={6}>
-                            <div className="text-xs text-gray-400 mb-1">Ürün</div>
+                            <div className="text-xs text-slate-400 mb-1">Urun</div>
                             <Form.Item name="productId" className="mb-2">
                               <Select
                                 showSearch
                                 allowClear
-                                placeholder="Ürün seçin"
+                                placeholder="Urun secin"
                                 optionFilterProp="label"
                                 onChange={handleProductSelect}
                                 variant="filled"
@@ -558,17 +546,17 @@ export default function NewPurchaseRequestPage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={6}>
-                            <div className="text-xs text-gray-400 mb-1">Ürün Adı *</div>
+                            <div className="text-xs text-slate-400 mb-1">Urun Adi *</div>
                             <Form.Item
                               name="productName"
                               rules={[{ required: true, message: 'Zorunlu' }]}
                               className="mb-2"
                             >
-                              <Input placeholder="Ürün adı" variant="filled" />
+                              <Input placeholder="Urun adi" variant="filled" />
                             </Form.Item>
                           </Col>
                           <Col xs={12} md={3}>
-                            <div className="text-xs text-gray-400 mb-1">Miktar *</div>
+                            <div className="text-xs text-slate-400 mb-1">Miktar *</div>
                             <Form.Item
                               name="quantity"
                               rules={[{ required: true, message: 'Zorunlu' }]}
@@ -578,13 +566,13 @@ export default function NewPurchaseRequestPage() {
                             </Form.Item>
                           </Col>
                           <Col xs={12} md={3}>
-                            <div className="text-xs text-gray-400 mb-1">Birim</div>
+                            <div className="text-xs text-slate-400 mb-1">Birim</div>
                             <Form.Item name="unit" initialValue="Adet" className="mb-2">
                               <Input placeholder="Adet" variant="filled" />
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={4}>
-                            <div className="text-xs text-gray-400 mb-1">Tahmini Fiyat *</div>
+                            <div className="text-xs text-slate-400 mb-1">Tahmini Fiyat *</div>
                             <Form.Item
                               name="estimatedUnitPrice"
                               rules={[{ required: true, message: 'Zorunlu' }]}
@@ -595,30 +583,29 @@ export default function NewPurchaseRequestPage() {
                                 min={0}
                                 precision={2}
                                 variant="filled"
-                                addonAfter="₺"
+                                addonAfter="TL"
                               />
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={2} className="flex items-end pb-2">
-                            <Button
-                              type="primary"
-                              icon={<PlusIcon className="w-4 h-4" />}
+                            <button
+                              type="button"
                               onClick={handleAddItem}
-                              block
-                              style={{ background: '#a855f7' }}
+                              className="flex items-center justify-center gap-1 w-full px-3 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
                             >
+                              <PlusIcon className="w-4 h-4" />
                               Ekle
-                            </Button>
+                            </button>
                           </Col>
                         </Row>
                         <Row gutter={16}>
                           <Col xs={24} md={8}>
-                            <div className="text-xs text-gray-400 mb-1">Tercih Edilen Tedarikçi</div>
+                            <div className="text-xs text-slate-400 mb-1">Tercih Edilen Tedarikci</div>
                             <Form.Item name="preferredSupplierId" className="mb-0">
                               <Select
                                 showSearch
                                 allowClear
-                                placeholder="Seçin (opsiyonel)"
+                                placeholder="Secin (opsiyonel)"
                                 optionFilterProp="label"
                                 variant="filled"
                                 options={suppliers.map((supplier) => ({
@@ -629,13 +616,13 @@ export default function NewPurchaseRequestPage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={8}>
-                            <div className="text-xs text-gray-400 mb-1">Teknik Özellikler</div>
+                            <div className="text-xs text-slate-400 mb-1">Teknik Ozellikler</div>
                             <Form.Item name="specifications" className="mb-0">
-                              <Input placeholder="Teknik özellikler (opsiyonel)" variant="filled" />
+                              <Input placeholder="Teknik ozellikler (opsiyonel)" variant="filled" />
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={8}>
-                            <div className="text-xs text-gray-400 mb-1">Kalem Notu</div>
+                            <div className="text-xs text-slate-400 mb-1">Kalem Notu</div>
                             <Form.Item name="notes" className="mb-0">
                               <Input placeholder="Kalem notu (opsiyonel)" variant="filled" />
                             </Form.Item>
@@ -651,16 +638,17 @@ export default function NewPurchaseRequestPage() {
                       rowKey="key"
                       pagination={false}
                       size="small"
-                      locale={{ emptyText: 'Henüz kalem eklenmedi' }}
+                      locale={{ emptyText: 'Henuz kalem eklenmedi' }}
+                      className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                       summary={() => items.length > 0 ? (
-                        <Table.Summary.Row>
+                        <Table.Summary.Row className="bg-slate-900">
                           <Table.Summary.Cell index={0} colSpan={3}>
-                            <Text strong>Toplam ({items.length} kalem)</Text>
+                            <span className="text-sm font-medium text-white">Toplam ({items.length} kalem)</span>
                           </Table.Summary.Cell>
                           <Table.Summary.Cell index={1} align="right">
-                            <Text strong style={{ fontSize: 16, color: '#a855f7' }}>
-                              {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
-                            </Text>
+                            <span className="text-base font-semibold text-white">
+                              {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                            </span>
                           </Table.Summary.Cell>
                           <Table.Summary.Cell index={2} colSpan={2} />
                         </Table.Summary.Row>

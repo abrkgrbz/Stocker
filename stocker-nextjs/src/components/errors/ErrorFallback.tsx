@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from 'antd';
-import { ReloadOutlined, HomeOutlined } from '@ant-design/icons';
+import { ArrowPathIcon, HomeIcon } from '@heroicons/react/24/outline';
 
 interface ErrorFallbackProps {
   error: Error | null;
@@ -74,7 +74,7 @@ export default function ErrorFallback({
               onClick={resetError}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-lg transition-colors"
             >
-              <ReloadOutlined />
+              <ArrowPathIcon className="w-5 h-5" />
               Tekrar Dene
             </button>
           )}
@@ -83,7 +83,7 @@ export default function ErrorFallback({
             onClick={() => (window.location.href = '/')}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg transition-colors"
           >
-            <HomeOutlined />
+            <HomeIcon className="w-5 h-5" />
             Ana Sayfaya Dön
           </button>
         </div>

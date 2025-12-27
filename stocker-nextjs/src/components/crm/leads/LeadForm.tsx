@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { UserIcon } from '@heroicons/react/24/outline';
 import type { Lead } from '@/lib/api/services/crm.service';
 import { FormPhoneInput } from '@/components/ui/InternationalPhoneInput';
 
@@ -83,7 +83,7 @@ export default function LeadForm({ form, initialValues, onFinish, loading }: Lea
             {/* Avatar */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-200 transition-all">
-                <UserOutlined className="text-xl text-slate-500" />
+                <UserIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 

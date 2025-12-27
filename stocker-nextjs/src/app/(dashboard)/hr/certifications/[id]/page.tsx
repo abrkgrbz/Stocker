@@ -2,36 +2,25 @@
 
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  Button,
-  Space,
-  Card,
-  Descriptions,
-  Tag,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  Divider,
-  Progress,
-  Timeline,
-} from 'antd';
+import Link from 'next/link';
+import { Spin, Progress } from 'antd';
+import { PageContainer } from '@/components/patterns';
 import {
   ArrowLeftIcon,
-  BookOpenIcon,
-  CheckCircleIcon,
-  CurrencyDollarIcon,
-  ExclamationCircleIcon,
-  ExclamationTriangleIcon,
-  LinkIcon,
   PencilIcon,
   ShieldCheckIcon,
+  CalendarIcon,
+  UserIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ExclamationCircleIcon,
+  BookOpenIcon,
+  CurrencyDollarIcon,
+  LinkIcon,
   TrophyIcon,
 } from '@heroicons/react/24/outline';
 import { useCertification } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function CertificationDetailPage() {
   const router = useRouter();
@@ -55,421 +44,356 @@ export default function CertificationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" />
-      </div>
+      <PageContainer maxWidth="5xl">
+        <div className="flex items-center justify-center py-12">
+          <Spin />
+        </div>
+      </PageContainer>
     );
   }
 
   if (!certification) {
     return (
-      <div className="p-6">
-        <Text>Sertifika bulunamadı.</Text>
-      </div>
+      <PageContainer maxWidth="5xl">
+        <div className="text-center py-12">
+          <p className="text-slate-500">Sertifika bulunamadı</p>
+          <Link href="/hr/certifications" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Listeye Dön
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 
   const getStatusInfo = () => {
     if (certification.isExpired) {
-      return { color: 'red', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
+      return { bg: 'bg-red-100', text: 'text-red-700', label: 'Süresi Doldu', icon: ExclamationCircleIcon };
     }
     if (certification.isExpiringSoon) {
-      return { color: 'orange', text: 'Yakında Dolacak', icon: <ExclamationTriangleIcon className="w-4 h-4" /> };
+      return { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Yakında Dolacak', icon: ExclamationTriangleIcon };
     }
-    return { color: 'green', text: 'Geçerli', icon: <CheckCircleIcon className="w-4 h-4" /> };
+    return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Geçerli', icon: CheckCircleIcon };
   };
 
   const statusInfo = getStatusInfo();
+  const StatusIcon = statusInfo.icon;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Glass Effect Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.back()}
-              type="text"
-              className="text-gray-500 hover:text-gray-800"
-            />
+    <PageContainer maxWidth="5xl">
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href="/hr/certifications"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Listeye Dön
+        </Link>
+
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ShieldCheckIcon className="w-6 h-6 text-slate-600" />
+            </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                <ShieldCheckIcon className="w-4 h-4" />
-                {certification.certificationName}
-              </h1>
-              <p className="text-sm text-gray-400 m-0">{certification.employeeName}</p>
+              <h1 className="text-2xl font-semibold text-slate-900">{certification.certificationName}</h1>
+              <p className="text-sm text-slate-500 mt-1">{certification.employeeName}</p>
             </div>
           </div>
-          <Space>
+
+          <div className="flex items-center gap-2">
             {certification.verificationUrl && (
-              <Button
-                icon={<LinkIcon className="w-4 h-4" />}
+              <a
                 href={certification.verificationUrl}
                 target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
               >
+                <LinkIcon className="w-4 h-4" />
                 Doğrula
-              </Button>
+              </a>
             )}
-            <Button
-              type="primary"
-              icon={<PencilIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/hr/certifications/${id}/edit`)}
-              style={{
-                background: '#1a1a1a',
-                borderColor: '#1a1a1a',
-              }}
-            >
-              Düzenle
-            </Button>
-          </Space>
+            <Link href={`/hr/certifications/${id}/edit`}>
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
+                <PencilIcon className="w-4 h-4" />
+                Düzenle
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Page Content */}
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        <Row gutter={[24, 24]}>
-          {/* Left Column - Main Info */}
-          <Col xs={24} lg={16}>
-            {/* Basic Info */}
-            <Card className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <Title level={4} className="m-0">
-                  <TrophyIcon className="w-4 h-4 mr-2" />
-                  Sertifika Bilgileri
-                </Title>
-                <Tag color={statusInfo.color} icon={statusInfo.icon} className="text-base px-3 py-1">
-                  {statusInfo.text}
-                </Tag>
+      {/* İki Kolonlu Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sol Kolon - Ana Bilgiler (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Sertifika Bilgileri */}
+          <div className="bg-white border border-slate-200 rounded-xl">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrophyIcon className="w-4 h-4 text-slate-500" />
+                <h2 className="text-sm font-medium text-slate-900">Sertifika Bilgileri</h2>
               </div>
-              <Descriptions column={{ xs: 1, sm: 2, md: 2 }} bordered size="small">
-                <Descriptions.Item label="Sertifika Adı">
-                  {certification.certificationName}
-                </Descriptions.Item>
-                <Descriptions.Item label="Tip">
-                  <Tag>{certification.certificationType}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Seviye">
-                  {certification.certificationLevel || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Uzmanlık">
-                  {certification.specialization || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Veren Kurum">
-                  {certification.issuingAuthority}
-                </Descriptions.Item>
-                <Descriptions.Item label="Ülke">
-                  {certification.issuingCountry || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Sertifika No">
-                  {certification.certificationNumber || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Credential ID">
-                  {certification.credentialId || '-'}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.bg} ${statusInfo.text}`}>
+                <StatusIcon className="w-3.5 h-3.5" />
+                {statusInfo.label}
+              </span>
+            </div>
+            <div className="p-6">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <InfoItem label="Sertifika Adı" value={certification.certificationName} />
+                <InfoItem label="Tip" value={certification.certificationType} />
+                <InfoItem label="Seviye" value={certification.certificationLevel} />
+                <InfoItem label="Uzmanlık" value={certification.specialization} />
+                <InfoItem label="Veren Kurum" value={certification.issuingAuthority} />
+                <InfoItem label="Ülke" value={certification.issuingCountry} />
+                <InfoItem label="Sertifika No" value={certification.certificationNumber} />
+                <InfoItem label="Credential ID" value={certification.credentialId} />
+              </dl>
+            </div>
+          </div>
 
-            {/* Training Info */}
-            {certification.trainingRequired && (
-              <Card className="mb-6">
-                <Title level={4}>
-                  <BookOpenIcon className="w-4 h-4 mr-2" />
-                  Eğitim Bilgileri
-                </Title>
-                <Row gutter={[16, 16]}>
-                  <Col span={12}>
-                    <Text type="secondary">Toplam Saat:</Text>
-                    <div>
-                      <Text strong>{certification.totalTrainingHours || 0} saat</Text>
-                    </div>
-                  </Col>
-                  <Col span={12}>
-                    <Text type="secondary">Tamamlanan:</Text>
-                    <div>
-                      <Text strong>{certification.completedTrainingHours || 0} saat</Text>
-                    </div>
-                  </Col>
-                  <Col span={24}>
-                    <Text type="secondary">İlerleme:</Text>
-                    <Progress
-                      percent={
-                        certification.totalTrainingHours
-                          ? Math.round(
-                              ((certification.completedTrainingHours || 0) /
-                                certification.totalTrainingHours) *
-                                100
-                            )
-                          : 0
-                      }
-                      status={
-                        (certification.completedTrainingHours || 0) >=
-                        (certification.totalTrainingHours || 0)
-                          ? 'success'
-                          : 'active'
-                      }
-                    />
-                  </Col>
-                  {certification.trainingProvider && (
-                    <Col span={24}>
-                      <Text type="secondary">Eğitim Sağlayıcı:</Text>
-                      <div>
-                        <Text>{certification.trainingProvider}</Text>
-                      </div>
-                    </Col>
-                  )}
-                </Row>
-              </Card>
-            )}
-
-            {/* Exam Info */}
-            {certification.examRequired && (
-              <Card className="mb-6">
-                <Title level={4}>Sınav Bilgileri</Title>
-                <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-                  <Descriptions.Item label="Sınav Tarihi">
-                    {formatDate(certification.examDate)}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Deneme Sayısı">
-                    {certification.attemptNumber || 1}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Sınav Puanı">
-                    <Text
-                      strong
-                      type={
-                        certification.examScore &&
-                        certification.passingScore &&
-                        certification.examScore >= certification.passingScore
-                          ? 'success'
-                          : 'danger'
-                      }
-                    >
-                      {certification.examScore || '-'}
-                    </Text>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Geçme Puanı">
-                    {certification.passingScore || '-'}
-                  </Descriptions.Item>
-                </Descriptions>
-              </Card>
-            )}
-
-            {/* CPE Info */}
-            {certification.cpeRequired && (
-              <Card className="mb-6">
-                <Title level={4}>CPE/CEU Bilgileri</Title>
-                <Row gutter={[16, 16]}>
-                  <Col span={12}>
-                    <Text type="secondary">Gerekli CPE:</Text>
-                    <div>
-                      <Text strong>{certification.requiredCpeUnits || 0}</Text>
-                    </div>
-                  </Col>
-                  <Col span={12}>
-                    <Text type="secondary">Kazanılan CPE:</Text>
-                    <div>
-                      <Text strong>{certification.earnedCpeUnits || 0}</Text>
-                    </div>
-                  </Col>
-                  <Col span={24}>
-                    <Progress
-                      percent={
-                        certification.requiredCpeUnits
-                          ? Math.round(
-                              ((certification.earnedCpeUnits || 0) /
-                                certification.requiredCpeUnits) *
-                                100
-                            )
-                          : 0
-                      }
-                      status={
-                        (certification.earnedCpeUnits || 0) >=
-                        (certification.requiredCpeUnits || 0)
-                          ? 'success'
-                          : 'active'
-                      }
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            )}
-
-            {/* Description & Notes */}
-            {(certification.description || certification.notes) && (
-              <Card className="mb-6">
-                <Title level={4}>Açıklama ve Notlar</Title>
-                {certification.description && (
-                  <>
-                    <Text strong>Açıklama:</Text>
-                    <Paragraph className="mt-2">{certification.description}</Paragraph>
-                  </>
-                )}
-                {certification.notes && (
-                  <>
-                    {certification.description && <Divider />}
-                    <Text strong>Notlar:</Text>
-                    <Paragraph className="mt-2">{certification.notes}</Paragraph>
-                  </>
-                )}
-              </Card>
-            )}
-          </Col>
-
-          {/* Right Column - Sidebar */}
-          <Col xs={24} lg={8}>
-            {/* Employee Info */}
-            <Card className="mb-6">
-              <Title level={5}>Çalışan</Title>
-              <div className="text-center py-4">
-                <div
-                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-yellow-500 flex items-center justify-center mx-auto mb-3"
-                >
-                  <ShieldCheckIcon className="w-4 h-4 text-2xl text-white" />
-                </div>
-                <Text strong className="text-lg block">
-                  {certification.employeeName}
-                </Text>
-              </div>
-              <div className="space-y-2 mt-4">
-                <div className="flex justify-between">
-                  <Text type="secondary">İş İçin Zorunlu:</Text>
-                  <Tag color={certification.requiredForJob ? 'red' : 'default'}>
-                    {certification.requiredForJob ? 'Evet' : 'Hayır'}
-                  </Tag>
-                </div>
-                <div className="flex justify-between">
-                  <Text type="secondary">Şirket Sponsorlu:</Text>
-                  <Tag color={certification.companySponsored ? 'green' : 'default'}>
-                    {certification.companySponsored ? 'Evet' : 'Hayır'}
-                  </Tag>
+          {/* Eğitim Bilgileri */}
+          {certification.trainingRequired && (
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <BookOpenIcon className="w-4 h-4 text-slate-500" />
+                  <h2 className="text-sm font-medium text-slate-900">Eğitim Bilgileri</h2>
                 </div>
               </div>
-            </Card>
-
-            {/* Dates */}
-            <Card className="mb-6">
-              <Title level={5}>Tarihler</Title>
-              <Timeline
-                items={[
-                  {
-                    color: 'green',
-                    children: (
-                      <div>
-                        <Text type="secondary">Verilme Tarihi</Text>
-                        <div>
-                          <Text>{formatDate(certification.issueDate)}</Text>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  ...(certification.expiryDate
-                    ? [
-                        {
-                          color: certification.isExpired
-                            ? 'red'
-                            : certification.isExpiringSoon
-                            ? 'orange'
-                            : 'blue',
-                          children: (
-                            <div>
-                              <Text type="secondary">Bitiş Tarihi</Text>
-                              <div>
-                                <Text>{formatDate(certification.expiryDate)}</Text>
-                              </div>
-                            </div>
-                          ),
-                        },
-                      ]
-                    : []),
-                  ...(certification.lastRenewalDate
-                    ? [
-                        {
-                          color: 'purple',
-                          children: (
-                            <div>
-                              <Text type="secondary">Son Yenileme</Text>
-                              <div>
-                                <Text>{formatDate(certification.lastRenewalDate)}</Text>
-                              </div>
-                            </div>
-                          ),
-                        },
-                      ]
-                    : []),
-                  ...(certification.nextRenewalDate
-                    ? [
-                        {
-                          color: 'cyan',
-                          children: (
-                            <div>
-                              <Text type="secondary">Sonraki Yenileme</Text>
-                              <div>
-                                <Text>{formatDate(certification.nextRenewalDate)}</Text>
-                              </div>
-                            </div>
-                          ),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-            </Card>
-
-            {/* Cost Info */}
-            {(certification.certificationCost || certification.renewalCost) && (
-              <Card className="mb-6">
-                <Title level={5}>
-                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-                  Maliyet
-                </Title>
-                <div className="space-y-3">
-                  {certification.certificationCost && (
-                    <div className="flex justify-between">
-                      <Text type="secondary">Sertifika Ücreti:</Text>
-                      <Text strong>
-                        {formatCurrency(
-                          certification.certificationCost,
-                          certification.currency
-                        )}
-                      </Text>
-                    </div>
-                  )}
-                  {certification.renewalCost && (
-                    <div className="flex justify-between">
-                      <Text type="secondary">Yenileme Ücreti:</Text>
-                      <Text strong>
-                        {formatCurrency(certification.renewalCost, certification.currency)}
-                      </Text>
-                    </div>
-                  )}
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Toplam Saat</p>
+                    <p className="text-sm font-medium text-slate-900">{certification.totalTrainingHours || 0} saat</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Tamamlanan</p>
+                    <p className="text-sm font-medium text-slate-900">{certification.completedTrainingHours || 0} saat</p>
+                  </div>
                 </div>
-              </Card>
-            )}
-
-            {/* Badge */}
-            {certification.badgeUrl && (
-              <Card className="mb-6">
-                <Title level={5}>Rozet</Title>
-                <div className="text-center">
-                  <img
-                    src={certification.badgeUrl}
-                    alt="Sertifika Rozeti"
-                    className="max-w-full h-auto rounded-lg"
-                    style={{ maxHeight: 150 }}
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">İlerleme</p>
+                  <Progress
+                    percent={
+                      certification.totalTrainingHours
+                        ? Math.round(((certification.completedTrainingHours || 0) / certification.totalTrainingHours) * 100)
+                        : 0
+                    }
+                    status={
+                      (certification.completedTrainingHours || 0) >= (certification.totalTrainingHours || 0)
+                        ? 'success'
+                        : 'active'
+                    }
                   />
                 </div>
-              </Card>
-            )}
-          </Col>
-        </Row>
+                {certification.trainingProvider && (
+                  <div className="mt-4">
+                    <p className="text-xs text-slate-500 mb-1">Eğitim Sağlayıcı</p>
+                    <p className="text-sm text-slate-900">{certification.trainingProvider}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Sınav Bilgileri */}
+          {certification.examRequired && (
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">Sınav Bilgileri</h2>
+              </div>
+              <div className="p-6">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <InfoItem label="Sınav Tarihi" value={formatDate(certification.examDate)} />
+                  <InfoItem label="Deneme Sayısı" value={certification.attemptNumber || 1} />
+                  <div>
+                    <dt className="text-xs text-slate-500 mb-1">Sınav Puanı</dt>
+                    <dd className={`text-sm font-medium ${
+                      certification.examScore && certification.passingScore && certification.examScore >= certification.passingScore
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                    }`}>
+                      {certification.examScore || '-'}
+                    </dd>
+                  </div>
+                  <InfoItem label="Geçme Puanı" value={certification.passingScore} />
+                </dl>
+              </div>
+            </div>
+          )}
+
+          {/* CPE Bilgileri */}
+          {certification.cpeRequired && (
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">CPE/CEU Bilgileri</h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Gerekli CPE</p>
+                    <p className="text-sm font-medium text-slate-900">{certification.requiredCpeUnits || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Kazanılan CPE</p>
+                    <p className="text-sm font-medium text-slate-900">{certification.earnedCpeUnits || 0}</p>
+                  </div>
+                </div>
+                <Progress
+                  percent={
+                    certification.requiredCpeUnits
+                      ? Math.round(((certification.earnedCpeUnits || 0) / certification.requiredCpeUnits) * 100)
+                      : 0
+                  }
+                  status={
+                    (certification.earnedCpeUnits || 0) >= (certification.requiredCpeUnits || 0)
+                      ? 'success'
+                      : 'active'
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Açıklama ve Notlar */}
+          {(certification.description || certification.notes) && (
+            <div className="bg-white border border-slate-200 rounded-xl">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">Açıklama ve Notlar</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                {certification.description && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Açıklama</p>
+                    <p className="text-sm text-slate-700">{certification.description}</p>
+                  </div>
+                )}
+                {certification.notes && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Notlar</p>
+                    <p className="text-sm text-slate-700">{certification.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sağ Kolon - Meta Bilgiler (1/3) */}
+        <div className="space-y-6">
+          {/* Çalışan */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Çalışan</h3>
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center mx-auto mb-3">
+                <UserIcon className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-sm font-medium text-slate-900">{certification.employeeName}</p>
+            </div>
+            <div className="space-y-3 mt-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500">İş İçin Zorunlu</span>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${certification.requiredForJob ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
+                  {certification.requiredForJob ? 'Evet' : 'Hayır'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500">Şirket Sponsorlu</span>
+                <span className={`px-2 py-0.5 text-xs rounded-full ${certification.companySponsored ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                  {certification.companySponsored ? 'Evet' : 'Hayır'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarihler */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Tarihler</h3>
+            <div className="space-y-3">
+              <DateItem icon={CalendarIcon} label="Verilme Tarihi" date={formatDate(certification.issueDate)} color="text-emerald-500" />
+              {certification.expiryDate && (
+                <DateItem
+                  icon={CalendarIcon}
+                  label="Bitiş Tarihi"
+                  date={formatDate(certification.expiryDate)}
+                  color={certification.isExpired ? 'text-red-500' : certification.isExpiringSoon ? 'text-amber-500' : 'text-blue-500'}
+                />
+              )}
+              {certification.lastRenewalDate && (
+                <DateItem icon={CalendarIcon} label="Son Yenileme" date={formatDate(certification.lastRenewalDate)} color="text-violet-500" />
+              )}
+              {certification.nextRenewalDate && (
+                <DateItem icon={CalendarIcon} label="Sonraki Yenileme" date={formatDate(certification.nextRenewalDate)} color="text-cyan-500" />
+              )}
+            </div>
+          </div>
+
+          {/* Maliyet */}
+          {(certification.certificationCost || certification.renewalCost) && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <CurrencyDollarIcon className="w-4 h-4 text-slate-500" />
+                <h3 className="text-sm font-medium text-slate-900">Maliyet</h3>
+              </div>
+              <div className="space-y-3">
+                {certification.certificationCost && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">Sertifika Ücreti</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {formatCurrency(certification.certificationCost, certification.currency)}
+                    </span>
+                  </div>
+                )}
+                {certification.renewalCost && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">Yenileme Ücreti</span>
+                    <span className="text-sm font-medium text-slate-900">
+                      {formatCurrency(certification.renewalCost, certification.currency)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Rozet */}
+          {certification.badgeUrl && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
+              <h3 className="text-sm font-medium text-slate-900 mb-4">Rozet</h3>
+              <div className="text-center">
+                <img
+                  src={certification.badgeUrl}
+                  alt="Sertifika Rozeti"
+                  className="max-w-full h-auto rounded-lg mx-auto"
+                  style={{ maxHeight: 150 }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
+
+// Yardımcı Bileşenler
+const InfoItem = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
+  <div>
+    <dt className="text-xs text-slate-500 mb-1">{label}</dt>
+    <dd className="text-sm text-slate-900">{value || '-'}</dd>
+  </div>
+);
+
+const DateItem = ({ icon: Icon, label, date, color }: { icon: any; label: string; date: string; color: string }) => (
+  <div className="flex items-center gap-3">
+    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+      <Icon className={`w-4 h-4 ${color}`} />
+    </div>
+    <div>
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-sm text-slate-900">{date}</p>
+    </div>
+  </div>
+);

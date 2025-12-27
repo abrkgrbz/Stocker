@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Tag, Input, Button, Modal, Form, Popover } from 'antd';
-import { PlusOutlined, CheckOutlined } from '@ant-design/icons';
+import { PlusIcon, CheckIcon } from '@heroicons/react/24/outline';
 import {
   useCustomerTags,
   useAddCustomerTag,
@@ -129,7 +129,7 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
           <Button
             type="text"
             size="small"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => setIsModalVisible(true)}
             className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md px-3 h-7"
           >
@@ -159,7 +159,7 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
         title={
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-              <PlusOutlined className="text-slate-600" />
+              <PlusIcon className="w-4 h-4 text-slate-600" />
             </div>
             <span>Yeni Etiket Ekle</span>
           </div>
@@ -213,7 +213,7 @@ export function CustomerTags({ customerId, editable = false, size = 'default' }:
                   title={color.name}
                 >
                   {selectedColor === color.value && (
-                    <CheckOutlined className="text-white text-xs" />
+                    <CheckIcon className="w-3 h-3 text-white" />
                   )}
                 </button>
               ))}

@@ -16,19 +16,19 @@ import {
   Tabs,
 } from 'antd';
 import {
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  SafetyOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  LockOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
-  HistoryOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  ShieldCheckIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  LockClosedIcon,
+  MapPinIcon,
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
 import { formatDate, getRoleLabel, type User } from '@/lib/api/users';
 
 const { Title, Text } = Typography;
@@ -87,8 +87,8 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
           {
             key: 'general',
             label: (
-              <span>
-                <UserOutlined /> Genel Bilgiler
+              <span className="flex items-center gap-1">
+                <UserIcon className="w-4 h-4" /> Genel Bilgiler
               </span>
             ),
             children: (
@@ -98,7 +98,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <MailOutlined />
+                      <EnvelopeIcon className="w-4 h-4" />
                       İletişim Bilgileri
                     </Space>
                   }
@@ -107,14 +107,14 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                     <Descriptions.Item label="E-posta">
                       {user.email}
                       {user.emailConfirmed && (
-                        <CheckCircleOutlined style={{ color: '#52c41a', marginLeft: 8 }} />
+                        <CheckCircleIcon className="w-4 h-4 ml-2" style={{ color: '#52c41a' }} />
                       )}
                     </Descriptions.Item>
                     {user.phoneNumber && (
                       <Descriptions.Item label="Telefon">
                         {user.phoneNumber}
                         {user.phoneNumberConfirmed && (
-                          <CheckCircleOutlined style={{ color: '#52c41a', marginLeft: 8 }} />
+                          <CheckCircleIcon className="w-4 h-4 ml-2" style={{ color: '#52c41a' }} />
                         )}
                       </Descriptions.Item>
                     )}
@@ -126,7 +126,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <TeamOutlined />
+                      <UserGroupIcon className="w-4 h-4" />
                       Organizasyon
                     </Space>
                   }
@@ -145,7 +145,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <SafetyOutlined />
+                      <ShieldCheckIcon className="w-4 h-4" />
                       Hesap Durumu
                     </Space>
                   }
@@ -159,11 +159,11 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                     </Descriptions.Item>
                     <Descriptions.Item label="İki Faktörlü">
                       {user.twoFactorEnabled ? (
-                        <Tag color="success" icon={<CheckCircleOutlined />}>
+                        <Tag color="success" icon={<CheckCircleIcon className="w-3 h-3 inline mr-1" />}>
                           Aktif
                         </Tag>
                       ) : (
-                        <Tag icon={<CloseCircleOutlined />}>Pasif</Tag>
+                        <Tag icon={<XCircleIcon className="w-3 h-3 inline mr-1" />}>Pasif</Tag>
                       )}
                     </Descriptions.Item>
                     <Descriptions.Item label="E-posta Onayı">
@@ -182,7 +182,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                     </Descriptions.Item>
                     {user.lockoutEnabled && user.lockoutEnd && (
                       <Descriptions.Item label="Kilit Durumu" span={2}>
-                        <Tag color="error" icon={<LockOutlined />}>
+                        <Tag color="error" icon={<LockClosedIcon className="w-3 h-3 inline mr-1" />}>
                           {new Date(user.lockoutEnd) > new Date()
                             ? `Kilitli - ${formatDate(user.lockoutEnd)}`
                             : 'Kilidi Açık'}
@@ -198,7 +198,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <ClockCircleOutlined />
+                      <ClockIcon className="w-4 h-4" />
                       Tarihler
                     </Space>
                   }
@@ -230,8 +230,8 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
           {
             key: 'roles',
             label: (
-              <span>
-                <SafetyOutlined /> Roller ve Yetkiler
+              <span className="flex items-center gap-1">
+                <ShieldCheckIcon className="w-4 h-4" /> Roller ve Yetkiler
               </span>
             ),
             children: (
@@ -241,7 +241,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <SafetyOutlined />
+                      <ShieldCheckIcon className="w-4 h-4" />
                       Roller ({user.roles.length})
                     </Space>
                   }
@@ -264,7 +264,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                   size="small"
                   title={
                     <Space>
-                      <LockOutlined />
+                      <LockClosedIcon className="w-4 h-4" />
                       Yetkiler ({user.permissions.length})
                     </Space>
                   }
@@ -287,8 +287,8 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
           {
             key: 'history',
             label: (
-              <span>
-                <HistoryOutlined /> Giriş Geçmişi
+              <span className="flex items-center gap-1">
+                <ClipboardDocumentListIcon className="w-4 h-4" /> Giriş Geçmişi
               </span>
             ),
             children: (
@@ -296,7 +296,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                 size="small"
                 title={
                   <Space>
-                    <HistoryOutlined />
+                    <ClipboardDocumentListIcon className="w-4 h-4" />
                     Son Giriş Aktiviteleri
                   </Space>
                 }
@@ -335,8 +335,8 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
           {
             key: 'settings',
             label: (
-              <span>
-                <SettingOutlined /> Ayarlar
+              <span className="flex items-center gap-1">
+                <Cog6ToothIcon className="w-4 h-4" /> Ayarlar
               </span>
             ),
             children: (
@@ -344,7 +344,7 @@ export function UserDetailsDrawer({ user, open, onClose }: UserDetailsDrawerProp
                 size="small"
                 title={
                   <Space>
-                    <SettingOutlined />
+                    <Cog6ToothIcon className="w-4 h-4" />
                     Kullanıcı Tercihleri
                   </Space>
                 }

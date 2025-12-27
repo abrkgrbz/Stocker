@@ -4,19 +4,13 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
-  Button,
-  Typography,
   Spin,
   Descriptions,
   Tag,
   Row,
   Col,
-  Statistic,
   Table,
-  Empty,
   Dropdown,
-  Space,
-  Steps,
   Modal,
   Timeline,
 } from 'antd';
@@ -31,7 +25,6 @@ import {
   PencilIcon,
   PrinterIcon,
   ShoppingCartIcon,
-  UserIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -47,8 +40,6 @@ import type { PurchaseRequestStatus, PurchaseRequestPriority, PurchaseRequestIte
 import type { MenuProps, TimelineItemProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
-
 const statusColors: Record<PurchaseRequestStatus, string> = {
   Draft: 'default',
   Pending: 'orange',
@@ -61,10 +52,10 @@ const statusColors: Record<PurchaseRequestStatus, string> = {
 const statusLabels: Record<PurchaseRequestStatus, string> = {
   Draft: 'Taslak',
   Pending: 'Onay Bekliyor',
-  Approved: 'Onaylandı',
+  Approved: 'Onaylandi',
   Rejected: 'Reddedildi',
-  Converted: 'Siparişe Dönüştürüldü',
-  Cancelled: 'İptal Edildi',
+  Converted: 'Siparise Donusturuldu',
+  Cancelled: 'Iptal Edildi',
 };
 
 const priorityColors: Record<PurchaseRequestPriority, string> = {
@@ -75,9 +66,9 @@ const priorityColors: Record<PurchaseRequestPriority, string> = {
 };
 
 const priorityLabels: Record<PurchaseRequestPriority, string> = {
-  Low: 'Düşük',
+  Low: 'Dusuk',
   Normal: 'Normal',
-  High: 'Yüksek',
+  High: 'Yuksek',
   Urgent: 'Acil',
 };
 
@@ -108,7 +99,7 @@ export default function PurchaseRequestDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -116,13 +107,18 @@ export default function PurchaseRequestDetailPage() {
 
   if (!request) {
     return (
-      <div className="p-8">
-        <Empty description="Satın alma talebi bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/requests')}>
-            Taleplere Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <DocumentTextIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Satin alma talebi bulunamadi</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu talep silinmis veya erisim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/requests')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Taleplere Don
+        </button>
       </div>
     );
   }
@@ -138,34 +134,34 @@ export default function PurchaseRequestDetailPage() {
   const handleReject = () => {
     Modal.confirm({
       title: 'Talebi Reddet',
-      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
-      content: 'Bu talebi reddetmek istediğinizden emin misiniz?',
+      icon: <XCircleIcon className="w-4 h-4 text-red-500" />,
+      content: 'Bu talebi reddetmek istediginizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
-      cancelText: 'Vazgeç',
+      cancelText: 'Vazgec',
       onOk: () => rejectRequest.mutate({ id: requestId, reason: 'Manuel red' }),
     });
   };
 
   const handleCancel = () => {
     Modal.confirm({
-      title: 'Talebi İptal Et',
-      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
-      content: 'Bu talebi iptal etmek istediğinizden emin misiniz?',
-      okText: 'İptal Et',
+      title: 'Talebi Iptal Et',
+      icon: <XCircleIcon className="w-4 h-4 text-red-500" />,
+      content: 'Bu talebi iptal etmek istediginizden emin misiniz?',
+      okText: 'Iptal Et',
       okType: 'danger',
-      cancelText: 'Vazgeç',
+      cancelText: 'Vazgec',
       onOk: () => cancelRequest.mutate({ id: requestId, reason: 'Manuel iptal' }),
     });
   };
 
   const handleConvertToOrder = () => {
     Modal.confirm({
-      title: 'Siparişe Dönüştür',
-      icon: <ShoppingCartIcon className="w-4 h-4" style={{ color: '#1890ff' }} />,
-      content: 'Bu talebi satın alma siparişine dönüştürmek istiyor musunuz? Tedarikçi seçimi sonraki adımda yapılacaktır.',
-      okText: 'Dönüştür',
-      cancelText: 'Vazgeç',
+      title: 'Siparise Donustur',
+      icon: <ShoppingCartIcon className="w-4 h-4 text-slate-600" />,
+      content: 'Bu talebi satin alma siparisine donusturmek istiyor musunuz? Tedarikci secimi sonraki adimda yapilacaktir.',
+      okText: 'Donustur',
+      cancelText: 'Vazgec',
       onOk: () => {
         // Note: In real implementation, this would open a supplier selection modal
         convertToOrder.mutate({ id: requestId, supplierId: '' });
@@ -176,11 +172,11 @@ export default function PurchaseRequestDetailPage() {
   const handleDelete = () => {
     Modal.confirm({
       title: 'Talebi Sil',
-      icon: <ExclamationCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
-      content: `"${request.requestNumber}" talebini silmek istediğinizden emin misiniz?`,
+      icon: <ExclamationCircleIcon className="w-4 h-4 text-red-500" />,
+      content: `"${request.requestNumber}" talebini silmek istediginizden emin misiniz?`,
       okText: 'Sil',
       okType: 'danger',
-      cancelText: 'Vazgeç',
+      cancelText: 'Vazgec',
       onOk: () => {
         deleteRequest.mutate(requestId);
         router.push('/purchase/requests');
@@ -192,7 +188,7 @@ export default function PurchaseRequestDetailPage() {
     request.status === 'Draft' && {
       key: 'submit',
       icon: <PaperAirplaneIcon className="w-4 h-4" />,
-      label: 'Onaya Gönder',
+      label: 'Onaya Gonder',
       onClick: handleSubmit,
     },
     request.status === 'Pending' && {
@@ -211,19 +207,19 @@ export default function PurchaseRequestDetailPage() {
     request.status === 'Approved' && {
       key: 'convert',
       icon: <ShoppingCartIcon className="w-4 h-4" />,
-      label: 'Siparişe Dönüştür',
+      label: 'Siparise Donustur',
       onClick: handleConvertToOrder,
     },
     {
       key: 'print',
       icon: <PrinterIcon className="w-4 h-4" />,
-      label: 'Yazdır',
+      label: 'Yazdir',
     },
     { type: 'divider' },
     !['Cancelled', 'Converted'].includes(request.status) && {
       key: 'cancel',
       icon: <XCircleIcon className="w-4 h-4" />,
-      label: 'İptal Et',
+      label: 'Iptal Et',
       danger: true,
       onClick: handleCancel,
     },
@@ -241,38 +237,48 @@ export default function PurchaseRequestDetailPage() {
       title: '#',
       key: 'index',
       width: 50,
-      render: (_: any, __: any, index: number) => index + 1,
+      render: (_: any, __: any, index: number) => (
+        <span className="text-sm text-slate-500">{index + 1}</span>
+      ),
     },
     {
-      title: 'Ürün',
+      title: 'Urun',
       dataIndex: 'productName',
       key: 'productName',
       render: (name: string, record: PurchaseRequestItemDto) => (
         <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-xs text-gray-500">{record.productCode}</div>
+          <div className="text-sm font-medium text-slate-900">{name}</div>
+          <div className="text-xs text-slate-500">{record.productCode}</div>
         </div>
       ),
     },
     {
-      title: 'Açıklama',
+      title: 'Aciklama',
       dataIndex: 'description',
       key: 'description',
-      render: (desc: string) => desc || '-',
+      render: (desc: string) => (
+        <span className="text-sm text-slate-500">{desc || '-'}</span>
+      ),
     },
     {
       title: 'Miktar',
       dataIndex: 'quantity',
       key: 'quantity',
       align: 'center' as const,
-      render: (qty: number, record: PurchaseRequestItemDto) => `${qty} ${record.unit}`,
+      render: (qty: number, record: PurchaseRequestItemDto) => (
+        <span className="text-sm text-slate-900">{qty} {record.unit}</span>
+      ),
     },
     {
       title: 'Tahmini Birim Fiyat',
       dataIndex: 'estimatedUnitPrice',
       key: 'estimatedUnitPrice',
       align: 'right' as const,
-      render: (price: number) => `${price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`,
+      render: (price: number) => (
+        <span className="text-sm text-slate-900">
+          {price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+        </span>
+      ),
     },
     {
       title: 'Tahmini Toplam',
@@ -280,245 +286,299 @@ export default function PurchaseRequestDetailPage() {
       key: 'estimatedTotalPrice',
       align: 'right' as const,
       render: (price: number) => (
-        <Text strong>{price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</Text>
+        <span className="text-sm font-semibold text-slate-900">
+          {price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+        </span>
       ),
     },
     {
-      title: 'Tercih Edilen Tedarikçi',
+      title: 'Tercih Edilen Tedarikci',
       dataIndex: 'preferredSupplierName',
       key: 'preferredSupplierName',
-      render: (name: string) => name || '-',
+      render: (name: string) => (
+        <span className="text-sm text-slate-500">{name || '-'}</span>
+      ),
     },
   ];
 
+  // Progress steps data
+  const progressSteps = [
+    { key: 'draft', label: 'Taslak', icon: DocumentTextIcon },
+    { key: 'pending', label: 'Onay Bekliyor', icon: ClockIcon },
+    { key: 'approved', label: 'Onaylandi', icon: CheckCircleIcon },
+    { key: 'converted', label: 'Siparise Donusturuldu', icon: ShoppingCartIcon },
+  ];
+
+  const currentStep = getStatusStep(request.status as PurchaseRequestStatus);
+
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push('/purchase/requests')}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/purchase/requests')}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                  {request.requestNumber}
-                  <Tag color={statusColors[request.status as PurchaseRequestStatus]}>
-                    {statusLabels[request.status as PurchaseRequestStatus]}
-                  </Tag>
-                  <Tag color={priorityColors[request.priority as PurchaseRequestPriority]}>
-                    {priorityLabels[request.priority as PurchaseRequestPriority]}
-                  </Tag>
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {request.requestedByName} • {dayjs(request.requestDate).format('DD.MM.YYYY')}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <DocumentTextIcon className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-semibold text-slate-900">{request.requestNumber}</h1>
+                    <Tag color={statusColors[request.status as PurchaseRequestStatus]}>
+                      {statusLabels[request.status as PurchaseRequestStatus]}
+                    </Tag>
+                    <Tag color={priorityColors[request.priority as PurchaseRequestPriority]}>
+                      {priorityLabels[request.priority as PurchaseRequestPriority]}
+                    </Tag>
+                  </div>
+                  <p className="text-sm text-slate-500">
+                    {request.requestedByName} - {dayjs(request.requestDate).format('DD.MM.YYYY')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <Space>
-            <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
-            </Dropdown>
-            {request.status === 'Draft' && (
-              <Button
-                type="primary"
-                icon={<PencilIcon className="w-4 h-4" />}
-                onClick={() => router.push(`/purchase/requests/${requestId}/edit`)}
-              >
-                Düzenle
-              </Button>
-            )}
-          </Space>
+            <div className="flex items-center gap-3">
+              <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                  Islemler
+                </button>
+              </Dropdown>
+              {request.status === 'Draft' && (
+                <button
+                  onClick={() => router.push(`/purchase/requests/${requestId}/edit`)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                  Duzenle
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Progress Steps */}
-        <Card className="mb-6">
-          <Steps
-            current={getStatusStep(request.status as PurchaseRequestStatus)}
-            status={['Rejected', 'Cancelled'].includes(request.status) ? 'error' : 'process'}
-            items={[
-              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
-              { title: 'Onay Bekliyor', icon: <ClockIcon className="w-4 h-4" /> },
-              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
-              { title: 'Siparişe Dönüştürüldü', icon: <ShoppingCartIcon className="w-4 h-4" /> },
-            ]}
-          />
-        </Card>
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            {progressSteps.map((step, index) => {
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep && currentStep >= 0;
+              const isError = ['Rejected', 'Cancelled'].includes(request.status) && index === 1;
+
+              return (
+                <React.Fragment key={step.key}>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                        isError ? 'bg-red-100 text-red-600' :
+                        isCompleted ? 'bg-slate-900 text-white' :
+                        isActive ? 'bg-slate-100 text-slate-900 ring-2 ring-slate-900' :
+                        'bg-slate-100 text-slate-400'
+                      }`}
+                    >
+                      <step.icon className="w-5 h-5" />
+                    </div>
+                    <span className={`text-xs font-medium ${
+                      isError ? 'text-red-600' :
+                      isCompleted || isActive ? 'text-slate-900' : 'text-slate-400'
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < progressSteps.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-4 ${
+                      isCompleted ? 'bg-slate-900' : 'bg-slate-200'
+                    }`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Statistics */}
-        <Row gutter={16} className="mb-6">
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Toplam Kalem"
-                value={(request.items || []).length}
-                suffix="adet"
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Tahmini Toplam"
-                value={request.estimatedTotalAmount || 0}
-                precision={2}
-                suffix={request.currency || '₺'}
-                valueStyle={{ color: '#8b5cf6' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Bütçe Tutarı"
-                value={request.budgetAmount || 0}
-                precision={2}
-                suffix={request.currency || '₺'}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Card size="small">
-              <Statistic
-                title="Gerekli Tarih"
-                value={request.requiredDate ? dayjs(request.requiredDate).format('DD.MM.YYYY') : '-'}
-                valueStyle={{ fontSize: '16px' }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Toplam Kalem</div>
+            <div className="text-2xl font-semibold text-slate-900">
+              {(request.items || []).length} <span className="text-sm font-normal text-slate-500">adet</span>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Tahmini Toplam</div>
+            <div className="text-2xl font-semibold text-slate-900">
+              {(request.estimatedTotalAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} <span className="text-sm font-normal text-slate-500">{request.currency || 'TL'}</span>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Butce Tutari</div>
+            <div className="text-2xl font-semibold text-emerald-600">
+              {(request.budgetAmount || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} <span className="text-sm font-normal text-slate-500">{request.currency || 'TL'}</span>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-xl p-5">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Gerekli Tarih</div>
+            <div className="text-lg font-semibold text-slate-900">
+              {request.requiredDate ? dayjs(request.requiredDate).format('DD.MM.YYYY') : '-'}
+            </div>
+          </div>
+        </div>
 
-        <Row gutter={16}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
-          <Col xs={24} lg={16}>
+          <div className="lg:col-span-2 space-y-6">
             {/* Request Items */}
-            <Card title="Talep Kalemleri" className="mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100">
+                <h2 className="text-sm font-medium text-slate-900">Talep Kalemleri</h2>
+              </div>
               <Table
                 dataSource={request.items || []}
                 columns={itemColumns}
                 rowKey="id"
                 pagination={false}
                 size="small"
+                className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                 summary={() => (
-                  <Table.Summary fixed>
-                    <Table.Summary.Row>
+                  <Table.Summary>
+                    <Table.Summary.Row className="bg-slate-900">
                       <Table.Summary.Cell index={0} colSpan={5} align="right">
-                        <Text strong>Toplam Tahmini Tutar</Text>
+                        <span className="text-sm font-medium text-white">Toplam Tahmini Tutar:</span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={1} align="right">
-                        <Text strong style={{ color: '#8b5cf6', fontSize: 16 }}>
-                          {request.estimatedTotalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || '₺'}
-                        </Text>
+                        <span className="text-base font-semibold text-white">
+                          {request.estimatedTotalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || 'TL'}
+                        </span>
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={2} />
                     </Table.Summary.Row>
                   </Table.Summary>
                 )}
               />
-            </Card>
+            </div>
 
             {/* Purpose & Justification */}
             {(request.purpose || request.justification) && (
-              <Card title="Amaç ve Gerekçe" className="mb-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 className="text-sm font-medium text-slate-900 mb-4">Amac ve Gerekce</h2>
                 {request.purpose && (
                   <div className="mb-4">
-                    <Text strong>Amaç:</Text>
-                    <Paragraph className="mt-1 mb-0">{request.purpose}</Paragraph>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Amac</span>
+                    <p className="mt-1 text-sm text-slate-600">{request.purpose}</p>
                   </div>
                 )}
                 {request.justification && (
                   <div>
-                    <Text strong>Gerekçe:</Text>
-                    <Paragraph className="mt-1 mb-0">{request.justification}</Paragraph>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gerekce</span>
+                    <p className="mt-1 text-sm text-slate-600">{request.justification}</p>
                   </div>
                 )}
-              </Card>
+              </div>
             )}
 
             {/* Notes */}
             {request.notes && (
-              <Card title="Notlar" size="small">
-                <Paragraph className="mb-0 whitespace-pre-wrap">{request.notes}</Paragraph>
-              </Card>
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 className="text-sm font-medium text-slate-900 mb-3">Notlar</h2>
+                <p className="text-sm text-slate-600 whitespace-pre-wrap">{request.notes}</p>
+              </div>
             )}
-          </Col>
+          </div>
 
           {/* Right Column */}
-          <Col xs={24} lg={8}>
+          <div className="space-y-6">
             {/* Request Info */}
-            <Card title="Talep Bilgileri" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Talep No">{request.requestNumber}</Descriptions.Item>
-                <Descriptions.Item label="Talep Tarihi">
-                  {dayjs(request.requestDate).format('DD.MM.YYYY')}
-                </Descriptions.Item>
-                <Descriptions.Item label="Gerekli Tarih">
-                  {request.requiredDate ? dayjs(request.requiredDate).format('DD.MM.YYYY') : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Öncelik">
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Talep Bilgileri</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Talep No</span>
+                  <span className="text-sm font-medium text-slate-900">{request.requestNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Talep Tarihi</span>
+                  <span className="text-sm text-slate-900">{dayjs(request.requestDate).format('DD.MM.YYYY')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Gerekli Tarih</span>
+                  <span className="text-sm text-slate-900">
+                    {request.requiredDate ? dayjs(request.requiredDate).format('DD.MM.YYYY') : '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Oncelik</span>
                   <Tag color={priorityColors[request.priority as PurchaseRequestPriority]}>
                     {priorityLabels[request.priority as PurchaseRequestPriority]}
                   </Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Para Birimi">{request.currency || 'TRY'}</Descriptions.Item>
-              </Descriptions>
-            </Card>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Para Birimi</span>
+                  <span className="text-sm text-slate-900">{request.currency || 'TRY'}</span>
+                </div>
+              </div>
+            </div>
 
             {/* Requester Info */}
-            <Card title="Talep Eden" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Kişi">{request.requestedByName || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Departman">{request.departmentName || '-'}</Descriptions.Item>
-              </Descriptions>
-            </Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Talep Eden</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Kisi</span>
+                  <span className="text-sm text-slate-900">{request.requestedByName || '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Departman</span>
+                  <span className="text-sm text-slate-900">{request.departmentName || '-'}</span>
+                </div>
+              </div>
+            </div>
 
             {/* Budget Info */}
-            <Card title="Bütçe Bilgileri" size="small" className="mb-4">
-              <Descriptions column={1} size="small">
-                <Descriptions.Item label="Bütçe Kodu">{request.budgetCode || '-'}</Descriptions.Item>
-                <Descriptions.Item label="Bütçe Tutarı">
-                  {request.budgetAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || '₺'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Tahmini Tutar">
-                  {request.estimatedTotalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || '₺'}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+            <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Butce Bilgileri</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Butce Kodu</span>
+                  <span className="text-sm text-slate-900">{request.budgetCode || '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Butce Tutari</span>
+                  <span className="text-sm text-slate-900">
+                    {request.budgetAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || 'TL'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-500">Tahmini Tutar</span>
+                  <span className="text-sm text-slate-900">
+                    {request.estimatedTotalAmount?.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {request.currency || 'TL'}
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {/* Approval Info */}
             {(request.approvedById || request.rejectionReason) && (
-              <Card title="Onay Bilgileri" size="small" className="mb-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Onay Bilgileri</h3>
                 <Timeline
                   items={[
                     {
                       color: 'blue',
                       children: (
                         <div>
-                          <div className="font-medium">Talep Oluşturuldu</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm font-medium text-slate-900">Talep Olusturuldu</div>
+                          <div className="text-xs text-slate-500">
                             {dayjs(request.createdAt).format('DD.MM.YYYY HH:mm')}
                           </div>
                         </div>
@@ -528,8 +588,8 @@ export default function PurchaseRequestDetailPage() {
                       color: 'orange',
                       children: (
                         <div>
-                          <div className="font-medium">Onaya Gönderildi</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm font-medium text-slate-900">Onaya Gonderildi</div>
+                          <div className="text-xs text-slate-500">
                             {request.requestedByName}
                           </div>
                         </div>
@@ -539,12 +599,12 @@ export default function PurchaseRequestDetailPage() {
                       color: 'green',
                       children: (
                         <div>
-                          <div className="font-medium">Onaylandı</div>
-                          <div className="text-xs text-gray-500">
-                            {request.approvedByName} • {dayjs(request.approvalDate).format('DD.MM.YYYY HH:mm')}
+                          <div className="text-sm font-medium text-slate-900">Onaylandi</div>
+                          <div className="text-xs text-slate-500">
+                            {request.approvedByName} - {dayjs(request.approvalDate).format('DD.MM.YYYY HH:mm')}
                           </div>
                           {request.approvalNotes && (
-                            <div className="text-xs mt-1">{request.approvalNotes}</div>
+                            <div className="text-xs text-slate-500 mt-1">{request.approvalNotes}</div>
                           )}
                         </div>
                       ),
@@ -553,8 +613,8 @@ export default function PurchaseRequestDetailPage() {
                       color: 'red',
                       children: (
                         <div>
-                          <div className="font-medium">Reddedildi</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm font-medium text-slate-900">Reddedildi</div>
+                          <div className="text-xs text-slate-500">
                             {request.rejectionReason}
                           </div>
                         </div>
@@ -562,10 +622,10 @@ export default function PurchaseRequestDetailPage() {
                     },
                   ].filter(Boolean) as TimelineItemProps[]}
                 />
-              </Card>
+              </div>
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -623,7 +623,7 @@ export default function NewProductAttributePage() {
 
                   {options.length === 0 ? (
                     <div className="p-12 bg-slate-50 rounded-xl text-center border-2 border-dashed border-slate-200">
-                      <ListBulletIcon className="w-4 h-4 text-5xl text-slate-300 mb-3" />
+                      <ListBulletIcon className="w-12 h-12 text-slate-300 mb-3" />
                       <div className="text-slate-500 mb-3 font-medium">Henüz seçenek eklenmedi</div>
                       <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                         İlk Seçeneği Ekle

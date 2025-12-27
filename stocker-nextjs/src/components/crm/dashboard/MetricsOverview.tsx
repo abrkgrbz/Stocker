@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Row, Col, Card, Statistic } from 'antd';
-import { TeamOutlined, UserOutlined, DollarOutlined, TrophyOutlined } from '@ant-design/icons';
+import { UserGroupIcon, UserIcon, CurrencyDollarIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatPercent } from '@/lib/crm';
 
@@ -27,25 +27,25 @@ export function MetricsOverview({
     {
       title: 'Toplam Müşteri',
       value: totalCustomers.toLocaleString('tr-TR'),
-      icon: TeamOutlined,
+      icon: UserGroupIcon,
       subtitle: activationRate > 0 ? `${formatPercent(activationRate)} aktivasyon` : 'Son aya göre artış',
     },
     {
       title: 'Aktif Müşteri',
       value: activeCustomers.toLocaleString('tr-TR'),
-      icon: UserOutlined,
+      icon: UserIcon,
       subtitle: 'Aktif müşteri sayısı',
     },
     {
       title: 'Toplam Gelir',
       value: formatCurrency(totalRevenue),
-      icon: DollarOutlined,
+      icon: CurrencyDollarIcon,
       subtitle: 'Bu ayki toplam',
     },
     {
       title: 'Ortalama Değer',
       value: formatCurrency(avgCustomerValue),
-      icon: TrophyOutlined,
+      icon: TrophyIcon,
       subtitle: 'Müşteri başına',
     },
   ];
@@ -79,7 +79,7 @@ export function MetricsOverview({
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-3 rounded-lg bg-slate-100">
-                    <Icon className="text-slate-600" style={{ fontSize: 20 }} />
+                    <Icon className="w-5 h-5 text-slate-600" />
                   </div>
                 </div>
 

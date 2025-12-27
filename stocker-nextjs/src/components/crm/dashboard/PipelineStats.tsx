@@ -3,13 +3,14 @@
 import React from 'react';
 import { Typography, Space, Empty, Button } from 'antd';
 import {
-  FunnelPlotOutlined,
-  DollarOutlined,
-  TrophyOutlined,
-  TeamOutlined,
-  StarFilled,
-  PlusOutlined
-} from '@ant-design/icons';
+  FunnelIcon,
+  CurrencyDollarIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  StarIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { AnimatedCard } from '../shared/AnimatedCard';
 import { formatCurrency, formatPercent } from '@/lib/crm';
 import type { Pipeline, Deal } from '@/lib/api/services/crm.service';
@@ -38,7 +39,7 @@ export function PipelineStats({
         <Empty
           image={
             <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mx-auto">
-              <FunnelPlotOutlined className="text-slate-300" style={{ fontSize: 20 }} />
+              <FunnelIcon className="w-5 h-5 text-slate-300" />
             </div>
           }
           imageStyle={{ height: 60 }}
@@ -53,7 +54,7 @@ export function PipelineStats({
               <Link href="/crm/pipelines">
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   className="!bg-slate-900 !border-slate-900 hover:!bg-slate-800"
                 >
                   Pipeline Oluştur
@@ -99,10 +100,10 @@ export function PipelineStats({
     <AnimatedCard
       title={
         <div className="flex items-center gap-2">
-          <FunnelPlotOutlined className="text-slate-500" />
+          <FunnelIcon className="w-4 h-4 text-slate-500" />
           <span>Pipeline İstatistikleri</span>
           {(activePipeline as any)?.isDefault && (
-            <StarFilled className="text-slate-400 text-sm" />
+            <StarIconSolid className="w-4 h-4 text-slate-400" />
           )}
         </div>
       }
@@ -127,19 +128,19 @@ export function PipelineStats({
       {/* Key Metrics */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="text-center p-3 bg-slate-50 rounded-lg">
-          <DollarOutlined className="text-xl text-slate-500 mb-1" />
+          <CurrencyDollarIcon className="w-5 h-5 text-slate-500 mx-auto mb-1" />
           <div className="text-xs text-slate-400 mb-1">Toplam Değer</div>
           <div className="font-bold text-slate-900 text-sm">{formatCurrency(totalValue)}</div>
         </div>
         <div className="text-center p-3 bg-slate-50 rounded-lg">
-          <TrophyOutlined className="text-xl text-slate-500 mb-1" />
+          <TrophyIcon className="w-5 h-5 text-slate-500 mx-auto mb-1" />
           <div className="text-xs text-slate-400 mb-1">Kazanma Oranı</div>
           <div className="font-bold text-slate-900 text-sm">
             {formatPercent(winRate)}
           </div>
         </div>
         <div className="text-center p-3 bg-slate-50 rounded-lg">
-          <TeamOutlined className="text-xl text-slate-500 mb-1" />
+          <UserGroupIcon className="w-5 h-5 text-slate-500 mx-auto mb-1" />
           <div className="text-xs text-slate-400 mb-1">Ort. Fırsat</div>
           <div className="font-bold text-slate-900 text-sm">{formatCurrency(avgDealSize)}</div>
         </div>

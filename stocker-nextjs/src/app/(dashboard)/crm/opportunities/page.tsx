@@ -258,7 +258,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
           </div>
           <div className="p-3 bg-slate-100 rounded-lg">
-            <ChartBarIcon className="w-4 h-4 text-2xl text-slate-600" />
+            <ChartBarIcon className="w-5 h-5 text-slate-600" />
           </div>
         </div>
       </Card>
@@ -270,7 +270,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-emerald-600">₺{stats.totalValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-emerald-100 rounded-lg">
-            <CurrencyDollarIcon className="w-4 h-4 text-2xl text-emerald-600" />
+            <CurrencyDollarIcon className="w-5 h-5 text-emerald-600" />
           </div>
         </div>
       </Card>
@@ -283,7 +283,7 @@ export default function OpportunitiesPage() {
             <div className="text-xs text-slate-500 mt-1">₺{stats.wonValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-green-100 rounded-lg">
-            <TrophyIcon className="w-4 h-4 text-2xl text-green-600" />
+            <TrophyIcon className="w-5 h-5 text-green-600" />
           </div>
         </div>
       </Card>
@@ -295,7 +295,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-blue-600">{stats.avgProbability.toFixed(0)}%</div>
           </div>
           <div className="p-3 bg-blue-100 rounded-lg">
-            <ArrowTrendingUpIcon className="w-4 h-4 text-2xl text-blue-600" />
+            <ArrowTrendingUpIcon className="w-5 h-5 text-blue-600" />
           </div>
         </div>
       </Card>
@@ -470,7 +470,7 @@ export default function OpportunitiesPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         }

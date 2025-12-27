@@ -4,17 +4,12 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Form,
-  Button,
-  Card,
   Input,
   Row,
   Col,
-  Typography,
   Spin,
-  Empty,
-  Tag,
-  message,
   Progress,
+  message,
 } from 'antd';
 import {
   ArrowLeftIcon,
@@ -28,30 +23,20 @@ import {
 } from '@/lib/api/hooks/usePurchase';
 import type { EvaluationStatus } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-const statusConfig: Record<EvaluationStatus, { color: string; text: string }> = {
-  Draft: { color: 'default', text: 'Taslak' },
-  Submitted: { color: 'blue', text: 'Gönderildi' },
-  Approved: { color: 'green', text: 'Onaylandı' },
-  Rejected: { color: 'red', text: 'Reddedildi' },
+const statusConfig: Record<EvaluationStatus, { bg: string; text: string; label: string }> = {
+  Draft: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Taslak' },
+  Submitted: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gönderildi' },
+  Approved: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Onaylandı' },
+  Rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' },
 };
 
-const ratingColors: Record<string, string> = {
-  Excellent: '#52c41a',
-  Good: '#1890ff',
-  Average: '#faad14',
-  Poor: '#f5222d',
-  Critical: '#722ed1',
-};
-
-const ratingLabels: Record<string, string> = {
-  Excellent: 'Mükemmel',
-  Good: 'İyi',
-  Average: 'Ortalama',
-  Poor: 'Zayıf',
-  Critical: 'Kritik',
+const getScoreColor = (score: number) => {
+  if (score >= 80) return '#10b981';
+  if (score >= 60) return '#3b82f6';
+  if (score >= 40) return '#f59e0b';
+  return '#ef4444';
 };
 
 export default function EditSupplierEvaluationPage() {
@@ -66,18 +51,6 @@ export default function EditSupplierEvaluationPage() {
   useEffect(() => {
     if (evaluation) {
       form.setFieldsValue({
-        qualityScore: evaluation.qualityScore,
-        deliveryScore: evaluation.deliveryScore,
-        priceScore: evaluation.priceScore,
-        serviceScore: evaluation.serviceScore,
-        communicationScore: evaluation.communicationScore,
-        responsiveness: evaluation.responsiveness,
-        reliability: evaluation.reliability,
-        flexibility: evaluation.flexibility,
-        documentation: evaluation.documentation,
-        strengths: evaluation.strengths,
-        weaknesses: evaluation.weaknesses,
-        recommendations: evaluation.recommendations,
         notes: evaluation.notes,
       });
     }
@@ -85,7 +58,7 @@ export default function EditSupplierEvaluationPage() {
 
   if (evaluationLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -93,12 +66,17 @@ export default function EditSupplierEvaluationPage() {
 
   if (!evaluation) {
     return (
-      <div className="p-8">
-        <Empty description="Değerlendirme bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/evaluations')}>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <StarIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Değerlendirme Bulunamadı</h3>
+          <p className="text-sm text-slate-500 mb-4">Aradığınız değerlendirme mevcut değil.</p>
+          <button
+            onClick={() => router.push('/purchase/evaluations')}
+            className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+          >
             Değerlendirmelere Dön
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -106,12 +84,17 @@ export default function EditSupplierEvaluationPage() {
 
   if (evaluation.status !== 'Draft') {
     return (
-      <div className="p-8">
-        <Empty description="Bu değerlendirme düzenlenemez. Sadece taslak değerlendirmeler düzenlenebilir." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/purchase/evaluations/${evaluationId}`)}>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <StarIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Düzenleme Yapılamaz</h3>
+          <p className="text-sm text-slate-500 mb-4">Sadece taslak durumundaki değerlendirmeler düzenlenebilir.</p>
+          <button
+            onClick={() => router.push(`/purchase/evaluations/${evaluationId}`)}
+            className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+          >
             Değerlendirmeye Dön
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -119,7 +102,6 @@ export default function EditSupplierEvaluationPage() {
 
   const handleSave = async (values: any) => {
     try {
-      // Update evaluation notes (scores are read-only after creation based on DTO)
       await updateEvaluation.mutateAsync({
         id: evaluationId,
         data: {
@@ -142,173 +124,157 @@ export default function EditSupplierEvaluationPage() {
   const status = statusConfig[evaluation.status as EvaluationStatus] || statusConfig.Draft;
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #faad14 0%, #fa8c16 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <StarIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Değerlendirmeyi Düzenle
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {evaluation.evaluationNumber}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                  <StarIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">Değerlendirmeyi Düzenle</h1>
+                  <p className="text-sm text-slate-500">{evaluation.evaluationNumber}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                İptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-5xl mx-auto px-8 py-8">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSave}
         >
           {/* Read-Only Info */}
-          <Card title="Değerlendirme Bilgileri (Salt Okunur)" className="mb-6">
-            <Row gutter={16}>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Tedarikçi</Text>
-                  <Text strong>{evaluation.supplierName}</Text>
-                  {evaluation.supplierCode && (
-                    <div className="text-xs text-gray-500">{evaluation.supplierCode}</div>
-                  )}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Değerlendirme Bilgileri (Salt Okunur)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tedarikçi</span>
+                <p className="text-sm font-medium text-slate-900 mt-1">{evaluation.supplierName}</p>
+                {evaluation.supplierCode && (
+                  <p className="text-xs text-slate-500">{evaluation.supplierCode}</p>
+                )}
+              </div>
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Durum</span>
+                <div className="mt-1">
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${status.bg} ${status.text}`}>
+                    {status.label}
+                  </span>
                 </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Durum</Text>
-                  <Tag color={status.color}>{status.text}</Tag>
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Değerlendirme</Text>
-                  <Tag color={ratingColors[evaluation.rating] || 'default'}>
-                    {ratingLabels[evaluation.rating] || evaluation.rating}
-                  </Tag>
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Dönem</Text>
-                  <Text strong>{evaluation.year} - Q{evaluation.quarter || '-'}</Text>
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Tip</Text>
-                  <Text strong>{evaluation.evaluationType || evaluation.type}</Text>
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Genel Puan</Text>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Genel Puan</span>
+                <div className="mt-1">
                   <Progress
                     percent={evaluation.overallScore}
                     size="small"
-                    status={evaluation.overallScore >= 70 ? 'success' : evaluation.overallScore >= 50 ? 'normal' : 'exception'}
+                    strokeColor={getScoreColor(evaluation.overallScore)}
                   />
                 </div>
-              </Col>
-            </Row>
-          </Card>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Dönem</span>
+                <p className="text-sm font-medium text-slate-900 mt-1">{evaluation.evaluationPeriod || '-'}</p>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tip</span>
+                <p className="text-sm font-medium text-slate-900 mt-1">{evaluation.evaluationType}</p>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Değerlendirme Tarihi</span>
+                <p className="text-sm font-medium text-slate-900 mt-1">
+                  {new Date(evaluation.evaluationDate).toLocaleDateString('tr-TR')}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Primary Scores (Read-Only) */}
-          <Card title="Ana Değerlendirme Puanları (Salt Okunur)" className="mb-6">
-            <Text type="secondary" className="block mb-4">
-              Puanlar değerlendirme oluşturulduktan sonra değiştirilemez.
-            </Text>
-            <Row gutter={24}>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Kalite Puanı</Text>
-                  <Progress percent={evaluation.qualityScore || 0} size="small" />
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Teslimat Puanı</Text>
-                  <Progress percent={evaluation.deliveryScore || 0} size="small" />
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Fiyat Puanı</Text>
-                  <Progress percent={evaluation.priceScore || 0} size="small" />
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">Hizmet Puanı</Text>
-                  <Progress percent={evaluation.serviceScore || 0} size="small" />
-                </div>
-              </Col>
-              <Col xs={24} md={8}>
-                <div className="mb-4">
-                  <Text type="secondary" className="block mb-1">İletişim Puanı</Text>
-                  <Progress percent={evaluation.communicationScore || 0} size="small" />
-                </div>
-              </Col>
-            </Row>
-          </Card>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-2">Ana Değerlendirme Puanları (Salt Okunur)</h3>
+            <p className="text-xs text-slate-500 mb-4">Puanlar değerlendirme oluşturulduktan sonra değiştirilemez.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <span className="text-xs text-slate-500">Kalite</span>
+                <Progress percent={evaluation.qualityScore || 0} size="small" strokeColor={getScoreColor(evaluation.qualityScore || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Teslimat</span>
+                <Progress percent={evaluation.deliveryScore || 0} size="small" strokeColor={getScoreColor(evaluation.deliveryScore || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Fiyat</span>
+                <Progress percent={evaluation.priceScore || 0} size="small" strokeColor={getScoreColor(evaluation.priceScore || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Hizmet</span>
+                <Progress percent={evaluation.serviceScore || 0} size="small" strokeColor={getScoreColor(evaluation.serviceScore || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Yanıt Hızı</span>
+                <Progress percent={evaluation.responsiveness || 0} size="small" strokeColor={getScoreColor(evaluation.responsiveness || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Güvenilirlik</span>
+                <Progress percent={evaluation.reliability || 0} size="small" strokeColor={getScoreColor(evaluation.reliability || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Esneklik</span>
+                <Progress percent={evaluation.flexibility || 0} size="small" strokeColor={getScoreColor(evaluation.flexibility || 0)} />
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Dokümantasyon</span>
+                <Progress percent={evaluation.documentation || 0} size="small" strokeColor={getScoreColor(evaluation.documentation || 0)} />
+              </div>
+            </div>
+          </div>
 
           {/* Editable Feedback */}
-          <Card title="Değerlendirme Notları" className="mb-6">
-            <Row gutter={16}>
-              <Col xs={24}>
-                <Form.Item name="notes" label="Notlar">
-                  <TextArea
-                    rows={4}
-                    placeholder="Değerlendirme notlarını girin..."
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h3 className="text-sm font-medium text-slate-900 mb-4">Değerlendirme Notları</h3>
+            <Form.Item
+              name="notes"
+              label={<span className="text-sm font-medium text-slate-700">Notlar</span>}
+            >
+              <TextArea
+                rows={4}
+                placeholder="Değerlendirme notlarını girin..."
+              />
+            </Form.Item>
+          </div>
         </Form>
       </div>
     </div>

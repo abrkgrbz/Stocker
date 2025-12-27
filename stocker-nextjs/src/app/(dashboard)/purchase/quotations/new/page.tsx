@@ -9,7 +9,6 @@ import {
   Button,
   Row,
   Col,
-  Typography,
   DatePicker,
   Table,
   InputNumber,
@@ -32,7 +31,6 @@ import { useSuppliers } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { CreateQuotationDto, CreateQuotationItemDto } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface QuotationItemRow extends CreateQuotationItemDto {
@@ -194,259 +192,260 @@ export default function NewQuotationPage() {
       key: 'actions',
       width: 60,
       render: (_: any, record: QuotationItemRow) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
+        <button
           onClick={() => handleRemoveItem(record.key)}
-        />
+          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          icon={<ArrowLeftIcon className="w-4 h-4" />}
-          onClick={() => router.back()}
-        />
-        <div>
-          <Title level={3} className="mb-1">Yeni Teklif Talebi</Title>
-          <Text type="secondary">Tedarikçilerden teklif isteği oluşturun</Text>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Yeni Teklif Talebi</h1>
+                <p className="text-sm text-slate-500">Tedarikçilerden teklif isteği oluşturun</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={createMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {createMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          currency: 'TRY',
-          validityPeriod: 30,
-        }}
-      >
-        <Row gutter={24}>
-          {/* Left Panel */}
-          <Col xs={24} lg={10}>
-            {/* Visual Card */}
-            <Card bordered={false} className="shadow-sm mb-6">
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #1890ff 0%, #722ed1 100%)',
-                  borderRadius: '12px',
-                  padding: '32px 20px',
-                  minHeight: '180px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
-                <p className="mt-4 text-lg font-medium text-white/90">
-                  Teklif Talebi (RFQ)
-                </p>
-                <p className="text-sm text-white/60">
-                  Tedarikçilerden fiyat teklifi alın
-                </p>
-              </div>
-            </Card>
-
-            {/* Supplier Selection */}
-            <Card
-              title={
-                <Space>
-                  <BuildingStorefrontIcon className="w-4 h-4" />
-                  <span>Tedarikçiler</span>
-                </Space>
-              }
-              bordered={false}
-              className="shadow-sm"
-            >
-              <Form.Item
-                label="Teklif İstenen Tedarikçiler"
-                required
-                help="En az bir tedarikçi seçmelisiniz"
-              >
-                <Select
-                  mode="multiple"
-                  style={{ width: '100%' }}
-                  placeholder="Tedarikçi seçin"
-                  value={selectedSuppliers}
-                  onChange={setSelectedSuppliers}
-                  loading={suppliersLoading}
-                  optionFilterProp="children"
-                  showSearch
-                >
-                  {suppliersData?.items?.map(supplier => (
-                    <Select.Option key={supplier.id} value={supplier.id}>
-                      {supplier.name} ({supplier.code})
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <div className="text-sm text-gray-500 mt-2">
-                Seçilen: {selectedSuppliers.length} tedarikçi
-              </div>
-            </Card>
-          </Col>
-
-          {/* Right Panel */}
-          <Col xs={24} lg={14}>
-            <Card bordered={false} className="shadow-sm mb-6">
-              {/* Title - Hero Input */}
-              <Form.Item
-                name="title"
-                rules={[
-                  { required: true, message: 'Başlık zorunludur' },
-                  { max: 200, message: 'En fazla 200 karakter' },
-                ]}
-                className="mb-4"
-              >
-                <Input
-                  placeholder="Teklif talebi başlığı"
-                  variant="borderless"
-                  style={{
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    padding: '0',
-                    color: '#1a1a1a',
-                  }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
-
-              <Form.Item name="description" className="mb-6">
-                <TextArea
-                  placeholder="Teklif talebi hakkında açıklama..."
-                  variant="borderless"
-                  autoSize={{ minRows: 2, maxRows: 4 }}
-                  style={{
-                    fontSize: '15px',
-                    padding: '0',
-                    color: '#666',
-                  }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
-
-              <Divider />
-
-              {/* Details */}
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="responseDeadline"
-                    label="Son Teklif Tarihi"
-                    rules={[{ required: true, message: 'Zorunlu' }]}
-                  >
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD.MM.YYYY"
-                      placeholder="Tarih seçin"
-                      disabledDate={(current) => current && current < dayjs().startOf('day')}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="validityPeriod"
-                    label="Geçerlilik Süresi (Gün)"
-                  >
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      min={1}
-                      max={365}
-                      placeholder="30"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="currency" label="Para Birimi">
-                    <Select placeholder="Seçin">
-                      <Select.Option value="TRY">TRY (₺)</Select.Option>
-                      <Select.Option value="USD">USD ($)</Select.Option>
-                      <Select.Option value="EUR">EUR (€)</Select.Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="paymentTerms" label="Ödeme Koşulları">
-                    <Select placeholder="Seçin">
-                      <Select.Option value="Prepaid">Peşin</Select.Option>
-                      <Select.Option value="Net30">Net 30 Gün</Select.Option>
-                      <Select.Option value="Net60">Net 60 Gün</Select.Option>
-                      <Select.Option value="Net90">Net 90 Gün</Select.Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Form.Item name="deliveryLocation" label="Teslimat Yeri">
-                <Input placeholder="Teslimat adresi veya lokasyonu" />
-              </Form.Item>
-
-              <Form.Item name="notes" label="Notlar">
-                <TextArea
-                  rows={3}
-                  placeholder="Ek notlar ve açıklamalar..."
-                />
-              </Form.Item>
-            </Card>
-
-            {/* Items */}
-            <Card
-              title="Ürünler"
-              bordered={false}
-              className="shadow-sm"
-              extra={
-                <Button
-                  type="dashed"
-                  icon={<PlusIcon className="w-4 h-4" />}
-                  onClick={handleAddItem}
-                >
-                  Ürün Ekle
-                </Button>
-              }
-            >
-              <Table
-                columns={itemColumns}
-                dataSource={items}
-                pagination={false}
-                size="small"
-                locale={{ emptyText: 'Henüz ürün eklenmedi' }}
-              />
-
-              {items.length > 0 && (
-                <div className="mt-4 text-right text-sm text-gray-500">
-                  Toplam: {items.length} ürün
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            currency: 'TRY',
+            validityPeriod: 30,
+          }}
+        >
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Column */}
+            <div className="col-span-12 lg:col-span-4 space-y-6">
+              {/* Visual Card */}
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center mb-4">
+                    <DocumentTextIcon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">Teklif Talebi (RFQ)</h3>
+                  <p className="text-sm text-white/70">Tedarikçilerden fiyat teklifi alın</p>
                 </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
+              </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={() => router.back()}>
-            İptal
-          </Button>
-          <Button
-            type="primary"
-            icon={<CheckIcon className="w-4 h-4" />}
-            htmlType="submit"
-            loading={createMutation.isPending}
-          >
-            Kaydet
-          </Button>
-        </div>
-      </Form>
+              {/* Supplier Selection */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <BuildingStorefrontIcon className="w-5 h-5 text-slate-400" />
+                  <h3 className="font-medium text-slate-900">Tedarikçiler</h3>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Teklif İstenen Tedarikçiler <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    mode="multiple"
+                    style={{ width: '100%' }}
+                    placeholder="Tedarikçi seçin"
+                    value={selectedSuppliers}
+                    onChange={setSelectedSuppliers}
+                    loading={suppliersLoading}
+                    optionFilterProp="children"
+                    showSearch
+                  >
+                    {suppliersData?.items?.map(supplier => (
+                      <Select.Option key={supplier.id} value={supplier.id}>
+                        {supplier.name} ({supplier.code})
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  <p className="text-xs text-slate-500 mt-1">En az bir tedarikçi seçmelisiniz</p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100">
+                  <span className="text-sm text-slate-600">
+                    Seçilen: <span className="font-medium text-slate-900">{selectedSuppliers.length}</span> tedarikçi
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-span-12 lg:col-span-8 space-y-6">
+              {/* Main Form */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                {/* Title - Hero Input */}
+                <Form.Item
+                  name="title"
+                  rules={[
+                    { required: true, message: 'Başlık zorunludur' },
+                    { max: 200, message: 'En fazla 200 karakter' },
+                  ]}
+                  className="mb-4"
+                >
+                  <Input
+                    placeholder="Teklif talebi başlığı"
+                    variant="borderless"
+                    className="text-2xl font-semibold text-slate-900 px-0 placeholder:text-slate-300"
+                  />
+                </Form.Item>
+
+                <Form.Item name="description" className="mb-6">
+                  <TextArea
+                    placeholder="Teklif talebi hakkında açıklama..."
+                    variant="borderless"
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    className="text-slate-600 px-0 placeholder:text-slate-300"
+                  />
+                </Form.Item>
+
+                <Divider className="my-6" />
+
+                {/* Details */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="responseDeadline"
+                      label={<span className="text-sm font-medium text-slate-700">Son Teklif Tarihi</span>}
+                      rules={[{ required: true, message: 'Zorunlu' }]}
+                    >
+                      <DatePicker
+                        style={{ width: '100%' }}
+                        format="DD.MM.YYYY"
+                        placeholder="Tarih seçin"
+                        disabledDate={(current) => current && current < dayjs().startOf('day')}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="validityPeriod"
+                      label={<span className="text-sm font-medium text-slate-700">Geçerlilik Süresi (Gün)</span>}
+                    >
+                      <InputNumber
+                        style={{ width: '100%' }}
+                        min={1}
+                        max={365}
+                        placeholder="30"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      name="currency"
+                      label={<span className="text-sm font-medium text-slate-700">Para Birimi</span>}
+                    >
+                      <Select placeholder="Seçin">
+                        <Select.Option value="TRY">TRY (₺)</Select.Option>
+                        <Select.Option value="USD">USD ($)</Select.Option>
+                        <Select.Option value="EUR">EUR (€)</Select.Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name="paymentTerms"
+                      label={<span className="text-sm font-medium text-slate-700">Ödeme Koşulları</span>}
+                    >
+                      <Select placeholder="Seçin">
+                        <Select.Option value="Prepaid">Peşin</Select.Option>
+                        <Select.Option value="Net30">Net 30 Gün</Select.Option>
+                        <Select.Option value="Net60">Net 60 Gün</Select.Option>
+                        <Select.Option value="Net90">Net 90 Gün</Select.Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item
+                  name="deliveryLocation"
+                  label={<span className="text-sm font-medium text-slate-700">Teslimat Yeri</span>}
+                >
+                  <Input placeholder="Teslimat adresi veya lokasyonu" />
+                </Form.Item>
+
+                <Form.Item
+                  name="notes"
+                  label={<span className="text-sm font-medium text-slate-700">Notlar</span>}
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder="Ek notlar ve açıklamalar..."
+                  />
+                </Form.Item>
+              </div>
+
+              {/* Items */}
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                  <h3 className="font-medium text-slate-900">Ürünler</h3>
+                  <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 border border-dashed border-slate-300 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition-colors"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Ürün Ekle
+                  </button>
+                </div>
+
+                <Table
+                  columns={itemColumns}
+                  dataSource={items}
+                  pagination={false}
+                  size="small"
+                  locale={{ emptyText: 'Henüz ürün eklenmedi' }}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
+                />
+
+                {items.length > 0 && (
+                  <div className="px-5 py-3 border-t border-slate-100 bg-slate-50">
+                    <span className="text-sm text-slate-600">
+                      Toplam: <span className="font-medium text-slate-900">{items.length}</span> ürün
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

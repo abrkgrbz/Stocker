@@ -226,7 +226,7 @@ export default function EditStockTransferPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <MapPinIcon className="w-4 h-4 text-blue-500 text-lg" />
+                      <MapPinIcon className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="text-xs">Kaynak Depo</Text>
@@ -235,7 +235,7 @@ export default function EditStockTransferPage() {
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                      <MapPinIcon className="w-4 h-4 text-green-500 text-lg" />
+                      <MapPinIcon className="w-5 h-5 text-green-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="text-xs">Hedef Depo</Text>

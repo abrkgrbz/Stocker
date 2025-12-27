@@ -14,19 +14,17 @@ import {
   Tooltip,
 } from 'antd';
 import {
-  FileOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  FilePdfOutlined,
-  FileWordOutlined,
-  FileExcelOutlined,
-  FileImageOutlined,
-  FileZipOutlined,
-  UploadOutlined,
-  PlusOutlined,
-  CloudUploadOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  DocumentIcon,
+  TrashIcon,
+  ArrowDownTrayIcon,
+  DocumentTextIcon,
+  PhotoIcon,
+  ArchiveBoxIcon,
+  ArrowUpTrayIcon,
+  PlusIcon,
+  CloudArrowUpIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import {
   useUploadDocument,
@@ -71,7 +69,7 @@ const getFileTypeInfo = (fileName: string) => {
   switch (ext) {
     case 'pdf':
       return {
-        icon: <FilePdfOutlined className="text-red-600 text-lg" />,
+        icon: <DocumentTextIcon className="w-5 h-5 text-red-600" />,
         bgColor: 'bg-red-50',
         textColor: 'text-red-600',
         label: 'PDF',
@@ -79,7 +77,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'doc':
     case 'docx':
       return {
-        icon: <FileWordOutlined className="text-blue-600 text-lg" />,
+        icon: <DocumentTextIcon className="w-5 h-5 text-blue-600" />,
         bgColor: 'bg-blue-50',
         textColor: 'text-blue-600',
         label: 'Word',
@@ -87,7 +85,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'xls':
     case 'xlsx':
       return {
-        icon: <FileExcelOutlined className="text-green-600 text-lg" />,
+        icon: <DocumentTextIcon className="w-5 h-5 text-green-600" />,
         bgColor: 'bg-green-50',
         textColor: 'text-green-600',
         label: 'Excel',
@@ -98,7 +96,7 @@ const getFileTypeInfo = (fileName: string) => {
     case 'gif':
     case 'svg':
       return {
-        icon: <FileImageOutlined className="text-purple-600 text-lg" />,
+        icon: <PhotoIcon className="w-5 h-5 text-purple-600" />,
         bgColor: 'bg-purple-50',
         textColor: 'text-purple-600',
         label: 'Image',
@@ -107,14 +105,14 @@ const getFileTypeInfo = (fileName: string) => {
     case 'rar':
     case '7z':
       return {
-        icon: <FileZipOutlined className="text-orange-600 text-lg" />,
+        icon: <ArchiveBoxIcon className="w-5 h-5 text-orange-600" />,
         bgColor: 'bg-orange-50',
         textColor: 'text-orange-600',
         label: 'Archive',
       };
     default:
       return {
-        icon: <FileOutlined className="text-slate-500 text-lg" />,
+        icon: <DocumentIcon className="w-5 h-5 text-slate-500" />,
         bgColor: 'bg-slate-100',
         textColor: 'text-slate-500',
         label: 'File',
@@ -299,7 +297,7 @@ export function DocumentUpload({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-50">
-            <FileOutlined className="text-emerald-600 text-lg" />
+            <DocumentIcon className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -317,7 +315,7 @@ export function DocumentUpload({
           onClick={handleNewDocumentClick}
           className="upload-trigger inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
         >
-          <UploadOutlined />
+          <ArrowUpTrayIcon className="w-4 h-4" />
           Yeni Doküman
         </button>
       </div>
@@ -329,7 +327,7 @@ export function DocumentUpload({
           <div className="absolute inset-0 z-50 bg-emerald-50/90 border-2 border-dashed border-emerald-400 rounded-lg flex items-center justify-center pointer-events-none">
             <div className="text-center">
               <div className="w-16 h-16 rounded-xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                <CloudUploadOutlined className="text-emerald-600 text-3xl" />
+                <CloudArrowUpIcon className="w-8 h-8 text-emerald-600" />
               </div>
               <p className="text-lg font-medium text-emerald-700 mb-1">
                 Yüklemek için buraya bırakın
@@ -398,7 +396,7 @@ export function DocumentUpload({
                           disabled={downloadMutation.isPending}
                           className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors disabled:opacity-50"
                         >
-                          <DownloadOutlined />
+                          <ArrowDownTrayIcon className="w-4 h-4" />
                         </button>
                       </Tooltip>
                       <Tooltip title="Sil">
@@ -407,7 +405,7 @@ export function DocumentUpload({
                           disabled={deleteMutation.isPending}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                         >
-                          <DeleteOutlined />
+                          <TrashIcon className="w-4 h-4" />
                         </button>
                       </Tooltip>
                     </div>
@@ -420,7 +418,7 @@ export function DocumentUpload({
           /* Empty State - Enterprise Design */
           <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50">
             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-              <FileOutlined className="text-xl" />
+              <DocumentIcon className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-medium text-slate-900 mb-1">Doküman bulunmuyor</h3>
             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -430,7 +428,7 @@ export function DocumentUpload({
               onClick={handleNewDocumentClick}
               className="upload-trigger inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
             >
-              <UploadOutlined />
+              <ArrowUpTrayIcon className="w-4 h-4" />
               İlk Dokümanı Yükle
             </button>
           </div>
@@ -450,7 +448,7 @@ export function DocumentUpload({
         {/* Modal Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50">
-            <UploadOutlined className="text-emerald-600 text-xl" />
+            <ArrowUpTrayIcon className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 m-0">Doküman Yükle</h2>
@@ -467,7 +465,7 @@ export function DocumentUpload({
           <div className="mt-6 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <FileOutlined className="text-slate-500 text-xs" />
+                <DocumentIcon className="w-3.5 h-3.5 text-slate-500" />
               </div>
               <span className="text-sm font-medium text-slate-700">Seçilen Dosyalar</span>
             </div>
@@ -502,7 +500,7 @@ export function DocumentUpload({
           {/* Category Section */}
           <div className="flex items-center gap-2 mb-4">
             <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-              <FileOutlined className="text-slate-500 text-xs" />
+              <DocumentIcon className="w-3.5 h-3.5 text-slate-500" />
             </div>
             <span className="text-sm font-medium text-slate-700">Doküman Bilgileri</span>
           </div>
@@ -601,7 +599,7 @@ export function DocumentUpload({
                 </>
               ) : (
                 <>
-                  <UploadOutlined />
+                  <ArrowUpTrayIcon className="w-4 h-4" />
                   Yükle
                 </>
               )}

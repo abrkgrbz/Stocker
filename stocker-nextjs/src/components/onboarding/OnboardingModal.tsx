@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { Modal, Steps, Button, Form, Input, Select, Typography, Space, Card, message } from 'antd';
 import {
-  CheckCircleOutlined,
-  ShopOutlined,
-  CrownOutlined,
-  RocketOutlined
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  BuildingStorefrontIcon,
+  SparklesIcon,
+  RocketLaunchIcon
+} from '@heroicons/react/24/outline';
 import { showAlert } from '@/lib/sweetalert-config';
 import Swal from 'sweetalert2';
 import { SetupProgressModal } from '@/components/setup/SetupProgressModal';
@@ -105,19 +105,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const steps = [
     {
       title: 'Hoş Geldiniz',
-      icon: <RocketOutlined />,
+      icon: <RocketLaunchIcon className="w-5 h-5" />,
     },
     {
       title: 'Sektör Seçimi',
-      icon: <ShopOutlined />,
+      icon: <BuildingStorefrontIcon className="w-5 h-5" />,
     },
     {
       title: 'Şirket Bilgileri',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-5 h-5" />,
     },
     {
       title: 'Paket Seçimi',
-      icon: <CrownOutlined />,
+      icon: <SparklesIcon className="w-5 h-5" />,
     },
   ];
 
@@ -228,7 +228,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       case 0:
         return (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <RocketOutlined style={{ fontSize: 72, color: '#1890ff', marginBottom: 24 }} />
+            <RocketLaunchIcon className="w-[72px] h-[72px]" style={{ color: '#1890ff', marginBottom: 24 }} />
             <Title level={2}>Stocker'a Hoş Geldiniz! 🎉</Title>
             <Paragraph style={{ fontSize: 16, marginTop: 16 }}>
               İşletmenizi yönetmek için gereken tüm araçlar artık elinizin altında.
@@ -339,7 +339,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                         <div style={{ marginTop: 12 }}>
                           {pkg.features.map((feature, idx) => (
                             <div key={idx} style={{ marginBottom: 4 }}>
-                              <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                              <CheckCircleIcon className="w-4 h-4" style={{ color: '#52c41a', marginRight: 8 }} />
                               <Text>{feature}</Text>
                             </div>
                           ))}

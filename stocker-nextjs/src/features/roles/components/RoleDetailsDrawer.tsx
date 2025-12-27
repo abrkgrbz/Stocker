@@ -2,13 +2,13 @@
 
 import { Drawer, Descriptions, Tag, Space, Typography, Divider, Empty, Avatar, List, Card } from 'antd';
 import {
-  CloseOutlined,
-  SafetyOutlined,
-  TeamOutlined,
-  UserOutlined,
-  LockOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  XMarkIcon,
+  ShieldCheckIcon,
+  UserGroupIcon,
+  UserIcon,
+  LockClosedIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { parsePermission, getPermissionLabel, type Role, PERMISSION_TYPE_LABELS } from '@/lib/api/roles';
 
 const { Title, Text } = Typography;
@@ -65,7 +65,7 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
             <Title level={4} style={{ margin: 0 }}>
               {role.name}
               {role.isSystemRole && (
-                <LockOutlined style={{ marginLeft: 8, fontSize: 14, color: '#8c8c8c' }} />
+                <LockClosedIcon className="w-4 h-4 ml-2" style={{ color: '#8c8c8c' }} />
               )}
             </Title>
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -77,14 +77,14 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
       width={640}
       open={open}
       onClose={onClose}
-      closeIcon={<CloseOutlined />}
+      closeIcon={<XMarkIcon className="w-4 h-4" />}
     >
       {/* Genel Bilgiler */}
       <Card
         size="small"
         title={
           <Space>
-            <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            <CheckCircleIcon className="w-4 h-4" style={{ color: '#52c41a' }} />
             <span>Genel Bilgiler</span>
           </Space>
         }
@@ -94,19 +94,19 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
           <Descriptions.Item label="Rol Tipi" span={2}>
             {role.isSystemRole ? (
               <Tag color="purple">
-                <LockOutlined /> Sistem Rolü
+                <LockClosedIcon className="w-3 h-3 inline mr-1" /> Sistem Rolü
               </Tag>
             ) : (
               <Tag color="blue">Özel Rol</Tag>
             )}
           </Descriptions.Item>
           <Descriptions.Item label="Kullanıcı Sayısı">
-            <Tag icon={<TeamOutlined />} color={role.userCount > 0 ? 'blue' : 'default'}>
+            <Tag icon={<UserGroupIcon className="w-3 h-3 inline mr-1" />} color={role.userCount > 0 ? 'blue' : 'default'}>
               {role.userCount}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Yetki Sayısı">
-            <Tag icon={<SafetyOutlined />} color="green">
+            <Tag icon={<ShieldCheckIcon className="w-3 h-3 inline mr-1" />} color="green">
               {role.permissions.length}
             </Tag>
           </Descriptions.Item>
@@ -121,7 +121,7 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
         size="small"
         title={
           <Space>
-            <TeamOutlined style={{ color: '#1890ff' }} />
+            <UserGroupIcon className="w-4 h-4" style={{ color: '#1890ff' }} />
             <span>Bu Role Atanan Kullanıcılar ({role.userCount})</span>
           </Space>
         }
@@ -134,7 +134,7 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
               <List.Item>
                 <List.Item.Meta
                   avatar={
-                    <Avatar icon={<UserOutlined />} style={{ background: '#1890ff' }}>
+                    <Avatar icon={<UserIcon className="w-4 h-4" />} style={{ background: '#1890ff' }}>
                       {user.name.charAt(0)}
                     </Avatar>
                   }
@@ -157,7 +157,7 @@ export function RoleDetailsDrawer({ role, open, onClose }: RoleDetailsDrawerProp
         size="small"
         title={
           <Space>
-            <SafetyOutlined style={{ color: '#52c41a' }} />
+            <ShieldCheckIcon className="w-4 h-4" style={{ color: '#52c41a' }} />
             <span>Yetkiler ({role.permissions.length})</span>
           </Space>
         }

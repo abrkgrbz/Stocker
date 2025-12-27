@@ -4,22 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Form,
-  Button,
-  Card,
   Input,
   Select,
   DatePicker,
   InputNumber,
   Row,
   Col,
-  Typography,
   Table,
-  Space,
   Divider,
-  Switch,
   Spin,
-  Empty,
-  message,
 } from 'antd';
 import {
   ArrowLeftIcon,
@@ -34,7 +27,6 @@ import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { ItemCondition } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface ReceiptItem {
@@ -55,11 +47,11 @@ interface ReceiptItem {
 }
 
 const conditionOptions = [
-  { value: 'Good', label: 'İyi' },
-  { value: 'Damaged', label: 'Hasarlı' },
+  { value: 'Good', label: 'Iyi' },
+  { value: 'Damaged', label: 'Hasarli' },
   { value: 'Defective', label: 'Kusurlu' },
-  { value: 'Expired', label: 'Vadesi Geçmiş' },
-  { value: 'Other', label: 'Diğer' },
+  { value: 'Expired', label: 'Vadesi Gecmis' },
+  { value: 'Other', label: 'Diger' },
 ];
 
 export default function EditGoodsReceiptPage() {
@@ -110,7 +102,7 @@ export default function EditGoodsReceiptPage() {
 
   if (receiptLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -118,26 +110,36 @@ export default function EditGoodsReceiptPage() {
 
   if (!receipt) {
     return (
-      <div className="p-8">
-        <Empty description="Mal alım belgesi bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/purchase/goods-receipts')}>
-            Mal Alım Belgelerine Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <InboxIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Mal alim belgesi bulunamadi</h2>
+        <p className="text-sm text-slate-500 mb-4">Bu belge silinmis veya erisim yetkiniz yok olabilir.</p>
+        <button
+          onClick={() => router.push('/purchase/goods-receipts')}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Mal Alim Belgelerine Don
+        </button>
       </div>
     );
   }
 
   if (receipt.status !== 'Draft') {
     return (
-      <div className="p-8">
-        <Empty description="Bu belge düzenlenemez. Sadece taslak belgeler düzenlenebilir." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/purchase/goods-receipts/${receiptId}`)}>
-            Belgeye Dön
-          </Button>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+          <InboxIcon className="w-8 h-8 text-slate-400" />
         </div>
+        <h2 className="text-lg font-medium text-slate-900 mb-2">Bu belge duzenlenemez</h2>
+        <p className="text-sm text-slate-500 mb-4">Sadece taslak belgeler duzenlenebilir.</p>
+        <button
+          onClick={() => router.push(`/purchase/goods-receipts/${receiptId}`)}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          Belgeye Don
+        </button>
       </div>
     );
   }
@@ -210,12 +212,12 @@ export default function EditGoodsReceiptPage() {
 
   const itemColumns = [
     {
-      title: 'Ürün',
+      title: 'Urun',
       key: 'product',
       width: 250,
       render: (record: ReceiptItem) => (
         <Select
-          placeholder="Ürün seçin"
+          placeholder="Urun secin"
           showSearch
           optionFilterProp="children"
           value={record.productId}
@@ -237,7 +239,7 @@ export default function EditGoodsReceiptPage() {
       width: 80,
     },
     {
-      title: 'Sipariş Miktarı',
+      title: 'Siparis Miktari',
       key: 'orderedQuantity',
       width: 120,
       render: (record: ReceiptItem) => (
@@ -250,7 +252,7 @@ export default function EditGoodsReceiptPage() {
       ),
     },
     {
-      title: 'Alınan Miktar',
+      title: 'Alinan Miktar',
       key: 'receivedQuantity',
       width: 120,
       render: (record: ReceiptItem) => (
@@ -295,76 +297,68 @@ export default function EditGoodsReceiptPage() {
       key: 'actions',
       width: 50,
       render: (record: ReceiptItem) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
+        <button
           onClick={() => removeItem(record.key)}
-        />
+          className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-slate-50">
       {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-50 px-8 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <InboxIcon className="w-4 h-4" style={{ fontSize: 24 }} />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 m-0">
-                  Mal Alım Belgesi Düzenle
-                </h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {receipt.receiptNumber}
-                </p>
+                <ArrowLeftIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center">
+                  <InboxIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    Mal Alim Belgesi Duzenle
+                  </h1>
+                  <p className="text-sm text-slate-500">
+                    {receipt.receiptNumber}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<XMarkIcon className="w-4 h-4" />}
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              İptal
-            </Button>
-            <Button
-              type="primary"
-              icon={<CheckIcon className="w-4 h-4" />}
-              onClick={() => form.submit()}
-              loading={isLoading}
-              className="px-6"
-            >
-              Kaydet
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                Iptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <Form
           form={form}
           layout="vertical"
@@ -374,51 +368,55 @@ export default function EditGoodsReceiptPage() {
             {/* Left Column */}
             <Col xs={24} lg={16}>
               {/* Basic Info - Read Only */}
-              <Card title="Temel Bilgiler" className="mb-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Temel Bilgiler</h3>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <Form.Item label="Tedarikçi">
-                      <Input value={receipt.supplierName} disabled />
+                    <Form.Item label={<span className="text-slate-600">Tedarikci</span>}>
+                      <Input value={receipt.supplierName} disabled className="bg-slate-50" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Form.Item label="Sipariş No">
-                      <Input value={receipt.purchaseOrderNumber || '-'} disabled />
+                    <Form.Item label={<span className="text-slate-600">Siparis No</span>}>
+                      <Input value={receipt.purchaseOrderNumber || '-'} disabled className="bg-slate-50" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={8}>
-                    <Form.Item label="Belge Tarihi">
+                    <Form.Item label={<span className="text-slate-600">Belge Tarihi</span>}>
                       <DatePicker
                         value={dayjs(receipt.receiptDate)}
                         disabled
-                        className="w-full"
+                        className="w-full bg-slate-50"
                         format="DD.MM.YYYY"
                       />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={8}>
-                    <Form.Item label="Belge Tipi">
-                      <Input value={receipt.type} disabled />
+                    <Form.Item label={<span className="text-slate-600">Belge Tipi</span>}>
+                      <Input value={receipt.type} disabled className="bg-slate-50" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={8}>
-                    <Form.Item label="Depo">
-                      <Input value={receipt.warehouseName || '-'} disabled />
+                    <Form.Item label={<span className="text-slate-600">Depo</span>}>
+                      <Input value={receipt.warehouseName || '-'} disabled className="bg-slate-50" />
                     </Form.Item>
                   </Col>
                 </Row>
-              </Card>
+              </div>
 
               {/* Items */}
-              <Card
-                title="Alınan Kalemler"
-                className="mb-6"
-                extra={
-                  <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mb-6">
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-slate-900">Alinan Kalemler</h3>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                  >
+                    <PlusIcon className="w-4 h-4" />
                     Kalem Ekle
-                  </Button>
-                }
-              >
+                  </button>
+                </div>
                 <Table
                   dataSource={items}
                   columns={itemColumns}
@@ -426,51 +424,55 @@ export default function EditGoodsReceiptPage() {
                   pagination={false}
                   size="small"
                   scroll={{ x: 900 }}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-500 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs"
                 />
-              </Card>
+              </div>
 
               {/* Notes */}
-              <Card title="Notlar" className="mb-6">
-                <Form.Item name="notes" label="Genel Notlar">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Notlar</h3>
+                <Form.Item name="notes" label={<span className="text-slate-600">Genel Notlar</span>}>
                   <TextArea rows={3} placeholder="Genel notlar..." />
                 </Form.Item>
-                <Form.Item name="internalNotes" label="Dahili Notlar">
-                  <TextArea rows={2} placeholder="Dahili notlar (müşteriye gösterilmez)..." />
+                <Form.Item name="internalNotes" label={<span className="text-slate-600">Dahili Notlar</span>}>
+                  <TextArea rows={2} placeholder="Dahili notlar (musteriye gosterilmez)..." />
                 </Form.Item>
-              </Card>
+              </div>
             </Col>
 
             {/* Right Column */}
             <Col xs={24} lg={8}>
               {/* Delivery Info */}
-              <Card title="Teslimat Bilgileri" className="mb-6">
-                <Form.Item name="deliveryNoteNumber" label="İrsaliye No">
-                  <Input placeholder="İrsaliye numarası" />
+              <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Teslimat Bilgileri</h3>
+                <Form.Item name="deliveryNoteNumber" label={<span className="text-slate-600">Irsaliye No</span>}>
+                  <Input placeholder="Irsaliye numarasi" />
                 </Form.Item>
-                <Form.Item name="deliveryDate" label="Teslimat Tarihi">
+                <Form.Item name="deliveryDate" label={<span className="text-slate-600">Teslimat Tarihi</span>}>
                   <DatePicker className="w-full" format="DD.MM.YYYY" />
                 </Form.Item>
-                <Divider />
-                <Form.Item name="carrierName" label="Taşıyıcı">
-                  <Input placeholder="Kargo/taşıyıcı firma" />
+                <Divider className="my-4" />
+                <Form.Item name="carrierName" label={<span className="text-slate-600">Tasiyici</span>}>
+                  <Input placeholder="Kargo/tasiyici firma" />
                 </Form.Item>
-                <Form.Item name="driverName" label="Şoför">
-                  <Input placeholder="Şoför adı" />
+                <Form.Item name="driverName" label={<span className="text-slate-600">Sofor</span>}>
+                  <Input placeholder="Sofor adi" />
                 </Form.Item>
-                <Form.Item name="vehiclePlate" label="Araç Plakası">
+                <Form.Item name="vehiclePlate" label={<span className="text-slate-600">Arac Plakasi</span>}>
                   <Input placeholder="Plaka" />
                 </Form.Item>
-              </Card>
+              </div>
 
               {/* Package Info */}
-              <Card title="Paket Bilgileri" className="mb-6">
-                <Form.Item name="totalPackages" label="Toplam Paket">
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-slate-900 mb-4">Paket Bilgileri</h3>
+                <Form.Item name="totalPackages" label={<span className="text-slate-600">Toplam Paket</span>}>
                   <InputNumber min={0} className="w-full" placeholder="0" />
                 </Form.Item>
-                <Form.Item name="totalWeight" label="Toplam Ağırlık (kg)">
+                <Form.Item name="totalWeight" label={<span className="text-slate-600">Toplam Agirlik (kg)</span>}>
                   <InputNumber min={0} step={0.1} className="w-full" placeholder="0.00" />
                 </Form.Item>
-              </Card>
+              </div>
             </Col>
           </Row>
         </Form>

@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import { Table, Tag, Dropdown, Button, Avatar, Space } from 'antd';
 import type { TableColumnsType } from 'antd';
 import {
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ShopOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  BuildingStorefrontIcon,
+  PhoneIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import type { Customer } from '@/lib/api/services/crm.service';
 import { formatCurrency } from '@/lib/crm/formatters';
 import { CRM_STATUS_LABELS } from '@/lib/crm/constants';
@@ -60,7 +60,7 @@ export function CustomersTable({
         <div className="flex items-center gap-3">
           <Avatar
             size={40}
-            icon={<ShopOutlined />}
+            icon={<BuildingStorefrontIcon className="w-5 h-5" />}
             className={record.isActive ? 'bg-blue-500' : 'bg-gray-400'}
           />
           <div className="flex-1 min-w-0">
@@ -121,7 +121,7 @@ export function CustomersTable({
       width: 200,
       render: (city, record) => (
         <div className="flex items-center gap-1 text-gray-600">
-          <EnvironmentOutlined className="text-gray-400" />
+          <MapPinIcon className="w-4 h-4 text-gray-400" />
           <span className="truncate">
             {city || 'N/A'}, {record.country || 'N/A'}
           </span>
@@ -135,7 +135,7 @@ export function CustomersTable({
       width: 150,
       render: (phone) => (
         <div className="flex items-center gap-1 text-gray-600">
-          <PhoneOutlined className="text-gray-400" />
+          <PhoneIcon className="w-4 h-4 text-gray-400" />
           <span>{phone || 'N/A'}</span>
         </div>
       ),
@@ -152,13 +152,13 @@ export function CustomersTable({
               {
                 key: 'view',
                 label: 'Detayları Gör',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => onView(record.id),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => onEdit(record),
               },
               {
@@ -167,7 +167,7 @@ export function CustomersTable({
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
               },
             ],
@@ -176,7 +176,7 @@ export function CustomersTable({
         >
           <Button
             type="text"
-            icon={<MoreOutlined />}
+            icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
             onClick={(e) => e.stopPropagation()}
           />
         </Dropdown>

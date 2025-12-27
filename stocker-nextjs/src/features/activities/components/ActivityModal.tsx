@@ -4,40 +4,36 @@ import React, { useState } from 'react';
 import { Drawer, Form, Input, Select, DatePicker, Row, Col, Card, Space, Alert, Steps, Button, Spin, Tag } from 'antd';
 import { showError, showApiError } from '@/lib/utils/notifications';
 import {
-  PhoneOutlined,
-  MailOutlined,
-  TeamOutlined,
-  FileTextOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  TrophyOutlined,
-  CheckCircleOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  ShopOutlined,
-  WhatsAppOutlined,
-  MessageOutlined,
-  VideoCameraOutlined,
-  BookOutlined,
-  ToolOutlined,
-  GlobalOutlined,
-  SyncOutlined,
-  CoffeeOutlined,
-  HomeOutlined,
-  EnvironmentOutlined,
-  DollarOutlined,
-  PhoneTwoTone,
-  QuestionCircleOutlined,
-  ExclamationCircleOutlined,
-  WarningOutlined,
-  StarOutlined,
-  FireOutlined,
-  CloseCircleOutlined,
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  MinusOutlined,
-} from '@ant-design/icons';
+  PhoneIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  ClockIcon,
+  UserIcon,
+  TrophyIcon,
+  CheckCircleIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  BuildingStorefrontIcon,
+  ChatBubbleLeftRightIcon,
+  VideoCameraIcon,
+  BookOpenIcon,
+  WrenchIcon,
+  GlobeAltIcon,
+  ArrowPathIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  QuestionMarkCircleIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  StarIcon,
+  FireIcon,
+  XCircleIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  MinusIcon,
+} from '@heroicons/react/24/outline';
 import type { Activity } from '@/lib/api/services/crm.service';
 import { useCustomers, useLeads, useDeals } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
@@ -46,61 +42,61 @@ const { TextArea } = Input;
 
 // Activity Type enum values (1-30) with Turkish labels
 const activityTypes = [
-  { value: 1, label: 'Telefon Görüşmesi', icon: <PhoneOutlined />, color: 'blue' },
-  { value: 2, label: 'E-posta', icon: <MailOutlined />, color: 'cyan' },
-  { value: 3, label: 'Toplantı', icon: <TeamOutlined />, color: 'green' },
-  { value: 4, label: 'Görev', icon: <FileTextOutlined />, color: 'orange' },
-  { value: 5, label: 'Not', icon: <FileTextOutlined />, color: 'default' },
-  { value: 6, label: 'Etkinlik', icon: <CalendarOutlined />, color: 'purple' },
-  { value: 7, label: 'Demo', icon: <ToolOutlined />, color: 'geekblue' },
-  { value: 8, label: 'Sunum', icon: <BookOutlined />, color: 'volcano' },
-  { value: 9, label: 'Ziyaret', icon: <EnvironmentOutlined />, color: 'magenta' },
-  { value: 10, label: 'Diğer', icon: <QuestionCircleOutlined />, color: 'default' },
-  { value: 11, label: 'WhatsApp Mesajı', icon: <WhatsAppOutlined />, color: 'green' },
-  { value: 12, label: 'SMS', icon: <MessageOutlined />, color: 'blue' },
-  { value: 13, label: 'Video Görüşme', icon: <VideoCameraOutlined />, color: 'red' },
-  { value: 14, label: 'Eğitim', icon: <BookOutlined />, color: 'gold' },
-  { value: 15, label: 'Atölye Çalışması', icon: <ToolOutlined />, color: 'lime' },
-  { value: 16, label: 'Webinar', icon: <GlobalOutlined />, color: 'cyan' },
-  { value: 17, label: 'Takip', icon: <SyncOutlined />, color: 'orange' },
-  { value: 18, label: 'İş Yemeği', icon: <CoffeeOutlined />, color: 'gold' },
-  { value: 19, label: 'Akşam Yemeği', icon: <CoffeeOutlined />, color: 'volcano' },
-  { value: 20, label: 'Konferans', icon: <TeamOutlined />, color: 'purple' },
-  { value: 21, label: 'Saha Ziyareti', icon: <EnvironmentOutlined />, color: 'blue' },
-  { value: 22, label: 'Ürün Demosu', icon: <ToolOutlined />, color: 'geekblue' },
-  { value: 23, label: 'Müzakere', icon: <DollarOutlined />, color: 'gold' },
-  { value: 24, label: 'Sözleşme İmzalama', icon: <FileTextOutlined />, color: 'green' },
-  { value: 25, label: 'Destek Talebi', icon: <QuestionCircleOutlined />, color: 'orange' },
-  { value: 26, label: 'Şikayet İşleme', icon: <WarningOutlined />, color: 'red' },
-  { value: 27, label: 'Anket', icon: <FileTextOutlined />, color: 'cyan' },
-  { value: 28, label: 'İnceleme/Gözden Geçirme', icon: <CheckCircleOutlined />, color: 'purple' },
-  { value: 29, label: 'Planlama', icon: <CalendarOutlined />, color: 'blue' },
-  { value: 30, label: 'Raporlama', icon: <FileTextOutlined />, color: 'magenta' },
+  { value: 1, label: 'Telefon Görüşmesi', icon: <PhoneIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 2, label: 'E-posta', icon: <EnvelopeIcon className="w-4 h-4" />, color: 'cyan' },
+  { value: 3, label: 'Toplantı', icon: <UserGroupIcon className="w-4 h-4" />, color: 'green' },
+  { value: 4, label: 'Görev', icon: <DocumentTextIcon className="w-4 h-4" />, color: 'orange' },
+  { value: 5, label: 'Not', icon: <DocumentTextIcon className="w-4 h-4" />, color: 'default' },
+  { value: 6, label: 'Etkinlik', icon: <CalendarIcon className="w-4 h-4" />, color: 'purple' },
+  { value: 7, label: 'Demo', icon: <WrenchIcon className="w-4 h-4" />, color: 'geekblue' },
+  { value: 8, label: 'Sunum', icon: <BookOpenIcon className="w-4 h-4" />, color: 'volcano' },
+  { value: 9, label: 'Ziyaret', icon: <MapPinIcon className="w-4 h-4" />, color: 'magenta' },
+  { value: 10, label: 'Diğer', icon: <QuestionMarkCircleIcon className="w-4 h-4" />, color: 'default' },
+  { value: 11, label: 'WhatsApp Mesajı', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" />, color: 'green' },
+  { value: 12, label: 'SMS', icon: <ChatBubbleLeftRightIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 13, label: 'Video Görüşme', icon: <VideoCameraIcon className="w-4 h-4" />, color: 'red' },
+  { value: 14, label: 'Eğitim', icon: <BookOpenIcon className="w-4 h-4" />, color: 'gold' },
+  { value: 15, label: 'Atölye Çalışması', icon: <WrenchIcon className="w-4 h-4" />, color: 'lime' },
+  { value: 16, label: 'Webinar', icon: <GlobeAltIcon className="w-4 h-4" />, color: 'cyan' },
+  { value: 17, label: 'Takip', icon: <ArrowPathIcon className="w-4 h-4" />, color: 'orange' },
+  { value: 18, label: 'İş Yemeği', icon: <BuildingStorefrontIcon className="w-4 h-4" />, color: 'gold' },
+  { value: 19, label: 'Akşam Yemeği', icon: <BuildingStorefrontIcon className="w-4 h-4" />, color: 'volcano' },
+  { value: 20, label: 'Konferans', icon: <UserGroupIcon className="w-4 h-4" />, color: 'purple' },
+  { value: 21, label: 'Saha Ziyareti', icon: <MapPinIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 22, label: 'Ürün Demosu', icon: <WrenchIcon className="w-4 h-4" />, color: 'geekblue' },
+  { value: 23, label: 'Müzakere', icon: <CurrencyDollarIcon className="w-4 h-4" />, color: 'gold' },
+  { value: 24, label: 'Sözleşme İmzalama', icon: <DocumentTextIcon className="w-4 h-4" />, color: 'green' },
+  { value: 25, label: 'Destek Talebi', icon: <QuestionMarkCircleIcon className="w-4 h-4" />, color: 'orange' },
+  { value: 26, label: 'Şikayet İşleme', icon: <ExclamationTriangleIcon className="w-4 h-4" />, color: 'red' },
+  { value: 27, label: 'Anket', icon: <DocumentTextIcon className="w-4 h-4" />, color: 'cyan' },
+  { value: 28, label: 'İnceleme/Gözden Geçirme', icon: <CheckCircleIcon className="w-4 h-4" />, color: 'purple' },
+  { value: 29, label: 'Planlama', icon: <CalendarIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 30, label: 'Raporlama', icon: <DocumentTextIcon className="w-4 h-4" />, color: 'magenta' },
 ];
 
 // Activity Status enum values (1-12) with Turkish labels
 const activityStatuses = [
-  { value: 1, label: 'Başlamadı', icon: <ClockCircleOutlined />, color: 'default' },
-  { value: 2, label: 'Devam Ediyor', icon: <SyncOutlined spin />, color: 'processing' },
-  { value: 3, label: 'Tamamlandı', icon: <CheckCircleOutlined />, color: 'success' },
-  { value: 4, label: 'İptal Edildi', icon: <CloseCircleOutlined />, color: 'error' },
-  { value: 5, label: 'Ertelendi', icon: <ClockCircleOutlined />, color: 'warning' },
-  { value: 6, label: 'Birini Bekliyor', icon: <UserOutlined />, color: 'default' },
-  { value: 7, label: 'Planlandı', icon: <CalendarOutlined />, color: 'blue' },
-  { value: 8, label: 'Yeniden Planlandı', icon: <CalendarOutlined />, color: 'orange' },
-  { value: 9, label: 'Katılım Olmadı', icon: <WarningOutlined />, color: 'warning' },
-  { value: 10, label: 'Kısmen Tamamlandı', icon: <CheckCircleOutlined />, color: 'processing' },
-  { value: 11, label: 'Beklemede', icon: <ClockCircleOutlined />, color: 'default' },
-  { value: 12, label: 'Takip Gerekiyor', icon: <SyncOutlined />, color: 'warning' },
+  { value: 1, label: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" />, color: 'default' },
+  { value: 2, label: 'Devam Ediyor', icon: <ArrowPathIcon className="w-4 h-4 animate-spin" />, color: 'processing' },
+  { value: 3, label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" />, color: 'success' },
+  { value: 4, label: 'İptal Edildi', icon: <XCircleIcon className="w-4 h-4" />, color: 'error' },
+  { value: 5, label: 'Ertelendi', icon: <ClockIcon className="w-4 h-4" />, color: 'warning' },
+  { value: 6, label: 'Birini Bekliyor', icon: <UserIcon className="w-4 h-4" />, color: 'default' },
+  { value: 7, label: 'Planlandı', icon: <CalendarIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 8, label: 'Yeniden Planlandı', icon: <CalendarIcon className="w-4 h-4" />, color: 'orange' },
+  { value: 9, label: 'Katılım Olmadı', icon: <ExclamationTriangleIcon className="w-4 h-4" />, color: 'warning' },
+  { value: 10, label: 'Kısmen Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" />, color: 'processing' },
+  { value: 11, label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" />, color: 'default' },
+  { value: 12, label: 'Takip Gerekiyor', icon: <ArrowPathIcon className="w-4 h-4" />, color: 'warning' },
 ];
 
 // Activity Priority enum values (1-5) with Turkish labels
 const activityPriorities = [
-  { value: 1, label: 'Düşük', icon: <ArrowDownOutlined />, color: 'default' },
-  { value: 2, label: 'Normal', icon: <MinusOutlined />, color: 'blue' },
-  { value: 3, label: 'Yüksek', icon: <ArrowUpOutlined />, color: 'orange' },
-  { value: 4, label: 'Acil', icon: <ExclamationCircleOutlined />, color: 'red' },
-  { value: 5, label: 'Kritik', icon: <FireOutlined />, color: 'error' },
+  { value: 1, label: 'Düşük', icon: <ArrowDownIcon className="w-4 h-4" />, color: 'default' },
+  { value: 2, label: 'Normal', icon: <MinusIcon className="w-4 h-4" />, color: 'blue' },
+  { value: 3, label: 'Yüksek', icon: <ArrowUpIcon className="w-4 h-4" />, color: 'orange' },
+  { value: 4, label: 'Acil', icon: <ExclamationCircleIcon className="w-4 h-4" />, color: 'red' },
+  { value: 5, label: 'Kritik', icon: <FireIcon className="w-4 h-4" />, color: 'error' },
 ];
 
 interface ActivityModalProps {
@@ -157,19 +153,19 @@ export function ActivityModal({
   const steps = [
     {
       title: 'Temel Bilgiler',
-      icon: <FileTextOutlined />,
+      icon: <DocumentTextIcon className="w-4 h-4" />,
     },
     {
       title: 'Tarih ve Öncelik',
-      icon: <CalendarOutlined />,
+      icon: <CalendarIcon className="w-4 h-4" />,
     },
     {
       title: 'İlgili Kayıtlar',
-      icon: <UserOutlined />,
+      icon: <UserIcon className="w-4 h-4" />,
     },
     {
       title: 'Detaylar & Tamamla',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
     },
   ];
 
@@ -287,7 +283,7 @@ export function ActivityModal({
           <Button
             onClick={handlePrev}
             disabled={currentStep === 0}
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeftIcon className="w-4 h-4" />}
             size="large"
           >
             Geri
@@ -303,7 +299,7 @@ export function ActivityModal({
               className="inline-flex items-center gap-2 h-10 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium"
             >
               İleri
-              <ArrowRightOutlined />
+              <ArrowRightIcon className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -311,7 +307,7 @@ export function ActivityModal({
               disabled={loading}
               className="inline-flex items-center gap-2 h-10 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
             >
-              <CheckCircleOutlined />
+              <CheckCircleIcon className="w-4 h-4" />
               {isEditMode ? 'Güncelle' : 'Oluştur'}
             </button>
           )}
@@ -329,7 +325,7 @@ export function ActivityModal({
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-slate-100 rounded-lg">
-                <FileTextOutlined className="text-slate-600 text-lg" />
+                <DocumentTextIcon className="w-5 h-5 text-slate-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Temel Bilgiler</h3>
             </div>
@@ -343,7 +339,7 @@ export function ActivityModal({
                 ]}
               >
                 <Input
-                  prefix={<FileTextOutlined className="text-gray-400" />}
+                  prefix={<DocumentTextIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="Örn: Müşteri Görüşmesi - Ürün Demo"
                   className="rounded-lg"
                   size="large"
@@ -422,7 +418,7 @@ export function ActivityModal({
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-slate-100 rounded-lg">
-                <CalendarOutlined className="text-slate-600 text-lg" />
+                <CalendarIcon className="w-5 h-5 text-slate-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Tarih, Saat ve Öncelik</h3>
             </div>
@@ -490,7 +486,7 @@ export function ActivityModal({
                     name="location"
                   >
                     <Input
-                      prefix={<EnvironmentOutlined className="text-gray-400" />}
+                      prefix={<MapPinIcon className="w-4 h-4 text-gray-400" />}
                       placeholder="Örn: Merkez Ofis, Toplantı Odası A"
                       className="rounded-lg"
                       size="large"
@@ -515,7 +511,7 @@ export function ActivityModal({
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-slate-100 rounded-lg">
-                <UserOutlined className="text-slate-600 text-lg" />
+                <UserIcon className="w-5 h-5 text-slate-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">İlgili Kayıtlar</h3>
             </div>
@@ -541,7 +537,7 @@ export function ActivityModal({
                           value: customer.id,
                           label: customer.companyName,
                         })) || []}
-                        suffixIcon={<ShopOutlined className="text-gray-400" />}
+                        suffixIcon={<BuildingStorefrontIcon className="w-4 h-4 text-gray-400" />}
                       />
                     </Form.Item>
                   </Col>
@@ -564,7 +560,7 @@ export function ActivityModal({
                           value: lead.id,
                           label: `${lead.firstName} ${lead.lastName} - ${lead.company || 'N/A'}`,
                         })) || []}
-                        suffixIcon={<UserOutlined className="text-gray-400" />}
+                        suffixIcon={<UserIcon className="w-4 h-4 text-gray-400" />}
                       />
                     </Form.Item>
                   </Col>
@@ -589,7 +585,7 @@ export function ActivityModal({
                           value: deal.id,
                           label: `${deal.title} - ₺${deal.value?.toLocaleString('tr-TR') || '0'}`,
                         })) || []}
-                        suffixIcon={<TrophyOutlined className="text-gray-400" />}
+                        suffixIcon={<TrophyIcon className="w-4 h-4 text-gray-400" />}
                       />
                     </Form.Item>
                   </Col>
@@ -602,7 +598,7 @@ export function ActivityModal({
                       <Input
                         placeholder="İletişim veya Fırsat ID"
                         className="rounded-lg"
-                        prefix={<UserOutlined className="text-gray-400" />}
+                        prefix={<UserIcon className="w-4 h-4 text-gray-400" />}
                         size="large"
                         disabled
                       />
@@ -626,7 +622,7 @@ export function ActivityModal({
           <div className="min-h-[400px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-slate-100 rounded-lg">
-                <CheckCircleOutlined className="text-slate-600 text-lg" />
+                <CheckCircleIcon className="w-5 h-5 text-slate-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Detaylar ve Notlar</h3>
             </div>
@@ -667,7 +663,7 @@ export function ActivityModal({
 
               <div className="bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-4 mt-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircleOutlined className="text-slate-600 text-xl mt-0.5" />
+                  <CheckCircleIcon className="w-5 h-5 text-slate-600 mt-0.5" />
                   <div>
                     <div className="font-semibold text-slate-800 mb-1">Tamamlamaya Hazır</div>
                     <div className="text-sm text-slate-600">

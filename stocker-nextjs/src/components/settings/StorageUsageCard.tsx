@@ -3,14 +3,14 @@
 import React from 'react';
 import { Card, Progress, Skeleton, Typography, Space, Tooltip, Button, Tag } from 'antd';
 import {
-  CloudOutlined,
-  DatabaseOutlined,
-  FileOutlined,
-  InfoCircleOutlined,
-  ReloadOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  CloudIcon,
+  CircleStackIcon,
+  DocumentIcon,
+  InformationCircleIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { useStorageUsage, formatBytes, getStorageStatus } from '@/lib/api/hooks/useStorage';
 
@@ -40,7 +40,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
       <Card className={`shadow-sm ${className}`}>
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="p-4 bg-orange-50 rounded-full mb-4">
-            <WarningOutlined className="text-3xl text-orange-500" />
+            <ExclamationTriangleIcon className="w-8 h-8 text-orange-500" />
           </div>
           <Title level={5} className="!mb-2 !text-gray-700">
             {isNotFound ? 'Depolama Alanı Henüz Oluşturulmamış' : 'Depolama Bilgisi Alınamadı'}
@@ -52,7 +52,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
             }
           </Text>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />}
             onClick={() => refetch()}
             loading={isFetching}
           >
@@ -84,7 +84,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-lg">
-                <CloudOutlined className="text-xl text-blue-600" />
+                <CloudIcon className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <Text className="font-semibold text-gray-800">Depolama Kullanımı</Text>
@@ -93,7 +93,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
             </div>
             <div className="flex items-center gap-2">
               <Tag
-                icon={status === 'success' ? <CheckCircleOutlined /> : <WarningOutlined />}
+                icon={status === 'success' ? <CheckCircleIcon className="w-4 h-4" /> : <ExclamationTriangleIcon className="w-4 h-4" />}
                 color={status}
               >
                 {label}
@@ -102,7 +102,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
                 <Button
                   type="text"
                   size="small"
-                  icon={<ReloadOutlined spin={isFetching} />}
+                  icon={<ArrowPathIcon className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />}
                   onClick={() => refetch()}
                 />
               </Tooltip>
@@ -144,7 +144,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
             <div className="text-center">
               <div className="p-2 bg-green-50 rounded-lg inline-block mb-2">
-                <DatabaseOutlined className="text-lg text-green-600" />
+                <CircleStackIcon className="w-5 h-5 text-green-600" />
               </div>
               <div className="text-sm font-semibold text-gray-700">{quotaFormatted}</div>
               <div className="text-xs text-gray-500">Toplam Kota</div>
@@ -152,7 +152,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
 
             <div className="text-center">
               <div className="p-2 bg-blue-50 rounded-lg inline-block mb-2">
-                <CloudOutlined className="text-lg text-blue-600" />
+                <CloudIcon className="w-5 h-5 text-blue-600" />
               </div>
               <div className="text-sm font-semibold text-gray-700">{usedFormatted}</div>
               <div className="text-xs text-gray-500">Kullanılan</div>
@@ -160,7 +160,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
 
             <div className="text-center">
               <div className="p-2 bg-purple-50 rounded-lg inline-block mb-2">
-                <FileOutlined className="text-lg text-purple-600" />
+                <DocumentIcon className="w-5 h-5 text-purple-600" />
               </div>
               <div className="text-sm font-semibold text-gray-700">{data.objectCount.toLocaleString('tr-TR')}</div>
               <div className="text-xs text-gray-500">Dosya Sayısı</div>
@@ -171,7 +171,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
         {/* Available Space Info */}
         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2">
-            <InfoCircleOutlined className="text-gray-400" />
+            <InformationCircleIcon className="w-4 h-4 text-gray-400" />
             <Text className="text-sm text-gray-600">
               <span className="font-medium" style={{ color }}>{availableFormatted}</span> kullanılabilir alan kaldı
             </Text>
@@ -182,7 +182,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
         {data.usagePercentage >= 90 && (
           <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
             <div className="flex items-start gap-2">
-              <WarningOutlined className="text-red-500 mt-0.5" />
+              <ExclamationTriangleIcon className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
                 <Text className="text-sm text-red-700 font-medium">
                   Depolama alanınız dolmak üzere!
@@ -198,7 +198,7 @@ export default function StorageUsageCard({ showDetails = true, className = '' }:
         {data.usagePercentage >= 70 && data.usagePercentage < 90 && (
           <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
             <div className="flex items-start gap-2">
-              <WarningOutlined className="text-yellow-600 mt-0.5" />
+              <ExclamationTriangleIcon className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div>
                 <Text className="text-sm text-yellow-700 font-medium">
                   Depolama alanınız azalıyor

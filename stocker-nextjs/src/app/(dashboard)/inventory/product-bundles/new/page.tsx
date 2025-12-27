@@ -628,7 +628,7 @@ export default function NewProductBundlePage() {
 
                 {items.length === 0 ? (
                   <div className="p-12 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
-                    <GiftIcon className="w-4 h-4 text-5xl text-gray-300 mb-3" />
+                    <GiftIcon className="w-12 h-12 text-gray-300 mb-3" />
                     <div className="text-gray-500 mb-3 font-medium">Henüz ürün eklenmedi</div>
                     <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
                       İlk Ürünü Ekle

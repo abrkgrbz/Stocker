@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, DatePicker, Select, Row, Col, Typography, Switch } from 'antd';
-import { NotificationOutlined } from '@ant-design/icons';
+import { BellIcon } from '@heroicons/react/24/outline';
 import { useDepartments, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -62,7 +62,7 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
                 justifyContent: 'center',
               }}
             >
-              <NotificationOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <BellIcon className="w-16 h-16 text-white/90" />
               <p className="mt-4 text-lg font-medium text-white/90">Duyuru</p>
               <p className="text-sm text-white/60">Çalışanlara duyuru yayınlayın</p>
             </div>

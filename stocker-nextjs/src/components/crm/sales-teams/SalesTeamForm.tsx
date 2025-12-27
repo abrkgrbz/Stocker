@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, InputNumber, Switch } from 'antd';
-import { TeamOutlined, UserOutlined, MailOutlined } from '@ant-design/icons';
+import { UserGroupIcon, UserIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import type { SalesTeamDto } from '@/lib/api/services/crm.types';
 import { useTerritories } from '@/lib/api/hooks/useCRM';
 
@@ -70,7 +70,7 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
             {/* Team Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <TeamOutlined className="text-xl text-slate-500" />
+                <UserGroupIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -152,7 +152,7 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
                 <Form.Item name="teamEmail" className="mb-0">
                   <Input
                     placeholder="satis@firma.com"
-                    prefix={<MailOutlined className="text-slate-400" />}
+                    prefix={<EnvelopeIcon className="w-4 h-4 text-slate-400" />}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>
@@ -171,7 +171,7 @@ export default function SalesTeamForm({ form, initialValues, onFinish, loading }
                 <Form.Item name="teamLeaderName" className="mb-0">
                   <Input
                     placeholder="—"
-                    prefix={<UserOutlined className="text-slate-400" />}
+                    prefix={<UserIcon className="w-4 h-4 text-slate-400" />}
                     className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
                   />
                 </Form.Item>

@@ -4,18 +4,19 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from 'antd';
 import {
-  DashboardOutlined,
-  BarChartOutlined,
-  BellOutlined,
-  ShoppingCartOutlined,
-  CheckCircleFilled,
-} from '@ant-design/icons';
+  Squares2X2Icon,
+  ChartBarIcon,
+  BellIcon,
+  ShoppingCartIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 
 const features = [
   {
     id: 'dashboard',
     title: 'Akıllı Dashboard',
-    icon: <DashboardOutlined />,
+    icon: <Squares2X2Icon className="w-8 h-8" />,
     description: 'Tüm stok hareketlerinizi tek bir ekranda görüntüleyin',
     benefits: [
       'Gerçek zamanlı stok seviyeleri',
@@ -28,7 +29,7 @@ const features = [
   {
     id: 'analytics',
     title: 'Detaylı Analitik',
-    icon: <BarChartOutlined />,
+    icon: <ChartBarIcon className="w-8 h-8" />,
     description: 'Veriye dayalı kararlar alın, işletmenizi büyütün',
     benefits: [
       'Satış trendleri analizi',
@@ -41,7 +42,7 @@ const features = [
   {
     id: 'alerts',
     title: 'Akıllı Bildirimler',
-    icon: <BellOutlined />,
+    icon: <BellIcon className="w-8 h-8" />,
     description: 'Kritik durumlarda anında haberdar olun',
     benefits: [
       'Düşük stok uyarıları',
@@ -54,7 +55,7 @@ const features = [
   {
     id: 'orders',
     title: 'Sipariş Yönetimi',
-    icon: <ShoppingCartOutlined />,
+    icon: <ShoppingCartIcon className="w-8 h-8" />,
     description: 'Siparişlerinizi otomatik yönetin, zamandan tasarruf edin',
     benefits: [
       'Otomatik sipariş oluşturma',
@@ -175,7 +176,7 @@ export default function ProductDemo() {
                       transition={{ duration: 0.3, delay: index * 0.1 }}
                       className="flex items-center gap-3"
                     >
-                      <CheckCircleFilled className="text-green-400 text-lg" />
+                      <CheckCircleIconSolid className="w-5 h-5 text-green-400" />
                       <span className="text-gray-300">{benefit}</span>
                     </motion.div>
                   ))}

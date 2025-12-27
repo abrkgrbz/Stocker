@@ -2,7 +2,12 @@
 
 import React from 'react';
 import { Row, Col } from 'antd';
-import { ClockCircleOutlined, CalendarOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import {
+  ClockIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
 interface ActivitiesStatsProps {
@@ -24,7 +29,7 @@ export function ActivitiesStats({
     {
       title: 'Zamanlanmış',
       value: scheduled.toLocaleString('tr-TR'),
-      icon: ClockCircleOutlined,
+      icon: ClockIcon,
       gradient: 'from-blue-500 to-blue-600',
       bgGradient: 'from-blue-50 to-blue-100',
       subtitle: 'Planlanan aktivite',
@@ -32,7 +37,7 @@ export function ActivitiesStats({
     {
       title: 'Bugün',
       value: today.toLocaleString('tr-TR'),
-      icon: CalendarOutlined,
+      icon: CalendarIcon,
       gradient: 'from-cyan-500 to-cyan-600',
       bgGradient: 'from-cyan-50 to-cyan-100',
       subtitle: 'Bugünün ajandası',
@@ -40,7 +45,7 @@ export function ActivitiesStats({
     {
       title: 'Tamamlanan',
       value: completed.toLocaleString('tr-TR'),
-      icon: CheckCircleOutlined,
+      icon: CheckCircleIcon,
       gradient: 'from-green-500 to-green-600',
       bgGradient: 'from-green-50 to-green-100',
       subtitle: 'Başarıyla tamamlandı',
@@ -48,7 +53,7 @@ export function ActivitiesStats({
     {
       title: 'Gecikmiş',
       value: overdue.toLocaleString('tr-TR'),
-      icon: WarningOutlined,
+      icon: ExclamationTriangleIcon,
       gradient: 'from-red-500 to-red-600',
       bgGradient: 'from-red-50 to-red-100',
       subtitle: 'Dikkat gerektiren',
@@ -81,11 +86,11 @@ export function ActivitiesStats({
             >
               <div className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${stat.bgGradient} p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100`}>
                 <div className="absolute top-4 right-4 opacity-10">
-                  <Icon className="text-6xl" />
+                  <Icon className="w-16 h-16" />
                 </div>
                 <div className="relative z-10">
                   <div className={`inline-flex p-3 rounded-lg bg-gradient-to-br ${stat.gradient} mb-4 shadow-md`}>
-                    <Icon className="text-2xl text-white" />
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-sm font-medium text-gray-600 mb-1">
                     {stat.title}

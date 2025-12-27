@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, Select, Space, Badge } from 'antd';
 import LineChart from './LineChart';
 import PieChart from './PieChart';
-import { WarningOutlined } from '@ant-design/icons';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 type ChartType = 'levels' | 'distribution' | 'alerts';
 
@@ -121,7 +121,7 @@ export function InventoryChart({ className }: InventoryChartProps) {
           <span>Stok Yönetimi</span>
           {showWarning && (
             <Badge count={47} className="ml-2">
-              <WarningOutlined className="text-orange-500" />
+              <ExclamationTriangleIcon className="w-5 h-5 text-orange-500" />
             </Badge>
           )}
         </Space>

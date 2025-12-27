@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Space, Button, Dropdown, message } from 'antd';
-import { DeleteOutlined, TagOutlined, StarOutlined, SwapOutlined, CloseOutlined } from '@ant-design/icons';
+import { TrashIcon, TagIcon, StarIcon, ArrowsRightLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { MenuProps } from 'antd';
 
 interface BulkActionsToolbarProps {
@@ -49,7 +49,7 @@ const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
       <div className="flex items-center gap-4">
         <Button
           type="text"
-          icon={<CloseOutlined />}
+          icon={<XMarkIcon className="w-4 h-4" />}
           onClick={onClearSelection}
           className="text-gray-600 hover:text-gray-800"
         />
@@ -63,20 +63,20 @@ const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
           menu={{ items: statusMenuItems, onClick: handleStatusChange }}
           placement="bottomRight"
         >
-          <Button icon={<SwapOutlined />}>
+          <Button icon={<ArrowsRightLeftIcon className="w-4 h-4" />}>
             Durum Değiştir
           </Button>
         </Dropdown>
 
         <Button
-          icon={<StarOutlined />}
+          icon={<StarIcon className="w-4 h-4" />}
           onClick={onBulkScoreAssign}
         >
           Puan Ata
         </Button>
 
         <Button
-          icon={<TagOutlined />}
+          icon={<TagIcon className="w-4 h-4" />}
           onClick={onBulkTagAssign}
         >
           Etiketle
@@ -84,7 +84,7 @@ const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
 
         <Button
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={handleDelete}
         >
           Sil

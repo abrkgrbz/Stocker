@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, DatePicker } from 'antd';
-import { DollarOutlined } from '@ant-design/icons';
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import type { Deal } from '@/lib/api/services/crm.service';
 import { useCustomers, usePipelines } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
@@ -103,7 +103,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
             {/* Deal Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <DollarOutlined className="text-xl text-slate-500" />
+                <CurrencyDollarIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

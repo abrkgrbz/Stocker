@@ -3,12 +3,12 @@
 import React from 'react';
 import { Tree, Tag, Empty, Spin } from 'antd';
 import {
-  ApartmentOutlined,
-  TeamOutlined,
-  UserOutlined,
-  FolderOutlined,
-  FolderOpenOutlined,
-} from '@ant-design/icons';
+  BuildingOfficeIcon,
+  UserGroupIcon,
+  UserIcon,
+  FolderIcon,
+  FolderOpenIcon,
+} from '@heroicons/react/24/outline';
 import type { DepartmentDto } from '@/lib/api/services/hr.types';
 import type { DataNode } from 'antd/es/tree';
 
@@ -58,7 +58,7 @@ function departmentToTreeNode(dept: DepartmentDto): DataNode {
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: dept.isActive ? '#7c3aed15' : '#64748b15' }}
           >
-            <ApartmentOutlined style={{ color: dept.isActive ? '#7c3aed' : '#64748b' }} />
+            <BuildingOfficeIcon className="w-4 h-4" style={{ color: dept.isActive ? '#7c3aed' : '#64748b' }} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -78,12 +78,12 @@ function departmentToTreeNode(dept: DepartmentDto): DataNode {
         <div className="flex items-center gap-4 flex-shrink-0">
           {dept.managerName && (
             <div className="flex items-center gap-1 text-xs text-slate-500">
-              <UserOutlined className="text-slate-400" />
+              <UserIcon className="w-3 h-3 text-slate-400" />
               <span>{dept.managerName}</span>
             </div>
           )}
           <div className="flex items-center gap-1 text-xs">
-            <TeamOutlined className="text-blue-500" />
+            <UserGroupIcon className="w-3 h-3 text-blue-500" />
             <span className="font-medium text-blue-600">{dept.employeeCount || 0}</span>
           </div>
         </div>
@@ -147,9 +147,9 @@ export function DepartmentTree({
         switcherIcon={(props: any) => {
           if (props.isLeaf) return null;
           return props.expanded ? (
-            <FolderOpenOutlined className="text-slate-400" />
+            <FolderOpenIcon className="w-4 h-4 text-slate-400" />
           ) : (
-            <FolderOutlined className="text-slate-400" />
+            <FolderIcon className="w-4 h-4 text-slate-400" />
           );
         }}
         onSelect={handleSelect}

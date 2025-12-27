@@ -2,7 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Select, DatePicker, Input, Row, Col, Spin, Empty, Rate } from 'antd';
+import Link from 'next/link';
+import { Form, Select, DatePicker, Input, Rate, message, Spin } from 'antd';
+import { PageContainer } from '@/components/patterns';
 import {
   ArrowLeftIcon,
   TrophyIcon,
@@ -51,207 +53,225 @@ export default function EditPerformancePage() {
       };
 
       await updateReview.mutateAsync({ id, data });
+      message.success('Değerlendirme başarıyla güncellendi');
       router.push(`/hr/performance/${id}`);
     } catch (error) {
-      // Error handled by hook
+      message.error('Güncelleme sırasında bir hata oluştu');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
+      <PageContainer maxWidth="3xl">
+        <div className="flex items-center justify-center py-12">
+          <Spin />
+        </div>
+      </PageContainer>
     );
   }
 
   if (error || !review) {
     return (
-      <div className="p-6">
-        <Empty description="Değerlendirme bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/performance')}>Listeye Dön</Button>
+      <PageContainer maxWidth="3xl">
+        <div className="text-center py-12">
+          <p className="text-slate-500">Değerlendirme bulunamadı</p>
+          <Link href="/hr/performance" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Listeye Dön
+          </Link>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (review.status === 'Completed') {
     return (
-      <div className="p-6">
-        <Empty description="Bu değerlendirme düzenlenemez. Tamamlanmış değerlendirmeler düzenlenemez." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/hr/performance/${id}`)}>Detaya Dön</Button>
+      <PageContainer maxWidth="3xl">
+        <div className="text-center py-12">
+          <p className="text-slate-500">Bu değerlendirme düzenlenemez. Tamamlanmış değerlendirmeler düzenlenemez.</p>
+          <Link href={`/hr/performance/${id}`} className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Detaya Dön
+          </Link>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-10 px-6 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/hr/performance/${id}`)}
-            />
-            <div className="flex items-center gap-2">
-              <TrophyIcon className="w-4 h-4 text-lg text-gray-600" />
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900 m-0">Değerlendirme Düzenle</h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {review.employeeName || `Çalışan #${review.employeeId}`} - {review.reviewPeriod}
-                </p>
-              </div>
-            </div>
+    <PageContainer maxWidth="3xl">
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href={`/hr/performance/${id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Detaya Dön
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <TrophyIcon className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => router.push(`/hr/performance/${id}`)}>Vazgeç</Button>
-            <Button
-              type="primary"
-              onClick={() => form.submit()}
-              loading={updateReview.isPending}
-              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
-            >
-              Kaydet
-            </Button>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Değerlendirme Düzenle</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {review.employeeName || `Çalışan #${review.employeeId}`} - {review.reviewPeriod}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Form Content */}
-      <div className="max-w-7xl mx-auto p-6">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          {/* Basic Information */}
+      {/* Form Kartı */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="p-6"
+        >
+          {/* Değerlendirme Bilgileri */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Değerlendirme Bilgileri
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
-            </div>
-            <div className="bg-gray-50/50 rounded-xl p-6">
-              <Row gutter={16}>
-                <Col xs={24} sm={8}>
-                  <Form.Item
-                    name="employeeId"
-                    label="Çalışan"
-                    rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Çalışan seçin"
-                      showSearch
-                      optionFilterProp="children"
-                      variant="filled"
-                      options={employees.map((e) => ({
-                        value: e.id,
-                        label: e.fullName,
-                      }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={8}>
-                  <Form.Item
-                    name="reviewerId"
-                    label="Değerlendiren"
-                    rules={[{ required: true, message: 'Değerlendiren seçimi gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Değerlendiren seçin"
-                      showSearch
-                      optionFilterProp="children"
-                      variant="filled"
-                      options={employees.map((e) => ({
-                        value: e.id,
-                        label: e.fullName,
-                      }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={8}>
-                  <Form.Item
-                    name="reviewDate"
-                    label="Değerlendirme Tarihi"
-                    rules={[{ required: true, message: 'Tarih gerekli' }]}
-                  >
-                    <DatePicker
-                      format="DD.MM.YYYY"
-                      style={{ width: '100%' }}
-                      placeholder="Tarih seçin"
-                      variant="filled"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="reviewPeriod"
-                    label="Değerlendirme Dönemi"
-                    rules={[{ required: true, message: 'Dönem gerekli' }]}
-                  >
-                    <Input placeholder="Örn: 2024 Q1, Yıllık 2024" variant="filled" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="overallScore"
-                    label="Genel Puan (1-10)"
-                    rules={[{ required: true, message: 'Puan gerekli' }]}
-                  >
-                    <Rate count={10} allowHalf style={{ fontSize: 20 }} />
-                  </Form.Item>
-                </Col>
-              </Row>
+            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
+              Değerlendirme Bilgileri
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Form.Item
+                name="employeeId"
+                label={<span className="text-sm text-slate-700">Çalışan</span>}
+                rules={[{ required: true, message: 'Çalışan seçimi zorunludur' }]}
+              >
+                <Select
+                  placeholder="Çalışan seçin"
+                  showSearch
+                  optionFilterProp="children"
+                  className="w-full"
+                  options={employees.map((e) => ({
+                    value: e.id,
+                    label: e.fullName,
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="reviewerId"
+                label={<span className="text-sm text-slate-700">Değerlendiren</span>}
+                rules={[{ required: true, message: 'Değerlendiren seçimi zorunludur' }]}
+              >
+                <Select
+                  placeholder="Değerlendiren seçin"
+                  showSearch
+                  optionFilterProp="children"
+                  className="w-full"
+                  options={employees.map((e) => ({
+                    value: e.id,
+                    label: e.fullName,
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="reviewDate"
+                label={<span className="text-sm text-slate-700">Değerlendirme Tarihi</span>}
+                rules={[{ required: true, message: 'Tarih zorunludur' }]}
+              >
+                <DatePicker
+                  format="DD.MM.YYYY"
+                  placeholder="Tarih seçin"
+                  className="w-full rounded-md"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="reviewPeriod"
+                label={<span className="text-sm text-slate-700">Değerlendirme Dönemi</span>}
+                rules={[{ required: true, message: 'Dönem zorunludur' }]}
+              >
+                <Input placeholder="Örn: 2024 Q1, Yıllık 2024" className="rounded-md" />
+              </Form.Item>
+
+              <Form.Item
+                name="overallScore"
+                label={<span className="text-sm text-slate-700">Genel Puan (1-10)</span>}
+                rules={[{ required: true, message: 'Puan zorunludur' }]}
+                className="md:col-span-2"
+              >
+                <Rate count={10} allowHalf style={{ fontSize: 20 }} />
+              </Form.Item>
             </div>
           </div>
 
-          {/* Evaluation Details */}
+          {/* Değerlendirme Detayları */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Değerlendirme Detayları
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
-            </div>
-            <div className="bg-gray-50/50 rounded-xl p-6">
-              <Form.Item name="strengths" label="Güçlü Yönler">
+            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
+              Değerlendirme Detayları
+            </h2>
+            <div className="space-y-4">
+              <Form.Item
+                name="strengths"
+                label={<span className="text-sm text-slate-700">Güçlü Yönler</span>}
+              >
                 <TextArea
                   rows={3}
                   placeholder="Çalışanın güçlü yönlerini yazın"
-                  variant="filled"
+                  className="rounded-md"
                 />
               </Form.Item>
-              <Form.Item name="areasForImprovement" label="Gelişim Alanları">
+
+              <Form.Item
+                name="areasForImprovement"
+                label={<span className="text-sm text-slate-700">Gelişim Alanları</span>}
+              >
                 <TextArea
                   rows={3}
                   placeholder="Geliştirilmesi gereken alanları yazın"
-                  variant="filled"
+                  className="rounded-md"
                 />
               </Form.Item>
-              <Form.Item name="developmentPlan" label="Gelişim Planı">
-                <TextArea rows={3} placeholder="Gelişim planını yazın" variant="filled" />
+
+              <Form.Item
+                name="developmentPlan"
+                label={<span className="text-sm text-slate-700">Gelişim Planı</span>}
+              >
+                <TextArea
+                  rows={3}
+                  placeholder="Gelişim planını yazın"
+                  className="rounded-md"
+                />
               </Form.Item>
-              <Form.Item name="managerComments" label="Yönetici Yorumları" className="mb-0">
-                <TextArea rows={3} placeholder="Yönetici yorumları" variant="filled" />
+
+              <Form.Item
+                name="managerComments"
+                label={<span className="text-sm text-slate-700">Yönetici Yorumları</span>}
+              >
+                <TextArea
+                  rows={3}
+                  placeholder="Yönetici yorumları"
+                  className="rounded-md"
+                />
               </Form.Item>
             </div>
           </div>
 
-          {/* Hidden submit button for form.submit() */}
-          <button type="submit" hidden />
+          {/* Form Aksiyonları */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <Link href={`/hr/performance/${id}`}>
+              <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                İptal
+              </button>
+            </Link>
+            <button
+              type="submit"
+              disabled={updateReview.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updateReview.isPending ? 'Kaydediliyor...' : 'Güncelle'}
+            </button>
+          </div>
         </Form>
       </div>
-    </div>
+    </PageContainer>
   );
 }

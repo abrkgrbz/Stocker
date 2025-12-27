@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Select, Input, DatePicker, InputNumber, Space, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface Rule {
   id: string;
@@ -285,7 +285,7 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
 
                   <Button
                     danger
-                    icon={<DeleteOutlined />}
+                    icon={<TrashIcon className="w-4 h-4" />}
                     onClick={() => removeRule(rule.id)}
                     style={{ width: '5%' }}
                   />
@@ -297,7 +297,7 @@ export function RuleBuilder({ value, onChange }: RuleBuilderProps) {
       )}
 
       {/* Add Rule Button */}
-      <Button type="dashed" onClick={addRule} block icon={<PlusOutlined />}>
+      <Button type="dashed" onClick={addRule} block icon={<PlusIcon className="w-4 h-4" />}>
         Yeni Kriter Ekle
       </Button>
 

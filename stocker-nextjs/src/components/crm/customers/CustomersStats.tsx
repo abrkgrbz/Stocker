@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Row, Col, Card, Statistic } from 'antd';
-import { TeamOutlined, UserOutlined, DollarOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@/lib/crm/formatters';
 import type { Customer } from '@/lib/api/services/crm.service';
 

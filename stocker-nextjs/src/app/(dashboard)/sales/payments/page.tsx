@@ -366,7 +366,7 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <CurrencyDollarIcon className="w-4 h-4 text-3xl text-green-500" />
+          <CurrencyDollarIcon className="w-10 h-10 text-green-500" />
           <Title level={2} className="!mb-0">
             Ödemeler
           </Title>

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Space, Select, Input, InputNumber, DatePicker, Button, Tag } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import type { Condition, ComparisonOperator, FieldDefinition, FieldType } from './ConditionBuilder';
 import dayjs from 'dayjs';
 
@@ -232,7 +232,7 @@ export default function ConditionRow({ condition, fields, onChange, onRemove }: 
       <div style={{ flex: 1 }}>{renderValueInput()}</div>
 
       {/* Remove Button */}
-      <Button type="text" danger icon={<DeleteOutlined />} onClick={onRemove} />
+      <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={onRemove} />
     </Space.Compact>
   );
 }

@@ -12,10 +12,10 @@ import {
   Empty,
 } from 'antd';
 import {
-  SwapOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+  ArrowsRightLeftIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useWarehouses, useProducts, useLocations } from '@/lib/api/hooks/useInventory';
 import { TransferType, type StockTransferDto, type CreateStockTransferItemDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
@@ -187,7 +187,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(index)}
         />
       ),
@@ -214,7 +214,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
             {/* Transfer Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <SwapOutlined className="text-xl text-slate-500" />
+                <ArrowsRightLeftIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
@@ -438,7 +438,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
               </h3>
               <Button
                 type="dashed"
-                icon={<PlusOutlined />}
+                icon={<PlusIcon className="w-4 h-4" />}
                 onClick={handleAddItem}
                 size="small"
                 className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
@@ -463,7 +463,7 @@ export default function TransferForm({ form, initialValues, onFinish, loading }:
               >
                 <Button
                   type="dashed"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={handleAddItem}
                   className="!border-slate-300 !text-slate-600 hover:!border-slate-400"
                 >

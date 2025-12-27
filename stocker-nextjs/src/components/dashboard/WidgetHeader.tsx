@@ -2,13 +2,13 @@
 
 import { Space, Button, Dropdown, MenuProps } from 'antd';
 import {
-  ReloadOutlined,
-  FullscreenOutlined,
-  SettingOutlined,
-  MoreOutlined,
-  DeleteOutlined,
-  EditOutlined
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ArrowsPointingOutIcon,
+  Cog6ToothIcon,
+  EllipsisHorizontalIcon,
+  TrashIcon,
+  PencilIcon
+} from '@heroicons/react/24/outline';
 
 export interface WidgetHeaderProps {
   title: string;
@@ -39,13 +39,13 @@ export function WidgetHeader({
     onEdit && {
       key: 'edit',
       label: 'Düzenle',
-      icon: <EditOutlined />,
+      icon: <PencilIcon className="w-4 h-4" />,
       onClick: onEdit,
     },
     onDelete && {
       key: 'delete',
       label: 'Kaldır',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       onClick: onDelete,
       danger: true,
     },
@@ -59,7 +59,7 @@ export function WidgetHeader({
           <Button
             type="text"
             size="small"
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={onRefresh}
           />
         )}
@@ -67,7 +67,7 @@ export function WidgetHeader({
           <Button
             type="text"
             size="small"
-            icon={<FullscreenOutlined />}
+            icon={<ArrowsPointingOutIcon className="w-4 h-4" />}
             onClick={onFullscreen}
           />
         )}
@@ -75,7 +75,7 @@ export function WidgetHeader({
           <Button
             type="text"
             size="small"
-            icon={<SettingOutlined />}
+            icon={<Cog6ToothIcon className="w-4 h-4" />}
             onClick={onSettings}
           />
         )}
@@ -84,7 +84,7 @@ export function WidgetHeader({
             <Button
               type="text"
               size="small"
-              icon={<MoreOutlined />}
+              icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
             />
           </Dropdown>
         )}

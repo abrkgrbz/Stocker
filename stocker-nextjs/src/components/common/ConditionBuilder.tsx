@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Button, Radio, Space, Alert, Typography } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import ConditionRow from './ConditionRow';
 
 const { Text } = Typography;
@@ -197,7 +197,7 @@ export default function ConditionBuilder({
                     type="text"
                     danger
                     size="small"
-                    icon={<DeleteOutlined />}
+                    icon={<TrashIcon className="w-4 h-4" />}
                     onClick={() => handleRemoveGroup(index)}
                   >
                     Grubu Kaldır
@@ -234,12 +234,12 @@ export default function ConditionBuilder({
 
         {/* Add Buttons */}
         <Space>
-          <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddCondition} block>
+          <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddCondition} block>
             Koşul Ekle
           </Button>
 
           {currentDepth < maxDepth && (
-            <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddGroup}>
+            <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddGroup}>
               Koşul Grubu Ekle
             </Button>
           )}

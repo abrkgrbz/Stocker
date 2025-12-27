@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpOutlined, ArrowDownOutlined, MinusOutlined } from '@ant-design/icons';
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from '@heroicons/react/24/outline';
 
 export type TrendDirection = 'up' | 'down' | 'neutral';
 
@@ -42,9 +42,9 @@ export default function TrendIndicator({
   };
 
   const iconSizeClasses = {
-    small: 'text-[10px]',
-    default: 'text-xs',
-    large: 'text-sm',
+    small: 'w-2.5 h-2.5',
+    default: 'w-3 h-3',
+    large: 'w-4 h-4',
   };
 
   // Color classes
@@ -55,7 +55,7 @@ export default function TrendIndicator({
     : 'text-gray-600 bg-gray-50';
 
   // Icon component
-  const Icon = trendDirection === 'up' ? ArrowUpOutlined : trendDirection === 'down' ? ArrowDownOutlined : MinusOutlined;
+  const Icon = trendDirection === 'up' ? ArrowUpIcon : trendDirection === 'down' ? ArrowDownIcon : MinusIcon;
 
   return (
     <div

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, Select, Space, Statistic } from 'antd';
 import BarChart from './BarChart';
 import LineChart from './LineChart';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
 
 type ChartType = 'comparison' | 'profit' | 'cashflow';
 type TimeRange = 'monthly' | 'quarterly' | 'yearly';
@@ -113,14 +113,14 @@ export function FinancialChart({ className }: FinancialChartProps) {
                 value={35.8}
                 suffix="%"
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<ArrowUpOutlined />}
+                prefix={<ArrowUpIcon className="w-4 h-4" />}
               />
               <Statistic
                 title="Trend"
                 value={12.5}
                 suffix="%"
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<ArrowUpOutlined />}
+                prefix={<ArrowUpIcon className="w-4 h-4" />}
               />
             </div>
           </div>
@@ -155,7 +155,7 @@ export function FinancialChart({ className }: FinancialChartProps) {
                 value={202}
                 suffix="%"
                 valueStyle={{ color: '#52c41a' }}
-                prefix={<ArrowUpOutlined />}
+                prefix={<ArrowUpIcon className="w-4 h-4" />}
               />
             </div>
           </div>

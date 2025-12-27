@@ -224,7 +224,7 @@ export default function NewStockAdjustmentPage() {
                   <div className="p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl mt-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-                        <ShoppingBagIcon className="w-4 h-4 text-white text-xl" />
+                        <ShoppingBagIcon className="w-5 h-5 text-white" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>

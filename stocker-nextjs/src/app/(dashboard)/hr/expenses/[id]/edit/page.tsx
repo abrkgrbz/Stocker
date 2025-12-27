@@ -2,7 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Select, DatePicker, InputNumber, Input, Row, Col, Spin, Empty } from 'antd';
+import Link from 'next/link';
+import { Form, Select, DatePicker, InputNumber, Input, message, Spin } from 'antd';
+import { PageContainer } from '@/components/patterns';
 import {
   ArrowLeftIcon,
   WalletIcon,
@@ -52,194 +54,195 @@ export default function EditExpensePage() {
       };
 
       await updateExpense.mutateAsync({ id, data });
+      message.success('Harcama başarıyla güncellendi');
       router.push(`/hr/expenses/${id}`);
     } catch (error) {
-      // Error handled by hook
+      message.error('Güncelleme sırasında bir hata oluştu');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
+      <PageContainer maxWidth="3xl">
+        <div className="flex items-center justify-center py-12">
+          <Spin />
+        </div>
+      </PageContainer>
     );
   }
 
   if (error || !expense) {
     return (
-      <div className="p-6">
-        <Empty description="Harcama kaydı bulunamadı" />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push('/hr/expenses')}>Listeye Dön</Button>
+      <PageContainer maxWidth="3xl">
+        <div className="text-center py-12">
+          <p className="text-slate-500">Harcama kaydı bulunamadı</p>
+          <Link href="/hr/expenses" className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Listeye Dön
+          </Link>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (expense.status !== ExpenseStatus.Pending) {
     return (
-      <div className="p-6">
-        <Empty description="Bu harcama kaydı düzenlenemez. Sadece bekleyen harcamalar düzenlenebilir." />
-        <div className="text-center mt-4">
-          <Button onClick={() => router.push(`/hr/expenses/${id}`)}>Detaya Dön</Button>
+      <PageContainer maxWidth="3xl">
+        <div className="text-center py-12">
+          <p className="text-slate-500">Bu harcama kaydı düzenlenemez. Sadece bekleyen harcamalar düzenlenebilir.</p>
+          <Link href={`/hr/expenses/${id}`} className="text-sm text-slate-900 hover:underline mt-2 inline-block">
+            ← Detaya Dön
+          </Link>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Sticky Header */}
-      <div
-        className="sticky top-0 z-10 px-6 py-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Button
-              type="text"
-              icon={<ArrowLeftIcon className="w-4 h-4" />}
-              onClick={() => router.push(`/hr/expenses/${id}`)}
-            />
-            <div className="flex items-center gap-2">
-              <WalletIcon className="w-4 h-4 text-lg text-gray-600" />
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900 m-0">Harcama Düzenle</h1>
-                <p className="text-sm text-gray-500 m-0">
-                  {expense.employeeName || `Çalışan #${expense.employeeId}`}
-                </p>
-              </div>
-            </div>
+    <PageContainer maxWidth="3xl">
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href={`/hr/expenses/${id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-4"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Detaya Dön
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <WalletIcon className="w-5 h-5 text-slate-600" />
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => router.push(`/hr/expenses/${id}`)}>Vazgeç</Button>
-            <Button
-              type="primary"
-              onClick={() => form.submit()}
-              loading={updateExpense.isPending}
-              style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
-            >
-              Kaydet
-            </Button>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Harcama Düzenle</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {expense.employeeName || `Çalışan #${expense.employeeId}`}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Form Content */}
-      <div className="max-w-7xl mx-auto p-6">
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          {/* Employee & Date */}
+      {/* Form Kartı */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="p-6"
+        >
+          {/* Harcama Bilgileri */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Harcama Bilgileri
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
-            </div>
-            <div className="bg-gray-50/50 rounded-xl p-6">
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="expenseDate"
-                    label="Harcama Tarihi"
-                    rules={[{ required: true, message: 'Tarih gerekli' }]}
-                  >
-                    <DatePicker
-                      format="DD.MM.YYYY"
-                      style={{ width: '100%' }}
-                      placeholder="Tarih seçin"
-                      variant="filled"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="expenseType"
-                    label="Harcama Türü"
-                    rules={[{ required: true, message: 'Harcama türü gerekli' }]}
-                  >
-                    <Select
-                      placeholder="Harcama türü seçin"
-                      variant="filled"
-                      options={[
-                        { value: ExpenseType.Transportation, label: 'Ulaşım' },
-                        { value: ExpenseType.Meal, label: 'Yemek' },
-                        { value: ExpenseType.Accommodation, label: 'Konaklama' },
-                        { value: ExpenseType.Communication, label: 'İletişim' },
-                        { value: ExpenseType.OfficeSupplies, label: 'Ofis Malzemeleri' },
-                        { value: ExpenseType.Training, label: 'Eğitim' },
-                        { value: ExpenseType.Medical, label: 'Sağlık' },
-                        { value: ExpenseType.Entertainment, label: 'Eğlence' },
-                        { value: ExpenseType.Other, label: 'Diğer' },
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="amount"
-                    label="Tutar"
-                    rules={[{ required: true, message: 'Tutar gerekli' }]}
-                  >
-                    <InputNumber
-                      placeholder="0"
-                      style={{ width: '100%' }}
-                      variant="filled"
-                      formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                      parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
-                      min={0}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="merchantName" label="İşyeri Adı">
-                    <Input placeholder="İşyeri adı" variant="filled" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name="receiptNumber" label="Fiş/Fatura No">
-                    <Input placeholder="Fiş veya fatura numarası" variant="filled" />
-                  </Form.Item>
-                </Col>
-              </Row>
+            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
+              Harcama Bilgileri
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item
+                name="expenseDate"
+                label={<span className="text-sm text-slate-700">Harcama Tarihi</span>}
+                rules={[{ required: true, message: 'Tarih zorunludur' }]}
+              >
+                <DatePicker
+                  format="DD.MM.YYYY"
+                  placeholder="Tarih seçin"
+                  className="w-full rounded-md"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="expenseType"
+                label={<span className="text-sm text-slate-700">Harcama Türü</span>}
+                rules={[{ required: true, message: 'Harcama türü zorunludur' }]}
+              >
+                <Select
+                  placeholder="Harcama türü seçin"
+                  className="w-full"
+                  options={[
+                    { value: ExpenseType.Transportation, label: 'Ulaşım' },
+                    { value: ExpenseType.Meal, label: 'Yemek' },
+                    { value: ExpenseType.Accommodation, label: 'Konaklama' },
+                    { value: ExpenseType.Communication, label: 'İletişim' },
+                    { value: ExpenseType.OfficeSupplies, label: 'Ofis Malzemeleri' },
+                    { value: ExpenseType.Training, label: 'Eğitim' },
+                    { value: ExpenseType.Medical, label: 'Sağlık' },
+                    { value: ExpenseType.Entertainment, label: 'Eğlence' },
+                    { value: ExpenseType.Other, label: 'Diğer' },
+                  ]}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="amount"
+                label={<span className="text-sm text-slate-700">Tutar</span>}
+                rules={[{ required: true, message: 'Tutar zorunludur' }]}
+              >
+                <InputNumber
+                  placeholder="0"
+                  className="w-full rounded-md"
+                  formatter={(value) => `₺ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(value) => value!.replace(/₺\s?|(,*)/g, '') as any}
+                  min={0}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="merchantName"
+                label={<span className="text-sm text-slate-700">İşyeri Adı</span>}
+              >
+                <Input placeholder="İşyeri adı" className="rounded-md" />
+              </Form.Item>
+
+              <Form.Item
+                name="receiptNumber"
+                label={<span className="text-sm text-slate-700">Fiş/Fatura No</span>}
+              >
+                <Input placeholder="Fiş veya fatura numarası" className="rounded-md" />
+              </Form.Item>
             </div>
           </div>
 
-          {/* Description */}
+          {/* Açıklama ve Notlar */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Açıklama ve Notlar
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent" />
-            </div>
-            <div className="bg-gray-50/50 rounded-xl p-6">
+            <h2 className="text-sm font-medium text-slate-900 mb-4 pb-2 border-b border-slate-100">
+              Açıklama ve Notlar
+            </h2>
+            <div className="space-y-4">
               <Form.Item
                 name="description"
-                label="Açıklama"
-                rules={[{ required: true, message: 'Açıklama gerekli' }]}
+                label={<span className="text-sm text-slate-700">Açıklama</span>}
+                rules={[{ required: true, message: 'Açıklama zorunludur' }]}
               >
-                <Input placeholder="Harcama açıklaması" variant="filled" />
+                <Input placeholder="Harcama açıklaması" className="rounded-md" />
               </Form.Item>
-              <Form.Item name="notes" label="Ek Notlar" className="mb-0">
-                <TextArea rows={3} placeholder="Ek notlar" variant="filled" />
+
+              <Form.Item
+                name="notes"
+                label={<span className="text-sm text-slate-700">Ek Notlar</span>}
+              >
+                <TextArea rows={3} placeholder="Ek notlar (opsiyonel)" className="rounded-md" />
               </Form.Item>
             </div>
           </div>
 
-          {/* Hidden submit button for form.submit() */}
-          <button type="submit" hidden />
+          {/* Form Aksiyonları */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <Link href={`/hr/expenses/${id}`}>
+              <button
+                type="button"
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              >
+                İptal
+              </button>
+            </Link>
+            <button
+              type="submit"
+              disabled={updateExpense.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updateExpense.isPending ? 'Kaydediliyor...' : 'Güncelle'}
+            </button>
+          </div>
         </Form>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,13 +4,13 @@ import React from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  ShoppingOutlined,
-  ShopOutlined,
-  DeploymentUnitOutlined,
-  MedicineBoxOutlined,
-  HomeOutlined,
-  CarOutlined,
-} from '@ant-design/icons';
+  ShoppingBagIcon,
+  BuildingStorefrontIcon,
+  CubeIcon,
+  BeakerIcon,
+  HomeIcon,
+  TruckIcon,
+} from '@heroicons/react/24/outline';
 import { useTranslations } from '@/lib/i18n';
 
 export default function IndustriesSection() {
@@ -20,32 +20,32 @@ export default function IndustriesSection() {
 
   const industries = [
     {
-      icon: <ShopOutlined />,
+      icon: <BuildingStorefrontIcon className="w-8 h-8" />,
       titleKey: 'retail',
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      icon: <ShoppingOutlined />,
+      icon: <ShoppingBagIcon className="w-8 h-8" />,
       titleKey: 'ecommerce',
       color: 'from-purple-500 to-pink-500',
     },
     {
-      icon: <DeploymentUnitOutlined />,
+      icon: <CubeIcon className="w-8 h-8" />,
       titleKey: 'manufacturing',
       color: 'from-orange-500 to-red-500',
     },
     {
-      icon: <MedicineBoxOutlined />,
+      icon: <BeakerIcon className="w-8 h-8" />,
       titleKey: 'healthcare',
       color: 'from-green-500 to-emerald-500',
     },
     {
-      icon: <HomeOutlined />,
+      icon: <HomeIcon className="w-8 h-8" />,
       titleKey: 'wholesale',
       color: 'from-indigo-500 to-blue-500',
     },
     {
-      icon: <CarOutlined />,
+      icon: <TruckIcon className="w-8 h-8" />,
       titleKey: 'automotive',
       color: 'from-gray-600 to-gray-800',
     },

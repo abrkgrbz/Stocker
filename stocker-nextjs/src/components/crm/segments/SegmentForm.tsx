@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Switch, ColorPicker, Segmented } from 'antd';
-import { TeamOutlined } from '@ant-design/icons';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 import type { CustomerSegment } from '@/lib/api/services/crm.service';
 import { RuleBuilder } from './RuleBuilder';
 
@@ -77,7 +77,7 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
                 className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center"
                 style={{ backgroundColor: `${selectedColor}20`, borderColor: selectedColor }}
               >
-                <TeamOutlined className="text-xl" style={{ color: selectedColor }} />
+                <UserGroupIcon className="w-5 h-5" style={{ color: selectedColor }} />
               </div>
             </div>
 

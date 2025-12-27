@@ -7,7 +7,15 @@
 
 import React from 'react';
 import { Table, Dropdown, Button } from 'antd';
-import { MoreOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, PauseCircleOutlined, StopOutlined } from '@ant-design/icons';
+import {
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  PauseCircleIcon,
+  NoSymbolIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -72,13 +80,13 @@ export function ContractsTable({
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => handleView(record.id),
       },
       {
         key: 'edit',
-        icon: <EditOutlined />,
+        icon: <PencilIcon className="w-4 h-4" />,
         label: 'Düzenle',
         onClick: () => handleEdit(record.id),
       },
@@ -88,7 +96,7 @@ export function ContractsTable({
     if (record.status === 'Draft' && onActivate) {
       items.push({
         key: 'activate',
-        icon: <CheckCircleOutlined />,
+        icon: <CheckCircleIcon className="w-4 h-4" />,
         label: 'Aktifleştir',
         onClick: () => onActivate(record.id),
       });
@@ -97,7 +105,7 @@ export function ContractsTable({
     if (record.status === 'Active' && onSuspend) {
       items.push({
         key: 'suspend',
-        icon: <PauseCircleOutlined />,
+        icon: <PauseCircleIcon className="w-4 h-4" />,
         label: 'Askıya Al',
         onClick: () => onSuspend(record.id),
       });
@@ -106,7 +114,7 @@ export function ContractsTable({
     if ((record.status === 'Active' || record.status === 'Suspended') && onTerminate) {
       items.push({
         key: 'terminate',
-        icon: <StopOutlined />,
+        icon: <NoSymbolIcon className="w-4 h-4" />,
         label: 'Feshet',
         onClick: () => onTerminate(record.id),
       });
@@ -117,7 +125,7 @@ export function ContractsTable({
         { type: 'divider' },
         {
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => onDelete(record.id),
@@ -201,7 +209,7 @@ export function ContractsTable({
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} className="text-slate-400 hover:text-slate-600" />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-400 hover:text-slate-600" />
         </Dropdown>
       ),
     },

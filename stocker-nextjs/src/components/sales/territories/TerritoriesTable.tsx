@@ -7,7 +7,15 @@
 
 import React from 'react';
 import { Table, Dropdown, Button } from 'antd';
-import { MoreOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, StopOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  NoSymbolIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -66,13 +74,13 @@ export function TerritoriesTable({
     const items: MenuProps['items'] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => handleView(record.id),
       },
       {
         key: 'edit',
-        icon: <EditOutlined />,
+        icon: <PencilIcon className="w-4 h-4" />,
         label: 'Düzenle',
         onClick: () => handleEdit(record.id),
       },
@@ -82,7 +90,7 @@ export function TerritoriesTable({
     if (record.status !== 'Active' && onActivate) {
       items.push({
         key: 'activate',
-        icon: <CheckCircleOutlined />,
+        icon: <CheckCircleIcon className="w-4 h-4" />,
         label: 'Aktifleştir',
         onClick: () => onActivate(record.id),
       });
@@ -91,7 +99,7 @@ export function TerritoriesTable({
     if (record.status === 'Active' && onDeactivate) {
       items.push({
         key: 'deactivate',
-        icon: <StopOutlined />,
+        icon: <NoSymbolIcon className="w-4 h-4" />,
         label: 'Pasifleştir',
         onClick: () => onDeactivate(record.id),
       });
@@ -102,7 +110,7 @@ export function TerritoriesTable({
         { type: 'divider' },
         {
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => onDelete(record.id),
@@ -166,7 +174,7 @@ export function TerritoriesTable({
       key: 'activeAssignmentCount',
       render: (count: number) => (
         <div className="flex items-center gap-1 text-slate-600">
-          <TeamOutlined />
+          <UserGroupIcon className="w-4 h-4" />
           <span>{count || 0}</span>
         </div>
       ),
@@ -195,7 +203,7 @@ export function TerritoriesTable({
       width: 50,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} className="text-slate-400 hover:text-slate-600" />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-400 hover:text-slate-600" />
         </Dropdown>
       ),
     },

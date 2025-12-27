@@ -3,10 +3,10 @@
 import React, { useMemo } from 'react';
 import { Progress, Space, Typography } from 'antd';
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  XCircleIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/24/outline';
 import { calculatePasswordStrength, type PasswordStrength } from '@/lib/auth/password-recovery';
 
 const { Text } = Typography;
@@ -66,11 +66,11 @@ export function PasswordStrengthMeter({
             {strength.feedback.map((message, index) => {
               const isPositive = message.includes('✓') || message.includes('Güçlü') || message.includes('İyi');
               const icon = isPositive ? (
-                <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                <CheckCircleIcon className="w-4 h-4" style={{ color: '#52c41a' }} />
               ) : message.includes('ekleyin') || message.includes('olmalı') ? (
-                <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />
               ) : (
-                <InfoCircleOutlined style={{ color: '#faad14' }} />
+                <InformationCircleIcon className="w-4 h-4" style={{ color: '#faad14' }} />
               );
 
               return (

@@ -1,24 +1,33 @@
 'use client';
 
+/**
+ * Purchase Dashboard Page
+ * Enterprise-grade design following Linear/Stripe/Vercel design principles
+ * - Clean white cards with subtle borders
+ * - Minimal accent colors (only on status indicators)
+ * - Monochrome slate color palette
+ */
+
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Statistic, Typography, Button, Space, List, Tag, Tooltip, Progress } from 'antd';
+import { Table, Spin } from 'antd';
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
+  ArrowPathIcon,
   ArrowUturnLeftIcon,
   BuildingStorefrontIcon,
   ChartBarIcon,
-  CheckCircleIcon,
-  ClockIcon,
+  ChevronRightIcon,
+  ClipboardDocumentListIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
   InboxIcon,
   PlusIcon,
   ShoppingCartIcon,
+  TruckIcon,
   WalletIcon,
 } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import {
   useSupplierSummary,
   usePurchaseRequestSummary,
@@ -38,26 +47,28 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   BarChart,
   Bar,
+  Legend,
 } from 'recharts';
 import dayjs from 'dayjs';
+import { PageContainer } from '@/components/ui/enterprise-page';
+import type { ColumnsType } from 'antd/es/table';
 
-const { Title, Text } = Typography;
-
-// Chart color palette
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+// Monochrome color palette
+const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'];
 
 export default function PurchaseDashboardPage() {
   const router = useRouter();
 
-  const { data: supplierSummary } = useSupplierSummary();
-  const { data: requestSummary } = usePurchaseRequestSummary();
-  const { data: orderSummary } = usePurchaseOrderSummary();
-  const { data: invoiceSummary } = usePurchaseInvoiceSummary();
-  const { data: paymentSummary } = useSupplierPaymentSummary();
-  const { data: returnSummary } = usePurchaseReturnSummary();
+  const { data: supplierSummary, isLoading: supplierLoading } = useSupplierSummary();
+  const { data: requestSummary, isLoading: requestLoading } = usePurchaseRequestSummary();
+  const { data: orderSummary, isLoading: orderLoading } = usePurchaseOrderSummary();
+  const { data: invoiceSummary, isLoading: invoiceLoading } = usePurchaseInvoiceSummary();
+  const { data: paymentSummary, isLoading: paymentLoading } = useSupplierPaymentSummary();
+  const { data: returnSummary, isLoading: returnLoading } = usePurchaseReturnSummary();
+
+  const isLoading = supplierLoading || requestLoading || orderLoading || invoiceLoading || paymentLoading || returnLoading;
 
   const formatCurrency = (amount: number = 0) => {
     return new Intl.NumberFormat('tr-TR', {
@@ -68,629 +79,579 @@ export default function PurchaseDashboardPage() {
     }).format(amount);
   };
 
-  // Order status pie chart data
+  // Quick navigation items
+  const quickNavItems = [
+    {
+      label: 'Tedarikçiler',
+      href: '/purchase/suppliers',
+      icon: <BuildingStorefrontIcon className="w-4 h-4" />,
+      count: supplierSummary?.totalSuppliers || 0,
+      subtitle: `${supplierSummary?.activeSuppliers || 0} aktif`,
+    },
+    {
+      label: 'Siparişler',
+      href: '/purchase/orders',
+      icon: <ShoppingCartIcon className="w-4 h-4" />,
+      count: orderSummary?.totalOrders || 0,
+      subtitle: `${orderSummary?.pendingOrders || 0} bekleyen`,
+    },
+    {
+      label: 'Faturalar',
+      href: '/purchase/invoices',
+      icon: <DocumentTextIcon className="w-4 h-4" />,
+      count: invoiceSummary?.totalInvoices || 0,
+      subtitle: `${invoiceSummary?.pendingInvoices || 0} bekleyen`,
+    },
+    {
+      label: 'Ödemeler',
+      href: '/purchase/payments',
+      icon: <WalletIcon className="w-4 h-4" />,
+      count: paymentSummary?.totalPayments || 0,
+      subtitle: `${paymentSummary?.pendingPayments || 0} bekleyen`,
+    },
+  ];
+
+  // Order status data for pie chart
   const orderStatusData = useMemo(() => {
     if (!orderSummary) return [];
     return [
-      { name: 'Taslak', value: orderSummary.draftOrders || 0, color: '#94a3b8' },
-      { name: 'Onay Bekliyor', value: orderSummary.pendingOrders || 0, color: '#f59e0b' },
-      { name: 'Onaylandı', value: orderSummary.confirmedOrders || 0, color: '#3b82f6' },
-      { name: 'Tamamlandı', value: orderSummary.completedOrders || 0, color: '#10b981' },
+      { name: 'Taslak', value: orderSummary.draftOrders || 0 },
+      { name: 'Onay Bekliyor', value: orderSummary.pendingOrders || 0 },
+      { name: 'Onaylandı', value: orderSummary.confirmedOrders || 0 },
+      { name: 'Tamamlandı', value: orderSummary.completedOrders || 0 },
     ].filter(item => item.value > 0);
   }, [orderSummary]);
 
-  // Invoice status pie chart data
+  // Invoice status data for bar chart
   const invoiceStatusData = useMemo(() => {
     if (!invoiceSummary) return [];
     return [
-      { name: 'Taslak', value: invoiceSummary.draftInvoices || 0, color: '#94a3b8' },
-      { name: 'Bekleyen', value: invoiceSummary.pendingInvoices || 0, color: '#f59e0b' },
-      { name: 'Onaylı', value: invoiceSummary.approvedInvoices || 0, color: '#3b82f6' },
-      { name: 'Ödenmiş', value: invoiceSummary.paidInvoices || 0, color: '#10b981' },
-      { name: 'Vadesi Geçmiş', value: invoiceSummary.overdueInvoices || 0, color: '#ef4444' },
+      { name: 'Taslak', value: invoiceSummary.draftInvoices || 0 },
+      { name: 'Bekleyen', value: invoiceSummary.pendingInvoices || 0 },
+      { name: 'Onaylı', value: invoiceSummary.approvedInvoices || 0 },
+      { name: 'Ödenmiş', value: invoiceSummary.paidInvoices || 0 },
+      { name: 'Vadesi Geçmiş', value: invoiceSummary.overdueInvoices || 0 },
     ].filter(item => item.value > 0);
   }, [invoiceSummary]);
 
-  // Monthly trend data (mock data - replace with actual API data when available)
+  // Monthly trend data (mock - replace with real API)
   const monthlyTrendData = useMemo(() => {
     const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
     const currentMonth = dayjs().month();
-    return months.slice(0, currentMonth + 1).map((month, index) => ({
+    return months.slice(0, currentMonth + 1).map((month) => ({
       name: month,
       siparisler: Math.floor(Math.random() * 50) + 10,
       faturalar: Math.floor(Math.random() * 40) + 5,
     }));
   }, []);
 
-  // Custom tooltip for pie chart
-  const renderCustomTooltip = ({ active, payload }: any) => {
+  // Custom tooltip for charts
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 shadow-lg rounded-lg border">
-          <p className="font-medium">{payload[0].name}</p>
-          <p className="text-gray-600">{payload[0].value} adet</p>
+        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm">
+          <p className="font-medium text-slate-900 mb-1">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm text-slate-600">
+              {entry.name}: {entry.value.toLocaleString('tr-TR')}
+            </p>
+          ))}
         </div>
       );
     }
     return null;
   };
 
+  // Quick actions
   const quickActions = [
-    { icon: <BuildingStorefrontIcon className="w-4 h-4" />, label: 'Yeni Tedarikçi', path: '/purchase/suppliers/new', color: '#8b5cf6' },
-    { icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Yeni Talep', path: '/purchase/requests/new', color: '#a855f7' },
-    { icon: <ShoppingCartIcon className="w-4 h-4" />, label: 'Yeni Sipariş', path: '/purchase/orders/new', color: '#3b82f6' },
-    { icon: <InboxIcon className="w-4 h-4" />, label: 'Mal Alımı', path: '/purchase/goods-receipts/new', color: '#10b981' },
-    { icon: <DocumentTextIcon className="w-4 h-4" />, label: 'Yeni Fatura', path: '/purchase/invoices/new', color: '#f59e0b' },
-    { icon: <WalletIcon className="w-4 h-4" />, label: 'Yeni Ödeme', path: '/purchase/payments/new', color: '#06b6d4' },
-    { icon: <ArrowUturnLeftIcon className="w-4 h-4" />, label: 'Yeni İade', path: '/purchase/returns/new', color: '#ef4444' },
-    { icon: <ChartBarIcon className="w-4 h-4" />, label: 'Raporlar', path: '/purchase/reports', color: '#0ea5e9' },
+    { label: 'Yeni Sipariş', href: '/purchase/orders/new', icon: <ShoppingCartIcon className="w-4 h-4" /> },
+    { label: 'Mal Alımı', href: '/purchase/goods-receipts/new', icon: <InboxIcon className="w-4 h-4" /> },
+    { label: 'Yeni Fatura', href: '/purchase/invoices/new', icon: <DocumentTextIcon className="w-4 h-4" /> },
+    { label: 'Yeni Ödeme', href: '/purchase/payments/new', icon: <WalletIcon className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
+    <PageContainer maxWidth="7xl">
+      {/* Page Header */}
       <div className="mb-8">
-        <Title level={2} className="!mb-2">
-          Satın Alma Dashboard
-        </Title>
-        <Text type="secondary">
-          Tedarik zincirinizi ve satın alma operasyonlarınızı yönetin
-        </Text>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Satın Alma</h1>
+            <p className="text-sm text-slate-500">Tedarik zinciri ve satın alma operasyonları</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/purchase/orders/new">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                Yeni Sipariş
+              </button>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Quick Actions */}
-      <Card className="mb-6" size="small">
-        <div className="flex items-center justify-between mb-4">
-          <Text strong>Hızlı İşlemler</Text>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {quickActions.map((action, index) => (
-            <Button
-              key={index}
-              icon={action.icon}
-              onClick={() => router.push(action.path)}
-              style={{
-                borderColor: action.color,
-                color: action.color,
-              }}
-            >
-              {action.label}
-            </Button>
-          ))}
-        </div>
-      </Card>
-
-      {/* Main Statistics */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={12} xl={6}>
-          <Card
-            hoverable
-            onClick={() => router.push('/purchase/suppliers')}
-            className="cursor-pointer"
-          >
-            <Statistic
-              title={
-                <span className="flex items-center gap-2">
-                  <BuildingStorefrontIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
-                  Tedarikçiler
-                </span>
-              }
-              value={supplierSummary?.totalSuppliers || 0}
-              suffix={
-                <span className="text-sm text-gray-500">
-                  / {supplierSummary?.activeSuppliers || 0} aktif
-                </span>
-              }
-            />
-            <div className="mt-2">
-              <Progress
-                percent={
-                  supplierSummary?.totalSuppliers
-                    ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
-                    : 0
-                }
-                size="small"
-                strokeColor="#8b5cf6"
-                showInfo={false}
-              />
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} xl={6}>
-          <Card
-            hoverable
-            onClick={() => router.push('/purchase/requests')}
-            className="cursor-pointer"
-          >
-            <Statistic
-              title={
-                <span className="flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5" style={{ color: '#a855f7' }} />
-                  Satın Alma Talepleri
-                </span>
-              }
-              value={requestSummary?.pendingRequests || 0}
-              valueStyle={{ color: '#a855f7' }}
-              suffix={
-                <span className="text-sm text-gray-500">
-                  bekleyen
-                </span>
-              }
-            />
-            <div className="mt-2 flex items-center gap-2">
-              <Tag color="green">{requestSummary?.approvedRequests || 0} Onaylı</Tag>
-              <Tag color="purple">{requestSummary?.totalRequests || 0} Toplam</Tag>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} xl={6}>
-          <Card
-            hoverable
-            onClick={() => router.push('/purchase/orders')}
-            className="cursor-pointer"
-          >
-            <Statistic
-              title={
-                <span className="flex items-center gap-2">
-                  <ShoppingCartIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
-                  Açık Siparişler
-                </span>
-              }
-              value={orderSummary?.pendingOrders || 0}
-              valueStyle={{ color: '#3b82f6' }}
-            />
-            <div className="mt-2 flex items-center gap-2">
-              <Tag color="blue">{orderSummary?.draftOrders || 0} Taslak</Tag>
-              <Tag color="cyan">{orderSummary?.confirmedOrders || 0} Onaylı</Tag>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} xl={6}>
-          <Card
-            hoverable
-            onClick={() => router.push('/purchase/invoices')}
-            className="cursor-pointer"
-          >
-            <Statistic
-              title={
-                <span className="flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5" style={{ color: '#f59e0b' }} />
-                  Bekleyen Faturalar
-                </span>
-              }
-              value={invoiceSummary?.pendingInvoices || 0}
-              valueStyle={{ color: '#f59e0b' }}
-            />
-            <div className="mt-2 text-sm">
-              <span className="text-red-500 flex items-center gap-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {invoiceSummary?.overdueInvoices || 0} vadesi geçmiş
-              </span>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} xl={6}>
-          <Card
-            hoverable
-            onClick={() => router.push('/purchase/payments')}
-            className="cursor-pointer"
-          >
-            <Statistic
-              title={
-                <span className="flex items-center gap-2">
-                  <WalletIcon className="w-5 h-5" style={{ color: '#10b981' }} />
-                  Bu Ay Ödemeler
-                </span>
-              }
-              value={formatCurrency(paymentSummary?.completedAmount || 0)}
-              valueStyle={{ color: '#10b981', fontSize: '20px' }}
-            />
-            <div className="mt-2 text-sm text-gray-500">
-              {paymentSummary?.completedPayments || 0} işlem tamamlandı
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Financial Overview */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} lg={16}>
-          <Card title="Finansal Özet" className="h-full">
-            <Row gutter={[24, 24]}>
-              <Col xs={24} sm={8}>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {formatCurrency(orderSummary?.totalAmount || 0)}
-                  </div>
-                  <div className="text-gray-600 mt-1">Toplam Sipariş Tutarı</div>
+      {/* Quick Navigation Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {quickNavItems.map((item) => (
+          <Link key={item.href} href={item.href}>
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+                  {React.cloneElement(item.icon, { className: 'w-4 h-4 text-slate-500' })}
                 </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {formatCurrency(invoiceSummary?.totalRemainingAmount || 0)}
-                  </div>
-                  <div className="text-gray-600 mt-1">Ödenmemiş Fatura</div>
-                </div>
-              </Col>
-              <Col xs={24} sm={8}>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-3xl font-bold text-red-600">
-                    {formatCurrency(invoiceSummary?.overdueAmount || 0)}
-                  </div>
-                  <div className="text-gray-600 mt-1">Vadesi Geçmiş</div>
-                </div>
-              </Col>
-            </Row>
-
-            <div className="mt-6 pt-6 border-t">
-              <Row gutter={[24, 16]}>
-                <Col xs={24} sm={12}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Tedarikçi Bakiyesi</span>
-                    <span className="font-semibold text-lg">
-                      {formatCurrency(supplierSummary?.totalBalance || 0)}
-                    </span>
-                  </div>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Bekleyen Ödemeler</span>
-                    <span className="font-semibold text-lg text-orange-600">
-                      {formatCurrency(paymentSummary?.pendingAmount || 0)}
-                    </span>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
-          <Card title="İade Durumu" className="h-full">
-            <div className="space-y-4">
-              <Statistic
-                title="Toplam İadeler"
-                value={returnSummary?.totalReturns || 0}
-                prefix={<ArrowUturnLeftIcon className="w-5 h-5" style={{ color: '#ef4444' }} />}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-yellow-50 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {returnSummary?.pendingReturns || 0}
-                  </div>
-                  <div className="text-xs text-gray-600">Bekleyen</div>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {returnSummary?.completedReturns || 0}
-                  </div>
-                  <div className="text-xs text-gray-600">Tamamlanan</div>
-                </div>
+                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
               </div>
-
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Toplam İade Tutarı</span>
-                  <span className="font-semibold text-red-600">
-                    {formatCurrency(returnSummary?.totalReturnAmount || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Bekleyen İade</span>
-                  <span className="font-semibold text-orange-600">
-                    {formatCurrency(returnSummary?.pendingRefundAmount || 0)}
-                  </span>
-                </div>
+              <div className="text-2xl font-semibold text-slate-900 mb-1">
+                {item.count.toLocaleString('tr-TR')}
               </div>
+              <div className="text-sm text-slate-500">{item.label}</div>
+              <div className="text-xs text-slate-400 mt-1">{item.subtitle}</div>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          </Link>
+        ))}
+      </div>
+
+      {/* Secondary Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-slate-900" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sipariş Tutarı</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">
+            {formatCurrency(orderSummary?.totalAmount || 0)}
+          </div>
+          <div className="text-sm text-slate-500">Toplam</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ödenmemiş</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">
+            {formatCurrency(invoiceSummary?.totalRemainingAmount || 0)}
+          </div>
+          <div className="text-sm text-slate-500">Fatura Tutarı</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Vadesi Geçmiş</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">
+            {formatCurrency(invoiceSummary?.overdueAmount || 0)}
+          </div>
+          <div className="text-sm text-slate-500">Fatura Tutarı</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bu Ay</span>
+          </div>
+          <div className="text-2xl font-semibold text-slate-900">
+            {formatCurrency(paymentSummary?.completedAmount || 0)}
+          </div>
+          <div className="text-sm text-slate-500">Ödeme Yapıldı</div>
+        </div>
+      </div>
+
+      {/* Alerts Section */}
+      {((invoiceSummary?.overdueInvoices || 0) > 0 || (orderSummary?.pendingOrders || 0) > 0) && (
+        <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-5">Dikkat Gerektiren</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Overdue Invoices Alert */}
+            {(invoiceSummary?.overdueInvoices || 0) > 0 && (
+              <Link href="/purchase/invoices?status=Overdue">
+                <div className="p-5 rounded-xl border border-slate-300 bg-slate-50 hover:shadow-md transition-all cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center">
+                      <ExclamationTriangleIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-slate-900">{invoiceSummary?.overdueInvoices || 0}</div>
+                      <div className="text-sm text-slate-500">Vadesi Geçmiş Fatura</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs font-medium text-slate-600">
+                    {formatCurrency(invoiceSummary?.overdueAmount || 0)} tutarında →
+                  </div>
+                </div>
+              </Link>
+            )}
+
+            {/* Pending Orders Alert */}
+            {(orderSummary?.pendingOrders || 0) > 0 && (
+              <Link href="/purchase/orders?status=Pending">
+                <div className="p-5 rounded-xl border border-slate-300 bg-slate-50 hover:shadow-md transition-all cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center">
+                      <ShoppingCartIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-slate-900">{orderSummary?.pendingOrders || 0}</div>
+                      <div className="text-sm text-slate-500">Onay Bekleyen Sipariş</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs font-medium text-slate-600">Onay bekliyor →</div>
+                </div>
+              </Link>
+            )}
+
+            {/* Pending Payments Alert */}
+            {(paymentSummary?.pendingPayments || 0) > 0 && (
+              <Link href="/purchase/payments?status=Pending">
+                <div className="p-5 rounded-xl border border-slate-300 bg-slate-50 hover:shadow-md transition-all cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-500 flex items-center justify-center">
+                      <WalletIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-slate-900">{paymentSummary?.pendingPayments || 0}</div>
+                      <div className="text-sm text-slate-500">Bekleyen Ödeme</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs font-medium text-slate-600">
+                    {formatCurrency(paymentSummary?.pendingAmount || 0)} tutarında →
+                  </div>
+                </div>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Charts Section */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} lg={16}>
-          <Card title="Aylık Trend" className="h-full">
-            <div style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
-                <AreaChart data={monthlyTrendData}>
-                  <defs>
-                    <linearGradient id="colorSiparisler" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorFaturalar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <RechartsTooltip
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="siparisler"
-                    name="Siparişler"
-                    stroke="#3b82f6"
-                    fillOpacity={1}
-                    fill="url(#colorSiparisler)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="faturalar"
-                    name="Faturalar"
-                    stroke="#10b981"
-                    fillOpacity={1}
-                    fill="url(#colorFaturalar)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Monthly Trend Chart */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Aylık Trend</p>
+          </div>
+          {monthlyTrendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={monthlyTrendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
+                <YAxis stroke="#94a3b8" fontSize={12} />
+                <RechartsTooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="siparisler"
+                  name="Siparişler"
+                  stroke="#1e293b"
+                  fill="#1e293b"
+                  fillOpacity={0.7}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="faturalar"
+                  name="Faturalar"
+                  stroke="#94a3b8"
+                  fill="#94a3b8"
+                  fillOpacity={0.5}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[280px] text-slate-400">
+              <ChartBarIcon className="w-8 h-8 mb-2" />
+              <span className="text-sm">Henüz veri yok</span>
+            </div>
+          )}
+        </div>
+
+        {/* Order Status Pie Chart */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sipariş Durumu</p>
+            <Link href="/purchase/orders" className="text-xs text-slate-500 hover:text-slate-700">
+              Tümünü gör →
+            </Link>
+          </div>
+          {orderStatusData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={orderStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {orderStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
               </ResponsiveContainer>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8}>
-          <Card title="Sipariş Durumu Dağılımı" className="h-full">
-            <div style={{ width: '100%', height: 300 }}>
-              {orderStatusData.length > 0 ? (
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={orderStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {orderStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip content={renderCustomTooltip} />
-                    <Legend
-                      formatter={(value: string) => <span className="text-sm">{value}</span>}
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {orderStatusData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: MONOCHROME_COLORS[index % MONOCHROME_COLORS.length] }}
                     />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  Sipariş verisi bulunamadı
-                </div>
-              )}
+                    <span className="text-slate-600">{item.name}: {item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[280px] text-slate-400">
+              <ShoppingCartIcon className="w-8 h-8 mb-2" />
+              <span className="text-sm">Sipariş verisi yok</span>
             </div>
-          </Card>
-        </Col>
-      </Row>
+          )}
+        </div>
+      </div>
 
-      {/* Invoice Status Chart */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} lg={12}>
-          <Card title="Fatura Durumu Dağılımı">
-            <div style={{ width: '100%', height: 280 }}>
-              {invoiceStatusData.length > 0 ? (
-                <ResponsiveContainer>
-                  <BarChart data={invoiceStatusData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 12 }} />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      tick={{ fontSize: 12 }}
-                      width={100}
-                    />
-                    <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      }}
-                      formatter={(value: number) => [`${value} adet`, 'Miktar']}
-                    />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                      {invoiceStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  Fatura verisi bulunamadı
-                </div>
-              )}
+      {/* Invoice Status & Supplier Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Invoice Status Bar Chart */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Fatura Durumu</p>
+            <Link href="/purchase/invoices" className="text-xs text-slate-500 hover:text-slate-700">
+              Tümünü gör →
+            </Link>
+          </div>
+          {invoiceStatusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={invoiceStatusData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                <XAxis type="number" stroke="#94a3b8" fontSize={12} />
+                <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={12} width={100} />
+                <RechartsTooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Adet" radius={[0, 4, 4, 0]}>
+                  {invoiceStatusData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={MONOCHROME_COLORS[index % MONOCHROME_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[280px] text-slate-400">
+              <DocumentTextIcon className="w-8 h-8 mb-2" />
+              <span className="text-sm">Fatura verisi yok</span>
             </div>
-          </Card>
-        </Col>
+          )}
+        </div>
 
-        <Col xs={24} lg={12}>
-          <Card title="Tedarikçi Özeti">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {supplierSummary?.activeSuppliers || 0}
-                  </div>
-                  <div className="text-gray-600 mt-1">Aktif Tedarikçi</div>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-3xl font-bold text-gray-600">
-                    {supplierSummary?.inactiveSuppliers || 0}
-                  </div>
-                  <div className="text-gray-600 mt-1">Pasif Tedarikçi</div>
-                </div>
-              </Col>
-              <Col span={24}>
-                <div className="mt-2">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-500">Aktif Oran</span>
-                    <span className="font-medium">
-                      {supplierSummary?.totalSuppliers
-                        ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
-                        : 0}%
-                    </span>
-                  </div>
-                  <Progress
-                    percent={
+        {/* Supplier Summary */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tedarikçi Özeti</p>
+            <Link href="/purchase/suppliers" className="text-xs text-slate-500 hover:text-slate-700">
+              Tümünü gör →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="p-4 bg-slate-50 rounded-xl text-center">
+              <div className="text-3xl font-bold text-slate-900">{supplierSummary?.activeSuppliers || 0}</div>
+              <div className="text-sm text-slate-500 mt-1">Aktif Tedarikçi</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-xl text-center">
+              <div className="text-3xl font-bold text-slate-400">{supplierSummary?.inactiveSuppliers || 0}</div>
+              <div className="text-sm text-slate-500 mt-1">Pasif Tedarikçi</div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-slate-500">Aktif Oran</span>
+                <span className="text-sm font-medium text-slate-900">
+                  {supplierSummary?.totalSuppliers
+                    ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
+                    : 0}%
+                </span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-slate-900 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
                       supplierSummary?.totalSuppliers
                         ? Math.round((supplierSummary.activeSuppliers / supplierSummary.totalSuppliers) * 100)
                         : 0
-                    }
-                    strokeColor={{
-                      '0%': '#8b5cf6',
-                      '100%': '#a855f7',
-                    }}
-                    showInfo={false}
-                  />
-                </div>
-              </Col>
-              <Col span={24}>
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-gray-500">Toplam Bakiye</span>
-                    <span className="font-semibold text-lg">
-                      {formatCurrency(supplierSummary?.totalBalance || 0)}
-                    </span>
+                    }%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm text-slate-500">Toplam Bakiye</span>
+                <span className="text-lg font-semibold text-slate-900">
+                  {formatCurrency(supplierSummary?.totalBalance || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Returns & Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Returns Summary */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">İade Durumu</p>
+            <Link href="/purchase/returns" className="text-xs text-slate-500 hover:text-slate-700">
+              Tümünü gör →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-slate-50 rounded-xl text-center">
+              <div className="text-2xl font-bold text-slate-900">{returnSummary?.totalReturns || 0}</div>
+              <div className="text-xs text-slate-500 mt-1">Toplam</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-xl text-center">
+              <div className="text-2xl font-bold text-amber-600">{returnSummary?.pendingReturns || 0}</div>
+              <div className="text-xs text-slate-500 mt-1">Bekleyen</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-xl text-center">
+              <div className="text-2xl font-bold text-emerald-600">{returnSummary?.completedReturns || 0}</div>
+              <div className="text-xs text-slate-500 mt-1">Tamamlanan</div>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-slate-100">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-slate-500">Toplam İade Tutarı</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {formatCurrency(returnSummary?.totalReturnAmount || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-slate-500">Bekleyen İade</span>
+              <span className="text-sm font-semibold text-amber-600">
+                {formatCurrency(returnSummary?.pendingRefundAmount || 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-5">Hızlı İşlemler</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((action) => (
+              <Link key={action.href} href={action.href}>
+                <div className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                      {React.cloneElement(action.icon, { className: 'w-5 h-5 text-slate-600' })}
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">{action.label}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Tipe Göre</span>
-                    <Tag color="purple">{Object.keys(supplierSummary?.suppliersByType || {}).length} kategori</Tag>
-                  </div>
                 </div>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
+              </Link>
+            ))}
+          </div>
 
-      {/* Status Overview */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={8} xl={4}>
-          <Card size="small">
+          <div className="mt-6 pt-4 border-t border-slate-100">
+            <div className="flex gap-3">
+              <Link href="/purchase/requests" className="flex-1">
+                <button className="w-full px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
+                  Satın Alma Talepleri
+                </button>
+              </Link>
+              <Link href="/purchase/reports" className="flex-1">
+                <button className="w-full px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
+                  Raporlar
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Navigation Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Link href="/purchase/suppliers">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                <BuildingStorefrontIcon className="w-6 h-6 text-purple-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <BuildingStorefrontIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-gray-500 text-sm">Tedarikçiler</div>
-                <div className="text-xl font-semibold">{supplierSummary?.totalSuppliers || 0}</div>
+                <div className="text-sm text-slate-500">Tedarikçiler</div>
+                <div className="text-lg font-semibold text-slate-900">{supplierSummary?.totalSuppliers || 0}</div>
               </div>
             </div>
-            <Button
-              type="link"
-              className="mt-3 p-0"
-              onClick={() => router.push('/purchase/suppliers')}
-            >
-              Tümünü Gör →
-            </Button>
-          </Card>
-        </Col>
+          </div>
+        </Link>
 
-        <Col xs={24} sm={12} lg={8} xl={4}>
-          <Card size="small">
+        <Link href="/purchase/requests">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center">
-                <DocumentTextIcon className="w-6 h-6 text-violet-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ClipboardDocumentListIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-gray-500 text-sm">Talepler</div>
-                <div className="text-xl font-semibold">{requestSummary?.totalRequests || 0}</div>
+                <div className="text-sm text-slate-500">Talepler</div>
+                <div className="text-lg font-semibold text-slate-900">{requestSummary?.totalRequests || 0}</div>
               </div>
             </div>
-            <Button
-              type="link"
-              className="mt-3 p-0"
-              onClick={() => router.push('/purchase/requests')}
-            >
-              Tümünü Gör →
-            </Button>
-          </Card>
-        </Col>
+          </div>
+        </Link>
 
-        <Col xs={24} sm={12} lg={8} xl={4}>
-          <Card size="small">
+        <Link href="/purchase/goods-receipts">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <ShoppingCartIcon className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <TruckIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-gray-500 text-sm">Siparişler</div>
-                <div className="text-xl font-semibold">{orderSummary?.totalOrders || 0}</div>
+                <div className="text-sm text-slate-500">Mal Alımları</div>
+                <div className="text-lg font-semibold text-slate-900">—</div>
               </div>
             </div>
-            <Button
-              type="link"
-              className="mt-3 p-0"
-              onClick={() => router.push('/purchase/orders')}
-            >
-              Tümünü Gör →
-            </Button>
-          </Card>
-        </Col>
+          </div>
+        </Link>
 
-        <Col xs={24} sm={12} lg={8} xl={4}>
-          <Card size="small">
+        <Link href="/purchase/returns">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <DocumentTextIcon className="w-6 h-6 text-amber-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ArrowUturnLeftIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-gray-500 text-sm">Faturalar</div>
-                <div className="text-xl font-semibold">{invoiceSummary?.totalInvoices || 0}</div>
+                <div className="text-sm text-slate-500">İadeler</div>
+                <div className="text-lg font-semibold text-slate-900">{returnSummary?.totalReturns || 0}</div>
               </div>
             </div>
-            <Button
-              type="link"
-              className="mt-3 p-0"
-              onClick={() => router.push('/purchase/invoices')}
-            >
-              Tümünü Gör →
-            </Button>
-          </Card>
-        </Col>
+          </div>
+        </Link>
 
-        <Col xs={24} sm={12} lg={8} xl={4}>
-          <Card size="small">
+        <Link href="/purchase/reports">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <WalletIcon className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                <ChartBarIcon className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <div className="text-gray-500 text-sm">Ödemeler</div>
-                <div className="text-xl font-semibold">{paymentSummary?.totalPayments || 0}</div>
+                <div className="text-sm text-slate-500">Raporlar</div>
+                <div className="text-lg font-semibold text-slate-900">→</div>
               </div>
             </div>
-            <Button
-              type="link"
-              className="mt-3 p-0"
-              onClick={() => router.push('/purchase/payments')}
-            >
-              Tümünü Gör →
-            </Button>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          </div>
+        </Link>
+      </div>
+    </PageContainer>
   );
 }

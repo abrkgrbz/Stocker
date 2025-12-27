@@ -3,16 +3,16 @@
 import React, { useState } from 'react';
 import { Drawer, Form, Input, Card, Steps, Button } from 'antd';
 import {
-  BankOutlined,
-  UserOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  SwapOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  CheckOutlined,
-} from '@ant-design/icons';
+  BuildingLibraryIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  ArrowsRightLeftIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 
 const { TextArea } = Input;
 
@@ -47,15 +47,15 @@ export function ConvertLeadModal({
   const steps = [
     {
       title: 'Firma Bilgileri',
-      icon: <BankOutlined />,
+      icon: <BuildingLibraryIcon className="w-4 h-4" />,
     },
     {
       title: 'İletişim',
-      icon: <MailOutlined />,
+      icon: <EnvelopeIcon className="w-4 h-4" />,
     },
     {
       title: 'Adres & Tamamla',
-      icon: <EnvironmentOutlined />,
+      icon: <MapPinIcon className="w-4 h-4" />,
     },
   ];
 
@@ -104,7 +104,7 @@ export function ConvertLeadModal({
       title={
         <div className="flex items-center gap-3 pb-4">
           <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md">
-            <SwapOutlined className="text-white text-lg" />
+            <ArrowsRightLeftIcon className="w-5 h-5 text-white" />
           </div>
           <div className="text-lg font-semibold text-gray-800">Müşteriye Dönüştür</div>
         </div>
@@ -123,16 +123,16 @@ export function ConvertLeadModal({
       }}
       footer={
         <div className="flex justify-between items-center">
-          <Button onClick={handlePrev} disabled={currentStep === 0} icon={<ArrowLeftOutlined />} size="large">
+          <Button onClick={handlePrev} disabled={currentStep === 0} icon={<ArrowLeftIcon className="w-4 h-4" />} size="large">
             Geri
           </Button>
           <div className="text-sm text-gray-500">Adım {currentStep + 1} / {steps.length}</div>
           {currentStep < steps.length - 1 ? (
-            <Button type="primary" onClick={handleNext} icon={<ArrowRightOutlined />} iconPosition="end" size="large">
+            <Button type="primary" onClick={handleNext} icon={<ArrowRightIcon className="w-4 h-4" />} iconPosition="end" size="large">
               İleri
             </Button>
           ) : (
-            <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckOutlined />} size="large">
+            <Button type="primary" onClick={handleSubmit} loading={loading} icon={<CheckIcon className="w-4 h-4" />} size="large">
               Müşteriye Dönüştür
             </Button>
           )}
@@ -150,7 +150,7 @@ export function ConvertLeadModal({
           <div className="min-h-[280px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
-                <BankOutlined className="text-blue-600 text-lg" />
+                <BuildingLibraryIcon className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Firma Bilgileri</h3>
             </div>
@@ -161,7 +161,7 @@ export function ConvertLeadModal({
                 rules={[{ required: true, message: 'Firma adı gerekli' }]}
               >
                 <Input
-                  prefix={<BankOutlined className="text-gray-400" />}
+                  prefix={<BuildingLibraryIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="Firma adı"
                   className="rounded-lg"
                   size="large"
@@ -173,7 +173,7 @@ export function ConvertLeadModal({
                 name="contactPerson"
               >
                 <Input
-                  prefix={<UserOutlined className="text-gray-400" />}
+                  prefix={<UserIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="Ad Soyad"
                   className="rounded-lg"
                   size="large"
@@ -194,7 +194,7 @@ export function ConvertLeadModal({
           <div className="min-h-[280px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-green-50 rounded-lg">
-                <MailOutlined className="text-green-600 text-lg" />
+                <EnvelopeIcon className="w-5 h-5 text-green-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">İletişim Bilgileri</h3>
             </div>
@@ -208,7 +208,7 @@ export function ConvertLeadModal({
                 ]}
               >
                 <Input
-                  prefix={<MailOutlined className="text-gray-400" />}
+                  prefix={<EnvelopeIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="ornek@firma.com"
                   className="rounded-lg"
                   size="large"
@@ -220,7 +220,7 @@ export function ConvertLeadModal({
                 name="phone"
               >
                 <Input
-                  prefix={<PhoneOutlined className="text-gray-400" />}
+                  prefix={<PhoneIcon className="w-4 h-4 text-gray-400" />}
                   placeholder="+90 (555) 123-4567"
                   className="rounded-lg"
                   size="large"
@@ -235,7 +235,7 @@ export function ConvertLeadModal({
           <div className="min-h-[280px]">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-purple-50 rounded-lg">
-                <EnvironmentOutlined className="text-purple-600 text-lg" />
+                <MapPinIcon className="w-5 h-5 text-purple-600" />
               </div>
               <h3 className="text-base font-semibold text-gray-800 m-0">Adres</h3>
             </div>
@@ -254,7 +254,7 @@ export function ConvertLeadModal({
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                 <div className="flex items-start gap-3">
-                  <SwapOutlined className="text-blue-600 text-xl mt-1" />
+                  <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600 mt-1" />
                   <div>
                     <div className="font-semibold text-blue-900 mb-1">Dönüştürmeye Hazır</div>
                     <div className="text-sm text-blue-700">

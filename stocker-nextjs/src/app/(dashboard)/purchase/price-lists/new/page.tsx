@@ -2,37 +2,29 @@
 
 import React, { useState } from 'react';
 import {
-  Card,
   Form,
   Input,
   Select,
-  Button,
-  Row,
-  Col,
-  Typography,
   DatePicker,
   Table,
   InputNumber,
-  Space,
-  Divider,
   Switch,
   message,
 } from 'antd';
 import {
   ArrowLeftIcon,
+  BuildingStorefrontIcon,
   CheckIcon,
   CurrencyDollarIcon,
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import dayjs from 'dayjs';
 import { useCreatePriceList } from '@/lib/api/hooks/usePurchase';
 import { useSuppliers } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { CreatePriceListDto, CreatePriceListItemDto, PriceListType } from '@/lib/api/services/purchase.types';
 
-const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface PriceListItemRow extends CreatePriceListItemDto {
@@ -208,235 +200,238 @@ export default function NewPriceListPage() {
     {
       title: '',
       key: 'actions',
-      width: 60,
+      width: 50,
       render: (_: any, record: PriceListItemRow) => (
-        <Button
-          type="text"
-          danger
-          icon={<TrashIcon className="w-4 h-4" />}
+        <button
           onClick={() => handleRemoveItem(record.key)}
-        />
+          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
-        <div>
-          <Title level={3} className="mb-1">Yeni Fiyat Listesi</Title>
-          <Text type="secondary">Tedarikçi fiyat listesi oluşturun</Text>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">Yeni Fiyat Listesi</h1>
+                <p className="text-sm text-slate-500">Tedarikçi fiyat listesi oluşturun</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={() => form.submit()}
+                disabled={createMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                <CheckIcon className="w-4 h-4" />
+                {createMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          currency: 'TRY',
-          isDefault: false,
-        }}
-      >
-        <Row gutter={24}>
-          {/* Left Panel */}
-          <Col xs={24} lg={10}>
-            <Card bordered={false} className="shadow-sm mb-6">
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #52c41a 0%, #1890ff 100%)',
-                  borderRadius: '12px',
-                  padding: '32px 20px',
-                  minHeight: '180px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
-                <p className="mt-4 text-lg font-medium text-white/90">Fiyat Listesi</p>
-                <p className="text-sm text-white/60">Tedarikçi fiyatlarını tanımlayın</p>
-              </div>
-            </Card>
-
-            {/* Status */}
-            <Card bordered={false} className="shadow-sm">
-              <div className="flex items-center justify-between p-2 bg-gray-50/50 rounded-xl">
-                <div>
-                  <Text strong className="text-gray-700">Durum</Text>
-                  <div className="text-xs text-gray-400 mt-0.5">
-                    {isActive ? 'Liste aktif ve kullanılabilir' : 'Liste pasif durumda'}
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            currency: 'TRY',
+            isDefault: false,
+          }}
+        >
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Column */}
+            <div className="col-span-12 lg:col-span-4 space-y-6">
+              {/* Visual Card */}
+              <div className="bg-gradient-to-br from-emerald-500 to-blue-500 rounded-2xl p-8 text-white">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center mb-4">
+                    <CurrencyDollarIcon className="w-8 h-8" />
                   </div>
+                  <h3 className="text-lg font-medium mb-1">Fiyat Listesi</h3>
+                  <p className="text-sm text-white/70">Tedarikçi fiyatlarını tanımlayın</p>
                 </div>
-                <Switch
-                  checked={isActive}
-                  onChange={setIsActive}
-                  checkedChildren="Aktif"
-                  unCheckedChildren="Pasif"
-                />
               </div>
 
-              <Divider />
-
-              <Form.Item name="isDefault" valuePropName="checked">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Text strong className="text-gray-700">Varsayılan Liste</Text>
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      Bu tedarikçi için varsayılan fiyat listesi
-                    </div>
-                  </div>
-                  <Switch />
+              {/* Supplier Selection Card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <BuildingStorefrontIcon className="w-5 h-5 text-slate-400" />
+                  <h3 className="font-medium text-slate-900">Tedarikçi Bilgileri</h3>
                 </div>
-              </Form.Item>
-            </Card>
-          </Col>
 
-          {/* Right Panel */}
-          <Col xs={24} lg={14}>
-            <Card bordered={false} className="shadow-sm mb-6">
-              {/* Name - Hero Input */}
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Liste adı zorunludur' },
-                  { max: 200, message: 'En fazla 200 karakter' },
-                ]}
-                className="mb-4"
-              >
-                <Input
-                  placeholder="Fiyat listesi adı"
-                  variant="borderless"
-                  style={{
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    padding: '0',
-                    color: '#1a1a1a',
-                  }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
-
-              <Form.Item name="description" className="mb-6">
-                <TextArea
-                  placeholder="Liste hakkında açıklama..."
-                  variant="borderless"
-                  autoSize={{ minRows: 2, maxRows: 4 }}
-                  style={{ fontSize: '15px', padding: '0', color: '#666' }}
-                  className="placeholder:text-gray-300"
-                />
-              </Form.Item>
-
-              <Divider />
-
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    name="code"
-                    label="Liste Kodu"
-                    rules={[{ required: true, message: 'Zorunlu' }]}
+                <Form.Item name="supplierId" label={<span className="text-sm font-medium text-slate-700">Tedarikçi</span>}>
+                  <Select
+                    placeholder="Tedarikçi seçin"
+                    allowClear
+                    showSearch
+                    optionFilterProp="children"
+                    loading={suppliersLoading}
                   >
-                    <Input placeholder="PL-001" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="supplierId" label="Tedarikçi">
-                    <Select
-                      placeholder="Tedarikçi seçin"
-                      allowClear
-                      showSearch
-                      optionFilterProp="children"
-                      loading={suppliersLoading}
-                    >
-                      {suppliersData?.items?.map(supplier => (
-                        <Select.Option key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
+                    {suppliersData?.items?.map(supplier => (
+                      <Select.Option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
 
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item name="currency" label="Para Birimi">
-                    <Select placeholder="Seçin">
-                      <Select.Option value="TRY">TRY (₺)</Select.Option>
-                      <Select.Option value="USD">USD ($)</Select.Option>
-                      <Select.Option value="EUR">EUR (€)</Select.Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="effectiveFrom" label="Başlangıç Tarihi">
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD.MM.YYYY"
-                      placeholder="Tarih"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="effectiveTo" label="Bitiş Tarihi">
-                    <DatePicker
-                      style={{ width: '100%' }}
-                      format="DD.MM.YYYY"
-                      placeholder="Tarih"
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+                <Form.Item name="currency" label={<span className="text-sm font-medium text-slate-700">Para Birimi</span>}>
+                  <Select placeholder="Seçin">
+                    <Select.Option value="TRY">TRY (₺)</Select.Option>
+                    <Select.Option value="USD">USD ($)</Select.Option>
+                    <Select.Option value="EUR">EUR (€)</Select.Option>
+                  </Select>
+                </Form.Item>
+              </div>
 
-              <Form.Item name="notes" label="Notlar">
-                <TextArea rows={2} placeholder="Ek notlar..." />
-              </Form.Item>
-            </Card>
-
-            {/* Items */}
-            <Card
-              title="Fiyat Kalemleri"
-              bordered={false}
-              className="shadow-sm"
-              extra={
-                <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
-                  Ürün Ekle
-                </Button>
-              }
-            >
-              <Table
-                columns={itemColumns}
-                dataSource={items}
-                pagination={false}
-                size="small"
-                locale={{ emptyText: 'Henüz ürün eklenmedi' }}
-                scroll={{ x: 750 }}
-              />
-              {items.length > 0 && (
-                <div className="mt-4 text-right text-sm text-gray-500">
-                  Toplam: {items.length} ürün
+              {/* Status Card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <span className="text-sm font-medium text-slate-900">Durum</span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {isActive ? 'Liste aktif ve kullanılabilir' : 'Liste pasif durumda'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isActive}
+                    onChange={setIsActive}
+                  />
                 </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6">
-          <Button onClick={() => router.back()}>İptal</Button>
-          <Button
-            type="primary"
-            icon={<CheckIcon className="w-4 h-4" />}
-            htmlType="submit"
-            loading={createMutation.isPending}
-          >
-            Kaydet
-          </Button>
-        </div>
-      </Form>
+                <div className="border-t border-slate-100 pt-4">
+                  <Form.Item name="isDefault" valuePropName="checked" className="mb-0">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium text-slate-900">Varsayılan Liste</span>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Bu tedarikçi için varsayılan fiyat listesi
+                        </p>
+                      </div>
+                      <Switch />
+                    </div>
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-span-12 lg:col-span-8 space-y-6">
+              {/* Basic Info Card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <Form.Item
+                  name="name"
+                  rules={[
+                    { required: true, message: 'Liste adı zorunludur' },
+                    { max: 200, message: 'En fazla 200 karakter' },
+                  ]}
+                  className="mb-4"
+                >
+                  <Input
+                    placeholder="Fiyat listesi adı"
+                    className="!text-xl !font-semibold !border-0 !shadow-none !p-0 !text-slate-900 placeholder:!text-slate-300"
+                  />
+                </Form.Item>
+
+                <Form.Item name="description" className="mb-6">
+                  <TextArea
+                    placeholder="Liste hakkında açıklama..."
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    className="!border-0 !shadow-none !p-0 !text-slate-600 placeholder:!text-slate-300"
+                  />
+                </Form.Item>
+
+                <div className="border-t border-slate-100 pt-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    <Form.Item
+                      name="code"
+                      label={<span className="text-sm font-medium text-slate-700">Liste Kodu</span>}
+                      rules={[{ required: true, message: 'Zorunlu' }]}
+                    >
+                      <Input placeholder="PL-001" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="effectiveFrom"
+                      label={<span className="text-sm font-medium text-slate-700">Başlangıç Tarihi</span>}
+                    >
+                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Tarih" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="effectiveTo"
+                      label={<span className="text-sm font-medium text-slate-700">Bitiş Tarihi</span>}
+                    >
+                      <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" placeholder="Tarih" />
+                    </Form.Item>
+                  </div>
+                </div>
+
+                <Form.Item
+                  name="notes"
+                  label={<span className="text-sm font-medium text-slate-700">Notlar</span>}
+                >
+                  <TextArea rows={2} placeholder="Ek notlar..." />
+                </Form.Item>
+              </div>
+
+              {/* Price Items Card */}
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-slate-900">Fiyat Kalemleri</h3>
+                    <button
+                      type="button"
+                      onClick={handleAddItem}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 border border-dashed border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      <PlusIcon className="w-4 h-4" />
+                      Ürün Ekle
+                    </button>
+                  </div>
+                </div>
+                <Table
+                  columns={itemColumns}
+                  dataSource={items}
+                  pagination={false}
+                  size="small"
+                  locale={{ emptyText: 'Henüz ürün eklenmedi' }}
+                  scroll={{ x: 750 }}
+                  className="[&_.ant-table-thead_th]:!bg-slate-50 [&_.ant-table-thead_th]:!text-slate-600 [&_.ant-table-thead_th]:!font-medium [&_.ant-table-thead_th]:!text-xs [&_.ant-table-thead_th]:!uppercase [&_.ant-table-thead_th]:!tracking-wide"
+                />
+                {items.length > 0 && (
+                  <div className="px-6 py-3 border-t border-slate-100 text-right text-sm text-slate-500">
+                    Toplam: {items.length} ürün
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

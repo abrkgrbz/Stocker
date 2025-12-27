@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, InputNumber, Select, Switch } from 'antd';
-import { GlobalOutlined } from '@ant-design/icons';
+import { GlobeAltIcon } from '@heroicons/react/24/outline';
 import type { TerritoryDto } from '@/lib/api/services/crm.types';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 
@@ -66,7 +66,7 @@ export default function TerritoryForm({ form, initialValues, onFinish, loading }
             {/* Territory Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <GlobalOutlined className="text-xl text-slate-500" />
+                <GlobeAltIcon className="w-5 h-5 text-slate-500" />
               </div>
             </div>
 
