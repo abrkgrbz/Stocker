@@ -82,7 +82,7 @@ const settingsGroups = [
         description: 'Sistem aktivitelerini ve değişiklikleri izleyin',
         icon: FileText,
         path: '/settings/audit-logs',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'backup',

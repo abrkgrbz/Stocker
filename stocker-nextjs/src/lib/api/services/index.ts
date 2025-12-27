@@ -98,3 +98,14 @@ export type {
   UpdateTenantSettingsRequest,
   TenantStatsDto,
 } from './tenant-settings.service';
+
+// Audit Logs Module
+export { AuditLogsService } from './audit-logs.service';
+export type {
+  AuditLogListItem,
+  AuditLogDetail,
+  AuditLogsResponse,
+  AuditLogStatistics,
+  SecurityEvent,
+  AuditLogFilters,
+} from './audit-logs.service';
