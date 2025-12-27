@@ -26,6 +26,7 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
   ClipboardDocumentListIcon,
+  ClockIcon,
   ExclamationTriangleIcon,
   EyeIcon,
   FunnelIcon,
@@ -242,7 +243,7 @@ export default function AuditTrailPage() {
           </Tooltip>
           <Tooltip title="Geçmiş">
             <a onClick={() => openHistoryModal(record.entityType, record.entityId)} className="text-slate-600 hover:text-slate-900">
-              <HistoryOutlined />
+              <ClockIcon className="w-4 h-4" />
             </a>
           </Tooltip>
         </Space>
@@ -432,7 +433,7 @@ export default function AuditTrailPage() {
         {/* Recent Activities */}
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-5">
-            <HistoryOutlined className="text-slate-500" />
+            <ClockIcon className="w-4 h-4 text-slate-500" />
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Son Aktiviteler
             </p>
@@ -665,7 +666,7 @@ export default function AuditTrailPage() {
       <Modal
         title={
           <Space>
-            <HistoryOutlined />
+            <ClockIcon className="w-5 h-5" />
             Varlık Geçmişi
           </Space>
         }

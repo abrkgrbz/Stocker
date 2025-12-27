@@ -22,6 +22,7 @@ import {
   CheckIcon,
   MapPinIcon,
   PlusIcon,
+  QrCodeIcon,
   ShoppingBagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
@@ -240,7 +241,7 @@ export default function NewSerialNumberPage() {
                   <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                        <BarcodeOutlined className="text-white text-xl" />
+                        <QrCodeIcon className="w-6 h-6 text-white" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
@@ -345,7 +346,7 @@ export default function NewSerialNumberPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide block">
-                      <BarcodeOutlined className="mr-1" /> Seri Numaraları
+                      <QrCodeIcon className="w-4 h-4 mr-1 inline-block" /> Seri Numaraları
                     </Text>
                     {validCount > 0 && (
                       <span className="text-sm text-gray-400">{validCount} adet girildi</span>

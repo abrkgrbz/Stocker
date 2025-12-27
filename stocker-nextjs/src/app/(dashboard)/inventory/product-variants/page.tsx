@@ -24,6 +24,7 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  QrCodeIcon,
   Squares2X2Icon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
@@ -89,7 +90,7 @@ export default function ProductVariantsPage() {
           <div>
             <div className="font-medium">{record.name}</div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <BarcodeOutlined />
+              <QrCodeIcon className="w-3 h-3" />
               <span>{record.sku}</span>
               {record.barcode && (
                 <>

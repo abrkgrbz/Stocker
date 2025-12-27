@@ -7,6 +7,7 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   CurrencyDollarIcon,
+  MinusCircleIcon,
   PlusCircleIcon,
   UserIcon,
 } from '@heroicons/react/24/outline';
@@ -115,7 +116,7 @@ export default function NewPayslipPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><MinusCircleOutlined className="mr-1" /> Kesintiler</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><MinusCircleIcon className="w-4 h-4 mr-1 inline" /> Kesintiler</Text>
                 <Row gutter={16}>
                   <Col span={12}><Form.Item name="incomeTax" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Gelir vergisi" prefix="₺" /></Form.Item></Col>
                   <Col span={12}><Form.Item name="stampTax" className="mb-3"><InputNumber style={{ width: '100%' }} placeholder="Damga vergisi" prefix="₺" /></Form.Item></Col>

@@ -20,6 +20,7 @@ import {
 } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowUturnLeftIcon,
   CheckCircleIcon,
   CurrencyDollarIcon,
   PencilIcon,
@@ -44,7 +45,7 @@ const statusConfig: Record<PaymentStatus, { color: string; label: string; icon: 
   Confirmed: { color: 'blue', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
   Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
-  Refunded: { color: 'purple', label: 'İade Edildi', icon: <RollbackOutlined /> },
+  Refunded: { color: 'purple', label: 'İade Edildi', icon: <ArrowUturnLeftIcon className="w-4 h-4" /> },
 };
 
 const methodLabels: Record<PaymentMethod, string> = {
@@ -217,7 +218,7 @@ export default function PaymentDetailPage() {
           )}
           {payment.status === 'Completed' && remainingAmount > 0 && (
             <Button
-              icon={<RollbackOutlined />}
+              icon={<ArrowUturnLeftIcon className="w-4 h-4" />}
               onClick={handleRefundClick}
             >
               İade Et

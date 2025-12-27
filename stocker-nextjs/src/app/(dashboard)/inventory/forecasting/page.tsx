@@ -18,12 +18,15 @@ import {
   Empty,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowPathIcon,
+  ArrowUpIcon,
   ChartBarIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  LightBulbIcon,
   MinusIcon,
   ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
@@ -63,9 +66,9 @@ const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
 };
 
 const getTrendIcon = (trend: number) => {
-  if (trend > 0.05) return <ArrowUpOutlined style={{ color: '#334155' }} />;
-  if (trend < -0.05) return <ArrowDownOutlined style={{ color: '#64748b' }} />;
-  return <MinusIcon className="w-4 h-4" style={{ color: '#94a3b8' }} />;
+  if (trend > 0.05) return <ArrowUpIcon className="w-4 h-4 text-slate-700" />;
+  if (trend < -0.05) return <ArrowDownIcon className="w-4 h-4 text-slate-500" />;
+  return <MinusIcon className="w-4 h-4 text-slate-400" />;
 };
 
 const getStatusColor = (status: ReorderSuggestionStatus) => {
@@ -662,7 +665,7 @@ export default function ForecastingPage() {
       key: 'optimization',
       label: (
         <span className="flex items-center gap-2">
-          <BulbOutlined />
+          <LightBulbIcon className="w-4 h-4" />
           Optimizasyon Önerileri
         </span>
       ),

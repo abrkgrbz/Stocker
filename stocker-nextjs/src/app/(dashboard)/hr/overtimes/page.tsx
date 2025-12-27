@@ -25,6 +25,7 @@ import {
   CurrencyDollarIcon,
   EllipsisHorizontalIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   EyeIcon,
   MagnifyingGlassIcon,
   PencilIcon,
@@ -222,7 +223,7 @@ export default function OvertimesPage() {
         <Space>
           <Text strong>{name}</Text>
           {record.isEmergency && (
-            <AlertOutlined style={{ color: '#ff4d4f' }} />
+            <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
           )}
         </Space>
       ),

@@ -442,7 +442,7 @@ export default function UserDetailPage() {
               ) : (
                 <div className="py-8 text-center">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                    <HistoryOutlined className="text-xl text-slate-400" />
+                    <HistoryIcon className="w-5 h-5 text-slate-400" />
                   </div>
                   <p className="text-slate-500 text-sm">Giris gecmisi bulunamadi</p>
                 </div>

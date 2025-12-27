@@ -28,16 +28,21 @@ import {
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  BoltIcon,
   CheckCircleIcon,
   ClipboardDocumentIcon,
+  ClockIcon,
   ExclamationCircleIcon,
   InboxIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   PrinterIcon,
+  QrCodeIcon,
   ShoppingBagIcon,
+  SpeakerWaveIcon,
   TagIcon,
   TrashIcon,
+  ViewfinderCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -556,7 +561,7 @@ export default function BarcodesPage() {
       return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-            <ScanOutlined className="text-xl text-slate-400" />
+            <ViewfinderCircleIcon className="w-6 h-6 text-slate-400" />
           </div>
           <span className="text-sm font-medium text-slate-900">Barkod Tarayın</span>
           <span className="text-xs text-slate-500 mt-1">Hardware scanner veya manuel giriş</span>
@@ -763,7 +768,7 @@ export default function BarcodesPage() {
       key: 'scanner',
       label: (
         <span className="flex items-center gap-2">
-          <ScanOutlined />
+          <ViewfinderCircleIcon className="w-4 h-4" />
           Pro Tarayıcı
         </span>
       ),
@@ -778,7 +783,7 @@ export default function BarcodesPage() {
                   <div className="text-2xl font-semibold text-slate-900">{totalScannedItems}</div>
                 </div>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-                  <ScanOutlined style={{ color: '#8b5cf6' }} />
+                  <ViewfinderCircleIcon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
                 </div>
               </div>
             </div>
@@ -789,7 +794,7 @@ export default function BarcodesPage() {
                   <div className="text-2xl font-semibold text-slate-900">{historyStats.uniqueItems}</div>
                 </div>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-                  <BarcodeOutlined style={{ color: '#3b82f6' }} />
+                  <QrCodeIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
                 </div>
               </div>
             </div>
@@ -826,7 +831,7 @@ export default function BarcodesPage() {
                   ref={scanInputRef}
                   size="large"
                   placeholder={isScannerActive ? "Barkod tarayın veya girin..." : "Tarayıcı devre dışı"}
-                  prefix={<ScanOutlined className="text-slate-400" />}
+                  prefix={<ViewfinderCircleIcon className="w-5 h-5 text-slate-400" />}
                   value={scanInput}
                   onChange={handleScanInputChange}
                   onKeyDown={handleScanKeyDown}
@@ -866,7 +871,7 @@ export default function BarcodesPage() {
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className={`p-2 rounded-md transition-colors ${soundEnabled ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                 >
-                  <SoundOutlined />
+                  <SpeakerWaveIcon className="w-5 h-5" />
                 </button>
               </Tooltip>
 
@@ -882,7 +887,7 @@ export default function BarcodesPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <ThunderboltOutlined />
+                <BoltIcon className="w-5 h-5" />
                 {isScannerActive ? "Aktif" : "Durduruldu"}
               </button>
             </div>
@@ -962,7 +967,7 @@ export default function BarcodesPage() {
           <div className="bg-white border border-slate-200 rounded-lg">
             <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HistoryOutlined className="text-slate-400" />
+                <ClockIcon className="w-4 h-4 text-slate-400" />
                 <span className="text-sm font-medium text-slate-900">Tarama Geçmişi</span>
                 <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                   {historyStats.uniqueItems}
@@ -996,7 +1001,7 @@ export default function BarcodesPage() {
               {scanHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                    <HistoryOutlined className="text-xl text-slate-400" />
+                    <ClockIcon className="w-6 h-6 text-slate-400" />
                   </div>
                   <span className="text-sm text-slate-500">Henüz tarama yapılmadı</span>
                 </div>
@@ -1120,7 +1125,7 @@ export default function BarcodesPage() {
       key: 'generator',
       label: (
         <span className="flex items-center gap-2">
-          <BarcodeOutlined />
+          <QrCodeIcon className="w-4 h-4" />
           Barkod Oluşturucu
         </span>
       ),
@@ -1166,7 +1171,7 @@ export default function BarcodesPage() {
                 disabled={generateBarcode.isPending}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
               >
-                <BarcodeOutlined />
+                <QrCodeIcon className="w-4 h-4" />
                 {generateBarcode.isPending ? 'Oluşturuluyor...' : 'Barkod Oluştur'}
               </button>
             </Form>
@@ -1203,7 +1208,7 @@ export default function BarcodesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                  <BarcodeOutlined className="text-xl text-slate-400" />
+                  <QrCodeIcon className="w-6 h-6 text-slate-400" />
                 </div>
                 <span className="text-sm text-slate-500">Barkod oluşturun</span>
               </div>
@@ -1455,7 +1460,7 @@ export default function BarcodesPage() {
       key: 'autogen',
       label: (
         <span className="flex items-center gap-2">
-          <QrcodeOutlined />
+          <QrCodeIcon className="w-4 h-4" />
           Otomatik Barkod
         </span>
       ),
@@ -1501,7 +1506,7 @@ export default function BarcodesPage() {
                 disabled={autoGenerateBarcode.isPending}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
               >
-                <QrcodeOutlined />
+                <QrCodeIcon className="w-4 h-4" />
                 {autoGenerateBarcode.isPending ? 'Oluşturuluyor...' : 'Barkod Oluştur'}
               </button>
             </Form>
@@ -1534,7 +1539,7 @@ export default function BarcodesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                  <QrcodeOutlined className="text-xl text-slate-400" />
+                  <QrCodeIcon className="w-6 h-6 text-slate-400" />
                 </div>
                 <span className="text-sm text-slate-500">Barkod oluşturun</span>
               </div>
@@ -1650,7 +1655,7 @@ export default function BarcodesPage() {
     <PageContainer maxWidth="7xl">
       {/* Header */}
       <ListPageHeader
-        icon={<ScanOutlined />}
+        icon={<ViewfinderCircleIcon className="w-6 h-6" />}
         iconColor="#8b5cf6"
         title="Barkod Yönetimi"
         description="Barkod tarama, oluşturma ve etiket işlemleri"

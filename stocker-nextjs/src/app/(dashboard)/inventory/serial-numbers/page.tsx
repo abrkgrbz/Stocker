@@ -22,6 +22,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowUturnLeftIcon,
   CheckCircleIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
@@ -32,6 +33,7 @@ import {
   LockOpenIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  QrCodeIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
   ShoppingCartIcon,
@@ -70,10 +72,10 @@ const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8'
 // Serial number status configuration - monochrome
 const statusConfig: Record<SerialNumberStatus, { color: string; label: string; icon: React.ReactNode }> = {
   Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleIcon className="w-4 h-4" /> },
-  InStock: { color: '#334155', label: 'Stokta', icon: <BarcodeOutlined /> },
+  InStock: { color: '#334155', label: 'Stokta', icon: <QrCodeIcon className="w-4 h-4" /> },
   Reserved: { color: '#475569', label: 'Rezerve', icon: <LockClosedIcon className="w-4 h-4" /> },
   Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingBagIcon className="w-4 h-4" /> },
-  Returned: { color: '#94a3b8', label: 'İade', icon: <RollbackOutlined /> },
+  Returned: { color: '#94a3b8', label: 'İade', icon: <ArrowUturnLeftIcon className="w-4 h-4" /> },
   Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
   InRepair: { color: '#475569', label: 'Tamirde', icon: <WrenchIcon className="w-4 h-4" /> },
   Scrapped: { color: '#1e293b', label: 'Hurda', icon: <TrashIcon className="w-4 h-4" /> },
@@ -467,7 +469,7 @@ export default function SerialNumbersPage() {
       key: 'all',
       label: (
         <span className="flex items-center gap-2">
-          <BarcodeOutlined />
+          <QrCodeIcon className="w-4 h-4" />
           Tümü
           <Badge count={stats.total} showZero style={{ backgroundColor: '#1e293b' }} />
         </span>
@@ -532,7 +534,7 @@ export default function SerialNumbersPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-              <BarcodeOutlined className="text-white text-lg" />
+              <QrCodeIcon className="w-5 h-5 text-white" />
             </div>
             Seri Numarası Yönetimi
           </h1>
@@ -563,7 +565,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <BarcodeOutlined className="text-slate-600 text-lg" />
+                <QrCodeIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>

@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Spin, Alert, Space, Dropdown, Table } from 'antd';
 import {
   ArrowLeftIcon,
+  ArrowUturnLeftIcon,
   CheckCircleIcon,
   EllipsisHorizontalIcon,
   MapPinIcon,
@@ -133,7 +134,7 @@ export default function ShipmentDetailPage() {
   if (shipment?.status === 'Delivered') {
     actionMenuItems.push({
       key: 'return',
-      icon: <RollbackOutlined />,
+      icon: <ArrowUturnLeftIcon className="w-4 h-4" />,
       label: 'İade Al',
       onClick: () => {
         // Handle return - would need a separate mutation

@@ -181,7 +181,7 @@ export default function CategoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={category.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={category.isActive ? <CheckCircleIcon className="w-3 h-3" /> : <XCircleIcon className="w-3 h-3" />}
                     className={`border-0 ${
                       category.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -205,9 +205,9 @@ export default function CategoryDetailPage() {
                     onClick={() => router.push(`/inventory/categories/${parentCategory.id}`)}
                     className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
                   >
-                    <FolderOutlined />
+                    <FolderIcon className="w-4 h-4" />
                     {parentCategory.name}
-                    <RightOutlined className="text-xs" />
+                    <ChevronRightIcon className="w-3 h-3" />
                   </button>
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function CategoryDetailPage() {
               {category.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <FileTextOutlined className="text-slate-400" />
+                    <DocumentTextIcon className="w-4 h-4 text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Açıklama</p>
                   </div>
                   <p className="text-sm text-slate-700">{category.description}</p>
@@ -234,7 +234,7 @@ export default function CategoryDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4 text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -244,7 +244,7 @@ export default function CategoryDetailPage() {
                 {category.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -272,7 +272,7 @@ export default function CategoryDetailPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
-                          <FolderOutlined className="text-slate-500" />
+                          <FolderIcon className="w-4 h-4 text-slate-500" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 m-0">{child.name}</p>
@@ -289,7 +289,7 @@ export default function CategoryDetailPage() {
                         >
                           {child.isActive ? 'Aktif' : 'Pasif'}
                         </Tag>
-                        <RightOutlined className="text-slate-300 text-xs" />
+                        <ChevronRightIcon className="w-3 h-3 text-slate-300" />
                       </div>
                     </div>
                   ))}

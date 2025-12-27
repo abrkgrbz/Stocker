@@ -20,6 +20,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowUpTrayIcon,
   CheckCircleIcon,
   DocumentTextIcon,
   EllipsisHorizontalIcon,
@@ -443,7 +444,7 @@ export default function PurchaseRequestsPage() {
             <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
           </Tooltip>
           <Tooltip title="Dışa Aktar">
-            <Button icon={<ExportOutlined />} />
+            <Button icon={<ArrowUpTrayIcon className="w-4 h-4" />} />
           </Tooltip>
         </div>
       </Card>

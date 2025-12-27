@@ -23,8 +23,11 @@ import {
   ArrowLeftIcon,
   CheckIcon,
   Cog6ToothIcon,
+  CubeIcon,
   CurrencyDollarIcon,
   PlusIcon,
+  QrCodeIcon,
+  SwatchIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -316,7 +319,7 @@ export default function NewProductVariantPage() {
               {/* Product Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <SkinOutlined className="mr-1" /> Ana Ürün Seçimi
+                  <SwatchIcon className="w-4 h-4 inline mr-1" /> Ana Ürün Seçimi
                 </Text>
                 <Form.Item
                   name="productId"
@@ -354,7 +357,7 @@ export default function NewProductVariantPage() {
                   <div className="p-4 bg-gray-50/50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                        <SkinOutlined className="text-white text-xl" />
+                        <SwatchIcon className="w-6 h-6 text-white" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
@@ -397,7 +400,7 @@ export default function NewProductVariantPage() {
                   </div>
                 ) : variantOptions.length === 0 ? (
                   <div className="p-8 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
-                    <SkinOutlined className="text-4xl text-gray-300 mb-2" />
+                    <SwatchIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <div className="text-gray-500 mb-3">Henüz varyant özelliği eklenmedi</div>
                     <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                       İlk Özelliği Ekle
@@ -469,7 +472,7 @@ export default function NewProductVariantPage() {
               {/* Inventory Codes */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <BarcodeOutlined className="mr-1" /> Envanter Kodları
+                  <QrCodeIcon className="w-4 h-4 inline mr-1" /> Envanter Kodları
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -557,7 +560,7 @@ export default function NewProductVariantPage() {
                     key: 'advanced',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <BoxPlotOutlined className="mr-1" /> Fiziksel Özellikler & Diğer
+                        <CubeIcon className="w-4 h-4 inline mr-1" /> Fiziksel Özellikler & Diğer
                       </Text>
                     ),
                     children: (

@@ -29,6 +29,7 @@ import {
   PaperAirplaneIcon,
   PencilIcon,
   PrinterIcon,
+  TruckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
@@ -299,7 +300,7 @@ export default function SalesOrderDetailPage() {
             </Button>
           )}
           {order.status === 'Shipped' && (
-            <Button type="primary" icon={<CarOutlined />} onClick={handleDeliver} loading={deliverMutation.isPending}>
+            <Button type="primary" icon={<TruckIcon className="w-4 h-4" />} onClick={handleDeliver} loading={deliverMutation.isPending}>
               Teslim Edildi
             </Button>
           )}

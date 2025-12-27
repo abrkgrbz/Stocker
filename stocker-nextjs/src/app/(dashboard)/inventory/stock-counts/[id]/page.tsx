@@ -16,7 +16,9 @@ import {
   Empty,
 } from 'antd';
 import {
+  ArrowDownIcon,
   ArrowLeftIcon,
+  ArrowUpIcon,
   CalendarIcon,
   CheckCircleIcon,
   Cog6ToothIcon,
@@ -297,12 +299,12 @@ export default function StockCountDetailPage() {
         if (diff > 0)
           return (
             <span className="text-emerald-600 flex items-center justify-end gap-1">
-              <ArrowUpOutlined /> +{diff}
+              <ArrowUpIcon className="w-4 h-4" /> +{diff}
             </span>
           );
         return (
           <span className="text-red-500 flex items-center justify-end gap-1">
-            <ArrowDownOutlined /> {diff}
+            <ArrowDownIcon className="w-4 h-4" /> {diff}
           </span>
         );
       },
@@ -493,9 +495,9 @@ export default function StockCountDetailPage() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                   {stockCount.totalDifference > 0 ? (
-                    <ArrowUpOutlined className="text-emerald-600 text-lg" />
+                    <ArrowUpIcon className="w-5 h-5 text-emerald-600" />
                   ) : stockCount.totalDifference < 0 ? (
-                    <ArrowDownOutlined className="text-red-600 text-lg" />
+                    <ArrowDownIcon className="w-5 h-5 text-red-600" />
                   ) : (
                     <MinusIcon className="w-5 h-5 text-slate-600" />
                   )}

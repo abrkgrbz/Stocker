@@ -21,6 +21,7 @@ import {
   DocumentTextIcon,
   ExclamationTriangleIcon,
   MapPinIcon,
+  QrCodeIcon,
   ShieldCheckIcon,
   ShoppingCartIcon,
   UserIcon,
@@ -247,7 +248,7 @@ export default function SerialNumberDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <BarcodeOutlined className="text-white text-lg" />
+                <QrCodeIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -342,7 +343,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <BarcodeOutlined className="text-white text-lg" />
+                  <QrCodeIcon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Durum</p>
               </div>

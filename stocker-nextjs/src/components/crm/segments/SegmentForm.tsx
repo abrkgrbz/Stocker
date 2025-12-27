@@ -30,14 +30,12 @@ interface SegmentFormProps {
 export default function SegmentForm({ form, initialValues, onFinish, loading }: SegmentFormProps) {
   const [isActive, setIsActive] = useState(true);
   const [segmentType, setSegmentType] = useState<'Static' | 'Dynamic'>('Static');
-  const [selectedColor, setSelectedColor] = useState('#1890ff');
 
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
       setSegmentType((initialValues.type as 'Static' | 'Dynamic') || 'Static');
-      setSelectedColor(initialValues.color || '#1890ff');
     } else {
       form.setFieldsValue({
         type: 'Static',
@@ -71,13 +69,10 @@ export default function SegmentForm({ form, initialValues, onFinish, loading }: 
         ═══════════════════════════════════════════════════════════════ */}
         <div className="px-8 py-6 border-b border-slate-200">
           <div className="flex items-center gap-6">
-            {/* Segment Icon with Color */}
+            {/* Segment Icon */}
             <div className="flex-shrink-0">
-              <div
-                className="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center"
-                style={{ backgroundColor: `${selectedColor}20`, borderColor: selectedColor }}
-              >
-                <UserGroupIcon className="w-5 h-5" style={{ color: selectedColor }} />
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <UserGroupIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

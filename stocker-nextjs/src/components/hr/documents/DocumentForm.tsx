@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Select, DatePicker, Input, Row, Col, Typography, Upload, message } from 'antd';
 import type { UploadProps, UploadFile } from 'antd';
-import { InboxIcon } from '@heroicons/react/24/outline';
+import { InboxIcon, DocumentIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { EmployeeDocumentDto } from '@/lib/api/services/hr.types';
 import { DocumentType } from '@/lib/api/services/hr.types';
@@ -139,7 +139,7 @@ export default function DocumentForm({ form, initialValues, onFinish, loading, o
             <div className="p-4 bg-gray-50/50 rounded-xl border border-gray-100">
               <div className="text-xs text-gray-500 mb-1">Mevcut Dosya</div>
               <div className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                <FileOutlined />
+                <DocumentIcon className="w-4 h-4" />
                 {initialValues.fileName}
               </div>
               {initialValues.fileSize && (

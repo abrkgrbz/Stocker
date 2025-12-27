@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Form, Select, DatePicker, InputNumber, Input, Switch, Tooltip, Collapse, Tag } from 'antd';
-import { CurrencyDollarIcon, CalculatorIcon, InformationCircleIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { CurrencyDollarIcon, CalculatorIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { PayrollDto } from '@/lib/api/services/hr.types';
 import {
@@ -145,19 +145,8 @@ export default function PayrollForm({ form, initialValues, onFinish, loading }: 
           <div className="flex items-center gap-6">
             {/* Payroll Icon */}
             <div className="flex-shrink-0">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center transition-all"
-                style={{
-                  background: autoCalculate
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                }}
-              >
-                {autoCalculate ? (
-                  <BoltIcon className="w-7 h-7 text-white" />
-                ) : (
-                  <CurrencyDollarIcon className="w-7 h-7 text-white" />
-                )}
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <CurrencyDollarIcon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

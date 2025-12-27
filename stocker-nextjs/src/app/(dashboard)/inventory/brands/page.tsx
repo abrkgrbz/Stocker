@@ -23,6 +23,7 @@ import {
   MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
+  TagIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useBrands, useDeleteBrand } from '@/lib/api/hooks/useInventory';
@@ -87,7 +88,7 @@ export default function BrandsPage() {
               className="w-10 h-10 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: '#f59e0b15' }}
             >
-              <TrademarkOutlined style={{ color: '#f59e0b' }} />
+              <TagIcon className="w-5 h-5 text-amber-500" />
             </div>
           )}
           <div>
@@ -201,7 +202,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalBrands}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <TrademarkOutlined style={{ color: '#f59e0b' }} />
+              <TagIcon className="w-5 h-5 text-amber-500" />
             </div>
           </div>
         </div>
@@ -212,7 +213,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeBrands}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-5 h-5 text-emerald-500" />
             </div>
           </div>
         </div>
@@ -242,7 +243,7 @@ export default function BrandsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TrademarkOutlined />}
+        icon={<TagIcon className="w-5 h-5" />}
         iconColor="#f59e0b"
         title="Markalar"
         description="Ürün markalarını yönetin"

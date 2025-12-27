@@ -2,8 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Form, Input, TimePicker, InputNumber, Row, Col, Empty } from 'antd';
-import { Spinner } from '@/components/primitives';
+import { Button, Form, Input, TimePicker, InputNumber, Row, Col, Empty, Spin } from 'antd';
 import { ArrowLeftIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { useShift, useUpdateShift } from '@/lib/api/hooks/useHR';
 import type { UpdateShiftDto } from '@/lib/api/services/hr.types';
@@ -96,11 +95,11 @@ export default function EditShiftPage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/shifts/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <ClockCircleOutlined className="text-lg text-gray-600" />
+              <ClockIcon className="w-5 h-5 text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Vardiya Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

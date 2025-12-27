@@ -17,12 +17,16 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
+  BoltIcon,
   ChartBarIcon,
   ChartPieIcon,
+  CircleStackIcon,
   CurrencyDollarIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  LightBulbIcon,
 } from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -114,7 +118,7 @@ const getTrendIcon = (trend: string) => {
       return <ArrowTrendingUpIcon className="w-4 h-4 text-slate-700" />;
     case 'declining':
     case 'down':
-      return <FallOutlined className="text-slate-400" />;
+      return <ArrowTrendingDownIcon className="w-4 h-4 text-slate-400" />;
     default:
       return <span className="text-slate-400">→</span>;
   }
@@ -556,7 +560,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <DatabaseOutlined className="text-slate-600 text-lg" />
+                        <CircleStackIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatNumber(abcXyzData.totalProductsAnalyzed)}</div>
@@ -578,7 +582,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <DatabaseOutlined className="text-slate-600 text-lg" />
+                        <CircleStackIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalStockValue)}</div>
@@ -589,7 +593,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <ThunderboltOutlined className="text-slate-600 text-lg" />
+                        <BoltIcon className="w-5 h-5 text-slate-600" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{abcXyzData.averageInventoryTurnover?.toFixed(2)}</div>
@@ -899,7 +903,7 @@ export default function InventoryAnalysisPage() {
                 <Alert
                   type="warning"
                   showIcon
-                  icon={<BulbOutlined className="text-slate-600" />}
+                  icon={<LightBulbIcon className="w-4 h-4 text-slate-600" />}
                   message={<span className="font-semibold text-slate-900">Öneriler</span>}
                   description={
                     <ul className="list-disc pl-5 mt-2 text-slate-600">
@@ -939,7 +943,7 @@ export default function InventoryAnalysisPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-              <AreaChartOutlined className="text-white text-lg" />
+              <ChartBarIcon className="w-5 h-5 text-white" />
             </div>
             Envanter Analizi
           </h1>
@@ -1047,7 +1051,7 @@ export default function InventoryAnalysisPage() {
                 <Alert
                   type="info"
                   showIcon
-                  icon={<BulbOutlined className="text-slate-600" />}
+                  icon={<LightBulbIcon className="w-4 h-4 text-slate-600" />}
                   message={<span className="font-semibold text-slate-900">İyileştirme Alanları</span>}
                   description={
                     <ul className="list-disc pl-5 mt-2 text-slate-600">

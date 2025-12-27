@@ -19,10 +19,12 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  BellAlertIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
+  MinusCircleIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -42,7 +44,7 @@ function getStockStatus(product: ProductDto): { status: string; color: string; b
     : 100;
 
   if (product.totalStockQuantity === 0) {
-    return { status: 'Stok Yok', color: '#1e293b', bgColor: '#e2e8f0', icon: <MinusCircleOutlined />, percent: 0 };
+    return { status: 'Stok Yok', color: '#1e293b', bgColor: '#e2e8f0', icon: <MinusCircleIcon className="w-4 h-4" />, percent: 0 };
   } else if (product.totalStockQuantity <= product.minStockLevel) {
     return { status: 'Kritik', color: '#1e293b', bgColor: '#cbd5e1', icon: <ExclamationCircleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.reorderLevel) {
@@ -335,7 +337,7 @@ export default function StockAlertsPage() {
       key: 'all',
       label: (
         <span className="flex items-center gap-2">
-          <AlertOutlined />
+          <BellAlertIcon className="w-4 h-4" />
           Tüm Ürünler
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.total}
@@ -428,7 +430,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <AlertOutlined className="text-lg text-slate-600" />
+                <BellAlertIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
@@ -439,7 +441,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
-                <MinusCircleOutlined className="text-lg text-slate-800" />
+                <MinusCircleIcon className="w-5 h-5 text-slate-800" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.noStock}</div>

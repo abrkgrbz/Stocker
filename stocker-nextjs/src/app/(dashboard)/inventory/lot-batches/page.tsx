@@ -21,6 +21,7 @@ import {
 } from 'antd';
 import {
   ArrowPathIcon,
+  BeakerIcon,
   CheckCircleIcon,
   ClockIcon,
   EllipsisHorizontalIcon,
@@ -522,7 +523,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ExperimentOutlined className="text-lg text-slate-600" />
+                <BeakerIcon className="w-5 h-5 text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.totalQuantity.toLocaleString('tr-TR')}</div>

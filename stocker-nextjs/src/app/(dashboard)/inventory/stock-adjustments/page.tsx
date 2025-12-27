@@ -28,6 +28,7 @@ import {
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
+  MinusCircleIcon,
   PencilIcon,
   PlusCircleIcon,
   PlusIcon,
@@ -326,9 +327,9 @@ export default function StockAdjustmentsPage() {
             style={{ backgroundColor: record.difference > 0 ? '#10b98115' : '#ef444415' }}
           >
             {record.difference > 0 ? (
-              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+              <PlusCircleIcon className="w-4 h-4 text-emerald-500" />
             ) : (
-              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+              <MinusCircleIcon className="w-4 h-4 text-red-500" />
             )}
           </div>
           <div>
@@ -464,9 +465,9 @@ export default function StockAdjustmentsPage() {
             style={{ backgroundColor: record.movementType === 'AdjustmentIncrease' ? '#10b98115' : '#ef444415' }}
           >
             {record.movementType === 'AdjustmentIncrease' ? (
-              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
+              <PlusCircleIcon className="w-4 h-4 text-emerald-500" />
             ) : (
-              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+              <MinusCircleIcon className="w-4 h-4 text-red-500" />
             )}
           </div>
           <div>
@@ -579,7 +580,7 @@ export default function StockAdjustmentsPage() {
       key: 'history',
       label: (
         <span className="flex items-center gap-2">
-          <HistoryOutlined />
+          <ClockIcon className="w-4 h-4" />
           Geçmiş
         </span>
       ),
@@ -640,8 +641,8 @@ export default function StockAdjustmentsPage() {
               <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam Azalış</span>
               <div className="text-2xl font-semibold text-red-600">-{stats.totalDecrease.toLocaleString('tr-TR')}</div>
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-              <MinusCircleOutlined style={{ color: '#ef4444' }} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/10">
+              <MinusCircleIcon className="w-4 h-4 text-red-500" />
             </div>
           </div>
         </div>

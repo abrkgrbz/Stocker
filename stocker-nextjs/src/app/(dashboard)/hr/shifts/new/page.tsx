@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CheckIcon, ClockIcon, DocumentCheckIcon } from '@heroicons/react/24/outline';
 import { ShiftForm } from '@/components/hr';
 import { useCreateShift } from '@/lib/api/hooks/useHR';
 import type { CreateShiftDto } from '@/lib/api/services/hr.types';
@@ -55,14 +55,14 @@ export default function NewShiftPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <ClockCircleOutlined className="mr-2" />
+                <ClockIcon className="w-5 h-5 inline mr-2" />
                 Yeni Vardiya
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir vardiya tanımlayın</p>
@@ -72,7 +72,7 @@ export default function NewShiftPage() {
             <Button onClick={() => router.push('/hr/shifts')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<DocumentCheckIcon className="w-4 h-4" />}
               loading={createShift.isPending}
               onClick={() => form.submit()}
               style={{

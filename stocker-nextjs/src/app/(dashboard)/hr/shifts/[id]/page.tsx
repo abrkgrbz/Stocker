@@ -14,6 +14,7 @@ import {
   Statistic,
   Empty,
   Modal,
+  Spin,
 } from 'antd';
 import {
   ArrowLeftIcon,
@@ -130,7 +131,7 @@ export default function ShiftDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/shifts')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/shifts')}>
             Geri
           </Button>
           <div>
@@ -147,7 +148,7 @@ export default function ShiftDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={shift.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleOutlined />}
+            icon={shift.isActive ? <StopCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {shift.isActive ? 'Pasifleştir' : 'Aktifleştir'}
@@ -155,7 +156,7 @@ export default function ShiftDetailPage() {
           <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/shifts/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -170,7 +171,7 @@ export default function ShiftDetailPage() {
                 <Statistic
                   title="Başlangıç"
                   value={formatTime(shift.startTime)}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#52c41a' }}
                 />
               </Card>
@@ -180,7 +181,7 @@ export default function ShiftDetailPage() {
                 <Statistic
                   title="Bitiş"
                   value={formatTime(shift.endTime)}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff' }}
                 />
               </Card>
