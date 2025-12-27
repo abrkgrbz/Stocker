@@ -18,16 +18,14 @@ import {
   Empty,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  DollarOutlined,
-  CalendarOutlined,
-  PercentageOutlined,
-  TrophyOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  ShoppingCartOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  TrophyIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import {
   useOpportunity,
@@ -138,7 +136,7 @@ export default function OpportunityDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <Button
-                icon={<ArrowLeftOutlined />}
+                icon={<ArrowLeftIcon className="w-4 h-4" />}
                 onClick={() => router.push('/crm/opportunities')}
                 className="mb-4 bg-white/20 border-white/40 text-white hover:bg-white/30"
               >
@@ -199,7 +197,7 @@ export default function OpportunityDetailPage() {
             <Statistic
               title="Tahmini Kapanış"
               value={opportunity.expectedCloseDate ? dayjs(opportunity.expectedCloseDate).format('DD/MM/YYYY') : '-'}
-              prefix={<CalendarOutlined />}
+              prefix={<CalendarIcon className="w-4 h-4" />}
             />
             {daysUntilClose !== null && (
               <div className="text-sm text-gray-500 mt-2">
@@ -234,7 +232,7 @@ export default function OpportunityDetailPage() {
               key: 'overview',
               label: (
                 <span>
-                  <FileTextOutlined />
+                  <DocumentTextIcon className="w-4 h-4" />
                   Genel Bakış
                 </span>
               ),
@@ -289,7 +287,7 @@ export default function OpportunityDetailPage() {
                     <Timeline
                       items={[
                         {
-                          dot: <ClockCircleOutlined style={{ fontSize: '16px' }} />,
+                          dot: <ClockIcon className="w-4 h-4" style={{ fontSize: '16px' }} />,
                           color: 'blue',
                           children: (
                             <>
@@ -330,7 +328,7 @@ export default function OpportunityDetailPage() {
               key: 'documents',
               label: (
                 <span>
-                  <FileTextOutlined />
+                  <DocumentTextIcon className="w-4 h-4" />
                   Dokümanlar
                 </span>
               ),

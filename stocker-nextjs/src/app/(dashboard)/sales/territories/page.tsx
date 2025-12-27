@@ -9,11 +9,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Alert, Spin, Select, Modal } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  GlobalOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  GlobeAltIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSalesTerritories,
   useActivateSalesTerritory,
@@ -116,7 +116,7 @@ export default function TerritoriesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<GlobalOutlined />}
+        icon={<GlobeAltIcon className="w-4 h-4" />}
         iconColor="#8b5cf6"
         title="Satış Bölgeleri"
         description="Satış bölgelerini yönetin"
@@ -124,7 +124,7 @@ export default function TerritoriesPage() {
         primaryAction={{
           label: 'Yeni Bölge',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -132,7 +132,7 @@ export default function TerritoriesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -166,7 +166,7 @@ export default function TerritoriesPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             placeholder="Bölge ara... (kod, ad)"
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear

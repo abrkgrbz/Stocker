@@ -18,15 +18,15 @@ import {
   Descriptions,
 } from 'antd';
 import {
-  SearchOutlined,
-  UserOutlined,
-  DollarOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  EyeOutlined,
-  ReloadOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useInvoices } from '@/lib/api/hooks/useInvoices';
 import type { InvoiceListItem, InvoiceStatus } from '@/lib/api/services/invoice.service';
@@ -131,7 +131,7 @@ export default function CustomerBalancePage() {
       key: 'customerName',
       render: (name: string) => (
         <Space>
-          <UserOutlined />
+          <UserIcon className="w-4 h-4" />
           <Text strong>{name}</Text>
         </Space>
       ),
@@ -178,12 +178,12 @@ export default function CustomerBalancePage() {
       render: (amount: number, record: CustomerBalance) =>
         amount > 0 ? (
           <Tooltip title={`${record.overdueCount} adet vadesi geçmiş fatura`}>
-            <Tag color="error" icon={<WarningOutlined />}>
+            <Tag color="error" icon={<ExclamationTriangleIcon className="w-4 h-4" />}>
               {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: record.currency }).format(amount)}
             </Tag>
           </Tooltip>
         ) : (
-          <Tag color="success" icon={<CheckCircleOutlined />}>Yok</Tag>
+          <Tag color="success" icon={<CheckCircleIcon className="w-4 h-4" />}>Yok</Tag>
         ),
       sorter: (a: CustomerBalance, b: CustomerBalance) => a.overdueAmount - b.overdueAmount,
     },
@@ -232,10 +232,10 @@ export default function CustomerBalancePage() {
       render: (_: any, record: CustomerBalance) => (
         <Space>
           <Tooltip title="Detay">
-            <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)} />
+            <Button size="small" icon={<EyeIcon className="w-4 h-4" />} onClick={() => handleViewDetail(record)} />
           </Tooltip>
           <Tooltip title="Faturaları Gör">
-            <Button size="small" icon={<FileTextOutlined />} onClick={() => handleViewInvoices(record.customerName)} />
+            <Button size="small" icon={<DocumentTextIcon className="w-4 h-4" />} onClick={() => handleViewInvoices(record.customerName)} />
           </Tooltip>
         </Space>
       ),
@@ -257,7 +257,7 @@ export default function CustomerBalancePage() {
             <Statistic
               title="Toplam Müşteri"
               value={stats.totalCustomers}
-              prefix={<UserOutlined style={{ color: '#1890ff' }} />}
+              prefix={<UserIcon className="w-4 h-4" style={{ color: '#1890ff' }} />}
             />
           </Card>
         </Col>
@@ -267,7 +267,7 @@ export default function CustomerBalancePage() {
               title="Toplam Alacak"
               value={stats.totalOutstanding}
               precision={2}
-              prefix={<DollarOutlined style={{ color: '#faad14' }} />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
               suffix="₺"
             />
           </Card>
@@ -278,7 +278,7 @@ export default function CustomerBalancePage() {
               title="Vadesi Geçmiş Alacak"
               value={stats.totalOverdue}
               precision={2}
-              prefix={<WarningOutlined style={{ color: '#ff4d4f' }} />}
+              prefix={<ExclamationTriangleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />}
               suffix="₺"
               valueStyle={{ color: stats.totalOverdue > 0 ? '#ff4d4f' : undefined }}
             />
@@ -290,7 +290,7 @@ export default function CustomerBalancePage() {
               title="Borçlu Müşteri"
               value={stats.customersWithBalance}
               suffix={`/ ${stats.totalCustomers}`}
-              prefix={<UserOutlined style={{ color: '#722ed1' }} />}
+              prefix={<UserIcon className="w-4 h-4" style={{ color: '#722ed1' }} />}
             />
             <div style={{ marginTop: 8 }}>
               <Text type="secondary">
@@ -307,7 +307,7 @@ export default function CustomerBalancePage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Müşteri ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               allowClear
@@ -315,7 +315,7 @@ export default function CustomerBalancePage() {
           </Col>
           <Col xs={24} sm={12} md={8}>
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+              <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
                 Yenile
               </Button>
             </Space>
@@ -342,14 +342,14 @@ export default function CustomerBalancePage() {
       <Modal
         title={
           <Space>
-            <UserOutlined />
+            <UserIcon className="w-4 h-4" />
             {selectedCustomer?.customerName}
           </Space>
         }
         open={detailModalOpen}
         onCancel={() => setDetailModalOpen(false)}
         footer={[
-          <Button key="invoices" icon={<FileTextOutlined />} onClick={() => {
+          <Button key="invoices" icon={<DocumentTextIcon className="w-4 h-4" />} onClick={() => {
             if (selectedCustomer) {
               handleViewInvoices(selectedCustomer.customerName);
               setDetailModalOpen(false);

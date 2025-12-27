@@ -18,18 +18,18 @@ import {
   Switch,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -74,7 +74,7 @@ export default function PriceListsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Fiyat Listesi Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu fiyat listesini silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -121,7 +121,7 @@ export default function PriceListsPage() {
       width: 180,
       render: (text) => text ? (
         <Space>
-          <ShopOutlined className="text-gray-400" />
+          <BuildingStorefrontIcon className="w-4 h-4" className="text-gray-400" />
           {text}
         </Space>
       ) : '-',
@@ -190,20 +190,20 @@ export default function PriceListsPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/purchase/price-lists/${record.id}`),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/purchase/price-lists/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 onClick: () => handleDelete(record.id),
               },
@@ -211,7 +211,7 @@ export default function PriceListsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -234,7 +234,7 @@ export default function PriceListsPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/price-lists/new')}
         >
@@ -249,7 +249,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Toplam Liste"
               value={stats.total}
-              prefix={<DollarOutlined className="text-blue-500" />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4" className="text-blue-500" />}
             />
           </Card>
         </Col>
@@ -258,7 +258,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Aktif"
               value={stats.active}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
             />
           </Card>
         </Col>
@@ -267,7 +267,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Pasif"
               value={stats.inactive}
-              prefix={<CloseCircleOutlined className="text-gray-500" />}
+              prefix={<XCircleIcon className="w-4 h-4" className="text-gray-500" />}
             />
           </Card>
         </Col>
@@ -276,7 +276,7 @@ export default function PriceListsPage() {
             <Statistic
               title="Süresi Dolmuş"
               value={stats.expired}
-              prefix={<ExclamationCircleOutlined className="text-red-500" />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" className="text-red-500" />}
             />
           </Card>
         </Col>
@@ -287,7 +287,7 @@ export default function PriceListsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Kod veya ad ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

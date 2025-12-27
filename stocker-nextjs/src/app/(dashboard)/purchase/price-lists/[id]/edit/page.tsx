@@ -19,11 +19,11 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePriceList,
   useUpdatePriceList,
@@ -189,7 +189,7 @@ export default function EditPriceListPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -198,7 +198,7 @@ export default function EditPriceListPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #52c41a 0%, #1890ff 100%)' }}
               >
-                <DollarOutlined style={{ fontSize: 24 }} />
+                <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -213,7 +213,7 @@ export default function EditPriceListPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -221,7 +221,7 @@ export default function EditPriceListPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"

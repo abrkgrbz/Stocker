@@ -15,20 +15,20 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  ShopOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  StarFilled,
-  CheckCircleOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  PlusIcon,
+  StarIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useSuppliers, useDeleteSupplier } from '@/lib/api/hooks/useInventory';
 import type { SupplierDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -90,13 +90,13 @@ export default function SuppliersPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: record.isPreferred ? '#f59e0b15' : '#10b98115' }}
           >
-            <ShopOutlined style={{ color: record.isPreferred ? '#f59e0b' : '#10b981' }} />
+            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isPreferred ? '#f59e0b' : '#10b981' }} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{name}</span>
               {record.isPreferred && (
-                <StarFilled style={{ fontSize: 12, color: '#f59e0b' }} />
+                <StarIcon className="w-4 h-4" style={{ fontSize: 12, color: '#f59e0b' }} />
               )}
             </div>
             {record.code && (
@@ -116,13 +116,13 @@ export default function SuppliersPage() {
         <div className="text-sm">
           {record.phone && (
             <div className="flex items-center gap-1 text-slate-600">
-              <PhoneOutlined className="text-slate-400" />
+              <PhoneIcon className="w-4 h-4" className="text-slate-400" />
               {record.phone}
             </div>
           )}
           {record.city && (
             <div className="flex items-center gap-1 text-slate-500 text-xs mt-1">
-              <EnvironmentOutlined className="text-slate-400" />
+              <MapPinIcon className="w-4 h-4" className="text-slate-400" />
               {record.city}
             </div>
           )}
@@ -156,7 +156,7 @@ export default function SuppliersPage() {
       onFilter: (value, record) => record.isPreferred === value,
       render: (isPreferred: boolean) => (
         isPreferred ? (
-          <Tag color="gold" icon={<StarFilled />}>Tercih Edilen</Tag>
+          <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>Tercih Edilen</Tag>
         ) : (
           <Tag color="default">Standart</Tag>
         )
@@ -187,20 +187,20 @@ export default function SuppliersPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => router.push(`/inventory/suppliers/${record.id}`),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => router.push(`/inventory/suppliers/${record.id}/edit`),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -210,7 +210,7 @@ export default function SuppliersPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -229,7 +229,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalSuppliers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <ShopOutlined style={{ color: '#10b981' }} />
+              <BuildingStorefrontIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeSuppliers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{preferredSuppliers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <StarFilled style={{ color: '#f59e0b' }} />
+              <StarIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function SuppliersPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxOutlined style={{ color: '#8b5cf6' }} />
+              <InboxIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function SuppliersPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ShopOutlined />}
+        icon={<BuildingStorefrontIcon className="w-4 h-4" />}
         iconColor="#10b981"
         title="Tedarikçiler"
         description="Tedarikçi ve satıcı bilgilerini yönetin"
@@ -278,7 +278,7 @@ export default function SuppliersPage() {
         primaryAction={{
           label: 'Yeni Tedarikçi',
           onClick: () => router.push('/inventory/suppliers/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -286,7 +286,7 @@ export default function SuppliersPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -295,7 +295,7 @@ export default function SuppliersPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Tedarikçi ara... (ad, kod, şehir)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

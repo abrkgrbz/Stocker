@@ -4,13 +4,13 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Button, Tag, Space, Input, Card } from 'antd';
 import {
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+  ExclamationTriangleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useDisciplinaryActions, useDeleteDisciplinaryAction } from '@/lib/api/hooks/useHR';
 
@@ -109,18 +109,18 @@ export default function DisciplinaryActionsPage() {
         <Space>
           <Button
             type="text"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/disciplinary-actions/${record.id}`)}
           />
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/disciplinary-actions/${record.id}/edit`)}
           />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={() => handleDelete(record.id)}
           />
         </Space>
@@ -133,13 +133,13 @@ export default function DisciplinaryActionsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-            <WarningOutlined /> Disiplin Islemleri
+            <ExclamationTriangleIcon className="w-4 h-4" /> Disiplin Islemleri
           </h1>
           <p className="text-gray-500 mt-1">Calisan disiplin islemlerini yonetin</p>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           onClick={() => router.push('/hr/disciplinary-actions/new')}
           style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
         >
@@ -151,7 +151,7 @@ export default function DisciplinaryActionsPage() {
         <div className="mb-4">
           <Input
             placeholder="Ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}

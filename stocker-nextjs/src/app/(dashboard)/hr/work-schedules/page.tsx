@@ -18,16 +18,16 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  CalendarOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  UserOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useWorkSchedules, useDeleteWorkSchedule, useEmployees, useShifts } from '@/lib/api/hooks/useHR';
 import type { WorkScheduleDto } from '@/lib/api/services/hr.types';
@@ -80,7 +80,7 @@ export default function WorkSchedulesPage() {
       sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
       render: (name: string, record: WorkScheduleDto) => (
         <Space>
-          <UserOutlined style={{ color: '#1890ff' }} />
+          <UserIcon className="w-4 h-4" style={{ color: '#1890ff' }} />
           <a onClick={() => router.push(`/hr/work-schedules/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -100,7 +100,7 @@ export default function WorkSchedulesPage() {
       width: 150,
       render: (name: string) => (
         <Space>
-          <ClockCircleOutlined style={{ color: '#8b5cf6' }} />
+          <ClockIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           {name || '-'}
         </Space>
       ),
@@ -149,20 +149,20 @@ export default function WorkSchedulesPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/work-schedules/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/work-schedules/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -171,7 +171,7 @@ export default function WorkSchedulesPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -182,11 +182,11 @@ export default function WorkSchedulesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CalendarOutlined className="mr-2" />
+          <CalendarIcon className="w-4 h-4" className="mr-2" />
           Çalışma Programları
         </Title>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/work-schedules/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-schedules/new')}>
             Yeni Program
           </Button>
           <Button onClick={() => router.push('/hr/work-schedules/assign')}>
@@ -202,7 +202,7 @@ export default function WorkSchedulesPage() {
             <Statistic
               title="Toplam Kayıt"
               value={totalSchedules}
-              prefix={<CalendarOutlined />}
+              prefix={<CalendarIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -212,7 +212,7 @@ export default function WorkSchedulesPage() {
             <Statistic
               title="Çalışma Günü"
               value={workDays}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -222,7 +222,7 @@ export default function WorkSchedulesPage() {
             <Statistic
               title="Tatil Günü"
               value={holidays}
-              prefix={<CalendarOutlined />}
+              prefix={<CalendarIcon className="w-4 h-4" />}
               valueStyle={{ color: '#fa541c' }}
             />
           </Card>

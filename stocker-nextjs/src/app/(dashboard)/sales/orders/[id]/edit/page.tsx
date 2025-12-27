@@ -3,7 +3,10 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, message, Spin, Typography } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { SalesOrderForm } from '@/components/sales/orders';
 import { useSalesOrder, useUpdateSalesOrder } from '@/lib/api/hooks/useSales';
 import type { UpdateSalesOrderCommand } from '@/lib/api/services/sales.service';
@@ -70,7 +73,7 @@ export default function EditSalesOrderPage() {
         >
           <div className="flex items-center gap-4 max-w-7xl mx-auto">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -113,7 +116,7 @@ export default function EditSalesOrderPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -131,7 +134,7 @@ export default function EditSalesOrderPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateOrder.isPending}
               onClick={() => form.submit()}
               style={{

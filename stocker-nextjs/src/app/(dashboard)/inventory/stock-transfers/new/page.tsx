@@ -16,15 +16,14 @@ import {
   Segmented,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  SwapOutlined,
-  InboxOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  InboxIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useWarehouses,
   useLocations,
@@ -255,7 +254,7 @@ export default function NewStockTransferPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -279,7 +278,7 @@ export default function NewStockTransferPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="hover:bg-gray-100"
             />
@@ -300,7 +299,7 @@ export default function NewStockTransferPage() {
             <Button onClick={() => router.back()}>İptal</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={handleSubmit}
               loading={createTransfer.isPending}
               disabled={items.length === 0}
@@ -367,7 +366,7 @@ export default function NewStockTransferPage() {
               {/* Warehouses */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <InboxOutlined className="mr-2" />
+                  <InboxIcon className="w-4 h-4" className="mr-2" />
                   Depolar
                 </label>
 
@@ -426,7 +425,7 @@ export default function NewStockTransferPage() {
               {/* Dates */}
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-4 block">
-                  <CalendarOutlined className="mr-2" />
+                  <CalendarIcon className="w-4 h-4" className="mr-2" />
                   Tarihler
                 </label>
 
@@ -464,7 +463,7 @@ export default function NewStockTransferPage() {
                     key: 'notes',
                     label: (
                       <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <FileTextOutlined className="mr-2" />
+                        <DocumentTextIcon className="w-4 h-4" className="mr-2" />
                         Notlar ve Açıklama
                       </span>
                     ),
@@ -525,7 +524,7 @@ export default function NewStockTransferPage() {
                   </label>
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={handleAddItem}
                     style={{ background: '#1a1a1a', borderColor: '#1a1a1a', color: 'white' }}
                   >

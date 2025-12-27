@@ -15,16 +15,15 @@ import {
   Form,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  InboxOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  StopOutlined,
-  CalendarOutlined,
-  ExclamationCircleOutlined,
-  ShopOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+} from '@heroicons/react/24/outline';
 import {
   useLotBatch,
   useApproveLotBatch,
@@ -43,19 +42,19 @@ const statusConfig: Record<
     label: 'Beklemede',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <ExclamationCircleOutlined />,
+    icon: <ExclamationCircleIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Received]: {
     label: 'Alındı',
     bgColor: 'bg-blue-50',
     textColor: 'text-blue-700',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Approved]: {
     label: 'Onaylandı',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Quarantined]: {
     label: 'Karantinada',
@@ -73,19 +72,19 @@ const statusConfig: Record<
     label: 'Tükendi',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Expired]: {
     label: 'Süresi Doldu',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   [LotBatchStatus.Recalled]: {
     label: 'Geri Çağrıldı',
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
 };
 
@@ -168,7 +167,7 @@ export default function LotBatchDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -177,7 +176,7 @@ export default function LotBatchDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <InboxOutlined className="text-white text-lg" />
+                <InboxIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -205,7 +204,7 @@ export default function LotBatchDetailPage() {
             {lotBatch.status === 'Pending' && (
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleApprove}
                 loading={approveLotBatch.isPending}
                 style={{ background: '#1e293b', borderColor: '#1e293b' }}
@@ -263,7 +262,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <InboxOutlined className="text-white text-lg" />
+                  <InboxIcon className="w-4 h-4" className="text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Başlangıç
@@ -280,7 +279,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <InboxOutlined className="text-blue-600 text-lg" />
+                  <InboxIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mevcut</p>
               </div>
@@ -295,7 +294,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ExclamationCircleOutlined className="text-amber-600 text-lg" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rezerve</p>
               </div>
@@ -312,7 +311,7 @@ export default function LotBatchDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kullanılabilir
@@ -455,7 +454,7 @@ export default function LotBatchDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Üretim Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -466,7 +465,7 @@ export default function LotBatchDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Alım Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -478,7 +477,7 @@ export default function LotBatchDetailPage() {
                 <div className="h-px bg-slate-100 my-2" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className={lotBatch.isExpired ? 'text-red-500' : 'text-slate-400'} />
+                    <CalendarIcon className="w-4 h-4" className={lotBatch.isExpired ? 'text-red-500' : 'text-slate-400'} />
                     <span className="text-sm text-slate-500">Son Kullanma</span>
                   </div>
                   <span
@@ -556,7 +555,7 @@ export default function LotBatchDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -566,7 +565,7 @@ export default function LotBatchDetailPage() {
                 {lotBatch.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

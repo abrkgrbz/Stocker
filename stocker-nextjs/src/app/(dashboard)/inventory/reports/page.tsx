@@ -14,20 +14,15 @@ import {
   message,
 } from 'antd';
 import {
-  BarChartOutlined,
-  PieChartOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-  DollarOutlined,
-  InboxOutlined,
-  SwapOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  WarningOutlined,
-  FileTextOutlined,
-  ThunderboltOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ChartBarIcon,
+  ChartPieIcon,
+  CurrencyDollarIcon,
+  DocumentIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+} from '@heroicons/react/24/outline';
 import {
   BarChart,
   Bar,
@@ -291,7 +286,7 @@ export default function InventoryReportsPage() {
       key: 'value',
       label: (
         <span>
-          <DollarOutlined /> Stok Değeri
+          <CurrencyDollarIcon className="w-4 h-4" /> Stok Değeri
         </span>
       ),
       children: (
@@ -301,7 +296,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <DollarOutlined className="mr-2" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
                   Toplam Stok Değeri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -312,7 +307,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <InboxOutlined className="mr-2" />
+                  <InboxIcon className="w-4 h-4" className="mr-2" />
                   Toplam Stok Miktarı
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -323,7 +318,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-4">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 h-full">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <BarChartOutlined className="mr-2" />
+                  <ChartBarIcon className="w-4 h-4" className="mr-2" />
                   Ortalama Ürün Değeri
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -342,10 +337,10 @@ export default function InventoryReportsPage() {
                     Kategoriye Göre Stok Değeri
                   </p>
                   <Space>
-                    <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                    <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('pdf', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                       PDF
                     </Button>
-                    <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                    <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('excel', 'stock-value')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                       Excel
                     </Button>
                   </Space>
@@ -458,10 +453,10 @@ export default function InventoryReportsPage() {
                 Hareket Trendi (Son 30 Gün)
               </p>
               <Space>
-                <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('pdf', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                   PDF
                 </Button>
-                <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('excel', 'movements')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                   Excel
                 </Button>
               </Space>
@@ -571,7 +566,7 @@ export default function InventoryReportsPage() {
       key: 'abc',
       label: (
         <span>
-          <PieChartOutlined /> ABC Analizi
+          <ChartPieIcon className="w-4 h-4" /> ABC Analizi
         </span>
       ),
       children: (
@@ -657,10 +652,10 @@ export default function InventoryReportsPage() {
                     En Değerli A Sınıfı Ürünler
                   </p>
                   <Space>
-                    <Button size="small" icon={<FilePdfOutlined />} onClick={() => handleExport('pdf', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                    <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('pdf', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                       PDF
                     </Button>
-                    <Button size="small" icon={<FileExcelOutlined />} onClick={() => handleExport('excel', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
+                    <Button size="small" icon={<DocumentIcon className="w-4 h-4" />} onClick={() => handleExport('excel', 'abc')} className="!border-slate-300 !text-slate-600 hover:!text-slate-900">
                       Excel
                     </Button>
                   </Space>
@@ -703,7 +698,7 @@ export default function InventoryReportsPage() {
       key: 'alerts',
       label: (
         <span>
-          <WarningOutlined /> Uyarılar
+          <ExclamationTriangleIcon className="w-4 h-4" /> Uyarılar
         </span>
       ),
       children: (
@@ -713,7 +708,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-6">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <WarningOutlined className="mr-2" />
+                  <ExclamationTriangleIcon className="w-4 h-4" className="mr-2" />
                   Düşük Stoklu Ürünler
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -724,7 +719,7 @@ export default function InventoryReportsPage() {
             <div className="col-span-6">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <InboxOutlined className="mr-2" />
+                  <InboxIcon className="w-4 h-4" className="mr-2" />
                   Stokta Olmayan Ürünler
                 </p>
                 <div className="text-3xl font-bold text-slate-900">
@@ -803,7 +798,7 @@ export default function InventoryReportsPage() {
               items: [
                 {
                   key: 'daily-stock',
-                  icon: <FileTextOutlined />,
+                  icon: <DocumentTextIcon className="w-4 h-4" />,
                   label: 'Günlük Stok Raporu',
                   onClick: () => {
                     handleExport('pdf', 'stock-value');
@@ -822,7 +817,7 @@ export default function InventoryReportsPage() {
                 },
                 {
                   key: 'monthly-analysis',
-                  icon: <BarChartOutlined />,
+                  icon: <ChartBarIcon className="w-4 h-4" />,
                   label: 'Aylık ABC Analizi',
                   onClick: () => {
                     setDateRange([dayjs().subtract(30, 'day'), dayjs()]);
@@ -833,7 +828,7 @@ export default function InventoryReportsPage() {
                 { type: 'divider' },
                 {
                   key: 'low-stock-alert',
-                  icon: <WarningOutlined />,
+                  icon: <ExclamationTriangleIcon className="w-4 h-4" />,
                   label: 'Düşük Stok Uyarı Raporu',
                   onClick: () => {
                     handleExport('pdf', 'alerts');
@@ -842,7 +837,7 @@ export default function InventoryReportsPage() {
                 },
                 {
                   key: 'full-inventory',
-                  icon: <InboxOutlined />,
+                  icon: <InboxIcon className="w-4 h-4" />,
                   label: 'Tam Envanter Listesi',
                   onClick: () => {
                     handleExport('excel', 'stock-value');
@@ -910,7 +905,7 @@ export default function InventoryReportsPage() {
                 Sıfırla
               </Button>
               <Button
-                icon={<SyncOutlined spin={productsLoading} />}
+                icon={<ArrowPathIcon className="w-4 h-4" spin={productsLoading} />}
                 onClick={() => refetchProducts()}
                 className="!border-slate-300 !text-slate-600 hover:!text-slate-900"
               />

@@ -17,14 +17,12 @@ import {
   Collapse,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  InboxOutlined,
-  ShoppingOutlined,
-  CalendarOutlined,
-  TruckOutlined,
-  SafetyCertificateOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  InboxIcon,
+  ShieldCheckIcon,
+} from '@heroicons/react/24/outline';
 import { useProducts, useCreateLotBatch } from '@/lib/api/hooks/useInventory';
 import type { CreateLotBatchDto } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
@@ -104,7 +102,7 @@ export default function NewLotBatchPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -118,7 +116,7 @@ export default function NewLotBatchPage() {
             <Button onClick={() => router.push('/inventory/lot-batches')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createLotBatch.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct}
@@ -183,7 +181,7 @@ export default function NewLotBatchPage() {
                   <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <InboxOutlined className="text-white text-xl" />
+                        <InboxIcon className="w-4 h-4" className="text-white text-xl" />
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900">{selectedProduct.name}</div>
@@ -217,7 +215,7 @@ export default function NewLotBatchPage() {
               {/* Dates */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarOutlined className="mr-1" /> Tarihler
+                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -317,7 +315,7 @@ export default function NewLotBatchPage() {
                     key: 'certificate',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <SafetyCertificateOutlined className="mr-1" /> Sertifika Bilgileri
+                        <ShieldCheckIcon className="w-4 h-4" className="mr-1" /> Sertifika Bilgileri
                       </Text>
                     ),
                     children: (

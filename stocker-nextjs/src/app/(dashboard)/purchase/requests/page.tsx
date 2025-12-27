@@ -19,21 +19,19 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  ShoppingCartOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import {
@@ -126,7 +124,7 @@ export default function PurchaseRequestsPage() {
   const handleDelete = (record: PurchaseRequestListDto) => {
     confirm({
       title: 'Talebi Sil',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: `"${record.requestNumber}" talebini silmek istediğinizden emin misiniz?`,
       okText: 'Sil',
       okType: 'danger',
@@ -146,7 +144,7 @@ export default function PurchaseRequestsPage() {
   const handleReject = (record: PurchaseRequestListDto) => {
     Modal.confirm({
       title: 'Talebi Reddet',
-      icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
+      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi reddetmek istediğinizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
@@ -158,7 +156,7 @@ export default function PurchaseRequestsPage() {
   const handleCancel = (record: PurchaseRequestListDto) => {
     Modal.confirm({
       title: 'Talebi İptal Et',
-      icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
+      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi iptal etmek istediğinizden emin misiniz?',
       okText: 'İptal Et',
       okType: 'danger',
@@ -182,32 +180,32 @@ export default function PurchaseRequestsPage() {
     const items = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => router.push(`/purchase/requests/${record.id}`),
       },
       record.status === 'Draft' && {
         key: 'edit',
-        icon: <EditOutlined />,
+        icon: <PencilIcon className="w-4 h-4" />,
         label: 'Düzenle',
         onClick: () => router.push(`/purchase/requests/${record.id}/edit`),
       },
       { type: 'divider' },
       record.status === 'Draft' && {
         key: 'submit',
-        icon: <SendOutlined />,
+        icon: <PaperAirplaneIcon className="w-4 h-4" />,
         label: 'Onaya Gönder',
         onClick: () => handleSubmit(record),
       },
       record.status === 'Pending' && {
         key: 'approve',
-        icon: <CheckCircleOutlined />,
+        icon: <CheckCircleIcon className="w-4 h-4" />,
         label: 'Onayla',
         onClick: () => handleApprove(record),
       },
       record.status === 'Pending' && {
         key: 'reject',
-        icon: <CloseCircleOutlined />,
+        icon: <XCircleIcon className="w-4 h-4" />,
         label: 'Reddet',
         danger: true,
         onClick: () => handleReject(record),
@@ -221,14 +219,14 @@ export default function PurchaseRequestsPage() {
       { type: 'divider' },
       !['Cancelled', 'Converted'].includes(record.status) && {
         key: 'cancel',
-        icon: <CloseCircleOutlined />,
+        icon: <XCircleIcon className="w-4 h-4" />,
         label: 'İptal Et',
         danger: true,
         onClick: () => handleCancel(record),
       },
       record.status === 'Draft' && {
         key: 'delete',
-        icon: <DeleteOutlined />,
+        icon: <TrashIcon className="w-4 h-4" />,
         label: 'Sil',
         danger: true,
         onClick: () => handleDelete(record),
@@ -326,7 +324,7 @@ export default function PurchaseRequestsPage() {
       width: 60,
       render: (_, record) => (
         <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} onClick={(e) => e.stopPropagation()} />
         </Dropdown>
       ),
     },
@@ -338,14 +336,14 @@ export default function PurchaseRequestsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Title level={3} className="!mb-1 flex items-center gap-2">
-            <FileTextOutlined className="text-purple-500" />
+            <DocumentTextIcon className="w-4 h-4" className="text-purple-500" />
             Satın Alma Talepleri
           </Title>
           <Text type="secondary">Departmanlardan gelen satın alma taleplerini yönetin</Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/requests/new')}
         >
@@ -400,7 +398,7 @@ export default function PurchaseRequestsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <Input
             placeholder="Talep ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}
@@ -441,7 +439,7 @@ export default function PurchaseRequestsPage() {
           <div className="flex-1" />
 
           <Tooltip title="Yenile">
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
+            <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} />
           </Tooltip>
           <Tooltip title="Dışa Aktar">
             <Button icon={<ExportOutlined />} />

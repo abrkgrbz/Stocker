@@ -17,16 +17,15 @@ import {
   Spin,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  RollbackOutlined,
-  InfoCircleOutlined,
-  FileTextOutlined,
-  LinkOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  InformationCircleIcon,
+  LinkIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useCreatePurchaseReturn, useSuppliers, usePurchaseOrders, useGoodsReceipts, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import { PurchaseReturnItemReason, ItemCondition } from '@/lib/api/services/purchase.types';
@@ -357,7 +356,7 @@ export default function NewPurchaseReturnPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => removeItem(record.key)}
         />
       ),
@@ -369,7 +368,7 @@ export default function NewPurchaseReturnPage() {
       key: 'info',
       label: (
         <span>
-          <InfoCircleOutlined className="mr-1" />
+          <InformationCircleIcon className="w-4 h-4" className="mr-1" />
           İade Bilgileri
         </span>
       ),
@@ -478,7 +477,7 @@ export default function NewPurchaseReturnPage() {
       key: 'documents',
       label: (
         <span>
-          <LinkOutlined className="mr-1" />
+          <LinkIcon className="w-4 h-4" className="mr-1" />
           İlişkili Belgeler
         </span>
       ),
@@ -556,7 +555,7 @@ export default function NewPurchaseReturnPage() {
       key: 'notes',
       label: (
         <span>
-          <FileTextOutlined className="mr-1" />
+          <DocumentTextIcon className="w-4 h-4" className="mr-1" />
           Notlar
         </span>
       ),
@@ -602,7 +601,7 @@ export default function NewPurchaseReturnPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -626,7 +625,7 @@ export default function NewPurchaseReturnPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -634,7 +633,7 @@ export default function NewPurchaseReturnPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"
@@ -739,7 +738,7 @@ export default function NewPurchaseReturnPage() {
                       <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
                       <span className="text-sm font-medium text-gray-700">İade Kalemleri</span>
                     </div>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+                    <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
                       Kalem Ekle
                     </Button>
                   </div>

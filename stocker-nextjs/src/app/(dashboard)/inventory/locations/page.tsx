@@ -17,18 +17,18 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  EnvironmentOutlined,
-  HomeOutlined,
-  CheckCircleOutlined,
-  InboxOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
+  HomeIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useLocations, useDeleteLocation, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -104,7 +104,7 @@ export default function LocationsPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: '#6366f115' }}
           >
-            <EnvironmentOutlined style={{ color: '#6366f1' }} />
+            <MapPinIcon className="w-4 h-4" style={{ color: '#6366f1' }} />
           </div>
           <div>
             <div className="text-sm font-medium text-slate-900">{name}</div>
@@ -122,7 +122,7 @@ export default function LocationsPage() {
       width: 150,
       render: (name: string) => (
         <div className="flex items-center gap-1 text-sm text-slate-600">
-          <HomeOutlined className="text-slate-400" />
+          <HomeIcon className="w-4 h-4" className="text-slate-400" />
           {name || '-'}
         </div>
       ),
@@ -208,14 +208,14 @@ export default function LocationsPage() {
         const menuItems = [
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => router.push(`/inventory/locations/${record.id}/edit`),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -225,7 +225,7 @@ export default function LocationsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -244,7 +244,7 @@ export default function LocationsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#6366f115' }}>
-              <EnvironmentOutlined style={{ color: '#6366f1' }} />
+              <MapPinIcon className="w-4 h-4" style={{ color: '#6366f1' }} />
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function LocationsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeLocations}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function LocationsPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <InboxOutlined style={{ color: '#3b82f6' }} />
+              <InboxIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -279,7 +279,7 @@ export default function LocationsPage() {
               <div className="text-2xl font-semibold text-slate-900">{overCapacityLocations}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: overCapacityLocations > 0 ? '#ef444415' : '#f59e0b15' }}>
-              <WarningOutlined style={{ color: overCapacityLocations > 0 ? '#ef4444' : '#f59e0b' }} />
+              <ExclamationTriangleIcon className="w-4 h-4" style={{ color: overCapacityLocations > 0 ? '#ef4444' : '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function LocationsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<EnvironmentOutlined />}
+        icon={<MapPinIcon className="w-4 h-4" />}
         iconColor="#6366f1"
         title="Lokasyonlar"
         description="Depo içi lokasyonları yönetin"
@@ -295,7 +295,7 @@ export default function LocationsPage() {
         primaryAction={{
           label: 'Yeni Lokasyon',
           onClick: () => router.push(`/inventory/locations/new${selectedWarehouse ? `?warehouseId=${selectedWarehouse}` : ''}`),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -303,7 +303,7 @@ export default function LocationsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -324,7 +324,7 @@ export default function LocationsPage() {
           />
           <Input
             placeholder="Lokasyon ara... (ad, kod, koridor)"
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}

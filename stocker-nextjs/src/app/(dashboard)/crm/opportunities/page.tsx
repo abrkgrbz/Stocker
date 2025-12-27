@@ -9,19 +9,16 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spin, Tag, Progress, Space, Button, Modal, message, Input } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  DollarOutlined,
-  TrophyOutlined,
-  RiseOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  BarChartOutlined,
-  UserOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  TrophyIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import {
   useOpportunities,
   useWinOpportunity,
@@ -38,12 +35,12 @@ import {
 
 // Opportunity status configuration
 const statusConfig: Record<OpportunityStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Prospecting: { color: 'blue', label: 'Araştırma', icon: <BarChartOutlined /> },
-  Qualification: { color: 'cyan', label: 'Nitelendirme', icon: <CheckCircleOutlined /> },
-  NeedsAnalysis: { color: 'geekblue', label: 'İhtiyaç Analizi', icon: <BarChartOutlined /> },
-  Proposal: { color: 'purple', label: 'Teklif', icon: <DollarOutlined /> },
+  Prospecting: { color: 'blue', label: 'Araştırma', icon: <ChartBarIcon className="w-4 h-4" /> },
+  Qualification: { color: 'cyan', label: 'Nitelendirme', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  NeedsAnalysis: { color: 'geekblue', label: 'İhtiyaç Analizi', icon: <ChartBarIcon className="w-4 h-4" /> },
+  Proposal: { color: 'purple', label: 'Teklif', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
   Negotiation: { color: 'orange', label: 'Müzakere', icon: <RiseOutlined /> },
-  ClosedWon: { color: 'green', label: 'Kazanıldı', icon: <TrophyOutlined /> },
+  ClosedWon: { color: 'green', label: 'Kazanıldı', icon: <TrophyIcon className="w-4 h-4" /> },
   ClosedLost: { color: 'red', label: 'Kaybedildi', icon: <StopOutlined /> },
 };
 
@@ -183,7 +180,7 @@ export default function OpportunitiesPage() {
 
         {opportunity.customerName && (
           <div className="mb-2 text-xs text-slate-600 flex items-center gap-1">
-            <UserOutlined className="text-slate-400" />
+            <UserIcon className="w-4 h-4" className="text-slate-400" />
             <span>{opportunity.customerName}</span>
           </div>
         )}
@@ -199,7 +196,7 @@ export default function OpportunitiesPage() {
             <Button
               type="primary"
               size="small"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={(e) => {
                 e.stopPropagation();
                 handleWin(opportunity);
@@ -258,7 +255,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
           </div>
           <div className="p-3 bg-slate-100 rounded-lg">
-            <BarChartOutlined className="text-2xl text-slate-600" />
+            <ChartBarIcon className="w-4 h-4" className="text-2xl text-slate-600" />
           </div>
         </div>
       </Card>
@@ -270,7 +267,7 @@ export default function OpportunitiesPage() {
             <div className="text-2xl font-bold text-emerald-600">₺{stats.totalValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-emerald-100 rounded-lg">
-            <DollarOutlined className="text-2xl text-emerald-600" />
+            <CurrencyDollarIcon className="w-4 h-4" className="text-2xl text-emerald-600" />
           </div>
         </div>
       </Card>
@@ -283,7 +280,7 @@ export default function OpportunitiesPage() {
             <div className="text-xs text-slate-500 mt-1">₺{stats.wonValue.toLocaleString('tr-TR')}</div>
           </div>
           <div className="p-3 bg-green-100 rounded-lg">
-            <TrophyOutlined className="text-2xl text-green-600" />
+            <TrophyIcon className="w-4 h-4" className="text-2xl text-green-600" />
           </div>
         </div>
       </Card>
@@ -343,7 +340,7 @@ export default function OpportunitiesPage() {
         <div className="bg-white border-2 border-green-400 rounded-lg h-full">
           <div className="p-4 border-b border-green-200 bg-green-50">
             <div className="flex items-center gap-2">
-              <TrophyOutlined className="text-green-500" />
+              <TrophyIcon className="w-4 h-4" className="text-green-500" />
               <span className="font-medium text-slate-900">Kazanıldı</span>
               <Tag color="green" className="ml-auto">{wonOpportunities.length}</Tag>
             </div>
@@ -428,7 +425,7 @@ export default function OpportunitiesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<DollarOutlined />}
+        icon={<CurrencyDollarIcon className="w-4 h-4" />}
         iconColor="#0f172a"
         title="Fırsatlar"
         description="Satış fırsatlarınızı yönetin ve takip edin"
@@ -436,7 +433,7 @@ export default function OpportunitiesPage() {
         primaryAction={{
           label: 'Yeni Fırsat',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
@@ -450,7 +447,7 @@ export default function OpportunitiesPage() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <AppstoreOutlined className="mr-1" />
+                <Squares2X2Icon className="w-4 h-4" className="mr-1" />
                 Kanban
               </button>
               <button
@@ -470,7 +467,7 @@ export default function OpportunitiesPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
             </button>
           </div>
         }
@@ -480,7 +477,7 @@ export default function OpportunitiesPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Fırsat ara..."
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -499,13 +496,13 @@ export default function OpportunitiesPage() {
         <Card>
           <div className="text-center py-12">
             <div className="text-slate-400 text-5xl mb-4">
-              <BarChartOutlined />
+              <ChartBarIcon className="w-4 h-4" />
             </div>
             <div className="text-slate-500 mb-4">
               {searchText ? 'Aramanızla eşleşen fırsat bulunamadı' : 'Henüz fırsat yok'}
             </div>
             {!searchText && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+              <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={handleCreate}>
                 İlk Fırsatı Oluştur
               </Button>
             )}

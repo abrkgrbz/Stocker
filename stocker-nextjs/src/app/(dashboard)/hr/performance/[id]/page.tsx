@@ -18,13 +18,12 @@ import {
   Rate,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  TrophyOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  StarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  PencilIcon,
+  TrashIcon,
+  TrophyIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { usePerformanceReview, useDeletePerformanceReview } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -94,7 +93,7 @@ export default function PerformanceDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/performance')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/performance')}>
             Geri
           </Button>
           <div>
@@ -113,13 +112,13 @@ export default function PerformanceDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/performance/${id}/edit`)}
             disabled={review.status === 'Completed'}
           >
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -175,7 +174,7 @@ export default function PerformanceDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {review.employeeName || `Çalışan #${review.employeeId}`}
                 </Space>
               </Descriptions.Item>

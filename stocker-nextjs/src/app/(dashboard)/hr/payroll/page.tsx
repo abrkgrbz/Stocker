@@ -19,16 +19,16 @@ import {
   message,
 } from 'antd';
 import {
-  PlusOutlined,
-  DollarOutlined,
-  MoreOutlined,
-  EditOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PlusIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   usePayrolls,
@@ -121,7 +121,7 @@ export default function PayrollPage() {
       key: 'employee',
       render: (_, record: PayrollDto) => (
         <Space>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -173,13 +173,13 @@ export default function PayrollPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/payroll/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/payroll/${record.id}/edit`),
                 disabled: record.status === PayrollStatus.Paid,
@@ -189,7 +189,7 @@ export default function PayrollPage() {
                 ? [
                     {
                       key: 'approve',
-                      icon: <CheckCircleOutlined />,
+                      icon: <CheckCircleIcon className="w-4 h-4" />,
                       label: 'Onayla',
                       onClick: () => handleApprove(record),
                     },
@@ -199,7 +199,7 @@ export default function PayrollPage() {
                 ? [
                     {
                       key: 'markPaid',
-                      icon: <SendOutlined />,
+                      icon: <PaperAirplaneIcon className="w-4 h-4" />,
                       label: 'Öde',
                       onClick: () => handleMarkPaid(record),
                     },
@@ -208,7 +208,7 @@ export default function PayrollPage() {
               { type: 'divider' as const },
               {
                 key: 'cancel',
-                icon: <CloseCircleOutlined />,
+                icon: <XCircleIcon className="w-4 h-4" />,
                 label: 'İptal Et',
                 danger: true,
                 onClick: () => handleCancel(record),
@@ -218,7 +218,7 @@ export default function PayrollPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -229,12 +229,12 @@ export default function PayrollPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <DollarOutlined className="mr-2" />
+          <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
           Bordro Yönetimi
         </Title>
         <Space>
           <Button onClick={() => router.push('/hr/expenses')}>Harcamalar</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/payroll/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/payroll/new')}>
             Yeni Bordro
           </Button>
         </Space>
@@ -247,7 +247,7 @@ export default function PayrollPage() {
             <Statistic
               title="Toplam Bordro"
               value={totalPayrolls}
-              prefix={<DollarOutlined />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -266,7 +266,7 @@ export default function PayrollPage() {
             <Statistic
               title="Onaylanan"
               value={approvedPayrolls}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>

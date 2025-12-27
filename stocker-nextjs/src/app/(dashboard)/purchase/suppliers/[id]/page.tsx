@@ -12,26 +12,22 @@ import {
   Dropdown,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ShopOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  GlobalOutlined,
-  EnvironmentOutlined,
-  BankOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  StopOutlined,
-  FileTextOutlined,
-  ShoppingCartOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  PercentageOutlined,
-  StarOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingLibraryIcon,
+  BuildingStorefrontIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  EnvelopeIcon,
+  GlobeAltIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSupplier,
   useActivateSupplier,
@@ -51,19 +47,19 @@ const statusConfig: Record<
     label: 'Aktif',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   Inactive: {
     label: 'Pasif',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-500',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
   },
   Pending: {
     label: 'Onay Bekliyor',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <CalendarOutlined />,
+    icon: <CalendarIcon className="w-4 h-4" />,
   },
   Blacklisted: {
     label: 'Bloklu',
@@ -75,7 +71,7 @@ const statusConfig: Record<
     label: 'Beklemede',
     bgColor: 'bg-yellow-50',
     textColor: 'text-yellow-700',
-    icon: <CalendarOutlined />,
+    icon: <CalendarIcon className="w-4 h-4" />,
   },
 };
 
@@ -125,7 +121,7 @@ export default function SupplierDetailPage() {
   const actionMenuItems = [
     supplier.status !== 'Active' && {
       key: 'activate',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Aktifleştir',
       onClick: () => activateSupplier.mutate(supplierId),
     },
@@ -144,7 +140,7 @@ export default function SupplierDetailPage() {
     },
     supplier.status === 'Blacklisted' && {
       key: 'unblock',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Bloğu Kaldır',
       onClick: () => unblockSupplier.mutate(supplierId),
     },
@@ -175,7 +171,7 @@ export default function SupplierDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/suppliers')}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -205,7 +201,7 @@ export default function SupplierDetailPage() {
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
               <Button
-                icon={<MoreOutlined />}
+                icon={<EllipsisHorizontalIcon className="w-4 h-4" />}
                 className="border-slate-200 text-slate-700 hover:border-slate-300"
               >
                 İşlemler
@@ -213,7 +209,7 @@ export default function SupplierDetailPage() {
             </Dropdown>
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/purchase/suppliers/${supplierId}/edit`)}
               style={{ background: '#1e293b', borderColor: '#1e293b' }}
             >
@@ -232,7 +228,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <DollarOutlined className="text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kredi Limiti
@@ -255,8 +251,7 @@ export default function SupplierDetailPage() {
                     (supplier.currentBalance || 0) > 0 ? 'bg-amber-100' : 'bg-emerald-100'
                   }`}
                 >
-                  <BankOutlined
-                    className={`text-lg ${
+                  <BuildingLibraryIcon className="w-4 h-4" className={`text-lg ${
                       (supplier.currentBalance || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
                     }`}
                   />
@@ -318,7 +313,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-7">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <ShopOutlined className="text-slate-400" />
+                <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Firma Bilgileri
                 </p>
@@ -363,7 +358,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-5">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <PhoneOutlined className="text-slate-400" />
+                <PhoneIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İletişim Bilgileri
                 </p>
@@ -371,7 +366,7 @@ export default function SupplierDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <PhoneOutlined className="text-slate-500 text-sm" />
+                    <PhoneIcon className="w-4 h-4" className="text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Telefon</p>
@@ -380,7 +375,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <MailOutlined className="text-slate-500 text-sm" />
+                    <EnvelopeIcon className="w-4 h-4" className="text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">E-posta</p>
@@ -389,7 +384,7 @@ export default function SupplierDetailPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <GlobalOutlined className="text-slate-500 text-sm" />
+                    <GlobeAltIcon className="w-4 h-4" className="text-slate-500 text-sm" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Web Sitesi</p>
@@ -410,7 +405,7 @@ export default function SupplierDetailPage() {
                 {supplier.fax && (
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <FileTextOutlined className="text-slate-500 text-sm" />
+                      <DocumentTextIcon className="w-4 h-4" className="text-slate-500 text-sm" />
                     </div>
                     <div>
                       <p className="text-xs text-slate-400">Faks</p>
@@ -426,7 +421,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <EnvironmentOutlined className="text-slate-400" />
+                <MapPinIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Adres</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -458,7 +453,7 @@ export default function SupplierDetailPage() {
           <div className="col-span-12 md:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <BankOutlined className="text-slate-400" />
+                <BuildingLibraryIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Finansal Bilgiler
                 </p>
@@ -499,7 +494,7 @@ export default function SupplierDetailPage() {
             <div className="col-span-12">
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileTextOutlined className="text-slate-400" />
+                  <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Notlar
                   </p>
@@ -514,7 +509,7 @@ export default function SupplierDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <UserOutlined className="text-slate-400" />
+                  <UserIcon className="w-4 h-4" className="text-slate-400" />
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     İletişim Kişileri ({supplier.contacts?.length || 0})
                   </p>
@@ -608,7 +603,7 @@ export default function SupplierDetailPage() {
               <div className="flex gap-8">
                 {supplier.createdAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(supplier.createdAt).format('DD/MM/YYYY HH:mm')}
@@ -617,7 +612,7 @@ export default function SupplierDetailPage() {
                 )}
                 {supplier.updatedAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Güncelleme:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(supplier.updatedAt).format('DD/MM/YYYY HH:mm')}

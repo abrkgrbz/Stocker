@@ -20,20 +20,16 @@ import {
   Space,
 } from 'antd';
 import {
-  BarChartOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
-  FileExcelOutlined,
-  PrinterOutlined,
-  TeamOutlined,
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  DollarOutlined,
-  TrophyOutlined,
-  WarningOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-} from '@ant-design/icons';
+  ChartBarIcon,
+  ChartPieIcon,
+  CurrencyDollarIcon,
+  DocumentIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  PrinterIcon,
+  TrophyIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import {
   BarChart,
   Bar,
@@ -226,7 +222,7 @@ export default function PurchaseReportsPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <Title level={2} className="!mb-1">
-              <BarChartOutlined className="mr-2" />
+              <ChartBarIcon className="w-4 h-4" className="mr-2" />
               Satın Alma Raporları
             </Title>
             <Text type="secondary">
@@ -234,10 +230,10 @@ export default function PurchaseReportsPage() {
             </Text>
           </div>
           <Space>
-            <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
+            <Button icon={<DocumentIcon className="w-4 h-4" />} onClick={handleExportExcel}>
               Excel
             </Button>
-            <Button icon={<PrinterOutlined />} onClick={handlePrint}>
+            <Button icon={<PrinterIcon className="w-4 h-4" />} onClick={handlePrint}>
               Yazdır
             </Button>
           </Space>
@@ -279,7 +275,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><TeamOutlined className="mr-2" />Aktif Tedarikçiler</span>}
+              title={<span><UserGroupIcon className="w-4 h-4" className="mr-2" />Aktif Tedarikçiler</span>}
               value={supplierSummary?.activeSuppliers || 0}
               suffix={`/ ${supplierSummary?.totalSuppliers || 0}`}
               valueStyle={{ color: '#10b981' }}
@@ -312,7 +308,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><FileTextOutlined className="mr-2" />Toplam Fatura</span>}
+              title={<span><DocumentTextIcon className="w-4 h-4" className="mr-2" />Toplam Fatura</span>}
               value={invoiceSummary?.totalInvoices || 0}
               valueStyle={{ color: '#8b5cf6' }}
             />
@@ -326,7 +322,7 @@ export default function PurchaseReportsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title={<span><DollarOutlined className="mr-2" />Toplam Tutar</span>}
+              title={<span><CurrencyDollarIcon className="w-4 h-4" className="mr-2" />Toplam Tutar</span>}
               value={orderSummary?.totalAmount || 0}
               precision={0}
               suffix="₺"
@@ -349,7 +345,7 @@ export default function PurchaseReportsPage() {
             key: 'overview',
             label: (
               <span>
-                <LineChartOutlined className="mr-1" />
+                <ChartBarIcon className="w-4 h-4" className="mr-1" />
                 Genel Bakış
               </span>
             ),
@@ -483,7 +479,7 @@ export default function PurchaseReportsPage() {
             key: 'suppliers',
             label: (
               <span>
-                <TeamOutlined className="mr-1" />
+                <UserGroupIcon className="w-4 h-4" className="mr-1" />
                 Tedarikçi Performansı
               </span>
             ),
@@ -533,7 +529,7 @@ export default function PurchaseReportsPage() {
                           key: 'puan',
                           render: (rating: number) => (
                             <div className="flex items-center gap-2">
-                              <TrophyOutlined className={rating >= 4 ? 'text-yellow-500' : 'text-gray-400'} />
+                              <TrophyIcon className="w-4 h-4" className={rating >= 4 ? 'text-yellow-500' : 'text-gray-400'} />
                               <span className="font-medium">{rating.toFixed(1)}</span>
                               <Progress
                                 percent={rating * 20}
@@ -648,7 +644,7 @@ export default function PurchaseReportsPage() {
                       title="Bekleyen Sipariş"
                       value={orderSummary?.pendingOrders || 0}
                       valueStyle={{ color: '#f59e0b' }}
-                      prefix={<WarningOutlined />}
+                      prefix={<ExclamationTriangleIcon className="w-4 h-4" />}
                     />
                   </Card>
                 </Col>
@@ -707,7 +703,7 @@ export default function PurchaseReportsPage() {
             key: 'invoices',
             label: (
               <span>
-                <FileTextOutlined className="mr-1" />
+                <DocumentTextIcon className="w-4 h-4" className="mr-1" />
                 Fatura Analitiği
               </span>
             ),
@@ -738,7 +734,7 @@ export default function PurchaseReportsPage() {
                       title="Geciken"
                       value={invoiceSummary?.overdueInvoices || 0}
                       valueStyle={{ color: '#ef4444' }}
-                      prefix={<WarningOutlined />}
+                      prefix={<ExclamationTriangleIcon className="w-4 h-4" />}
                     />
                   </Card>
                 </Col>

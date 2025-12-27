@@ -17,19 +17,18 @@ import {
   Input,
 } from 'antd';
 import {
-  PlusOutlined,
-  EnvironmentOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  SearchOutlined,
-  HomeOutlined,
-  GlobalOutlined,
-  TeamOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  GlobeAltIcon,
+  HomeIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useWorkLocations, useDeleteWorkLocation, useActivateWorkLocation, useDeactivateWorkLocation } from '@/lib/api/hooks/useHR';
 import type { WorkLocationDto } from '@/lib/api/services/hr.types';
@@ -98,7 +97,7 @@ export default function WorkLocationsPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: WorkLocationDto) => (
         <Space>
-          <EnvironmentOutlined style={{ color: '#1890ff' }} />
+          <MapPinIcon className="w-4 h-4" style={{ color: '#1890ff' }} />
           <a onClick={() => router.push(`/hr/work-locations/${record.id}`)}>{name}</a>
           {record.isHeadquarters && <Tag color="gold">Merkez</Tag>}
           {record.isRemote && <Tag color="purple">Uzaktan</Tag>}
@@ -159,26 +158,26 @@ export default function WorkLocationsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/work-locations/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/work-locations/${record.id}/edit`),
               },
               {
                 key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+                icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 onClick: () => handleToggleActive(record),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -187,7 +186,7 @@ export default function WorkLocationsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -198,10 +197,10 @@ export default function WorkLocationsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <EnvironmentOutlined className="mr-2" />
+          <MapPinIcon className="w-4 h-4" className="mr-2" />
           Çalışma Lokasyonları
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/work-locations/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-locations/new')}>
           Yeni Lokasyon
         </Button>
       </div>
@@ -213,7 +212,7 @@ export default function WorkLocationsPage() {
             <Statistic
               title="Toplam Lokasyon"
               value={totalLocations}
-              prefix={<EnvironmentOutlined />}
+              prefix={<MapPinIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -223,7 +222,7 @@ export default function WorkLocationsPage() {
             <Statistic
               title="Aktif Lokasyon"
               value={activeLocations}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -233,7 +232,7 @@ export default function WorkLocationsPage() {
             <Statistic
               title="Merkez Ofis"
               value={headquarters}
-              prefix={<HomeOutlined />}
+              prefix={<HomeIcon className="w-4 h-4" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -243,7 +242,7 @@ export default function WorkLocationsPage() {
             <Statistic
               title="Uzaktan"
               value={remoteLocations}
-              prefix={<GlobalOutlined />}
+              prefix={<GlobeAltIcon className="w-4 h-4" />}
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>
@@ -253,7 +252,7 @@ export default function WorkLocationsPage() {
             <Statistic
               title="Toplam Çalışan"
               value={totalEmployees}
-              prefix={<TeamOutlined />}
+              prefix={<UserGroupIcon className="w-4 h-4" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -266,7 +265,7 @@ export default function WorkLocationsPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Lokasyon ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

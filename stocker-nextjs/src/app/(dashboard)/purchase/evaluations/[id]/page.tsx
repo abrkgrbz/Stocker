@@ -17,19 +17,18 @@ import {
   Statistic,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  StarOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-  ShopOutlined,
-  SendOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  TrashIcon,
+  TrophyIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useSupplierEvaluation,
@@ -42,10 +41,10 @@ import type { EvaluationStatus } from '@/lib/api/services/purchase.types';
 const { Title, Text, Paragraph } = Typography;
 
 const statusConfig: Record<EvaluationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <EditOutlined /> },
-  Submitted: { color: 'blue', text: 'Gönderildi', icon: <ClockCircleOutlined /> },
-  Approved: { color: 'green', text: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', text: 'Reddedildi', icon: <CloseCircleOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
+  Submitted: { color: 'blue', text: 'Gönderildi', icon: <ClockIcon className="w-4 h-4" /> },
+  Approved: { color: 'green', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', text: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const evaluationTypeLabels: Record<string, string> = {
@@ -112,7 +111,7 @@ export default function SupplierEvaluationDetailPage() {
   const handleDelete = () => {
     Modal.confirm({
       title: 'Değerlendirme Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu değerlendirmeyi silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -173,7 +172,7 @@ export default function SupplierEvaluationDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
           <div>
             <div className="flex items-center gap-3">
               <Title level={3} className="mb-0">{evaluation.evaluationNumber}</Title>
@@ -181,7 +180,7 @@ export default function SupplierEvaluationDetailPage() {
                 {status.text}
               </Tag>
               {evaluation.rank && evaluation.rank <= 3 && (
-                <Tag color="gold" icon={<TrophyOutlined />}>
+                <Tag color="gold" icon={<TrophyIcon className="w-4 h-4" />}>
                   #{evaluation.rank} Sıralama
                 </Tag>
               )}
@@ -194,14 +193,14 @@ export default function SupplierEvaluationDetailPage() {
           {evaluation.status === 'Draft' && (
             <>
               <Button
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/evaluations/${id}/edit`)}
               >
                 Düzenle
               </Button>
               <Button
                 type="primary"
-                icon={<SendOutlined />}
+                icon={<PaperAirplaneIcon className="w-4 h-4" />}
                 onClick={handleSubmit}
                 loading={submitMutation.isPending}
               >
@@ -212,7 +211,7 @@ export default function SupplierEvaluationDetailPage() {
           {evaluation.status === 'Submitted' && (
             <Button
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={handleApprove}
               loading={approveMutation.isPending}
             >
@@ -225,7 +224,7 @@ export default function SupplierEvaluationDetailPage() {
                 {
                   key: 'delete',
                   label: 'Sil',
-                  icon: <DeleteOutlined />,
+                  icon: <TrashIcon className="w-4 h-4" />,
                   danger: true,
                   disabled: evaluation.status !== 'Draft',
                   onClick: handleDelete,
@@ -233,7 +232,7 @@ export default function SupplierEvaluationDetailPage() {
               ],
             }}
           >
-            <Button icon={<MoreOutlined />} />
+            <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         </Space>
       </div>
@@ -293,7 +292,7 @@ export default function SupplierEvaluationDetailPage() {
               <Descriptions.Item label="Değerlendirme No">{evaluation.evaluationNumber}</Descriptions.Item>
               <Descriptions.Item label="Tedarikçi">
                 <Space>
-                  <ShopOutlined />
+                  <BuildingStorefrontIcon className="w-4 h-4" />
                   {evaluation.supplierName}
                 </Space>
               </Descriptions.Item>

@@ -9,16 +9,14 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Spin, Alert, Space, Dropdown, Table } from 'antd';
 import {
-  ArrowLeftOutlined,
-  MoreOutlined,
-  SendOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  RollbackOutlined,
-  TruckOutlined,
-  EnvironmentOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  MapPinIcon,
+  PaperAirplaneIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -99,7 +97,7 @@ export default function ShipmentDetailPage() {
   if (canShip) {
     actionMenuItems.push({
       key: 'ship',
-      icon: <SendOutlined />,
+      icon: <PaperAirplaneIcon className="w-4 h-4" />,
       label: 'Sevk Et',
       onClick: handleShip,
     });
@@ -110,7 +108,7 @@ export default function ShipmentDetailPage() {
   if (canDeliver) {
     actionMenuItems.push({
       key: 'deliver',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Teslim Edildi',
       onClick: handleDeliver,
     });
@@ -123,7 +121,7 @@ export default function ShipmentDetailPage() {
       { type: 'divider' },
       {
         key: 'cancel',
-        icon: <CloseCircleOutlined />,
+        icon: <XCircleIcon className="w-4 h-4" />,
         label: 'İptal Et',
         danger: true,
         onClick: handleCancel,
@@ -230,7 +228,7 @@ export default function ShipmentDetailPage() {
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-slate-500 hover:text-slate-800"
@@ -248,7 +246,7 @@ export default function ShipmentDetailPage() {
           <Space>
             {actionMenuItems.length > 0 && (
               <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-                <Button icon={<MoreOutlined />}>İşlemler</Button>
+                <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
               </Dropdown>
             )}
           </Space>
@@ -268,7 +266,7 @@ export default function ShipmentDetailPage() {
           <StatCard
             label="Paket Sayısı"
             value={shipment.totalPackages}
-            icon={<SendOutlined />}
+            icon={<PaperAirplaneIcon className="w-4 h-4" />}
             iconColor="#8b5cf6"
           />
           <StatCard
@@ -278,7 +276,7 @@ export default function ShipmentDetailPage() {
                 ? dayjs(shipment.actualShipDate).format('DD.MM.YYYY')
                 : 'Henüz sevk edilmedi'
             }
-            icon={<SendOutlined />}
+            icon={<PaperAirplaneIcon className="w-4 h-4" />}
             iconColor="#3b82f6"
           />
           <StatCard
@@ -290,7 +288,7 @@ export default function ShipmentDetailPage() {
                 ? `Tahmini: ${dayjs(shipment.estimatedDeliveryDate).format('DD.MM.YYYY')}`
                 : '-'
             }
-            icon={<CheckCircleOutlined />}
+            icon={<CheckCircleIcon className="w-4 h-4" />}
             iconColor="#10b981"
           />
         </div>
@@ -399,7 +397,7 @@ export default function ShipmentDetailPage() {
             {/* Customer Info */}
             <Card>
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">
-                <UserOutlined className="mr-2" />
+                <UserIcon className="w-4 h-4" className="mr-2" />
                 Müşteri
               </h3>
               <div className="space-y-3">
@@ -439,7 +437,7 @@ export default function ShipmentDetailPage() {
             {/* Shipping Address */}
             <Card>
               <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">
-                <EnvironmentOutlined className="mr-2" />
+                <MapPinIcon className="w-4 h-4" className="mr-2" />
                 Teslimat Adresi
               </h3>
               <div className="space-y-1 text-sm text-slate-600">

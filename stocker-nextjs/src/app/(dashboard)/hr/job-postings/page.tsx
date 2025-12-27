@@ -19,23 +19,19 @@ import {
   Tooltip,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  StopOutlined,
-  TeamOutlined,
-  SendOutlined,
-  EyeInvisibleOutlined,
-  FireOutlined,
-  PushpinOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import {
   useJobPostings,
   useDepartments,
@@ -308,13 +304,13 @@ export default function JobPostingsPage() {
         const menuItems: any[] = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
@@ -325,7 +321,7 @@ export default function JobPostingsPage() {
         if (record.status === 'Draft') {
           menuItems.push({
             key: 'publish',
-            icon: <SendOutlined />,
+            icon: <PaperAirplaneIcon className="w-4 h-4" />,
             label: 'Yayınla',
             onClick: () => handlePublish(record),
           });
@@ -347,7 +343,7 @@ export default function JobPostingsPage() {
         menuItems.push({ type: 'divider' });
         menuItems.push({
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => handleDelete(record),
@@ -355,7 +351,7 @@ export default function JobPostingsPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         );
       },
@@ -368,18 +364,18 @@ export default function JobPostingsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <FileTextOutlined className="mr-2" />
+            <DocumentTextIcon className="w-4 h-4" className="mr-2" />
             İş İlanları
           </Title>
           <Text type="secondary">Tüm iş ilanlarını görüntüle ve yönet</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/hr/job-postings/new')}
           >
             Yeni İlan
@@ -394,7 +390,7 @@ export default function JobPostingsPage() {
             <Statistic
               title="Toplam İlan"
               value={totalPostings}
-              prefix={<FileTextOutlined />}
+              prefix={<DocumentTextIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -404,7 +400,7 @@ export default function JobPostingsPage() {
             <Statistic
               title="Yayında"
               value={publishedPostings}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -414,7 +410,7 @@ export default function JobPostingsPage() {
             <Statistic
               title="Toplam Başvuru"
               value={totalApplications}
-              prefix={<TeamOutlined />}
+              prefix={<UserGroupIcon className="w-4 h-4" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -424,7 +420,7 @@ export default function JobPostingsPage() {
             <Statistic
               title="İşe Alınan"
               value={totalHired}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -440,7 +436,7 @@ export default function JobPostingsPage() {
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             />
           </Col>
           <Col xs={12} md={5}>

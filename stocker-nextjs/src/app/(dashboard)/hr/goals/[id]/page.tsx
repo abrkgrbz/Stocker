@@ -18,16 +18,16 @@ import {
   Progress,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  AimOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CursorArrowRaysIcon,
+  ExclamationCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { usePerformanceGoal, useDeletePerformanceGoal } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -63,13 +63,13 @@ export default function GoalDetailPage() {
 
   const getStatusConfig = (status?: string, isOverdue?: boolean) => {
     if (isOverdue && status !== 'Completed' && status !== 'Cancelled') {
-      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleOutlined /> };
+      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
     }
     const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockCircleOutlined /> },
-      InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockCircleOutlined /> },
-      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleOutlined /> },
+      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" /> },
+      InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockIcon className="w-4 h-4" /> },
+      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
     };
     return statusMap[status || ''] || { color: 'default', text: status || '-', icon: null };
   };
@@ -101,7 +101,7 @@ export default function GoalDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/goals')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/goals')}>
             Geri
           </Button>
           <div>
@@ -120,13 +120,13 @@ export default function GoalDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/goals/${id}/edit`)}
             disabled={goal.status === 'Completed'}
           >
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -157,7 +157,7 @@ export default function GoalDetailPage() {
                     <Statistic
                       title="Başlangıç"
                       value={dayjs(goal.startDate).format('DD.MM.YYYY')}
-                      prefix={<CalendarOutlined />}
+                      prefix={<CalendarIcon className="w-4 h-4" />}
                       valueStyle={{ fontSize: 16 }}
                     />
                   </Col>
@@ -165,7 +165,7 @@ export default function GoalDetailPage() {
                     <Statistic
                       title="Hedef Tarih"
                       value={dayjs(goal.targetDate).format('DD.MM.YYYY')}
-                      prefix={<AimOutlined />}
+                      prefix={<CursorArrowRaysIcon className="w-4 h-4" />}
                       valueStyle={{ fontSize: 16, color: goal.isOverdue ? '#ff4d4f' : undefined }}
                     />
                   </Col>
@@ -196,7 +196,7 @@ export default function GoalDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {goal.employeeName}
                 </Space>
               </Descriptions.Item>

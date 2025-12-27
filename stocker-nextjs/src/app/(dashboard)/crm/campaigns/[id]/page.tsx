@@ -9,19 +9,17 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Spin, Empty, Tag, Progress } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  TeamOutlined,
-  MailOutlined,
-  PlayCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PauseCircleOutlined,
-  UserAddOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EnvelopeIcon,
+  PencilIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  UserPlusIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useCampaign } from '@/lib/api/hooks/useCRM';
 import dayjs from 'dayjs';
 import 'dayjs/locale/tr';
@@ -29,23 +27,23 @@ import 'dayjs/locale/tr';
 dayjs.locale('tr');
 
 const statusLabels: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  Planned: { label: 'Planlandı', color: 'default', icon: <CalendarOutlined /> },
+  Planned: { label: 'Planlandı', color: 'default', icon: <CalendarIcon className="w-4 h-4" /> },
   InProgress: { label: 'Devam Ediyor', color: 'processing', icon: <PlayCircleOutlined /> },
-  Completed: { label: 'Tamamlandı', color: 'success', icon: <CheckCircleOutlined /> },
-  Aborted: { label: 'İptal Edildi', color: 'error', icon: <CloseCircleOutlined /> },
+  Completed: { label: 'Tamamlandı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Aborted: { label: 'İptal Edildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
   OnHold: { label: 'Beklemede', color: 'warning', icon: <PauseCircleOutlined /> },
 };
 
 const typeLabels: Record<string, { label: string; icon: React.ReactNode }> = {
-  Email: { label: 'E-posta', icon: <MailOutlined /> },
-  SocialMedia: { label: 'Sosyal Medya', icon: <UserAddOutlined /> },
+  Email: { label: 'E-posta', icon: <EnvelopeIcon className="w-4 h-4" /> },
+  SocialMedia: { label: 'Sosyal Medya', icon: <UserPlusIcon className="w-4 h-4" /> },
   Webinar: { label: 'Webinar', icon: <PlayCircleOutlined /> },
-  Event: { label: 'Etkinlik', icon: <CheckCircleOutlined /> },
-  Conference: { label: 'Konferans', icon: <TeamOutlined /> },
-  Advertisement: { label: 'Reklam', icon: <DollarOutlined /> },
-  Banner: { label: 'Banner', icon: <DollarOutlined /> },
-  Telemarketing: { label: 'Telefonla Pazarlama', icon: <MailOutlined /> },
-  PublicRelations: { label: 'Halkla İlişkiler', icon: <UserAddOutlined /> },
+  Event: { label: 'Etkinlik', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Conference: { label: 'Konferans', icon: <UserGroupIcon className="w-4 h-4" /> },
+  Advertisement: { label: 'Reklam', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  Banner: { label: 'Banner', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  Telemarketing: { label: 'Telefonla Pazarlama', icon: <EnvelopeIcon className="w-4 h-4" /> },
+  PublicRelations: { label: 'Halkla İlişkiler', icon: <UserPlusIcon className="w-4 h-4" /> },
 };
 
 export default function CampaignDetailPage() {
@@ -72,7 +70,7 @@ export default function CampaignDetailPage() {
   }
 
   const statusInfo = statusLabels[campaign.status] || { label: campaign.status, color: 'default', icon: null };
-  const typeInfo = typeLabels[campaign.type] || { label: campaign.type, icon: <MailOutlined /> };
+  const typeInfo = typeLabels[campaign.type] || { label: campaign.type, icon: <EnvelopeIcon className="w-4 h-4" /> };
   const responseRate = campaign.sentCount > 0 ? Math.round((campaign.responseCount / campaign.sentCount) * 100) : 0;
   const roi = campaign.actualCost > 0 ? Math.round(((campaign.revenue - campaign.actualCost) / campaign.actualCost) * 100) : 0;
 
@@ -93,7 +91,7 @@ export default function CampaignDetailPage() {
               onClick={() => router.push('/crm/campaigns')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -115,7 +113,7 @@ export default function CampaignDetailPage() {
             onClick={() => router.push(`/crm/campaigns/${campaign.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -148,7 +146,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.startDate ? dayjs(campaign.startDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -157,7 +155,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.endDate ? dayjs(campaign.endDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -166,7 +164,7 @@ export default function CampaignDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Hedef Kitle</p>
                   <div className="flex items-center gap-1">
-                    <TeamOutlined className="text-slate-400" />
+                    <UserGroupIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {campaign.targetAudience || '-'}
                     </span>
@@ -223,7 +221,7 @@ export default function CampaignDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <DollarOutlined className="text-slate-400" />
+                <CurrencyDollarIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Bütçe
                 </p>
@@ -249,7 +247,7 @@ export default function CampaignDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyOutlined className="text-slate-400" />
+                <TrophyIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Yatırım Getirisi
                 </p>

@@ -17,17 +17,16 @@ import {
   Tabs,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  WalletOutlined,
-  BankOutlined,
-  CreditCardOutlined,
-  DollarOutlined,
-  SyncOutlined,
-  ShopOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  BuildingLibraryIcon,
+  BuildingStorefrontIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  WalletIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useCreateSupplierPayment, useSuppliers, usePurchaseInvoices } from '@/lib/api/hooks/usePurchase';
 import { PaymentMethod, PurchaseInvoiceStatus } from '@/lib/api/services/purchase.types';
 import dayjs from 'dayjs';
@@ -44,12 +43,12 @@ const typeOptions = [
 ];
 
 const methodOptions = [
-  { value: 'Cash', label: 'Nakit', icon: <DollarOutlined /> },
-  { value: 'BankTransfer', label: 'Havale/EFT', icon: <BankOutlined /> },
+  { value: 'Cash', label: 'Nakit', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  { value: 'BankTransfer', label: 'Havale/EFT', icon: <BuildingLibraryIcon className="w-4 h-4" /> },
   { value: 'CreditCard', label: 'Kredi Kartı', icon: <CreditCardOutlined /> },
-  { value: 'Check', label: 'Çek', icon: <WalletOutlined /> },
-  { value: 'DirectDebit', label: 'Otomatik Ödeme', icon: <SyncOutlined /> },
-  { value: 'Other', label: 'Diğer', icon: <WalletOutlined /> },
+  { value: 'Check', label: 'Çek', icon: <WalletIcon className="w-4 h-4" /> },
+  { value: 'DirectDebit', label: 'Otomatik Ödeme', icon: <ArrowPathIcon className="w-4 h-4" /> },
+  { value: 'Other', label: 'Diğer', icon: <WalletIcon className="w-4 h-4" /> },
 ];
 
 const currencyOptions = [
@@ -146,7 +145,7 @@ export default function NewSupplierPaymentPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -155,7 +154,7 @@ export default function NewSupplierPaymentPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}
               >
-                <WalletOutlined style={{ fontSize: 24 }} />
+                <WalletIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -170,7 +169,7 @@ export default function NewSupplierPaymentPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -178,7 +177,7 @@ export default function NewSupplierPaymentPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"
@@ -223,7 +222,7 @@ export default function NewSupplierPaymentPage() {
                         justifyContent: 'center',
                       }}
                     >
-                      <WalletOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <WalletIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                       <p className="mt-4 text-lg font-medium text-white/90">
                         Tedarikçi Ödemesi
                       </p>
@@ -281,7 +280,7 @@ export default function NewSupplierPaymentPage() {
                   {/* Currency Settings */}
                   <div className="mt-6 space-y-4">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      <DollarOutlined className="mr-1" />
+                      <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
                       Para Birimi
                     </div>
                     <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
@@ -324,7 +323,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <ShopOutlined className="mr-1" />
+                            <BuildingStorefrontIcon className="w-4 h-4" className="mr-1" />
                             Ödeme Bilgileri
                           </span>
                         ),
@@ -441,7 +440,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'bank',
                         label: (
                           <span>
-                            <BankOutlined className="mr-1" />
+                            <BuildingLibraryIcon className="w-4 h-4" className="mr-1" />
                             Banka Bilgileri
                           </span>
                         ),
@@ -517,7 +516,7 @@ export default function NewSupplierPaymentPage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <FileTextOutlined className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
                             Notlar
                           </span>
                         ),

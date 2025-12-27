@@ -20,26 +20,23 @@ import {
 } from 'antd';
 import type { UploadProps } from 'antd';
 import {
-  SearchOutlined,
-  FilterOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  WarningOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  InboxOutlined,
-  ShopOutlined,
-  AppstoreOutlined,
-  SwapOutlined,
-  PlusOutlined,
-  EyeOutlined,
-  HistoryOutlined,
-  MoreOutlined,
-  ExportOutlined,
-  PrinterOutlined,
-  FileExcelOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  DocumentIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  FunnelIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  PrinterIcon,
+  Squares2X2Icon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -328,7 +325,7 @@ export default function StockListPage() {
       width: 130,
       render: (name) => (
         <Space>
-          <ShopOutlined className="text-slate-400" />
+          <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-400" />
           <span className="text-slate-700">{name}</span>
         </Space>
       ),
@@ -453,7 +450,7 @@ export default function StockListPage() {
             <Button
               type="text"
               size="small"
-              icon={<EyeOutlined />}
+              icon={<EyeIcon className="w-4 h-4" />}
               className="!text-slate-600 hover:!text-slate-900"
               onClick={() => handleViewDetail(record.productId)}
             />
@@ -481,7 +478,7 @@ export default function StockListPage() {
             }}
             trigger={['click']}
           >
-            <Button type="text" size="small" icon={<MoreOutlined />} className="!text-slate-600 hover:!text-slate-900" />
+            <Button type="text" size="small" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="!text-slate-600 hover:!text-slate-900" />
           </Dropdown>
         </Space>
       ),
@@ -495,7 +492,7 @@ export default function StockListPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <InboxOutlined />
+              <InboxIcon className="w-4 h-4" />
               Stok Listesi
             </h1>
             <p className="text-sm text-slate-500 mt-1">
@@ -508,20 +505,20 @@ export default function StockListPage() {
                 items: [
                   {
                     key: 'export-stock',
-                    icon: <DownloadOutlined />,
+                    icon: <ArrowDownTrayIcon className="w-4 h-4" />,
                     label: 'Stok Verisini İndir',
                     onClick: () => exportStockMutation.mutate({ warehouseId: selectedWarehouseId }),
                   },
                   {
                     key: 'export-summary',
-                    icon: <FileExcelOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'Stok Özeti İndir',
                     onClick: () => exportStockSummaryMutation.mutate(),
                   },
                   { type: 'divider' },
                   {
                     key: 'download-template',
-                    icon: <FileExcelOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'İçe Aktarma Şablonu',
                     onClick: () => downloadTemplateMutation.mutate(),
                   },
@@ -530,7 +527,7 @@ export default function StockListPage() {
               trigger={['click']}
             >
               <Button
-                icon={<DownloadOutlined />}
+                icon={<ArrowDownTrayIcon className="w-4 h-4" />}
                 className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                 loading={exportStockMutation.isPending || exportStockSummaryMutation.isPending || downloadTemplateMutation.isPending}
               >
@@ -538,7 +535,7 @@ export default function StockListPage() {
               </Button>
             </Dropdown>
             <Button
-              icon={<UploadOutlined />}
+              icon={<ArrowUpTrayIcon className="w-4 h-4" />}
               className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
               onClick={() => setImportModalVisible(true)}
               loading={importStockMutation.isPending}
@@ -546,14 +543,14 @@ export default function StockListPage() {
               Excel İçe Aktar
             </Button>
             <Button
-              icon={<PrinterOutlined />}
+              icon={<PrinterIcon className="w-4 h-4" />}
               className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
             >
               Yazdır
             </Button>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<PlusIcon className="w-4 h-4" />}
               className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               onClick={() => message.info('Stok girişi sayfasına yönlendiriliyorsunuz')}
             >
@@ -579,7 +576,7 @@ export default function StockListPage() {
           <div className="col-span-12 sm:col-span-6 lg:col-span-2">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-1">
-                <AppstoreOutlined className="text-slate-400" />
+                <Squares2X2Icon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs text-slate-500">Ürün Çeşidi</p>
               </div>
               <p className="text-2xl font-bold text-slate-900">{summaryStats.uniqueProducts}</p>
@@ -588,7 +585,7 @@ export default function StockListPage() {
           <div className="col-span-12 sm:col-span-6 lg:col-span-2">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-1">
-                <WarningOutlined className="text-amber-500" />
+                <ExclamationTriangleIcon className="w-4 h-4" className="text-amber-500" />
                 <p className="text-xs text-slate-500">Düşük Stok</p>
               </div>
               <p className="text-2xl font-bold text-amber-600">{summaryStats.lowStockCount}</p>
@@ -597,7 +594,7 @@ export default function StockListPage() {
           <div className="col-span-12 sm:col-span-6 lg:col-span-2">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-1">
-                <ExclamationCircleOutlined className="text-red-500" />
+                <ExclamationCircleIcon className="w-4 h-4" className="text-red-500" />
                 <p className="text-xs text-slate-500">Stok Bitti</p>
               </div>
               <p className="text-2xl font-bold text-red-600">{summaryStats.outOfStockCount}</p>
@@ -606,7 +603,7 @@ export default function StockListPage() {
           <div className="col-span-12 sm:col-span-6 lg:col-span-2">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-1">
-                <InboxOutlined className="text-slate-400" />
+                <InboxIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs text-slate-500">Kayıt Sayısı</p>
               </div>
               <p className="text-2xl font-bold text-slate-900">{filteredData.length}</p>
@@ -622,7 +619,7 @@ export default function StockListPage() {
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined className="text-slate-400" />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
               style={{ width: 280 }}
             />
             <Select
@@ -663,7 +660,7 @@ export default function StockListPage() {
             <div className="flex-1" />
             <Tooltip title="Filtreleri Temizle">
               <Button
-                icon={<FilterOutlined />}
+                icon={<FunnelIcon className="w-4 h-4" />}
                 className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                 onClick={() => {
                   setSearchText('');
@@ -677,7 +674,7 @@ export default function StockListPage() {
             </Tooltip>
             <Tooltip title="Yenile">
               <Button
-                icon={<ReloadOutlined />}
+                icon={<ArrowPathIcon className="w-4 h-4" />}
                 className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
                 onClick={() => refetchStock()}
               />
@@ -736,7 +733,7 @@ export default function StockListPage() {
       <Modal
         title={
           <span className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <InboxOutlined />
+            <InboxIcon className="w-4 h-4" />
             Ürün Stok Detayı
           </span>
         }
@@ -769,7 +766,7 @@ export default function StockListPage() {
               </div>
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <ShopOutlined className="text-slate-400" />
+                  <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-400" />
                   <p className="text-xs text-slate-500">Depo Sayısı</p>
                 </div>
                 <p className="text-2xl font-bold text-slate-900">{stockSummary.warehouseCount || 0}</p>
@@ -807,7 +804,7 @@ export default function StockListPage() {
       <Modal
         title={
           <span className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <UploadOutlined />
+            <ArrowUpTrayIcon className="w-4 h-4" />
             Excel'den Stok Ayarlaması İçe Aktar
           </span>
         }
@@ -840,7 +837,7 @@ export default function StockListPage() {
             disabled={importStockMutation.isPending}
           >
             <p className="ant-upload-drag-icon">
-              <InboxOutlined className="text-5xl text-slate-400" />
+              <InboxIcon className="w-4 h-4" className="text-5xl text-slate-400" />
             </p>
             <p className="ant-upload-text text-slate-700">
               Excel dosyasını buraya sürükleyin veya tıklayarak seçin
@@ -861,12 +858,12 @@ export default function StockListPage() {
             <div className="mt-5">
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                  <CheckCircleOutlined className="text-emerald-600 text-lg mb-1" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-emerald-600 text-lg mb-1" />
                   <p className="text-xs text-emerald-700">Başarılı</p>
                   <p className="text-xl font-bold text-emerald-600">{importStockMutation.data.successCount}</p>
                 </div>
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                  <ExclamationCircleOutlined className="text-red-600 text-lg mb-1" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="text-red-600 text-lg mb-1" />
                   <p className="text-xs text-red-700">Hata</p>
                   <p className="text-xl font-bold text-red-600">{importStockMutation.data.errorCount}</p>
                 </div>

@@ -15,20 +15,19 @@ import {
   Empty,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TagsOutlined,
-  PlusOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  FilterOutlined,
-  EyeOutlined,
-  OrderedListOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  EyeIcon,
+  FunnelIcon,
+  PencilIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+  XCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProductAttribute,
   useDeleteProductAttribute,
@@ -233,7 +232,7 @@ export default function ProductAttributeDetailPage() {
               <Button
                 type="text"
                 size="small"
-                icon={<CheckOutlined />}
+                icon={<CheckIcon className="w-4 h-4" />}
                 onClick={handleUpdateOption}
                 loading={updateOption.isPending}
                 className="text-emerald-600 hover:text-emerald-700"
@@ -241,7 +240,7 @@ export default function ProductAttributeDetailPage() {
               <Button
                 type="text"
                 size="small"
-                icon={<CloseOutlined />}
+                icon={<XMarkIcon className="w-4 h-4" />}
                 onClick={cancelEdit}
                 className="text-slate-400 hover:text-slate-600"
               />
@@ -253,7 +252,7 @@ export default function ProductAttributeDetailPage() {
             <Button
               type="text"
               size="small"
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => startEdit(record)}
               className="text-slate-400 hover:text-slate-600"
             />
@@ -261,7 +260,7 @@ export default function ProductAttributeDetailPage() {
               type="text"
               size="small"
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => handleDeleteOption(record.id)}
               loading={deleteOption.isPending}
             />
@@ -304,7 +303,7 @@ export default function ProductAttributeDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -313,7 +312,7 @@ export default function ProductAttributeDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <TagsOutlined className="text-white text-lg" />
+                <TagIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -328,7 +327,7 @@ export default function ProductAttributeDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/product-attributes/${attributeId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -336,7 +335,7 @@ export default function ProductAttributeDetailPage() {
             </Button>
             <Button
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => setDeleteModalOpen(true)}
             >
               Sil
@@ -354,7 +353,7 @@ export default function ProductAttributeDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className={`w-10 h-10 rounded-lg ${typeConfig.bgColor} flex items-center justify-center`}>
-                  <TagsOutlined className={`${typeConfig.textColor} text-lg`} />
+                  <TagIcon className="w-4 h-4" className={`${typeConfig.textColor} text-lg`} />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Özellik Tipi
@@ -389,7 +388,7 @@ export default function ProductAttributeDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <FilterOutlined className="text-slate-600 text-lg" />
+                  <FunnelIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Görüntüleme Sırası
@@ -405,7 +404,7 @@ export default function ProductAttributeDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <EyeOutlined className="text-emerald-600 text-lg" />
+                  <EyeIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Grup
@@ -496,7 +495,7 @@ export default function ProductAttributeDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Zorunlu Alan</span>
                   <Tag
-                    icon={attribute.isRequired ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={attribute.isRequired ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       attribute.isRequired
                         ? 'bg-emerald-50 text-emerald-700'
@@ -509,7 +508,7 @@ export default function ProductAttributeDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Filtrelenebilir</span>
                   <Tag
-                    icon={attribute.isFilterable ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={attribute.isFilterable ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       attribute.isFilterable
                         ? 'bg-emerald-50 text-emerald-700'
@@ -522,7 +521,7 @@ export default function ProductAttributeDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Görünür</span>
                   <Tag
-                    icon={attribute.isVisible ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={attribute.isVisible ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       attribute.isVisible
                         ? 'bg-emerald-50 text-emerald-700'
@@ -534,7 +533,7 @@ export default function ProductAttributeDetailPage() {
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-600">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -581,7 +580,7 @@ export default function ProductAttributeDetailPage() {
                     <Button
                       type="primary"
                       size="small"
-                      icon={<PlusOutlined />}
+                      icon={<PlusIcon className="w-4 h-4" />}
                       onClick={handleAddOption}
                       loading={addOption.isPending}
                       style={{ background: '#1e293b', borderColor: '#1e293b' }}

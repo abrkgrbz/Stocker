@@ -18,18 +18,18 @@ import {
   Select,
 } from 'antd';
 import {
-  PlusOutlined,
-  FileOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useDocuments, useDeleteDocument, useEmployees } from '@/lib/api/hooks/useHR';
 import type { EmployeeDocumentDto } from '@/lib/api/services/hr.types';
@@ -109,7 +109,7 @@ export default function DocumentsPage() {
       sorter: (a, b) => a.title.localeCompare(b.title),
       render: (title: string, record: EmployeeDocumentDto) => (
         <Space>
-          <FileOutlined style={{ color: '#3b82f6' }} />
+          <DocumentIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
           <a onClick={() => router.push(`/hr/documents/${record.id}`)}>{title}</a>
         </Space>
       ),
@@ -158,7 +158,7 @@ export default function DocumentsPage() {
       key: 'isVerified',
       width: 100,
       render: (isVerified: boolean) => (
-        <Tag color={isVerified ? 'green' : 'default'} icon={isVerified ? <CheckCircleOutlined /> : <ClockCircleOutlined />}>
+        <Tag color={isVerified ? 'green' : 'default'} icon={isVerified ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}>
           {isVerified ? 'Doğrulandı' : 'Bekliyor'}
         </Tag>
       ),
@@ -173,20 +173,20 @@ export default function DocumentsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/documents/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/documents/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -195,7 +195,7 @@ export default function DocumentsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -212,10 +212,10 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <FileOutlined className="mr-2" />
+          <DocumentIcon className="w-4 h-4" className="mr-2" />
           Belgeler
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/documents/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/documents/new')}>
           Yeni Belge
         </Button>
       </div>
@@ -227,7 +227,7 @@ export default function DocumentsPage() {
             <Statistic
               title="Toplam Belge"
               value={totalDocuments}
-              prefix={<FileOutlined />}
+              prefix={<DocumentIcon className="w-4 h-4" />}
               valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
@@ -237,7 +237,7 @@ export default function DocumentsPage() {
             <Statistic
               title="Doğrulanmış"
               value={verifiedDocuments}
-              prefix={<SafetyCertificateOutlined />}
+              prefix={<ShieldCheckIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -247,7 +247,7 @@ export default function DocumentsPage() {
             <Statistic
               title="Süresi Dolacak"
               value={expiringSoonDocuments}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-4 h-4" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -257,7 +257,7 @@ export default function DocumentsPage() {
             <Statistic
               title="Süresi Dolmuş"
               value={expiredDocuments}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
@@ -270,7 +270,7 @@ export default function DocumentsPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Belge veya çalışan ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

@@ -3,7 +3,11 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Row, Col } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, LaptopOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  ComputerDesktopIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 import { useEmployeeAsset } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = {
@@ -23,20 +27,20 @@ export default function EmployeeAssetDetailPage() {
   const { data: asset, isLoading } = useEmployeeAsset(id);
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!asset) return <div className="p-6"><Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Varlik bulunamadi.</div></div>;
+  if (!asset) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Varlik bulunamadi.</div></div>;
 
   return (
     <div className="min-h-screen bg-white">
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" className="text-gray-500 hover:text-gray-800" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" className="text-gray-500 hover:text-gray-800" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Varlik Detayi</h1>
               <p className="text-sm text-gray-400 m-0">{asset.assetName}</p>
             </div>
           </div>
-          <Button type="primary" icon={<EditOutlined />} onClick={() => router.push(`/hr/employee-assets/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
+          <Button type="primary" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/employee-assets/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
         </div>
       </div>
 
@@ -44,7 +48,7 @@ export default function EmployeeAssetDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <LaptopOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ComputerDesktopIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{asset.assetName}</h3>
               <p className="text-sm text-white/60">{asset.assetType}</p>
               <Tag color={statusColors[asset.status]} className="mt-4">{asset.status}</Tag>

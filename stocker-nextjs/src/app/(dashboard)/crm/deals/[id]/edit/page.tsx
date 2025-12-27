@@ -3,7 +3,9 @@
 import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Form, Tag, Button } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import {
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { DealForm } from '@/components/crm/deals';
 import { useDeal, useUpdateDeal, useDeleteDeal } from '@/lib/api/hooks/useCRM';
@@ -90,7 +92,7 @@ export default function EditDealPage({ params }: PageProps) {
       extraActions={
         <Button
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={handleDelete}
           loading={deleteDeal.isPending}
         >

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { Card, Input, Button, Space, Typography, Alert, Divider } from 'antd';
-import { SafetyOutlined, MobileOutlined, KeyOutlined } from '@ant-design/icons';
+import {
+  ShieldCheckIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 
 const { Title, Text, Link } = Typography;
@@ -83,7 +85,7 @@ export default function Verify2FAPage() {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* Header */}
           <div style={{ textAlign: 'center' }}>
-            <SafetyOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+            <ShieldCheckIcon className="w-4 h-4" style={{ fontSize: 48, color: '#1890ff' }} />
             <Title level={3} style={{ marginTop: 16, marginBottom: 8 }}>
               İki Faktörlü Doğrulama
             </Title>

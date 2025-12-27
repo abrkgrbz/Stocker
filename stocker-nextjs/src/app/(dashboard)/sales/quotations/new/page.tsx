@@ -17,7 +17,12 @@ import {
   Row,
   Col,
 } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useCreateQuotation } from '@/lib/api/hooks/useSales';
 import { useCustomers } from '@/lib/api/hooks/useCRM';
@@ -240,7 +245,7 @@ export default function NewQuotationPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -251,7 +256,7 @@ export default function NewQuotationPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/quotations')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/quotations')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>Yeni Teklif</Title>
@@ -311,7 +316,7 @@ export default function NewQuotationPage() {
             <Card
               title="Teklif Kalemleri"
               extra={
-                <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem}>
+                <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
                   Kalem Ekle
                 </Button>
               }
@@ -363,7 +368,7 @@ export default function NewQuotationPage() {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Button
                   type="primary"
-                  icon={<SaveOutlined />}
+                  icon={<CheckIcon className="w-4 h-4" />}
                   htmlType="submit"
                   loading={createMutation.isPending}
                   block

@@ -20,20 +20,17 @@ import {
   Divider,
 } from 'antd';
 import {
-  DollarOutlined,
-  PieChartOutlined,
-  BarChartOutlined,
-  LineChartOutlined,
-  CalculatorOutlined,
-  SwapOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  ReloadOutlined,
-  SettingOutlined,
-  InfoCircleOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ChartBarIcon,
+  ChartPieIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  FunnelIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import {
@@ -256,7 +253,7 @@ export default function CostingPage() {
       render: (_, record) => (
         <Button
           type="link"
-          icon={<InfoCircleOutlined />}
+          icon={<InformationCircleIcon className="w-4 h-4" />}
           className="!text-slate-600 hover:!text-slate-900"
           onClick={() => setProductDetailModal(record)}
         >
@@ -432,7 +429,7 @@ export default function CostingPage() {
       key: 'valuation',
       label: (
         <span className="flex items-center gap-2">
-          <PieChartOutlined />
+          <ChartPieIcon className="w-4 h-4" />
           Envanter Değerleme
         </span>
       ),
@@ -492,7 +489,7 @@ export default function CostingPage() {
       key: 'cogs',
       label: (
         <span className="flex items-center gap-2">
-          <BarChartOutlined />
+          <ChartBarIcon className="w-4 h-4" />
           SMM Raporu
         </span>
       ),
@@ -613,7 +610,7 @@ export default function CostingPage() {
       key: 'layers',
       label: (
         <span className="flex items-center gap-2">
-          <LineChartOutlined />
+          <ChartBarIcon className="w-4 h-4" />
           Maliyet Katmanları
         </span>
       ),
@@ -681,7 +678,7 @@ export default function CostingPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <DollarOutlined />
+            <CurrencyDollarIcon className="w-4 h-4" />
             Envanter Maliyetlendirme
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -697,7 +694,7 @@ export default function CostingPage() {
             SMM Hesapla
           </Button>
           <Button
-            icon={<SettingOutlined />}
+            icon={<Cog6ToothIcon className="w-4 h-4" />}
             className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
           >
             Ayarlar
@@ -711,7 +708,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <DollarOutlined className="text-lg text-slate-600" />
+                <CurrencyDollarIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Toplam Envanter Değeri</p>
@@ -729,7 +726,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <PieChartOutlined className="text-lg text-emerald-600" />
+                <ChartPieIcon className="w-4 h-4" className="text-lg text-emerald-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Toplam Ürün Sayısı</p>
@@ -747,7 +744,7 @@ export default function CostingPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <BarChartOutlined className="text-lg text-amber-600" />
+                <ChartBarIcon className="w-4 h-4" className="text-lg text-amber-600" />
               </div>
             </div>
             <p className="text-xs text-slate-500 mb-1">Dönem SMM</p>
@@ -772,9 +769,9 @@ export default function CostingPage() {
                   : 'bg-red-50'
               }`}>
                 {varianceAnalysis && varianceAnalysis.reduce((sum, v) => sum + v.totalVarianceImpact, 0) < 0 ? (
-                  <CheckCircleOutlined className="text-lg text-emerald-600" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-lg text-emerald-600" />
                 ) : (
-                  <ExclamationCircleOutlined className="text-lg text-red-600" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-red-600" />
                 )}
               </div>
             </div>
@@ -801,7 +798,7 @@ export default function CostingPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <FilterOutlined className="text-slate-400" />
+            <FunnelIcon className="w-4 h-4" className="text-slate-400" />
             <span className="font-medium text-slate-700">Filtreler:</span>
           </div>
           <Select
@@ -838,7 +835,7 @@ export default function CostingPage() {
             format="DD.MM.YYYY"
           />
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
             onClick={() => refetchValuation()}
           >
@@ -931,8 +928,8 @@ export default function CostingPage() {
                         : 'text-red-600'
                     }`}>
                       {productDetailModal.weightedAverageCost < productDetailModal.standardCost
-                        ? <CheckCircleOutlined />
-                        : <WarningOutlined />}
+                        ? <CheckCircleIcon className="w-4 h-4" />
+                        : <ExclamationTriangleIcon className="w-4 h-4" />}
                       {formatCurrency(productDetailModal.weightedAverageCost - productDetailModal.standardCost, productDetailModal.currency)}
                     </p>
                   </div>

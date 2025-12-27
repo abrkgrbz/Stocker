@@ -4,16 +4,16 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty, Progress } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  HomeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  AppstoreOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  HomeIcon,
+  InboxIcon,
+  MapPinIcon,
+  PencilIcon,
+  Squares2X2Icon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useLocation, useWarehouse } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
 
@@ -75,7 +75,7 @@ export default function LocationDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -84,13 +84,13 @@ export default function LocationDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <EnvironmentOutlined className="text-white text-lg" />
+                <MapPinIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{location.name}</h1>
                   <Tag
-                    icon={location.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       location.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -109,7 +109,7 @@ export default function LocationDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/locations/${locationId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -128,7 +128,7 @@ export default function LocationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <AppstoreOutlined className="text-white text-lg" />
+                  <Squares2X2Icon className="w-4 h-4" className="text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Kapasite
@@ -145,7 +145,7 @@ export default function LocationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <InboxOutlined className="text-amber-600 text-lg" />
+                  <InboxIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kullanılan
@@ -164,7 +164,7 @@ export default function LocationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Boş Kapasite
@@ -199,7 +199,7 @@ export default function LocationDetailPage() {
                       onClick={() => router.push(`/inventory/warehouses/${warehouse.id}`)}
                       className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
-                      <HomeOutlined className="text-xs" />
+                      <HomeIcon className="w-4 h-4" className="text-xs" />
                       {warehouse.name}
                     </button>
                   ) : (
@@ -209,7 +209,7 @@ export default function LocationDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={location.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       location.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -246,7 +246,7 @@ export default function LocationDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -256,7 +256,7 @@ export default function LocationDetailPage() {
                 {location.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

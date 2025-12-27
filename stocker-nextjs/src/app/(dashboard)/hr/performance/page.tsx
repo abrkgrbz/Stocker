@@ -18,15 +18,14 @@ import {
   Rate,
 } from 'antd';
 import {
-  PlusOutlined,
-  TrophyOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  StarOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  TrophyIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { usePerformanceReviews, useDeletePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceReviewDto } from '@/lib/api/services/hr.types';
@@ -90,7 +89,7 @@ export default function PerformancePage() {
       key: 'employee',
       render: (_, record: PerformanceReviewDto) => (
         <Space>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -141,13 +140,13 @@ export default function PerformancePage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/performance/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/performance/${record.id}/edit`),
                 disabled: record.status === 'Completed',
@@ -155,7 +154,7 @@ export default function PerformancePage() {
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -164,7 +163,7 @@ export default function PerformancePage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -175,10 +174,10 @@ export default function PerformancePage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <TrophyOutlined className="mr-2" />
+          <TrophyIcon className="w-4 h-4" className="mr-2" />
           Performans Değerlendirme
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/performance/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/performance/new')}>
           Yeni Değerlendirme
         </Button>
       </div>
@@ -190,7 +189,7 @@ export default function PerformancePage() {
             <Statistic
               title="Toplam Değerlendirme"
               value={totalReviews}
-              prefix={<TrophyOutlined />}
+              prefix={<TrophyIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>

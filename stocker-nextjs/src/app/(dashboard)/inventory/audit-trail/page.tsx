@@ -21,23 +21,22 @@ import {
   Button,
 } from 'antd';
 import {
-  AuditOutlined,
-  UserOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  HistoryOutlined,
-  PlusCircleOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  GlobalOutlined,
-  TeamOutlined,
-  BarChartOutlined,
-  CalendarOutlined,
-  EyeOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  FunnelIcon,
+  GlobeAltIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  UserGroupIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import {
   useAuditLogs,
   useAuditDashboard,
@@ -88,11 +87,11 @@ const actionColors: Record<string, string> = {
 
 // Action icons
 const actionIcons: Record<string, React.ReactNode> = {
-  Created: <PlusCircleOutlined />,
-  Updated: <EditOutlined />,
-  Deleted: <DeleteOutlined />,
-  Activated: <CheckCircleOutlined />,
-  Deactivated: <WarningOutlined />,
+  Created: <PlusCircleIcon className="w-4 h-4" />,
+  Updated: <PencilIcon className="w-4 h-4" />,
+  Deleted: <TrashIcon className="w-4 h-4" />,
+  Activated: <CheckCircleIcon className="w-4 h-4" />,
+  Deactivated: <ExclamationTriangleIcon className="w-4 h-4" />,
 };
 
 export default function AuditTrailPage() {
@@ -197,7 +196,7 @@ export default function AuditTrailPage() {
       width: 160,
       render: (_, record) => (
         <Space>
-          <Avatar size="small" icon={<UserOutlined />} className="!bg-slate-200" />
+          <Avatar size="small" icon={<UserIcon className="w-4 h-4" />} className="!bg-slate-200" />
           <Space direction="vertical" size={0}>
             <span className="text-slate-900">{record.userName}</span>
             {record.userEmail && (
@@ -238,7 +237,7 @@ export default function AuditTrailPage() {
         <Space size="small">
           <Tooltip title="Detay">
             <a onClick={() => openDetailModal(record)} className="text-slate-600 hover:text-slate-900">
-              <EyeOutlined />
+              <EyeIcon className="w-4 h-4" />
             </a>
           </Tooltip>
           <Tooltip title="Geçmiş">
@@ -292,7 +291,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <AuditOutlined className="mr-2" />
+                <ClipboardDocumentListIcon className="w-4 h-4" className="mr-2" />
                 Toplam Log
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -303,7 +302,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <CalendarOutlined className="mr-2" />
+                <CalendarIcon className="w-4 h-4" className="mr-2" />
                 Bugün
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -314,7 +313,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <BarChartOutlined className="mr-2" />
+                <ChartBarIcon className="w-4 h-4" className="mr-2" />
                 Bu Hafta
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -325,7 +324,7 @@ export default function AuditTrailPage() {
           <div className="col-span-3">
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                <GlobalOutlined className="mr-2" />
+                <GlobeAltIcon className="w-4 h-4" className="mr-2" />
                 Bu Ay
               </p>
               <div className="text-3xl font-bold text-slate-900">
@@ -340,7 +339,7 @@ export default function AuditTrailPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-5">
-                <FilterOutlined className="text-slate-500" />
+                <FunnelIcon className="w-4 h-4" className="text-slate-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Varlık Tipine Göre
                 </p>
@@ -393,7 +392,7 @@ export default function AuditTrailPage() {
           <div className="col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-5">
-                <TeamOutlined className="text-slate-500" />
+                <UserGroupIcon className="w-4 h-4" className="text-slate-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   En Aktif Kullanıcılar
                 </p>
@@ -510,7 +509,7 @@ export default function AuditTrailPage() {
                 allowClear
                 value={filter.entityId}
                 onChange={(e) => handleFilterChange('entityId', e.target.value)}
-                prefix={<SearchOutlined className="text-slate-400" />}
+                prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
                 className="[&_.ant-input]:!border-slate-300"
               />
             </div>
@@ -564,7 +563,7 @@ export default function AuditTrailPage() {
       <Modal
         title={
           <Space>
-            <AuditOutlined />
+            <ClipboardDocumentListIcon className="w-4 h-4" />
             Log Detayı
           </Space>
         }
@@ -593,7 +592,7 @@ export default function AuditTrailPage() {
             </Descriptions.Item>
             <Descriptions.Item label="Kullanıcı">
               <Space>
-                <Avatar size="small" icon={<UserOutlined />} className="!bg-slate-200" />
+                <Avatar size="small" icon={<UserIcon className="w-4 h-4" />} className="!bg-slate-200" />
                 {selectedLog.userName}
               </Space>
             </Descriptions.Item>
@@ -752,7 +751,7 @@ export default function AuditTrailPage() {
       key: 'dashboard',
       label: (
         <span>
-          <BarChartOutlined /> Dashboard
+          <ChartBarIcon className="w-4 h-4" /> Dashboard
         </span>
       ),
       children: renderDashboard(),
@@ -761,7 +760,7 @@ export default function AuditTrailPage() {
       key: 'logs',
       label: (
         <span>
-          <AuditOutlined /> Log Kayıtları
+          <ClipboardDocumentListIcon className="w-4 h-4" /> Log Kayıtları
         </span>
       ),
       children: renderLogs(),
@@ -774,7 +773,7 @@ export default function AuditTrailPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            <AuditOutlined className="mr-3" />
+            <ClipboardDocumentListIcon className="w-4 h-4" className="mr-3" />
             Envanter Denetim İzi
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -783,7 +782,7 @@ export default function AuditTrailPage() {
         </div>
         <Space>
           <Button
-            icon={<SyncOutlined spin={logsLoading || dashboardLoading} />}
+            icon={<ArrowPathIcon className="w-4 h-4" spin={logsLoading || dashboardLoading} />}
             onClick={() => {
               refetchLogs();
               refetchDashboard();

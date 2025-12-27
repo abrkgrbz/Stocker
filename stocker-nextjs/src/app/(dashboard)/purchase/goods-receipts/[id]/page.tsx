@@ -20,16 +20,16 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  InboxOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PrinterOutlined,
-  FileTextOutlined,
-  SafetyOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  InboxIcon,
+  PencilIcon,
+  PrinterIcon,
+  ShieldCheckIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useGoodsReceipt,
   useCompleteGoodsReceipt,
@@ -151,32 +151,32 @@ export default function GoodsReceiptDetailPage() {
   const actionMenuItems = [
     receipt.status === 'Confirmed' && {
       key: 'complete',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Tamamla',
       onClick: handleComplete,
     },
     receipt.requiresQualityCheck && !receipt.qualityCheckDate && {
       key: 'passQC',
-      icon: <SafetyOutlined />,
+      icon: <ShieldCheckIcon className="w-4 h-4" />,
       label: 'Kalite Kontrol Geçti',
       onClick: handlePassQC,
     },
     receipt.requiresQualityCheck && !receipt.qualityCheckDate && {
       key: 'failQC',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Kalite Kontrol Başarısız',
       danger: true,
       onClick: handleFailQC,
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
     },
     { type: 'divider' },
     !['Cancelled', 'Completed'].includes(receipt.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
@@ -267,7 +267,7 @@ export default function GoodsReceiptDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/goods-receipts')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -276,7 +276,7 @@ export default function GoodsReceiptDetailPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
               >
-                <InboxOutlined style={{ fontSize: 24 }} />
+                <InboxIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
@@ -294,12 +294,12 @@ export default function GoodsReceiptDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {receipt.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/goods-receipts/${receiptId}/edit`)}
               >
                 Düzenle
@@ -317,10 +317,10 @@ export default function GoodsReceiptDetailPage() {
             current={getStatusStep(receipt.status as GoodsReceiptStatus)}
             status={receipt.status === 'Cancelled' ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Beklemede' },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
-              { title: 'Tamamlandı', icon: <CheckCircleOutlined /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+              { title: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

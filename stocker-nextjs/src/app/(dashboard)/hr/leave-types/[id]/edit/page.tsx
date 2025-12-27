@@ -3,7 +3,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Input, InputNumber, Row, Col, Switch, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, FileTextOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 import { useLeaveType, useUpdateLeaveType } from '@/lib/api/hooks/useHR';
 import type { UpdateLeaveTypeDto } from '@/lib/api/services/hr.types';
 
@@ -99,11 +102,11 @@ export default function EditLeaveTypePage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/leave-types/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <FileTextOutlined className="text-lg text-gray-600" />
+              <DocumentTextIcon className="w-4 h-4" className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">İzin Türü Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

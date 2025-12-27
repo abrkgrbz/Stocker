@@ -19,12 +19,12 @@ import {
   Table,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  CloseCircleOutlined,
-  CheckCircleOutlined,
-  SendOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  PaperAirplaneIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePayroll,
   useCancelPayroll,
@@ -172,7 +172,7 @@ export default function PayrollDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/payroll')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/payroll')}>
             Geri
           </Button>
           <div>
@@ -193,7 +193,7 @@ export default function PayrollDetailPage() {
           {(payroll.status === PayrollStatus.PendingApproval || payroll.status === PayrollStatus.Draft || payroll.status === PayrollStatus.Calculated) && (
             <Button
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={handleApprove}
               style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
             >
@@ -203,7 +203,7 @@ export default function PayrollDetailPage() {
           {payroll.status === PayrollStatus.Approved && (
             <Button
               type="primary"
-              icon={<SendOutlined />}
+              icon={<PaperAirplaneIcon className="w-4 h-4" />}
               onClick={handleMarkPaid}
               style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
             >
@@ -213,7 +213,7 @@ export default function PayrollDetailPage() {
           {payroll.status !== PayrollStatus.Paid && payroll.status !== PayrollStatus.Cancelled && (
             <Button
               danger
-              icon={<CloseCircleOutlined />}
+              icon={<XCircleIcon className="w-4 h-4" />}
               onClick={handleCancel}
             >
               İptal Et
@@ -275,7 +275,7 @@ export default function PayrollDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {payroll.employeeName || `Çalışan #${payroll.employeeId}`}
                 </Space>
               </Descriptions.Item>

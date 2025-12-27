@@ -3,7 +3,10 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form, message } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { InvoiceForm } from '@/components/sales/invoices';
 import { useCreateInvoice } from '@/lib/api/hooks/useInvoices';
 import type { CreateInvoiceCommand } from '@/lib/api/services/invoice.service';
@@ -64,7 +67,7 @@ export default function NewInvoicePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -82,7 +85,7 @@ export default function NewInvoicePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createInvoice.isPending}
               onClick={() => form.submit()}
               style={{

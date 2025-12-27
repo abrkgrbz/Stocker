@@ -17,20 +17,18 @@ import {
   Progress,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  DollarOutlined,
-  PlusOutlined,
-  CalendarOutlined,
-  PercentageOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  UnorderedListOutlined,
-  TagOutlined,
-  SettingOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePriceList,
   useDeletePriceList,
@@ -60,25 +58,25 @@ const validityConfig: Record<
     label: 'Beklemede',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <CalendarOutlined />,
+    icon: <CalendarIcon className="w-4 h-4" />,
   },
   valid: {
     label: 'Geçerli',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   expired: {
     label: 'Süresi Doldu',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
   },
   unknown: {
     label: 'Bilinmiyor',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <CalendarOutlined />,
+    icon: <CalendarIcon className="w-4 h-4" />,
   },
 };
 
@@ -269,7 +267,7 @@ export default function PriceListDetailPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/inventory/products/${record.productId}`)}
             className="text-slate-500 hover:text-blue-600"
             title="Ürün Detayı"
@@ -277,7 +275,7 @@ export default function PriceListDetailPage() {
           <Button
             type="text"
             size="small"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => openEditModal(record)}
             className="text-slate-500 hover:text-slate-700"
           />
@@ -331,7 +329,7 @@ export default function PriceListDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -340,13 +338,13 @@ export default function PriceListDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center">
-                <DollarOutlined className="text-white text-lg" />
+                <CurrencyDollarIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{priceList.name}</h1>
                   <Tag
-                    icon={priceList.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={priceList.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       priceList.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -370,7 +368,7 @@ export default function PriceListDetailPage() {
           </div>
           <Space>
             <Button
-              icon={priceList.isActive ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
+              icon={priceList.isActive ? <XCircleIcon className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
               onClick={handleToggleActive}
               loading={activatePriceList.isPending || deactivatePriceList.isPending}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
@@ -378,7 +376,7 @@ export default function PriceListDetailPage() {
               {priceList.isActive ? 'Devre Dışı Bırak' : 'Aktifleştir'}
             </Button>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/price-lists/${priceListId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -386,7 +384,7 @@ export default function PriceListDetailPage() {
             </Button>
             <Button
               danger
-              icon={<DeleteOutlined />}
+              icon={<TrashIcon className="w-4 h-4" />}
               onClick={() => setDeleteModalOpen(true)}
             >
               Sil
@@ -404,7 +402,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <DollarOutlined className="text-amber-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Para Birimi
@@ -438,7 +436,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <TagOutlined className="text-emerald-600 text-lg" />
+                  <TagIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ort. Fiyat
@@ -457,7 +455,7 @@ export default function PriceListDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <SettingOutlined className="text-indigo-600 text-lg" />
+                  <Cog6ToothIcon className="w-4 h-4" className="text-indigo-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Öncelik
@@ -554,7 +552,7 @@ export default function PriceListDetailPage() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-xs text-slate-400">Başlangıç Tarihi</span>
                   </div>
                   <p className="text-sm font-medium text-slate-900">
@@ -565,7 +563,7 @@ export default function PriceListDetailPage() {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-xs text-slate-400">Bitiş Tarihi</span>
                   </div>
                   <p className="text-sm font-medium text-slate-900">
@@ -638,7 +636,7 @@ export default function PriceListDetailPage() {
                 </p>
                 <Button
                   type="primary"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={() => setAddItemModalOpen(true)}
                   size="small"
                   style={{ background: '#1e293b', borderColor: '#1e293b' }}
@@ -671,7 +669,7 @@ export default function PriceListDetailPage() {
               </p>
               <div className="flex gap-8">
                 <div className="flex items-center gap-2">
-                  <CalendarOutlined className="text-slate-400" />
+                  <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-sm text-slate-500">Oluşturulma:</span>
                   <span className="text-sm font-medium text-slate-900">
                     {dayjs(priceList.createdAt).format('DD/MM/YYYY HH:mm')}
@@ -679,7 +677,7 @@ export default function PriceListDetailPage() {
                 </div>
                 {priceList.updatedAt && (
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Güncelleme:</span>
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(priceList.updatedAt).format('DD/MM/YYYY HH:mm')}

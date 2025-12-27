@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import { UnitForm } from '@/components/inventory/units';
 import { useUnit, useUpdateUnit } from '@/lib/api/hooks/useInventory';
 import type { UpdateUnitDto } from '@/lib/api/services/inventory.types';
@@ -66,7 +71,7 @@ export default function EditUnitPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -78,7 +83,7 @@ export default function EditUnitPage() {
                     {unit.name}
                   </h1>
                   <Tag
-                    icon={unit.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={unit.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={unit.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -95,7 +100,7 @@ export default function EditUnitPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateUnit.isPending}
               onClick={() => form.submit()}
               style={{

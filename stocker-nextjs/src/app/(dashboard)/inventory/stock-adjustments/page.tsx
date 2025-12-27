@@ -20,22 +20,20 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  MinusCircleOutlined,
-  PlusCircleOutlined,
-  FileTextOutlined,
-  HistoryOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProducts,
   useWarehouses,
@@ -84,9 +82,9 @@ interface PendingAdjustment {
 }
 
 const statusConfig: Record<AdjustmentStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'warning', label: 'Beklemede', icon: <ClockCircleOutlined /> },
-  Approved: { color: 'success', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'error', label: 'Reddedildi', icon: <CloseOutlined /> },
+  Pending: { color: 'warning', label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" /> },
+  Approved: { color: 'success', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'error', label: 'Reddedildi', icon: <XMarkIcon className="w-4 h-4" /> },
 };
 
 const adjustmentReasons = [
@@ -328,7 +326,7 @@ export default function StockAdjustmentsPage() {
             style={{ backgroundColor: record.difference > 0 ? '#10b98115' : '#ef444415' }}
           >
             {record.difference > 0 ? (
-              <PlusCircleOutlined style={{ color: '#10b981' }} />
+              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             ) : (
               <MinusCircleOutlined style={{ color: '#ef4444' }} />
             )}
@@ -415,14 +413,14 @@ export default function StockAdjustmentsPage() {
         const menuItems = record.status === 'Pending' ? [
           {
             key: 'review',
-            icon: <CheckOutlined />,
+            icon: <CheckIcon className="w-4 h-4" />,
             label: 'İncele ve Onayla',
             onClick: () => handleReviewClick(record),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDeletePending(record.id),
@@ -430,7 +428,7 @@ export default function StockAdjustmentsPage() {
         ] : [
           {
             key: 'detail',
-            icon: <FileTextOutlined />,
+            icon: <DocumentTextIcon className="w-4 h-4" />,
             label: 'Detay',
             onClick: () => handleReviewClick(record),
           },
@@ -439,7 +437,7 @@ export default function StockAdjustmentsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -466,7 +464,7 @@ export default function StockAdjustmentsPage() {
             style={{ backgroundColor: record.movementType === 'AdjustmentIncrease' ? '#10b98115' : '#ef444415' }}
           >
             {record.movementType === 'AdjustmentIncrease' ? (
-              <PlusCircleOutlined style={{ color: '#10b981' }} />
+              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             ) : (
               <MinusCircleOutlined style={{ color: '#ef4444' }} />
             )}
@@ -533,7 +531,7 @@ export default function StockAdjustmentsPage() {
             items: [
               {
                 key: 'detail',
-                icon: <FileTextOutlined />,
+                icon: <DocumentTextIcon className="w-4 h-4" />,
                 label: 'Detay',
                 onClick: () => router.push(`/inventory/stock-movements/${record.id}`),
               },
@@ -542,7 +540,7 @@ export default function StockAdjustmentsPage() {
           trigger={['click']}
         >
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <MoreOutlined className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
           </button>
         </Dropdown>
       ),
@@ -554,7 +552,7 @@ export default function StockAdjustmentsPage() {
       key: 'pending',
       label: (
         <span className="flex items-center gap-2">
-          <ClockCircleOutlined />
+          <ClockIcon className="w-4 h-4" />
           Bekleyen ({stats.pending})
         </span>
       ),
@@ -563,7 +561,7 @@ export default function StockAdjustmentsPage() {
       key: 'approved',
       label: (
         <span className="flex items-center gap-2">
-          <CheckCircleOutlined />
+          <CheckCircleIcon className="w-4 h-4" />
           Onaylanan ({stats.approved})
         </span>
       ),
@@ -572,7 +570,7 @@ export default function StockAdjustmentsPage() {
       key: 'rejected',
       label: (
         <span className="flex items-center gap-2">
-          <CloseOutlined />
+          <XMarkIcon className="w-4 h-4" />
           Reddedilen ({stats.rejected})
         </span>
       ),
@@ -599,7 +597,7 @@ export default function StockAdjustmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.pending}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.pending > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockCircleOutlined style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
+              <ClockIcon className="w-4 h-4" style={{ color: stats.pending > 0 ? '#f59e0b' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -610,7 +608,7 @@ export default function StockAdjustmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.approved}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -621,7 +619,7 @@ export default function StockAdjustmentsPage() {
               <div className="text-2xl font-semibold text-slate-900">{stats.rejected}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stats.rejected > 0 ? '#ef444415' : '#64748b15' }}>
-              <CloseOutlined style={{ color: stats.rejected > 0 ? '#ef4444' : '#64748b' }} />
+              <XMarkIcon className="w-4 h-4" style={{ color: stats.rejected > 0 ? '#ef4444' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -632,7 +630,7 @@ export default function StockAdjustmentsPage() {
               <div className="text-2xl font-semibold text-green-600">+{stats.totalIncrease.toLocaleString('tr-TR')}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <PlusCircleOutlined style={{ color: '#10b981' }} />
+              <PlusCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -651,7 +649,7 @@ export default function StockAdjustmentsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<EditOutlined />}
+        icon={<PencilIcon className="w-4 h-4" />}
         iconColor="#8b5cf6"
         title="Stok Düzeltme"
         description="Stok miktarlarını düzeltin ve onay süreçlerini yönetin"
@@ -659,7 +657,7 @@ export default function StockAdjustmentsPage() {
         primaryAction={{
           label: 'Yeni Düzeltme',
           onClick: handleCreateAdjustment,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -667,7 +665,7 @@ export default function StockAdjustmentsPage() {
             disabled={productsLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={productsLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={productsLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -688,7 +686,7 @@ export default function StockAdjustmentsPage() {
           />
           <Input
             placeholder="Ürün ara... (ad, kod)"
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ maxWidth: 400 }}
@@ -742,7 +740,7 @@ export default function StockAdjustmentsPage() {
         title={
           <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <PlusOutlined style={{ color: '#8b5cf6' }} />
+              <PlusIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
             <div>
               <div className="text-lg font-semibold text-slate-900">Yeni Stok Düzeltme</div>
@@ -867,7 +865,7 @@ export default function StockAdjustmentsPage() {
           </Form.Item>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-            <WarningOutlined className="text-amber-600 mt-0.5" />
+            <ExclamationTriangleIcon className="w-4 h-4" className="text-amber-600 mt-0.5" />
             <div className="text-sm text-amber-800">
               <strong>Onaya Gönder:</strong> Düzeltme talebi oluşturulur ve onay bekler.<br />
               <strong>Direkt Uygula:</strong> Düzeltme anında sisteme uygulanır.
@@ -885,9 +883,9 @@ export default function StockAdjustmentsPage() {
               style={{ backgroundColor: selectedAdjustment?.status === 'Pending' ? '#f59e0b15' : '#8b5cf615' }}
             >
               {selectedAdjustment?.status === 'Pending' ? (
-                <CheckOutlined style={{ color: '#f59e0b' }} />
+                <CheckIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
               ) : (
-                <FileTextOutlined style={{ color: '#8b5cf6' }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
               )}
             </div>
             <div>

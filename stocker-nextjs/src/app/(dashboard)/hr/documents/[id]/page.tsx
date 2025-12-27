@@ -20,19 +20,19 @@ import {
 } from 'antd';
 import type { UploadProps } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FileOutlined,
-  DeleteOutlined,
-  SafetyCertificateOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  DownloadOutlined,
-  CheckCircleOutlined,
-  UploadOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowLeftIcon,
+  ArrowUpTrayIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentIcon,
+  ExclamationCircleIcon,
+  InboxIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useDocument, useDeleteDocument, useVerifyDocument, useUploadDocumentFile } from '@/lib/api/hooks/useHR';
 import { DocumentType } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -171,7 +171,7 @@ export default function DocumentDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/documents')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/documents')}>
             Geri
           </Button>
           <div>
@@ -181,15 +181,15 @@ export default function DocumentDetailPage() {
             <Space>
               <Text type="secondary">{documentTypeLabels[document.documentType]}</Text>
               {document.isVerified ? (
-                <Tag color="green" icon={<CheckCircleOutlined />}>Doğrulandı</Tag>
+                <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Doğrulandı</Tag>
               ) : (
-                <Tag color="default" icon={<ClockCircleOutlined />}>Bekliyor</Tag>
+                <Tag color="default" icon={<ClockIcon className="w-4 h-4" />}>Bekliyor</Tag>
               )}
               {document.isExpired && (
-                <Tag color="red" icon={<ExclamationCircleOutlined />}>Süresi Dolmuş</Tag>
+                <Tag color="red" icon={<ExclamationCircleIcon className="w-4 h-4" />}>Süresi Dolmuş</Tag>
               )}
               {document.isExpiringSoon && !document.isExpired && (
-                <Tag color="orange" icon={<ClockCircleOutlined />}>Süresi Dolacak</Tag>
+                <Tag color="orange" icon={<ClockIcon className="w-4 h-4" />}>Süresi Dolacak</Tag>
               )}
             </Space>
           </div>
@@ -198,7 +198,7 @@ export default function DocumentDetailPage() {
           {!document.isVerified && (
             <Button
               type="primary"
-              icon={<SafetyCertificateOutlined />}
+              icon={<ShieldCheckIcon className="w-4 h-4" />}
               onClick={handleVerify}
               loading={verifyDocument.isPending}
               style={{ background: '#52c41a', borderColor: '#52c41a' }}
@@ -206,10 +206,10 @@ export default function DocumentDetailPage() {
               Doğrula
             </Button>
           )}
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/documents/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/documents/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -224,7 +224,7 @@ export default function DocumentDetailPage() {
                 <Statistic
                   title="Çalışan"
                   value={document.employeeName}
-                  prefix={<UserOutlined />}
+                  prefix={<UserIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
               </Card>
@@ -234,7 +234,7 @@ export default function DocumentDetailPage() {
                 <Statistic
                   title="Belge No"
                   value={document.documentNumber}
-                  prefix={<FileOutlined />}
+                  prefix={<DocumentIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed', fontSize: 16 }}
                 />
               </Card>
@@ -253,7 +253,7 @@ export default function DocumentDetailPage() {
                 <Statistic
                   title="Durum"
                   value={document.isVerified ? 'Doğrulanmış' : 'Bekliyor'}
-                  prefix={document.isVerified ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                  prefix={document.isVerified ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                   valueStyle={{
                     color: document.isVerified ? '#52c41a' : '#8c8c8c',
                     fontSize: 16
@@ -301,9 +301,9 @@ export default function DocumentDetailPage() {
               <Descriptions column={1} size="small">
                 <Descriptions.Item label="Durum">
                   {document.isVerified ? (
-                    <Tag color="green" icon={<CheckCircleOutlined />}>Doğrulandı</Tag>
+                    <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>Doğrulandı</Tag>
                   ) : (
-                    <Tag color="default" icon={<ClockCircleOutlined />}>Bekliyor</Tag>
+                    <Tag color="default" icon={<ClockIcon className="w-4 h-4" />}>Bekliyor</Tag>
                   )}
                 </Descriptions.Item>
                 {document.isVerified && (
@@ -338,7 +338,7 @@ export default function DocumentDetailPage() {
                     {document.fileUrl && (
                       <Button
                         type="primary"
-                        icon={<DownloadOutlined />}
+                        icon={<ArrowDownTrayIcon className="w-4 h-4" />}
                         block
                         href={document.fileUrl}
                         target="_blank"
@@ -348,7 +348,7 @@ export default function DocumentDetailPage() {
                     )}
                     <Dragger {...uploadProps} disabled={uploadFile.isPending}>
                       <p className="ant-upload-drag-icon">
-                        <InboxOutlined />
+                        <InboxIcon className="w-4 h-4" />
                       </p>
                       <p className="ant-upload-text">Yeni Dosya Yükle</p>
                       <p className="ant-upload-hint">
@@ -360,7 +360,7 @@ export default function DocumentDetailPage() {
               ) : (
                 <Dragger {...uploadProps} disabled={uploadFile.isPending}>
                   <p className="ant-upload-drag-icon">
-                    <InboxOutlined />
+                    <InboxIcon className="w-4 h-4" />
                   </p>
                   <p className="ant-upload-text">Dosya Yükle</p>
                   <p className="ant-upload-hint">

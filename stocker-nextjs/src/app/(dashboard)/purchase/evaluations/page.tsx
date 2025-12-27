@@ -19,20 +19,19 @@ import {
   Progress,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  StarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-  TrophyOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  TrophyIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useSupplierEvaluations, useDeleteSupplierEvaluation } from '@/lib/api/hooks/usePurchase';
@@ -41,10 +40,10 @@ import type { SupplierEvaluationListDto, EvaluationStatus } from '@/lib/api/serv
 const { Title, Text } = Typography;
 
 const statusConfig: Record<EvaluationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <EditOutlined /> },
-  Submitted: { color: 'blue', text: 'Gönderildi', icon: <ClockCircleOutlined /> },
-  Approved: { color: 'green', text: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', text: 'Reddedildi', icon: <CloseCircleOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
+  Submitted: { color: 'blue', text: 'Gönderildi', icon: <ClockIcon className="w-4 h-4" /> },
+  Approved: { color: 'green', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', text: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const getScoreColor = (score: number) => {
@@ -80,7 +79,7 @@ export default function SupplierEvaluationsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Değerlendirme Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu değerlendirmeyi silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -111,7 +110,7 @@ export default function SupplierEvaluationsPage() {
       key: 'supplierName',
       render: (text, record) => (
         <Space>
-          <ShopOutlined className="text-gray-400" />
+          <BuildingStorefrontIcon className="w-4 h-4" className="text-gray-400" />
           <div>
             <div className="font-medium">{text}</div>
             <div className="text-xs text-gray-400">{record.supplierCode}</div>
@@ -169,7 +168,7 @@ export default function SupplierEvaluationsPage() {
       align: 'center',
       render: (rank: number | null) =>
         rank ? (
-          <Tag color={rank <= 3 ? 'gold' : 'default'} icon={rank <= 3 ? <TrophyOutlined /> : null}>
+          <Tag color={rank <= 3 ? 'gold' : 'default'} icon={rank <= 3 ? <TrophyIcon className="w-4 h-4" /> : null}>
             #{rank}
           </Tag>
         ) : '-',
@@ -200,13 +199,13 @@ export default function SupplierEvaluationsPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/purchase/evaluations/${record.id}`),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 disabled: record.status !== 'Draft',
                 onClick: () => router.push(`/purchase/evaluations/${record.id}/edit`),
               },
@@ -214,7 +213,7 @@ export default function SupplierEvaluationsPage() {
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 disabled: record.status !== 'Draft',
                 onClick: () => handleDelete(record.id),
@@ -223,7 +222,7 @@ export default function SupplierEvaluationsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -245,7 +244,7 @@ export default function SupplierEvaluationsPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/evaluations/new')}
         >
@@ -280,7 +279,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Üst Performans"
               value={topPerformers}
-              prefix={<TrophyOutlined className="text-green-500" />}
+              prefix={<TrophyIcon className="w-4 h-4" className="text-green-500" />}
               suffix="tedarikçi"
             />
           </Card>
@@ -290,7 +289,7 @@ export default function SupplierEvaluationsPage() {
             <Statistic
               title="Onay Bekleyen"
               value={data?.items?.filter(i => i.status === 'Submitted').length || 0}
-              prefix={<ClockCircleOutlined className="text-orange-500" />}
+              prefix={<ClockIcon className="w-4 h-4" className="text-orange-500" />}
             />
           </Card>
         </Col>
@@ -301,7 +300,7 @@ export default function SupplierEvaluationsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Tedarikçi veya değerlendirme no ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}

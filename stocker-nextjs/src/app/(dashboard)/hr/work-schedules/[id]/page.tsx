@@ -17,14 +17,14 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  DeleteOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useWorkSchedule, useDeleteWorkSchedule } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -82,7 +82,7 @@ export default function WorkScheduleDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/work-schedules')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-schedules')}>
             Geri
           </Button>
           <div>
@@ -103,10 +103,10 @@ export default function WorkScheduleDetailPage() {
           </div>
         </Space>
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/work-schedules/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/work-schedules/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -121,7 +121,7 @@ export default function WorkScheduleDetailPage() {
                 <Statistic
                   title="Çalışan"
                   value={schedule.employeeName}
-                  prefix={<UserOutlined />}
+                  prefix={<UserIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
               </Card>
@@ -131,7 +131,7 @@ export default function WorkScheduleDetailPage() {
                 <Statistic
                   title="Tarih"
                   value={dayjs(schedule.date).format('DD.MM.YYYY')}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed', fontSize: 16 }}
                 />
               </Card>
@@ -141,7 +141,7 @@ export default function WorkScheduleDetailPage() {
                 <Statistic
                   title="Vardiya"
                   value={schedule.shiftName || '-'}
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#8b5cf6', fontSize: 16 }}
                 />
               </Card>
@@ -151,7 +151,7 @@ export default function WorkScheduleDetailPage() {
                 <Statistic
                   title="Durum"
                   value={schedule.isWorkDay ? 'Çalışma Günü' : 'İzin'}
-                  prefix={<CheckCircleOutlined />}
+                  prefix={<CheckCircleIcon className="w-4 h-4" />}
                   valueStyle={{
                     color: schedule.isWorkDay ? '#52c41a' : '#8c8c8c',
                     fontSize: 16,

@@ -3,7 +3,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Select, DatePicker, Input, Row, Col, Spin, Empty, Rate } from 'antd';
-import { ArrowLeftOutlined, TrophyOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
 import { usePerformanceReview, useUpdatePerformanceReview, useEmployees } from '@/lib/api/hooks/useHR';
 import type { UpdatePerformanceReviewDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -99,11 +102,11 @@ export default function EditPerformancePage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/performance/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <TrophyOutlined className="text-lg text-gray-600" />
+              <TrophyIcon className="w-4 h-4" className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Değerlendirme Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

@@ -20,21 +20,19 @@ import {
   Dropdown,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  StopOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  InboxOutlined,
-  SafetyOutlined,
-  ExperimentOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  InboxIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useLotBatches,
   useLotBatch,
@@ -61,13 +59,13 @@ const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8'
 
 // Lot batch status configuration with monochrome colors
 const statusConfig: Record<LotBatchStatus, { color: string; bgColor: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: '#64748b', bgColor: '#f1f5f9', label: 'Beklemede', icon: <ClockCircleOutlined /> },
-  Received: { color: '#475569', bgColor: '#e2e8f0', label: 'Teslim Alındı', icon: <InboxOutlined /> },
-  Approved: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Quarantined: { color: '#334155', bgColor: '#f1f5f9', label: 'Karantinada', icon: <ExclamationCircleOutlined /> },
-  Rejected: { color: '#475569', bgColor: '#f1f5f9', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Exhausted: { color: '#94a3b8', bgColor: '#f8fafc', label: 'Tükendi', icon: <DeleteOutlined /> },
-  Expired: { color: '#64748b', bgColor: '#f1f5f9', label: 'Tarihi Geçti', icon: <WarningOutlined /> },
+  Pending: { color: '#64748b', bgColor: '#f1f5f9', label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" /> },
+  Received: { color: '#475569', bgColor: '#e2e8f0', label: 'Teslim Alındı', icon: <InboxIcon className="w-4 h-4" /> },
+  Approved: { color: '#1e293b', bgColor: '#e2e8f0', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Quarantined: { color: '#334155', bgColor: '#f1f5f9', label: 'Karantinada', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: '#475569', bgColor: '#f1f5f9', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Exhausted: { color: '#94a3b8', bgColor: '#f8fafc', label: 'Tükendi', icon: <TrashIcon className="w-4 h-4" /> },
+  Expired: { color: '#64748b', bgColor: '#f1f5f9', label: 'Tarihi Geçti', icon: <ExclamationTriangleIcon className="w-4 h-4" /> },
   Recalled: { color: '#334155', bgColor: '#e2e8f0', label: 'Geri Çağrıldı', icon: <StopOutlined /> },
 };
 
@@ -223,12 +221,12 @@ export default function LotBatchesPage() {
           <div className="flex gap-1">
             {record.isExpired && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
-                <WarningOutlined className="text-xs" /> Süresi Doldu
+                <ExclamationTriangleIcon className="w-4 h-4" className="text-xs" /> Süresi Doldu
               </span>
             )}
             {record.isQuarantined && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-300 text-slate-800">
-                <ExclamationCircleOutlined className="text-xs" /> Karantinada
+                <ExclamationCircleIcon className="w-4 h-4" className="text-xs" /> Karantinada
               </span>
             )}
           </div>
@@ -335,7 +333,7 @@ export default function LotBatchesPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Detay',
             onClick: () => handleViewDetail(record.id),
           },
@@ -344,7 +342,7 @@ export default function LotBatchesPage() {
         if (record.status === 'Pending' || record.status === 'Received') {
           menuItems.push({
             key: 'approve',
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             label: 'Onayla',
             onClick: () => handleApprove(record),
           });
@@ -353,7 +351,7 @@ export default function LotBatchesPage() {
         if (record.status !== 'Quarantined' && record.status !== 'Exhausted' && record.status !== 'Expired') {
           menuItems.push({
             key: 'quarantine',
-            icon: <ExclamationCircleOutlined />,
+            icon: <ExclamationCircleIcon className="w-4 h-4" />,
             label: 'Karantinaya Al',
             onClick: () => handleQuarantineClick(record),
           });
@@ -364,7 +362,7 @@ export default function LotBatchesPage() {
             menu={{ items: menuItems }}
             trigger={['click']}
           >
-            <Button type="text" icon={<MoreOutlined />} className="text-slate-600 hover:text-slate-900" />
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
           </Dropdown>
         );
       },
@@ -377,7 +375,7 @@ export default function LotBatchesPage() {
       key: 'all',
       label: (
         <span className="flex items-center gap-2">
-          <InboxOutlined />
+          <InboxIcon className="w-4 h-4" />
           Tüm Lotlar
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.total}
@@ -389,7 +387,7 @@ export default function LotBatchesPage() {
       key: 'pending',
       label: (
         <span className="flex items-center gap-2">
-          <ClockCircleOutlined />
+          <ClockIcon className="w-4 h-4" />
           Bekleyenler
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
             {stats.pending}
@@ -401,7 +399,7 @@ export default function LotBatchesPage() {
       key: 'quarantine',
       label: (
         <span className="flex items-center gap-2">
-          <ExclamationCircleOutlined />
+          <ExclamationCircleIcon className="w-4 h-4" />
           Karantina
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-400 text-white">
             {stats.quarantined}
@@ -413,7 +411,7 @@ export default function LotBatchesPage() {
       key: 'expiring',
       label: (
         <span className="flex items-center gap-2">
-          <WarningOutlined />
+          <ExclamationTriangleIcon className="w-4 h-4" />
           Süresi Yaklaşanlar
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
             {stats.expiringSoon}
@@ -445,7 +443,7 @@ export default function LotBatchesPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
             className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
@@ -453,7 +451,7 @@ export default function LotBatchesPage() {
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => setCreateModalOpen(true)}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
@@ -468,7 +466,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <InboxOutlined className="text-lg text-slate-600" />
+                <InboxIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
@@ -479,7 +477,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ClockCircleOutlined className="text-lg text-slate-700" />
+                <ClockIcon className="w-4 h-4" className="text-lg text-slate-700" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.pending}</div>
@@ -490,7 +488,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
-                <ExclamationCircleOutlined className="text-lg text-slate-800" />
+                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-slate-800" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.quarantined}</div>
@@ -501,7 +499,7 @@ export default function LotBatchesPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <WarningOutlined className="text-lg text-slate-600" />
+                <ExclamationTriangleIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.expiringSoon}</div>
@@ -537,7 +535,7 @@ export default function LotBatchesPage() {
         <Alert
           type="error"
           showIcon
-          icon={<WarningOutlined />}
+          icon={<ExclamationTriangleIcon className="w-4 h-4" />}
           message={`${stats.expired} adet lot/partinin son kullanma tarihi geçmiş durumda!`}
           description="Bu lotları kontrol edin ve gerekli aksiyonları alın."
           className="mb-6 !border-slate-300 !bg-slate-100 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
@@ -547,7 +545,7 @@ export default function LotBatchesPage() {
         <Alert
           type="warning"
           showIcon
-          icon={<ClockCircleOutlined />}
+          icon={<ClockIcon className="w-4 h-4" />}
           message={`${stats.expiringSoon} adet lot/partinin son kullanma tarihi yaklaşıyor!`}
           description="30 gün içinde süresi dolacak lotları kontrol edin."
           className="mb-6 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
@@ -775,7 +773,7 @@ export default function LotBatchesPage() {
             <Button
               key="approve"
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               onClick={() => {
                 if (selectedLotBatch) {

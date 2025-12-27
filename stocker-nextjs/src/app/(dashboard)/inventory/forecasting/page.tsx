@@ -18,20 +18,14 @@ import {
   Empty,
 } from 'antd';
 import {
-  LineChartOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SyncOutlined,
-  ShoppingCartOutlined,
-  BarChartOutlined,
-  BulbOutlined,
-  ExclamationCircleOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  MinusOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  MinusIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useForecastSummary,
@@ -61,16 +55,16 @@ const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8'
 
 // Risk level helpers
 const getRiskLevel = (daysUntilStockout: number, leadTime: number) => {
-  if (daysUntilStockout <= 0) return { color: 'red', text: 'Stokta Yok', icon: <ExclamationCircleOutlined /> };
-  if (daysUntilStockout < leadTime) return { color: 'red', text: 'Yüksek Risk', icon: <WarningOutlined /> };
-  if (daysUntilStockout < leadTime * 2) return { color: 'orange', text: 'Orta Risk', icon: <ClockCircleOutlined /> };
-  return { color: 'green', text: 'Düşük Risk', icon: <CheckCircleOutlined /> };
+  if (daysUntilStockout <= 0) return { color: 'red', text: 'Stokta Yok', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
+  if (daysUntilStockout < leadTime) return { color: 'red', text: 'Yüksek Risk', icon: <ExclamationTriangleIcon className="w-4 h-4" /> };
+  if (daysUntilStockout < leadTime * 2) return { color: 'orange', text: 'Orta Risk', icon: <ClockIcon className="w-4 h-4" /> };
+  return { color: 'green', text: 'Düşük Risk', icon: <CheckCircleIcon className="w-4 h-4" /> };
 };
 
 const getTrendIcon = (trend: number) => {
   if (trend > 0.05) return <ArrowUpOutlined style={{ color: '#334155' }} />;
   if (trend < -0.05) return <ArrowDownOutlined style={{ color: '#64748b' }} />;
-  return <MinusOutlined style={{ color: '#94a3b8' }} />;
+  return <MinusIcon className="w-4 h-4" style={{ color: '#94a3b8' }} />;
 };
 
 const getStatusColor = (status: ReorderSuggestionStatus) => {
@@ -387,7 +381,7 @@ export default function ForecastingPage() {
       key: 'summary',
       label: (
         <span className="flex items-center gap-2">
-          <BarChartOutlined />
+          <ChartBarIcon className="w-4 h-4" />
           Özet
         </span>
       ),
@@ -405,7 +399,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <BarChartOutlined className="text-lg text-slate-600" />
+                        <ChartBarIcon className="w-4 h-4" className="text-lg text-slate-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Analiz Edilen Ürün</p>
@@ -429,7 +423,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <WarningOutlined className="text-lg text-red-600" />
+                        <ExclamationTriangleIcon className="w-4 h-4" className="text-lg text-red-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Risk Altında</p>
@@ -442,7 +436,7 @@ export default function ForecastingPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                        <ExclamationCircleOutlined className="text-lg text-red-600" />
+                        <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-red-600" />
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 mb-1">Stokta Yok</p>
@@ -578,7 +572,7 @@ export default function ForecastingPage() {
       key: 'risk',
       label: (
         <span className="flex items-center gap-2">
-          <WarningOutlined />
+          <ExclamationTriangleIcon className="w-4 h-4" />
           Stok Tükenme Riski
           {riskProducts && riskProducts.length > 0 && (
             <Badge count={riskProducts.length} className="ml-2" />
@@ -627,7 +621,7 @@ export default function ForecastingPage() {
           <div className="flex items-center gap-4 mb-4">
             <Button
               type="primary"
-              icon={<SyncOutlined />}
+              icon={<ArrowPathIcon className="w-4 h-4" />}
               className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
               onClick={() => generateSuggestions.mutate({
                 categoryId: selectedCategoryId,
@@ -720,7 +714,7 @@ export default function ForecastingPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <LineChartOutlined />
+            <ChartBarIcon className="w-4 h-4" />
             Stok Tahminleme & Otomatik Yeniden Sipariş
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -762,7 +756,7 @@ export default function ForecastingPage() {
             <Select.Option value={90}>90 Gün</Select.Option>
           </Select>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             className="!border-slate-300 hover:!border-slate-400 !text-slate-600"
             onClick={() => {
               refetchSummary();

@@ -4,15 +4,13 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalculatorOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  SwapOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useUnit, useUnits } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
 
@@ -61,7 +59,7 @@ export default function UnitDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -76,7 +74,7 @@ export default function UnitDetailPage() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{unit.name}</h1>
                   <Tag
-                    icon={unit.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={unit.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       unit.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -94,7 +92,7 @@ export default function UnitDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/units/${unitId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -184,7 +182,7 @@ export default function UnitDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={unit.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={unit.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       unit.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -207,7 +205,7 @@ export default function UnitDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -217,7 +215,7 @@ export default function UnitDetailPage() {
                 {unit.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -261,7 +259,7 @@ export default function UnitDetailPage() {
                     className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     Temel Birim: {baseUnit.name} ({baseUnit.symbol})
-                    <RightOutlined className="text-xs" />
+                    <ChevronRightIcon className="w-4 h-4" className="text-xs" />
                   </button>
                 </div>
               </div>
@@ -295,7 +293,7 @@ export default function UnitDetailPage() {
                         <span className="text-xs text-slate-500">
                           1 {derived.symbol} = {derived.conversionFactor} {unit.symbol}
                         </span>
-                        <RightOutlined className="text-slate-300 text-xs" />
+                        <ChevronRightIcon className="w-4 h-4" className="text-slate-300 text-xs" />
                       </div>
                     </div>
                   ))}

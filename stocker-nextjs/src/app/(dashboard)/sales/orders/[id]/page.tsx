@@ -20,18 +20,17 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  PrinterOutlined,
-  FileTextOutlined,
-  MoreOutlined,
-  SendOutlined,
-  CarOutlined,
-  CheckCircleOutlined,
-  FilePdfOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  DocumentIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useSalesOrder,
@@ -263,7 +262,7 @@ export default function SalesOrderDetailPage() {
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/orders')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/orders')}>
             Geri
           </Button>
           <div>
@@ -281,21 +280,21 @@ export default function SalesOrderDetailPage() {
           </Tag>
           {order.status === 'Draft' && (
             <>
-              <Button icon={<EditOutlined />} onClick={() => router.push(`/sales/orders/${id}/edit`)}>
+              <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/orders/${id}/edit`)}>
                 Düzenle
               </Button>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleApprove} loading={approveMutation.isPending}>
+              <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleApprove} loading={approveMutation.isPending}>
                 Onayla
               </Button>
             </>
           )}
           {order.status === 'Approved' && (
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleConfirm} loading={confirmMutation.isPending}>
+            <Button type="primary" icon={<CheckCircleIcon className="w-4 h-4" />} onClick={handleConfirm} loading={confirmMutation.isPending}>
               Müşteri Onayı
             </Button>
           )}
           {order.status === 'Confirmed' && (
-            <Button type="primary" icon={<SendOutlined />} onClick={handleShip} loading={shipMutation.isPending}>
+            <Button type="primary" icon={<PaperAirplaneIcon className="w-4 h-4" />} onClick={handleShip} loading={shipMutation.isPending}>
               Gönderildi
             </Button>
           )}
@@ -305,25 +304,25 @@ export default function SalesOrderDetailPage() {
             </Button>
           )}
           {order.status === 'Delivered' && (
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleComplete} loading={completeMutation.isPending}>
+            <Button type="primary" icon={<CheckCircleIcon className="w-4 h-4" />} onClick={handleComplete} loading={completeMutation.isPending}>
               Tamamla
             </Button>
           )}
           {order.status !== 'Cancelled' && order.status !== 'Completed' && (
-            <Button danger icon={<CloseOutlined />} onClick={() => setCancelModalOpen(true)}>
+            <Button danger icon={<XMarkIcon className="w-4 h-4" />} onClick={() => setCancelModalOpen(true)}>
               İptal Et
             </Button>
           )}
           {order.status !== 'Cancelled' && order.status !== 'Draft' && (
             <Button
-              icon={<FileTextOutlined />}
+              icon={<DocumentTextIcon className="w-4 h-4" />}
               onClick={handleCreateInvoice}
               loading={createInvoiceMutation.isPending}
             >
               Fatura Oluştur
             </Button>
           )}
-          <Button icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
+          <Button icon={<DocumentIcon className="w-4 h-4" />} onClick={handleExportPDF} loading={pdfLoading}>
             PDF İndir
           </Button>
         </Space>
@@ -537,14 +536,14 @@ export default function SalesOrderDetailPage() {
               {order.status !== 'Cancelled' && order.status !== 'Draft' && (
                 <Button
                   block
-                  icon={<FileTextOutlined />}
+                  icon={<DocumentTextIcon className="w-4 h-4" />}
                   onClick={handleCreateInvoice}
                   loading={createInvoiceMutation.isPending}
                 >
                   Fatura Oluştur
                 </Button>
               )}
-              <Button block icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
+              <Button block icon={<DocumentIcon className="w-4 h-4" />} onClick={handleExportPDF} loading={pdfLoading}>
                 PDF İndir
               </Button>
             </Space>

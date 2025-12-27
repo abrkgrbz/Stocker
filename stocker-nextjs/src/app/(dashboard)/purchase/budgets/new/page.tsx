@@ -15,10 +15,10 @@ import {
   Divider,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  WalletOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  WalletIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import { useCreatePurchaseBudget } from '@/lib/api/hooks/usePurchase';
@@ -72,7 +72,7 @@ export default function NewPurchaseBudgetPage() {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
         <div>
           <Title level={3} className="mb-1">Yeni Satın Alma Bütçesi</Title>
           <Text type="secondary">Departman veya kategori bazlı bütçe tanımlayın</Text>
@@ -105,7 +105,7 @@ export default function NewPurchaseBudgetPage() {
                   justifyContent: 'center',
                 }}
               >
-                <WalletOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <WalletIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
                 <p className="mt-4 text-lg font-medium text-white/90">Satın Alma Bütçesi</p>
                 <p className="text-sm text-white/60">Harcama limitlerini belirleyin</p>
               </div>
@@ -269,7 +269,7 @@ export default function NewPurchaseBudgetPage() {
           <Button onClick={() => router.back()}>İptal</Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<CheckIcon className="w-4 h-4" />}
             htmlType="submit"
             loading={createMutation.isPending}
           >

@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { Typography, Card, Row, Col, Button } from 'antd';
-import { CheckOutlined } from '@ant-design/icons';
+import {
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 
 const { Title } = Typography;
 
@@ -91,7 +93,7 @@ export default function PricingPage() {
               <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left' }}>
                 {plan.features.map((feature, idx) => (
                   <li key={idx} style={{ marginBottom: 12 }}>
-                    <CheckOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                    <CheckIcon className="w-4 h-4" style={{ color: '#52c41a', marginRight: 8 }} />
                     {feature}
                   </li>
                 ))}

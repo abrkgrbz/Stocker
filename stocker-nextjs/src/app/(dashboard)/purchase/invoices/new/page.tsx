@@ -19,18 +19,17 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  FileTextOutlined,
-  ShopOutlined,
-  LinkOutlined,
-  DollarOutlined,
-  BankOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingLibraryIcon,
+  BuildingStorefrontIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  LinkIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useCreatePurchaseInvoice, useSuppliers, usePurchaseOrders, useGoodsReceipts } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { PurchaseInvoiceType } from '@/lib/api/services/purchase.types';
@@ -311,7 +310,7 @@ export default function NewPurchaseInvoicePage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => removeItem(record.key)}
         />
       ),
@@ -333,7 +332,7 @@ export default function NewPurchaseInvoicePage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -342,7 +341,7 @@ export default function NewPurchaseInvoicePage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
               >
-                <FileTextOutlined style={{ fontSize: 24 }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -357,7 +356,7 @@ export default function NewPurchaseInvoicePage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -365,7 +364,7 @@ export default function NewPurchaseInvoicePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"
@@ -410,7 +409,7 @@ export default function NewPurchaseInvoicePage() {
                         justifyContent: 'center',
                       }}
                     >
-                      <FileTextOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                      <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                       <p className="mt-4 text-lg font-medium text-white/90">
                         Satın Alma Faturası
                       </p>
@@ -464,7 +463,7 @@ export default function NewPurchaseInvoicePage() {
                   {/* Currency & Tax Settings */}
                   <div className="mt-6 space-y-4">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      <DollarOutlined className="mr-1" />
+                      <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
                       Para Birimi ve Vergiler
                     </div>
                     <div className="bg-gray-50/50 rounded-xl p-4 space-y-4">
@@ -511,7 +510,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <ShopOutlined className="mr-1" />
+                            <BuildingStorefrontIcon className="w-4 h-4" className="mr-1" />
                             Temel Bilgiler
                           </span>
                         ),
@@ -576,7 +575,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'related',
                         label: (
                           <span>
-                            <LinkOutlined className="mr-1" />
+                            <LinkIcon className="w-4 h-4" className="mr-1" />
                             İlişkili Belgeler
                           </span>
                         ),
@@ -615,7 +614,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'einvoice',
                         label: (
                           <span>
-                            <BankOutlined className="mr-1" />
+                            <BuildingLibraryIcon className="w-4 h-4" className="mr-1" />
                             E-Fatura
                           </span>
                         ),
@@ -642,7 +641,7 @@ export default function NewPurchaseInvoicePage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <FileTextOutlined className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
                             Notlar
                           </span>
                         ),
@@ -680,7 +679,7 @@ export default function NewPurchaseInvoicePage() {
                         <UnorderedListOutlined className="mr-1" />
                         Fatura Kalemleri
                       </Text>
-                      <Button type="primary" icon={<PlusOutlined />} onClick={addItem} style={{ background: '#f59e0b' }}>
+                      <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem} style={{ background: '#f59e0b' }}>
                         Kalem Ekle
                       </Button>
                     </div>

@@ -3,7 +3,10 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { StockCountForm } from '@/components/inventory/stock-counts';
 import { useCreateStockCount } from '@/lib/api/hooks/useInventory';
 import type { CreateStockCountDto } from '@/lib/api/services/inventory.types';
@@ -41,7 +44,7 @@ export default function NewStockCountPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -59,7 +62,7 @@ export default function NewStockCountPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createStockCount.isPending}
               onClick={() => form.submit()}
               style={{

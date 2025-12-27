@@ -16,16 +16,15 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TrademarkOutlined,
-  CheckCircleOutlined,
-  InboxOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  GlobeAltIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useBrands, useDeleteBrand } from '@/lib/api/hooks/useInventory';
 import type { BrandDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -125,7 +124,7 @@ export default function BrandsPage() {
             className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
           >
-            <GlobalOutlined />
+            <GlobeAltIcon className="w-4 h-4" />
             <span className="truncate max-w-[150px]">{url.replace(/^https?:\/\//, '')}</span>
           </a>
         ) : (
@@ -167,7 +166,7 @@ export default function BrandsPage() {
             }}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
           </button>
           <Popconfirm
             title="Markayı silmek istediğinize emin misiniz?"
@@ -183,7 +182,7 @@ export default function BrandsPage() {
               onClick={(e) => e.stopPropagation()}
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
             >
-              <DeleteOutlined />
+              <TrashIcon className="w-4 h-4" />
             </button>
           </Popconfirm>
         </div>
@@ -213,7 +212,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeBrands}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -224,7 +223,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{brandsWithWebsite}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <GlobalOutlined style={{ color: '#3b82f6' }} />
+              <GlobeAltIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -235,7 +234,7 @@ export default function BrandsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <InboxOutlined style={{ color: '#8b5cf6' }} />
+              <InboxIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -251,7 +250,7 @@ export default function BrandsPage() {
         primaryAction={{
           label: 'Yeni Marka',
           onClick: () => router.push('/inventory/brands/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -259,7 +258,7 @@ export default function BrandsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -268,7 +267,7 @@ export default function BrandsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Marka ara... (ad, açıklama)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

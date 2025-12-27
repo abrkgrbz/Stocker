@@ -18,22 +18,16 @@ import {
   Collapse,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  TagsOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  FontSizeOutlined,
-  NumberOutlined,
-  CheckSquareOutlined,
-  UnorderedListOutlined,
-  AppstoreOutlined,
-  BgColorsOutlined,
-  ExpandOutlined,
-  SettingOutlined,
-  FilterOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  EyeIcon,
+  FunnelIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  TagIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useCreateProductAttribute } from '@/lib/api/hooks/useInventory';
 import {
   AttributeType,
@@ -247,7 +241,7 @@ export default function NewProductAttributePage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveOption(record.key)}
         />
       ),
@@ -271,14 +265,14 @@ export default function NewProductAttributePage() {
               onClick={() => router.back()}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: '#8b5cf615' }}
               >
-                <TagsOutlined style={{ color: '#8b5cf6' }} />
+                <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-slate-800 m-0">Yeni Ürün Özelliği</h1>
@@ -290,7 +284,7 @@ export default function NewProductAttributePage() {
             <Button onClick={() => router.push('/inventory/product-attributes')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createAttribute.isPending}
               onClick={handleSubmit}
               style={{ background: '#0f172a', borderColor: '#0f172a' }}
@@ -316,7 +310,7 @@ export default function NewProductAttributePage() {
               {/* Attribute Type Selection */}
               <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TagsOutlined className="text-slate-400" />
+                  <TagIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Özellik Tipi
                   </span>
@@ -342,7 +336,7 @@ export default function NewProductAttributePage() {
               {/* Settings Toggles */}
               <div className="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <SettingOutlined className="text-slate-400" />
+                  <Cog6ToothIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Ayarlar
                   </span>
@@ -365,7 +359,7 @@ export default function NewProductAttributePage() {
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <FilterOutlined className="text-blue-500" />
+                        <FunnelIcon className="w-4 h-4" className="text-blue-500" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-slate-700">Filtrelenebilir</div>
@@ -378,7 +372,7 @@ export default function NewProductAttributePage() {
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                        <EyeOutlined className="text-green-500" />
+                        <EyeIcon className="w-4 h-4" className="text-green-500" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-slate-700">Görünür</div>
@@ -613,7 +607,7 @@ export default function NewProductAttributePage() {
                     <Button
                       type="text"
                       size="small"
-                      icon={<PlusOutlined />}
+                      icon={<PlusIcon className="w-4 h-4" />}
                       onClick={handleAddOption}
                       className="text-violet-600"
                     >
@@ -625,7 +619,7 @@ export default function NewProductAttributePage() {
                     <div className="p-12 bg-slate-50 rounded-xl text-center border-2 border-dashed border-slate-200">
                       <UnorderedListOutlined className="text-5xl text-slate-300 mb-3" />
                       <div className="text-slate-500 mb-3 font-medium">Henüz seçenek eklenmedi</div>
-                      <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddOption}>
+                      <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                         İlk Seçeneği Ekle
                       </Button>
                     </div>

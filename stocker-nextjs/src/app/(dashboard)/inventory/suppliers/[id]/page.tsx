@@ -16,17 +16,17 @@ import {
   Statistic,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ShopOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  GlobalOutlined,
-  EnvironmentOutlined,
-  StarFilled,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EnvelopeIcon,
+  GlobeAltIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  StarIcon,
+} from '@heroicons/react/24/outline';
 import { useSupplier } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
 
@@ -74,7 +74,7 @@ export default function SupplierDetailPage() {
       >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+            <Button type="text" icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
               Geri
             </Button>
             <div className="h-6 w-px bg-gray-200" />
@@ -83,18 +83,18 @@ export default function SupplierDetailPage() {
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
               >
-                <ShopOutlined style={{ fontSize: 20, color: 'white' }} />
+                <BuildingStorefrontIcon className="w-4 h-4" style={{ fontSize: 20, color: 'white' }} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-gray-900 m-0">{supplier.name}</h1>
                   {supplier.isPreferred && (
-                    <Tag color="gold" icon={<StarFilled />}>
+                    <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>
                       Tercih Edilen
                     </Tag>
                   )}
                   <Tag
-                    icon={supplier.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={supplier.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={supplier.isActive ? 'success' : 'default'}
                   >
                     {supplier.isActive ? 'Aktif' : 'Pasif'}
@@ -106,7 +106,7 @@ export default function SupplierDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/suppliers/${supplierId}/edit`)}
             >
               Düzenle
@@ -169,7 +169,7 @@ export default function SupplierDetailPage() {
               </Descriptions.Item>
               <Descriptions.Item label="Tercih Durumu">
                 {supplier.isPreferred ? (
-                  <Tag color="gold" icon={<StarFilled />}>
+                  <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>
                     Tercih Edilen
                   </Tag>
                 ) : (
@@ -186,7 +186,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <ShopOutlined className="text-blue-500" />
+                      <BuildingStorefrontIcon className="w-4 h-4" className="text-blue-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -201,7 +201,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                      <MailOutlined className="text-green-500" />
+                      <EnvelopeIcon className="w-4 h-4" className="text-green-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -216,7 +216,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-                      <PhoneOutlined className="text-orange-500" />
+                      <PhoneIcon className="w-4 h-4" className="text-orange-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -231,7 +231,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center">
-                      <PhoneOutlined className="text-cyan-500" />
+                      <PhoneIcon className="w-4 h-4" className="text-cyan-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -246,7 +246,7 @@ export default function SupplierDetailPage() {
                 <Col xs={24} md={12}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                      <GlobalOutlined className="text-purple-500" />
+                      <GlobeAltIcon className="w-4 h-4" className="text-purple-500" />
                     </div>
                     <div>
                       <Text type="secondary" className="block text-xs">
@@ -266,7 +266,7 @@ export default function SupplierDetailPage() {
           {address && (
             <Card title="Adres Bilgileri">
               <div className="flex items-start gap-3">
-                <EnvironmentOutlined className="text-gray-400 mt-1 text-lg" />
+                <MapPinIcon className="w-4 h-4" className="text-gray-400 mt-1 text-lg" />
                 <div>
                   {supplier.street && <div>{supplier.street}</div>}
                   <div>{[supplier.city, supplier.state].filter(Boolean).join(', ')}</div>

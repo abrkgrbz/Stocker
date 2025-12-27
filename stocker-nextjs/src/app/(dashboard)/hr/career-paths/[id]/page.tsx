@@ -4,14 +4,14 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Space, Progress, Timeline, Row, Col, Statistic } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  RocketOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  TrophyOutlined,
-  BookOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  PencilIcon,
+  RocketLaunchIcon,
+  TrophyIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useCareerPath } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = {
@@ -41,7 +41,7 @@ export default function CareerPathDetailPage() {
   if (!careerPath) {
     return (
       <div className="p-6">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
           Geri
         </Button>
         <div className="mt-4">Kariyer plani bulunamadi.</div>
@@ -63,7 +63,7 @@ export default function CareerPathDetailPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -77,7 +77,7 @@ export default function CareerPathDetailPage() {
           </div>
           <Button
             type="primary"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/career-paths/${id}/edit`)}
             style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
           >
@@ -99,7 +99,7 @@ export default function CareerPathDetailPage() {
               }}
               bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}
             >
-              <RocketOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">
                 {careerPath.employeeName}
               </h3>
@@ -117,7 +117,7 @@ export default function CareerPathDetailPage() {
                 title="Ilerleme"
                 value={careerPath.progressPercentage}
                 suffix="%"
-                prefix={<TrophyOutlined />}
+                prefix={<TrophyIcon className="w-4 h-4" />}
               />
               <Progress
                 percent={careerPath.progressPercentage}
@@ -133,7 +133,7 @@ export default function CareerPathDetailPage() {
                   <Statistic
                     title="Hazirlik Puani"
                     value={careerPath.readinessScore || 0}
-                    prefix={<BookOutlined />}
+                    prefix={<BookOpenIcon className="w-4 h-4" />}
                     suffix="%"
                   />
                 </Col>
@@ -141,7 +141,7 @@ export default function CareerPathDetailPage() {
                   <Statistic
                     title="Seviye"
                     value={`${careerPath.currentLevel || 0} → ${careerPath.targetLevel || 0}`}
-                    prefix={<CalendarOutlined />}
+                    prefix={<CalendarIcon className="w-4 h-4" />}
                   />
                 </Col>
               </Row>

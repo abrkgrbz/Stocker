@@ -3,7 +3,10 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Form, message, Spin, Result } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { PaymentForm } from '@/components/sales/payments';
 import { usePayment, useUpdatePayment } from '@/lib/api/hooks/usePayments';
 import type { UpdatePaymentCommand } from '@/lib/api/services/payment.service';
@@ -97,7 +100,7 @@ export default function EditPaymentPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -115,7 +118,7 @@ export default function EditPaymentPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updatePayment.isPending}
               onClick={() => form.submit()}
               style={{

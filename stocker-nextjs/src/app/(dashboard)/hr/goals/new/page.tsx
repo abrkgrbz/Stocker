@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, AimOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  CursorArrowRaysIcon,
+} from '@heroicons/react/24/outline';
 import { GoalForm } from '@/components/hr';
 import { useCreatePerformanceGoal } from '@/lib/api/hooks/useHR';
 import type { CreatePerformanceGoalDto } from '@/lib/api/services/hr.types';
@@ -48,14 +52,14 @@ export default function NewGoalPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <AimOutlined className="mr-2" />
+                <CursorArrowRaysIcon className="w-4 h-4" className="mr-2" />
                 Yeni Hedef
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir performans hedefi oluşturun</p>
@@ -65,7 +69,7 @@ export default function NewGoalPage() {
             <Button onClick={() => router.push('/hr/goals')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createGoal.isPending}
               onClick={() => form.submit()}
               style={{

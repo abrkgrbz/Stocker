@@ -16,22 +16,19 @@ import {
   Empty,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  FileSearchOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PlayCircleOutlined,
-  EditOutlined,
-  PrinterOutlined,
-  ExclamationCircleOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  MinusOutlined,
-  CalendarOutlined,
-  EnvironmentOutlined,
-  SettingOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  DocumentMagnifyingGlassIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MapPinIcon,
+  MinusIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockCount,
   useStartStockCount,
@@ -45,13 +42,13 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const statusConfig: Record<StockCountStatus, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
-  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <EditOutlined /> },
+  Draft: { label: 'Taslak', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <PencilIcon className="w-4 h-4" /> },
   InProgress: { label: 'Devam Ediyor', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <PlayCircleOutlined /> },
-  Completed: { label: 'Tamamlandı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', icon: <CheckCircleOutlined /> },
-  Approved: { label: 'Onaylandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleOutlined /> },
-  Rejected: { label: 'Reddedildi', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <CloseCircleOutlined /> },
-  Adjusted: { label: 'Düzeltildi', bgColor: 'bg-purple-50', textColor: 'text-purple-700', icon: <CheckCircleOutlined /> },
-  Cancelled: { label: 'İptal', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <CloseCircleOutlined /> },
+  Completed: { label: 'Tamamlandı', bgColor: 'bg-cyan-50', textColor: 'text-cyan-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Approved: { label: 'Onaylandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { label: 'Reddedildi', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <XCircleIcon className="w-4 h-4" /> },
+  Adjusted: { label: 'Düzeltildi', bgColor: 'bg-purple-50', textColor: 'text-purple-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Cancelled: { label: 'İptal', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const countTypeConfig: Record<StockCountType, { label: string; bgColor: string; textColor: string }> = {
@@ -208,7 +205,7 @@ export default function StockCountDetailPage() {
           >
             Başlat
           </Button>,
-          <Button key="cancel" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
+          <Button key="cancel" danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleCancel}>
             İptal Et
           </Button>
         );
@@ -218,14 +215,14 @@ export default function StockCountDetailPage() {
           <Button
             key="complete"
             type="primary"
-            icon={<CheckCircleOutlined />}
+            icon={<CheckCircleIcon className="w-4 h-4" />}
             onClick={handleComplete}
             disabled={stockCount.countedItems < stockCount.totalItems}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
             Tamamla
           </Button>,
-          <Button key="cancel" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
+          <Button key="cancel" danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleCancel}>
             İptal Et
           </Button>
         );
@@ -235,7 +232,7 @@ export default function StockCountDetailPage() {
           <Button
             key="approve"
             type="primary"
-            icon={<CheckCircleOutlined />}
+            icon={<CheckCircleIcon className="w-4 h-4" />}
             onClick={handleApprove}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
@@ -320,13 +317,13 @@ export default function StockCountDetailPage() {
         }
         if (record.hasDifference) {
           return (
-            <Tag icon={<ExclamationCircleOutlined />} className="border-0 bg-amber-50 text-amber-700">
+            <Tag icon={<ExclamationCircleIcon className="w-4 h-4" />} className="border-0 bg-amber-50 text-amber-700">
               Farklı
             </Tag>
           );
         }
         return (
-          <Tag icon={<CheckCircleOutlined />} className="border-0 bg-emerald-50 text-emerald-700">
+          <Tag icon={<CheckCircleIcon className="w-4 h-4" />} className="border-0 bg-emerald-50 text-emerald-700">
             Eşleşti
           </Tag>
         );
@@ -354,7 +351,7 @@ export default function StockCountDetailPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/inventory/products/${record.productId}`)}
             className="text-slate-500 hover:text-blue-600"
             title="Ürün Detayı"
@@ -389,7 +386,7 @@ export default function StockCountDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -398,7 +395,7 @@ export default function StockCountDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-purple-600 flex items-center justify-center">
-                <FileSearchOutlined className="text-white text-lg" />
+                <DocumentMagnifyingGlassIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -418,7 +415,7 @@ export default function StockCountDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<PrinterOutlined />}
+              icon={<PrinterIcon className="w-4 h-4" />}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Yazdır
@@ -437,7 +434,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <FileSearchOutlined className="text-white text-lg" />
+                  <DocumentMagnifyingGlassIcon className="w-4 h-4" className="text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Kalem
@@ -454,7 +451,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-purple-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sayılan
@@ -471,7 +468,7 @@ export default function StockCountDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <ExclamationCircleOutlined className="text-amber-600 text-lg" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Farklı
@@ -499,7 +496,7 @@ export default function StockCountDetailPage() {
                   ) : stockCount.totalDifference < 0 ? (
                     <ArrowDownOutlined className="text-red-600 text-lg" />
                   ) : (
-                    <MinusOutlined className="text-slate-600 text-lg" />
+                    <MinusIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                   )}
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -563,7 +560,7 @@ export default function StockCountDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Sayım Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(stockCount.countDate).format('DD/MM/YYYY')}
                     </span>
@@ -572,7 +569,7 @@ export default function StockCountDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Depo</p>
                   <div className="flex items-center gap-2">
-                    <EnvironmentOutlined className="text-slate-400 text-xs" />
+                    <MapPinIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">{stockCount.warehouseName}</span>
                   </div>
                 </div>

@@ -21,19 +21,18 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  ShoppingCartOutlined,
-  PrinterOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePurchaseRequest,
   useSubmitPurchaseRequest,
@@ -138,7 +137,7 @@ export default function PurchaseRequestDetailPage() {
   const handleReject = () => {
     Modal.confirm({
       title: 'Talebi Reddet',
-      icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
+      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi reddetmek istediğinizden emin misiniz?',
       okText: 'Reddet',
       okType: 'danger',
@@ -150,7 +149,7 @@ export default function PurchaseRequestDetailPage() {
   const handleCancel = () => {
     Modal.confirm({
       title: 'Talebi İptal Et',
-      icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
+      icon: <XCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: 'Bu talebi iptal etmek istediğinizden emin misiniz?',
       okText: 'İptal Et',
       okType: 'danger',
@@ -176,7 +175,7 @@ export default function PurchaseRequestDetailPage() {
   const handleDelete = () => {
     Modal.confirm({
       title: 'Talebi Sil',
-      icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" style={{ color: '#ff4d4f' }} />,
       content: `"${request.requestNumber}" talebini silmek istediğinizden emin misiniz?`,
       okText: 'Sil',
       okType: 'danger',
@@ -191,19 +190,19 @@ export default function PurchaseRequestDetailPage() {
   const actionMenuItems = [
     request.status === 'Draft' && {
       key: 'submit',
-      icon: <SendOutlined />,
+      icon: <PaperAirplaneIcon className="w-4 h-4" />,
       label: 'Onaya Gönder',
       onClick: handleSubmit,
     },
     request.status === 'Pending' && {
       key: 'approve',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onayla',
       onClick: handleApprove,
     },
     request.status === 'Pending' && {
       key: 'reject',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Reddet',
       danger: true,
       onClick: handleReject,
@@ -216,20 +215,20 @@ export default function PurchaseRequestDetailPage() {
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
     },
     { type: 'divider' },
     !['Cancelled', 'Converted'].includes(request.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
     },
     request.status === 'Draft' && {
       key: 'delete',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Sil',
       danger: true,
       onClick: handleDelete,
@@ -306,7 +305,7 @@ export default function PurchaseRequestDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/requests')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -315,7 +314,7 @@ export default function PurchaseRequestDetailPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}
               >
-                <FileTextOutlined style={{ fontSize: 24 }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
@@ -336,12 +335,12 @@ export default function PurchaseRequestDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {request.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/requests/${requestId}/edit`)}
               >
                 Düzenle
@@ -359,9 +358,9 @@ export default function PurchaseRequestDetailPage() {
             current={getStatusStep(request.status as PurchaseRequestStatus)}
             status={['Rejected', 'Cancelled'].includes(request.status) ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
-              { title: 'Onay Bekliyor', icon: <ClockCircleOutlined /> },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
+              { title: 'Onay Bekliyor', icon: <ClockIcon className="w-4 h-4" /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
               { title: 'Siparişe Dönüştürüldü', icon: <ShoppingCartOutlined /> },
             ]}
           />

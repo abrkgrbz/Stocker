@@ -22,16 +22,15 @@ import {
   Segmented,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  GiftOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  DollarOutlined,
-  CalendarOutlined,
-  SettingOutlined,
-  PercentageOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
+  GiftIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useProducts, useCreateProductBundle } from '@/lib/api/hooks/useInventory';
 import {
   BundleType,
@@ -299,7 +298,7 @@ export default function NewProductBundlePage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -320,7 +319,7 @@ export default function NewProductBundlePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -334,7 +333,7 @@ export default function NewProductBundlePage() {
             <Button onClick={() => router.push('/inventory/product-bundles')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createBundle.isPending}
               onClick={handleSubmit}
               disabled={items.length === 0}
@@ -402,7 +401,7 @@ export default function NewProductBundlePage() {
               {/* Bundle Type Selection */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <GiftOutlined className="mr-1" /> Paket Türü
+                  <GiftIcon className="w-4 h-4" className="mr-1" /> Paket Türü
                 </Text>
                 <Form.Item name="bundleType" rules={[{ required: true }]} className="mb-2">
                   <Segmented
@@ -426,7 +425,7 @@ export default function NewProductBundlePage() {
               {/* Pricing Type */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <DollarOutlined className="mr-1" /> Fiyatlandırma
+                  <CurrencyDollarIcon className="w-4 h-4" className="mr-1" /> Fiyatlandırma
                 </Text>
                 <Form.Item name="pricingType" rules={[{ required: true }]} className="mb-4">
                   <Select options={pricingTypes} variant="filled" size="large" />
@@ -487,7 +486,7 @@ export default function NewProductBundlePage() {
               {/* Settings */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <SettingOutlined className="mr-1" /> Seçenekler
+                  <Cog6ToothIcon className="w-4 h-4" className="mr-1" /> Seçenekler
                 </Text>
                 <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
                   <div>
@@ -511,7 +510,7 @@ export default function NewProductBundlePage() {
                     key: 'validity',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <CalendarOutlined className="mr-1" /> Geçerlilik Tarihleri
+                        <CalendarIcon className="w-4 h-4" className="mr-1" /> Geçerlilik Tarihleri
                       </Text>
                     ),
                     children: (
@@ -618,7 +617,7 @@ export default function NewProductBundlePage() {
                   <Button
                     type="text"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={handleAddItem}
                     className="text-blue-500"
                   >
@@ -628,9 +627,9 @@ export default function NewProductBundlePage() {
 
                 {items.length === 0 ? (
                   <div className="p-12 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
-                    <GiftOutlined className="text-5xl text-gray-300 mb-3" />
+                    <GiftIcon className="w-4 h-4" className="text-5xl text-gray-300 mb-3" />
                     <div className="text-gray-500 mb-3 font-medium">Henüz ürün eklenmedi</div>
-                    <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem}>
+                    <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
                       İlk Ürünü Ekle
                     </Button>
                   </div>

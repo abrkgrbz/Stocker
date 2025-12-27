@@ -3,7 +3,13 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Form, Input, Select, DatePicker, Row, Col, Typography, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, WarningOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  ExclamationTriangleIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import { useDisciplinaryAction, useUpdateDisciplinaryAction, useEmployees } from '@/lib/api/hooks/useHR';
 
@@ -105,7 +111,7 @@ export default function EditDisciplinaryActionPage() {
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Disiplin Islemi Duzenle</h1>
               <p className="text-sm text-gray-400 m-0">{action?.employeeName}</p>
@@ -115,7 +121,7 @@ export default function EditDisciplinaryActionPage() {
             <Button onClick={() => router.push(`/hr/disciplinary-actions/${id}`)}>Vazgec</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateAction.isPending}
               onClick={() => form.submit()}
               style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
@@ -143,7 +149,7 @@ export default function EditDisciplinaryActionPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <WarningOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <ExclamationTriangleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                   <p className="mt-4 text-lg font-medium text-white/90">Disiplin Islemi</p>
                   <p className="text-sm text-white/60">Calisan disiplin kaydi</p>
                 </div>
@@ -165,7 +171,7 @@ export default function EditDisciplinaryActionPage() {
             <Col xs={24} lg={14}>
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <UserOutlined className="mr-1" /> Calisan & Islem Bilgileri
+                  <UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Islem Bilgileri
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -188,7 +194,7 @@ export default function EditDisciplinaryActionPage() {
 
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarOutlined className="mr-1" /> Tarihler
+                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler
                 </Text>
                 <Row gutter={16}>
                   <Col span={8}>

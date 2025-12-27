@@ -20,17 +20,16 @@ import {
   Tabs,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  SendOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  FileTextOutlined,
-  InfoCircleOutlined,
-  DollarOutlined,
-  UnorderedListOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  InformationCircleIcon,
+  PaperAirplaneIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useCreatePurchaseRequest, useSubmitPurchaseRequest, useSuppliers } from '@/lib/api/hooks/usePurchase';
 import { useProducts } from '@/lib/api/hooks/useInventory';
 import type { CreatePurchaseRequestDto, CreatePurchaseRequestItemDto, PurchaseRequestPriority } from '@/lib/api/services/purchase.types';
@@ -233,7 +232,7 @@ export default function NewPurchaseRequestPage() {
           okText="Sil"
           cancelText="İptal"
         >
-          <Button type="text" danger icon={<DeleteOutlined />} />
+          <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} />
         </Popconfirm>
       ),
     },
@@ -254,7 +253,7 @@ export default function NewPurchaseRequestPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -263,7 +262,7 @@ export default function NewPurchaseRequestPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' }}
               >
-                <FileTextOutlined style={{ fontSize: 24 }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -278,14 +277,14 @@ export default function NewPurchaseRequestPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
               İptal
             </Button>
             <Button
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={handleSaveDraft}
               loading={createRequest.isPending}
             >
@@ -293,7 +292,7 @@ export default function NewPurchaseRequestPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SendOutlined />}
+              icon={<PaperAirplaneIcon className="w-4 h-4" />}
               onClick={handleSaveAndSubmit}
               loading={isLoading}
               className="px-6"
@@ -325,7 +324,7 @@ export default function NewPurchaseRequestPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <FileTextOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                    <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                     <p className="mt-4 text-lg font-medium text-white/90">
                       Satın Alma Talebi
                     </p>
@@ -385,7 +384,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'basic',
                         label: (
                           <span>
-                            <InfoCircleOutlined className="mr-1" />
+                            <InformationCircleIcon className="w-4 h-4" className="mr-1" />
                             Talep Bilgileri
                           </span>
                         ),
@@ -449,7 +448,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'budget',
                         label: (
                           <span>
-                            <DollarOutlined className="mr-1" />
+                            <CurrencyDollarIcon className="w-4 h-4" className="mr-1" />
                             Bütçe
                           </span>
                         ),
@@ -499,7 +498,7 @@ export default function NewPurchaseRequestPage() {
                         key: 'notes',
                         label: (
                           <span>
-                            <FileTextOutlined className="mr-1" />
+                            <DocumentTextIcon className="w-4 h-4" className="mr-1" />
                             Notlar
                           </span>
                         ),
@@ -602,7 +601,7 @@ export default function NewPurchaseRequestPage() {
                           <Col xs={24} md={2} className="flex items-end pb-2">
                             <Button
                               type="primary"
-                              icon={<PlusOutlined />}
+                              icon={<PlusIcon className="w-4 h-4" />}
                               onClick={handleAddItem}
                               block
                               style={{ background: '#a855f7' }}

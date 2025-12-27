@@ -19,18 +19,17 @@ import {
   message,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  MoreOutlined,
-  DollarOutlined,
-  RollbackOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
   usePayments,
@@ -47,10 +46,10 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const statusConfig: Record<PaymentStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'orange', label: 'Bekliyor', icon: <DollarOutlined /> },
-  Confirmed: { color: 'blue', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
+  Pending: { color: 'orange', label: 'Bekliyor', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  Confirmed: { color: 'blue', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
   Refunded: { color: 'purple', label: 'İade Edildi', icon: <RollbackOutlined /> },
 };
 
@@ -214,7 +213,7 @@ export default function PaymentsPage() {
     const items: any[] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => router.push(`/sales/payments/${record.id}`),
       },
@@ -224,19 +223,19 @@ export default function PaymentsPage() {
       items.push(
         {
           key: 'edit',
-          icon: <EditOutlined />,
+          icon: <PencilIcon className="w-4 h-4" />,
           label: 'Düzenle',
           onClick: () => router.push(`/sales/payments/${record.id}/edit`),
         },
         {
           key: 'confirm',
-          icon: <CheckCircleOutlined />,
+          icon: <CheckCircleIcon className="w-4 h-4" />,
           label: 'Onayla',
           onClick: () => handleConfirm(record.id),
         },
         {
           key: 'reject',
-          icon: <CloseCircleOutlined />,
+          icon: <XCircleIcon className="w-4 h-4" />,
           label: 'Reddet',
           danger: true,
           onClick: () => handleRejectClick(record.id),
@@ -246,7 +245,7 @@ export default function PaymentsPage() {
         },
         {
           key: 'delete',
-          icon: <DeleteOutlined />,
+          icon: <TrashIcon className="w-4 h-4" />,
           label: 'Sil',
           danger: true,
           onClick: () => handleDelete(record.id),
@@ -257,7 +256,7 @@ export default function PaymentsPage() {
     if (record.status === 'Confirmed') {
       items.push({
         key: 'complete',
-        icon: <CheckCircleOutlined />,
+        icon: <CheckCircleIcon className="w-4 h-4" />,
         label: 'Tamamla',
         onClick: () => handleComplete(record.id),
       });
@@ -266,7 +265,7 @@ export default function PaymentsPage() {
     if (record.status === 'Rejected') {
       items.push({
         key: 'delete',
-        icon: <DeleteOutlined />,
+        icon: <TrashIcon className="w-4 h-4" />,
         label: 'Sil',
         danger: true,
         onClick: () => handleDelete(record.id),
@@ -356,7 +355,7 @@ export default function PaymentsPage() {
           menu={{ items: getActionItems(record) }}
           trigger={['click']}
         >
-          <Button icon={<MoreOutlined />} size="small" />
+          <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} size="small" />
         </Dropdown>
       ),
     },
@@ -367,16 +366,16 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <DollarOutlined className="text-3xl text-green-500" />
+          <CurrencyDollarIcon className="w-4 h-4" className="text-3xl text-green-500" />
           <Title level={2} className="!mb-0">
             Ödemeler
           </Title>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()} loading={isLoading}>
             Yenile
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/sales/payments/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/sales/payments/new')}>
             Yeni Ödeme
           </Button>
         </Space>
@@ -388,7 +387,7 @@ export default function PaymentsPage() {
           <Col xs={24} md={6}>
             <Input
               placeholder="Ödeme ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               allowClear
               onChange={(e) => handleSearch(e.target.value)}
             />

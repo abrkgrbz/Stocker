@@ -3,7 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from 'antd';
-import { HomeOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  HomeIcon,
+} from '@heroicons/react/24/outline';
 
 export default function NotFound() {
   return (
@@ -48,7 +51,7 @@ export default function NotFound() {
           <Link href="/">
             <Button
               type="primary"
-              icon={<HomeOutlined />}
+              icon={<HomeIcon className="w-4 h-4" />}
               size="large"
               className="w-full sm:w-auto"
             >
@@ -56,7 +59,7 @@ export default function NotFound() {
             </Button>
           </Link>
           <Button
-            icon={<ArrowLeftOutlined />}
+            icon={<ArrowLeftIcon className="w-4 h-4" />}
             size="large"
             onClick={() => window.history.back()}
             className="w-full sm:w-auto"

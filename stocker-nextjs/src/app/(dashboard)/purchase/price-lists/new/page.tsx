@@ -19,12 +19,12 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  CurrencyDollarIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import { useCreatePriceList } from '@/lib/api/hooks/usePurchase';
@@ -213,7 +213,7 @@ export default function NewPriceListPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -224,7 +224,7 @@ export default function NewPriceListPage() {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
         <div>
           <Title level={3} className="mb-1">Yeni Fiyat Listesi</Title>
           <Text type="secondary">Tedarikçi fiyat listesi oluşturun</Text>
@@ -256,7 +256,7 @@ export default function NewPriceListPage() {
                   justifyContent: 'center',
                 }}
               >
-                <DollarOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
                 <p className="mt-4 text-lg font-medium text-white/90">Fiyat Listesi</p>
                 <p className="text-sm text-white/60">Tedarikçi fiyatlarını tanımlayın</p>
               </div>
@@ -402,7 +402,7 @@ export default function NewPriceListPage() {
               bordered={false}
               className="shadow-sm"
               extra={
-                <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem}>
+                <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem}>
                   Ürün Ekle
                 </Button>
               }
@@ -429,7 +429,7 @@ export default function NewPriceListPage() {
           <Button onClick={() => router.back()}>İptal</Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<CheckIcon className="w-4 h-4" />}
             htmlType="submit"
             loading={createMutation.isPending}
           >

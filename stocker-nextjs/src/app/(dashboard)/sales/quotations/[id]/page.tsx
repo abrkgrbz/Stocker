@@ -16,14 +16,13 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckOutlined,
-  SendOutlined,
-  CloseOutlined,
-  ShoppingCartOutlined,
-  PrinterOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useQuotation,
@@ -180,7 +179,7 @@ export default function QuotationDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/sales/quotations')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/sales/quotations')}>
             Geri
           </Button>
           <Title level={2} style={{ margin: 0 }}>
@@ -191,24 +190,24 @@ export default function QuotationDetailPage() {
           </Tag>
         </Space>
         <Space>
-          <Button icon={<PrinterOutlined />}>Yazdır</Button>
+          <Button icon={<PrinterIcon className="w-4 h-4" />}>Yazdır</Button>
           {quotation.status === 'Draft' && (
             <>
-              <Button icon={<EditOutlined />} onClick={() => router.push(`/sales/quotations/${id}/edit`)}>
+              <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/sales/quotations/${id}/edit`)}>
                 Düzenle
               </Button>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleApprove}>
+              <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleApprove}>
                 Onayla
               </Button>
             </>
           )}
           {quotation.status === 'Approved' && (
-            <Button type="primary" icon={<SendOutlined />} onClick={handleSend}>
+            <Button type="primary" icon={<PaperAirplaneIcon className="w-4 h-4" />} onClick={handleSend}>
               Gönder
             </Button>
           )}
           {quotation.status === 'Sent' && (
-            <Button type="primary" icon={<CheckOutlined />} onClick={handleAccept}>
+            <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} onClick={handleAccept}>
               Kabul Et
             </Button>
           )}

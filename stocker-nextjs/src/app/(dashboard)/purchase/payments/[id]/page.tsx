@@ -21,20 +21,18 @@ import {
 } from 'antd';
 import type { TimelineItemProps } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  WalletOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PrinterOutlined,
-  PlayCircleOutlined,
-  SyncOutlined,
-  BankOutlined,
-  CreditCardOutlined,
-  DollarOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  BuildingLibraryIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  PencilIcon,
+  PrinterIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSupplierPayment,
   useApproveSupplierPayment,
@@ -82,12 +80,12 @@ const methodLabels: Record<PaymentMethod, string> = {
 };
 
 const methodIcons: Record<PaymentMethod, React.ReactNode> = {
-  Cash: <DollarOutlined />,
-  BankTransfer: <BankOutlined />,
+  Cash: <CurrencyDollarIcon className="w-4 h-4" />,
+  BankTransfer: <BuildingLibraryIcon className="w-4 h-4" />,
   CreditCard: <CreditCardOutlined />,
-  Check: <WalletOutlined />,
-  DirectDebit: <SyncOutlined />,
-  Other: <WalletOutlined />,
+  Check: <WalletIcon className="w-4 h-4" />,
+  DirectDebit: <ArrowPathIcon className="w-4 h-4" />,
+  Other: <WalletIcon className="w-4 h-4" />,
 };
 
 const typeLabels: Record<string, string> = {
@@ -195,19 +193,19 @@ export default function SupplierPaymentDetailPage() {
   const actionMenuItems = [
     payment.status === 'Draft' && {
       key: 'submit',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onaya Gönder',
       onClick: handleSubmitForApproval,
     },
     payment.status === 'PendingApproval' && {
       key: 'approve',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onayla',
       onClick: handleApprove,
     },
     payment.status === 'PendingApproval' && {
       key: 'reject',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Reddet',
       danger: true,
       onClick: handleReject,
@@ -220,19 +218,19 @@ export default function SupplierPaymentDetailPage() {
     },
     payment.status === 'Completed' && !payment.isReconciled && {
       key: 'reconcile',
-      icon: <SyncOutlined />,
+      icon: <ArrowPathIcon className="w-4 h-4" />,
       label: 'Mutabakat Yap',
       onClick: handleReconcile,
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
     },
     { type: 'divider' },
     !['Cancelled', 'Completed', 'Failed'].includes(payment.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
@@ -254,7 +252,7 @@ export default function SupplierPaymentDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/payments')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -263,7 +261,7 @@ export default function SupplierPaymentDetailPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
               >
-                <WalletOutlined style={{ fontSize: 24 }} />
+                <WalletIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
@@ -281,12 +279,12 @@ export default function SupplierPaymentDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {payment.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/payments/${paymentId}/edit`)}
               >
                 Düzenle
@@ -304,11 +302,11 @@ export default function SupplierPaymentDetailPage() {
             current={getStatusStep(payment.status as SupplierPaymentStatus)}
             status={['Rejected', 'Cancelled', 'Failed'].includes(payment.status) ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
               { title: 'İşlendi', icon: <PlayCircleOutlined /> },
-              { title: 'Tamamlandı', icon: <DollarOutlined /> },
+              { title: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

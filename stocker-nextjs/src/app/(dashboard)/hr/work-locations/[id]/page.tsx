@@ -17,18 +17,17 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  TeamOutlined,
-  HomeOutlined,
-  GlobalOutlined,
-  PhoneOutlined,
-  MailOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  EnvelopeIcon,
+  GlobeAltIcon,
+  HomeIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import { useWorkLocation, useDeleteWorkLocation, useActivateWorkLocation, useDeactivateWorkLocation } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -101,12 +100,12 @@ export default function WorkLocationDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/work-locations')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/work-locations')}>
             Geri
           </Button>
           <div>
             <Title level={2} style={{ margin: 0 }}>
-              <EnvironmentOutlined className="mr-2" />
+              <MapPinIcon className="w-4 h-4" className="mr-2" />
               {location.name}
             </Title>
             <Space className="mt-1">
@@ -121,16 +120,16 @@ export default function WorkLocationDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={location.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={location.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
             loading={activateLocation.isPending || deactivateLocation.isPending}
           >
             {location.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/work-locations/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/work-locations/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -145,7 +144,7 @@ export default function WorkLocationDetailPage() {
                 <Statistic
                   title="Çalışan Sayısı"
                   value={location.employeeCount || 0}
-                  prefix={<TeamOutlined />}
+                  prefix={<UserGroupIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff' }}
                 />
               </Card>
@@ -164,7 +163,7 @@ export default function WorkLocationDetailPage() {
                 <Statistic
                   title="Tür"
                   value={location.isHeadquarters ? 'Merkez' : location.isRemote ? 'Uzaktan' : 'Şube'}
-                  prefix={location.isHeadquarters ? <HomeOutlined /> : location.isRemote ? <GlobalOutlined /> : <EnvironmentOutlined />}
+                  prefix={location.isHeadquarters ? <HomeIcon className="w-4 h-4" /> : location.isRemote ? <GlobeAltIcon className="w-4 h-4" /> : <MapPinIcon className="w-4 h-4" />}
                   valueStyle={{ color: location.isHeadquarters ? '#faad14' : location.isRemote ? '#722ed1' : '#52c41a', fontSize: 16 }}
                 />
               </Card>
@@ -174,7 +173,7 @@ export default function WorkLocationDetailPage() {
                 <Statistic
                   title="Durum"
                   value={location.isActive ? 'Aktif' : 'Pasif'}
-                  prefix={location.isActive ? <CheckCircleOutlined /> : <StopOutlined />}
+                  prefix={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <StopOutlined />}
                   valueStyle={{ color: location.isActive ? '#52c41a' : '#8c8c8c', fontSize: 16 }}
                 />
               </Card>
@@ -206,10 +205,10 @@ export default function WorkLocationDetailPage() {
             {/* Contact Info */}
             <Card title="İletişim Bilgileri">
               <Descriptions column={1} size="small">
-                <Descriptions.Item label={<><PhoneOutlined /> Telefon</>}>
+                <Descriptions.Item label={<><PhoneIcon className="w-4 h-4" /> Telefon</>}>
                   {location.phone || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label={<><MailOutlined /> E-posta</>}>
+                <Descriptions.Item label={<><EnvelopeIcon className="w-4 h-4" /> E-posta</>}>
                   {location.email || '-'}
                 </Descriptions.Item>
               </Descriptions>

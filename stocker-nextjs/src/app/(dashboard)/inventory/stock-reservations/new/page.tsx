@@ -19,14 +19,13 @@ import {
   Collapse,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  LockOutlined,
-  ShoppingOutlined,
-  EnvironmentOutlined,
-  FileTextOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  LockClosedIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import {
   useWarehouses,
   useLocations,
@@ -128,7 +127,7 @@ export default function NewStockReservationPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -142,7 +141,7 @@ export default function NewStockReservationPage() {
             <Button onClick={() => router.push('/inventory/stock-reservations')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createReservation.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct}
@@ -242,7 +241,7 @@ export default function NewStockReservationPage() {
               {/* Location */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <EnvironmentOutlined className="mr-1" /> Depo & Lokasyon
+                  <MapPinIcon className="w-4 h-4" className="mr-1" /> Depo & Lokasyon
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -278,7 +277,7 @@ export default function NewStockReservationPage() {
               {/* Expiration */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarOutlined className="mr-1" /> Son Geçerlilik
+                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Son Geçerlilik
                 </Text>
                 <Form.Item name="expirationDate" className="mb-0">
                   <DatePicker
@@ -322,7 +321,7 @@ export default function NewStockReservationPage() {
               {/* Reservation Type */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <LockOutlined className="mr-1" /> Rezervasyon Türü
+                  <LockClosedIcon className="w-4 h-4" className="mr-1" /> Rezervasyon Türü
                 </Text>
                 <Form.Item
                   name="reservationType"
@@ -359,7 +358,7 @@ export default function NewStockReservationPage() {
                     key: 'reference',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <FileTextOutlined className="mr-1" /> Referans Dökümanı
+                        <DocumentTextIcon className="w-4 h-4" className="mr-1" /> Referans Dökümanı
                       </Text>
                     ),
                     children: (

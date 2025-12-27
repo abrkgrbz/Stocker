@@ -3,7 +3,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Input, DatePicker, Row, Col, Spin, Empty, Switch } from 'antd';
-import { ArrowLeftOutlined, CalendarOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+} from '@heroicons/react/24/outline';
 import { useHoliday, useUpdateHoliday } from '@/lib/api/hooks/useHR';
 import type { UpdateHolidayDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -90,11 +93,11 @@ export default function EditHolidayPage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/holidays/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <CalendarOutlined className="text-lg text-gray-600" />
+              <CalendarIcon className="w-4 h-4" className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Tatil Günü Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">{holiday.name}</p>

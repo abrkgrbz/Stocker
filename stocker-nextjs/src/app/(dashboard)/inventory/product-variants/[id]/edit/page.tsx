@@ -16,12 +16,12 @@ import {
   Tag,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  AppstoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  Squares2X2Icon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProductVariant,
   useUpdateProductVariant,
@@ -121,7 +121,7 @@ export default function EditProductVariantPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -133,7 +133,7 @@ export default function EditProductVariantPage() {
                     {variant.name}
                   </h1>
                   <Tag
-                    icon={variant.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={variant.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     color={variant.isActive ? 'success' : 'default'}
                   >
                     {variant.isActive ? 'Aktif' : 'Pasif'}
@@ -149,7 +149,7 @@ export default function EditProductVariantPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateVariant.isPending}
               onClick={handleSubmit}
               style={{
@@ -178,7 +178,7 @@ export default function EditProductVariantPage() {
                     className="w-12 h-12 rounded-lg flex items-center justify-center"
                     style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
                   >
-                    <AppstoreOutlined style={{ fontSize: 24, color: 'white' }} />
+                    <Squares2X2Icon className="w-4 h-4" style={{ fontSize: 24, color: 'white' }} />
                   </div>
                   <div className="flex-1">
                     <div className="font-medium">{variant.productName}</div>

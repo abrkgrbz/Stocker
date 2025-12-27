@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, FileTextOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  DocumentTextIcon,
+} from '@heroicons/react/24/outline';
 import { JobPostingForm } from '@/components/hr';
 import { useJobPosting, useUpdateJobPosting } from '@/lib/api/hooks/useHR';
 import type { UpdateJobPostingDto } from '@/lib/api/services/hr.types';
@@ -48,14 +52,14 @@ export default function EditJobPostingPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <FileTextOutlined className="mr-2" />
+                <DocumentTextIcon className="w-4 h-4" className="mr-2" />
                 İş İlanı Düzenle
               </h1>
               <p className="text-sm text-gray-400 m-0">{jobPosting?.title}</p>
@@ -65,7 +69,7 @@ export default function EditJobPostingPage() {
             <Button onClick={() => router.push(`/hr/job-postings/${id}`)}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateJobPosting.isPending}
               onClick={() => form.submit()}
               style={{

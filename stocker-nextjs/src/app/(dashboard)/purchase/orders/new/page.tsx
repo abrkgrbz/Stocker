@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Form, Button, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CloseOutlined, SendOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  PaperAirplaneIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import PurchaseOrderForm from '@/components/purchase/orders/PurchaseOrderForm';
 import { useCreatePurchaseOrder, useSubmitPurchaseOrder } from '@/lib/api/hooks/usePurchase';
 
@@ -63,7 +68,7 @@ export default function NewPurchaseOrderPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -79,14 +84,14 @@ export default function NewPurchaseOrderPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
               İptal
             </Button>
             <Button
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={createOrder.isPending}
             >
@@ -94,7 +99,7 @@ export default function NewPurchaseOrderPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SendOutlined />}
+              icon={<PaperAirplaneIcon className="w-4 h-4" />}
               onClick={handleSaveAndSubmit}
               loading={isLoading}
               className="px-6"

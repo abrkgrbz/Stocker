@@ -4,29 +4,23 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SwapOutlined,
-  ShoppingCartOutlined,
-  ShoppingOutlined,
-  RetweetOutlined,
-  RollbackOutlined,
-  ToolOutlined,
-  MinusCircleOutlined,
-  PlusCircleOutlined,
-  WarningOutlined,
-  QuestionCircleOutlined,
-  InboxOutlined,
-  SyncOutlined,
-  CloseCircleOutlined,
-  SearchOutlined,
-  PrinterOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  DollarOutlined,
-  FileTextOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ChevronRightIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PlusCircleIcon,
+  PrinterIcon,
+  QuestionMarkCircleIcon,
+  WrenchIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useStockMovement } from '@/lib/api/hooks/useInventory';
 import { StockMovementType } from '@/lib/api/services/inventory.types';
 import dayjs from 'dayjs';
@@ -75,7 +69,7 @@ const movementTypeConfig: Record<
     label: 'Üretim',
     bgColor: 'bg-indigo-50',
     textColor: 'text-indigo-700',
-    icon: <ToolOutlined />,
+    icon: <WrenchIcon className="w-4 h-4" />,
     direction: 'in',
   },
   [StockMovementType.Consumption]: {
@@ -89,7 +83,7 @@ const movementTypeConfig: Record<
     label: 'Düzeltme (+)',
     bgColor: 'bg-lime-50',
     textColor: 'text-lime-700',
-    icon: <PlusCircleOutlined />,
+    icon: <PlusCircleIcon className="w-4 h-4" />,
     direction: 'in',
   },
   [StockMovementType.AdjustmentDecrease]: {
@@ -103,35 +97,35 @@ const movementTypeConfig: Record<
     label: 'Açılış',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
     direction: 'in',
   },
   [StockMovementType.Counting]: {
     label: 'Sayım',
     bgColor: 'bg-pink-50',
     textColor: 'text-pink-700',
-    icon: <SyncOutlined />,
+    icon: <ArrowPathIcon className="w-4 h-4" />,
     direction: 'neutral',
   },
   [StockMovementType.Damage]: {
     label: 'Hasar',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.Loss]: {
     label: 'Kayıp',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
     direction: 'out',
   },
   [StockMovementType.Found]: {
     label: 'Bulunan',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <SearchOutlined />,
+    icon: <MagnifyingGlassIcon className="w-4 h-4" />,
     direction: 'in',
   },
 };
@@ -163,14 +157,14 @@ export default function StockMovementDetailPage() {
     label: movement.movementType,
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <QuestionCircleOutlined />,
+    icon: <QuestionMarkCircleIcon className="w-4 h-4" />,
     direction: 'neutral' as const,
   };
 
   const getDirectionIcon = () => {
     switch (config.direction) {
       case 'in':
-        return <PlusCircleOutlined className="text-emerald-600" />;
+        return <PlusCircleIcon className="w-4 h-4" className="text-emerald-600" />;
       case 'out':
         return <MinusCircleOutlined className="text-red-600" />;
       default:
@@ -208,7 +202,7 @@ export default function StockMovementDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -242,7 +236,7 @@ export default function StockMovementDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<PrinterOutlined />}
+              icon={<PrinterIcon className="w-4 h-4" />}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Yazdır
@@ -288,7 +282,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <DollarOutlined className="text-blue-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Birim Maliyet
@@ -306,7 +300,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <DollarOutlined className="text-emerald-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam Maliyet
@@ -324,7 +318,7 @@ export default function StockMovementDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <CalendarOutlined className="text-slate-600 text-lg" />
+                  <CalendarIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   İşlem Tarihi
@@ -361,7 +355,7 @@ export default function StockMovementDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Hareket Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(movement.movementDate).format('DD/MM/YYYY HH:mm')}
                     </span>
@@ -374,7 +368,7 @@ export default function StockMovementDetailPage() {
                       İptal Edildi
                     </Tag>
                   ) : (
-                    <Tag icon={<CheckCircleOutlined />} className="border-0 bg-emerald-50 text-emerald-700">
+                    <Tag icon={<CheckCircleIcon className="w-4 h-4" />} className="border-0 bg-emerald-50 text-emerald-700">
                       Aktif
                     </Tag>
                   )}
@@ -403,7 +397,7 @@ export default function StockMovementDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -412,7 +406,7 @@ export default function StockMovementDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Kullanıcı ID</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -442,7 +436,7 @@ export default function StockMovementDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
-                  <RightOutlined className="text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" className="text-xs" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -490,7 +484,7 @@ export default function StockMovementDetailPage() {
                 onClick={() => router.push(`/inventory/warehouses/${movement.warehouseId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-white text-xl" />
+                  <MapPinIcon className="w-4 h-4" className="text-white text-xl" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{movement.warehouseName}</p>
@@ -498,7 +492,7 @@ export default function StockMovementDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Depoya Git</span>
-                  <RightOutlined className="text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" className="text-xs" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -527,7 +521,7 @@ export default function StockMovementDetailPage() {
                 </p>
                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
                   <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <FileTextOutlined className="text-amber-600 text-xl" />
+                    <DocumentTextIcon className="w-4 h-4" className="text-amber-600 text-xl" />
                   </div>
                   <div className="flex-1">
                     {movement.referenceDocumentType && (

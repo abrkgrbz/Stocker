@@ -19,20 +19,19 @@ import {
   Modal,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  FileTextOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SendOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  ShoppingCartOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useQuotations, useDeleteQuotation, useCancelQuotation } from '@/lib/api/hooks/usePurchase';
@@ -42,18 +41,18 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const statusConfig: Record<QuotationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <FileTextOutlined /> },
-  Sent: { color: 'blue', text: 'Gönderildi', icon: <SendOutlined /> },
-  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockCircleOutlined /> },
-  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleOutlined /> },
-  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockCircleOutlined /> },
-  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleOutlined /> },
-  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleOutlined /> },
-  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleOutlined /> },
-  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'red', text: 'İptal', icon: <CloseCircleOutlined /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <CloseCircleOutlined /> },
-  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  Sent: { color: 'blue', text: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
+  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockIcon className="w-4 h-4" /> },
+  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockIcon className="w-4 h-4" /> },
+  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'red', text: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
+  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
+  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
 };
 
 export default function QuotationsPage() {
@@ -76,7 +75,7 @@ export default function QuotationsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Teklif Talebi Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu teklif talebini silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -88,7 +87,7 @@ export default function QuotationsPage() {
   const handleCancel = (id: string) => {
     Modal.confirm({
       title: 'Teklif Talebi İptal Edilecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu teklif talebini iptal etmek istediğinize emin misiniz?',
       okText: 'İptal Et',
       okType: 'danger',
@@ -184,13 +183,13 @@ export default function QuotationsPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/purchase/quotations/${record.id}`),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 disabled: record.status !== 'Draft',
                 onClick: () => router.push(`/purchase/quotations/${record.id}/edit`),
               },
@@ -198,7 +197,7 @@ export default function QuotationsPage() {
               {
                 key: 'cancel',
                 label: 'İptal Et',
-                icon: <CloseCircleOutlined />,
+                icon: <XCircleIcon className="w-4 h-4" />,
                 danger: true,
                 disabled: record.status === 'Cancelled' || record.status === 'Closed',
                 onClick: () => handleCancel(record.id),
@@ -206,7 +205,7 @@ export default function QuotationsPage() {
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 disabled: record.status !== 'Draft',
                 onClick: () => handleDelete(record.id),
@@ -215,7 +214,7 @@ export default function QuotationsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -239,7 +238,7 @@ export default function QuotationsPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/quotations/new')}
         >
@@ -254,7 +253,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Toplam Talep"
               value={stats.total}
-              prefix={<FileTextOutlined className="text-blue-500" />}
+              prefix={<DocumentTextIcon className="w-4 h-4" className="text-blue-500" />}
             />
           </Card>
         </Col>
@@ -263,7 +262,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Taslak"
               value={stats.draft}
-              prefix={<EditOutlined className="text-gray-500" />}
+              prefix={<PencilIcon className="w-4 h-4" className="text-gray-500" />}
             />
           </Card>
         </Col>
@@ -272,7 +271,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Gönderildi"
               value={stats.sent}
-              prefix={<SendOutlined className="text-blue-500" />}
+              prefix={<PaperAirplaneIcon className="w-4 h-4" className="text-blue-500" />}
             />
           </Card>
         </Col>
@@ -281,7 +280,7 @@ export default function QuotationsPage() {
             <Statistic
               title="Kazanan Belirlendi"
               value={stats.awarded}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
             />
           </Card>
         </Col>
@@ -292,7 +291,7 @@ export default function QuotationsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Teklif no veya başlık ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 280 }}

@@ -17,16 +17,15 @@ import {
   Input,
 } from 'antd';
 import {
-  PlusOutlined,
-  FileTextOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useLeaveTypes, useDeleteLeaveType, useActivateLeaveType, useDeactivateLeaveType } from '@/lib/api/hooks/useHR';
 import type { LeaveTypeDto } from '@/lib/api/services/hr.types';
@@ -92,7 +91,7 @@ export default function LeaveTypesPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: LeaveTypeDto) => (
         <Space>
-          <FileTextOutlined style={{ color: '#8b5cf6' }} />
+          <DocumentTextIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <a onClick={() => router.push(`/hr/leave-types/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -138,26 +137,26 @@ export default function LeaveTypesPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/leave-types/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/leave-types/${record.id}/edit`),
               },
               {
                 key: 'toggle',
-                icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+                icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
                 label: record.isActive ? 'Pasifleştir' : 'Aktifleştir',
                 onClick: () => handleToggleActive(record),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -166,7 +165,7 @@ export default function LeaveTypesPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -177,12 +176,12 @@ export default function LeaveTypesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <FileTextOutlined className="mr-2" />
+          <DocumentTextIcon className="w-4 h-4" className="mr-2" />
           İzin Türleri
         </Title>
         <Space>
           <Button onClick={() => router.push('/hr/leaves')}>İzin Talepleri</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/leave-types/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leave-types/new')}>
             Yeni İzin Türü
           </Button>
         </Space>
@@ -195,7 +194,7 @@ export default function LeaveTypesPage() {
             <Statistic
               title="Toplam Tür"
               value={totalTypes}
-              prefix={<FileTextOutlined />}
+              prefix={<DocumentTextIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -205,7 +204,7 @@ export default function LeaveTypesPage() {
             <Statistic
               title="Aktif Tür"
               value={activeTypes}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -215,7 +214,7 @@ export default function LeaveTypesPage() {
             <Statistic
               title="Ücretli İzin"
               value={paidTypes}
-              prefix={<FileTextOutlined />}
+              prefix={<DocumentTextIcon className="w-4 h-4" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -228,7 +227,7 @@ export default function LeaveTypesPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="İzin türü ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

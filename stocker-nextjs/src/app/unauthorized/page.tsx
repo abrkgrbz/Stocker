@@ -7,7 +7,10 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from 'antd';
-import { LockOutlined, HomeOutlined } from '@ant-design/icons';
+import {
+  HomeIcon,
+  LockClosedIcon,
+} from '@heroicons/react/24/outline';
 import { useRole } from '@/hooks/useRole';
 
 export default function UnauthorizedPage() {
@@ -18,7 +21,7 @@ export default function UnauthorizedPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
         <div className="mb-6">
-          <LockOutlined className="text-6xl text-red-500" />
+          <LockClosedIcon className="w-4 h-4" className="text-6xl text-red-500" />
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -43,7 +46,7 @@ export default function UnauthorizedPage() {
         <div className="space-y-3">
           <Button
             type="primary"
-            icon={<HomeOutlined />}
+            icon={<HomeIcon className="w-4 h-4" />}
             size="large"
             block
             onClick={() => router.push('/dashboard')}

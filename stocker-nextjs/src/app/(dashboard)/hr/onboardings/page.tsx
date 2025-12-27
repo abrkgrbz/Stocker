@@ -3,7 +3,14 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Button, Tag, Space, Input, Card, Progress } from 'antd';
-import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, SearchOutlined, RocketOutlined } from '@ant-design/icons';
+import {
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  RocketLaunchIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useOnboardings, useDeleteOnboarding } from '@/lib/api/hooks/useHR';
 
@@ -41,9 +48,9 @@ export default function OnboardingsPage() {
     { title: 'Baslangic', dataIndex: 'startDate', key: 'startDate', render: (date: string) => date ? new Date(date).toLocaleDateString('tr-TR') : '-' },
     { title: 'Islemler', key: 'actions', render: (_, record) => (
       <Space>
-        <Button type="text" icon={<EyeOutlined />} onClick={() => router.push(`/hr/onboardings/${record.id}`)} />
-        <Button type="text" icon={<EditOutlined />} onClick={() => router.push(`/hr/onboardings/${record.id}/edit`)} />
-        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} />
+        <Button type="text" icon={<EyeIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/onboardings/${record.id}`)} />
+        <Button type="text" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/onboardings/${record.id}/edit`)} />
+        <Button type="text" danger icon={<TrashIcon className="w-4 h-4" />} onClick={() => handleDelete(record.id)} />
       </Space>
     )},
   ];
@@ -52,13 +59,13 @@ export default function OnboardingsPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><RocketOutlined /> Ise Alisim Surecleri</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2"><RocketLaunchIcon className="w-4 h-4" /> Ise Alisim Surecleri</h1>
           <p className="text-gray-500 mt-1">Yeni calisan oryantasyonlarini yonetin</p>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/onboardings/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Onboarding</Button>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/onboardings/new')} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Yeni Onboarding</Button>
       </div>
       <Card>
-        <div className="mb-4"><Input placeholder="Ara..." prefix={<SearchOutlined />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
+        <div className="mb-4"><Input placeholder="Ara..." prefix={<MagnifyingGlassIcon className="w-4 h-4" />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 300 }} /></div>
         <Table columns={columns} dataSource={filteredData} rowKey="id" loading={isLoading} pagination={{ pageSize: 10 }} />
       </Card>
     </div>

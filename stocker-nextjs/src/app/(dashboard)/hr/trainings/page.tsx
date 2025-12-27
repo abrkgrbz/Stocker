@@ -18,16 +18,16 @@ import {
   Select,
 } from 'antd';
 import {
-  PlusOutlined,
-  BookOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
+  BookOpenIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useTrainings, useDeleteTraining } from '@/lib/api/hooks/useHR';
 import type { TrainingDto } from '@/lib/api/services/hr.types';
@@ -94,7 +94,7 @@ export default function TrainingsPage() {
       sorter: (a, b) => a.title.localeCompare(b.title),
       render: (title: string, record: TrainingDto) => (
         <Space>
-          <BookOutlined style={{ color: '#8b5cf6' }} />
+          <BookOpenIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <a onClick={() => router.push(`/hr/trainings/${record.id}`)}>{title}</a>
         </Space>
       ),
@@ -151,20 +151,20 @@ export default function TrainingsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/trainings/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/trainings/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -173,7 +173,7 @@ export default function TrainingsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -184,10 +184,10 @@ export default function TrainingsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <BookOutlined className="mr-2" />
+          <BookOpenIcon className="w-4 h-4" className="mr-2" />
           Eğitim Yönetimi
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/trainings/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/trainings/new')}>
           Yeni Eğitim
         </Button>
       </div>
@@ -199,7 +199,7 @@ export default function TrainingsPage() {
             <Statistic
               title="Toplam Eğitim"
               value={totalTrainings}
-              prefix={<BookOutlined />}
+              prefix={<BookOpenIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -209,7 +209,7 @@ export default function TrainingsPage() {
             <Statistic
               title="Aktif Eğitim"
               value={activeTrainings}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -219,7 +219,7 @@ export default function TrainingsPage() {
             <Statistic
               title="Yaklaşan"
               value={upcomingTrainings}
-              prefix={<TeamOutlined />}
+              prefix={<UserGroupIcon className="w-4 h-4" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -232,7 +232,7 @@ export default function TrainingsPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Eğitim ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

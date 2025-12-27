@@ -18,16 +18,15 @@ import {
   Select,
 } from 'antd';
 import {
-  PlusOutlined,
-  NotificationOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
-  CheckCircleOutlined,
-  PushpinOutlined,
-} from '@ant-design/icons';
+  BellIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useAnnouncements, useDeleteAnnouncement } from '@/lib/api/hooks/useHR';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
@@ -91,7 +90,7 @@ export default function AnnouncementsPage() {
       render: (title: string, record: AnnouncementDto) => (
         <Space>
           {record.isPinned && <PushpinOutlined style={{ color: '#faad14' }} />}
-          <NotificationOutlined style={{ color: '#8b5cf6' }} />
+          <BellIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <a onClick={() => router.push(`/hr/announcements/${record.id}`)}>{title}</a>
         </Space>
       ),
@@ -144,20 +143,20 @@ export default function AnnouncementsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/announcements/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/announcements/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -166,7 +165,7 @@ export default function AnnouncementsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -177,10 +176,10 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <NotificationOutlined className="mr-2" />
+          <BellIcon className="w-4 h-4" className="mr-2" />
           Duyurular
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/announcements/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/announcements/new')}>
           Yeni Duyuru
         </Button>
       </div>
@@ -192,7 +191,7 @@ export default function AnnouncementsPage() {
             <Statistic
               title="Toplam Duyuru"
               value={totalAnnouncements}
-              prefix={<NotificationOutlined />}
+              prefix={<BellIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -202,7 +201,7 @@ export default function AnnouncementsPage() {
             <Statistic
               title="Yayında"
               value={publishedAnnouncements}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -225,7 +224,7 @@ export default function AnnouncementsPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Duyuru ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

@@ -13,19 +13,18 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  GiftOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PlusOutlined,
-  ShoppingCartOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  AppstoreOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EyeIcon,
+  GiftIcon,
+  PencilIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProductBundle,
   useDeleteProductBundle,
@@ -178,9 +177,9 @@ export default function ProductBundleDetailPage() {
       align: 'center',
       render: (isRequired) =>
         isRequired ? (
-          <CheckCircleOutlined className="text-emerald-500" />
+          <CheckCircleIcon className="w-4 h-4" className="text-emerald-500" />
         ) : (
-          <CloseCircleOutlined className="text-slate-300" />
+          <XCircleIcon className="w-4 h-4" className="text-slate-300" />
         ),
     },
     {
@@ -191,9 +190,9 @@ export default function ProductBundleDetailPage() {
       align: 'center',
       render: (isDefault) =>
         isDefault ? (
-          <CheckCircleOutlined className="text-emerald-500" />
+          <CheckCircleIcon className="w-4 h-4" className="text-emerald-500" />
         ) : (
-          <CloseCircleOutlined className="text-slate-300" />
+          <XCircleIcon className="w-4 h-4" className="text-slate-300" />
         ),
     },
     {
@@ -206,7 +205,7 @@ export default function ProductBundleDetailPage() {
           <Button
             type="text"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/inventory/products/${record.productId}`)}
             className="text-slate-500 hover:text-blue-600"
             title="Ürün Detayı"
@@ -214,7 +213,7 @@ export default function ProductBundleDetailPage() {
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={() => handleRemoveItem(record.id)}
             size="small"
           />
@@ -258,7 +257,7 @@ export default function ProductBundleDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -267,7 +266,7 @@ export default function ProductBundleDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <GiftOutlined className="text-white text-lg" />
+                <GiftIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -276,7 +275,7 @@ export default function ProductBundleDetailPage() {
                     {bundleTypeStyle.label}
                   </Tag>
                   <Tag
-                    icon={bundle.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={bundle.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       bundle.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -292,13 +291,13 @@ export default function ProductBundleDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Düzenle
             </Button>
-            <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+            <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
               Sil
             </Button>
           </Space>
@@ -314,7 +313,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <DollarOutlined className="text-amber-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-amber-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Paket Fiyatı
@@ -333,7 +332,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <AppstoreOutlined className="text-purple-600 text-lg" />
+                  <Squares2X2Icon className="w-4 h-4" className="text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ürün Sayısı
@@ -374,7 +373,7 @@ export default function ProductBundleDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CalendarOutlined className="text-blue-600 text-lg" />
+                  <CalendarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Geçerlilik
@@ -464,7 +463,7 @@ export default function ProductBundleDetailPage() {
                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
                   <span className="text-sm text-slate-600">Tüm Ürünler Zorunlu</span>
                   <Tag
-                    icon={bundle.requireAllItems ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={bundle.requireAllItems ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       bundle.requireAllItems
                         ? 'bg-emerald-50 text-emerald-700'
@@ -533,7 +532,7 @@ export default function ProductBundleDetailPage() {
                 <Button
                   type="primary"
                   size="small"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
                   style={{ background: '#1e293b', borderColor: '#1e293b' }}
                 >
@@ -573,12 +572,12 @@ export default function ProductBundleDetailPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <GiftOutlined className="text-slate-400 text-2xl" />
+                    <GiftIcon className="w-4 h-4" className="text-slate-400 text-2xl" />
                   </div>
                   <p className="text-slate-500 mb-4">Bu pakette henüz ürün yok</p>
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={() => router.push(`/inventory/product-bundles/${id}/edit`)}
                     style={{ background: '#1e293b', borderColor: '#1e293b' }}
                   >

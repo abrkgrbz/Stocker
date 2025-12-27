@@ -17,20 +17,16 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  EnvironmentOutlined,
-  DollarOutlined,
-  ClockCircleOutlined,
-  SendOutlined,
-  EyeInvisibleOutlined,
-  StopOutlined,
-  CheckCircleOutlined,
-  FireOutlined,
-  PushpinOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  MapPinIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import {
   useJobPosting,
   usePublishJobPosting,
@@ -102,14 +98,14 @@ export default function JobPostingDetailPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                <FileTextOutlined />
+                <DocumentTextIcon className="w-4 h-4" />
                 {jobPosting.title}
                 {jobPosting.isUrgent && <FireOutlined style={{ color: '#ff4d4f' }} />}
                 {jobPosting.isFeatured && <PushpinOutlined style={{ color: '#faad14' }} />}
@@ -120,7 +116,7 @@ export default function JobPostingDetailPage() {
           <Space>
             {jobPosting.status === 'Draft' && (
               <Button
-                icon={<SendOutlined />}
+                icon={<PaperAirplaneIcon className="w-4 h-4" />}
                 onClick={() => publishJobPosting.mutateAsync(id)}
                 loading={publishJobPosting.isPending}
               >
@@ -148,7 +144,7 @@ export default function JobPostingDetailPage() {
             )}
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/job-postings/${id}/edit`)}
               style={{
                 background: '#1a1a1a',
@@ -170,7 +166,7 @@ export default function JobPostingDetailPage() {
               <Statistic
                 title="Başvurular"
                 value={jobPosting.totalApplications || 0}
-                prefix={<TeamOutlined />}
+                prefix={<UserGroupIcon className="w-4 h-4" />}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>
@@ -180,7 +176,7 @@ export default function JobPostingDetailPage() {
               <Statistic
                 title="Görüntülenme"
                 value={jobPosting.viewsCount || 0}
-                prefix={<FileTextOutlined />}
+                prefix={<DocumentTextIcon className="w-4 h-4" />}
                 valueStyle={{ color: '#7c3aed' }}
               />
             </Card>
@@ -190,7 +186,7 @@ export default function JobPostingDetailPage() {
               <Statistic
                 title="İşe Alınan"
                 value={jobPosting.hiredCount || 0}
-                prefix={<CheckCircleOutlined />}
+                prefix={<CheckCircleIcon className="w-4 h-4" />}
                 valueStyle={{ color: '#52c41a' }}
               />
             </Card>
@@ -200,7 +196,7 @@ export default function JobPostingDetailPage() {
               <Statistic
                 title="Açık Pozisyon"
                 value={jobPosting.numberOfOpenings || 0}
-                prefix={<TeamOutlined />}
+                prefix={<UserGroupIcon className="w-4 h-4" />}
                 valueStyle={{ color: '#faad14' }}
               />
             </Card>
@@ -307,7 +303,7 @@ export default function JobPostingDetailPage() {
             {/* Location */}
             <Card className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <EnvironmentOutlined className="text-lg" />
+                <MapPinIcon className="w-4 h-4" className="text-lg" />
                 <Title level={5} className="m-0">Konum</Title>
               </div>
               <div className="space-y-2">
@@ -336,7 +332,7 @@ export default function JobPostingDetailPage() {
             {jobPosting.showSalary && (jobPosting.salaryMin || jobPosting.salaryMax) && (
               <Card className="mb-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <DollarOutlined className="text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-lg" />
                   <Title level={5} className="m-0">Maaş Bilgisi</Title>
                 </div>
                 <div className="space-y-2">
@@ -357,7 +353,7 @@ export default function JobPostingDetailPage() {
             {/* Dates */}
             <Card className="mb-6">
               <div className="flex items-center gap-2 mb-4">
-                <ClockCircleOutlined className="text-lg" />
+                <ClockIcon className="w-4 h-4" className="text-lg" />
                 <Title level={5} className="m-0">Tarihler</Title>
               </div>
               <Timeline

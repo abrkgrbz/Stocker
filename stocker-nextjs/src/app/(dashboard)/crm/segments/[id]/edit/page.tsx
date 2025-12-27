@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  CheckCircleIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { SegmentForm } from '@/components/crm/segments';
 import { useCustomerSegment, useUpdateCustomerSegment } from '@/lib/api/hooks/useCRM';
@@ -48,11 +52,11 @@ export default function EditSegmentPage() {
               {segment.type === 'Dynamic' ? 'Dinamik' : 'Statik'}
             </Tag>
             {segment.isActive ? (
-              <Tag icon={<CheckCircleOutlined />} color="success">
+              <Tag icon={<CheckCircleIcon className="w-4 h-4" />} color="success">
                 Aktif
               </Tag>
             ) : (
-              <Tag icon={<CloseCircleOutlined />} color="default">
+              <Tag icon={<XCircleIcon className="w-4 h-4" />} color="default">
                 Pasif
               </Tag>
             )}

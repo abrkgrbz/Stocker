@@ -18,15 +18,15 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  WalletOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  UserOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useExpense,
   useDeleteExpense,
@@ -155,7 +155,7 @@ export default function ExpenseDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/expenses')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/expenses')}>
             Geri
           </Button>
           <div>
@@ -175,25 +175,25 @@ export default function ExpenseDetailPage() {
             <>
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleApprove}
                 style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
               >
                 Onayla
               </Button>
-              <Button danger icon={<CloseCircleOutlined />} onClick={handleReject}>
+              <Button danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleReject}>
                 Reddet
               </Button>
             </>
           )}
           <Button
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/expenses/${id}/edit`)}
             disabled={expense.status !== ExpenseStatus.Pending}
           >
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -227,7 +227,7 @@ export default function ExpenseDetailPage() {
                 <Statistic
                   title="Tarih"
                   value={dayjs(expense.expenseDate).format('DD.MM.YYYY')}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#52c41a', fontSize: 16 }}
                 />
               </Card>
@@ -241,7 +241,7 @@ export default function ExpenseDetailPage() {
             <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Çalışan">
                 <Space>
-                  <UserOutlined />
+                  <UserIcon className="w-4 h-4" />
                   {expense.employeeName || `Çalışan #${expense.employeeId}`}
                 </Space>
               </Descriptions.Item>

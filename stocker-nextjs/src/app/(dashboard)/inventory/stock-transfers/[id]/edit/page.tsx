@@ -16,10 +16,10 @@ import {
   Table,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockTransfer,
   useUpdateStockTransfer,
@@ -164,7 +164,7 @@ export default function EditStockTransferPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -189,7 +189,7 @@ export default function EditStockTransferPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateTransfer.isPending}
               onClick={handleSubmit}
               disabled={!canEdit}
@@ -226,7 +226,7 @@ export default function EditStockTransferPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <EnvironmentOutlined className="text-blue-500 text-lg" />
+                      <MapPinIcon className="w-4 h-4" className="text-blue-500 text-lg" />
                     </div>
                     <div>
                       <Text type="secondary" className="text-xs">Kaynak Depo</Text>
@@ -235,7 +235,7 @@ export default function EditStockTransferPage() {
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                      <EnvironmentOutlined className="text-green-500 text-lg" />
+                      <MapPinIcon className="w-4 h-4" className="text-green-500 text-lg" />
                     </div>
                     <div>
                       <Text type="secondary" className="text-xs">Hedef Depo</Text>

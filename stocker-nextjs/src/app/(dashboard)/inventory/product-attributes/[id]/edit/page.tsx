@@ -16,16 +16,13 @@ import {
   Tag,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  TagsOutlined,
-  SettingOutlined,
-  UnorderedListOutlined,
-  NumberOutlined,
-  FontSizeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProductAttribute,
   useUpdateProductAttribute,
@@ -226,7 +223,7 @@ export default function EditProductAttributePage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveOption(record.key)}
         />
       ),
@@ -276,14 +273,14 @@ export default function EditProductAttributePage() {
               onClick={() => router.back()}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: '#8b5cf615' }}
               >
-                <TagsOutlined style={{ color: '#8b5cf6' }} />
+                <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -304,7 +301,7 @@ export default function EditProductAttributePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateAttribute.isPending}
               onClick={handleSubmit}
               style={{ background: '#0f172a', borderColor: '#0f172a' }}
@@ -324,7 +321,7 @@ export default function EditProductAttributePage() {
               {/* Basic Info */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <TagsOutlined className="text-slate-400" />
+                  <TagIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Temel Bilgiler
                   </span>
@@ -399,7 +396,7 @@ export default function EditProductAttributePage() {
                     <Button
                       type="text"
                       size="small"
-                      icon={<PlusOutlined />}
+                      icon={<PlusIcon className="w-4 h-4" />}
                       onClick={handleAddOption}
                       className="text-violet-600"
                     >
@@ -423,7 +420,7 @@ export default function EditProductAttributePage() {
               {/* Settings */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <SettingOutlined className="text-slate-400" />
+                  <Cog6ToothIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     Ayarlar
                   </span>

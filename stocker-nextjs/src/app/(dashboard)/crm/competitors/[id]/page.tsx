@@ -9,18 +9,18 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Spin, Empty, Tag, Progress } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  AimOutlined,
-  GlobalOutlined,
-  CalendarOutlined,
-  TrophyOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  TeamOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  CursorArrowRaysIcon,
+  ExclamationTriangleIcon,
+  GlobeAltIcon,
+  PencilIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useCompetitor } from '@/lib/api/hooks/useCRM';
 import { ThreatLevel } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -81,7 +81,7 @@ export default function CompetitorDetailPage() {
               onClick={() => router.push('/crm/competitors')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -90,15 +90,14 @@ export default function CompetitorDetailPage() {
                   competitor.isActive ? 'bg-red-100' : 'bg-slate-100'
                 }`}
               >
-                <AimOutlined
-                  className={`text-lg ${competitor.isActive ? 'text-red-600' : 'text-slate-400'}`}
+                <CursorArrowRaysIcon className="w-4 h-4" className={`text-lg ${competitor.isActive ? 'text-red-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{competitor.name}</h1>
                   <Tag color={threatInfo.color}>
-                    <WarningOutlined className="mr-1" />
+                    <ExclamationTriangleIcon className="w-4 h-4" className="mr-1" />
                     {threatInfo.label}
                   </Tag>
                 </div>
@@ -112,7 +111,7 @@ export default function CompetitorDetailPage() {
             onClick={() => router.push(`/crm/competitors/${competitor.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -139,14 +138,14 @@ export default function CompetitorDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Tehdit Seviyesi</p>
                   <Tag color={threatInfo.color}>
-                    <WarningOutlined className="mr-1" />
+                    <ExclamationTriangleIcon className="w-4 h-4" className="mr-1" />
                     {threatInfo.label}
                   </Tag>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={competitor.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={competitor.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     color={competitor.isActive ? 'success' : 'default'}
                   >
                     {competitor.isActive ? 'Aktif' : 'Pasif'}
@@ -161,7 +160,7 @@ export default function CompetitorDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {competitor.createdAt
                         ? dayjs(competitor.createdAt).format('DD/MM/YYYY')
@@ -174,7 +173,7 @@ export default function CompetitorDetailPage() {
               {competitor.website && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <GlobalOutlined className="text-slate-400" />
+                    <GlobeAltIcon className="w-4 h-4" className="text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Website</p>
                   </div>
                   <a
@@ -234,7 +233,7 @@ export default function CompetitorDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyOutlined className="text-emerald-500" />
+                <TrophyIcon className="w-4 h-4" className="text-emerald-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Güçlü Yönleri
                 </p>
@@ -250,7 +249,7 @@ export default function CompetitorDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <WarningOutlined className="text-red-500" />
+                <ExclamationTriangleIcon className="w-4 h-4" className="text-red-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Zayıf Yönleri
                 </p>

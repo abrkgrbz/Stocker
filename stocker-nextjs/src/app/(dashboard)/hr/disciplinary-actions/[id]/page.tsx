@@ -4,13 +4,13 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Row, Col, Timeline } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  WarningOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  PencilIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import { useDisciplinaryAction } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = {
@@ -48,7 +48,7 @@ export default function DisciplinaryActionDetailPage() {
   if (!action) {
     return (
       <div className="p-6">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>Geri</Button>
+        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button>
         <div className="mt-4">Disiplin islemi bulunamadi.</div>
       </div>
     );
@@ -67,7 +67,7 @@ export default function DisciplinaryActionDetailPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -79,7 +79,7 @@ export default function DisciplinaryActionDetailPage() {
           </div>
           <Button
             type="primary"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/disciplinary-actions/${id}/edit`)}
             style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
           >
@@ -99,7 +99,7 @@ export default function DisciplinaryActionDetailPage() {
               }}
               bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}
             >
-              <WarningOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ExclamationTriangleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{action.employeeName}</h3>
               <p className="text-sm text-white/60">{action.actionType}</p>
               <div className="mt-4 space-x-2">
@@ -110,7 +110,7 @@ export default function DisciplinaryActionDetailPage() {
 
             {action.investigatorName && (
               <Card className="mt-4" title="Sorusturmaci">
-                <p><UserOutlined className="mr-2" />{action.investigatorName}</p>
+                <p><UserIcon className="w-4 h-4" className="mr-2" />{action.investigatorName}</p>
               </Card>
             )}
           </Col>

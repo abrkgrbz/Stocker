@@ -19,17 +19,17 @@ import {
   message,
 } from 'antd';
 import {
-  PlusOutlined,
-  WalletOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useExpenses,
@@ -127,7 +127,7 @@ export default function ExpensesPage() {
       key: 'employee',
       render: (_, record: ExpenseDto) => (
         <Space>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
+          <UserIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <span>{record.employeeName || `Çalışan #${record.employeeId}`}</span>
         </Space>
       ),
@@ -179,13 +179,13 @@ export default function ExpensesPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/expenses/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/expenses/${record.id}/edit`),
                 disabled: record.status !== ExpenseStatus.Pending,
@@ -195,13 +195,13 @@ export default function ExpensesPage() {
                 ? [
                     {
                       key: 'approve',
-                      icon: <CheckCircleOutlined />,
+                      icon: <CheckCircleIcon className="w-4 h-4" />,
                       label: 'Onayla',
                       onClick: () => handleApprove(record),
                     },
                     {
                       key: 'reject',
-                      icon: <CloseCircleOutlined />,
+                      icon: <XCircleIcon className="w-4 h-4" />,
                       label: 'Reddet',
                       onClick: () => handleReject(record),
                     },
@@ -210,7 +210,7 @@ export default function ExpensesPage() {
                 : []),
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -219,7 +219,7 @@ export default function ExpensesPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -230,12 +230,12 @@ export default function ExpensesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <WalletOutlined className="mr-2" />
+          <WalletIcon className="w-4 h-4" className="mr-2" />
           Harcama Yönetimi
         </Title>
         <Space>
           <Button onClick={() => router.push('/hr/payroll')}>Bordro</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/expenses/new')}>
+          <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/expenses/new')}>
             Yeni Harcama
           </Button>
         </Space>
@@ -248,7 +248,7 @@ export default function ExpensesPage() {
             <Statistic
               title="Toplam Harcama"
               value={totalExpenses}
-              prefix={<WalletOutlined />}
+              prefix={<WalletIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -258,7 +258,7 @@ export default function ExpensesPage() {
             <Statistic
               title="Bekleyen"
               value={pendingExpenses}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-4 h-4" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -268,7 +268,7 @@ export default function ExpensesPage() {
             <Statistic
               title="Onaylanan"
               value={approvedExpenses}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>

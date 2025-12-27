@@ -17,18 +17,12 @@ import {
   Spin,
 } from 'antd';
 import {
-  ReloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  SwapOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  UndoOutlined,
-  SyncOutlined,
-  DownloadOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  DocumentIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockMovements,
   useProducts,
@@ -283,7 +277,7 @@ export default function StockMovementsPage() {
         const config = movementTypeConfig[type];
         const icon = config.direction === 'in' ? <ArrowUpOutlined /> :
                     config.direction === 'out' ? <ArrowDownOutlined /> :
-                    <SyncOutlined />;
+                    <ArrowPathIcon className="w-4 h-4" />;
         return (
           <Tag color={config.color} icon={icon}>
             {config.label}
@@ -394,7 +388,7 @@ export default function StockMovementsPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
@@ -411,7 +405,7 @@ export default function StockMovementsPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -471,7 +465,7 @@ export default function StockMovementsPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <SyncOutlined style={{ color: '#8b5cf6' }} />
+              <ArrowPathIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -497,13 +491,13 @@ export default function StockMovementsPage() {
                 items: [
                   {
                     key: 'pdf',
-                    icon: <FilePdfOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'PDF İndir',
                     onClick: handleExportPDF,
                   },
                   {
                     key: 'excel',
-                    icon: <FileExcelOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'Excel İndir',
                     onClick: handleExportExcel,
                   },
@@ -511,7 +505,7 @@ export default function StockMovementsPage() {
               }}
             >
               <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <DownloadOutlined />
+                <ArrowDownTrayIcon className="w-4 h-4" />
                 Dışa Aktar
               </button>
             </Dropdown>
@@ -520,7 +514,7 @@ export default function StockMovementsPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
             </button>
           </div>
         }

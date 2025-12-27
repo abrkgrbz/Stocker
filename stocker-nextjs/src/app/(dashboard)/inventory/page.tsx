@@ -3,25 +3,20 @@
 import React, { useMemo, useState } from 'react';
 import { Button, Select, Spin, DatePicker, Drawer, Switch, Dropdown, Table, Tag, List, Progress, Tooltip, Empty } from 'antd';
 import {
-  AppstoreOutlined,
-  ShopOutlined,
-  SwapOutlined,
-  WarningOutlined,
-  InboxOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  PlusOutlined,
-  SyncOutlined,
-  ExclamationCircleOutlined,
-  FileExcelOutlined,
-  PrinterOutlined,
-  CheckSquareOutlined,
-  SettingOutlined,
-  MoreOutlined,
-  TruckOutlined,
-  ClockCircleOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  BuildingStorefrontIcon,
+  ClockIcon,
+  Cog6ToothIcon,
+  DocumentIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  PrinterIcon,
+  Squares2X2Icon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
   useProducts,
@@ -430,17 +425,17 @@ export default function InventoryDashboardPage() {
     {
       key: 'excel',
       label: <Link href="/inventory/stock">Excel İşlemleri</Link>,
-      icon: <FileExcelOutlined />,
+      icon: <DocumentIcon className="w-4 h-4" />,
     },
     {
       key: 'reports',
       label: <Link href="/inventory/reports">Raporlar</Link>,
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
     },
     {
       key: 'analytics',
       label: <Link href="/inventory/analytics">Analitik</Link>,
-      icon: <AppstoreOutlined />,
+      icon: <Squares2X2Icon className="w-4 h-4" />,
     },
   ];
 
@@ -507,13 +502,13 @@ export default function InventoryDashboardPage() {
           </Select>
 
           <Button
-            icon={<SyncOutlined spin={isLoading} />}
+            icon={<ArrowPathIcon className="w-4 h-4" spin={isLoading} />}
             onClick={handleRefresh}
             className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
           />
 
           <Button
-            icon={<SettingOutlined />}
+            icon={<Cog6ToothIcon className="w-4 h-4" />}
             onClick={() => setSettingsDrawerOpen(true)}
             className="!border-slate-300 !text-slate-600 hover:!text-slate-900 hover:!border-slate-400"
           />
@@ -528,7 +523,7 @@ export default function InventoryDashboardPage() {
 
           <Link href="/inventory/products/new">
             <Button type="primary" className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900">
-              <PlusOutlined className="mr-1" />
+              <PlusIcon className="w-4 h-4" className="mr-1" />
               Yeni Ürün
             </Button>
           </Link>
@@ -536,7 +531,7 @@ export default function InventoryDashboardPage() {
           {/* Operations Dropdown */}
           <Dropdown menu={{ items: operationsMenuItems }} placement="bottomRight">
             <Button className="!border-slate-300 !text-slate-600">
-              İşlemler <MoreOutlined />
+              İşlemler <EllipsisHorizontalIcon className="w-4 h-4" />
             </Button>
           </Dropdown>
         </div>
@@ -601,7 +596,7 @@ export default function InventoryDashboardPage() {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       lowStockCount > 0 ? 'bg-slate-900' : 'bg-slate-100'
                     }`}>
-                      <WarningOutlined className={`text-xl ${lowStockCount > 0 ? 'text-white' : 'text-slate-400'}`} />
+                      <ExclamationTriangleIcon className="w-4 h-4" className={`text-xl ${lowStockCount > 0 ? 'text-white' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-slate-900">{lowStockCount}</div>
@@ -645,7 +640,7 @@ export default function InventoryDashboardPage() {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
                       expiringCount > 0 ? 'bg-slate-500' : 'bg-slate-100'
                     }`}>
-                      <ClockCircleOutlined className={`text-xl ${expiringCount > 0 ? 'text-white' : 'text-slate-400'}`} />
+                      <ClockIcon className="w-4 h-4" className={`text-xl ${expiringCount > 0 ? 'text-white' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-slate-900">{expiringCount}</div>

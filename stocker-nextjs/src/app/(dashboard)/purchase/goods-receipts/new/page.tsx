@@ -18,16 +18,15 @@ import {
   Spin,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  InboxOutlined,
-  InfoCircleOutlined,
-  CarOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  InboxIcon,
+  InformationCircleIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useCreateGoodsReceipt, useSuppliers, usePurchaseOrders } from '@/lib/api/hooks/usePurchase';
 import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { ItemCondition } from '@/lib/api/services/purchase.types';
@@ -277,7 +276,7 @@ export default function NewGoodsReceiptPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => removeItem(record.key)}
         />
       ),
@@ -289,7 +288,7 @@ export default function NewGoodsReceiptPage() {
       key: 'info',
       label: (
         <span>
-          <InfoCircleOutlined className="mr-1" />
+          <InformationCircleIcon className="w-4 h-4" className="mr-1" />
           Temel Bilgiler
         </span>
       ),
@@ -489,7 +488,7 @@ export default function NewGoodsReceiptPage() {
       key: 'notes',
       label: (
         <span>
-          <FileTextOutlined className="mr-1" />
+          <DocumentTextIcon className="w-4 h-4" className="mr-1" />
           Notlar
         </span>
       ),
@@ -527,7 +526,7 @@ export default function NewGoodsReceiptPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -536,7 +535,7 @@ export default function NewGoodsReceiptPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
               >
-                <InboxOutlined style={{ fontSize: 24 }} />
+                <InboxIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -551,7 +550,7 @@ export default function NewGoodsReceiptPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -559,7 +558,7 @@ export default function NewGoodsReceiptPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"
@@ -593,7 +592,7 @@ export default function NewGoodsReceiptPage() {
                       className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-4"
                       style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
                     >
-                      <InboxOutlined style={{ fontSize: 48, color: 'white' }} />
+                      <InboxIcon className="w-4 h-4" style={{ fontSize: 48, color: 'white' }} />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       Mal Alım Belgesi
@@ -662,7 +661,7 @@ export default function NewGoodsReceiptPage() {
                       <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
                       <span className="text-sm font-medium text-gray-700">Alınan Kalemler</span>
                     </div>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+                    <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
                       Kalem Ekle
                     </Button>
                   </div>

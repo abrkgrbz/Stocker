@@ -9,16 +9,16 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Spin, Empty, Tag } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  GlobalOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  UserOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  GlobeAltIcon,
+  MapPinIcon,
+  PencilIcon,
+  UserGroupIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useTerritory } from '@/lib/api/hooks/useCRM';
 import { TerritoryType } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -79,7 +79,7 @@ export default function TerritoryDetailPage() {
               onClick={() => router.push('/crm/territories')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -88,8 +88,7 @@ export default function TerritoryDetailPage() {
                   territory.isActive ? 'bg-emerald-100' : 'bg-slate-100'
                 }`}
               >
-                <GlobalOutlined
-                  className={`text-lg ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
+                <GlobeAltIcon className="w-4 h-4" className={`text-lg ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
@@ -105,7 +104,7 @@ export default function TerritoryDetailPage() {
             onClick={() => router.push(`/crm/territories/${territory.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -136,7 +135,7 @@ export default function TerritoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={territory.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={territory.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     color={territory.isActive ? 'success' : 'default'}
                   >
                     {territory.isActive ? 'Aktif' : 'Pasif'}
@@ -145,7 +144,7 @@ export default function TerritoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Müşteri Sayısı</p>
                   <div className="flex items-center gap-1">
-                    <TeamOutlined className="text-slate-400" />
+                    <UserGroupIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {territory.customerCount || 0}
                     </span>
@@ -154,7 +153,7 @@ export default function TerritoryDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Oluşturma Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {territory.createdAt
                         ? dayjs(territory.createdAt).format('DD/MM/YYYY')
@@ -185,8 +184,7 @@ export default function TerritoryDetailPage() {
                     territory.isActive ? 'bg-emerald-100' : 'bg-slate-100'
                   }`}
                 >
-                  <EnvironmentOutlined
-                    className={`text-3xl ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
+                  <MapPinIcon className="w-4 h-4" className={`text-3xl ${territory.isActive ? 'text-emerald-600' : 'text-slate-400'}`}
                   />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 mt-3">{territory.name}</p>
@@ -220,7 +218,7 @@ export default function TerritoryDetailPage() {
                 </p>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
                   <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    <GlobalOutlined className="text-indigo-500" />
+                    <GlobeAltIcon className="w-4 h-4" className="text-indigo-500" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">

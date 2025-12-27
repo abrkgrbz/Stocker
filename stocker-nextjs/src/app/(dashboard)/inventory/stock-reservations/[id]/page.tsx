@@ -16,18 +16,18 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  LockOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  PrinterOutlined,
-  EnvironmentOutlined,
-  AppstoreOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  LockClosedIcon,
+  MapPinIcon,
+  PrinterIcon,
+  Squares2X2Icon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockReservation,
   useFulfillStockReservation,
@@ -38,11 +38,11 @@ import type { ReservationStatus, ReservationType } from '@/lib/api/services/inve
 import dayjs from 'dayjs';
 
 const statusConfig: Record<ReservationStatus, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
-  Active: { label: 'Aktif', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <LockOutlined /> },
-  PartiallyFulfilled: { label: 'Kısmen Karşılandı', bgColor: 'bg-amber-50', textColor: 'text-amber-700', icon: <ClockCircleOutlined /> },
-  Fulfilled: { label: 'Karşılandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleOutlined /> },
-  Cancelled: { label: 'İptal Edildi', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <CloseCircleOutlined /> },
-  Expired: { label: 'Süresi Doldu', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <ClockCircleOutlined /> },
+  Active: { label: 'Aktif', bgColor: 'bg-blue-50', textColor: 'text-blue-700', icon: <LockClosedIcon className="w-4 h-4" /> },
+  PartiallyFulfilled: { label: 'Kısmen Karşılandı', bgColor: 'bg-amber-50', textColor: 'text-amber-700', icon: <ClockIcon className="w-4 h-4" /> },
+  Fulfilled: { label: 'Karşılandı', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Cancelled: { label: 'İptal Edildi', bgColor: 'bg-slate-100', textColor: 'text-slate-600', icon: <XCircleIcon className="w-4 h-4" /> },
+  Expired: { label: 'Süresi Doldu', bgColor: 'bg-red-50', textColor: 'text-red-700', icon: <ClockIcon className="w-4 h-4" /> },
 };
 
 const reservationTypeConfig: Record<ReservationType, { label: string; bgColor: string; textColor: string }> = {
@@ -152,7 +152,7 @@ export default function StockReservationDetailPage() {
         <Button
           key="fulfill"
           type="primary"
-          icon={<CheckCircleOutlined />}
+          icon={<CheckCircleIcon className="w-4 h-4" />}
           onClick={() => {
             setFulfillQuantity(reservation.remainingQuantity);
             setFulfillModalVisible(true);
@@ -163,7 +163,7 @@ export default function StockReservationDetailPage() {
         </Button>,
         <Button
           key="extend"
-          icon={<ClockCircleOutlined />}
+          icon={<ClockIcon className="w-4 h-4" />}
           onClick={() => {
             setExtendDate(
               reservation.expirationDate
@@ -179,7 +179,7 @@ export default function StockReservationDetailPage() {
         <Button
           key="cancel"
           danger
-          icon={<CloseCircleOutlined />}
+          icon={<XCircleIcon className="w-4 h-4" />}
           onClick={() => setCancelModalVisible(true)}
         >
           İptal Et
@@ -205,7 +205,7 @@ export default function StockReservationDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -214,7 +214,7 @@ export default function StockReservationDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-orange-600 flex items-center justify-center">
-                <LockOutlined className="text-white text-lg" />
+                <LockClosedIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export default function StockReservationDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<PrinterOutlined />}
+              icon={<PrinterIcon className="w-4 h-4" />}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Yazdır
@@ -258,7 +258,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <LockOutlined className="text-white text-lg" />
+                  <LockClosedIcon className="w-4 h-4" className="text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Toplam
@@ -275,7 +275,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Karşılanan
@@ -292,7 +292,7 @@ export default function StockReservationDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                  <ClockCircleOutlined className="text-orange-600 text-lg" />
+                  <ClockIcon className="w-4 h-4" className="text-orange-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kalan
@@ -350,7 +350,7 @@ export default function StockReservationDetailPage() {
                 onClick={() => router.push(`/inventory/products/${reservation.productId}`)}
               >
                 <div className="w-12 h-12 rounded-lg bg-orange-600 flex items-center justify-center">
-                  <AppstoreOutlined className="text-white text-xl" />
+                  <Squares2X2Icon className="w-4 h-4" className="text-white text-xl" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-slate-900 m-0">{reservation.productName}</p>
@@ -358,7 +358,7 @@ export default function StockReservationDetailPage() {
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
                   <span className="text-sm">Ürüne Git</span>
-                  <RightOutlined className="text-xs" />
+                  <ChevronRightIcon className="w-4 h-4" className="text-xs" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -367,7 +367,7 @@ export default function StockReservationDetailPage() {
                   onClick={() => router.push(`/inventory/warehouses/${reservation.warehouseId}`)}
                 >
                   <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <EnvironmentOutlined className="text-blue-600" />
+                    <MapPinIcon className="w-4 h-4" className="text-blue-600" />
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 m-0">Depo</p>
@@ -377,7 +377,7 @@ export default function StockReservationDetailPage() {
                 {reservation.locationName && (
                   <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <EnvironmentOutlined className="text-emerald-600" />
+                      <MapPinIcon className="w-4 h-4" className="text-emerald-600" />
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 m-0">Lokasyon</p>
@@ -399,7 +399,7 @@ export default function StockReservationDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Rezervasyon Tarihi</p>
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400 text-xs" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                     <span className="text-sm font-medium text-slate-900">
                       {dayjs(reservation.reservationDate).format('DD/MM/YYYY HH:mm')}
                     </span>

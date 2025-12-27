@@ -22,18 +22,16 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ShoppingCartOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  PrinterOutlined,
-  FileTextOutlined,
-  TruckOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  InboxIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePurchaseOrder,
   useApprovePurchaseOrder,
@@ -231,46 +229,46 @@ export default function PurchaseOrderDetailPage() {
   const actionMenuItems = [
     order.status === 'PendingApproval' && {
       key: 'approve',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onayla',
       onClick: handleApprove,
     },
     order.status === 'PendingApproval' && {
       key: 'reject',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Reddet',
       danger: true,
       onClick: handleReject,
     },
     order.status === 'Confirmed' && {
       key: 'send',
-      icon: <SendOutlined />,
+      icon: <PaperAirplaneIcon className="w-4 h-4" />,
       label: 'Tedarikçiye Gönder',
       onClick: handleSend,
     },
     order.status === 'Sent' && {
       key: 'confirm',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Tedarikçi Onayı',
       onClick: handleConfirm,
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
       onClick: () => setPrintModalVisible(true),
     },
     { type: 'divider' },
     !['Cancelled', 'Completed', 'Closed'].includes(order.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
     },
     order.status === 'Received' && {
       key: 'complete',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Tamamla',
       onClick: handleComplete,
     },
@@ -356,7 +354,7 @@ export default function PurchaseOrderDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/orders')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -383,12 +381,12 @@ export default function PurchaseOrderDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {order.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/orders/${orderId}/edit`)}
               >
                 Düzenle
@@ -406,14 +404,14 @@ export default function PurchaseOrderDetailPage() {
             current={getStatusStep(order.status as PurchaseOrderStatus)}
             status={['Rejected', 'Cancelled'].includes(order.status) ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
-              { title: 'Gönderildi', icon: <SendOutlined /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+              { title: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
               { title: 'Tedarikçi Onayı' },
-              { title: 'Kısmen Alındı', icon: <InboxOutlined /> },
+              { title: 'Kısmen Alındı', icon: <InboxIcon className="w-4 h-4" /> },
               { title: 'Teslim Alındı', icon: <TruckOutlined /> },
-              { title: 'Tamamlandı', icon: <CheckCircleOutlined /> },
+              { title: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

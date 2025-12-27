@@ -18,13 +18,13 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  FileTextOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import { useCreateQuotation } from '@/lib/api/hooks/usePurchase';
@@ -197,7 +197,7 @@ export default function NewQuotationPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -209,7 +209,7 @@ export default function NewQuotationPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button
-          icon={<ArrowLeftOutlined />}
+          icon={<ArrowLeftIcon className="w-4 h-4" />}
           onClick={() => router.back()}
         />
         <div>
@@ -244,7 +244,7 @@ export default function NewQuotationPage() {
                   justifyContent: 'center',
                 }}
               >
-                <FileTextOutlined style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '56px', color: 'rgba(255,255,255,0.9)' }} />
                 <p className="mt-4 text-lg font-medium text-white/90">
                   Teklif Talebi (RFQ)
                 </p>
@@ -258,7 +258,7 @@ export default function NewQuotationPage() {
             <Card
               title={
                 <Space>
-                  <ShopOutlined />
+                  <BuildingStorefrontIcon className="w-4 h-4" />
                   <span>Tedarikçiler</span>
                 </Space>
               }
@@ -408,7 +408,7 @@ export default function NewQuotationPage() {
               extra={
                 <Button
                   type="dashed"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={handleAddItem}
                 >
                   Ürün Ekle
@@ -439,7 +439,7 @@ export default function NewQuotationPage() {
           </Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<CheckIcon className="w-4 h-4" />}
             htmlType="submit"
             loading={createMutation.isPending}
           >

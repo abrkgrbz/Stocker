@@ -19,20 +19,18 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  FileSearchOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PlayCircleOutlined,
-  EditOutlined,
-  ExclamationCircleOutlined,
-  DownloadOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  DocumentIcon,
+  DocumentMagnifyingGlassIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockCounts,
   useWarehouses,
@@ -66,13 +64,13 @@ const { RangePicker } = DatePicker;
 
 // Stock count status configuration
 const statusConfig: Record<StockCountStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <EditOutlined /> },
+  Draft: { color: 'default', label: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
   InProgress: { color: 'processing', label: 'Devam Ediyor', icon: <PlayCircleOutlined /> },
-  Completed: { color: 'blue', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Adjusted: { color: 'purple', label: 'Düzeltildi', icon: <ExclamationCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <CloseCircleOutlined /> },
+  Completed: { color: 'blue', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Approved: { color: 'green', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Adjusted: { color: 'purple', label: 'Düzeltildi', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'red', label: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 // Stock count type configuration
@@ -391,7 +389,7 @@ export default function StockCountsPage() {
     const items: any[] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => handleView(stockCount.id),
       },
@@ -408,7 +406,7 @@ export default function StockCountsPage() {
           },
           {
             key: 'cancel',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
             onClick: () => handleCancel(stockCount),
           }
@@ -418,13 +416,13 @@ export default function StockCountsPage() {
         items.push(
           {
             key: 'complete',
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             label: 'Tamamla',
             onClick: () => handleComplete(stockCount),
           },
           {
             key: 'cancel',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
             onClick: () => handleCancel(stockCount),
           }
@@ -433,7 +431,7 @@ export default function StockCountsPage() {
       case 'Completed':
         items.push({
           key: 'approve',
-          icon: <CheckCircleOutlined />,
+          icon: <CheckCircleIcon className="w-4 h-4" />,
           label: 'Onayla',
           onClick: () => handleApprove(stockCount),
         });
@@ -550,7 +548,7 @@ export default function StockCountsPage() {
       render: (_, record) => (
         <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <MoreOutlined className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
           </button>
         </Dropdown>
       ),
@@ -568,7 +566,7 @@ export default function StockCountsPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalCounts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <FileSearchOutlined style={{ color: '#3b82f6' }} />
+              <DocumentMagnifyingGlassIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -592,7 +590,7 @@ export default function StockCountsPage() {
               <div className="text-2xl font-semibold text-slate-900">{completedCounts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -605,7 +603,7 @@ export default function StockCountsPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: totalDifferences > 0 ? '#f9731615' : '#64748b15' }}>
-              <ExclamationCircleOutlined style={{ color: totalDifferences > 0 ? '#f97316' : '#64748b' }} />
+              <ExclamationCircleIcon className="w-4 h-4" style={{ color: totalDifferences > 0 ? '#f97316' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -613,7 +611,7 @@ export default function StockCountsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<FileSearchOutlined />}
+        icon={<DocumentMagnifyingGlassIcon className="w-4 h-4" />}
         iconColor="#3b82f6"
         title="Stok Sayımları"
         description="Envanter sayım işlemlerini yönetin"
@@ -621,7 +619,7 @@ export default function StockCountsPage() {
         primaryAction={{
           label: 'Yeni Sayım',
           onClick: () => router.push('/inventory/stock-counts/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
@@ -636,13 +634,13 @@ export default function StockCountsPage() {
                 items: [
                   {
                     key: 'pdf',
-                    icon: <FilePdfOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'PDF İndir',
                     onClick: handleExportPDF,
                   },
                   {
                     key: 'excel',
-                    icon: <FileExcelOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'Excel İndir',
                     onClick: handleExportExcel,
                   },
@@ -650,7 +648,7 @@ export default function StockCountsPage() {
               }}
             >
               <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <DownloadOutlined />
+                <ArrowDownTrayIcon className="w-4 h-4" />
                 Dışa Aktar
               </button>
             </Dropdown>
@@ -659,7 +657,7 @@ export default function StockCountsPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
             </button>
           </div>
         }

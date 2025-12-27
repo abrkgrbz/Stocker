@@ -16,16 +16,14 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ColumnWidthOutlined,
-  LinkOutlined,
-  CheckCircleOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useUnits, useDeleteUnit } from '@/lib/api/hooks/useInventory';
 import type { UnitDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -106,7 +104,7 @@ export default function UnitsPage() {
       render: (baseUnitName: string, record) => (
         baseUnitName ? (
           <div className="flex items-center gap-2">
-            <LinkOutlined className="text-slate-400" />
+            <LinkIcon className="w-4 h-4" className="text-slate-400" />
             <div>
               <div className="text-sm text-slate-700">{baseUnitName}</div>
               <div className="text-xs text-slate-500">
@@ -153,7 +151,7 @@ export default function UnitsPage() {
             onClick={() => router.push(`/inventory/units/${record.id}/edit`)}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
           </button>
           <Popconfirm
             title="Birimi silmek istediğinize emin misiniz?"
@@ -162,7 +160,7 @@ export default function UnitsPage() {
             cancelText="Hayır"
           >
             <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-              <DeleteOutlined />
+              <TrashIcon className="w-4 h-4" />
             </button>
           </Popconfirm>
         </div>
@@ -192,7 +190,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <CheckCircleOutlined style={{ color: '#3b82f6' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -203,7 +201,7 @@ export default function UnitsPage() {
               <div className="text-2xl font-semibold text-slate-900">{baseUnits}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <LinkOutlined style={{ color: '#8b5cf6' }} />
+              <LinkIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -230,7 +228,7 @@ export default function UnitsPage() {
         primaryAction={{
           label: 'Yeni Birim',
           onClick: () => router.push('/inventory/units/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -238,7 +236,7 @@ export default function UnitsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -247,7 +245,7 @@ export default function UnitsPage() {
       <div className="bg-white border border-slate-200 rounded-lg p-4 mb-6">
         <Input
           placeholder="Birim ara... (ad, kod, sembol)"
-          prefix={<SearchOutlined className="text-slate-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 400 }}

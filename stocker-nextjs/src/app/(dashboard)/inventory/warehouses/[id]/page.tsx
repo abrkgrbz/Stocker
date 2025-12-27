@@ -4,21 +4,20 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty, Progress, Table } from 'antd';
 import {
-  ArrowLeftOutlined,
-  HomeOutlined,
-  EditOutlined,
-  PlusOutlined,
-  EnvironmentOutlined,
-  PhoneOutlined,
-  UserOutlined,
-  AppstoreOutlined,
-  DollarOutlined,
-  StarFilled,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  ExpandOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  HomeIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  StarIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useWarehouse, useLocations } from '@/lib/api/hooks/useInventory';
 import type { LocationDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -99,7 +98,7 @@ export default function WarehouseDetailPage() {
       align: 'center',
       render: (active) => (
         <Tag
-          icon={active ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+          icon={active ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
           className={`border-0 ${
             active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
           }`}
@@ -116,7 +115,7 @@ export default function WarehouseDetailPage() {
         <Button
           type="text"
           size="small"
-          icon={<EditOutlined />}
+          icon={<PencilIcon className="w-4 h-4" />}
           onClick={() => router.push(`/inventory/locations/${record.id}/edit`)}
           className="text-slate-400 hover:text-slate-600"
         />
@@ -166,7 +165,7 @@ export default function WarehouseDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -175,18 +174,18 @@ export default function WarehouseDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <HomeOutlined className="text-white text-lg" />
+                <HomeIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{warehouse.name}</h1>
                   {warehouse.isDefault && (
-                    <Tag icon={<StarFilled />} className="border-0 bg-amber-50 text-amber-700">
+                    <Tag icon={<StarIcon className="w-4 h-4" />} className="border-0 bg-amber-50 text-amber-700">
                       Varsayılan
                     </Tag>
                   )}
                   <Tag
-                    icon={warehouse.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={warehouse.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       warehouse.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -202,7 +201,7 @@ export default function WarehouseDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/warehouses/${id}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -210,7 +209,7 @@ export default function WarehouseDetailPage() {
             </Button>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<PlusIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
               style={{ background: '#1e293b', borderColor: '#1e293b' }}
             >
@@ -229,7 +228,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-blue-600 text-lg" />
+                  <MapPinIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Lokasyonlar
@@ -246,7 +245,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <AppstoreOutlined className="text-purple-600 text-lg" />
+                  <Squares2X2Icon className="w-4 h-4" className="text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Ürün Çeşidi
@@ -263,7 +262,7 @@ export default function WarehouseDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <DollarOutlined className="text-emerald-600 text-lg" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Stok Değeri
@@ -333,7 +332,7 @@ export default function WarehouseDetailPage() {
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Yönetici</p>
                       <div className="flex items-center gap-1.5">
-                        <UserOutlined className="text-slate-400 text-xs" />
+                        <UserIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                         <span className="text-sm font-medium text-slate-900">{warehouse.manager}</span>
                       </div>
                     </div>
@@ -342,7 +341,7 @@ export default function WarehouseDetailPage() {
                     <div>
                       <p className="text-xs text-slate-400 mb-1">Telefon</p>
                       <div className="flex items-center gap-1.5">
-                        <PhoneOutlined className="text-slate-400 text-xs" />
+                        <PhoneIcon className="w-4 h-4" className="text-slate-400 text-xs" />
                         <span className="text-sm font-medium text-slate-900">{warehouse.phone}</span>
                       </div>
                     </div>
@@ -369,7 +368,7 @@ export default function WarehouseDetailPage() {
               {address ? (
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <EnvironmentOutlined className="text-slate-600 text-lg" />
+                    <MapPinIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                   </div>
                   <div className="space-y-1">
                     {warehouse.street && (
@@ -400,7 +399,7 @@ export default function WarehouseDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -410,7 +409,7 @@ export default function WarehouseDetailPage() {
                 {warehouse.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -432,7 +431,7 @@ export default function WarehouseDetailPage() {
                 <Button
                   type="primary"
                   size="small"
-                  icon={<PlusOutlined />}
+                  icon={<PlusIcon className="w-4 h-4" />}
                   onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
                   style={{ background: '#1e293b', borderColor: '#1e293b' }}
                 >
@@ -459,12 +458,12 @@ export default function WarehouseDetailPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <EnvironmentOutlined className="text-slate-400 text-2xl" />
+                    <MapPinIcon className="w-4 h-4" className="text-slate-400 text-2xl" />
                   </div>
                   <p className="text-slate-500 mb-4">Bu depoda henüz lokasyon tanımlanmamış</p>
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={() => router.push(`/inventory/locations/new?warehouseId=${id}`)}
                     style={{ background: '#1e293b', borderColor: '#1e293b' }}
                   >

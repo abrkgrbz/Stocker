@@ -21,19 +21,17 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  RollbackOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PrinterOutlined,
-  SendOutlined,
-  DollarOutlined,
-  FileTextOutlined,
-  CarOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  InboxIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePurchaseReturn,
   useApprovePurchaseReturn,
@@ -226,50 +224,50 @@ export default function PurchaseReturnDetailPage() {
   const actionMenuItems = [
     purchaseReturn.status === 'Draft' && {
       key: 'submit',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onaya Gönder',
       onClick: handleSubmitForApproval,
     },
     purchaseReturn.status === 'Pending' && {
       key: 'approve',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onayla',
       onClick: handleApprove,
     },
     purchaseReturn.status === 'Pending' && {
       key: 'reject',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Reddet',
       danger: true,
       onClick: handleReject,
     },
     purchaseReturn.status === 'Approved' && {
       key: 'ship',
-      icon: <SendOutlined />,
+      icon: <PaperAirplaneIcon className="w-4 h-4" />,
       label: 'Gönder',
       onClick: handleShip,
     },
     purchaseReturn.status === 'Shipped' && {
       key: 'receive',
-      icon: <InboxOutlined />,
+      icon: <InboxIcon className="w-4 h-4" />,
       label: 'Teslim Alındı',
       onClick: handleReceive,
     },
     purchaseReturn.status === 'Received' && {
       key: 'refund',
-      icon: <DollarOutlined />,
+      icon: <CurrencyDollarIcon className="w-4 h-4" />,
       label: 'İade İşle',
       onClick: handleProcessRefund,
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
     },
     { type: 'divider' },
     !['Cancelled', 'Completed'].includes(purchaseReturn.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
@@ -359,7 +357,7 @@ export default function PurchaseReturnDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/returns')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -386,12 +384,12 @@ export default function PurchaseReturnDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {purchaseReturn.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/returns/${returnId}/edit`)}
               >
                 Düzenle
@@ -409,12 +407,12 @@ export default function PurchaseReturnDetailPage() {
             current={getStatusStep(purchaseReturn.status as PurchaseReturnStatus)}
             status={['Rejected', 'Cancelled'].includes(purchaseReturn.status) ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
               { title: 'Gönderildi', icon: <CarOutlined /> },
-              { title: 'Teslim Alındı', icon: <InboxOutlined /> },
-              { title: 'Tamamlandı', icon: <DollarOutlined /> },
+              { title: 'Teslim Alındı', icon: <InboxIcon className="w-4 h-4" /> },
+              { title: 'Tamamlandı', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

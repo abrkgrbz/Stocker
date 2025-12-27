@@ -20,16 +20,13 @@ import {
   Collapse,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  SkinOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  SettingOutlined,
-  DollarOutlined,
-  BarcodeOutlined,
-  BoxPlotOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProducts,
   useProductAttributes,
@@ -246,7 +243,7 @@ export default function NewProductVariantPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveOption(record.key)}
         />
       ),
@@ -277,7 +274,7 @@ export default function NewProductVariantPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -291,7 +288,7 @@ export default function NewProductVariantPage() {
             <Button onClick={() => router.push('/inventory/product-variants')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createVariant.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct}
@@ -372,12 +369,12 @@ export default function NewProductVariantPage() {
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
                   <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <SettingOutlined className="mr-1" /> Varyant Özellikleri
+                    <Cog6ToothIcon className="w-4 h-4" className="mr-1" /> Varyant Özellikleri
                   </Text>
                   <Button
                     type="text"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={handleAddOption}
                     disabled={variantOptions.length >= selectableAttributes.length}
                     className="text-blue-500"
@@ -402,7 +399,7 @@ export default function NewProductVariantPage() {
                   <div className="p-8 bg-gray-50/50 rounded-xl text-center border-2 border-dashed border-gray-200">
                     <SkinOutlined className="text-4xl text-gray-300 mb-2" />
                     <div className="text-gray-500 mb-3">Henüz varyant özelliği eklenmedi</div>
-                    <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddOption}>
+                    <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddOption}>
                       İlk Özelliği Ekle
                     </Button>
                   </div>
@@ -500,7 +497,7 @@ export default function NewProductVariantPage() {
               {/* Pricing Section */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <DollarOutlined className="mr-1" /> Fiyatlandırma
+                  <CurrencyDollarIcon className="w-4 h-4" className="mr-1" /> Fiyatlandırma
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>

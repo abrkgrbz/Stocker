@@ -3,7 +3,14 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Form, Input, Select, DatePicker, InputNumber, Row, Col, Typography, Switch, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, RocketOutlined, UserOutlined, LaptopOutlined, FileTextOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ComputerDesktopIcon,
+  DocumentTextIcon,
+  RocketLaunchIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import { useOnboarding, useUpdateOnboarding, useEmployees } from '@/lib/api/hooks/useHR';
 
@@ -61,7 +68,7 @@ export default function EditOnboardingPage() {
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Onboarding Duzenle</h1>
               <p className="text-sm text-gray-400 m-0">{onboarding?.employeeName}</p>
@@ -69,7 +76,7 @@ export default function EditOnboardingPage() {
           </div>
           <Space>
             <Button onClick={() => router.push(`/hr/onboardings/${id}`)}>Vazgec</Button>
-            <Button type="primary" icon={<SaveOutlined />} loading={updateOnboarding.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
+            <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} loading={updateOnboarding.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
           </Space>
         </div>
       </div>
@@ -80,7 +87,7 @@ export default function EditOnboardingPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <RocketOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                   <p className="mt-4 text-lg font-medium text-white/90">Ise Alisim</p>
                   <p className="text-sm text-white/60">Yeni calisan oryantasyonu</p>
                 </div>
@@ -93,7 +100,7 @@ export default function EditOnboardingPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserOutlined className="mr-1" /> Calisan & Mentor Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Mentor Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>
@@ -110,7 +117,7 @@ export default function EditOnboardingPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><LaptopOutlined className="mr-1" /> Ekipman & IT Erisimi</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><ComputerDesktopIcon className="w-4 h-4" className="mr-1" /> Ekipman & IT Erisimi</Text>
                 <Row gutter={16}>
                   <Col span={8}><Form.Item name="deskPrepared" valuePropName="checked" className="mb-3"><Switch checkedChildren="Is Istasyonu" unCheckedChildren="Is Istasyonu" /></Form.Item></Col>
                   <Col span={8}><Form.Item name="laptopProvided" valuePropName="checked" className="mb-3"><Switch checkedChildren="Bilgisayar" unCheckedChildren="Bilgisayar" /></Form.Item></Col>
@@ -127,7 +134,7 @@ export default function EditOnboardingPage() {
               </div>
               <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><FileTextOutlined className="mr-1" /> Dokumantasyon & Egitim</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><DocumentTextIcon className="w-4 h-4" className="mr-1" /> Dokumantasyon & Egitim</Text>
                 <Row gutter={16}>
                   <Col span={8}><Form.Item name="contractSigned" valuePropName="checked" className="mb-3"><Switch checkedChildren="Sozlesme" unCheckedChildren="Sozlesme" /></Form.Item></Col>
                   <Col span={8}><Form.Item name="ndaSigned" valuePropName="checked" className="mb-3"><Switch checkedChildren="NDA" unCheckedChildren="NDA" /></Form.Item></Col>

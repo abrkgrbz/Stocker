@@ -19,18 +19,16 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  WalletOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  PauseCircleOutlined,
-  CloseCircleOutlined,
-  LockOutlined,
-  PlayCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  LockClosedIcon,
+  PencilIcon,
+  TrashIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   usePurchaseBudget,
@@ -46,15 +44,15 @@ import type { PurchaseBudgetStatus, BudgetTransactionDto } from '@/lib/api/servi
 const { Title, Text, Paragraph } = Typography;
 
 const statusConfig: Record<PurchaseBudgetStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <EditOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
   PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleOutlined /> },
-  Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Active: { color: 'green', text: 'Aktif', icon: <CheckCircleOutlined /> },
-  Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockOutlined /> },
-  Exhausted: { color: 'red', text: 'Tükendi', icon: <ExclamationCircleOutlined /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <CloseCircleOutlined /> },
-  Rejected: { color: 'volcano', text: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Cancelled: { color: 'magenta', text: 'İptal Edildi', icon: <CloseCircleOutlined /> },
+  Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Active: { color: 'green', text: 'Aktif', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockClosedIcon className="w-4 h-4" /> },
+  Exhausted: { color: 'red', text: 'Tükendi', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'volcano', text: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'magenta', text: 'İptal Edildi', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const budgetTypeLabels: Record<string, string> = {
@@ -101,7 +99,7 @@ export default function PurchaseBudgetDetailPage() {
   const handleDelete = () => {
     Modal.confirm({
       title: 'Bütçe Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu bütçeyi silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -210,7 +208,7 @@ export default function PurchaseBudgetDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
           <div>
             <div className="flex items-center gap-3">
               <Title level={3} className="mb-0">{budget.code}</Title>
@@ -226,7 +224,7 @@ export default function PurchaseBudgetDetailPage() {
           {budget.status === 'Draft' && (
             <>
               <Button
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/budgets/${id}/edit`)}
               >
                 Düzenle
@@ -243,7 +241,7 @@ export default function PurchaseBudgetDetailPage() {
           {budget.status === 'PendingApproval' && (
             <Button
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={handleApprove}
               loading={approveMutation.isPending}
             >
@@ -262,7 +260,7 @@ export default function PurchaseBudgetDetailPage() {
           )}
           {budget.status === 'Active' && (
             <Button
-              icon={<LockOutlined />}
+              icon={<LockClosedIcon className="w-4 h-4" />}
               onClick={handleFreeze}
               loading={freezeMutation.isPending}
             >
@@ -275,7 +273,7 @@ export default function PurchaseBudgetDetailPage() {
                 {
                   key: 'close',
                   label: 'Kapat',
-                  icon: <CloseCircleOutlined />,
+                  icon: <XCircleIcon className="w-4 h-4" />,
                   disabled: budget.status === 'Closed' || budget.status === 'Draft',
                   onClick: handleClose,
                 },
@@ -283,7 +281,7 @@ export default function PurchaseBudgetDetailPage() {
                 {
                   key: 'delete',
                   label: 'Sil',
-                  icon: <DeleteOutlined />,
+                  icon: <TrashIcon className="w-4 h-4" />,
                   danger: true,
                   disabled: budget.status !== 'Draft',
                   onClick: handleDelete,
@@ -291,7 +289,7 @@ export default function PurchaseBudgetDetailPage() {
               ],
             }}
           >
-            <Button icon={<MoreOutlined />} />
+            <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         </Space>
       </div>
@@ -346,7 +344,7 @@ export default function PurchaseBudgetDetailPage() {
               />
               {isOverThreshold && (
                 <div className="mt-2 text-sm text-red-600">
-                  <ExclamationCircleOutlined className="mr-1" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="mr-1" />
                   Uyarı eşiği ({budget.alertThreshold}%) aşıldı!
                 </div>
               )}
@@ -409,7 +407,7 @@ export default function PurchaseBudgetDetailPage() {
                 marginBottom: '16px',
               }}
             >
-              <WalletOutlined style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
+              <WalletIcon className="w-4 h-4" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
               <div className="text-white/90 font-medium mt-2">{budget.code}</div>
               <Tag color={status.color} className="mt-2">{status.text}</Tag>
             </div>

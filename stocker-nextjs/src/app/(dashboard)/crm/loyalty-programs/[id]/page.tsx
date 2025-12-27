@@ -9,17 +9,16 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Spin, Empty, Tag, Progress } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  GiftOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  StarOutlined,
-  TrophyOutlined,
-  CrownOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  GiftIcon,
+  PencilIcon,
+  StarIcon,
+  TrophyIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useLoyaltyProgram } from '@/lib/api/hooks/useCRM';
 import { LoyaltyProgramType } from '@/lib/api/services/crm.types';
 import dayjs from 'dayjs';
@@ -77,7 +76,7 @@ export default function LoyaltyProgramDetailPage() {
               onClick={() => router.push('/crm/loyalty-programs')}
               className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
             >
-              <ArrowLeftOutlined />
+              <ArrowLeftIcon className="w-4 h-4" />
             </button>
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
@@ -86,8 +85,7 @@ export default function LoyaltyProgramDetailPage() {
                   program.isActive ? 'bg-amber-100' : 'bg-slate-100'
                 }`}
               >
-                <GiftOutlined
-                  className={`text-lg ${program.isActive ? 'text-amber-600' : 'text-slate-400'}`}
+                <GiftIcon className="w-4 h-4" className={`text-lg ${program.isActive ? 'text-amber-600' : 'text-slate-400'}`}
                 />
               </div>
               <div>
@@ -103,7 +101,7 @@ export default function LoyaltyProgramDetailPage() {
             onClick={() => router.push(`/crm/loyalty-programs/${program.id}/edit`)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            <EditOutlined />
+            <PencilIcon className="w-4 h-4" />
             Düzenle
           </button>
         </div>
@@ -134,7 +132,7 @@ export default function LoyaltyProgramDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={program.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={program.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     color={program.isActive ? 'success' : 'default'}
                   >
                     {program.isActive ? 'Aktif' : 'Pasif'}
@@ -143,7 +141,7 @@ export default function LoyaltyProgramDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Başlangıç Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {program.startDate ? dayjs(program.startDate).format('DD/MM/YYYY') : '-'}
                     </span>
@@ -152,7 +150,7 @@ export default function LoyaltyProgramDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Bitiş Tarihi</p>
                   <div className="flex items-center gap-1">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm font-medium text-slate-900">
                       {program.endDate ? dayjs(program.endDate).format('DD/MM/YYYY') : 'Süresiz'}
                     </span>
@@ -215,7 +213,7 @@ export default function LoyaltyProgramDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrophyOutlined className="text-amber-500" />
+                <TrophyIcon className="w-4 h-4" className="text-amber-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Bonus Puanlar
                 </p>
@@ -253,7 +251,7 @@ export default function LoyaltyProgramDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <CrownOutlined className="text-purple-500" />
+                <StarIcon className="w-4 h-4" className="text-purple-500" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Kademeler
                 </p>
@@ -270,7 +268,7 @@ export default function LoyaltyProgramDetailPage() {
                           className="w-8 h-8 rounded-full flex items-center justify-center"
                           style={{ backgroundColor: tier.color || '#e2e8f0' }}
                         >
-                          <CrownOutlined className="text-white text-sm" />
+                          <StarIcon className="w-4 h-4" className="text-white text-sm" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-900">{tier.name}</p>

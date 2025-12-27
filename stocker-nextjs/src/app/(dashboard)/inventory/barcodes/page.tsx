@@ -26,27 +26,19 @@ import {
   Popconfirm,
 } from 'antd';
 import {
-  BarcodeOutlined,
-  ScanOutlined,
-  QrcodeOutlined,
-  PrinterOutlined,
-  DownloadOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  ShoppingOutlined,
-  InboxOutlined,
-  HistoryOutlined,
-  TagsOutlined,
-  CopyOutlined,
-  SoundOutlined,
-  ThunderboltOutlined,
-  ColumnWidthOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClipboardDocumentIcon,
+  ExclamationCircleIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  PrinterIcon,
+  TagIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProducts,
   useWarehouses,
@@ -575,7 +567,7 @@ export default function BarcodesPage() {
       return (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
-            <ExclamationCircleOutlined className="text-amber-600" />
+            <ExclamationCircleIcon className="w-4 h-4" className="text-amber-600" />
           </div>
           <div className="text-sm font-medium text-slate-900 mb-1">Barkod Bulunamadı</div>
           <div className="text-xs text-slate-500 font-mono mb-3">{lookupResult.searchedBarcode}</div>
@@ -583,7 +575,7 @@ export default function BarcodesPage() {
             onClick={() => router.push('/inventory/products/new')}
             className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
-            <PlusOutlined />
+            <PlusIcon className="w-4 h-4" />
             Yeni Ürün Ekle
           </button>
         </div>
@@ -601,7 +593,7 @@ export default function BarcodesPage() {
         <div className="space-y-4">
           {/* Success indicator */}
           <div className="flex items-center gap-2 text-emerald-600">
-            <CheckCircleOutlined />
+            <CheckCircleIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Ürün Bulundu</span>
             <Tag color="blue">{lookupResult.matchType}</Tag>
           </div>
@@ -695,7 +687,7 @@ export default function BarcodesPage() {
       return (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-emerald-600">
-            <CheckCircleOutlined />
+            <CheckCircleIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Varyant Bulundu</span>
             <Tag color="purple">{lookupResult.matchType}</Tag>
           </div>
@@ -718,7 +710,7 @@ export default function BarcodesPage() {
       return (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-emerald-600">
-            <CheckCircleOutlined />
+            <CheckCircleIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Seri Numarası Bulundu</span>
             <Tag color="orange">{lookupResult.matchType}</Tag>
           </div>
@@ -738,7 +730,7 @@ export default function BarcodesPage() {
       return (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-emerald-600">
-            <CheckCircleOutlined />
+            <CheckCircleIcon className="w-4 h-4" />
             <span className="text-sm font-medium">Parti/Lot Bulundu</span>
             <Tag color="cyan">{lookupResult.matchType}</Tag>
           </div>
@@ -807,7 +799,7 @@ export default function BarcodesPage() {
                   <div className="text-2xl font-semibold text-emerald-600">{historyStats.foundItems}</div>
                 </div>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-                  <CheckCircleOutlined style={{ color: '#10b981' }} />
+                  <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
                 </div>
               </div>
             </div>
@@ -818,7 +810,7 @@ export default function BarcodesPage() {
                   <div className="text-2xl font-semibold text-red-600">{historyStats.notFoundItems}</div>
                 </div>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ef444415' }}>
-                  <CloseCircleOutlined style={{ color: '#ef4444' }} />
+                  <XCircleIcon className="w-4 h-4" style={{ color: '#ef4444' }} />
                 </div>
               </div>
             </div>
@@ -845,7 +837,7 @@ export default function BarcodesPage() {
                       disabled={!isScannerActive || !scanInput.trim()}
                       className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
                     >
-                      <SearchOutlined />
+                      <MagnifyingGlassIcon className="w-4 h-4" />
                       Ara
                     </button>
                   }
@@ -919,7 +911,7 @@ export default function BarcodesPage() {
             <div className="bg-white border border-slate-200 rounded-lg">
               <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <InboxOutlined className="text-slate-400" />
+                  <InboxIcon className="w-4 h-4" className="text-slate-400" />
                   <span className="text-sm font-medium text-slate-900">Tarama Sonucu</span>
                 </div>
                 {lastScannedBarcode && (
@@ -941,23 +933,23 @@ export default function BarcodesPage() {
               <div className="p-4">
                 <ul className="space-y-2 text-sm text-slate-600">
                   <li className="flex items-start gap-2">
-                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
                     <span>Hardware scanner otomatik algılanır</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
                     <span>Aynı barkod tarandığında miktar artar</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
                     <span>Ses açıkken başarı/hata bildirimi alırsınız</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
                     <span>Focus otomatik olarak korunur</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircleOutlined className="text-emerald-500 mt-0.5" />
+                    <CheckCircleIcon className="w-4 h-4" className="text-emerald-500 mt-0.5" />
                     <span>Enter tuşu ile hızlı arama yapabilirsiniz</span>
                   </li>
                 </ul>
@@ -988,14 +980,14 @@ export default function BarcodesPage() {
                   disabled={scanHistory.length === 0}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
                 >
-                  <CopyOutlined />
+                  <ClipboardDocumentIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleClearHistory}
                   disabled={scanHistory.length === 0}
                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                 >
-                  <DeleteOutlined />
+                  <TrashIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1044,11 +1036,11 @@ export default function BarcodesPage() {
                       width: 120,
                       render: (_, record: ScanHistoryItem) =>
                         record.lookupResult.found ? (
-                          <Tag color="green" icon={<CheckCircleOutlined />}>
+                          <Tag color="green" icon={<CheckCircleIcon className="w-4 h-4" />}>
                             {record.lookupResult.matchType}
                           </Tag>
                         ) : (
-                          <Tag color="red" icon={<CloseCircleOutlined />}>
+                          <Tag color="red" icon={<XCircleIcon className="w-4 h-4" />}>
                             Bulunamadı
                           </Tag>
                         ),
@@ -1101,7 +1093,7 @@ export default function BarcodesPage() {
                               onClick={() => setLastScannedBarcode(record.barcode)}
                               className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
                             >
-                              <ReloadOutlined />
+                              <ArrowPathIcon className="w-4 h-4" />
                             </button>
                           </Tooltip>
                           <Tooltip title="Sil">
@@ -1109,7 +1101,7 @@ export default function BarcodesPage() {
                               onClick={() => handleRemoveFromHistory(record.id)}
                               className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                             >
-                              <DeleteOutlined />
+                              <TrashIcon className="w-4 h-4" />
                             </button>
                           </Tooltip>
                         </div>
@@ -1195,14 +1187,14 @@ export default function BarcodesPage() {
                     onClick={() => downloadImage(generatedBarcodeImage, 'barcode.png')}
                     className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                   >
-                    <DownloadOutlined />
+                    <ArrowDownTrayIcon className="w-4 h-4" />
                     İndir
                   </button>
                   <button
                     onClick={() => copyToClipboard(generateForm.getFieldValue('content'))}
                     className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                   >
-                    <CopyOutlined />
+                    <ClipboardDocumentIcon className="w-4 h-4" />
                     Kopyala
                   </button>
                 </div>
@@ -1223,7 +1215,7 @@ export default function BarcodesPage() {
       key: 'labels',
       label: (
         <span className="flex items-center gap-2">
-          <TagsOutlined />
+          <TagIcon className="w-4 h-4" />
           Ürün Etiketi
         </span>
       ),
@@ -1287,7 +1279,7 @@ export default function BarcodesPage() {
                 disabled={generateProductLabel.isPending}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
               >
-                <TagsOutlined />
+                <TagIcon className="w-4 h-4" />
                 {generateProductLabel.isPending ? 'Oluşturuluyor...' : 'Etiket Oluştur'}
               </button>
             </Form>
@@ -1309,11 +1301,11 @@ export default function BarcodesPage() {
                     onClick={() => downloadImage(generatedLabelImage, 'product-label.png')}
                     className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                   >
-                    <DownloadOutlined />
+                    <ArrowDownTrayIcon className="w-4 h-4" />
                     İndir
                   </button>
                   <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors">
-                    <PrinterOutlined />
+                    <PrinterIcon className="w-4 h-4" />
                     Yazdır
                   </button>
                 </div>
@@ -1321,7 +1313,7 @@ export default function BarcodesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                  <TagsOutlined className="text-xl text-slate-400" />
+                  <TagIcon className="w-4 h-4" className="text-xl text-slate-400" />
                 </div>
                 <span className="text-sm text-slate-500">Etiket oluşturun</span>
               </div>
@@ -1334,7 +1326,7 @@ export default function BarcodesPage() {
       key: 'bulk',
       label: (
         <span className="flex items-center gap-2">
-          <PrinterOutlined />
+          <PrinterIcon className="w-4 h-4" />
           Toplu Etiket
         </span>
       ),
@@ -1363,7 +1355,7 @@ export default function BarcodesPage() {
               {bulkProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                    <PrinterOutlined className="text-xl text-slate-400" />
+                    <PrinterIcon className="w-4 h-4" className="text-xl text-slate-400" />
                   </div>
                   <span className="text-sm text-slate-500">Etiket yazdırmak için ürün ekleyin</span>
                 </div>
@@ -1399,7 +1391,7 @@ export default function BarcodesPage() {
                           onClick={() => handleRemoveProductFromBulk(record.productId)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                         >
-                          <DeleteOutlined />
+                          <TrashIcon className="w-4 h-4" />
                         </button>
                       ),
                     },
@@ -1449,7 +1441,7 @@ export default function BarcodesPage() {
                   disabled={generateBulkLabels.isPending || bulkProducts.length === 0}
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
                 >
-                  <DownloadOutlined />
+                  <ArrowDownTrayIcon className="w-4 h-4" />
                   {generateBulkLabels.isPending ? 'Hazırlanıyor...' : 'Etiketleri İndir (ZIP)'}
                 </button>
               </div>
@@ -1521,7 +1513,7 @@ export default function BarcodesPage() {
             {autoGenResult ? (
               <div className="text-center">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 mb-4">
-                  <CheckCircleOutlined className="text-3xl text-emerald-600 mb-2" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-3xl text-emerald-600 mb-2" />
                   <div className="text-sm text-slate-600 mb-2">Barkod Oluşturuldu</div>
                   <div className="text-2xl font-mono font-bold text-slate-900">{autoGenResult.barcode}</div>
                   {autoGenResult.saved ? (
@@ -1534,7 +1526,7 @@ export default function BarcodesPage() {
                   onClick={() => copyToClipboard(autoGenResult.barcode)}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                 >
-                  <CopyOutlined />
+                  <ClipboardDocumentIcon className="w-4 h-4" />
                   Kopyala
                 </button>
               </div>
@@ -1554,7 +1546,7 @@ export default function BarcodesPage() {
       key: 'validate',
       label: (
         <span className="flex items-center gap-2">
-          <CheckCircleOutlined />
+          <CheckCircleIcon className="w-4 h-4" />
           Doğrulama
         </span>
       ),
@@ -1590,7 +1582,7 @@ export default function BarcodesPage() {
                   disabled={validateBarcode.isPending || !validationBarcode}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 disabled:bg-slate-400 transition-colors"
                 >
-                  <CheckCircleOutlined />
+                  <CheckCircleIcon className="w-4 h-4" />
                   Format Doğrula
                 </button>
                 <button
@@ -1598,7 +1590,7 @@ export default function BarcodesPage() {
                   disabled={checkBarcodeUnique.isPending || !validationBarcode}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:bg-slate-100 transition-colors"
                 >
-                  <SearchOutlined />
+                  <MagnifyingGlassIcon className="w-4 h-4" />
                   Benzersizlik
                 </button>
               </div>
@@ -1666,7 +1658,7 @@ export default function BarcodesPage() {
             onClick={refocusScanner}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
           >
-            <ReloadOutlined />
+            <ArrowPathIcon className="w-4 h-4" />
           </button>
         }
       />

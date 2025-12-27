@@ -13,25 +13,19 @@ import {
   Badge,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  TagsOutlined,
-  CheckCircleOutlined,
-  FilterOutlined,
-  FontSizeOutlined,
-  NumberOutlined,
-  CheckSquareOutlined,
-  CalendarOutlined,
-  UnorderedListOutlined,
-  AppstoreOutlined,
-  BgColorsOutlined,
-  ExpandOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  TagIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useProductAttributes, useDeleteProductAttribute } from '@/lib/api/hooks/useInventory';
 import type { ProductAttributeDetailDto, AttributeType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -47,9 +41,9 @@ const attributeTypeConfig: Record<AttributeType, { color: string; label: string;
   Text: { color: 'blue', label: 'Metin', icon: <FontSizeOutlined /> },
   Number: { color: 'cyan', label: 'Sayı', icon: <NumberOutlined /> },
   Boolean: { color: 'green', label: 'Evet/Hayır', icon: <CheckSquareOutlined /> },
-  Date: { color: 'purple', label: 'Tarih', icon: <CalendarOutlined /> },
+  Date: { color: 'purple', label: 'Tarih', icon: <CalendarIcon className="w-4 h-4" /> },
   Select: { color: 'orange', label: 'Seçim', icon: <UnorderedListOutlined /> },
-  MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <AppstoreOutlined /> },
+  MultiSelect: { color: 'magenta', label: 'Çoklu Seçim', icon: <Squares2X2Icon className="w-4 h-4" /> },
   Color: { color: 'red', label: 'Renk', icon: <BgColorsOutlined /> },
   Size: { color: 'gold', label: 'Beden', icon: <ExpandOutlined /> },
 };
@@ -114,7 +108,7 @@ export default function ProductAttributesPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: '#8b5cf615' }}
           >
-            <TagsOutlined style={{ color: '#8b5cf6' }} />
+            <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           </div>
           <div>
             <div
@@ -180,7 +174,7 @@ export default function ProductAttributesPage() {
           )}
           {record.isFilterable && (
             <Tooltip title="Filtrelenebilir">
-              <Tag color="blue" icon={<FilterOutlined />} style={{ margin: 0 }}>Filtre</Tag>
+              <Tag color="blue" icon={<FunnelIcon className="w-4 h-4" />} style={{ margin: 0 }}>Filtre</Tag>
             </Tooltip>
           )}
           {record.isVisible && (
@@ -224,20 +218,20 @@ export default function ProductAttributesPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}`),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => router.push(`/inventory/product-attributes/${record.id}/edit`),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -247,7 +241,7 @@ export default function ProductAttributesPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -266,7 +260,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{attributes.length}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <TagsOutlined style={{ color: '#8b5cf6' }} />
+              <TagIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -277,7 +271,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeAttributes}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -288,7 +282,7 @@ export default function ProductAttributesPage() {
               <div className="text-2xl font-semibold text-slate-900">{filterableAttributes}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <FilterOutlined style={{ color: '#3b82f6' }} />
+              <FunnelIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -307,7 +301,7 @@ export default function ProductAttributesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<TagsOutlined />}
+        icon={<TagIcon className="w-4 h-4" />}
         iconColor="#8b5cf6"
         title="Ürün Özellikleri"
         description="Ürün özelliklerini ve varyant seçeneklerini yönetin"
@@ -315,7 +309,7 @@ export default function ProductAttributesPage() {
         primaryAction={{
           label: 'Yeni Özellik',
           onClick: () => router.push('/inventory/product-attributes/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -323,7 +317,7 @@ export default function ProductAttributesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -333,7 +327,7 @@ export default function ProductAttributesPage() {
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <Input
             placeholder="Özellik adı veya kodu ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear

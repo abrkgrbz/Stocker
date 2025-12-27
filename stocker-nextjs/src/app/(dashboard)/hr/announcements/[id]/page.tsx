@@ -17,15 +17,13 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  NotificationOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  PushpinOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BellIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useAnnouncement,
   useDeleteAnnouncement,
@@ -132,7 +130,7 @@ export default function AnnouncementDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/announcements')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/announcements')}>
             Geri
           </Button>
           <div>
@@ -151,15 +149,15 @@ export default function AnnouncementDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={announcement.isPublished ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={announcement.isPublished ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleTogglePublish}
           >
             {announcement.isPublished ? 'Yayından Kaldır' : 'Yayınla'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/announcements/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/announcements/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -183,7 +181,7 @@ export default function AnnouncementDetailPage() {
                 <Statistic
                   title="Yayın Tarihi"
                   value={formatDate(announcement.publishDate)}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                 />
               </Card>
             </Col>
@@ -192,7 +190,7 @@ export default function AnnouncementDetailPage() {
                 <Statistic
                   title="Bitiş Tarihi"
                   value={formatDate(announcement.expiryDate)}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: expired ? '#f5222d' : undefined }}
                 />
               </Card>

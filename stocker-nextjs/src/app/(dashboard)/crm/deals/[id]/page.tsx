@@ -19,18 +19,17 @@ import {
 } from 'antd';
 import { showSuccess, showApiError } from '@/lib/utils/notifications';
 import {
-  ArrowLeftOutlined,
-  DollarOutlined,
-  CalendarOutlined,
-  PercentageOutlined,
-  TrophyOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  ClockCircleOutlined,
-  EditOutlined,
-  UserOutlined,
-  HomeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  HomeIcon,
+  PencilIcon,
+  TrophyIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { useDeal, useCreateActivity } from '@/lib/api/hooks/useCRM';
 import { DocumentUpload } from '@/components/crm/shared';
@@ -123,7 +122,7 @@ export default function DealDetailPage() {
       {/* Back Button */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <Button
-          icon={<ArrowLeftOutlined />}
+          icon={<ArrowLeftIcon className="w-4 h-4" />}
           onClick={() => router.push('/crm/deals')}
           className="mb-4 hover:bg-white/50 backdrop-blur-sm"
         >
@@ -155,7 +154,7 @@ export default function DealDetailPage() {
           </div>
 
           {/* Right: Edit Button */}
-          <Button type="primary" icon={<EditOutlined />} size="large">
+          <Button type="primary" icon={<PencilIcon className="w-4 h-4" />} size="large">
             Düzenle
           </Button>
         </div>
@@ -221,7 +220,7 @@ export default function DealDetailPage() {
                 key: 'overview',
                 label: (
                   <span className="flex items-center gap-2">
-                    <HomeOutlined />
+                    <HomeIcon className="w-4 h-4" />
                     Genel Bakış
                   </span>
                 ),
@@ -237,14 +236,14 @@ export default function DealDetailPage() {
                           transition={{ delay: 0.4 }}
                         >
                           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <FileTextOutlined className="text-blue-500" />
+                            <DocumentTextIcon className="w-4 h-4" className="text-blue-500" />
                             Fırsat Bilgileri
                           </h3>
                           <Descriptions bordered column={1} size="middle">
                             <Descriptions.Item
                               label={
                                 <>
-                                  <UserOutlined /> Müşteri
+                                  <UserIcon className="w-4 h-4" /> Müşteri
                                 </>
                               }
                               labelStyle={{ fontWeight: 'bold' }}
@@ -290,7 +289,7 @@ export default function DealDetailPage() {
                             className="mt-6"
                           >
                             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                              <FileTextOutlined className="text-blue-500" />
+                              <DocumentTextIcon className="w-4 h-4" className="text-blue-500" />
                               Açıklama
                             </h3>
                             <Card className="bg-gray-50 border border-gray-200 shadow-sm">
@@ -309,14 +308,14 @@ export default function DealDetailPage() {
                           transition={{ delay: 0.4 }}
                         >
                           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <ClockCircleOutlined className="text-blue-500" />
+                            <ClockIcon className="w-4 h-4" className="text-blue-500" />
                             Aktivite Geçmişi
                           </h3>
                           <Card className="border border-gray-200 shadow-sm">
                             <Timeline
                               items={[
                                 {
-                                  dot: <ClockCircleOutlined style={{ fontSize: '16px' }} />,
+                                  dot: <ClockIcon className="w-4 h-4" style={{ fontSize: '16px' }} />,
                                   color: 'blue',
                                   children: (
                                     <>
@@ -360,7 +359,7 @@ export default function DealDetailPage() {
                 key: 'documents',
                 label: (
                   <span className="flex items-center gap-2">
-                    <FileTextOutlined />
+                    <DocumentTextIcon className="w-4 h-4" />
                     Dokümanlar
                   </span>
                 ),

@@ -3,7 +3,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Select, DatePicker, InputNumber, Input, Row, Col, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, WalletOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  WalletIcon,
+} from '@heroicons/react/24/outline';
 import { useExpense, useUpdateExpense } from '@/lib/api/hooks/useHR';
 import type { UpdateExpenseDto } from '@/lib/api/services/hr.types';
 import { ExpenseStatus, ExpenseType } from '@/lib/api/services/hr.types';
@@ -100,11 +103,11 @@ export default function EditExpensePage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/expenses/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <WalletOutlined className="text-lg text-gray-600" />
+              <WalletIcon className="w-4 h-4" className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Harcama Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">

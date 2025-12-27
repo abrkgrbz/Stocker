@@ -21,27 +21,22 @@ import {
   message,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  StopOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  BarcodeOutlined,
-  ShoppingOutlined,
-  ToolOutlined,
-  DeleteOutlined,
-  SafetyCertificateOutlined,
-  SearchOutlined,
-  RollbackOutlined,
-  ShoppingCartOutlined,
-  LockOutlined,
-  UnlockOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+  WrenchIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSerialNumbers,
   useSerialNumber,
@@ -72,17 +67,17 @@ const MONOCHROME_COLORS = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8'
 
 // Serial number status configuration - monochrome
 const statusConfig: Record<SerialNumberStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleOutlined /> },
+  Available: { color: '#1e293b', label: 'Mevcut', icon: <CheckCircleIcon className="w-4 h-4" /> },
   InStock: { color: '#334155', label: 'Stokta', icon: <BarcodeOutlined /> },
-  Reserved: { color: '#475569', label: 'Rezerve', icon: <LockOutlined /> },
+  Reserved: { color: '#475569', label: 'Rezerve', icon: <LockClosedIcon className="w-4 h-4" /> },
   Sold: { color: '#64748b', label: 'Satıldı', icon: <ShoppingOutlined /> },
   Returned: { color: '#94a3b8', label: 'İade', icon: <RollbackOutlined /> },
-  Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleOutlined /> },
-  InRepair: { color: '#475569', label: 'Tamirde', icon: <ToolOutlined /> },
-  Scrapped: { color: '#1e293b', label: 'Hurda', icon: <DeleteOutlined /> },
-  Lost: { color: '#94a3b8', label: 'Kayıp', icon: <WarningOutlined /> },
+  Defective: { color: '#cbd5e1', label: 'Arızalı', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  InRepair: { color: '#475569', label: 'Tamirde', icon: <WrenchIcon className="w-4 h-4" /> },
+  Scrapped: { color: '#1e293b', label: 'Hurda', icon: <TrashIcon className="w-4 h-4" /> },
+  Lost: { color: '#94a3b8', label: 'Kayıp', icon: <ExclamationTriangleIcon className="w-4 h-4" /> },
   OnLoan: { color: '#64748b', label: 'Ödünç', icon: <ShoppingCartOutlined /> },
-  InTransit: { color: '#334155', label: 'Taşımada', icon: <ClockCircleOutlined /> },
+  InTransit: { color: '#334155', label: 'Taşımada', icon: <ClockIcon className="w-4 h-4" /> },
 };
 
 export default function SerialNumbersPage() {
@@ -337,7 +332,7 @@ export default function SerialNumbersPage() {
           {record.isUnderWarranty && (
             <div className="mt-1">
               <Tag className="text-xs bg-slate-900 text-white border-none">
-                <SafetyCertificateOutlined className="mr-1" />
+                <ShieldCheckIcon className="w-4 h-4" className="mr-1" />
                 Garanti: {record.remainingWarrantyDays} gün
               </Tag>
             </div>
@@ -387,7 +382,7 @@ export default function SerialNumbersPage() {
         const menuItems: any[] = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Detay',
             onClick: () => handleViewDetail(record.id),
           },
@@ -397,7 +392,7 @@ export default function SerialNumbersPage() {
         if (record.status === 'Available') {
           menuItems.push({
             key: 'receive',
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             label: 'Teslim Al',
             onClick: () => handleReceive(record),
           });
@@ -406,7 +401,7 @@ export default function SerialNumbersPage() {
         if (record.status === 'InStock' || record.status === 'Available') {
           menuItems.push({
             key: 'reserve',
-            icon: <LockOutlined />,
+            icon: <LockClosedIcon className="w-4 h-4" />,
             label: 'Rezerve Et',
             onClick: () => handleReserveClick(record),
           });
@@ -421,7 +416,7 @@ export default function SerialNumbersPage() {
         if (record.status === 'Reserved') {
           menuItems.push({
             key: 'release',
-            icon: <UnlockOutlined />,
+            icon: <LockOpenIcon className="w-4 h-4" />,
             label: 'Rezervasyonu Kaldır',
             onClick: () => handleRelease(record),
           });
@@ -436,7 +431,7 @@ export default function SerialNumbersPage() {
         if (record.status !== 'Defective' && record.status !== 'Scrapped' && record.status !== 'Sold') {
           menuItems.push({
             key: 'defective',
-            icon: <ExclamationCircleOutlined />,
+            icon: <ExclamationCircleIcon className="w-4 h-4" />,
             label: 'Arızalı İşaretle',
             onClick: () => handleDefectiveClick(record),
           });
@@ -445,7 +440,7 @@ export default function SerialNumbersPage() {
         if (record.status === 'Defective') {
           menuItems.push({
             key: 'scrap',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Hurda İşaretle',
             danger: true,
             onClick: () => handleScrap(record),
@@ -457,7 +452,7 @@ export default function SerialNumbersPage() {
             menu={{ items: menuItems }}
             trigger={['click']}
           >
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         );
       },
@@ -480,7 +475,7 @@ export default function SerialNumbersPage() {
       key: 'available',
       label: (
         <span className="flex items-center gap-2">
-          <CheckCircleOutlined />
+          <CheckCircleIcon className="w-4 h-4" />
           Mevcut
           <Badge count={stats.available} showZero style={{ backgroundColor: '#334155' }} />
         </span>
@@ -490,7 +485,7 @@ export default function SerialNumbersPage() {
       key: 'reserved',
       label: (
         <span className="flex items-center gap-2">
-          <LockOutlined />
+          <LockClosedIcon className="w-4 h-4" />
           Rezerve
           <Badge count={stats.reserved} showZero style={{ backgroundColor: '#475569' }} />
         </span>
@@ -510,7 +505,7 @@ export default function SerialNumbersPage() {
       key: 'warranty',
       label: (
         <span className="flex items-center gap-2">
-          <SafetyCertificateOutlined />
+          <ShieldCheckIcon className="w-4 h-4" />
           Garantili
           <Badge count={stats.underWarranty} showZero style={{ backgroundColor: '#1e293b' }} />
         </span>
@@ -520,7 +515,7 @@ export default function SerialNumbersPage() {
       key: 'defective',
       label: (
         <span className="flex items-center gap-2">
-          <ExclamationCircleOutlined />
+          <ExclamationCircleIcon className="w-4 h-4" />
           Arızalı
           <Badge count={stats.defective} showZero style={{ backgroundColor: '#94a3b8' }} />
         </span>
@@ -543,7 +538,7 @@ export default function SerialNumbersPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
             className="!border-slate-200 !text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
           >
@@ -551,7 +546,7 @@ export default function SerialNumbersPage() {
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => setCreateModalOpen(true)}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
@@ -577,7 +572,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                <CheckCircleOutlined className="text-white text-lg" />
+                <CheckCircleIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.available}</div>
@@ -588,7 +583,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <LockOutlined className="text-slate-600 text-lg" />
+                <LockClosedIcon className="w-4 h-4" className="text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.reserved}</div>
@@ -610,7 +605,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <SafetyCertificateOutlined className="text-slate-600 text-lg" />
+                <ShieldCheckIcon className="w-4 h-4" className="text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.underWarranty}</div>
@@ -621,7 +616,7 @@ export default function SerialNumbersPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <ExclamationCircleOutlined className="text-slate-600 text-lg" />
+                <ExclamationCircleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.defective}</div>
@@ -643,7 +638,7 @@ export default function SerialNumbersPage() {
         <Space wrap className="mb-4">
           <Input
             placeholder="Seri numarası ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchSerial}
             onChange={(e) => setSearchSerial(e.target.value)}
             className="w-52 [&_.ant-input]:!border-slate-200"
@@ -867,7 +862,7 @@ export default function SerialNumbersPage() {
                 type="success"
                 message="Garanti Kapsamında"
                 description={`${selectedSerial.remainingWarrantyDays} gün garanti süresi kaldı`}
-                icon={<SafetyCertificateOutlined />}
+                icon={<ShieldCheckIcon className="w-4 h-4" />}
                 showIcon
                 className="!bg-slate-50 !border-slate-200"
               />

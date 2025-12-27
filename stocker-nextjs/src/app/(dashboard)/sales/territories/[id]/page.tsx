@@ -9,16 +9,15 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Spin, Alert, Space, Dropdown, Tag } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  DeleteOutlined,
-  GlobalOutlined,
-  TeamOutlined,
-  AimOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CursorArrowRaysIcon,
+  EllipsisHorizontalIcon,
+  GlobeAltIcon,
+  PencilIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import type { MenuProps } from 'antd';
 import {
   useSalesTerritory,
@@ -92,7 +91,7 @@ export default function TerritoryDetailPage() {
   if (territory && !isActive) {
     actionMenuItems.push({
       key: 'activate',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Aktifleştir',
       onClick: handleActivate,
     });
@@ -111,7 +110,7 @@ export default function TerritoryDetailPage() {
     { type: 'divider' },
     {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       label: 'Sil',
       danger: true,
       onClick: handleDelete,
@@ -156,7 +155,7 @@ export default function TerritoryDetailPage() {
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-slate-500 hover:text-slate-800"
@@ -177,13 +176,13 @@ export default function TerritoryDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/sales/territories/${id}/edit`)}
             >
               Düzenle
             </Button>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />} />
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
             </Dropdown>
           </Space>
         </div>
@@ -196,12 +195,12 @@ export default function TerritoryDetailPage() {
           <StatCard
             label="Bölge Tipi"
             value={typeLabels[territory.territoryType]}
-            icon={<GlobalOutlined className="text-purple-500" />}
+            icon={<GlobeAltIcon className="w-4 h-4" className="text-purple-500" />}
           />
           <StatCard
             label="Müşteri Sayısı"
             value={territory.customerCount}
-            icon={<TeamOutlined className="text-blue-500" />}
+            icon={<UserGroupIcon className="w-4 h-4" className="text-blue-500" />}
           />
           <StatCard
             label="Yıllık Hedef"
@@ -213,14 +212,14 @@ export default function TerritoryDetailPage() {
                   }).format(territory.annualTarget.amount)
                 : '-'
             }
-            icon={<AimOutlined className="text-green-500" />}
+            icon={<CursorArrowRaysIcon className="w-4 h-4" className="text-green-500" />}
           />
           <StatCard
             label="Durum"
             value={statusLabels[territory.status]}
             icon={
               territory.status === 'Active' ? (
-                <CheckCircleOutlined className="text-emerald-500" />
+                <CheckCircleIcon className="w-4 h-4" className="text-emerald-500" />
               ) : (
                 <StopOutlined className="text-slate-400" />
               )

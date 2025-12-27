@@ -24,17 +24,17 @@ import {
   Select,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  SendOutlined,
-  DollarOutlined,
-  MailOutlined,
-  PrinterOutlined,
-  FilePdfOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
   useInvoice,
@@ -52,13 +52,13 @@ import { generateInvoicePDF } from '@/lib/utils/pdf-export';
 const { Title, Text } = Typography;
 
 const statusConfig: Record<InvoiceStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', label: 'Taslak', icon: <FileTextOutlined /> },
-  Issued: { color: 'blue', label: 'Kesildi', icon: <CheckCircleOutlined /> },
-  Sent: { color: 'cyan', label: 'Gönderildi', icon: <SendOutlined /> },
-  PartiallyPaid: { color: 'orange', label: 'Kısmi Ödendi', icon: <DollarOutlined /> },
-  Paid: { color: 'green', label: 'Ödendi', icon: <CheckCircleOutlined /> },
-  Overdue: { color: 'red', label: 'Vadesi Geçmiş', icon: <CloseCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal Edildi', icon: <CloseCircleOutlined /> },
+  Draft: { color: 'default', label: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  Issued: { color: 'blue', label: 'Kesildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Sent: { color: 'cyan', label: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
+  PartiallyPaid: { color: 'orange', label: 'Kısmi Ödendi', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  Paid: { color: 'green', label: 'Ödendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Overdue: { color: 'red', label: 'Vadesi Geçmiş', icon: <XCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'red', label: 'İptal Edildi', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 const typeLabels: Record<InvoiceType, string> = {
@@ -272,10 +272,10 @@ export default function InvoiceDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
             Geri
           </Button>
-          <FileTextOutlined className="text-3xl text-green-500" />
+          <DocumentTextIcon className="w-4 h-4" className="text-3xl text-green-500" />
           <div>
             <Title level={2} className="!mb-0">
               {invoice.invoiceNumber}
@@ -288,17 +288,17 @@ export default function InvoiceDetailPage() {
           {invoice.isEInvoice && <Tag color="blue">E-Fatura</Tag>}
         </div>
         <Space>
-          <Button icon={<FilePdfOutlined />} onClick={handleExportPDF} loading={pdfLoading}>
+          <Button icon={<DocumentIcon className="w-4 h-4" />} onClick={handleExportPDF} loading={pdfLoading}>
             PDF İndir
           </Button>
           {invoice.status === 'Draft' && (
             <>
               <Link href={`/sales/invoices/${id}/edit`}>
-                <Button icon={<EditOutlined />}>Düzenle</Button>
+                <Button icon={<PencilIcon className="w-4 h-4" />}>Düzenle</Button>
               </Link>
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleIssue}
                 loading={issueInvoice.isPending}
               >
@@ -309,7 +309,7 @@ export default function InvoiceDetailPage() {
           {invoice.status === 'Issued' && (
             <Button
               type="primary"
-              icon={<MailOutlined />}
+              icon={<EnvelopeIcon className="w-4 h-4" />}
               onClick={handleSend}
               loading={sendInvoice.isPending}
             >
@@ -319,7 +319,7 @@ export default function InvoiceDetailPage() {
           {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && invoice.balanceDue > 0 && (
             <Button
               type="primary"
-              icon={<DollarOutlined />}
+              icon={<CurrencyDollarIcon className="w-4 h-4" />}
               onClick={handleOpenPaymentModal}
             >
               Ödeme Kaydet
@@ -328,7 +328,7 @@ export default function InvoiceDetailPage() {
           {invoice.status !== 'Cancelled' && invoice.status !== 'Paid' && invoice.status !== 'Draft' && (
             <Button
               danger
-              icon={<CloseCircleOutlined />}
+              icon={<XCircleIcon className="w-4 h-4" />}
               onClick={handleCancel}
               loading={cancelInvoice.isPending}
             >

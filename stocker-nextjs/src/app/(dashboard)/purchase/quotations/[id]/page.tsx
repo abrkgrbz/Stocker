@@ -19,18 +19,17 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  SendOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  MoreOutlined,
-  FileTextOutlined,
-  ShopOutlined,
-  ShoppingCartOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   useQuotation,
@@ -44,18 +43,18 @@ import type { QuotationStatus, QuotationSupplierDto } from '@/lib/api/services/p
 const { Title, Text, Paragraph } = Typography;
 
 const statusConfig: Record<QuotationStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <FileTextOutlined /> },
-  Sent: { color: 'blue', text: 'Gönderildi', icon: <SendOutlined /> },
-  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockCircleOutlined /> },
-  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleOutlined /> },
-  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockCircleOutlined /> },
-  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleOutlined /> },
-  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleOutlined /> },
-  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleOutlined /> },
-  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'red', text: 'İptal', icon: <CloseCircleOutlined /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <CloseCircleOutlined /> },
-  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
+  Sent: { color: 'blue', text: 'Gönderildi', icon: <PaperAirplaneIcon className="w-4 h-4" /> },
+  PartiallyResponded: { color: 'orange', text: 'Kısmi Yanıt', icon: <ClockIcon className="w-4 h-4" /> },
+  FullyResponded: { color: 'cyan', text: 'Tam Yanıt', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  UnderReview: { color: 'purple', text: 'İnceleniyor', icon: <ClockIcon className="w-4 h-4" /> },
+  Evaluated: { color: 'purple', text: 'Değerlendirildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  SupplierSelected: { color: 'green', text: 'Tedarikçi Seçildi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Awarded: { color: 'green', text: 'Kazanan Belirlendi', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Converted: { color: 'geekblue', text: 'Siparişe Dönüştü', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'red', text: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
+  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
+  Expired: { color: 'volcano', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
 };
 
 export default function QuotationDetailPage() {
@@ -155,7 +154,7 @@ export default function QuotationDetailPage() {
       key: 'supplierName',
       render: (text: string, record: QuotationSupplierDto) => (
         <Space>
-          <ShopOutlined />
+          <BuildingStorefrontIcon className="w-4 h-4" />
           <span>{text}</span>
           {record.isSelected && <Tag color="green">Kazanan</Tag>}
         </Space>
@@ -227,7 +226,7 @@ export default function QuotationDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
           <div>
             <div className="flex items-center gap-3">
               <Title level={3} className="mb-0">{quotation.quotationNumber}</Title>
@@ -243,14 +242,14 @@ export default function QuotationDetailPage() {
           {quotation.status === 'Draft' && (
             <>
               <Button
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/quotations/${id}/edit`)}
               >
                 Düzenle
               </Button>
               <Button
                 type="primary"
-                icon={<SendOutlined />}
+                icon={<PaperAirplaneIcon className="w-4 h-4" />}
                 onClick={handleSendToSuppliers}
                 loading={sendMutation.isPending}
               >
@@ -274,7 +273,7 @@ export default function QuotationDetailPage() {
                 {
                   key: 'cancel',
                   label: 'İptal Et',
-                  icon: <CloseCircleOutlined />,
+                  icon: <XCircleIcon className="w-4 h-4" />,
                   danger: true,
                   disabled: quotation.status === 'Cancelled' || quotation.status === 'Closed',
                   onClick: handleCancel,
@@ -282,7 +281,7 @@ export default function QuotationDetailPage() {
               ],
             }}
           >
-            <Button icon={<MoreOutlined />} />
+            <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         </Space>
       </div>
@@ -362,7 +361,7 @@ export default function QuotationDetailPage() {
                 marginBottom: '16px',
               }}
             >
-              <FileTextOutlined style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
+              <DocumentTextIcon className="w-4 h-4" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
               <div className="text-white/90 font-medium mt-2">{quotation.quotationNumber}</div>
               <Tag color={status.color} className="mt-2">{status.text}</Tag>
             </div>

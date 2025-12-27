@@ -3,7 +3,11 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Form, Button, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import SupplierForm from '@/components/purchase/suppliers/SupplierForm';
 import { useSupplier, useUpdateSupplier } from '@/lib/api/hooks/usePurchase';
 
@@ -65,7 +69,7 @@ export default function EditSupplierPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -81,7 +85,7 @@ export default function EditSupplierPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={updateSupplier.isPending}
             >
@@ -89,7 +93,7 @@ export default function EditSupplierPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={updateSupplier.isPending}
               className="px-6"

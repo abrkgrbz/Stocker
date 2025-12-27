@@ -16,11 +16,10 @@ import {
   Space,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  StarOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import { useCreateSupplierEvaluation } from '@/lib/api/hooks/usePurchase';
@@ -114,7 +113,7 @@ export default function NewSupplierEvaluationPage() {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+        <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
         <div>
           <Title level={3} className="mb-1">Yeni Tedarikçi Değerlendirmesi</Title>
           <Text type="secondary">Tedarikçi performansını puanlayın</Text>
@@ -164,7 +163,7 @@ export default function NewSupplierEvaluationPage() {
             <Card
               title={
                 <Space>
-                  <ShopOutlined />
+                  <BuildingStorefrontIcon className="w-4 h-4" />
                   <span>Tedarikçi Bilgileri</span>
                 </Space>
               }
@@ -290,7 +289,7 @@ export default function NewSupplierEvaluationPage() {
           <Button onClick={() => router.back()}>İptal</Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            icon={<CheckIcon className="w-4 h-4" />}
             htmlType="submit"
             loading={createMutation.isPending}
           >

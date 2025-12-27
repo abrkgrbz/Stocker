@@ -18,17 +18,17 @@ import {
   Progress,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  ReloadOutlined,
-  GiftOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  GiftIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useProductBundles, useDeleteProductBundle } from '@/lib/api/hooks/useInventory';
 import type { ProductBundleDto, BundleType, BundlePricingType } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -82,20 +82,20 @@ export default function ProductBundlesPage() {
     {
       key: 'view',
       label: 'Görüntüle',
-      icon: <EyeOutlined />,
+      icon: <EyeIcon className="w-4 h-4" />,
       onClick: () => router.push(`/inventory/product-bundles/${record.id}`),
     },
     {
       key: 'edit',
       label: 'Düzenle',
-      icon: <EditOutlined />,
+      icon: <PencilIcon className="w-4 h-4" />,
       onClick: () => router.push(`/inventory/product-bundles/${record.id}/edit`),
     },
     { type: 'divider' },
     {
       key: 'delete',
       label: 'Sil',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       danger: true,
       onClick: () => handleDelete(record.id),
     },
@@ -113,7 +113,7 @@ export default function ProductBundlesPage() {
             className="w-10 h-10 rounded-lg flex items-center justify-center"
             style={{ background: '#f59e0b15' }}
           >
-            <GiftOutlined style={{ fontSize: 18, color: '#f59e0b' }} />
+            <GiftIcon className="w-4 h-4" style={{ fontSize: 18, color: '#f59e0b' }} />
           </div>
           <div>
             <div className="font-medium text-gray-900">{name}</div>
@@ -221,9 +221,9 @@ export default function ProductBundlesPage() {
             {isActive ? 'Aktif' : 'Pasif'}
           </Tag>
           {record.isValid ? (
-            <CheckCircleOutlined style={{ color: '#10b981', fontSize: 12 }} />
+            <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981', fontSize: 12 }} />
           ) : (
-            <CloseCircleOutlined style={{ color: '#ef4444', fontSize: 12 }} />
+            <XCircleIcon className="w-4 h-4" style={{ color: '#ef4444', fontSize: 12 }} />
           )}
         </Space>
       ),
@@ -239,7 +239,7 @@ export default function ProductBundlesPage() {
           trigger={['click']}
           placement="bottomRight"
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -259,12 +259,12 @@ export default function ProductBundlesPage() {
           <Text type="secondary">Ürün paketlerini ve komboları yönetin</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/inventory/product-bundles/new')}
             style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
           >
@@ -278,7 +278,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <GiftOutlined className="text-blue-500 text-lg" />
+              <GiftIcon className="w-4 h-4" className="text-blue-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Paket</Text>
@@ -289,7 +289,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-              <CheckCircleOutlined className="text-green-500 text-lg" />
+              <CheckCircleIcon className="w-4 h-4" className="text-green-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Aktif Paket</Text>
@@ -300,7 +300,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-              <CheckCircleOutlined className="text-purple-500 text-lg" />
+              <CheckCircleIcon className="w-4 h-4" className="text-purple-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Geçerli Paket</Text>
@@ -311,7 +311,7 @@ export default function ProductBundlesPage() {
         <Card size="small">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <GiftOutlined className="text-orange-500 text-lg" />
+              <GiftIcon className="w-4 h-4" className="text-orange-500 text-lg" />
             </div>
             <div>
               <Text type="secondary" className="text-xs">Toplam Değer</Text>
@@ -328,7 +328,7 @@ export default function ProductBundlesPage() {
         <Space wrap>
           <Input
             placeholder="Paket ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

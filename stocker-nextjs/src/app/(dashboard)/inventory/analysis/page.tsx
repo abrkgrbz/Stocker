@@ -16,19 +16,13 @@ import {
   Empty,
 } from 'antd';
 import {
-  BarChartOutlined,
-  WarningOutlined,
-  BulbOutlined,
-  ExclamationCircleOutlined,
-  ReloadOutlined,
-  DatabaseOutlined,
-  ThunderboltOutlined,
-  AreaChartOutlined,
-  PieChartOutlined,
-  RiseOutlined,
-  FallOutlined,
-  DollarOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  ChartBarIcon,
+  ChartPieIcon,
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import {
   useAbcXyzAnalysis,
@@ -543,7 +537,7 @@ export default function InventoryAnalysisPage() {
       key: 'abcxyz',
       label: (
         <span className="flex items-center gap-2">
-          <PieChartOutlined />
+          <ChartPieIcon className="w-4 h-4" />
           ABC/XYZ Analizi
         </span>
       ),
@@ -572,7 +566,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <DollarOutlined className="text-slate-600 text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(abcXyzData.totalRevenue)}</div>
@@ -619,7 +613,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <WarningOutlined className="text-slate-600 text-lg" />
+                        <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{abcXyzData.highRiskProducts?.length || 0}</div>
@@ -756,7 +750,7 @@ export default function InventoryAnalysisPage() {
                 <div className="col-span-12 lg:col-span-6">
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5 flex items-center gap-2">
-                      <WarningOutlined className="text-slate-600" />
+                      <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600" />
                       Yüksek Riskli Ürünler
                     </h3>
                     <Table
@@ -810,7 +804,7 @@ export default function InventoryAnalysisPage() {
       key: 'turnover',
       label: (
         <span className="flex items-center gap-2">
-          <BarChartOutlined />
+          <ChartBarIcon className="w-4 h-4" />
           Stok Devir Hızı
         </span>
       ),
@@ -841,7 +835,7 @@ export default function InventoryAnalysisPage() {
       key: 'deadstock',
       label: (
         <span className="flex items-center gap-2">
-          <ExclamationCircleOutlined />
+          <ExclamationCircleIcon className="w-4 h-4" />
           Ölü Stok
         </span>
       ),
@@ -858,7 +852,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <WarningOutlined className="text-slate-600 text-lg" />
+                        <ExclamationTriangleIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatNumber(deadStockData.totalDeadStockItems)}</div>
@@ -869,7 +863,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <DollarOutlined className="text-slate-600 text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.totalDeadStockValue)}</div>
@@ -880,7 +874,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <PieChartOutlined className="text-slate-600 text-lg" />
+                        <ChartPieIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">%{deadStockData.deadStockPercentage?.toFixed(1)}</div>
@@ -891,7 +885,7 @@ export default function InventoryAnalysisPage() {
                   <div className="bg-white border border-slate-200 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center">
-                        <DollarOutlined className="text-white text-lg" />
+                        <CurrencyDollarIcon className="w-4 h-4" className="text-white text-lg" />
                       </div>
                     </div>
                     <div className="text-2xl font-bold text-slate-900">{formatCurrency(deadStockData.potentialRecoveryValue)}</div>
@@ -986,7 +980,7 @@ export default function InventoryAnalysisPage() {
             ]}
           />
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => {
               refetchAbcXyz();
               refetchHealth();

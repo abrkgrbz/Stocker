@@ -20,14 +20,14 @@ import {
   Tag,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  GiftOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+  GiftIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProductBundle,
   useProducts,
@@ -269,7 +269,7 @@ export default function EditProductBundlePage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => handleRemoveItem(record.key)}
         />
       ),
@@ -316,7 +316,7 @@ export default function EditProductBundlePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -328,7 +328,7 @@ export default function EditProductBundlePage() {
                     {bundle.name}
                   </h1>
                   <Tag
-                    icon={bundle.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={bundle.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={bundle.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -345,7 +345,7 @@ export default function EditProductBundlePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={handleSubmit}
               loading={updateBundle.isPending}
               style={{
@@ -368,7 +368,7 @@ export default function EditProductBundlePage() {
               {/* Paket Bilgileri */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  <GiftOutlined className="mr-2" /> Paket Bilgileri
+                  <GiftIcon className="w-4 h-4" className="mr-2" /> Paket Bilgileri
                 </h3>
                 <div className="grid grid-cols-12 gap-4">
                   <div className="col-span-4">
@@ -441,7 +441,7 @@ export default function EditProductBundlePage() {
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Paket Ürünleri ({items.length})
                   </h3>
-                  <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddItem} size="small">
+                  <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddItem} size="small">
                     Ürün Ekle
                   </Button>
                 </div>

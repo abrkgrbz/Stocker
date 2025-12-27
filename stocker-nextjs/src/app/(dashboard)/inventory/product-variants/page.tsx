@@ -20,14 +20,13 @@ import {
   Modal,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  AppstoreOutlined,
-  BarcodeOutlined,
-} from '@ant-design/icons';
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  Squares2X2Icon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useProducts, useProductVariants, useDeleteProductVariant } from '@/lib/api/hooks/useInventory';
 import type { ProductVariantDto } from '@/lib/api/services/inventory.types';
 import type { ColumnsType } from 'antd/es/table';
@@ -84,7 +83,7 @@ export default function ProductVariantsPage() {
             shape="square"
             size={48}
             src={record.imageUrl}
-            icon={<AppstoreOutlined />}
+            icon={<Squares2X2Icon className="w-4 h-4" />}
             style={{ backgroundColor: '#f0f0f0' }}
           />
           <div>
@@ -175,18 +174,18 @@ export default function ProductVariantsPage() {
         <Space size="small">
           <Button
             type="text"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/inventory/product-variants/${record.id}`)}
           />
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/inventory/product-variants/${record.id}/edit`)}
           />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={() => {
               setVariantToDelete(record);
               setDeleteModalOpen(true);
@@ -206,7 +205,7 @@ export default function ProductVariantsPage() {
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
           >
-            <AppstoreOutlined style={{ fontSize: 20, color: 'white' }} />
+            <Squares2X2Icon className="w-4 h-4" style={{ fontSize: 20, color: 'white' }} />
           </div>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 m-0">Ürün Varyantları</h1>
@@ -215,7 +214,7 @@ export default function ProductVariantsPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           onClick={() => router.push('/inventory/product-variants/new')}
           style={{ background: '#6366f1', borderColor: '#6366f1' }}
         >
@@ -230,7 +229,7 @@ export default function ProductVariantsPage() {
             <Statistic
               title="Toplam Varyant"
               value={filteredVariants.length}
-              prefix={<AppstoreOutlined style={{ color: '#6366f1' }} />}
+              prefix={<Squares2X2Icon className="w-4 h-4" style={{ color: '#6366f1' }} />}
             />
           </Card>
         </Col>
@@ -270,7 +269,7 @@ export default function ProductVariantsPage() {
         <div className="flex flex-wrap gap-4 mb-4">
           <Input
             placeholder="Varyant ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

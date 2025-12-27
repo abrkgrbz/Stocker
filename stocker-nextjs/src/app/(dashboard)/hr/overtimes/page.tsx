@@ -19,20 +19,19 @@ import {
   DatePicker,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ExclamationCircleOutlined,
-  DollarOutlined,
-  AlertOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useOvertimes,
   useDeleteOvertime,
@@ -304,13 +303,13 @@ export default function OvertimesPage() {
         const menuItems: any[] = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
@@ -322,13 +321,13 @@ export default function OvertimesPage() {
             { type: 'divider' },
             {
               key: 'approve',
-              icon: <CheckCircleOutlined />,
+              icon: <CheckCircleIcon className="w-4 h-4" />,
               label: 'Onayla',
               onClick: () => handleApprove(record),
             },
             {
               key: 'reject',
-              icon: <CloseCircleOutlined />,
+              icon: <XCircleIcon className="w-4 h-4" />,
               label: 'Reddet',
               danger: true,
               onClick: () => handleReject(record),
@@ -340,7 +339,7 @@ export default function OvertimesPage() {
           { type: 'divider' },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -349,7 +348,7 @@ export default function OvertimesPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         );
       },
@@ -362,18 +361,18 @@ export default function OvertimesPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <ClockCircleOutlined className="mr-2" />
+            <ClockIcon className="w-4 h-4" className="mr-2" />
             Fazla Mesailer
           </Title>
           <Text type="secondary">Fazla mesai taleplerini görüntüle ve yönet</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/hr/overtimes/new')}
           >
             Yeni Mesai Talebi
@@ -388,7 +387,7 @@ export default function OvertimesPage() {
             <Statistic
               title="Toplam Talep"
               value={totalOvertimes}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -398,7 +397,7 @@ export default function OvertimesPage() {
             <Statistic
               title="Bekleyen"
               value={pendingOvertimes}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -408,7 +407,7 @@ export default function OvertimesPage() {
             <Statistic
               title="Toplam Saat"
               value={totalHours.toFixed(1)}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-4 h-4" />}
               suffix="saat"
               valueStyle={{ color: '#1890ff' }}
             />
@@ -419,7 +418,7 @@ export default function OvertimesPage() {
             <Statistic
               title="Toplam Tutar"
               value={totalAmount}
-              prefix={<DollarOutlined />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4" />}
               formatter={(value) => formatCurrency(Number(value))}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -436,7 +435,7 @@ export default function OvertimesPage() {
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             />
           </Col>
           <Col xs={12} md={4}>

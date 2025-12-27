@@ -15,20 +15,18 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  ShopOutlined,
-  EnvironmentOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  StarOutlined,
-  StarFilled,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  InboxIcon,
+  MapPinIcon,
+  PencilIcon,
+  PlusIcon,
+  StarIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useWarehouses,
   useDeleteWarehouse,
@@ -119,13 +117,13 @@ export default function WarehousesPage() {
       render: (_, record) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: record.isDefault ? '#f59e0b15' : '#3b82f615' }}>
-            <ShopOutlined style={{ color: record.isDefault ? '#f59e0b' : '#3b82f6' }} />
+            <BuildingStorefrontIcon className="w-4 h-4" style={{ color: record.isDefault ? '#f59e0b' : '#3b82f6' }} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-900">{record.name}</span>
               {record.isDefault && (
-                <Tag color="gold" icon={<StarFilled />} style={{ margin: 0 }}>Varsayılan</Tag>
+                <Tag color="gold" icon={<StarIcon className="w-4 h-4" />} style={{ margin: 0 }}>Varsayılan</Tag>
               )}
             </div>
             <div className="text-xs text-slate-500">{record.code}</div>
@@ -140,7 +138,7 @@ export default function WarehousesPage() {
       render: (_, record) => (
         record.city ? (
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <EnvironmentOutlined className="text-slate-400" />
+            <MapPinIcon className="w-4 h-4" className="text-slate-400" />
             <span>{record.city}{record.state ? `, ${record.state}` : ''}</span>
           </div>
         ) : (
@@ -205,13 +203,13 @@ export default function WarehousesPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
@@ -225,7 +223,7 @@ export default function WarehousesPage() {
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             disabled: record.isDefault,
@@ -236,7 +234,7 @@ export default function WarehousesPage() {
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-              <MoreOutlined className="text-sm" />
+              <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
             </button>
           </Dropdown>
         );
@@ -255,7 +253,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalWarehouses}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f615' }}>
-              <ShopOutlined style={{ color: '#3b82f6' }} />
+              <BuildingStorefrontIcon className="w-4 h-4" style={{ color: '#3b82f6' }} />
             </div>
           </div>
         </div>
@@ -266,7 +264,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{activeWarehouses}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -277,7 +275,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalLocations}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf615' }}>
-              <EnvironmentOutlined style={{ color: '#8b5cf6' }} />
+              <MapPinIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
             </div>
           </div>
         </div>
@@ -288,7 +286,7 @@ export default function WarehousesPage() {
               <div className="text-2xl font-semibold text-slate-900">{totalProducts}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f59e0b15' }}>
-              <InboxOutlined style={{ color: '#f59e0b' }} />
+              <InboxIcon className="w-4 h-4" style={{ color: '#f59e0b' }} />
             </div>
           </div>
         </div>
@@ -296,7 +294,7 @@ export default function WarehousesPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<ShopOutlined />}
+        icon={<BuildingStorefrontIcon className="w-4 h-4" />}
         iconColor="#3b82f6"
         title="Depolar"
         description="Depo ve lokasyonlarınızı yönetin"
@@ -304,7 +302,7 @@ export default function WarehousesPage() {
         primaryAction={{
           label: 'Yeni Depo',
           onClick: () => router.push('/inventory/warehouses/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -312,7 +310,7 @@ export default function WarehousesPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />

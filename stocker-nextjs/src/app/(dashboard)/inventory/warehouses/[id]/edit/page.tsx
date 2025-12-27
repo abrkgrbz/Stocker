@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import { WarehouseForm } from '@/components/inventory/warehouses';
 import { useWarehouse, useUpdateWarehouse } from '@/lib/api/hooks/useInventory';
 import type { UpdateWarehouseDto } from '@/lib/api/services/inventory.types';
@@ -66,7 +71,7 @@ export default function EditWarehousePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -78,7 +83,7 @@ export default function EditWarehousePage() {
                     {warehouse.name}
                   </h1>
                   <Tag
-                    icon={warehouse.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={warehouse.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={warehouse.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -98,7 +103,7 @@ export default function EditWarehousePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateWarehouse.isPending}
               onClick={() => form.submit()}
               style={{

@@ -15,14 +15,10 @@ import {
   Alert,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  SwapOutlined,
-  ShoppingOutlined,
-  EnvironmentOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import {
   useWarehouses,
   useLocations,
@@ -154,7 +150,7 @@ export default function NewStockAdjustmentPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -168,7 +164,7 @@ export default function NewStockAdjustmentPage() {
             <Button onClick={() => router.push('/inventory/stock-adjustments')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={adjustStock.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct || difference === 0}
@@ -241,7 +237,7 @@ export default function NewStockAdjustmentPage() {
               {/* Location */}
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
-                  <EnvironmentOutlined className="mr-2" /> Depo & Lokasyon
+                  <MapPinIcon className="w-4 h-4" className="mr-2" /> Depo & Lokasyon
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

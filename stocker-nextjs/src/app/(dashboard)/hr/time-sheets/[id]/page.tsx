@@ -3,7 +3,13 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Row, Col, Statistic, Divider } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  PencilIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useTimeSheet } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = { 'Draft': 'default', 'Submitted': 'processing', 'Approved': 'success', 'Rejected': 'error', 'Paid': 'blue' };
@@ -15,7 +21,7 @@ export default function TimeSheetDetailPage() {
   const { data: timeSheet, isLoading } = useTimeSheet(id);
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!timeSheet) return <div className="p-6"><Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Puantaj bulunamadi.</div></div>;
+  if (!timeSheet) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Puantaj bulunamadi.</div></div>;
 
   const totalHours = (timeSheet.regularHours || 0) + (timeSheet.overtimeHours || 0);
 
@@ -24,13 +30,13 @@ export default function TimeSheetDetailPage() {
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Puantaj Detayi</h1>
               <p className="text-sm text-gray-400 m-0">{timeSheet.employeeName}</p>
             </div>
           </div>
-          <Button type="primary" icon={<EditOutlined />} onClick={() => router.push(`/hr/time-sheets/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
+          <Button type="primary" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/time-sheets/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
         </div>
       </div>
 
@@ -38,7 +44,7 @@ export default function TimeSheetDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <ClockCircleOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ClockIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{timeSheet.employeeName}</h3>
               <p className="text-sm text-white/60">{timeSheet.status}</p>
               <Tag color={statusColors[timeSheet.status]} className="mt-4">{timeSheet.status}</Tag>

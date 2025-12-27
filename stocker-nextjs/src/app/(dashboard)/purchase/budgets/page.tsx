@@ -18,19 +18,18 @@ import {
   Modal,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  WalletOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PauseCircleOutlined,
-  ExclamationCircleOutlined,
-  LockOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  WalletIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { usePurchaseBudgets, useDeletePurchaseBudget } from '@/lib/api/hooks/usePurchase';
@@ -39,15 +38,15 @@ import type { PurchaseBudgetListDto, PurchaseBudgetStatus } from '@/lib/api/serv
 const { Title, Text } = Typography;
 
 const statusConfig: Record<PurchaseBudgetStatus, { color: string; text: string; icon: React.ReactNode }> = {
-  Draft: { color: 'default', text: 'Taslak', icon: <EditOutlined /> },
+  Draft: { color: 'default', text: 'Taslak', icon: <PencilIcon className="w-4 h-4" /> },
   PendingApproval: { color: 'orange', text: 'Onay Bekliyor', icon: <PauseCircleOutlined /> },
-  Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Active: { color: 'green', text: 'Aktif', icon: <CheckCircleOutlined /> },
-  Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockOutlined /> },
-  Exhausted: { color: 'red', text: 'Tükendi', icon: <ExclamationCircleOutlined /> },
-  Closed: { color: 'gray', text: 'Kapatıldı', icon: <CloseCircleOutlined /> },
-  Rejected: { color: 'volcano', text: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  Cancelled: { color: 'magenta', text: 'İptal Edildi', icon: <CloseCircleOutlined /> },
+  Approved: { color: 'blue', text: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Active: { color: 'green', text: 'Aktif', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Frozen: { color: 'cyan', text: 'Donduruldu', icon: <LockClosedIcon className="w-4 h-4" /> },
+  Exhausted: { color: 'red', text: 'Tükendi', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
+  Closed: { color: 'gray', text: 'Kapatıldı', icon: <XCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'volcano', text: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'magenta', text: 'İptal Edildi', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 export default function PurchaseBudgetsPage() {
@@ -69,7 +68,7 @@ export default function PurchaseBudgetsPage() {
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: 'Bütçe Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu bütçeyi silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -186,13 +185,13 @@ export default function PurchaseBudgetsPage() {
               {
                 key: 'view',
                 label: 'Görüntüle',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 onClick: () => router.push(`/purchase/budgets/${record.id}`),
               },
               {
                 key: 'edit',
                 label: 'Düzenle',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 disabled: record.status !== 'Draft',
                 onClick: () => router.push(`/purchase/budgets/${record.id}/edit`),
               },
@@ -200,7 +199,7 @@ export default function PurchaseBudgetsPage() {
               {
                 key: 'delete',
                 label: 'Sil',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 danger: true,
                 disabled: record.status !== 'Draft',
                 onClick: () => handleDelete(record.id),
@@ -209,7 +208,7 @@ export default function PurchaseBudgetsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -230,7 +229,7 @@ export default function PurchaseBudgetsPage() {
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           size="large"
           onClick={() => router.push('/purchase/budgets/new')}
         >
@@ -246,7 +245,7 @@ export default function PurchaseBudgetsPage() {
               title="Toplam Bütçe"
               value={totalBudget}
               precision={2}
-              prefix={<WalletOutlined className="text-blue-500" />}
+              prefix={<WalletIcon className="w-4 h-4" className="text-blue-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -258,7 +257,7 @@ export default function PurchaseBudgetsPage() {
               title="Kullanılan"
               value={totalUsed}
               precision={2}
-              prefix={<ExclamationCircleOutlined className="text-orange-500" />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" className="text-orange-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -270,7 +269,7 @@ export default function PurchaseBudgetsPage() {
               title="Kalan"
               value={totalRemaining}
               precision={2}
-              prefix={<CheckCircleOutlined className="text-green-500" />}
+              prefix={<CheckCircleIcon className="w-4 h-4" className="text-green-500" />}
               suffix="₺"
               formatter={(value) => value.toLocaleString('tr-TR')}
             />
@@ -281,7 +280,7 @@ export default function PurchaseBudgetsPage() {
             <Statistic
               title="Aktif Bütçe"
               value={data?.items?.filter(i => i.status === 'Active').length || 0}
-              prefix={<WalletOutlined className="text-green-500" />}
+              prefix={<WalletIcon className="w-4 h-4" className="text-green-500" />}
             />
           </Card>
         </Col>
@@ -292,7 +291,7 @@ export default function PurchaseBudgetsPage() {
         <Space wrap size="middle">
           <Input
             placeholder="Kod veya ad ara..."
-            prefix={<SearchOutlined className="text-gray-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}

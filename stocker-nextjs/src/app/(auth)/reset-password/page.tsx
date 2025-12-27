@@ -3,13 +3,11 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Card, Form, Input, Button, Typography, Alert, Space } from 'antd';
 import {
-  LockOutlined,
-  EyeInvisibleOutlined,
-  EyeTwoTone,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  LockClosedIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -134,7 +132,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large">
-            <SyncOutlined spin style={{ fontSize: '48px', color: '#1890ff' }} />
+            <ArrowPathIcon className="w-4 h-4" spin style={{ fontSize: '48px', color: '#1890ff' }} />
             <Title level={4}>Bağlantı Doğrulanıyor...</Title>
           </Space>
         </Card>
@@ -156,7 +154,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <CloseCircleOutlined style={{ fontSize: '64px', color: '#ff4d4f' }} />
+            <XCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: '#ff4d4f' }} />
             <div>
               <Title level={3}>Geçersiz Bağlantı</Title>
               <Paragraph type="secondary">{error}</Paragraph>
@@ -186,7 +184,7 @@ function ResetPasswordContent() {
       >
         <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <CheckCircleOutlined style={{ fontSize: '64px', color: '#52c41a' }} />
+            <CheckCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: '#52c41a' }} />
             <div>
               <Title level={3}>Şifre Başarıyla Sıfırlandı</Title>
               <Paragraph type="secondary">
@@ -219,8 +217,7 @@ function ResetPasswordContent() {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* Header */}
           <div style={{ textAlign: 'center' }}>
-            <LockOutlined
-              style={{
+            <LockClosedIcon className="w-4 h-4" style={{
                 fontSize: '48px',
                 color: '#1890ff',
                 marginBottom: '16px',
@@ -262,7 +259,7 @@ function ResetPasswordContent() {
               ]}
             >
               <Input.Password
-                prefix={<LockOutlined />}
+                prefix={<LockClosedIcon className="w-4 h-4" />}
                 placeholder="Yeni şifrenizi girin"
                 size="large"
                 iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
@@ -292,7 +289,7 @@ function ResetPasswordContent() {
               ]}
             >
               <Input.Password
-                prefix={<LockOutlined />}
+                prefix={<LockClosedIcon className="w-4 h-4" />}
                 placeholder="Şifrenizi tekrar girin"
                 size="large"
                 iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
@@ -306,7 +303,7 @@ function ResetPasswordContent() {
 
               <Button
                 type="dashed"
-                icon={<SyncOutlined />}
+                icon={<ArrowPathIcon className="w-4 h-4" />}
                 onClick={handleGeneratePassword}
                 block
               >
@@ -339,7 +336,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <SyncOutlined spin style={{ fontSize: '48px', color: '#1890ff' }} />
+        <ArrowPathIcon className="w-4 h-4" spin style={{ fontSize: '48px', color: '#1890ff' }} />
       </div>
     }>
       <ResetPasswordContent />

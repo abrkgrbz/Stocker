@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, BookOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  BookOpenIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { TrainingForm } from '@/components/hr';
 import { useCreateTraining } from '@/lib/api/hooks/useHR';
 import type { CreateTrainingDto } from '@/lib/api/services/hr.types';
@@ -60,14 +64,14 @@ export default function NewTrainingPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <BookOutlined className="mr-2" />
+                <BookOpenIcon className="w-4 h-4" className="mr-2" />
                 Yeni Eğitim
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir eğitim programı oluşturun</p>
@@ -77,7 +81,7 @@ export default function NewTrainingPage() {
             <Button onClick={() => router.push('/hr/trainings')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createTraining.isPending}
               onClick={() => form.submit()}
               style={{

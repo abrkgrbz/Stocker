@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import { BrandForm } from '@/components/inventory/brands';
 import { useBrand, useUpdateBrand } from '@/lib/api/hooks/useInventory';
 import type { UpdateBrandDto } from '@/lib/api/services/inventory.types';
@@ -66,7 +71,7 @@ export default function EditBrandPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -78,7 +83,7 @@ export default function EditBrandPage() {
                     {brand.name}
                   </h1>
                   <Tag
-                    icon={brand.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={brand.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={brand.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -95,7 +100,7 @@ export default function EditBrandPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateBrand.isPending}
               onClick={() => form.submit()}
               style={{

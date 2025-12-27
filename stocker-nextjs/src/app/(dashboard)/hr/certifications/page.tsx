@@ -20,20 +20,20 @@ import {
   Tooltip,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  SafetyCertificateOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  WarningOutlined,
-  ExclamationCircleOutlined,
-  LinkOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useCertifications,
   useDeleteCertification,
@@ -156,12 +156,12 @@ export default function CertificationsPage() {
   // Get status info
   const getStatusInfo = (cert: CertificationDto) => {
     if (cert.isExpired) {
-      return { color: 'red', text: 'Süresi Doldu', icon: <ExclamationCircleOutlined /> };
+      return { color: 'red', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
     }
     if (cert.isExpiringSoon) {
-      return { color: 'orange', text: 'Yakında Dolacak', icon: <WarningOutlined /> };
+      return { color: 'orange', text: 'Yakında Dolacak', icon: <ExclamationTriangleIcon className="w-4 h-4" /> };
     }
-    return { color: 'green', text: 'Geçerli', icon: <CheckCircleOutlined /> };
+    return { color: 'green', text: 'Geçerli', icon: <CheckCircleIcon className="w-4 h-4" /> };
   };
 
   // Table columns
@@ -264,7 +264,7 @@ export default function CertificationsPage() {
           <Tooltip title="Doğrulama Linki">
             <Button
               type="link"
-              icon={<LinkOutlined />}
+              icon={<LinkIcon className="w-4 h-4" />}
               href={record.verificationUrl}
               target="_blank"
             />
@@ -281,20 +281,20 @@ export default function CertificationsPage() {
         const menuItems = [
           {
             key: 'view',
-            icon: <EyeOutlined />,
+            icon: <EyeIcon className="w-4 h-4" />,
             label: 'Görüntüle',
             onClick: () => handleView(record.id),
           },
           {
             key: 'edit',
-            icon: <EditOutlined />,
+            icon: <PencilIcon className="w-4 h-4" />,
             label: 'Düzenle',
             onClick: () => handleEdit(record.id),
           },
           { type: 'divider' as const },
           {
             key: 'delete',
-            icon: <DeleteOutlined />,
+            icon: <TrashIcon className="w-4 h-4" />,
             label: 'Sil',
             danger: true,
             onClick: () => handleDelete(record),
@@ -303,7 +303,7 @@ export default function CertificationsPage() {
 
         return (
           <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         );
       },
@@ -316,18 +316,18 @@ export default function CertificationsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} style={{ margin: 0 }}>
-            <SafetyCertificateOutlined className="mr-2" />
+            <ShieldCheckIcon className="w-4 h-4" className="mr-2" />
             Sertifikalar
           </Title>
           <Text type="secondary">Çalışan sertifikalarını görüntüle ve yönet</Text>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+          <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={() => refetch()}>
             Yenile
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/hr/certifications/new')}
           >
             Yeni Sertifika
@@ -342,7 +342,7 @@ export default function CertificationsPage() {
             <Statistic
               title="Toplam Sertifika"
               value={totalCertifications}
-              prefix={<SafetyCertificateOutlined />}
+              prefix={<ShieldCheckIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -352,7 +352,7 @@ export default function CertificationsPage() {
             <Statistic
               title="Geçerli"
               value={validCertifications}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -362,7 +362,7 @@ export default function CertificationsPage() {
             <Statistic
               title="Yakında Dolacak"
               value={expiringCertifications}
-              prefix={<WarningOutlined />}
+              prefix={<ExclamationTriangleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#faad14' }}
             />
           </Card>
@@ -372,7 +372,7 @@ export default function CertificationsPage() {
             <Statistic
               title="Süresi Dolmuş"
               value={expiredCertifications}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
@@ -388,7 +388,7 @@ export default function CertificationsPage() {
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             />
           </Col>
           <Col xs={12} md={5}>

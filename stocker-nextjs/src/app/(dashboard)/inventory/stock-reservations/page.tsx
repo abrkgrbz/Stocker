@@ -16,17 +16,17 @@ import {
   InputNumber,
 } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  LockOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  ClockCircleOutlined,
-  MoreOutlined,
-  EyeOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckIcon,
+  ClockIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockReservations,
   useFulfillStockReservation,
@@ -138,7 +138,7 @@ export default function StockReservationsPage() {
       {
         key: 'view',
         label: 'Detayları Gör',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         onClick: () => router.push(`/inventory/stock-reservations/${record.id}`),
       },
     ];
@@ -149,7 +149,7 @@ export default function StockReservationsPage() {
         {
           key: 'fulfill',
           label: 'Karşıla',
-          icon: <CheckOutlined />,
+          icon: <CheckIcon className="w-4 h-4" />,
           onClick: () => {
             setSelectedReservation(record);
             setFulfillQuantity(record.quantity - record.fulfilledQuantity);
@@ -159,7 +159,7 @@ export default function StockReservationsPage() {
         {
           key: 'extend',
           label: 'Süre Uzat',
-          icon: <ClockCircleOutlined />,
+          icon: <ClockIcon className="w-4 h-4" />,
           onClick: () => {
             setSelectedReservation(record);
             setExtendDate(record.expirationDate ? dayjs(record.expirationDate).add(7, 'day') : dayjs().add(7, 'day'));
@@ -170,7 +170,7 @@ export default function StockReservationsPage() {
         {
           key: 'cancel',
           label: 'İptal Et',
-          icon: <CloseOutlined />,
+          icon: <XMarkIcon className="w-4 h-4" />,
           danger: true,
           onClick: () => {
             setSelectedReservation(record);
@@ -192,7 +192,7 @@ export default function StockReservationsPage() {
       render: (number: string) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-            <LockOutlined className="text-lg text-slate-600" />
+            <LockClosedIcon className="w-4 h-4" className="text-lg text-slate-600" />
           </div>
           <div>
             <div className="font-semibold text-slate-900">{number}</div>
@@ -247,7 +247,7 @@ export default function StockReservationsPage() {
           </div>
           {record.expirationDate && (
             <div className="text-xs text-slate-500 flex items-center gap-1">
-              <ClockCircleOutlined />
+              <ClockIcon className="w-4 h-4" />
               {dayjs(record.expirationDate).format('DD.MM.YYYY')}
               {dayjs(record.expirationDate).isBefore(dayjs()) && (
                 <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-slate-200 text-slate-700">Süresi Doldu</span>
@@ -293,7 +293,7 @@ export default function StockReservationsPage() {
           trigger={['click']}
           placement="bottomRight"
         >
-          <Button type="text" icon={<MoreOutlined />} className="text-slate-600 hover:text-slate-900" />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} className="text-slate-600 hover:text-slate-900" />
         </Dropdown>
       ),
     },
@@ -309,7 +309,7 @@ export default function StockReservationsPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
             className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
@@ -317,7 +317,7 @@ export default function StockReservationsPage() {
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/inventory/stock-reservations/new')}
             className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
           >
@@ -332,7 +332,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <LockOutlined className="text-lg text-slate-600" />
+                <LockClosedIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
@@ -343,7 +343,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <ClockCircleOutlined className="text-lg text-slate-700" />
+                <ClockIcon className="w-4 h-4" className="text-lg text-slate-700" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.active}</div>
@@ -354,7 +354,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-300 flex items-center justify-center">
-                <ExclamationCircleOutlined className="text-lg text-slate-800" />
+                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-slate-800" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800">{stats.partial}</div>
@@ -365,7 +365,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <CheckOutlined className="text-lg text-slate-600" />
+                <CheckIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.fulfilled}</div>
@@ -376,7 +376,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <CloseOutlined className="text-lg text-slate-500" />
+                <XMarkIcon className="w-4 h-4" className="text-lg text-slate-500" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.cancelled}</div>
@@ -387,7 +387,7 @@ export default function StockReservationsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <ClockCircleOutlined className="text-lg text-white" />
+                <ClockIcon className="w-4 h-4" className="text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.expired}</div>
@@ -428,7 +428,7 @@ export default function StockReservationsPage() {
           />
           <Input
             placeholder="Rezervasyon ara..."
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -516,7 +516,7 @@ export default function StockReservationsPage() {
       <Modal
         title={
           <div className="flex items-center gap-2 text-slate-900">
-            <ExclamationCircleOutlined className="text-slate-600" />
+            <ExclamationCircleIcon className="w-4 h-4" className="text-slate-600" />
             <span className="font-semibold">Rezervasyonu İptal Et</span>
           </div>
         }

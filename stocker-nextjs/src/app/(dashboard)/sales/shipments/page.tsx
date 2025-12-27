@@ -9,11 +9,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Alert, Spin, Select, Modal } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  SendOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  PaperAirplaneIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import {
   useShipments,
   useShipShipment,
@@ -131,7 +131,7 @@ export default function ShipmentsPage() {
 
       {/* Header */}
       <ListPageHeader
-        icon={<SendOutlined />}
+        icon={<PaperAirplaneIcon className="w-4 h-4" />}
         iconColor="#06b6d4"
         title="Sevkiyatlar"
         description="Sevkiyatları yönetin ve takip edin"
@@ -139,7 +139,7 @@ export default function ShipmentsPage() {
         primaryAction={{
           label: 'Yeni Sevkiyat',
           onClick: handleCreate,
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <button
@@ -147,7 +147,7 @@ export default function ShipmentsPage() {
             disabled={isLoading}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
           >
-            <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+            <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
           </button>
         }
       />
@@ -181,7 +181,7 @@ export default function ShipmentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Input
             placeholder="Sevkiyat ara... (numara, müşteri)"
-            prefix={<SearchOutlined className="text-slate-400" />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear

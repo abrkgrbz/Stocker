@@ -17,17 +17,17 @@ import {
   Timeline,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  SafetyCertificateOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  WarningOutlined,
-  BookOutlined,
-  DollarOutlined,
-  LinkOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BookOpenIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  LinkIcon,
+  PencilIcon,
+  ShieldCheckIcon,
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
 import { useCertification } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -71,12 +71,12 @@ export default function CertificationDetailPage() {
 
   const getStatusInfo = () => {
     if (certification.isExpired) {
-      return { color: 'red', text: 'Süresi Doldu', icon: <ExclamationCircleOutlined /> };
+      return { color: 'red', text: 'Süresi Doldu', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
     }
     if (certification.isExpiringSoon) {
-      return { color: 'orange', text: 'Yakında Dolacak', icon: <WarningOutlined /> };
+      return { color: 'orange', text: 'Yakında Dolacak', icon: <ExclamationTriangleIcon className="w-4 h-4" /> };
     }
-    return { color: 'green', text: 'Geçerli', icon: <CheckCircleOutlined /> };
+    return { color: 'green', text: 'Geçerli', icon: <CheckCircleIcon className="w-4 h-4" /> };
   };
 
   const statusInfo = getStatusInfo();
@@ -95,14 +95,14 @@ export default function CertificationDetailPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
-                <SafetyCertificateOutlined />
+                <ShieldCheckIcon className="w-4 h-4" />
                 {certification.certificationName}
               </h1>
               <p className="text-sm text-gray-400 m-0">{certification.employeeName}</p>
@@ -111,7 +111,7 @@ export default function CertificationDetailPage() {
           <Space>
             {certification.verificationUrl && (
               <Button
-                icon={<LinkOutlined />}
+                icon={<LinkIcon className="w-4 h-4" />}
                 href={certification.verificationUrl}
                 target="_blank"
               >
@@ -120,7 +120,7 @@ export default function CertificationDetailPage() {
             )}
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/certifications/${id}/edit`)}
               style={{
                 background: '#1a1a1a',
@@ -142,7 +142,7 @@ export default function CertificationDetailPage() {
             <Card className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <Title level={4} className="m-0">
-                  <TrophyOutlined className="mr-2" />
+                  <TrophyIcon className="w-4 h-4" className="mr-2" />
                   Sertifika Bilgileri
                 </Title>
                 <Tag color={statusInfo.color} icon={statusInfo.icon} className="text-base px-3 py-1">
@@ -181,7 +181,7 @@ export default function CertificationDetailPage() {
             {certification.trainingRequired && (
               <Card className="mb-6">
                 <Title level={4}>
-                  <BookOutlined className="mr-2" />
+                  <BookOpenIcon className="w-4 h-4" className="mr-2" />
                   Eğitim Bilgileri
                 </Title>
                 <Row gutter={[16, 16]}>
@@ -331,7 +331,7 @@ export default function CertificationDetailPage() {
                 <div
                   className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-yellow-500 flex items-center justify-center mx-auto mb-3"
                 >
-                  <SafetyCertificateOutlined className="text-2xl text-white" />
+                  <ShieldCheckIcon className="w-4 h-4" className="text-2xl text-white" />
                 </div>
                 <Text strong className="text-lg block">
                   {certification.employeeName}
@@ -426,7 +426,7 @@ export default function CertificationDetailPage() {
             {(certification.certificationCost || certification.renewalCost) && (
               <Card className="mb-6">
                 <Title level={5}>
-                  <DollarOutlined className="mr-2" />
+                  <CurrencyDollarIcon className="w-4 h-4" className="mr-2" />
                   Maliyet
                 </Title>
                 <div className="space-y-3">

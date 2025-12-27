@@ -4,15 +4,15 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  TagOutlined,
-  GlobalOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  GlobeAltIcon,
+  PencilIcon,
+  TagIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useBrand } from '@/lib/api/hooks/useInventory';
 import dayjs from 'dayjs';
 
@@ -54,7 +54,7 @@ export default function BrandDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -63,13 +63,13 @@ export default function BrandDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center">
-                <TagOutlined className="text-white text-lg" />
+                <TagIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{brand.name}</h1>
                   <Tag
-                    icon={brand.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={brand.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       brand.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -85,7 +85,7 @@ export default function BrandDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/inventory/brands/${brandId}/edit`)}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
@@ -135,7 +135,7 @@ export default function BrandDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={brand.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={brand.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       brand.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -157,7 +157,7 @@ export default function BrandDetailPage() {
               {brand.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <FileTextOutlined className="text-slate-400" />
+                    <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Açıklama</p>
                   </div>
                   <p className="text-sm text-slate-700">{brand.description}</p>
@@ -172,7 +172,7 @@ export default function BrandDetailPage() {
               <div className="bg-white border border-slate-200 rounded-xl p-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <GlobalOutlined className="text-slate-600 text-lg" />
+                    <GlobeAltIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                   </div>
                   <div className="flex-1">
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -201,7 +201,7 @@ export default function BrandDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -211,7 +211,7 @@ export default function BrandDetailPage() {
                 {brand.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

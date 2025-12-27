@@ -3,7 +3,10 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  CheckCircleIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { LeadForm } from '@/components/crm/leads';
 import { useLead, useUpdateLead } from '@/lib/api/hooks/useCRM';
@@ -53,7 +56,7 @@ export default function EditLeadPage() {
       titleExtra={
         lead && (
           <Tag
-            icon={isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+            icon={isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
             color={isActive ? 'processing' : 'default'}
           >
             {statusLabels[lead.status] || 'Yeni'}

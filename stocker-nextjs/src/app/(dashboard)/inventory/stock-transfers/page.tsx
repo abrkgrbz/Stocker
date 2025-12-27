@@ -18,21 +18,19 @@ import {
   Spin,
 } from 'antd';
 import {
-  PlusOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  SwapOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  InboxOutlined,
-  RocketOutlined,
-  ClockCircleOutlined,
-  DownloadOutlined,
-  FilePdfOutlined,
-  FileExcelOutlined,
-} from '@ant-design/icons';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  InboxIcon,
+  PaperAirplaneIcon,
+  PlusIcon,
+  RocketLaunchIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockTransfers,
   useWarehouses,
@@ -68,14 +66,14 @@ const { RangePicker } = DatePicker;
 // Transfer status configuration
 const statusConfig: Record<TransferStatus, { color: string; label: string; icon: React.ReactNode }> = {
   Draft: { color: 'default', label: 'Taslak', icon: null },
-  Pending: { color: 'processing', label: 'Beklemede', icon: <ClockCircleOutlined /> },
-  Approved: { color: 'blue', label: 'Onaylı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
-  InTransit: { color: 'orange', label: 'Yolda', icon: <RocketOutlined /> },
-  Received: { color: 'cyan', label: 'Teslim Alındı', icon: <InboxOutlined /> },
-  PartiallyReceived: { color: 'gold', label: 'Kısmi Teslim', icon: <InboxOutlined /> },
-  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Cancelled: { color: 'red', label: 'İptal', icon: <CloseCircleOutlined /> },
+  Pending: { color: 'processing', label: 'Beklemede', icon: <ClockIcon className="w-4 h-4" /> },
+  Approved: { color: 'blue', label: 'Onaylı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
+  InTransit: { color: 'orange', label: 'Yolda', icon: <RocketLaunchIcon className="w-4 h-4" /> },
+  Received: { color: 'cyan', label: 'Teslim Alındı', icon: <InboxIcon className="w-4 h-4" /> },
+  PartiallyReceived: { color: 'gold', label: 'Kısmi Teslim', icon: <InboxIcon className="w-4 h-4" /> },
+  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Cancelled: { color: 'red', label: 'İptal', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 export default function StockTransfersPage() {
@@ -407,7 +405,7 @@ export default function StockTransfersPage() {
     const items: any[] = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeIcon className="w-4 h-4" />,
         label: 'Görüntüle',
         onClick: () => handleView(transfer.id),
       },
@@ -418,13 +416,13 @@ export default function StockTransfersPage() {
         items.push(
           {
             key: 'submit',
-            icon: <SendOutlined />,
+            icon: <PaperAirplaneIcon className="w-4 h-4" />,
             label: 'Onaya Gönder',
             onClick: () => handleSubmit(transfer),
           },
           {
             key: 'cancel',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             label: 'İptal Et',
             onClick: () => handleCancel(transfer),
           }
@@ -434,13 +432,13 @@ export default function StockTransfersPage() {
         items.push(
           {
             key: 'approve',
-            icon: <CheckCircleOutlined />,
+            icon: <CheckCircleIcon className="w-4 h-4" />,
             label: 'Onayla',
             onClick: () => handleApprove(transfer),
           },
           {
             key: 'cancel',
-            icon: <CloseCircleOutlined />,
+            icon: <XCircleIcon className="w-4 h-4" />,
             label: 'Reddet',
             onClick: () => handleCancel(transfer),
           }
@@ -449,7 +447,7 @@ export default function StockTransfersPage() {
       case 'Approved':
         items.push({
           key: 'ship',
-          icon: <RocketOutlined />,
+          icon: <RocketLaunchIcon className="w-4 h-4" />,
           label: 'Sevk Et',
           onClick: () => handleShip(transfer),
         });
@@ -457,7 +455,7 @@ export default function StockTransfersPage() {
       case 'InTransit':
         items.push({
           key: 'receive',
-          icon: <InboxOutlined />,
+          icon: <InboxIcon className="w-4 h-4" />,
           label: 'Teslim Al',
           onClick: () => handleReceive(transfer),
         });
@@ -568,7 +566,7 @@ export default function StockTransfersPage() {
       render: (_, record) => (
         <Dropdown menu={{ items: getActionItems(record) }} trigger={['click']}>
           <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
-            <MoreOutlined className="text-sm" />
+            <EllipsisHorizontalIcon className="w-4 h-4" className="text-sm" />
           </button>
         </Dropdown>
       ),
@@ -599,7 +597,7 @@ export default function StockTransfersPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: pendingTransfers > 0 ? '#f59e0b15' : '#64748b15' }}>
-              <ClockCircleOutlined style={{ color: pendingTransfers > 0 ? '#f59e0b' : '#64748b' }} />
+              <ClockIcon className="w-4 h-4" style={{ color: pendingTransfers > 0 ? '#f59e0b' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -612,7 +610,7 @@ export default function StockTransfersPage() {
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: inTransitTransfers > 0 ? '#f9731615' : '#64748b15' }}>
-              <RocketOutlined style={{ color: inTransitTransfers > 0 ? '#f97316' : '#64748b' }} />
+              <RocketLaunchIcon className="w-4 h-4" style={{ color: inTransitTransfers > 0 ? '#f97316' : '#64748b' }} />
             </div>
           </div>
         </div>
@@ -623,7 +621,7 @@ export default function StockTransfersPage() {
               <div className="text-2xl font-semibold text-slate-900">{completedTransfers}</div>
             </div>
             <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98115' }}>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
+              <CheckCircleIcon className="w-4 h-4" style={{ color: '#10b981' }} />
             </div>
           </div>
         </div>
@@ -639,7 +637,7 @@ export default function StockTransfersPage() {
         primaryAction={{
           label: 'Yeni Transfer',
           onClick: () => router.push('/inventory/stock-transfers/new'),
-          icon: <PlusOutlined />,
+          icon: <PlusIcon className="w-4 h-4" />,
         }}
         secondaryActions={
           <div className="flex items-center gap-2">
@@ -654,13 +652,13 @@ export default function StockTransfersPage() {
                 items: [
                   {
                     key: 'pdf',
-                    icon: <FilePdfOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'PDF İndir',
                     onClick: handleExportPDF,
                   },
                   {
                     key: 'excel',
-                    icon: <FileExcelOutlined />,
+                    icon: <DocumentIcon className="w-4 h-4" />,
                     label: 'Excel İndir',
                     onClick: handleExportExcel,
                   },
@@ -668,7 +666,7 @@ export default function StockTransfersPage() {
               }}
             >
               <button className="inline-flex items-center gap-2 px-3 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <DownloadOutlined />
+                <ArrowDownTrayIcon className="w-4 h-4" />
                 Dışa Aktar
               </button>
             </Dropdown>
@@ -677,7 +675,7 @@ export default function StockTransfersPage() {
               disabled={isLoading}
               className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
             >
-              <ReloadOutlined className={isLoading ? 'animate-spin' : ''} />
+              <ArrowPathIcon className="w-4 h-4" className={isLoading ? 'animate-spin' : ''} />
             </button>
           </div>
         }

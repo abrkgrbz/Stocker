@@ -17,15 +17,15 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  BookOutlined,
-  DeleteOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  EnvironmentOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  ClockIcon,
+  MapPinIcon,
+  PencilIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import { useTraining, useDeleteTraining } from '@/lib/api/hooks/useHR';
 import { TrainingStatus } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -104,7 +104,7 @@ export default function TrainingDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/trainings')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/trainings')}>
             Geri
           </Button>
           <div>
@@ -122,10 +122,10 @@ export default function TrainingDetailPage() {
           </div>
         </Space>
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/trainings/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/trainings/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -141,7 +141,7 @@ export default function TrainingDetailPage() {
                   title="Katılımcı"
                   value={training.currentParticipants || 0}
                   suffix={`/ ${training.maxParticipants || '-'}`}
-                  prefix={<TeamOutlined />}
+                  prefix={<UserGroupIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed' }}
                 />
               </Card>
@@ -152,7 +152,7 @@ export default function TrainingDetailPage() {
                   title="Süre"
                   value={training.durationHours || 0}
                   suffix="saat"
-                  prefix={<ClockCircleOutlined />}
+                  prefix={<ClockIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#52c41a', fontSize: 16 }}
                 />
               </Card>
@@ -162,7 +162,7 @@ export default function TrainingDetailPage() {
                 <Statistic
                   title="Başlangıç"
                   value={training.startDate ? dayjs(training.startDate).format('DD.MM.YYYY') : '-'}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 16 }}
                 />
               </Card>
@@ -199,7 +199,7 @@ export default function TrainingDetailPage() {
               <Descriptions.Item label="Süre">{training.durationHours} saat</Descriptions.Item>
               <Descriptions.Item label="Konum">
                 <Space>
-                  <EnvironmentOutlined />
+                  <MapPinIcon className="w-4 h-4" />
                   {training.isOnline ? (
                     <a href={training.onlineUrl} target="_blank" rel="noopener noreferrer">
                       {training.onlineUrl || 'Online'}

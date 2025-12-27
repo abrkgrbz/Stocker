@@ -3,7 +3,12 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Form, Input, Select, DatePicker, InputNumber, Row, Col, Typography, Switch, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ToolOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  UserIcon,
+  WrenchIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import { useEmployeeSkill, useUpdateEmployeeSkill, useEmployees } from '@/lib/api/hooks/useHR';
 
@@ -65,7 +70,7 @@ export default function EditEmployeeSkillPage() {
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Yetkinlik Duzenle</h1>
               <p className="text-sm text-gray-400 m-0">{skill?.skillName}</p>
@@ -73,7 +78,7 @@ export default function EditEmployeeSkillPage() {
           </div>
           <Space>
             <Button onClick={() => router.push(`/hr/employee-skills/${id}`)}>Vazgec</Button>
-            <Button type="primary" icon={<SaveOutlined />} loading={updateSkill.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
+            <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} loading={updateSkill.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
           </Space>
         </div>
       </div>
@@ -84,7 +89,7 @@ export default function EditEmployeeSkillPage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <ToolOutlined style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
+                  <WrenchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(0,0,0,0.6)' }} />
                   <p className="mt-4 text-lg font-medium text-gray-800">Yetkinlik</p>
                   <p className="text-sm text-gray-600">Calisan beceri ve yetenekleri</p>
                 </div>
@@ -100,7 +105,7 @@ export default function EditEmployeeSkillPage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserOutlined className="mr-1" /> Calisan & Yetkinlik Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Yetkinlik Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>

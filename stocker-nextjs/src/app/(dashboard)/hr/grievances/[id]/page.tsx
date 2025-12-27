@@ -3,7 +3,11 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Row, Col } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  ExclamationCircleIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 import { useGrievance } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = { 'Open': 'processing', 'UnderReview': 'warning', 'Investigating': 'orange', 'PendingResolution': 'gold', 'Resolved': 'success', 'Closed': 'default', 'Escalated': 'red', 'Withdrawn': 'default' };
@@ -16,20 +20,20 @@ export default function GrievanceDetailPage() {
   const { data: grievance, isLoading } = useGrievance(id);
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!grievance) return <div className="p-6"><Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Sikayet bulunamadi.</div></div>;
+  if (!grievance) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Sikayet bulunamadi.</div></div>;
 
   return (
     <div className="min-h-screen bg-white">
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Sikayet Detayi</h1>
               <p className="text-sm text-gray-400 m-0">{grievance.subject}</p>
             </div>
           </div>
-          <Button type="primary" icon={<EditOutlined />} onClick={() => router.push(`/hr/grievances/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
+          <Button type="primary" icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/grievances/${id}/edit`)} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Duzenle</Button>
         </div>
       </div>
 
@@ -37,7 +41,7 @@ export default function GrievanceDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <ExclamationCircleOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <ExclamationCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{grievance.subject}</h3>
               <p className="text-sm text-white/60">{grievance.grievanceType}</p>
               <div className="mt-4 space-x-2">

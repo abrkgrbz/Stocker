@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 import { LocationForm } from '@/components/inventory/locations';
 import { useLocation, useUpdateLocation } from '@/lib/api/hooks/useInventory';
 import type { UpdateLocationDto } from '@/lib/api/services/inventory.types';
@@ -66,7 +71,7 @@ export default function EditLocationPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -78,7 +83,7 @@ export default function EditLocationPage() {
                     {location.name}
                   </h1>
                   <Tag
-                    icon={location.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={location.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={location.isActive ? 'success' : 'default'}
                     className="ml-2"
                   >
@@ -95,7 +100,7 @@ export default function EditLocationPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateLocation.isPending}
               onClick={() => form.submit()}
               style={{

@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Form, Tag } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { OpportunityForm } from '@/components/crm/opportunities';
 import { useOpportunity, useUpdateOpportunity } from '@/lib/api/hooks/useCRM';
@@ -11,13 +15,13 @@ import dayjs from 'dayjs';
 
 // Status labels and colors
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  Prospecting: { label: 'Araştırma', color: 'blue', icon: <ClockCircleOutlined /> },
-  Qualification: { label: 'Nitelendirme', color: 'cyan', icon: <ClockCircleOutlined /> },
-  NeedsAnalysis: { label: 'İhtiyaç Analizi', color: 'purple', icon: <ClockCircleOutlined /> },
-  Proposal: { label: 'Teklif', color: 'orange', icon: <ClockCircleOutlined /> },
-  Negotiation: { label: 'Müzakere', color: 'gold', icon: <ClockCircleOutlined /> },
-  ClosedWon: { label: 'Kazanıldı', color: 'success', icon: <CheckCircleOutlined /> },
-  ClosedLost: { label: 'Kaybedildi', color: 'error', icon: <CloseCircleOutlined /> },
+  Prospecting: { label: 'Araştırma', color: 'blue', icon: <ClockIcon className="w-4 h-4" /> },
+  Qualification: { label: 'Nitelendirme', color: 'cyan', icon: <ClockIcon className="w-4 h-4" /> },
+  NeedsAnalysis: { label: 'İhtiyaç Analizi', color: 'purple', icon: <ClockIcon className="w-4 h-4" /> },
+  Proposal: { label: 'Teklif', color: 'orange', icon: <ClockIcon className="w-4 h-4" /> },
+  Negotiation: { label: 'Müzakere', color: 'gold', icon: <ClockIcon className="w-4 h-4" /> },
+  ClosedWon: { label: 'Kazanıldı', color: 'success', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  ClosedLost: { label: 'Kaybedildi', color: 'error', icon: <XCircleIcon className="w-4 h-4" /> },
 };
 
 export default function EditOpportunityPage() {

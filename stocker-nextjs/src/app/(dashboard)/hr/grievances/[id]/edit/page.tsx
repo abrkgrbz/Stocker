@@ -3,7 +3,12 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Space, Form, Input, Select, DatePicker, Row, Col, Typography, Spin } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, ExclamationCircleOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ExclamationCircleIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import { useGrievance, useUpdateGrievance, useEmployees } from '@/lib/api/hooks/useHR';
 
@@ -71,7 +76,7 @@ export default function EditGrievancePage() {
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Sikayet Duzenle</h1>
               <p className="text-sm text-gray-400 m-0">{grievance?.subject}</p>
@@ -79,7 +84,7 @@ export default function EditGrievancePage() {
           </div>
           <Space>
             <Button onClick={() => router.push(`/hr/grievances/${id}`)}>Vazgec</Button>
-            <Button type="primary" icon={<SaveOutlined />} loading={updateGrievance.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
+            <Button type="primary" icon={<CheckIcon className="w-4 h-4" />} loading={updateGrievance.isPending} onClick={() => form.submit()} style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}>Kaydet</Button>
           </Space>
         </div>
       </div>
@@ -90,7 +95,7 @@ export default function EditGrievancePage() {
             <Col xs={24} lg={10}>
               <div className="mb-8">
                 <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '40px 20px', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <ExclamationCircleOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <ExclamationCircleIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                   <p className="mt-4 text-lg font-medium text-white/90">Sikayet</p>
                   <p className="text-sm text-white/60">Calisan sikayeti</p>
                 </div>
@@ -105,7 +110,7 @@ export default function EditGrievancePage() {
             </Col>
             <Col xs={24} lg={14}>
               <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserOutlined className="mr-1" /> Calisan & Sikayet Bilgileri</Text>
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block"><UserIcon className="w-4 h-4" className="mr-1" /> Calisan & Sikayet Bilgileri</Text>
                 <Form.Item name="employeeId" rules={[{ required: true }]} className="mb-3">
                   <Select showSearch placeholder="Calisan secin" optionFilterProp="label" options={employees?.map((e: any) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))} />
                 </Form.Item>

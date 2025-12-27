@@ -18,15 +18,15 @@ import {
   Select,
 } from 'antd';
 import {
-  PlusOutlined,
-  CalendarOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  SearchOutlined,
-  GiftOutlined,
-} from '@ant-design/icons';
+  CalendarIcon,
+  EllipsisHorizontalIcon,
+  EyeIcon,
+  GiftIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useHolidays, useDeleteHoliday } from '@/lib/api/hooks/useHR';
 import type { HolidayDto } from '@/lib/api/services/hr.types';
@@ -78,7 +78,7 @@ export default function HolidaysPage() {
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name: string, record: HolidayDto) => (
         <Space>
-          <GiftOutlined style={{ color: '#8b5cf6' }} />
+          <GiftIcon className="w-4 h-4" style={{ color: '#8b5cf6' }} />
           <a onClick={() => router.push(`/hr/holidays/${record.id}`)}>{name}</a>
         </Space>
       ),
@@ -133,20 +133,20 @@ export default function HolidaysPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/holidays/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/holidays/${record.id}/edit`),
               },
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -155,7 +155,7 @@ export default function HolidaysPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -172,10 +172,10 @@ export default function HolidaysPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <CalendarOutlined className="mr-2" />
+          <CalendarIcon className="w-4 h-4" className="mr-2" />
           Resmi Tatiller
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/holidays/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/holidays/new')}>
           Yeni Tatil
         </Button>
       </div>
@@ -187,7 +187,7 @@ export default function HolidaysPage() {
             <Statistic
               title="Toplam Tatil"
               value={totalHolidays}
-              prefix={<CalendarOutlined />}
+              prefix={<CalendarIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -197,7 +197,7 @@ export default function HolidaysPage() {
             <Statistic
               title="Yaklaşan"
               value={upcomingHolidays}
-              prefix={<GiftOutlined />}
+              prefix={<GiftIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -219,7 +219,7 @@ export default function HolidaysPage() {
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Tatil ara..."
-              prefix={<SearchOutlined />}
+              prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear

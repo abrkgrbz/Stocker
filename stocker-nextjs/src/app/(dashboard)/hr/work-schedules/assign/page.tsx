@@ -3,7 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Form, Space, Card, Row, Col, Select, DatePicker, Checkbox, Input } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CalendarOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+} from '@heroicons/react/24/outline';
 import { useAssignWorkSchedule, useEmployees, useShifts } from '@/lib/api/hooks/useHR';
 import type { AssignWorkScheduleDto } from '@/lib/api/services/hr.types';
 
@@ -54,14 +58,14 @@ export default function AssignWorkSchedulePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/hr/work-schedules')}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <CalendarOutlined className="mr-2" />
+                <CalendarIcon className="w-4 h-4" className="mr-2" />
                 Toplu Program Atama
               </h1>
               <p className="text-sm text-gray-400 m-0">Tarih aralığı için program oluşturun</p>
@@ -71,7 +75,7 @@ export default function AssignWorkSchedulePage() {
             <Button onClick={() => router.push('/hr/work-schedules')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={assignSchedule.isPending}
               onClick={() => form.submit()}
               style={{

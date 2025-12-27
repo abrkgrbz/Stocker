@@ -4,13 +4,13 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, Button, Tag, Space, Progress, Input, Card } from 'antd';
 import {
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  RocketOutlined,
-} from '@ant-design/icons';
+  EyeIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  RocketLaunchIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { useCareerPaths, useDeleteCareerPath } from '@/lib/api/hooks/useHR';
 
@@ -113,18 +113,18 @@ export default function CareerPathsPage() {
         <Space>
           <Button
             type="text"
-            icon={<EyeOutlined />}
+            icon={<EyeIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/career-paths/${record.id}`)}
           />
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/hr/career-paths/${record.id}/edit`)}
           />
           <Button
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<TrashIcon className="w-4 h-4" />}
             onClick={() => handleDelete(record.id)}
           />
         </Space>
@@ -137,13 +137,13 @@ export default function CareerPathsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-            <RocketOutlined /> Kariyer Planlari
+            <RocketLaunchIcon className="w-4 h-4" /> Kariyer Planlari
           </h1>
           <p className="text-gray-500 mt-1">Calisan kariyer gelisim planlarini yonetin</p>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<PlusIcon className="w-4 h-4" />}
           onClick={() => router.push('/hr/career-paths/new')}
           style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
         >
@@ -155,7 +155,7 @@ export default function CareerPathsPage() {
         <div className="mb-4">
           <Input
             placeholder="Ara..."
-            prefix={<SearchOutlined />}
+            prefix={<MagnifyingGlassIcon className="w-4 h-4" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}

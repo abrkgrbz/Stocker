@@ -18,15 +18,13 @@ import {
   message,
 } from 'antd';
 import {
-  ReloadOutlined,
-  EditOutlined,
-  WarningOutlined,
-  ExclamationCircleOutlined,
-  AlertOutlined,
-  CheckCircleOutlined,
-  MinusCircleOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProducts,
   useLowStockProducts,
@@ -46,13 +44,13 @@ function getStockStatus(product: ProductDto): { status: string; color: string; b
   if (product.totalStockQuantity === 0) {
     return { status: 'Stok Yok', color: '#1e293b', bgColor: '#e2e8f0', icon: <MinusCircleOutlined />, percent: 0 };
   } else if (product.totalStockQuantity <= product.minStockLevel) {
-    return { status: 'Kritik', color: '#1e293b', bgColor: '#cbd5e1', icon: <ExclamationCircleOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Kritik', color: '#1e293b', bgColor: '#cbd5e1', icon: <ExclamationCircleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.reorderLevel) {
-    return { status: 'Düşük', color: '#475569', bgColor: '#f1f5f9', icon: <WarningOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Düşük', color: '#475569', bgColor: '#f1f5f9', icon: <ExclamationTriangleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else if (product.totalStockQuantity <= product.maxStockLevel) {
-    return { status: 'Normal', color: '#334155', bgColor: '#e2e8f0', icon: <CheckCircleOutlined />, percent: Math.min(ratio, 100) };
+    return { status: 'Normal', color: '#334155', bgColor: '#e2e8f0', icon: <CheckCircleIcon className="w-4 h-4" />, percent: Math.min(ratio, 100) };
   } else {
-    return { status: 'Yüksek', color: '#64748b', bgColor: '#f1f5f9', icon: <InfoCircleOutlined />, percent: 100 };
+    return { status: 'Yüksek', color: '#64748b', bgColor: '#f1f5f9', icon: <InformationCircleIcon className="w-4 h-4" />, percent: 100 };
   }
 }
 
@@ -321,7 +319,7 @@ export default function StockAlertsPage() {
       render: (_, record) => (
         <Button
           type="text"
-          icon={<EditOutlined />}
+          icon={<PencilIcon className="w-4 h-4" />}
           onClick={() => handleConfigClick(record)}
           className="!text-slate-600 hover:!text-slate-900"
         >
@@ -349,7 +347,7 @@ export default function StockAlertsPage() {
       key: 'critical',
       label: (
         <span className="flex items-center gap-2">
-          <ExclamationCircleOutlined />
+          <ExclamationCircleIcon className="w-4 h-4" />
           Kritik
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-400 text-white">
             {stats.critical + stats.noStock}
@@ -361,7 +359,7 @@ export default function StockAlertsPage() {
       key: 'low',
       label: (
         <span className="flex items-center gap-2">
-          <WarningOutlined />
+          <ExclamationTriangleIcon className="w-4 h-4" />
           Düşük
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-300 text-slate-800">
             {stats.low}
@@ -373,7 +371,7 @@ export default function StockAlertsPage() {
       key: 'normal',
       label: (
         <span className="flex items-center gap-2">
-          <CheckCircleOutlined />
+          <CheckCircleIcon className="w-4 h-4" />
           Normal
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
             {stats.normal}
@@ -385,7 +383,7 @@ export default function StockAlertsPage() {
       key: 'unconfigured',
       label: (
         <span className="flex items-center gap-2">
-          <InfoCircleOutlined />
+          <InformationCircleIcon className="w-4 h-4" />
           Yapılandırılmamış
           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full bg-slate-100 text-slate-500">
             {stats.unconfigured}
@@ -405,7 +403,7 @@ export default function StockAlertsPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
             className="!border-slate-300 !text-slate-700 hover:!border-slate-400"
           >
@@ -414,7 +412,7 @@ export default function StockAlertsPage() {
           {selectedRowKeys.length > 0 && (
             <Button
               type="primary"
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={handleBulkConfigClick}
               className="!bg-slate-900 hover:!bg-slate-800 !border-slate-900"
             >
@@ -452,7 +450,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-400 flex items-center justify-center">
-                <ExclamationCircleOutlined className="text-lg text-white" />
+                <ExclamationCircleIcon className="w-4 h-4" className="text-lg text-white" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-700">{stats.critical}</div>
@@ -463,7 +461,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <WarningOutlined className="text-lg text-slate-600" />
+                <ExclamationTriangleIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.low}</div>
@@ -474,7 +472,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
-                <CheckCircleOutlined className="text-lg text-slate-600" />
+                <CheckCircleIcon className="w-4 h-4" className="text-lg text-slate-600" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-600">{stats.normal}</div>
@@ -485,7 +483,7 @@ export default function StockAlertsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <InfoCircleOutlined className="text-lg text-slate-500" />
+                <InformationCircleIcon className="w-4 h-4" className="text-lg text-slate-500" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-500">{stats.unconfigured}</div>
@@ -499,7 +497,7 @@ export default function StockAlertsPage() {
         <Alert
           type="error"
           showIcon
-          icon={<ExclamationCircleOutlined />}
+          icon={<ExclamationCircleIcon className="w-4 h-4" />}
           message={`${stats.critical + stats.noStock} ürün kritik stok seviyesinde veya stok dışı!`}
           description="Bu ürünler için acil sipariş gerekebilir."
           className="mb-6 !border-slate-300 !bg-slate-100 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"
@@ -509,7 +507,7 @@ export default function StockAlertsPage() {
         <Alert
           type="warning"
           showIcon
-          icon={<InfoCircleOutlined />}
+          icon={<InformationCircleIcon className="w-4 h-4" />}
           message={`${stats.unconfigured} ürün için stok seviye ayarları yapılmamış`}
           description="Stok seviye uyarılarını etkinleştirmek için minimum ve maksimum stok seviyelerini ayarlayın."
           className="mb-6 !border-slate-300 !bg-slate-50 [&_.ant-alert-message]:!text-slate-900 [&_.ant-alert-description]:!text-slate-600"

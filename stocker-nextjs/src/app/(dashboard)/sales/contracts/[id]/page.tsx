@@ -9,13 +9,11 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Spin, Alert, Modal, Tag, Descriptions, Divider } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckCircleOutlined,
-  PauseCircleOutlined,
-  StopOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 import {
   useCustomerContract,
   useActivateCustomerContract,
@@ -133,7 +131,7 @@ export default function ContractDetailPage() {
         <div className="flex items-center justify-between max-w-6xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/sales/contracts')}
               type="text"
               className="text-slate-500 hover:text-slate-800"
@@ -151,7 +149,7 @@ export default function ContractDetailPage() {
           <Space>
             {contract.status === 'Draft' && (
               <Button
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleActivate}
                 loading={activateMutation.isPending}
               >
@@ -160,7 +158,7 @@ export default function ContractDetailPage() {
             )}
             {contract.status === 'Active' && (
               <>
-                <Button icon={<ReloadOutlined />} onClick={handleRenew} loading={renewMutation.isPending}>
+                <Button icon={<ArrowPathIcon className="w-4 h-4" />} onClick={handleRenew} loading={renewMutation.isPending}>
                   Yenile
                 </Button>
                 <Button icon={<PauseCircleOutlined />} onClick={handleSuspend} loading={suspendMutation.isPending}>
@@ -169,7 +167,7 @@ export default function ContractDetailPage() {
               </>
             )}
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => router.push(`/sales/contracts/${id}/edit`)}
             >
               Düzenle

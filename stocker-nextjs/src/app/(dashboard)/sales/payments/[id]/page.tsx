@@ -19,14 +19,13 @@ import {
   InputNumber,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DollarOutlined,
-  RollbackOutlined,
-  PrinterOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import {
   usePayment,
@@ -41,10 +40,10 @@ import dayjs from 'dayjs';
 const { Title, Text } = Typography;
 
 const statusConfig: Record<PaymentStatus, { color: string; label: string; icon: React.ReactNode }> = {
-  Pending: { color: 'orange', label: 'Bekliyor', icon: <DollarOutlined /> },
-  Confirmed: { color: 'blue', label: 'Onaylandı', icon: <CheckCircleOutlined /> },
-  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-  Rejected: { color: 'red', label: 'Reddedildi', icon: <CloseCircleOutlined /> },
+  Pending: { color: 'orange', label: 'Bekliyor', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
+  Confirmed: { color: 'blue', label: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Completed: { color: 'green', label: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+  Rejected: { color: 'red', label: 'Reddedildi', icon: <XCircleIcon className="w-4 h-4" /> },
   Refunded: { color: 'purple', label: 'İade Edildi', icon: <RollbackOutlined /> },
 };
 
@@ -168,10 +167,10 @@ export default function PaymentDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>
             Geri
           </Button>
-          <DollarOutlined className="text-3xl text-green-500" />
+          <CurrencyDollarIcon className="w-4 h-4" className="text-3xl text-green-500" />
           <div>
             <Title level={2} className="!mb-0">
               {payment.paymentNumber}
@@ -183,15 +182,15 @@ export default function PaymentDetailPage() {
           </Tag>
         </div>
         <Space>
-          <Button icon={<PrinterOutlined />}>Yazdır</Button>
+          <Button icon={<PrinterIcon className="w-4 h-4" />}>Yazdır</Button>
           {payment.status === 'Pending' && (
             <>
               <Link href={`/sales/payments/${id}/edit`}>
-                <Button icon={<EditOutlined />}>Düzenle</Button>
+                <Button icon={<PencilIcon className="w-4 h-4" />}>Düzenle</Button>
               </Link>
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleConfirm}
                 loading={confirmPayment.isPending}
               >
@@ -199,7 +198,7 @@ export default function PaymentDetailPage() {
               </Button>
               <Button
                 danger
-                icon={<CloseCircleOutlined />}
+                icon={<XCircleIcon className="w-4 h-4" />}
                 onClick={handleRejectClick}
               >
                 Reddet
@@ -209,7 +208,7 @@ export default function PaymentDetailPage() {
           {payment.status === 'Confirmed' && (
             <Button
               type="primary"
-              icon={<CheckCircleOutlined />}
+              icon={<CheckCircleIcon className="w-4 h-4" />}
               onClick={handleComplete}
               loading={completePayment.isPending}
             >

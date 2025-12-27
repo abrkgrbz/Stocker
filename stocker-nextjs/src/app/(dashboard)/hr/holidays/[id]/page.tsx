@@ -17,12 +17,12 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  CalendarOutlined,
-  DeleteOutlined,
-  GiftOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  GiftIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useHoliday, useDeleteHoliday } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
 
@@ -84,7 +84,7 @@ export default function HolidayDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/holidays')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/holidays')}>
             Geri
           </Button>
           <div>
@@ -101,10 +101,10 @@ export default function HolidayDetailPage() {
           </div>
         </Space>
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/holidays/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/holidays/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -119,7 +119,7 @@ export default function HolidayDetailPage() {
                 <Statistic
                   title="Tarih"
                   value={dayjs(holiday.date).format('DD.MM.YYYY')}
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed', fontSize: 18 }}
                 />
               </Card>
@@ -129,7 +129,7 @@ export default function HolidayDetailPage() {
                 <Statistic
                   title="Gün"
                   value={dayjs(holiday.date).format('dddd')}
-                  prefix={<GiftOutlined />}
+                  prefix={<GiftIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#1890ff', fontSize: 18 }}
                 />
               </Card>

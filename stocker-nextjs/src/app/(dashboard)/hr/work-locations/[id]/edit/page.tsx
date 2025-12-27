@@ -3,7 +3,11 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Space, Spin, Empty } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 import { useWorkLocation, useUpdateWorkLocation } from '@/lib/api/hooks/useHR';
 import { WorkLocationForm } from '@/components/hr/work-locations';
 import type { UpdateWorkLocationDto } from '@/lib/api/services/hr.types';
@@ -76,14 +80,14 @@ export default function EditWorkLocationPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/work-locations/${id}`)}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <EnvironmentOutlined className="mr-2" />
+                <MapPinIcon className="w-4 h-4" className="mr-2" />
                 Lokasyonu Düzenle
               </h1>
               <p className="text-sm text-gray-400 m-0">{location.name}</p>
@@ -93,7 +97,7 @@ export default function EditWorkLocationPage() {
             <Button onClick={() => router.push(`/hr/work-locations/${id}`)}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateLocation.isPending}
               onClick={() => form.submit()}
               style={{

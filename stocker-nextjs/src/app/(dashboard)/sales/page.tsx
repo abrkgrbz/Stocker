@@ -3,16 +3,14 @@
 import React from 'react';
 import { Card, Row, Col, Statistic, Typography, Table, Tag, Button, Progress, Alert, List, Badge, Tooltip } from 'antd';
 import {
-  ShoppingCartOutlined,
-  FileTextOutlined,
-  WalletOutlined,
-  DollarOutlined,
-  RightOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  RiseOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  CalendarIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  WalletIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useSalesStatistics, useSalesOrders } from '@/lib/api/hooks/useSales';
 import { useInvoiceStatistics, useInvoices } from '@/lib/api/hooks/useInvoices';
@@ -121,7 +119,7 @@ export default function SalesDashboardPage() {
             <Statistic
               title="Toplam Fatura"
               value={invoiceStats?.totalInvoices ?? 0}
-              prefix={<FileTextOutlined style={{ color: '#52c41a' }} />}
+              prefix={<DocumentTextIcon className="w-4 h-4" style={{ color: '#52c41a' }} />}
               loading={invoiceStatsLoading}
             />
             <div style={{ marginTop: 8 }}>
@@ -136,7 +134,7 @@ export default function SalesDashboardPage() {
             <Statistic
               title="Toplam Ödeme"
               value={paymentStats?.totalPayments ?? 0}
-              prefix={<WalletOutlined style={{ color: '#722ed1' }} />}
+              prefix={<WalletIcon className="w-4 h-4" style={{ color: '#722ed1' }} />}
               loading={paymentStatsLoading}
             />
             <div style={{ marginTop: 8 }}>
@@ -152,7 +150,7 @@ export default function SalesDashboardPage() {
               title="Toplam Gelir"
               value={salesStats?.totalRevenue ?? 0}
               precision={2}
-              prefix={<DollarOutlined style={{ color: '#faad14' }} />}
+              prefix={<CurrencyDollarIcon className="w-4 h-4" style={{ color: '#faad14' }} />}
               suffix="₺"
               loading={salesStatsLoading}
             />
@@ -170,7 +168,7 @@ export default function SalesDashboardPage() {
         <Alert
           message={
             <span>
-              <WarningOutlined style={{ marginRight: 8 }} />
+              <ExclamationTriangleIcon className="w-4 h-4" style={{ marginRight: 8 }} />
               <strong>{invoiceStats?.overdueInvoices ?? 0} adet vadesi geçmiş fatura</strong> bulunmaktadır.
               Toplam tutar: {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(overdueAmount)}
             </span>
@@ -341,7 +339,7 @@ export default function SalesDashboardPage() {
             title="Son Siparişler"
             extra={
               <Button type="link" onClick={() => router.push('/sales/orders')}>
-                Tümünü Gör <RightOutlined />
+                Tümünü Gör <ChevronRightIcon className="w-4 h-4" />
               </Button>
             }
           >
@@ -359,13 +357,13 @@ export default function SalesDashboardPage() {
           <Card
             title={
               <span>
-                <ClockCircleOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
+                <ClockIcon className="w-4 h-4" style={{ marginRight: 8, color: '#ff4d4f' }} />
                 Vadesi Geçmiş Faturalar
               </span>
             }
             extra={
               <Button type="link" onClick={() => router.push('/sales/invoices?status=Overdue')}>
-                Tümü <RightOutlined />
+                Tümü <ChevronRightIcon className="w-4 h-4" />
               </Button>
             }
           >

@@ -19,11 +19,11 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { usePurchaseInvoice, useUpdatePurchaseInvoice } from '@/lib/api/hooks/usePurchase';
 import dayjs from 'dayjs';
 
@@ -131,7 +131,7 @@ export default function EditPurchaseInvoicePage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -140,7 +140,7 @@ export default function EditPurchaseInvoicePage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
               >
-                <FileTextOutlined style={{ fontSize: 24 }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -155,7 +155,7 @@ export default function EditPurchaseInvoicePage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -163,7 +163,7 @@ export default function EditPurchaseInvoicePage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"

@@ -17,15 +17,13 @@ import {
   Collapse,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  BarcodeOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  ShoppingOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  MapPinIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useProducts,
   useWarehouses,
@@ -168,7 +166,7 @@ export default function NewSerialNumberPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -182,7 +180,7 @@ export default function NewSerialNumberPage() {
             <Button onClick={() => router.push('/inventory/serial-numbers')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={createSerialNumber.isPending}
               onClick={handleSubmit}
               disabled={!selectedProduct || validCount === 0}
@@ -255,7 +253,7 @@ export default function NewSerialNumberPage() {
               {/* Location */}
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <EnvironmentOutlined className="mr-1" /> Konum
+                  <MapPinIcon className="w-4 h-4" className="mr-1" /> Konum
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>
@@ -294,7 +292,7 @@ export default function NewSerialNumberPage() {
                     key: 'additional',
                     label: (
                       <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        <CalendarOutlined className="mr-1" /> Ek Bilgiler
+                        <CalendarIcon className="w-4 h-4" className="mr-1" /> Ek Bilgiler
                       </Text>
                     ),
                     children: (
@@ -355,7 +353,7 @@ export default function NewSerialNumberPage() {
                   <Button
                     type="text"
                     size="small"
-                    icon={<PlusOutlined />}
+                    icon={<PlusIcon className="w-4 h-4" />}
                     onClick={handleAddSerial}
                     className="text-blue-500"
                   >
@@ -385,7 +383,7 @@ export default function NewSerialNumberPage() {
                           danger
                           onClick={() => handleRemoveSerial(index)}
                           size="large"
-                          icon={<DeleteOutlined />}
+                          icon={<TrashIcon className="w-4 h-4" />}
                         />
                       )}
                     </div>
@@ -393,7 +391,7 @@ export default function NewSerialNumberPage() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                  <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddSerial} block>
+                  <Button type="dashed" icon={<PlusIcon className="w-4 h-4" />} onClick={handleAddSerial} block>
                     Başka Seri Numarası Ekle
                   </Button>
                 </div>

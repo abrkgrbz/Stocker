@@ -3,7 +3,11 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MailOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import {
+  CheckCircleIcon,
+  EnvelopeIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { VerificationCodeInput } from '@/components/auth/VerificationCodeInput';
 
 function VerifyEmailContent() {
@@ -162,7 +166,7 @@ function VerifyEmailContent() {
             {/* Success Icon */}
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircleOutlined className="text-4xl text-green-600" />
+                <CheckCircleIcon className="w-4 h-4" className="text-4xl text-green-600" />
               </div>
             </div>
 
@@ -192,7 +196,7 @@ function VerifyEmailContent() {
           {/* Icon */}
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-              <MailOutlined className="text-4xl text-blue-600" />
+              <EnvelopeIcon className="w-4 h-4" className="text-4xl text-blue-600" />
             </div>
           </div>
 
@@ -217,7 +221,7 @@ function VerifyEmailContent() {
           {/* Verify Error */}
           {verifyError && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-              <CloseCircleOutlined />
+              <XCircleIcon className="w-4 h-4" />
               <span className="text-sm">{verifyError}</span>
             </div>
           )}
@@ -225,7 +229,7 @@ function VerifyEmailContent() {
           {/* Resend Success */}
           {resendSuccess && (
             <div className="flex items-center space-x-2 text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
-              <CheckCircleOutlined />
+              <CheckCircleIcon className="w-4 h-4" />
               <span className="text-sm">E-posta başarıyla tekrar gönderildi!</span>
             </div>
           )}
@@ -233,7 +237,7 @@ function VerifyEmailContent() {
           {/* Resend Error */}
           {resendError && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-              <CloseCircleOutlined />
+              <XCircleIcon className="w-4 h-4" />
               <span className="text-sm">{resendError}</span>
             </div>
           )}

@@ -3,7 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Space, Form, message } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, FileOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  DocumentIcon,
+} from '@heroicons/react/24/outline';
 import { DocumentForm } from '@/components/hr';
 import { useCreateDocument, useUploadDocumentFile } from '@/lib/api/hooks/useHR';
 import type { CreateEmployeeDocumentDto } from '@/lib/api/services/hr.types';
@@ -67,14 +71,14 @@ export default function NewDocumentPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
             />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">
-                <FileOutlined className="mr-2" />
+                <DocumentIcon className="w-4 h-4" className="mr-2" />
                 Yeni Belge
               </h1>
               <p className="text-sm text-gray-400 m-0">Yeni bir belge kaydı oluşturun</p>
@@ -84,7 +88,7 @@ export default function NewDocumentPage() {
             <Button onClick={() => router.push('/hr/documents')}>Vazgeç</Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={isLoading}
               onClick={() => form.submit()}
               style={{

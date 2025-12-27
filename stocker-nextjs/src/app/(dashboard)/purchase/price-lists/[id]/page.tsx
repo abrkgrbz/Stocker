@@ -17,15 +17,15 @@ import {
   Switch,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  DollarOutlined,
-  ShopOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { useRouter, useParams } from 'next/navigation';
 import {
   usePriceList,
@@ -79,7 +79,7 @@ export default function PriceListDetailPage() {
   const handleDelete = () => {
     Modal.confirm({
       title: 'Fiyat Listesi Silinecek',
-      icon: <ExclamationCircleOutlined />,
+      icon: <ExclamationCircleIcon className="w-4 h-4" />,
       content: 'Bu fiyat listesini silmek istediğinize emin misiniz?',
       okText: 'Sil',
       okType: 'danger',
@@ -168,7 +168,7 @@ export default function PriceListDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} />
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} />
           <div>
             <div className="flex items-center gap-3">
               <Title level={3} className="mb-0">{priceList.code}</Title>
@@ -181,7 +181,7 @@ export default function PriceListDetailPage() {
 
         <Space>
           <Button
-            icon={<EditOutlined />}
+            icon={<PencilIcon className="w-4 h-4" />}
             onClick={() => router.push(`/purchase/price-lists/${id}/edit`)}
           >
             Düzenle
@@ -192,14 +192,14 @@ export default function PriceListDetailPage() {
                 {
                   key: 'delete',
                   label: 'Sil',
-                  icon: <DeleteOutlined />,
+                  icon: <TrashIcon className="w-4 h-4" />,
                   danger: true,
                   onClick: handleDelete,
                 },
               ],
             }}
           >
-            <Button icon={<MoreOutlined />} />
+            <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
           </Dropdown>
         </Space>
       </div>
@@ -215,7 +215,7 @@ export default function PriceListDetailPage() {
               <Descriptions.Item label="Tedarikçi">
                 {priceList.supplierName ? (
                   <Space>
-                    <ShopOutlined />
+                    <BuildingStorefrontIcon className="w-4 h-4" />
                     {priceList.supplierName}
                   </Space>
                 ) : '-'}
@@ -265,7 +265,7 @@ export default function PriceListDetailPage() {
                 marginBottom: '16px',
               }}
             >
-              <DollarOutlined style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
+              <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.9)' }} />
               <div className="text-white/90 font-medium mt-2">{priceList.code}</div>
               <Tag color={status.color} className="mt-2">{status.text}</Tag>
             </div>

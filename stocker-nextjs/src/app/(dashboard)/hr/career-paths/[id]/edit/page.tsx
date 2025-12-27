@@ -16,13 +16,13 @@ import {
   Spin,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  RocketOutlined,
-  UserOutlined,
-  TrophyOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckIcon,
+  RocketLaunchIcon,
+  TrophyIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
 import { useCareerPath, useUpdateCareerPath, useEmployees, usePositions } from '@/lib/api/hooks/useHR';
 
@@ -103,7 +103,7 @@ export default function EditCareerPathPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -121,7 +121,7 @@ export default function EditCareerPathPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateCareerPath.isPending}
               onClick={() => form.submit()}
               style={{ background: '#1a1a1a', borderColor: '#1a1a1a' }}
@@ -151,7 +151,7 @@ export default function EditCareerPathPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <RocketOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+                  <RocketLaunchIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
                   <p className="mt-4 text-lg font-medium text-white/90">
                     Kariyer Plani
                   </p>
@@ -181,7 +181,7 @@ export default function EditCareerPathPage() {
 
               <div className="mb-6">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <TrophyOutlined className="mr-1" /> Ilerleme
+                  <TrophyIcon className="w-4 h-4" className="mr-1" /> Ilerleme
                 </Text>
                 <Form.Item name="progressPercentage" className="mb-0">
                   <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
@@ -193,7 +193,7 @@ export default function EditCareerPathPage() {
             <Col xs={24} lg={14}>
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <UserOutlined className="mr-1" /> Calisan Bilgileri
+                  <UserIcon className="w-4 h-4" className="mr-1" /> Calisan Bilgileri
                 </Text>
                 <Form.Item
                   name="employeeId"
@@ -258,7 +258,7 @@ export default function EditCareerPathPage() {
 
               <div className="mb-8">
                 <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <CalendarOutlined className="mr-1" /> Tarihler
+                  <CalendarIcon className="w-4 h-4" className="mr-1" /> Tarihler
                 </Text>
                 <Row gutter={16}>
                   <Col span={12}>

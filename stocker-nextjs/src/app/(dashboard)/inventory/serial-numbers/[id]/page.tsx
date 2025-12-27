@@ -15,17 +15,15 @@ import {
   InputNumber,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  BarcodeOutlined,
-  CheckCircleOutlined,
-  ShoppingCartOutlined,
-  SafetyCertificateOutlined,
-  WarningOutlined,
-  CalendarOutlined,
-  EnvironmentOutlined,
-  UserOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
 import {
   useSerialNumber,
   useReceiveSerialNumber,
@@ -47,13 +45,13 @@ const statusConfig: Record<
     label: 'Kullanılabilir',
     bgColor: 'bg-blue-50',
     textColor: 'text-blue-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.InStock]: {
     label: 'Stokta',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Reserved]: {
     label: 'Rezerve',
@@ -71,43 +69,43 @@ const statusConfig: Record<
     label: 'İade Edildi',
     bgColor: 'bg-cyan-50',
     textColor: 'text-cyan-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Defective]: {
     label: 'Arızalı',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.InRepair]: {
     label: 'Tamirde',
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Scrapped]: {
     label: 'Hurda',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.Lost]: {
     label: 'Kayıp',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.OnLoan]: {
     label: 'Ödünç Verildi',
     bgColor: 'bg-lime-50',
     textColor: 'text-lime-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   [SerialNumberStatus.InTransit]: {
     label: 'Transfer Halinde',
     bgColor: 'bg-indigo-50',
     textColor: 'text-indigo-700',
-    icon: <WarningOutlined />,
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
 };
 
@@ -239,7 +237,7 @@ export default function SerialNumberDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -261,7 +259,7 @@ export default function SerialNumberDetailPage() {
                   </Tag>
                   {serialNumber.isUnderWarranty && (
                     <Tag
-                      icon={<SafetyCertificateOutlined />}
+                      icon={<ShieldCheckIcon className="w-4 h-4" />}
                       className="border-0 bg-emerald-50 text-emerald-700"
                     >
                       Garantili
@@ -278,7 +276,7 @@ export default function SerialNumberDetailPage() {
             {canReceive && (
               <Button
                 type="primary"
-                icon={<CheckCircleOutlined />}
+                icon={<CheckCircleIcon className="w-4 h-4" />}
                 onClick={handleReceive}
                 loading={receiveSerialNumber.isPending}
                 style={{ background: '#1e293b', borderColor: '#1e293b' }}
@@ -331,7 +329,7 @@ export default function SerialNumberDetailPage() {
             }
             type={serialNumber.remainingWarrantyDays <= 30 ? 'warning' : 'info'}
             showIcon
-            icon={<SafetyCertificateOutlined />}
+            icon={<ShieldCheckIcon className="w-4 h-4" />}
             className="mb-6"
           />
         )}
@@ -362,7 +360,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <SafetyCertificateOutlined className="text-emerald-600 text-lg" />
+                  <ShieldCheckIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Garanti</p>
               </div>
@@ -380,7 +378,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <CalendarOutlined className="text-blue-600 text-lg" />
+                  <CalendarIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Kalan Garanti
@@ -401,7 +399,7 @@ export default function SerialNumberDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-purple-600 text-lg" />
+                  <MapPinIcon className="w-4 h-4" className="text-purple-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Depo</p>
               </div>
@@ -476,7 +474,7 @@ export default function SerialNumberDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-purple-600 text-xl" />
+                  <MapPinIcon className="w-4 h-4" className="text-purple-600 text-xl" />
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-slate-400 mb-1">Depo / Lokasyon</p>
@@ -547,7 +545,7 @@ export default function SerialNumberDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Üretim Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -558,7 +556,7 @@ export default function SerialNumberDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Teslim Tarihi</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -570,7 +568,7 @@ export default function SerialNumberDetailPage() {
                 <div className="h-px bg-slate-100 my-2" />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -591,7 +589,7 @@ export default function SerialNumberDetailPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <UserOutlined className="text-slate-400" />
+                      <UserIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Müşteri ID</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -600,7 +598,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <FileTextOutlined className="text-slate-400" />
+                      <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Sipariş No</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -609,7 +607,7 @@ export default function SerialNumberDetailPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Satış Tarihi</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">

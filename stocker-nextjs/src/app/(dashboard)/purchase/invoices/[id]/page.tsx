@@ -21,16 +21,16 @@ import {
   Progress,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  PrinterOutlined,
-  DollarOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  PencilIcon,
+  PrinterIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePurchaseInvoice,
   useApprovePurchaseInvoice,
@@ -165,39 +165,39 @@ export default function PurchaseInvoiceDetailPage() {
   const actionMenuItems = [
     invoice.status === 'Draft' && {
       key: 'submit',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onaya Gönder',
       onClick: handleSubmitForApproval,
     },
     invoice.status === 'PendingApproval' && {
       key: 'approve',
-      icon: <CheckCircleOutlined />,
+      icon: <CheckCircleIcon className="w-4 h-4" />,
       label: 'Onayla',
       onClick: handleApprove,
     },
     invoice.status === 'PendingApproval' && {
       key: 'reject',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'Reddet',
       danger: true,
       onClick: handleReject,
     },
     ['Approved', 'PartiallyPaid'].includes(invoice.status) && {
       key: 'pay',
-      icon: <DollarOutlined />,
+      icon: <CurrencyDollarIcon className="w-4 h-4" />,
       label: 'Ödeme Kaydet',
       onClick: handleMarkAsPaid,
     },
     {
       key: 'print',
-      icon: <PrinterOutlined />,
+      icon: <PrinterIcon className="w-4 h-4" />,
       label: 'Yazdır',
       onClick: () => setPrintModalVisible(true),
     },
     { type: 'divider' },
     !['Cancelled', 'Paid'].includes(invoice.status) && {
       key: 'cancel',
-      icon: <CloseCircleOutlined />,
+      icon: <XCircleIcon className="w-4 h-4" />,
       label: 'İptal Et',
       danger: true,
       onClick: handleCancel,
@@ -290,7 +290,7 @@ export default function PurchaseInvoiceDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/purchase/invoices')}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -299,7 +299,7 @@ export default function PurchaseInvoiceDetailPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}
               >
-                <FileTextOutlined style={{ fontSize: 24 }} />
+                <DocumentTextIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0 flex items-center gap-2">
@@ -308,7 +308,7 @@ export default function PurchaseInvoiceDetailPage() {
                     {statusLabels[invoice.status as PurchaseInvoiceStatus]}
                   </Tag>
                   {isOverdue && (
-                    <Tag color="red" icon={<ExclamationCircleOutlined />}>
+                    <Tag color="red" icon={<ExclamationCircleIcon className="w-4 h-4" />}>
                       Vadesi Geçmiş
                     </Tag>
                   )}
@@ -322,12 +322,12 @@ export default function PurchaseInvoiceDetailPage() {
 
           <Space>
             <Dropdown menu={{ items: actionMenuItems }} trigger={['click']}>
-              <Button icon={<MoreOutlined />}>İşlemler</Button>
+              <Button icon={<EllipsisHorizontalIcon className="w-4 h-4" />}>İşlemler</Button>
             </Dropdown>
             {invoice.status === 'Draft' && (
               <Button
                 type="primary"
-                icon={<EditOutlined />}
+                icon={<PencilIcon className="w-4 h-4" />}
                 onClick={() => router.push(`/purchase/invoices/${invoiceId}/edit`)}
               >
                 Düzenle
@@ -345,11 +345,11 @@ export default function PurchaseInvoiceDetailPage() {
             current={getStatusStep(invoice.status as PurchaseInvoiceStatus)}
             status={['Rejected', 'Cancelled'].includes(invoice.status) ? 'error' : 'process'}
             items={[
-              { title: 'Taslak', icon: <FileTextOutlined /> },
+              { title: 'Taslak', icon: <DocumentTextIcon className="w-4 h-4" /> },
               { title: 'Onay Bekliyor' },
-              { title: 'Onaylandı', icon: <CheckCircleOutlined /> },
+              { title: 'Onaylandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
               { title: 'Kısmen Ödendi' },
-              { title: 'Ödendi', icon: <DollarOutlined /> },
+              { title: 'Ödendi', icon: <CurrencyDollarIcon className="w-4 h-4" /> },
             ]}
           />
         </Card>

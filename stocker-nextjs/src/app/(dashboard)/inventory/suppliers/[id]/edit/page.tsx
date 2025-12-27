@@ -3,7 +3,13 @@
 import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Form, Spin, Alert, Tag } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+  StarIcon,
+} from '@heroicons/react/24/outline';
 import { SupplierForm } from '@/components/inventory/suppliers';
 import { useSupplier, useUpdateSupplier } from '@/lib/api/hooks/useInventory';
 import type { UpdateSupplierDto } from '@/lib/api/services/inventory.types';
@@ -66,7 +72,7 @@ export default function EditSupplierPage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               type="text"
               className="text-gray-500 hover:text-gray-800"
@@ -78,10 +84,10 @@ export default function EditSupplierPage() {
                     {supplier.name}
                   </h1>
                   {supplier.isPreferred && (
-                    <Tag color="gold" icon={<StarFilled />}>Tercih Edilen</Tag>
+                    <Tag color="gold" icon={<StarIcon className="w-4 h-4" />}>Tercih Edilen</Tag>
                   )}
                   <Tag
-                    icon={supplier.isActive ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+                    icon={supplier.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <ClockIcon className="w-4 h-4" />}
                     color={supplier.isActive ? 'success' : 'default'}
                   >
                     {supplier.isActive ? 'Aktif' : 'Pasif'}
@@ -97,7 +103,7 @@ export default function EditSupplierPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               loading={updateSupplier.isPending}
               onClick={() => form.submit()}
               style={{

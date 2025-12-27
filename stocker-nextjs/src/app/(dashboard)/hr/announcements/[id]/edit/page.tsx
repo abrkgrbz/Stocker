@@ -3,7 +3,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Form, Input, DatePicker, Select, Row, Col, Spin, Empty, Switch } from 'antd';
-import { ArrowLeftOutlined, NotificationOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftIcon,
+  BellIcon,
+} from '@heroicons/react/24/outline';
 import { useAnnouncement, useUpdateAnnouncement } from '@/lib/api/hooks/useHR';
 import type { UpdateAnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
@@ -94,11 +97,11 @@ export default function EditAnnouncementPage() {
           <div className="flex items-center gap-3">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push(`/hr/announcements/${id}`)}
             />
             <div className="flex items-center gap-2">
-              <NotificationOutlined className="text-lg text-gray-600" />
+              <BellIcon className="w-4 h-4" className="text-lg text-gray-600" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 m-0">Duyuru Düzenle</h1>
                 <p className="text-sm text-gray-500 m-0">{announcement.title}</p>

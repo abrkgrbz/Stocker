@@ -22,13 +22,13 @@ import {
   message,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  InboxOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CheckIcon,
+  InboxIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useGoodsReceipt, useUpdateGoodsReceipt, useSuppliers } from '@/lib/api/hooks/usePurchase';
 import { useProducts, useWarehouses } from '@/lib/api/hooks/useInventory';
 import type { ItemCondition } from '@/lib/api/services/purchase.types';
@@ -298,7 +298,7 @@ export default function EditGoodsReceiptPage() {
         <Button
           type="text"
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={() => removeItem(record.key)}
         />
       ),
@@ -320,7 +320,7 @@ export default function EditGoodsReceiptPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700"
             />
@@ -329,7 +329,7 @@ export default function EditGoodsReceiptPage() {
                 className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
               >
-                <InboxOutlined style={{ fontSize: 24 }} />
+                <InboxIcon className="w-4 h-4" style={{ fontSize: 24 }} />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 m-0">
@@ -344,7 +344,7 @@ export default function EditGoodsReceiptPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              icon={<CloseOutlined />}
+              icon={<XMarkIcon className="w-4 h-4" />}
               onClick={handleCancel}
               disabled={isLoading}
             >
@@ -352,7 +352,7 @@ export default function EditGoodsReceiptPage() {
             </Button>
             <Button
               type="primary"
-              icon={<SaveOutlined />}
+              icon={<CheckIcon className="w-4 h-4" />}
               onClick={() => form.submit()}
               loading={isLoading}
               className="px-6"
@@ -414,7 +414,7 @@ export default function EditGoodsReceiptPage() {
                 title="Alınan Kalemler"
                 className="mb-6"
                 extra={
-                  <Button type="primary" icon={<PlusOutlined />} onClick={addItem}>
+                  <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={addItem}>
                     Kalem Ekle
                   </Button>
                 }

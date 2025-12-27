@@ -8,7 +8,9 @@
 import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Form, Button, Modal } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import {
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { CrmFormPageLayout } from '@/components/crm/shared';
 import { TerritoryForm } from '@/components/sales/territories';
 import {
@@ -104,7 +106,7 @@ export default function EditTerritoryPage() {
       extraActions={
         <Button
           danger
-          icon={<DeleteOutlined />}
+          icon={<TrashIcon className="w-4 h-4" />}
           onClick={handleDelete}
           loading={deleteTerritory.isPending}
         >

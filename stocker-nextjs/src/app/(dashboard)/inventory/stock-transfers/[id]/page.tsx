@@ -4,22 +4,21 @@ import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Table, Tag, Spin, Empty, Timeline, Progress, Modal } from 'antd';
 import {
-  ArrowLeftOutlined,
-  SwapOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SendOutlined,
-  RocketOutlined,
-  InboxOutlined,
-  ClockCircleOutlined,
-  EditOutlined,
-  PrinterOutlined,
-  EnvironmentOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  ExclamationCircleOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  InboxIcon,
+  MapPinIcon,
+  PaperAirplaneIcon,
+  PencilIcon,
+  PrinterIcon,
+  RocketLaunchIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import {
   useStockTransfer,
   useSubmitStockTransfer,
@@ -40,55 +39,55 @@ const statusConfig: Record<
     label: 'Taslak',
     bgColor: 'bg-slate-100',
     textColor: 'text-slate-600',
-    icon: <EditOutlined />,
+    icon: <PencilIcon className="w-4 h-4" />,
   },
   Pending: {
     label: 'Beklemede',
     bgColor: 'bg-blue-50',
     textColor: 'text-blue-700',
-    icon: <ClockCircleOutlined />,
+    icon: <ClockIcon className="w-4 h-4" />,
   },
   Approved: {
     label: 'Onaylı',
     bgColor: 'bg-indigo-50',
     textColor: 'text-indigo-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   Rejected: {
     label: 'Reddedildi',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
   },
   InTransit: {
     label: 'Yolda',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
-    icon: <RocketOutlined />,
+    icon: <RocketLaunchIcon className="w-4 h-4" />,
   },
   Received: {
     label: 'Teslim Alındı',
     bgColor: 'bg-cyan-50',
     textColor: 'text-cyan-700',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
   },
   PartiallyReceived: {
     label: 'Kısmi Teslim',
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
-    icon: <InboxOutlined />,
+    icon: <InboxIcon className="w-4 h-4" />,
   },
   Completed: {
     label: 'Tamamlandı',
     bgColor: 'bg-emerald-50',
     textColor: 'text-emerald-700',
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   Cancelled: {
     label: 'İptal',
     bgColor: 'bg-red-50',
     textColor: 'text-red-700',
-    icon: <CloseCircleOutlined />,
+    icon: <XCircleIcon className="w-4 h-4" />,
   },
 };
 
@@ -202,13 +201,13 @@ export default function StockTransferDetailPage() {
           <Button
             key="submit"
             type="primary"
-            icon={<SendOutlined />}
+            icon={<PaperAirplaneIcon className="w-4 h-4" />}
             onClick={handleSubmit}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
             Onaya Gönder
           </Button>,
-          <Button key="cancel" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
+          <Button key="cancel" danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleCancel}>
             İptal Et
           </Button>
         );
@@ -218,13 +217,13 @@ export default function StockTransferDetailPage() {
           <Button
             key="approve"
             type="primary"
-            icon={<CheckCircleOutlined />}
+            icon={<CheckCircleIcon className="w-4 h-4" />}
             onClick={handleApprove}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
             Onayla
           </Button>,
-          <Button key="reject" danger icon={<CloseCircleOutlined />} onClick={handleCancel}>
+          <Button key="reject" danger icon={<XCircleIcon className="w-4 h-4" />} onClick={handleCancel}>
             Reddet
           </Button>
         );
@@ -234,7 +233,7 @@ export default function StockTransferDetailPage() {
           <Button
             key="ship"
             type="primary"
-            icon={<RocketOutlined />}
+            icon={<RocketLaunchIcon className="w-4 h-4" />}
             onClick={handleShip}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
@@ -247,7 +246,7 @@ export default function StockTransferDetailPage() {
           <Button
             key="receive"
             type="primary"
-            icon={<InboxOutlined />}
+            icon={<InboxIcon className="w-4 h-4" />}
             onClick={handleReceive}
             style={{ background: '#1e293b', borderColor: '#1e293b' }}
           >
@@ -356,7 +355,7 @@ export default function StockTransferDetailPage() {
         <Button
           type="text"
           size="small"
-          icon={<EyeOutlined />}
+          icon={<EyeIcon className="w-4 h-4" />}
           onClick={() => router.push(`/inventory/products/${record.productId}`)}
           className="text-slate-500 hover:text-blue-600"
           title="Ürün Detayı"
@@ -473,7 +472,7 @@ export default function StockTransferDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.back()}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -504,7 +503,7 @@ export default function StockTransferDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<PrinterOutlined />}
+              icon={<PrinterIcon className="w-4 h-4" />}
               className="border-slate-200 text-slate-700 hover:border-slate-300"
             >
               Yazdır
@@ -523,7 +522,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                  <InboxOutlined className="text-white text-lg" />
+                  <InboxIcon className="w-4 h-4" className="text-white text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Talep Edilen
@@ -542,7 +541,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <RocketOutlined className="text-blue-600 text-lg" />
+                  <RocketLaunchIcon className="w-4 h-4" className="text-blue-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Sevk Edilen
@@ -561,7 +560,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <CheckCircleOutlined className="text-emerald-600 text-lg" />
+                  <CheckCircleIcon className="w-4 h-4" className="text-emerald-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Teslim Alınan
@@ -580,7 +579,7 @@ export default function StockTransferDetailPage() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 h-full">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                  <ExclamationCircleOutlined className="text-red-600 text-lg" />
+                  <ExclamationCircleIcon className="w-4 h-4" className="text-red-600 text-lg" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fark</p>
               </div>
@@ -601,7 +600,7 @@ export default function StockTransferDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-blue-600 text-xl" />
+                  <MapPinIcon className="w-4 h-4" className="text-blue-600 text-xl" />
                 </div>
                 <div>
                   <button
@@ -625,7 +624,7 @@ export default function StockTransferDetailPage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <EnvironmentOutlined className="text-emerald-600 text-xl" />
+                  <MapPinIcon className="w-4 h-4" className="text-emerald-600 text-xl" />
                 </div>
                 <div>
                   <button
@@ -750,7 +749,7 @@ export default function StockTransferDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -760,7 +759,7 @@ export default function StockTransferDetailPage() {
                 {transfer.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -781,7 +780,7 @@ export default function StockTransferDetailPage() {
               {transfer.referenceNumber ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <FileTextOutlined className="text-purple-600 text-lg" />
+                    <DocumentTextIcon className="w-4 h-4" className="text-purple-600 text-lg" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{transfer.referenceNumber}</p>

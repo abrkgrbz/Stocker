@@ -18,16 +18,16 @@ import {
   Progress,
 } from 'antd';
 import {
-  PlusOutlined,
-  AimOutlined,
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+  CheckCircleIcon,
+  ClockIcon,
+  CursorArrowRaysIcon,
+  EllipsisHorizontalIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import type { ColumnsType } from 'antd/es/table';
 import { usePerformanceGoals, useDeletePerformanceGoal, useEmployees } from '@/lib/api/hooks/useHR';
 import type { PerformanceGoalDto } from '@/lib/api/services/hr.types';
@@ -69,13 +69,13 @@ export default function GoalsPage() {
 
   const getStatusConfig = (status?: string, isOverdue?: boolean) => {
     if (isOverdue && status !== 'Completed' && status !== 'Cancelled') {
-      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleOutlined /> };
+      return { color: 'red', text: 'Gecikmiş', icon: <ExclamationCircleIcon className="w-4 h-4" /> };
     }
     const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockCircleOutlined /> },
-      InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockCircleOutlined /> },
-      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleOutlined /> },
-      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleOutlined /> },
+      NotStarted: { color: 'default', text: 'Başlamadı', icon: <ClockIcon className="w-4 h-4" /> },
+      InProgress: { color: 'blue', text: 'Devam Ediyor', icon: <ClockIcon className="w-4 h-4" /> },
+      Completed: { color: 'green', text: 'Tamamlandı', icon: <CheckCircleIcon className="w-4 h-4" /> },
+      Cancelled: { color: 'red', text: 'İptal', icon: <ExclamationCircleIcon className="w-4 h-4" /> },
     };
     return statusMap[status || ''] || { color: 'default', text: status || '-', icon: null };
   };
@@ -143,13 +143,13 @@ export default function GoalsPage() {
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <EyeIcon className="w-4 h-4" />,
                 label: 'Görüntüle',
                 onClick: () => router.push(`/hr/goals/${record.id}`),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <PencilIcon className="w-4 h-4" />,
                 label: 'Düzenle',
                 onClick: () => router.push(`/hr/goals/${record.id}/edit`),
                 disabled: record.status === 'Completed',
@@ -157,7 +157,7 @@ export default function GoalsPage() {
               { type: 'divider' },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <TrashIcon className="w-4 h-4" />,
                 label: 'Sil',
                 danger: true,
                 onClick: () => handleDelete(record),
@@ -166,7 +166,7 @@ export default function GoalsPage() {
           }}
           trigger={['click']}
         >
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -177,10 +177,10 @@ export default function GoalsPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Title level={2} style={{ margin: 0 }}>
-          <AimOutlined className="mr-2" />
+          <CursorArrowRaysIcon className="w-4 h-4" className="mr-2" />
           Performans Hedefleri
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/hr/goals/new')}>
+        <Button type="primary" icon={<PlusIcon className="w-4 h-4" />} onClick={() => router.push('/hr/goals/new')}>
           Yeni Hedef
         </Button>
       </div>
@@ -192,7 +192,7 @@ export default function GoalsPage() {
             <Statistic
               title="Toplam Hedef"
               value={totalGoals}
-              prefix={<AimOutlined />}
+              prefix={<CursorArrowRaysIcon className="w-4 h-4" />}
               valueStyle={{ color: '#7c3aed' }}
             />
           </Card>
@@ -202,7 +202,7 @@ export default function GoalsPage() {
             <Statistic
               title="Devam Eden"
               value={inProgressGoals}
-              prefix={<ClockCircleOutlined />}
+              prefix={<ClockIcon className="w-4 h-4" />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
@@ -212,7 +212,7 @@ export default function GoalsPage() {
             <Statistic
               title="Tamamlanan"
               value={completedGoals}
-              prefix={<CheckCircleOutlined />}
+              prefix={<CheckCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>
@@ -222,7 +222,7 @@ export default function GoalsPage() {
             <Statistic
               title="Gecikmiş"
               value={overdueGoals}
-              prefix={<ExclamationCircleOutlined />}
+              prefix={<ExclamationCircleIcon className="w-4 h-4" />}
               valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>

@@ -17,19 +17,17 @@ import {
 } from 'antd';
 import type { MenuProps } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  StarOutlined,
-  StarFilled,
-  MoreOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowPathIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  EllipsisHorizontalIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  StarIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   usePriceLists,
   useDeletePriceList,
@@ -98,13 +96,13 @@ export default function PriceListsPage() {
   const getActionMenu = (record: PriceListListDto): MenuProps['items'] => [
     {
       key: 'edit',
-      icon: <EditOutlined />,
+      icon: <PencilIcon className="w-4 h-4" />,
       label: 'Duzenle',
       onClick: () => router.push(`/inventory/price-lists/${record.id}/edit`),
     },
     {
       key: 'default',
-      icon: record.isDefault ? <StarFilled /> : <StarOutlined />,
+      icon: record.isDefault ? <StarIcon className="w-4 h-4" /> : <StarOutlined />,
       label: record.isDefault ? 'Varsayilan' : 'Varsayilan Yap',
       disabled: record.isDefault,
       onClick: () => handleSetDefault(record.id),
@@ -114,7 +112,7 @@ export default function PriceListsPage() {
     },
     {
       key: 'toggle',
-      icon: record.isActive ? <StopOutlined /> : <CheckCircleOutlined />,
+      icon: record.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />,
       label: record.isActive ? 'Pasif Yap' : 'Aktif Yap',
       onClick: () => record.isActive ? handleDeactivate(record.id) : handleActivate(record.id),
     },
@@ -123,7 +121,7 @@ export default function PriceListsPage() {
     },
     {
       key: 'delete',
-      icon: <DeleteOutlined />,
+      icon: <TrashIcon className="w-4 h-4" />,
       label: 'Sil',
       danger: true,
       disabled: record.isDefault,
@@ -142,9 +140,9 @@ export default function PriceListsPage() {
             style={{ background: record.isDefault ? '#10b98115' : '#6366f115' }}
           >
             {record.isDefault ? (
-              <StarFilled style={{ fontSize: 18, color: '#10b981' }} />
+              <StarIcon className="w-4 h-4" style={{ fontSize: 18, color: '#10b981' }} />
             ) : (
-              <DollarOutlined style={{ fontSize: 18, color: '#6366f1' }} />
+              <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: 18, color: '#6366f1' }} />
             )}
           </div>
           <div>
@@ -196,7 +194,7 @@ export default function PriceListsPage() {
         return (
           <div className="text-xs">
             <div className="flex items-center gap-1 text-gray-500">
-              <CalendarOutlined />
+              <CalendarIcon className="w-4 h-4" />
               {record.validFrom ? dayjs(record.validFrom).format('DD.MM.YYYY') : '-'}
               {' → '}
               {record.validTo ? dayjs(record.validTo).format('DD.MM.YYYY') : '-'}
@@ -241,7 +239,7 @@ export default function PriceListsPage() {
       width: 100,
       render: (_, record) => (
         <Dropdown menu={{ items: getActionMenu(record) }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<EllipsisHorizontalIcon className="w-4 h-4" />} />
         </Dropdown>
       ),
     },
@@ -257,7 +255,7 @@ export default function PriceListsPage() {
         </div>
         <Space>
           <Button
-            icon={<ReloadOutlined />}
+            icon={<ArrowPathIcon className="w-4 h-4" />}
             onClick={() => refetch()}
           >
             Yenile
@@ -271,7 +269,7 @@ export default function PriceListsPage() {
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<PlusIcon className="w-4 h-4" />}
             onClick={() => router.push('/inventory/price-lists/new')}
             style={{ background: '#6366f1', borderColor: '#6366f1' }}
           >
@@ -284,7 +282,7 @@ export default function PriceListsPage() {
       <Card className="mb-4">
         <Input
           placeholder="Fiyat listesi ara..."
-          prefix={<SearchOutlined className="text-gray-400" />}
+          prefix={<MagnifyingGlassIcon className="w-4 h-4" className="text-gray-400" />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           style={{ maxWidth: 300 }}

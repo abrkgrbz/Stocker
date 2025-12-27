@@ -3,7 +3,12 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Descriptions, Tag, Spin, Row, Col, Statistic, Divider } from 'antd';
-import { ArrowLeftOutlined, PrinterOutlined, DollarOutlined, DownloadOutlined } from '@ant-design/icons';
+import {
+  ArrowDownTrayIcon,
+  ArrowLeftIcon,
+  CurrencyDollarIcon,
+  PrinterIcon,
+} from '@heroicons/react/24/outline';
 import { usePayslip } from '@/lib/api/hooks/useHR';
 
 const statusColors: Record<string, string> = { 'Draft': 'default', 'Pending': 'processing', 'Approved': 'success', 'Paid': 'blue', 'Cancelled': 'error' };
@@ -17,22 +22,22 @@ export default function PayslipDetailPage() {
   const formatCurrency = (value: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value || 0);
 
   if (isLoading) return <div className="flex items-center justify-center min-h-screen"><Spin size="large" /></div>;
-  if (!payslip) return <div className="p-6"><Button icon={<ArrowLeftOutlined />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Bordro bulunamadi.</div></div>;
+  if (!payslip) return <div className="p-6"><Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()}>Geri</Button><div className="mt-4">Bordro bulunamadi.</div></div>;
 
   return (
     <div className="min-h-screen bg-white">
       <div className="sticky top-0 z-50 px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0, 0, 0, 0.06)' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button icon={<ArrowLeftOutlined />} onClick={() => router.back()} type="text" />
+            <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.back()} type="text" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900 m-0">Bordro Detayi</h1>
               <p className="text-sm text-gray-400 m-0">{payslip.employeeName} - {payslip.periodStart ? new Date(payslip.periodStart).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : ''}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button icon={<PrinterOutlined />} onClick={() => window.print()}>Yazdir</Button>
-            <Button icon={<DownloadOutlined />}>PDF Indir</Button>
+            <Button icon={<PrinterIcon className="w-4 h-4" />} onClick={() => window.print()}>Yazdir</Button>
+            <Button icon={<ArrowDownTrayIcon className="w-4 h-4" />}>PDF Indir</Button>
           </div>
         </div>
       </div>
@@ -41,7 +46,7 @@ export default function PayslipDetailPage() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={8}>
             <Card style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', border: 'none' }} bodyStyle={{ padding: '40px 20px', textAlign: 'center' }}>
-              <DollarOutlined style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
+              <CurrencyDollarIcon className="w-4 h-4" style={{ fontSize: '64px', color: 'rgba(255,255,255,0.9)' }} />
               <h3 className="mt-4 text-lg font-medium text-white/90">{payslip.employeeName}</h3>
               <p className="text-sm text-white/60">{payslip.period}</p>
               <Tag color={statusColors[payslip.status]} className="mt-4">{payslip.status}</Tag>

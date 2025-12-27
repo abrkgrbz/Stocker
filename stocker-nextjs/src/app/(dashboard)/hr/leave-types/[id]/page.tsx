@@ -17,14 +17,13 @@ import {
   Modal,
 } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  DeleteOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import {
   useLeaveType,
   useDeleteLeaveType,
@@ -101,7 +100,7 @@ export default function LeaveTypeDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <Space>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/hr/leave-types')}>
+          <Button icon={<ArrowLeftIcon className="w-4 h-4" />} onClick={() => router.push('/hr/leave-types')}>
             Geri
           </Button>
           <div>
@@ -119,15 +118,15 @@ export default function LeaveTypeDetailPage() {
         </Space>
         <Space>
           <Button
-            icon={leaveType.isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+            icon={leaveType.isActive ? <StopOutlined /> : <CheckCircleIcon className="w-4 h-4" />}
             onClick={handleToggleActive}
           >
             {leaveType.isActive ? 'Pasifleştir' : 'Aktifleştir'}
           </Button>
-          <Button icon={<EditOutlined />} onClick={() => router.push(`/hr/leave-types/${id}/edit`)}>
+          <Button icon={<PencilIcon className="w-4 h-4" />} onClick={() => router.push(`/hr/leave-types/${id}/edit`)}>
             Düzenle
           </Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>
+          <Button danger icon={<TrashIcon className="w-4 h-4" />} onClick={handleDelete}>
             Sil
           </Button>
         </Space>
@@ -143,7 +142,7 @@ export default function LeaveTypeDetailPage() {
                   title="Varsayılan Gün"
                   value={leaveType.defaultDays || 0}
                   suffix="gün"
-                  prefix={<CalendarOutlined />}
+                  prefix={<CalendarIcon className="w-4 h-4" />}
                   valueStyle={{ color: '#7c3aed' }}
                 />
               </Card>

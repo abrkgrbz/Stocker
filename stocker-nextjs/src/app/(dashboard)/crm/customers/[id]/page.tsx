@@ -4,29 +4,28 @@ import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Space, Tag, Spin, Empty, Modal, Form, Input, InputNumber, Tabs, Timeline, Card, Skeleton, Table, Select, DatePicker, Tooltip, Checkbox } from 'antd';
 import {
-  ArrowLeftOutlined,
-  EditOutlined,
-  ShopOutlined,
-  GlobalOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
-  DollarOutlined,
-  TagOutlined,
-  ClockCircleOutlined,
-  ShoppingOutlined,
-  FileOutlined,
-  UserOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  LockOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+  ArrowLeftIcon,
+  BuildingStorefrontIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
+  MapPinIcon,
+  PencilIcon,
+  PhoneIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
+  UserGroupIcon,
+  UserIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { useCustomer, useUpdateCustomer, useActivities, useContactsByCustomer, useCreateContact, useUpdateContact, useDeleteContact, useSetContactAsPrimary } from '@/lib/api/hooks/useCRM';
 import type { Contact, CreateContactCommand, UpdateContactCommand } from '@/lib/api/services/crm.service';
 import { useSalesOrdersByCustomer, useCreateSalesOrder } from '@/lib/api/hooks/useSales';
@@ -308,14 +307,14 @@ export default function CustomerDetailPage() {
   // Activity helpers
   const getActivityIcon = (type: string) => {
     const iconMap: Record<string, React.ReactNode> = {
-      Call: <PhoneOutlined />,
-      Email: <MailOutlined />,
-      Meeting: <TeamOutlined />,
-      Task: <FileTextOutlined />,
-      Note: <FileTextOutlined />,
-      Document: <FileOutlined />,
+      Call: <PhoneIcon className="w-4 h-4" />,
+      Email: <EnvelopeIcon className="w-4 h-4" />,
+      Meeting: <UserGroupIcon className="w-4 h-4" />,
+      Task: <DocumentTextIcon className="w-4 h-4" />,
+      Note: <DocumentTextIcon className="w-4 h-4" />,
+      Document: <DocumentIcon className="w-4 h-4" />,
     };
-    return iconMap[type] || <ClockCircleOutlined />;
+    return iconMap[type] || <ClockIcon className="w-4 h-4" />;
   };
 
   const getActivityColor = (type: string, status: string) => {
@@ -356,7 +355,7 @@ export default function CustomerDetailPage() {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftIcon className="w-4 h-4" />}
               onClick={() => router.push('/crm/customers')}
               className="text-slate-600 hover:text-slate-900"
             >
@@ -365,13 +364,13 @@ export default function CustomerDetailPage() {
             <div className="h-6 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${customer.isActive ? 'bg-blue-600' : 'bg-slate-400'}`}>
-                <ShopOutlined className="text-white text-lg" />
+                <BuildingStorefrontIcon className="w-4 h-4" className="text-white text-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-semibold text-slate-900 m-0">{customer.companyName}</h1>
                   <Tag
-                    icon={customer.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={customer.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       customer.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -387,7 +386,7 @@ export default function CustomerDetailPage() {
           </div>
           <Space>
             <Button
-              icon={<EditOutlined />}
+              icon={<PencilIcon className="w-4 h-4" />}
               onClick={() => {
                 form.setFieldsValue({
                   companyName: customer.companyName,
@@ -448,7 +447,7 @@ export default function CustomerDetailPage() {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Durum</p>
                   <Tag
-                    icon={customer.isActive ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                    icon={customer.isActive ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
                     className={`border-0 ${
                       customer.isActive
                         ? 'bg-emerald-50 text-emerald-700'
@@ -476,7 +475,7 @@ export default function CustomerDetailPage() {
               {customer.description && (
                 <div className="mt-6 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <FileTextOutlined className="text-slate-400" />
+                    <DocumentTextIcon className="w-4 h-4" className="text-slate-400" />
                     <p className="text-xs text-slate-400 m-0">Açıklama</p>
                   </div>
                   <p className="text-sm text-slate-700">{customer.description}</p>
@@ -527,7 +526,7 @@ export default function CustomerDetailPage() {
           <div className="col-span-12">
             <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TagOutlined className="text-slate-400" />
+                <TagIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Etiketler
                 </p>
@@ -540,7 +539,7 @@ export default function CustomerDetailPage() {
           <div className="col-span-12 lg:col-span-6">
             <div className="bg-white border border-slate-200 rounded-xl p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <EnvironmentOutlined className="text-slate-400" />
+                <MapPinIcon className="w-4 h-4" className="text-slate-400" />
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">
                   Adres Bilgileri
                 </p>
@@ -586,7 +585,7 @@ export default function CustomerDetailPage() {
                 <div className="mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <GlobalOutlined className="text-slate-600 text-lg" />
+                      <GlobeAltIcon className="w-4 h-4" className="text-slate-600 text-lg" />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-slate-400 mb-0">Web Sitesi</p>
@@ -607,7 +606,7 @@ export default function CustomerDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <CalendarOutlined className="text-slate-400" />
+                    <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                     <span className="text-sm text-slate-500">Oluşturulma</span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
@@ -617,7 +616,7 @@ export default function CustomerDetailPage() {
                 {customer.updatedAt && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-slate-400" />
+                      <CalendarIcon className="w-4 h-4" className="text-slate-400" />
                       <span className="text-sm text-slate-500">Güncelleme</span>
                     </div>
                     <span className="text-sm font-medium text-slate-900">
@@ -652,7 +651,7 @@ export default function CustomerDetailPage() {
                     key: 'activities',
                     label: (
                       <span className="flex items-center gap-2 py-1">
-                        <ClockCircleOutlined />
+                        <ClockIcon className="w-4 h-4" />
                         Aktiviteler
                         {timelineData.length > 0 && (
                           <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
@@ -667,7 +666,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-50">
-                              <ClockCircleOutlined className="text-purple-600 text-lg" />
+                              <ClockIcon className="w-4 h-4" className="text-purple-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -684,7 +683,7 @@ export default function CustomerDetailPage() {
                           <button
                             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                           >
-                            <PlusOutlined />
+                            <PlusIcon className="w-4 h-4" />
                             Yeni Aktivite
                           </button>
                         </div>
@@ -702,7 +701,7 @@ export default function CustomerDetailPage() {
                         ) : timelineData.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <ClockCircleOutlined className="text-xl" />
+                              <ClockIcon className="w-4 h-4" className="text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Aktivite bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -711,7 +710,7 @@ export default function CustomerDetailPage() {
                             <button
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                             >
-                              <PlusOutlined />
+                              <PlusIcon className="w-4 h-4" />
                               İlk Aktiviteyi Oluştur
                             </button>
                           </div>
@@ -729,7 +728,7 @@ export default function CustomerDetailPage() {
                                   item.color === 'red' ? 'bg-red-50' :
                                   item.color === 'purple' ? 'bg-purple-50' : 'bg-slate-100'
                                 }`}>
-                                  {item.icon || <ClockCircleOutlined className={`text-lg ${
+                                  {item.icon || <ClockIcon className="w-4 h-4" className={`text-lg ${
                                     item.color === 'blue' ? 'text-blue-600' :
                                     item.color === 'green' ? 'text-green-600' :
                                     item.color === 'orange' ? 'text-orange-600' :
@@ -779,7 +778,7 @@ export default function CustomerDetailPage() {
                         {!canCreateOrder && !modulesLoading && (
                           <div className="mb-6 p-4 bg-amber-50/50 border border-amber-200/50 rounded-lg flex items-center gap-3">
                             <div className="w-8 h-8 rounded-md flex items-center justify-center bg-amber-100">
-                              <LockOutlined className="text-amber-600 text-sm" />
+                              <LockClosedIcon className="w-4 h-4" className="text-amber-600 text-sm" />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-amber-800 m-0">Sipariş Oluşturma Kısıtlı</p>
@@ -813,7 +812,7 @@ export default function CustomerDetailPage() {
                               onClick={() => setIsOrderModalOpen(true)}
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                             >
-                              <PlusOutlined />
+                              <PlusIcon className="w-4 h-4" />
                               Yeni Sipariş
                             </button>
                           )}
@@ -843,7 +842,7 @@ export default function CustomerDetailPage() {
                                 onClick={() => setIsOrderModalOpen(true)}
                                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                               >
-                                <PlusOutlined />
+                                <PlusIcon className="w-4 h-4" />
                                 İlk Siparişi Oluştur
                               </button>
                             )}
@@ -905,7 +904,7 @@ export default function CustomerDetailPage() {
                                       router.push(`/sales/orders/${order.id}`);
                                     }}
                                   >
-                                    <EyeOutlined />
+                                    <EyeIcon className="w-4 h-4" />
                                   </button>
                                 </div>
                               </div>
@@ -919,7 +918,7 @@ export default function CustomerDetailPage() {
                     key: 'documents',
                     label: (
                       <span className="flex items-center gap-2 py-1">
-                        <FileOutlined />
+                        <DocumentIcon className="w-4 h-4" />
                         Dokümanlar
                       </span>
                     ),
@@ -939,7 +938,7 @@ export default function CustomerDetailPage() {
                     key: 'contacts',
                     label: (
                       <span className="flex items-center gap-2 py-1">
-                        <UserOutlined />
+                        <UserIcon className="w-4 h-4" />
                         Kişiler
                         {contactsData && contactsData.length > 0 && (
                           <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
@@ -954,7 +953,7 @@ export default function CustomerDetailPage() {
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-50">
-                              <UserOutlined className="text-indigo-600 text-lg" />
+                              <UserIcon className="w-4 h-4" className="text-indigo-600 text-lg" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -972,7 +971,7 @@ export default function CustomerDetailPage() {
                             onClick={() => handleOpenContactModal()}
                             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                           >
-                            <PlusOutlined />
+                            <PlusIcon className="w-4 h-4" />
                             Yeni Kişi
                           </button>
                         </div>
@@ -990,7 +989,7 @@ export default function CustomerDetailPage() {
                         ) : !contactsData?.length ? (
                           <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
-                              <UserOutlined className="text-xl" />
+                              <UserIcon className="w-4 h-4" className="text-xl" />
                             </div>
                             <h3 className="text-sm font-medium text-slate-900 mb-1">Kişi bulunmuyor</h3>
                             <p className="text-sm text-slate-500 mb-4 max-w-sm">
@@ -1000,7 +999,7 @@ export default function CustomerDetailPage() {
                               onClick={() => handleOpenContactModal()}
                               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                             >
-                              <PlusOutlined />
+                              <PlusIcon className="w-4 h-4" />
                               İlk Kişiyi Ekle
                             </button>
                           </div>
@@ -1013,7 +1012,7 @@ export default function CustomerDetailPage() {
                               >
                                 <div className="flex items-center gap-4">
                                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${contact.isPrimary ? 'bg-indigo-100' : 'bg-slate-100'}`}>
-                                    <UserOutlined className={contact.isPrimary ? 'text-indigo-600' : 'text-slate-500'} />
+                                    <UserIcon className="w-4 h-4" className={contact.isPrimary ? 'text-indigo-600' : 'text-slate-500'} />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
@@ -1059,7 +1058,7 @@ export default function CustomerDetailPage() {
                                         className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
                                         onClick={() => handleSetPrimaryContact(contact.id)}
                                       >
-                                        <CheckCircleOutlined />
+                                        <CheckCircleIcon className="w-4 h-4" />
                                       </button>
                                     </Tooltip>
                                   )}
@@ -1068,7 +1067,7 @@ export default function CustomerDetailPage() {
                                       className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
                                       onClick={() => handleOpenContactModal(contact)}
                                     >
-                                      <EditOutlined />
+                                      <PencilIcon className="w-4 h-4" />
                                     </button>
                                   </Tooltip>
                                   <Tooltip title="Sil">
@@ -1085,7 +1084,7 @@ export default function CustomerDetailPage() {
                                         });
                                       }}
                                     >
-                                      <DeleteOutlined />
+                                      <TrashIcon className="w-4 h-4" />
                                     </button>
                                   </Tooltip>
                                 </div>
@@ -1107,7 +1106,7 @@ export default function CustomerDetailPage() {
       <Modal
         title={
           <div className="flex items-center gap-2">
-            <EditOutlined className="text-blue-600" />
+            <PencilIcon className="w-4 h-4" className="text-blue-600" />
             <span>Müşteri Bilgilerini Düzenle</span>
           </div>
         }
@@ -1129,7 +1128,7 @@ export default function CustomerDetailPage() {
               label="Firma Adı"
               rules={[{ required: true, message: 'Firma adı gereklidir' }]}
             >
-              <Input size="large" prefix={<ShopOutlined />} placeholder="Firma adı" />
+              <Input size="large" prefix={<BuildingStorefrontIcon className="w-4 h-4" />} placeholder="Firma adı" />
             </Form.Item>
 
             <Form.Item
@@ -1140,27 +1139,27 @@ export default function CustomerDetailPage() {
                 { type: 'email', message: 'Geçerli bir e-posta adresi girin' }
               ]}
             >
-              <Input size="large" prefix={<MailOutlined />} placeholder="ornek@firma.com" />
+              <Input size="large" prefix={<EnvelopeIcon className="w-4 h-4" />} placeholder="ornek@firma.com" />
             </Form.Item>
 
             <Form.Item name="phone" label="Telefon">
-              <Input size="large" prefix={<PhoneOutlined />} placeholder="+90 555 123 4567" />
+              <Input size="large" prefix={<PhoneIcon className="w-4 h-4" />} placeholder="+90 555 123 4567" />
             </Form.Item>
 
             <Form.Item name="website" label="Website">
-              <Input size="large" prefix={<GlobalOutlined />} placeholder="https://www.firma.com" />
+              <Input size="large" prefix={<GlobeAltIcon className="w-4 h-4" />} placeholder="https://www.firma.com" />
             </Form.Item>
 
             <Form.Item name="industry" label="Sektör">
-              <Input size="large" prefix={<ShopOutlined />} placeholder="Teknoloji" />
+              <Input size="large" prefix={<BuildingStorefrontIcon className="w-4 h-4" />} placeholder="Teknoloji" />
             </Form.Item>
 
             <Form.Item name="address" label="Adres">
-              <Input size="large" prefix={<EnvironmentOutlined />} placeholder="Adres" />
+              <Input size="large" prefix={<MapPinIcon className="w-4 h-4" />} placeholder="Adres" />
             </Form.Item>
 
             <Form.Item name="city" label="Şehir">
-              <Input size="large" prefix={<EnvironmentOutlined />} placeholder="İstanbul" />
+              <Input size="large" prefix={<MapPinIcon className="w-4 h-4" />} placeholder="İstanbul" />
             </Form.Item>
 
             <Form.Item name="state" label="İlçe">
@@ -1206,7 +1205,7 @@ export default function CustomerDetailPage() {
             <Button size="large" onClick={() => setIsEditModalOpen(false)}>
               İptal
             </Button>
-            <Button type="primary" size="large" htmlType="submit" icon={<EditOutlined />} loading={updateCustomer.isPending}>
+            <Button type="primary" size="large" htmlType="submit" icon={<PencilIcon className="w-4 h-4" />} loading={updateCustomer.isPending}>
               Güncelle
             </Button>
           </div>
@@ -1251,7 +1250,7 @@ export default function CustomerDetailPage() {
           <div className="bg-slate-50/50 border border-slate-200/50 p-4 rounded-xl mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-100">
-                <ShopOutlined className="text-slate-500" />
+                <BuildingStorefrontIcon className="w-4 h-4" className="text-slate-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-900 m-0">{customer?.companyName}</p>
@@ -1387,7 +1386,7 @@ export default function CustomerDetailPage() {
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           onClick={() => handleRemoveProduct(item.productId)}
                         >
-                          <DeleteOutlined />
+                          <TrashIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -1400,7 +1399,7 @@ export default function CustomerDetailPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10">
-                      <DollarOutlined className="text-white" />
+                      <CurrencyDollarIcon className="w-4 h-4" className="text-white" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-400 m-0">Genel Toplam</p>
@@ -1470,7 +1469,7 @@ export default function CustomerDetailPage() {
         {/* Modal Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-slate-200">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${editingContact ? 'bg-amber-50' : 'bg-indigo-50'}`}>
-            <UserOutlined className={`text-xl ${editingContact ? 'text-amber-600' : 'text-indigo-600'}`} />
+            <UserIcon className="w-4 h-4" className={`text-xl ${editingContact ? 'text-amber-600' : 'text-indigo-600'}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 m-0">
@@ -1492,7 +1491,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <UserOutlined className="text-slate-500 text-xs" />
+                <UserIcon className="w-4 h-4" className="text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Kişisel Bilgiler</span>
             </div>
@@ -1551,7 +1550,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <PhoneOutlined className="text-slate-500 text-xs" />
+                <PhoneIcon className="w-4 h-4" className="text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">İletişim Bilgileri</span>
             </div>
@@ -1567,7 +1566,7 @@ export default function CustomerDetailPage() {
                   className="mb-0"
                 >
                   <Input
-                    prefix={<MailOutlined className="text-slate-400" />}
+                    prefix={<EnvelopeIcon className="w-4 h-4" className="text-slate-400" />}
                     placeholder="ahmet@firma.com"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1578,7 +1577,7 @@ export default function CustomerDetailPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Telefon</label>
                 <Form.Item name="phone" className="mb-0">
                   <Input
-                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    prefix={<PhoneIcon className="w-4 h-4" className="text-slate-400" />}
                     placeholder="+90 212 123 4567"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1589,7 +1588,7 @@ export default function CustomerDetailPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Cep Telefonu</label>
                 <Form.Item name="mobilePhone" className="mb-0">
                   <Input
-                    prefix={<PhoneOutlined className="text-slate-400" />}
+                    prefix={<PhoneIcon className="w-4 h-4" className="text-slate-400" />}
                     placeholder="+90 555 123 4567"
                     className="h-10 rounded-lg border-slate-200 hover:border-slate-300 focus:border-slate-400"
                   />
@@ -1602,7 +1601,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <TagOutlined className="text-slate-500 text-xs" />
+                <TagIcon className="w-4 h-4" className="text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Ayarlar</span>
             </div>
@@ -1623,7 +1622,7 @@ export default function CustomerDetailPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 rounded-md flex items-center justify-center bg-slate-100">
-                <FileTextOutlined className="text-slate-500 text-xs" />
+                <DocumentTextIcon className="w-4 h-4" className="text-slate-500 text-xs" />
               </div>
               <span className="text-sm font-medium text-slate-700">Notlar</span>
             </div>
@@ -1653,9 +1652,9 @@ export default function CustomerDetailPage() {
               {(createContact.isPending || updateContact.isPending) ? (
                 <Spin size="small" className="text-white" />
               ) : editingContact ? (
-                <EditOutlined />
+                <PencilIcon className="w-4 h-4" />
               ) : (
-                <PlusOutlined />
+                <PlusIcon className="w-4 h-4" />
               )}
               {editingContact ? 'Güncelle' : 'Kişi Ekle'}
             </button>
