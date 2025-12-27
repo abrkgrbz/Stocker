@@ -92,7 +92,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl">
 
         {/* ═══════════════════════════════════════════════════════════════
             HEADER: Icon + Name + Type Selector
@@ -154,7 +154,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── BÜTÇE BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Bütçe Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -210,7 +210,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── HEDEF BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Hedef Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -249,7 +249,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── ZAMANLAMA ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Zamanlama
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -287,7 +287,7 @@ export default function CampaignForm({ form, initialValues, onFinish, loading }:
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Notlar
             </h3>
             <div className="grid grid-cols-12 gap-4">

@@ -23,11 +23,12 @@ public class GetTenantAuditLogsQueryHandler : IRequestHandler<GetTenantAuditLogs
 
     public async Task<Result<TenantAuditLogsResponse>> Handle(GetTenantAuditLogsQuery request, CancellationToken cancellationToken)
     {
-        // First, get the TenantCode from TenantId
+        // First, get the TenantCode and TenantName from TenantId
+        // Note: SecurityAuditLog may store either Code or Name in TenantCode field
         var tenant = await _unitOfWork.Tenants()
             .AsQueryable()
             .Where(t => t.Id == request.TenantId)
-            .Select(t => new { t.Code })
+            .Select(t => new { t.Code, t.Name })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (tenant == null)
@@ -36,12 +37,11 @@ public class GetTenantAuditLogsQueryHandler : IRequestHandler<GetTenantAuditLogs
                 new Error("Tenant.NotFound", "Tenant bulunamadı", ErrorType.NotFound));
         }
 
-        var tenantCode = tenant.Code;
-
-        // Query audit logs filtered by tenant code
+        // Query audit logs filtered by tenant code OR tenant name
+        // (Login handler stores TenantName in TenantCode field)
         var query = _unitOfWork.SecurityAuditLogs()
             .AsQueryable()
-            .Where(x => x.TenantCode == tenantCode);
+            .Where(x => x.TenantCode == tenant.Code || x.TenantCode == tenant.Name);
 
         // Apply date filters
         if (request.FromDate.HasValue)

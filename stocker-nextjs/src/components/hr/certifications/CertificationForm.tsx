@@ -1,47 +1,31 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Switch,
-  InputNumber,
-  DatePicker,
-} from 'antd';
-import {
-  ShieldCheckIcon,
-  CurrencyDollarIcon,
-  BookOpenIcon,
-  TrophyIcon,
-} from '@heroicons/react/24/outline';
+import { Form, Input, Select, Switch, InputNumber, DatePicker } from 'antd';
+import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import type { CertificationDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 // Certification type options
 const certificationTypeOptions = [
   { value: 'Professional', label: 'Profesyonel' },
   { value: 'Technical', label: 'Teknik' },
-  { value: 'Industry', label: 'Sektörel' },
+  { value: 'Industry', label: 'Sektorel' },
   { value: 'Academic', label: 'Akademik' },
   { value: 'Government', label: 'Devlet' },
-  { value: 'Vendor', label: 'Vendor/Ürün' },
-  { value: 'Safety', label: 'Güvenlik' },
+  { value: 'Vendor', label: 'Vendor/Urun' },
+  { value: 'Safety', label: 'Guvenlik' },
   { value: 'Quality', label: 'Kalite' },
-  { value: 'Other', label: 'Diğer' },
+  { value: 'Other', label: 'Diger' },
 ];
 
 // Certification level options
 const certificationLevelOptions = [
   { value: 'Foundation', label: 'Foundation (Temel)' },
-  { value: 'Associate', label: 'Associate (Yardımcı)' },
+  { value: 'Associate', label: 'Associate (Yardimci)' },
   { value: 'Professional', label: 'Professional (Profesyonel)' },
   { value: 'Expert', label: 'Expert (Uzman)' },
   { value: 'Master', label: 'Master (Usta)' },
@@ -114,534 +98,458 @@ export default function CertificationForm({
       layout="vertical"
       onFinish={handleFinish}
       disabled={loading}
-      className="certification-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Status (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShieldCheckIcon className="w-16 h-16 text-white/90" />
-              <p className="mt-4 text-lg font-medium text-white/90">
-                Sertifika Bilgileri
-              </p>
-              <p className="text-sm text-white/60">
-                Çalışan sertifikalarını yönetin
-              </p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Status Toggles */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  Eğitim Gerekli
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Sertifika için eğitim zorunlu mu?
-                </div>
+        {/* HEADER */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Certification Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <ShieldCheckIcon className="w-6 h-6 text-slate-500" />
               </div>
-              <Form.Item name="trainingRequired" valuePropName="checked" noStyle>
-                <Switch
-                  checked={trainingRequired}
-                  onChange={(val) => {
-                    setTrainingRequired(val);
-                    form.setFieldValue('trainingRequired', val);
-                  }}
-                />
-              </Form.Item>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  Sınav Gerekli
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Sertifika için sınav zorunlu mu?
-                </div>
-              </div>
-              <Form.Item name="examRequired" valuePropName="checked" noStyle>
-                <Switch
-                  checked={examRequired}
-                  onChange={(val) => {
-                    setExamRequired(val);
-                    form.setFieldValue('examRequired', val);
-                  }}
-                />
-              </Form.Item>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  CPE/CEU Gerekli
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Sürekli eğitim kredisi gerekli mi?
-                </div>
-              </div>
-              <Form.Item name="cpeRequired" valuePropName="checked" noStyle>
-                <Switch
-                  checked={cpeRequired}
-                  onChange={(val) => {
-                    setCpeRequired(val);
-                    form.setFieldValue('cpeRequired', val);
-                  }}
-                />
-              </Form.Item>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  Şirket Sponsorlu
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Masraflar şirket tarafından karşılanıyor mu?
-                </div>
-              </div>
-              <Form.Item name="companySponsored" valuePropName="checked" noStyle>
-                <Switch
-                  checked={companySponsored}
-                  onChange={(val) => {
-                    setCompanySponsored(val);
-                    form.setFieldValue('companySponsored', val);
-                  }}
-                />
-              </Form.Item>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  İş İçin Zorunlu
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  Pozisyon için gerekli mi?
-                </div>
-              </div>
-              <Form.Item name="requiredForJob" valuePropName="checked" noStyle>
-                <Switch
-                  checked={requiredForJob}
-                  onChange={(val) => {
-                    setRequiredForJob(val);
-                    form.setFieldValue('requiredForJob', val);
-                  }}
-                />
-              </Form.Item>
-            </div>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div
-                className={`p-4 rounded-xl text-center ${
-                  initialValues.isExpired
-                    ? 'bg-red-50'
-                    : initialValues.isExpiringSoon
-                    ? 'bg-yellow-50'
-                    : 'bg-green-50'
-                }`}
+            {/* Certification Name */}
+            <div className="flex-1">
+              <Form.Item
+                name="certificationName"
+                rules={[
+                  { required: true, message: 'Sertifika adi zorunludur' },
+                  { max: 200, message: 'En fazla 200 karakter' },
+                ]}
+                className="mb-0"
               >
-                <div
-                  className={`text-2xl font-semibold ${
-                    initialValues.isExpired
-                      ? 'text-red-600'
-                      : initialValues.isExpiringSoon
-                      ? 'text-yellow-600'
-                      : 'text-green-600'
-                  }`}
-                >
-                  {initialValues.isExpired
-                    ? 'Süresi Doldu'
-                    : initialValues.isExpiringSoon
-                    ? 'Yakında'
-                    : 'Geçerli'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Durum</div>
-              </div>
-              {initialValues.examScore && (
-                <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                  <div className="text-2xl font-semibold text-gray-800">
-                    {initialValues.examScore}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">Sınav Puanı</div>
-                </div>
-              )}
+                <Input
+                  placeholder="Sertifika Adi Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="description" className="mb-0 mt-1">
+                <Input
+                  placeholder="Sertifika aciklamasi..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
+                />
+              </Form.Item>
             </div>
-          )}
-        </Col>
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Certification Name - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="certificationName"
-              rules={[
-                { required: true, message: 'Sertifika adı zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Sertifika adı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="description" className="mb-0 mt-2">
-              <TextArea
-                placeholder="Sertifika açıklaması..."
-                variant="borderless"
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                  resize: 'none',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
+            {/* Status Indicator (Edit Mode) */}
+            {initialValues && (
+              <div className="flex-shrink-0">
+                <div className={`px-4 py-2 rounded-lg ${
+                  initialValues.isExpired
+                    ? 'bg-red-100 text-red-700'
+                    : initialValues.isExpiringSoon
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-green-100 text-green-700'
+                }`}>
+                  <span className="text-sm font-medium">
+                    {initialValues.isExpired
+                      ? 'Suresi Doldu'
+                      : initialValues.isExpiringSoon
+                      ? 'Yakinda Dolacak'
+                      : 'Gecerli'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+        {/* FORM BODY */}
+        <div className="px-8 py-6">
 
-          {/* Basic Info */}
+          {/* TEMEL BILGILER */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <TrophyIcon className="w-4 h-4 mr-1 inline" /> Temel Bilgiler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Çalışan *</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Temel Bilgiler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Calisan <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="employeeId"
                   rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Select
-                    placeholder="Çalışan seçin"
+                    placeholder="Calisan secin"
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={employees.map((e) => ({
                       value: e.id,
                       label: e.fullName,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sertifika Tipi *</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika Tipi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="certificationType"
                   rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <Select
-                    placeholder="Tip seçin"
-                    variant="filled"
+                    placeholder="Tip secin"
                     options={certificationTypeOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Seviye</div>
-                <Form.Item name="certificationLevel" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Seviye</label>
+                <Form.Item name="certificationLevel" className="mb-0">
                   <Select
-                    placeholder="Seviye seçin"
-                    variant="filled"
+                    placeholder="Seviye secin"
                     allowClear
                     options={certificationLevelOptions}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Uzmanlık Alanı</div>
-                <Form.Item name="specialization" className="mb-3">
-                  <Input placeholder="Örn: Cloud, Security" variant="filled" />
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Uzmanlik Alani</label>
+                <Form.Item name="specialization" className="mb-0">
+                  <Input
+                    placeholder="Orn: Cloud, Security"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Issuing Authority */}
+          {/* VEREN KURUM */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Veren Kurum
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Kurum Adı *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Kurum Adi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="issuingAuthority"
                   rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
-                  <Input placeholder="Örn: Microsoft, AWS, PMI" variant="filled" />
+                  <Input
+                    placeholder="Orn: Microsoft, AWS, PMI"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Ülke</div>
-                <Form.Item name="issuingCountry" className="mb-3">
-                  <Input placeholder="ABD, Almanya, vb." variant="filled" />
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Ulke</label>
+                <Form.Item name="issuingCountry" className="mb-0">
+                  <Input
+                    placeholder="ABD, Almanya, vb."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sertifika No</div>
-                <Form.Item name="certificationNumber" className="mb-3">
-                  <Input placeholder="Sertifika numarası" variant="filled" />
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika No</label>
+                <Form.Item name="certificationNumber" className="mb-0">
+                  <Input
+                    placeholder="Sertifika numarasi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Credential ID</div>
-                <Form.Item name="credentialId" className="mb-3">
-                  <Input placeholder="Kimlik numarası" variant="filled" />
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Credential ID</label>
+                <Form.Item name="credentialId" className="mb-0">
+                  <Input
+                    placeholder="Kimlik numarasi"
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
-            <div className="text-xs text-gray-400 mb-1">Doğrulama URL</div>
-            <Form.Item name="verificationUrl" className="mb-0">
-              <Input
-                placeholder="https://verify.example.com/..."
-                variant="filled"
-              />
-            </Form.Item>
+              </div>
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Dogrulama URL</label>
+                <Form.Item name="verificationUrl" className="mb-0">
+                  <Input
+                    placeholder="https://verify.example.com/..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Dates */}
+          {/* TARIHLER */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Tarihler
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Verilme Tarihi *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Verilme Tarihi <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="issueDate"
                   rules={[{ required: true, message: 'Gerekli' }]}
-                  className="mb-3"
+                  className="mb-0"
                 >
                   <DatePicker
-                    style={{ width: '100%' }}
-                    variant="filled"
                     format="DD.MM.YYYY"
-                    placeholder="Tarih seçin"
+                    placeholder="Tarih secin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Geçerlilik Bitiş</div>
-                <Form.Item name="expiryDate" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Gecerlilik Bitis</label>
+                <Form.Item name="expiryDate" className="mb-0">
                   <DatePicker
-                    style={{ width: '100%' }}
-                    variant="filled"
                     format="DD.MM.YYYY"
-                    placeholder="Tarih seçin"
+                    placeholder="Tarih secin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Training Section (if required) */}
+          {/* GEREKSINIMLER */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Gereksinimler
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Egitim Gerekli</span>
+                  <Form.Item name="trainingRequired" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={trainingRequired}
+                      onChange={(val) => {
+                        setTrainingRequired(val);
+                        form.setFieldValue('trainingRequired', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-4">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Sinav Gerekli</span>
+                  <Form.Item name="examRequired" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={examRequired}
+                      onChange={(val) => {
+                        setExamRequired(val);
+                        form.setFieldValue('examRequired', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-4">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">CPE/CEU Gerekli</span>
+                  <Form.Item name="cpeRequired" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={cpeRequired}
+                      onChange={(val) => {
+                        setCpeRequired(val);
+                        form.setFieldValue('cpeRequired', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-6">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Sirket Sponsorlu</span>
+                  <Form.Item name="companySponsored" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={companySponsored}
+                      onChange={(val) => {
+                        setCompanySponsored(val);
+                        form.setFieldValue('companySponsored', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+              <div className="col-span-6">
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-sm font-medium text-slate-600">Is Icin Zorunlu</span>
+                  <Form.Item name="requiredForJob" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={requiredForJob}
+                      onChange={(val) => {
+                        setRequiredForJob(val);
+                        form.setFieldValue('requiredForJob', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* EGITIM BILGILERI (if required) */}
           {trainingRequired && (
-            <>
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  <BookOpenIcon className="w-4 h-4 mr-1 inline" /> Eğitim Bilgileri
-                </Text>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <div className="text-xs text-gray-400 mb-1">Toplam Saat</div>
-                    <Form.Item name="totalTrainingHours" className="mb-3">
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        variant="filled"
-                        placeholder="40"
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <div className="text-xs text-gray-400 mb-1">Eğitim Sağlayıcı</div>
-                    <Form.Item name="trainingProvider" className="mb-3">
-                      <Input placeholder="Eğitim veren kurum" variant="filled" />
-                    </Form.Item>
-                  </Col>
-                </Row>
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Egitim Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Toplam Saat</label>
+                  <Form.Item name="totalTrainingHours" className="mb-0">
+                    <InputNumber
+                      placeholder="40"
+                      min={0}
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Egitim Saglayici</label>
+                  <Form.Item name="trainingProvider" className="mb-0">
+                    <Input
+                      placeholder="Egitim veren kurum"
+                      className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
-          {/* Exam Section (if required) */}
+          {/* SINAV BILGILERI (if required) */}
           {examRequired && (
-            <>
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  Sınav Bilgileri
-                </Text>
-                <Row gutter={16}>
-                  <Col span={8}>
-                    <div className="text-xs text-gray-400 mb-1">Sınav Tarihi</div>
-                    <Form.Item name="examDate" className="mb-3">
-                      <DatePicker
-                        style={{ width: '100%' }}
-                        variant="filled"
-                        format="DD.MM.YYYY"
-                        placeholder="Tarih seçin"
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={8}>
-                    <div className="text-xs text-gray-400 mb-1">Sınav Puanı</div>
-                    <Form.Item name="examScore" className="mb-3">
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        max={100}
-                        variant="filled"
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={8}>
-                    <div className="text-xs text-gray-400 mb-1">Geçme Puanı</div>
-                    <Form.Item name="passingScore" className="mb-3">
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        max={100}
-                        variant="filled"
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Sinav Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sinav Tarihi</label>
+                  <Form.Item name="examDate" className="mb-0">
+                    <DatePicker
+                      format="DD.MM.YYYY"
+                      placeholder="Tarih secin"
+                      className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Sinav Puani</label>
+                  <Form.Item name="examScore" className="mb-0">
+                    <InputNumber
+                      min={0}
+                      max={100}
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-4">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gecme Puani</label>
+                  <Form.Item name="passingScore" className="mb-0">
+                    <InputNumber
+                      min={0}
+                      max={100}
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
-          {/* CPE Section (if required) */}
+          {/* CPE BILGILERI (if required) */}
           {cpeRequired && (
-            <>
-              <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-              <div className="mb-8">
-                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-                  CPE/CEU Bilgileri
-                </Text>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <div className="text-xs text-gray-400 mb-1">Gerekli CPE</div>
-                    <Form.Item name="requiredCpeUnits" className="mb-3">
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        variant="filled"
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <div className="text-xs text-gray-400 mb-1">Kazanılan CPE</div>
-                    <Form.Item name="earnedCpeUnits" className="mb-3">
-                      <InputNumber
-                        style={{ width: '100%' }}
-                        min={0}
-                        variant="filled"
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                CPE/CEU Bilgileri
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Gerekli CPE</label>
+                  <Form.Item name="requiredCpeUnits" className="mb-0">
+                    <InputNumber
+                      min={0}
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
+                <div className="col-span-6">
+                  <label className="block text-sm font-medium text-slate-600 mb-1.5">Kazanilan CPE</label>
+                  <Form.Item name="earnedCpeUnits" className="mb-0">
+                    <InputNumber
+                      min={0}
+                      className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
+                    />
+                  </Form.Item>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
-          {/* Cost Section */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
+          {/* MALIYET BILGILERI */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              <CurrencyDollarIcon className="w-4 h-4 mr-1 inline" /> Maliyet Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Sertifika Ücreti</div>
-                <Form.Item name="certificationCost" className="mb-3">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Maliyet Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Sertifika Ucreti</label>
+                <Form.Item name="certificationCost" className="mb-0">
                   <InputNumber
-                    style={{ width: '100%' }}
                     min={0}
-                    variant="filled"
-                    formatter={(value) =>
-                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                    }
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
                     addonAfter="TRY"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Yenileme Ücreti</div>
-                <Form.Item name="renewalCost" className="mb-3">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yenileme Ucreti</label>
+                <Form.Item name="renewalCost" className="mb-0">
                   <InputNumber
-                    style={{ width: '100%' }}
                     min={0}
-                    variant="filled"
-                    formatter={(value) =>
-                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                    }
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
                     addonAfter="TRY"
+                    className="!w-full [&.ant-input-number]:!bg-slate-50 [&.ant-input-number]:!border-slate-300 [&.ant-input-number:hover]:!border-slate-400 [&.ant-input-number-focused]:!border-slate-900 [&.ant-input-number-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Notes */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+          {/* NOTLAR */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Notlar
-            </Text>
-            <Form.Item name="notes" className="mb-0">
-              <TextArea rows={3} placeholder="Ek notlar..." variant="filled" />
-            </Form.Item>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <Form.Item name="notes" className="mb-0">
+                  <TextArea
+                    rows={3}
+                    placeholder="Ek notlar..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

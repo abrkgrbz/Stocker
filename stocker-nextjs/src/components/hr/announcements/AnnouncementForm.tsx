@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Form, Input, DatePicker, Select, Row, Col, Typography, Switch } from 'antd';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { Form, Input, DatePicker, Select, Switch } from 'antd';
+import { MegaphoneIcon } from '@heroicons/react/24/outline';
 import { useDepartments, useEmployees } from '@/lib/api/hooks/useHR';
 import type { AnnouncementDto } from '@/lib/api/services/hr.types';
 import dayjs from 'dayjs';
 
 const { TextArea } = Input;
-const { Text } = Typography;
 
 interface AnnouncementFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -43,285 +42,252 @@ export default function AnnouncementForm({ form, initialValues, onFinish, loadin
       onFinish={onFinish}
       disabled={loading}
       initialValues={{ priority: 'Normal', isPinned: false, requiresAcknowledgment: false }}
-      className="announcement-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual & Settings (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <BellIcon className="w-16 h-16 text-white/90" />
-              <p className="mt-4 text-lg font-medium text-white/90">Duyuru</p>
-              <p className="text-sm text-white/60">Çalışanlara duyuru yayınlayın</p>
-            </div>
-          </div>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
 
-          {/* Settings */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  Sabitle
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {isPinned ? 'Listede üstte sabit' : 'Normal sıralama'}
-                </div>
+        {/* HEADER */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Announcement Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <MegaphoneIcon className="w-6 h-6 text-slate-500" />
               </div>
-              <Form.Item name="isPinned" valuePropName="checked" noStyle>
-                <Switch
-                  checked={isPinned}
-                  onChange={(val) => {
-                    setIsPinned(val);
-                    form.setFieldValue('isPinned', val);
-                  }}
-                  checkedChildren="Evet"
-                  unCheckedChildren="Hayır"
-                  style={{
-                    backgroundColor: isPinned ? '#faad14' : '#d9d9d9',
-                    minWidth: '80px',
-                  }}
+            </div>
+
+            {/* Announcement Title */}
+            <div className="flex-1">
+              <Form.Item
+                name="title"
+                rules={[
+                  { required: true, message: 'Baslik zorunludur' },
+                  { max: 200, message: 'En fazla 200 karakter' },
+                ]}
+                className="mb-0"
+              >
+                <Input
+                  placeholder="Duyuru Basligi Girin..."
+                  variant="borderless"
+                  className="!text-2xl !font-bold !text-slate-900 !p-0 !border-transparent placeholder:!text-slate-400 placeholder:!font-medium"
+                />
+              </Form.Item>
+              <Form.Item name="summary" className="mb-0 mt-1">
+                <Input
+                  placeholder="Kisa ozet ekleyin..."
+                  variant="borderless"
+                  className="!text-sm !text-slate-500 !p-0 placeholder:!text-slate-400"
                 />
               </Form.Item>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-xl">
-              <div>
-                <Text strong className="text-gray-700">
-                  Onay Gerekli
-                </Text>
-                <div className="text-xs text-gray-400 mt-0.5">
-                  {requiresAck ? 'Çalışanlar onaylamalı' : 'Onay gerekmez'}
-                </div>
-              </div>
-              <Form.Item name="requiresAcknowledgment" valuePropName="checked" noStyle>
-                <Switch
-                  checked={requiresAck}
-                  onChange={(val) => {
-                    setRequiresAck(val);
-                    form.setFieldValue('requiresAcknowledgment', val);
-                  }}
-                  checkedChildren="Evet"
-                  unCheckedChildren="Hayır"
-                  style={{
-                    backgroundColor: requiresAck ? '#1890ff' : '#d9d9d9',
-                    minWidth: '80px',
-                  }}
-                />
-              </Form.Item>
-            </div>
-          </div>
-
-          {/* Quick Stats for Edit Mode */}
-          {initialValues && (
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.acknowledgmentCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Onaylayan</div>
-              </div>
-              <div className="p-4 bg-gray-50/50 rounded-xl text-center">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {initialValues.viewCount || 0}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">Görüntülenme</div>
-              </div>
-            </div>
-          )}
-        </Col>
-
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Announcement Title - Hero Input */}
-          <div className="mb-8">
-            <Form.Item
-              name="title"
-              rules={[
-                { required: true, message: 'Başlık zorunludur' },
-                { max: 200, message: 'En fazla 200 karakter' },
-              ]}
-              className="mb-0"
-            >
-              <Input
-                placeholder="Duyuru başlığı"
-                variant="borderless"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 600,
-                  padding: '0',
-                  color: '#1a1a1a',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-            <Form.Item name="summary" className="mb-0 mt-2">
-              <Input
-                placeholder="Kısa özet ekleyin..."
-                variant="borderless"
-                style={{
-                  fontSize: '15px',
-                  padding: '0',
-                  color: '#666',
-                }}
-                className="placeholder:text-gray-300"
-              />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Content */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              İçerik
-            </Text>
-            <Form.Item
-              name="content"
-              rules={[{ required: true, message: 'Gerekli' }]}
-              className="mb-0"
-            >
-              <TextArea rows={6} placeholder="Duyuru içeriği..." variant="filled" />
-            </Form.Item>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Schedule & Priority */}
-          <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Zamanlama ve Öncelik
-            </Text>
-            <Row gutter={16}>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Öncelik</div>
-                <Form.Item name="priority" className="mb-0">
-                  <Select
-                    variant="filled"
-                    options={[
-                      { value: 'Low', label: 'Düşük' },
-                      { value: 'Normal', label: 'Normal' },
-                      { value: 'High', label: 'Yüksek' },
-                      { value: 'Urgent', label: 'Acil' },
-                    ]}
+            {/* Pinned Toggle */}
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg">
+                <span className="text-sm font-medium text-slate-600">
+                  {isPinned ? 'Sabitlendi' : 'Sabit Degil'}
+                </span>
+                <Form.Item name="isPinned" valuePropName="checked" noStyle>
+                  <Switch
+                    checked={isPinned}
+                    onChange={(val) => {
+                      setIsPinned(val);
+                      form.setFieldValue('isPinned', val);
+                    }}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Yayın Tarihi</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FORM BODY */}
+        <div className="px-8 py-6">
+
+          {/* ICERIK */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Icerik
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Duyuru Icerigi <span className="text-red-500">*</span></label>
+                <Form.Item
+                  name="content"
+                  rules={[{ required: true, message: 'Icerik zorunludur' }]}
+                  className="mb-0"
+                >
+                  <TextArea
+                    rows={6}
+                    placeholder="Duyuru icerigi..."
+                    className="!bg-slate-50 !border-slate-300 hover:!border-slate-400 focus:!border-slate-900 focus:!ring-1 focus:!ring-slate-900 focus:!bg-white !resize-none"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+
+          {/* ZAMANLAMA VE ONCELIK */}
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Zamanlama ve Oncelik
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Oncelik</label>
+                <Form.Item name="priority" className="mb-0">
+                  <Select
+                    options={[
+                      { value: 'Low', label: 'Dusuk' },
+                      { value: 'Normal', label: 'Normal' },
+                      { value: 'High', label: 'Yuksek' },
+                      { value: 'Urgent', label: 'Acil' },
+                    ]}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
+                  />
+                </Form.Item>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yayin Tarihi</label>
                 <Form.Item name="publishDate" className="mb-0">
                   <DatePicker
                     format="DD.MM.YYYY"
-                    style={{ width: '100%' }}
-                    placeholder="Tarih"
-                    variant="filled"
+                    placeholder="Tarih secin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={8}>
-                <div className="text-xs text-gray-400 mb-1">Bitiş Tarihi</div>
+              </div>
+              <div className="col-span-4">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Bitis Tarihi</label>
                 <Form.Item name="expiryDate" className="mb-0">
                   <DatePicker
                     format="DD.MM.YYYY"
-                    style={{ width: '100%' }}
-                    placeholder="Tarih"
-                    variant="filled"
+                    placeholder="Tarih secin"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Author & Type */}
+          {/* YAZAR VE TIP */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Yazar ve Tip
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Yazar *</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Yazar <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="authorId"
+                  rules={[{ required: true, message: 'Yazar secimi zorunludur' }]}
                   className="mb-0"
-                  rules={[{ required: true, message: 'Yazar seçimi zorunludur' }]}
                 >
                   <Select
-                    placeholder="Yazar seçin"
+                    placeholder="Yazar secin"
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={employees.map((e) => ({
                       value: e.id,
                       label: e.fullName,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Duyuru Tipi</div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Duyuru Tipi</label>
                 <Form.Item name="announcementType" className="mb-0">
                   <Select
                     placeholder="Genel"
-                    variant="filled"
                     options={[
                       { value: 'General', label: 'Genel' },
                       { value: 'Policy', label: 'Politika' },
                       { value: 'Event', label: 'Etkinlik' },
-                      { value: 'Achievement', label: 'Başarı' },
-                      { value: 'Welcome', label: 'Hoşgeldin' },
+                      { value: 'Achievement', label: 'Basari' },
+                      { value: 'Welcome', label: 'Hosgeldin' },
                       { value: 'Farewell', label: 'Veda' },
                     ]}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Target Department */}
+          {/* HEDEF KITLE */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Hedef Kitle
-            </Text>
-            <Row gutter={16}>
-              <Col span={24}>
-                <div className="text-xs text-gray-400 mb-1">Departman (boş = herkese)</div>
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Departman (bos = herkese)</label>
                 <Form.Item name="targetDepartmentId" className="mb-0">
                   <Select
-                    placeholder="Tüm departmanlar"
+                    placeholder="Tum departmanlar"
                     allowClear
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={departments.map((d) => ({
                       value: d.id,
                       label: d.name,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Onay Gerekli</label>
+                <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-lg h-[38px]">
+                  <span className="text-sm font-medium text-slate-600">
+                    {requiresAck ? 'Calisanlar onaylamali' : 'Onay gerekmez'}
+                  </span>
+                  <Form.Item name="requiresAcknowledgment" valuePropName="checked" noStyle>
+                    <Switch
+                      checked={requiresAck}
+                      onChange={(val) => {
+                        setRequiresAck(val);
+                        form.setFieldValue('requiresAcknowledgment', val);
+                      }}
+                    />
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* ISTATISTIKLER (Duzenleme Modu) */}
+          {initialValues && (
+            <div>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+                Istatistikler
+              </h3>
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.acknowledgmentCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Onaylayan</div>
+                  </div>
+                </div>
+                <div className="col-span-6">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                    <div className="text-2xl font-semibold text-slate-800">
+                      {initialValues.viewCount || 0}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">Goruntuleme</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

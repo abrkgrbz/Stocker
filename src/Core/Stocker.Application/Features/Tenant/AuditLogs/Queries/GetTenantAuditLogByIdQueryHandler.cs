@@ -21,11 +21,11 @@ public class GetTenantAuditLogByIdQueryHandler : IRequestHandler<GetTenantAuditL
 
     public async Task<Result<SecurityAuditLogDto>> Handle(GetTenantAuditLogByIdQuery request, CancellationToken cancellationToken)
     {
-        // First, get the TenantCode from TenantId
+        // First, get the TenantCode and TenantName from TenantId
         var tenant = await _unitOfWork.Tenants()
             .AsQueryable()
             .Where(t => t.Id == request.TenantId)
-            .Select(t => new { t.Code })
+            .Select(t => new { t.Code, t.Name })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (tenant == null)
@@ -34,12 +34,10 @@ public class GetTenantAuditLogByIdQueryHandler : IRequestHandler<GetTenantAuditL
                 new Error("Tenant.NotFound", "Tenant bulunamadı", ErrorType.NotFound));
         }
 
-        var tenantCode = tenant.Code;
-
-        // Get the audit log, ensuring it belongs to this tenant
+        // Get the audit log, ensuring it belongs to this tenant (check both Code and Name)
         var log = await _unitOfWork.SecurityAuditLogs()
             .AsQueryable()
-            .Where(x => x.Id == request.LogId && x.TenantCode == tenantCode)
+            .Where(x => x.Id == request.LogId && (x.TenantCode == tenant.Code || x.TenantCode == tenant.Name))
             .Select(x => new SecurityAuditLogDto
             {
                 Id = x.Id,

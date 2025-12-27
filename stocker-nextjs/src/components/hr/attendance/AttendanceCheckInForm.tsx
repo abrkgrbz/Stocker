@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Form, Select, TimePicker, Row, Col, Typography } from 'antd';
+import { Form, Select, TimePicker } from 'antd';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { useEmployees } from '@/lib/api/hooks/useHR';
 import dayjs from 'dayjs';
-
-const { Text } = Typography;
 
 interface CheckInFormValues {
   employeeId: number;
@@ -35,94 +33,90 @@ export default function AttendanceCheckInForm({ form, initialValues, onFinish, l
       layout="vertical"
       onFinish={onFinish}
       disabled={loading}
-      className="attendance-checkin-form-modern"
+      className="w-full"
+      scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
-      <Row gutter={48}>
-        {/* Left Panel - Visual (40%) */}
-        <Col xs={24} lg={10}>
-          {/* Visual Representation */}
-          <div className="mb-8">
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '40px 20px',
-                minHeight: '200px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ClockIcon className="w-16 h-16 text-white/90" />
-              <p className="mt-4 text-lg font-medium text-white/90">Manuel Giriş Kaydı</p>
-              <p className="text-sm text-white/60">Çalışan için giriş kaydı oluşturun</p>
+      {/* Main Card */}
+      <div className="bg-white border border-slate-200 rounded-xl">
+
+        {/* HEADER */}
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-6">
+            {/* Clock Icon */}
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <ClockIcon className="w-6 h-6 text-slate-500" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-slate-900">Manuel Giris Kaydi</h2>
+              <p className="text-sm text-slate-500 mt-1">Calisan icin giris kaydi olusturun</p>
             </div>
           </div>
+        </div>
 
-          {/* Info Box */}
-          <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-            <div className="text-sm font-medium text-blue-700 mb-1">Bilgi</div>
-            <div className="text-xs text-blue-600">
-              Giriş saati boş bırakılırsa, şu anki saat kullanılacaktır.
-            </div>
-          </div>
-        </Col>
+        {/* FORM BODY */}
+        <div className="px-8 py-6">
 
-        {/* Right Panel - Form Content (60%) */}
-        <Col xs={24} lg={14}>
-          {/* Check-in Info Section */}
+          {/* GIRIS BILGILERI */}
           <div className="mb-8">
-            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 block">
-              Giriş Bilgileri
-            </Text>
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Çalışan *</div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Giris Bilgileri
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Calisan <span className="text-red-500">*</span></label>
                 <Form.Item
                   name="employeeId"
-                  rules={[{ required: true, message: 'Çalışan seçimi gerekli' }]}
-                  className="mb-4"
+                  rules={[{ required: true, message: 'Calisan secimi gerekli' }]}
+                  className="mb-0"
                 >
                   <Select
-                    placeholder="Çalışan seçin"
+                    placeholder="Calisan secin"
                     showSearch
                     optionFilterProp="label"
-                    variant="filled"
                     options={employees.map((e) => ({
                       value: e.id,
                       label: e.fullName,
                     }))}
+                    className="w-full [&_.ant-select-selector]:!bg-slate-50 [&_.ant-select-selector]:!border-slate-300 [&_.ant-select-selector:hover]:!border-slate-400 [&_.ant-select-focused_.ant-select-selector]:!border-slate-900 [&_.ant-select-focused_.ant-select-selector]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <div className="text-xs text-gray-400 mb-1">Giriş Saati</div>
-                <Form.Item name="checkInTime" className="mb-4">
+              </div>
+              <div className="col-span-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Giris Saati</label>
+                <Form.Item name="checkInTime" className="mb-0">
                   <TimePicker
                     format="HH:mm"
-                    style={{ width: '100%' }}
-                    placeholder="Şu anki saat"
-                    variant="filled"
+                    placeholder="Su anki saat"
+                    className="!w-full [&.ant-picker]:!bg-slate-50 [&.ant-picker]:!border-slate-300 [&.ant-picker:hover]:!border-slate-400 [&.ant-picker-focused]:!border-slate-900 [&.ant-picker-focused]:!bg-white"
                   />
                 </Form.Item>
-              </Col>
-            </Row>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent mb-8" />
-
-          {/* Additional Info */}
-          <div className="mb-8">
-            <div className="p-4 bg-gray-50/50 rounded-xl">
-              <div className="text-sm text-gray-600">
-                Manuel giriş kaydı oluşturulduktan sonra, çıkış kaydı için yoklama detay sayfasını kullanabilirsiniz.
               </div>
             </div>
           </div>
-        </Col>
-      </Row>
+
+          {/* BILGI NOTU */}
+          <div>
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+              Bilgi
+            </h3>
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-12">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-sm font-medium text-blue-700 mb-1">Bilgi</div>
+                  <div className="text-xs text-blue-600">
+                    Giris saati bos birakilirsa, su anki saat kullanilacaktir. Manuel giris kaydi olusturulduktan sonra, cikis kaydi icin yoklama detay sayfasini kullanabilirsiniz.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       {/* Hidden submit button */}
       <Form.Item hidden>

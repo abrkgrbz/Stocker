@@ -2,11 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, Switch } from 'antd';
-import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
 import { useDepartments, useEmployees } from '@/lib/api/hooks/useHR';
 import type { DepartmentDto } from '@/lib/api/services/hr.types';
-
-const { TextArea } = Input;
 
 interface DepartmentFormProps {
   form: ReturnType<typeof Form.useForm>[0];
@@ -56,7 +54,7 @@ export default function DepartmentForm({ form, initialValues, onFinish, loading 
             {/* Department Icon */}
             <div className="flex-shrink-0">
               <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                <BuildingOfficeIcon className="w-6 h-6 text-slate-500" />
+                <BuildingOffice2Icon className="w-6 h-6 text-slate-500" />
               </div>
             </div>
 

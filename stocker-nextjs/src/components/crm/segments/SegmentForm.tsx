@@ -30,18 +30,21 @@ interface SegmentFormProps {
 export default function SegmentForm({ form, initialValues, onFinish, loading }: SegmentFormProps) {
   const [isActive, setIsActive] = useState(true);
   const [segmentType, setSegmentType] = useState<'Static' | 'Dynamic'>('Static');
+  const [selectedColor, setSelectedColor] = useState('#1890ff');
 
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
       setIsActive(initialValues.isActive ?? true);
       setSegmentType((initialValues.type as 'Static' | 'Dynamic') || 'Static');
+      setSelectedColor((initialValues as any).color || '#1890ff');
     } else {
       form.setFieldsValue({
         type: 'Static',
         isActive: true,
         color: '#1890ff',
       });
+      setSelectedColor('#1890ff');
     }
   }, [form, initialValues]);
 

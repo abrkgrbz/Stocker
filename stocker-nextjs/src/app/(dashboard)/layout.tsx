@@ -128,6 +128,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const currentModule = useMemo(() => getCurrentModule(pathname), [pathname]);
   const moduleConfig = currentModule ? MODULE_MENUS[currentModule] : null;
 
+  // Hide sidebar for modules page (it's a hub page, doesn't need sidebar)
+  const hideSidebar = currentModule === 'modules' || pathname === '/app';
+
   // Get selected keys for menu
   const getSelectedKeys = useMemo(() => {
     // For nested routes, match to parent
@@ -459,41 +462,45 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   return (
     <>
     <Layout style={{ minHeight: '100dvh' }}>
-        {/* Desktop Sidebar - Hidden on mobile */}
-        <Sider
-          theme="light"
-          width={240}
-          style={{
-            height: '100dvh',
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            borderRight: '1px solid #f0f0f0',
-            zIndex: 100,
-            transition: 'transform 0.2s ease-in-out',
-          }}
-          className="dashboard-sider hidden lg:block"
-        >
-          {sidebarContent}
-        </Sider>
+        {/* Desktop Sidebar - Hidden on mobile and on hub pages (modules, app) */}
+        {!hideSidebar && (
+          <Sider
+            theme="light"
+            width={240}
+            style={{
+              height: '100dvh',
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              borderRight: '1px solid #f0f0f0',
+              zIndex: 100,
+              transition: 'transform 0.2s ease-in-out',
+            }}
+            className="dashboard-sider hidden lg:block"
+          >
+            {sidebarContent}
+          </Sider>
+        )}
 
-        {/* Mobile Sidebar Drawer */}
-        <Drawer
-          placement="left"
-          open={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(false)}
-          width={280}
-          styles={{
-            body: { padding: 0 },
-            header: { display: 'none' },
-          }}
-          className="lg:hidden"
-        >
-          {sidebarContent}
-        </Drawer>
+        {/* Mobile Sidebar Drawer - Hidden on hub pages */}
+        {!hideSidebar && (
+          <Drawer
+            placement="left"
+            open={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+            width={280}
+            styles={{
+              body: { padding: 0 },
+              header: { display: 'none' },
+            }}
+            className="lg:hidden"
+          >
+            {sidebarContent}
+          </Drawer>
+        )}
 
-        <Layout className="lg:ml-[240px] ml-0">
+        <Layout className={hideSidebar ? 'ml-0' : 'lg:ml-[240px] ml-0'}>
           <Header
             style={{
               padding: '0 12px',
@@ -508,14 +515,32 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           >
             {/* Left: Mobile Menu + Tenant Name + Module Switcher */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="sm:gap-3">
-              {/* Mobile Menu Button - Only visible on mobile */}
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <MenuIcon className="w-5 h-5" strokeWidth={2} />
-              </button>
+              {/* Mobile Menu Button - Only visible on mobile, hidden on hub pages */}
+              {!hideSidebar && (
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="lg:hidden w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <MenuIcon className="w-5 h-5" strokeWidth={2} />
+                </button>
+              )}
+
+              {/* Back to App button - Only visible on hub pages like /modules */}
+              {hideSidebar && pathname !== '/app' && (
+                <Tooltip title="Ana Sayfaya Dön">
+                  <Button
+                    type="text"
+                    icon={<ArrowLeftIcon className="w-4 h-4" />}
+                    onClick={() => router.push('/app')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  />
+                </Tooltip>
+              )}
 
               <div style={{ fontWeight: 600, fontSize: 14, color: '#334155' }} className="hidden sm:block">
                 {tenant?.name || 'Stocker'}

@@ -93,7 +93,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
       scrollToFirstError={{ behavior: 'smooth', block: 'center' }}
     >
       {/* Main Card */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-xl">
 
         {/* ═══════════════════════════════════════════════════════════════
             HEADER: Icon + Title
@@ -151,7 +151,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
 
           {/* ─────────────── MÜŞTERİ BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Müşteri Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -206,7 +206,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
 
           {/* ─────────────── FİNANSAL BİLGİLER ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Finansal Bilgiler
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -248,7 +248,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
 
           {/* ─────────────── SATIŞ SÜRECİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Satış Süreci
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -307,7 +307,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
 
           {/* ─────────────── TARİH BİLGİLERİ ─────────────── */}
           <div className="mb-8">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Tarih Bilgileri
             </h3>
             <div className="grid grid-cols-12 gap-4">
@@ -331,7 +331,7 @@ export default function DealForm({ form, initialValues, onFinish, loading }: Dea
 
           {/* ─────────────── NOTLAR ─────────────── */}
           <div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider pb-2 mb-4 border-b border-slate-100">
               Notlar
             </h3>
             <div className="grid grid-cols-12 gap-4">
