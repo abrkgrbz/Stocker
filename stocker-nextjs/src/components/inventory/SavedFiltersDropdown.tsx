@@ -309,7 +309,7 @@ export default function SavedFiltersDropdown({
   return (
     <>
       <Dropdown
-        dropdownRender={() => (
+        popupRender={() => (
           <div className="bg-white rounded-lg shadow-lg border border-gray-200">
             {dropdownContent}
           </div>
