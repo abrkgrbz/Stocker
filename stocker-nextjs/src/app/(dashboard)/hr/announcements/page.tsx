@@ -43,28 +43,34 @@ function AnnouncementsStats({
   pinned: number;
   loading: boolean;
 }) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <div className="h-16 bg-slate-100 rounded" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <StatCard
-        title="Toplam Duyuru"
+        label="Toplam Duyuru"
         value={total}
         icon={<BellIcon className="w-5 h-5" />}
-        iconColor="#7c3aed"
-        loading={loading}
       />
       <StatCard
-        title="Yayında"
+        label="Yayında"
         value={published}
         icon={<CheckCircleIcon className="w-5 h-5" />}
-        iconColor="#22c55e"
-        loading={loading}
       />
       <StatCard
-        title="Sabitlenmiş"
+        label="Sabitlenmiş"
         value={pinned}
         icon={<MapPinIcon className="w-5 h-5" />}
-        iconColor="#f59e0b"
-        loading={loading}
       />
     </div>
   );
