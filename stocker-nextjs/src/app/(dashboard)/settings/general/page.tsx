@@ -17,18 +17,39 @@ import {
 } from '@heroicons/react/24/outline';
 import { Spinner } from '@/components/primitives';
 import { useRouter } from 'next/navigation';
-import { useTenant } from '@/lib/tenant';
 import { StorageUsageCard } from '@/components/settings';
 import { showUpdateSuccess, showError } from '@/lib/utils/sweetalert';
+import { useTenantSettings, useUpdateTenantSettings } from '@/lib/api/hooks/useTenantSettings';
+import type { UpdateTenantSettingsRequest } from '@/lib/api/services/tenant-settings.service';
+import { useEffect } from 'react';
 
 export default function GeneralSettingsPage() {
   const router = useRouter();
   const [form] = Form.useForm();
-  const { tenant, isLoading } = useTenant();
+  const { data: settings, isLoading } = useTenantSettings();
+  const updateSettings = useUpdateTenantSettings();
+
+  // Set form values when settings are loaded
+  useEffect(() => {
+    if (settings) {
+      form.setFieldsValue({
+        companyName: settings.companyName || '',
+        timezone: settings.timezone || 'Europe/Istanbul',
+        language: settings.language || 'tr-TR',
+        dateFormat: settings.dateFormat || 'DD/MM/YYYY',
+        currency: settings.currency || 'TRY',
+        emailNotifications: settings.emailNotifications ?? true,
+      });
+    }
+  }, [settings, form]);
 
   const handleSave = async (values: any) => {
     try {
-      // TODO: API call to update tenant settings
+      const updateData: UpdateTenantSettingsRequest = {
+        companyName: values.companyName,
+        emailNotifications: values.emailNotifications,
+      };
+      await updateSettings.mutateAsync(updateData);
       showUpdateSuccess('ayarlar');
     } catch (error) {
       showError('Ayarlar kaydedilirken bir hata oluştu');
@@ -72,14 +93,6 @@ export default function GeneralSettingsPage() {
               form={form}
               layout="vertical"
               onFinish={handleSave}
-              initialValues={{
-                companyName: tenant?.name || '',
-                timezone: 'Europe/Istanbul',
-                language: 'tr-TR',
-                dateFormat: 'DD/MM/YYYY',
-                currency: 'TRY',
-                notifications: true,
-              }}
             >
               {/* Company Info Section */}
               <section>
@@ -148,27 +161,27 @@ export default function GeneralSettingsPage() {
               <section>
                 <h2 className="text-sm font-medium text-slate-900 mb-4">Bildirim Tercihleri</h2>
                 <div className="bg-white border border-slate-200 rounded-lg p-6">
-                  <Form.Item
-                    name="notifications"
-                    valuePropName="checked"
-                    className="mb-0"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: '#3b82f615' }}
-                        >
-                          <BellIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-slate-900 block">E-posta Bildirimleri</span>
-                          <span className="text-xs text-slate-500">Önemli güncellemeler için e-posta alın</span>
-                        </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: '#3b82f615' }}
+                      >
+                        <BellIcon className="w-5 h-5" style={{ color: '#3b82f6' }} />
                       </div>
-                      <Switch defaultChecked />
+                      <div>
+                        <span className="text-sm font-medium text-slate-900 block">E-posta Bildirimleri</span>
+                        <span className="text-xs text-slate-500">Önemli güncellemeler için e-posta alın</span>
+                      </div>
                     </div>
-                  </Form.Item>
+                    <Form.Item
+                      name="emailNotifications"
+                      valuePropName="checked"
+                      className="mb-0"
+                    >
+                      <Switch />
+                    </Form.Item>
+                  </div>
                 </div>
               </section>
 

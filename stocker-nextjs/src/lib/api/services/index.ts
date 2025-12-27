@@ -90,3 +90,11 @@ export type {
   BucketExistsResponse,
   BucketNameResponse,
 } from './storage.service';
+
+// Tenant Settings Module
+export { TenantSettingsService } from './tenant-settings.service';
+export type {
+  TenantSettingsDto,
+  UpdateTenantSettingsRequest,
+  TenantStatsDto,
+} from './tenant-settings.service';

@@ -30,6 +30,7 @@ import {
   Layers,
   HardDrive,
 } from 'lucide-react';
+import { useTenantStats, formatStorageSize, getStorageUsagePercentage } from '@/lib/api/hooks/useTenantSettings';
 
 // Settings organized by logical groups
 const settingsGroups = [
@@ -149,12 +150,18 @@ const settingsGroups = [
 
 export default function SettingsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: stats, isLoading: statsLoading } = useTenantStats();
 
   // Calculate stats
   const allItems = settingsGroups.flatMap(group => group.items);
   const activeCount = allItems.filter(item => item.enabled).length;
   const totalCount = allItems.length;
   const comingSoonCount = totalCount - activeCount;
+
+  // Storage stats from API
+  const storageUsed = stats?.storageUsedGB ?? 0;
+  const storageQuota = stats?.storageQuotaGB ?? 10;
+  const storagePercentage = getStorageUsagePercentage(storageUsed, storageQuota);
 
   // Filter items based on search
   const filteredGroups = settingsGroups
@@ -215,9 +222,14 @@ export default function SettingsPage() {
               <HardDrive className="w-4 h-4 text-slate-400" />
             </div>
             <div>
-              <div className="text-2xl font-semibold text-slate-900">2.4 GB</div>
+              <div className="text-2xl font-semibold text-slate-900">
+                {statsLoading ? '...' : formatStorageSize(storageUsed)}
+              </div>
               <div className="w-full h-1 bg-slate-100 rounded-full mt-1">
-                <div className="h-1 bg-slate-900 rounded-full" style={{ width: '24%' }} />
+                <div
+                  className="h-1 bg-slate-900 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(storagePercentage, 100)}%` }}
+                />
               </div>
             </div>
           </div>
