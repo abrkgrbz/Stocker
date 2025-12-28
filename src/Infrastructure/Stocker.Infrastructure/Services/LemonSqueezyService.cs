@@ -694,7 +694,7 @@ public class LemonSqueezyService : ILemonSqueezyService
             attr.EndsAt,
             attr.CardBrand,
             attr.CardLastFour,
-            attr.UnitPrice ?? 0,
+            attr.UnitPrice,
             attr.UnitPriceCurrency ?? "TRY",
             "month", // Default billing interval
             1,
@@ -732,7 +732,7 @@ public class LemonSqueezyService : ILemonSqueezyService
             attr.EndsAt,
             attr.CardBrand,
             attr.CardLastFour,
-            attr.UnitPrice ?? 0,
+            attr.UnitPrice,
             attr.UnitPriceCurrency ?? "TRY",
             "month",
             1,
