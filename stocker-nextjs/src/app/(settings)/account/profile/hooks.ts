@@ -75,7 +75,7 @@ export function useProfile() {
         success: boolean;
         data: ProfileData;
         message?: string;
-      }>('/account/profile');
+      }>('/api/account/profile');
       return response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -92,7 +92,7 @@ export function useUpdateProfile() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/account/profile', data);
+      }>('/api/account/profile', data);
       return response;
     },
     onSuccess: () => {
@@ -109,7 +109,7 @@ export function useChangePassword() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/account/change-password', data);
+      }>('/api/account/change-password', data);
       return response;
     },
   });
@@ -124,7 +124,7 @@ export function useActivityLog(page: number = 1, pageSize: number = 20) {
         success: boolean;
         data: ActivityLogResponse;
         message?: string;
-      }>(`/account/activity-log?page=${page}&pageSize=${pageSize}`);
+      }>(`/api/account/activity-log?page=${page}&pageSize=${pageSize}`);
       return response;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -144,7 +144,7 @@ export function useUploadProfileImage() {
         success: boolean;
         data: { imageUrl: string };
         message?: string;
-      }>('/account/profile-image', formData, {
+      }>('/api/account/profile-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -167,7 +167,7 @@ export function useUpdatePreferences() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/account/preferences', data);
+      }>('/api/account/preferences', data);
       return response;
     },
     onSuccess: () => {
