@@ -42,9 +42,16 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
                     Error.Validation("Password.TooShort", "Password must be at least 8 characters"));
             }
 
+            // Normalize token - remove padding (=) that might come from URL
+            // Database stores tokens without trailing = (URL-safe format)
+            var normalizedToken = request.Token.TrimEnd('=');
+
+            _logger.LogDebug("Searching for token: {Token} (normalized: {NormalizedToken})",
+                request.Token, normalizedToken);
+
             // First, try to find user by reset token in MasterUsers
             var masterUser = await _masterContext.MasterUsers
-                .FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token, cancellationToken);
+                .FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token || u.PasswordResetToken == normalizedToken, cancellationToken);
 
             if (masterUser != null)
             {
@@ -103,7 +110,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
                     await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
 
                     var tenantUser = await tenantContext.TenantUsers
-                        .FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token, cancellationToken);
+                        .FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token || u.PasswordResetToken == normalizedToken, cancellationToken);
 
                     if (tenantUser != null)
                     {

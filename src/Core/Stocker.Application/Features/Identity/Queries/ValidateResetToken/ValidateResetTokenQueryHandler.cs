@@ -37,9 +37,16 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
                 });
             }
 
-            // First, check in MasterUsers
+            // Normalize token - remove padding (=) that might come from URL
+            // Database stores tokens without trailing = (URL-safe format)
+            var normalizedToken = request.Token.TrimEnd('=');
+
+            _logger.LogDebug("Searching for token: {Token} (normalized: {NormalizedToken})",
+                request.Token, normalizedToken);
+
+            // First, check in MasterUsers - try both original and normalized token
             var masterUser = await _masterContext.MasterUsers
-                .Where(u => u.PasswordResetToken == request.Token)
+                .Where(u => u.PasswordResetToken == request.Token || u.PasswordResetToken == normalizedToken)
                 .Select(u => new { u.PasswordResetTokenExpiry })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -70,7 +77,7 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
                     await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
 
                     var tenantUser = await tenantContext.TenantUsers
-                        .Where(u => u.PasswordResetToken == request.Token)
+                        .Where(u => u.PasswordResetToken == request.Token || u.PasswordResetToken == normalizedToken)
                         .Select(u => new { u.PasswordResetTokenExpiry })
                         .FirstOrDefaultAsync(cancellationToken);
 

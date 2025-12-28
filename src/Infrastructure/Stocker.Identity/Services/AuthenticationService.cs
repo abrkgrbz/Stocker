@@ -771,9 +771,12 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
+            // Normalize token - remove padding (=) that might come from URL
+            var normalizedToken = token.TrimEnd('=');
+
             // First try to find in master users
             var masterUser = await _userManagementService.FindMasterUserAsync(email);
-            if (masterUser != null && masterUser.PasswordResetToken == token)
+            if (masterUser != null && (masterUser.PasswordResetToken == token || masterUser.PasswordResetToken == normalizedToken))
             {
                 // Check if token is expired
                 if (masterUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
@@ -813,7 +816,7 @@ public class AuthenticationService : IAuthenticationService
                     await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenant.Id);
 
                     var tenantUser = await tenantContext.TenantUsers
-                        .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email.Value, email) && u.PasswordResetToken == token, cancellationToken);
+                        .FirstOrDefaultAsync(u => EF.Functions.Like(u.Email.Value, email) && (u.PasswordResetToken == token || u.PasswordResetToken == normalizedToken), cancellationToken);
 
                     if (tenantUser != null)
                     {
