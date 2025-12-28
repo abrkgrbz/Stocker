@@ -600,6 +600,28 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
+            // Set access_token as HttpOnly cookie
+            Response.Cookies.Append("access_token", result.Value.AccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Domain = ".stoocker.app",
+                Path = "/",
+                Expires = result.Value.ExpiresAt
+            });
+
+            // Set refresh_token as HttpOnly cookie (7 days expiration)
+            Response.Cookies.Append("refresh_token", result.Value.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Domain = ".stoocker.app",
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            });
+
             _logger.LogInformation("2FA verification successful for email: {Email}", command.Email);
             return Ok(new
             {
