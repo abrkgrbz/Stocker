@@ -29,6 +29,7 @@ import {
   Clock,
   Layers,
   HardDrive,
+  DatabaseBackup,
 } from 'lucide-react';
 import { useTenantStats, formatStorageSize, getStorageUsagePercentage } from '@/lib/api/hooks/useTenantSettings';
 
@@ -128,6 +129,14 @@ const settingsGroups = [
     id: 'integrations',
     title: 'ENTEGRASYONLAR VE VERİ',
     items: [
+      {
+        id: 'data-migration',
+        name: 'Veri Aktarımı',
+        description: 'Logo, ETA, Mikro, Excel vb. sistemlerden veri aktarın',
+        icon: DatabaseBackup,
+        path: '/settings/data-migration',
+        enabled: true,
+      },
       {
         id: 'email',
         name: 'Email / SMTP Ayarları',
