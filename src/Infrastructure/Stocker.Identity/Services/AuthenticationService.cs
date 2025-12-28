@@ -693,6 +693,8 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<Stocker.SharedKernel.Results.Result<string>> GeneratePasswordResetTokenAsync(string email, string? tenantCode = null, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("DEBUG GeneratePasswordResetTokenAsync ENTRY: Email={Email}, TenantCode={TenantCode}", email, tenantCode ?? "null");
+
         try
         {
             // If tenant code is provided, search directly in that tenant's database (optimized path)
