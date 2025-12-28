@@ -1,6 +1,7 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Stocker.Application.Services;
+using Stocker.Application.Common.Interfaces;
 using Stocker.SharedKernel.Results;
 
 namespace Stocker.Application.Features.Identity.Queries.ValidateResetToken;
@@ -8,14 +9,17 @@ namespace Stocker.Application.Features.Identity.Queries.ValidateResetToken;
 public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetTokenQuery, Result<ValidateResetTokenResponse>>
 {
     private readonly ILogger<ValidateResetTokenQueryHandler> _logger;
-    private readonly IAuthenticationService _authenticationService;
+    private readonly IMasterDbContext _masterContext;
+    private readonly ITenantDbContextFactory _tenantDbContextFactory;
 
     public ValidateResetTokenQueryHandler(
         ILogger<ValidateResetTokenQueryHandler> logger,
-        IAuthenticationService authenticationService)
+        IMasterDbContext masterContext,
+        ITenantDbContextFactory tenantDbContextFactory)
     {
         _logger = logger;
-        _authenticationService = authenticationService;
+        _masterContext = masterContext;
+        _tenantDbContextFactory = tenantDbContextFactory;
     }
 
     public async Task<Result<ValidateResetTokenResponse>> Handle(ValidateResetTokenQuery request, CancellationToken cancellationToken)
@@ -24,20 +28,75 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
         try
         {
-            // Validate token using existing method
-            var isValid = await _authenticationService.ValidateTokenAsync(request.Token, cancellationToken);
-
-            if (isValid.IsSuccess && isValid.Value)
+            if (string.IsNullOrWhiteSpace(request.Token))
             {
-                // Token is valid - return expiry time (1 hour from generation)
                 return Result.Success(new ValidateResetTokenResponse
                 {
-                    Valid = true,
-                    ExpiresAt = DateTime.UtcNow.AddHours(1) // Tokens typically expire in 1 hour
+                    Valid = false,
+                    ExpiresAt = DateTime.UtcNow
                 });
             }
 
-            _logger.LogWarning("Invalid or expired password reset token");
+            // First, check in MasterUsers
+            var masterUser = await _masterContext.MasterUsers
+                .Where(u => u.PasswordResetToken == request.Token)
+                .Select(u => new { u.PasswordResetTokenExpiry })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (masterUser != null)
+            {
+                var isValid = masterUser.PasswordResetTokenExpiry.HasValue &&
+                              masterUser.PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+
+                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
+
+                return Result.Success(new ValidateResetTokenResponse
+                {
+                    Valid = isValid,
+                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? DateTime.UtcNow
+                });
+            }
+
+            // If not found in MasterUsers, search in all tenant databases
+            var tenants = await _masterContext.Tenants
+                .Where(t => t.IsActive)
+                .Select(t => t.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var tenantId in tenants)
+            {
+                try
+                {
+                    await using var tenantContext = await _tenantDbContextFactory.CreateDbContextAsync(tenantId);
+
+                    var tenantUser = await tenantContext.TenantUsers
+                        .Where(u => u.PasswordResetToken == request.Token)
+                        .Select(u => new { u.PasswordResetTokenExpiry })
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (tenantUser != null)
+                    {
+                        var isValid = tenantUser.PasswordResetTokenExpiry.HasValue &&
+                                      tenantUser.PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+
+                        _logger.LogInformation("Password reset token found in Tenant {TenantId}, valid: {IsValid}", tenantId, isValid);
+
+                        return Result.Success(new ValidateResetTokenResponse
+                        {
+                            Valid = isValid,
+                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? DateTime.UtcNow
+                        });
+                    }
+                }
+                catch (Exception tenantEx)
+                {
+                    _logger.LogWarning(tenantEx, "Error searching for token in tenant {TenantId}", tenantId);
+                    // Continue to next tenant
+                }
+            }
+
+            // Token not found anywhere
+            _logger.LogWarning("Password reset token not found in any database");
             return Result.Success(new ValidateResetTokenResponse
             {
                 Valid = false,
