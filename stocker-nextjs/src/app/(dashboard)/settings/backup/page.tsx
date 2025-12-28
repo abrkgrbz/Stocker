@@ -4,12 +4,12 @@
  * Backup & Restore Page
  * Corporate Professional Design - Monochrome Palette
  * - Statistics cards showing backup status
- * - Backup list with actions
+ * - Backup list with filtering, search, and download
  * - Create backup modal
  * - Restore confirmation modal
  */
 
-import { useState, Fragment } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/primitives';
 import {
@@ -33,7 +33,13 @@ import {
   X,
   ChevronRight,
   AlertTriangle,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  Timer,
 } from 'lucide-react';
+import BackupSchedules from './BackupSchedules';
 import { AdminOnly } from '@/components/auth/PermissionGate';
 import {
   useBackups,
@@ -41,6 +47,7 @@ import {
   useCreateBackup,
   useDeleteBackup,
   useRestoreBackup,
+  useBackupDownload,
   formatBytes,
   getStatusColor,
   getStatusLabel,
@@ -67,6 +74,7 @@ const getStatusIcon = (status: string) => {
 
 export default function BackupPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'backups' | 'schedules'>('backups');
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRestoreModal, setShowRestoreModal] = useState<BackupDto | null>(null);
@@ -74,11 +82,37 @@ export default function BackupPage() {
   const [selectedBackup, setSelectedBackup] = useState<BackupDto | null>(null);
   const pageSize = 10;
 
-  // Filters
-  const filters: BackupFilters = {
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Compute filters with useMemo
+  const filters: BackupFilters = useMemo(() => ({
     pageNumber: page,
     pageSize,
     sortDescending: true,
+    search: searchQuery || undefined,
+    status: statusFilter || undefined,
+    backupType: typeFilter || undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
+  }), [page, pageSize, searchQuery, statusFilter, typeFilter, fromDate, toDate]);
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery || statusFilter || typeFilter || fromDate || toDate;
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    setTypeFilter('');
+    setFromDate('');
+    setToDate('');
+    setPage(1);
   };
 
   // Fetch data
@@ -89,6 +123,7 @@ export default function BackupPage() {
   const createBackup = useCreateBackup();
   const deleteBackup = useDeleteBackup();
   const restoreBackup = useRestoreBackup();
+  const downloadBackup = useBackupDownload();
 
   const backups = backupsData?.items || [];
   const totalCount = backupsData?.totalCount || 0;
@@ -144,6 +179,16 @@ export default function BackupPage() {
     try {
       await deleteBackup.mutateAsync(showDeleteModal.id);
       setShowDeleteModal(null);
+    } catch {
+      // Error handled by mutation
+    }
+  };
+
+  const handleDownload = async (backup: BackupDto) => {
+    try {
+      const result = await downloadBackup.mutateAsync({ id: backup.id });
+      // Open download URL in new tab
+      window.open(result.downloadUrl, '_blank');
     } catch {
       // Error handled by mutation
     }
@@ -252,6 +297,205 @@ export default function BackupPage() {
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+            <button
+              onClick={() => setActiveTab('backups')}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'backups'
+                  ? 'text-slate-900 border-slate-900'
+                  : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <FileArchive className="w-4 h-4" />
+              Yedekler
+            </button>
+            <button
+              onClick={() => setActiveTab('schedules')}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'schedules'
+                  ? 'text-slate-900 border-slate-900'
+                  : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <Timer className="w-4 h-4" />
+              Zamanlamalar
+            </button>
+          </div>
+
+          {activeTab === 'schedules' && <BackupSchedules />}
+
+          {activeTab === 'backups' && (
+          <>
+          {/* Search and Filters */}
+          <div className="bg-white border border-slate-200 rounded-lg mb-4">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setPage(1);
+                    }}
+                    placeholder="Yedek adı veya açıklama ara..."
+                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Filter Toggle */}
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                    showFilters || hasActiveFilters
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  Filtreler
+                  {hasActiveFilters && (
+                    <span className="flex items-center justify-center w-5 h-5 bg-white text-slate-900 text-xs font-bold rounded-full">
+                      {[statusFilter, typeFilter, fromDate, toDate].filter(Boolean).length}
+                    </span>
+                  )}
+                  {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+
+                {/* Clear Filters */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-1 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Temizle
+                  </button>
+                )}
+              </div>
+
+              {/* Expanded Filters */}
+              {showFilters && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-200">
+                  {/* Status Filter */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                      Durum
+                    </label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => {
+                        setStatusFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    >
+                      <option value="">Tümü</option>
+                      <option value="Completed">Tamamlandı</option>
+                      <option value="Pending">Bekliyor</option>
+                      <option value="InProgress">Devam Ediyor</option>
+                      <option value="Failed">Başarısız</option>
+                    </select>
+                  </div>
+
+                  {/* Type Filter */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                      Tür
+                    </label>
+                    <select
+                      value={typeFilter}
+                      onChange={(e) => {
+                        setTypeFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    >
+                      <option value="">Tümü</option>
+                      <option value="Full">Tam Yedek</option>
+                      <option value="Incremental">Artımlı</option>
+                      <option value="Differential">Fark</option>
+                    </select>
+                  </div>
+
+                  {/* From Date */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                      Başlangıç Tarihi
+                    </label>
+                    <input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => {
+                        setFromDate(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    />
+                  </div>
+
+                  {/* To Date */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                      Bitiş Tarihi
+                    </label>
+                    <input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => {
+                        setToDate(e.target.value);
+                        setPage(1);
+                      }}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Active Filters Indicators */}
+            {hasActiveFilters && !showFilters && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 border-t border-slate-200">
+                <span className="text-xs text-slate-500">Aktif filtreler:</span>
+                {statusFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded-full">
+                    Durum: {getStatusLabel(statusFilter)}
+                    <button onClick={() => setStatusFilter('')} className="hover:text-slate-900">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {typeFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded-full">
+                    Tür: {getBackupTypeLabel(typeFilter)}
+                    <button onClick={() => setTypeFilter('')} className="hover:text-slate-900">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {fromDate && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded-full">
+                    Başlangıç: {fromDate}
+                    <button onClick={() => setFromDate('')} className="hover:text-slate-900">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {toDate && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded-full">
+                    Bitiş: {toDate}
+                    <button onClick={() => setToDate('')} className="hover:text-slate-900">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Backups Table */}
           <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
             {isLoading ? (
@@ -261,15 +505,31 @@ export default function BackupPage() {
             ) : backups.length === 0 ? (
               <div className="text-center py-20">
                 <CloudUpload className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-sm font-medium text-slate-900 mb-1">Yedek Bulunamadı</h3>
-                <p className="text-xs text-slate-500 mb-4">Henüz bir yedekleme oluşturmadınız</p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  İlk Yedeği Oluştur
-                </button>
+                <h3 className="text-sm font-medium text-slate-900 mb-1">
+                  {hasActiveFilters ? 'Sonuç Bulunamadı' : 'Yedek Bulunamadı'}
+                </h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  {hasActiveFilters
+                    ? 'Arama kriterlerinize uygun yedek bulunamadı'
+                    : 'Henüz bir yedekleme oluşturmadınız'}
+                </p>
+                {hasActiveFilters ? (
+                  <button
+                    onClick={clearFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-slate-700 border border-slate-300 text-sm font-medium rounded-md hover:bg-slate-50 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Filtreleri Temizle
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    İlk Yedeği Oluştur
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -306,9 +566,9 @@ export default function BackupPage() {
                         {/* Type */}
                         <div className="md:col-span-2 flex items-center">
                           <div className="flex items-center gap-1.5">
-                            {backup.includesDatabase && <Database className="w-3.5 h-3.5 text-slate-400" title="Veritabanı" />}
-                            {backup.includesFiles && <FileArchive className="w-3.5 h-3.5 text-slate-400" title="Dosyalar" />}
-                            {backup.includesConfiguration && <Settings className="w-3.5 h-3.5 text-slate-400" title="Ayarlar" />}
+                            {backup.includesDatabase && <span title="Veritabanı"><Database className="w-3.5 h-3.5 text-slate-400" /></span>}
+                            {backup.includesFiles && <span title="Dosyalar"><FileArchive className="w-3.5 h-3.5 text-slate-400" /></span>}
+                            {backup.includesConfiguration && <span title="Ayarlar"><Settings className="w-3.5 h-3.5 text-slate-400" /></span>}
                             <span className="ml-1 text-sm text-slate-600">{getBackupTypeLabel(backup.backupType)}</span>
                           </div>
                         </div>
@@ -348,6 +608,16 @@ export default function BackupPage() {
 
                         {/* Actions */}
                         <div className="md:col-span-1 flex items-center justify-end gap-1">
+                          {backup.status === 'Completed' && (
+                            <button
+                              onClick={() => handleDownload(backup)}
+                              disabled={downloadBackup.isPending}
+                              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors disabled:opacity-50"
+                              title="İndir"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                          )}
                           {backup.isRestorable && (
                             <button
                               onClick={() => setShowRestoreModal(backup)}
@@ -407,6 +677,8 @@ export default function BackupPage() {
               </>
             )}
           </div>
+          </>
+          )}
         </div>
 
         {/* Create Backup Modal */}
@@ -799,6 +1071,16 @@ export default function BackupPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-200">
+                  {selectedBackup.status === 'Completed' && (
+                    <button
+                      onClick={() => handleDownload(selectedBackup)}
+                      disabled={downloadBackup.isPending}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      İndir
+                    </button>
+                  )}
                   {selectedBackup.isRestorable && (
                     <button
                       onClick={() => {

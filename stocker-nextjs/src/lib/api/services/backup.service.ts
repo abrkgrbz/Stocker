@@ -73,6 +73,46 @@ export interface RestoreBackupRequest {
   notes?: string;
 }
 
+// =====================================
+// SCHEDULE TYPES
+// =====================================
+
+export interface BackupScheduleDto {
+  id: string;
+  scheduleName: string;
+  scheduleType: 'Daily' | 'Weekly' | 'Monthly' | 'Custom';
+  cronExpression: string;
+  backupType: 'Full' | 'Incremental' | 'Differential';
+  includeDatabase: boolean;
+  includeFiles: boolean;
+  includeConfiguration: boolean;
+  compress: boolean;
+  encrypt: boolean;
+  retentionDays: number;
+  isEnabled: boolean;
+  lastExecutedAt?: string;
+  nextExecutionAt?: string;
+  successCount: number;
+  failureCount: number;
+  lastErrorMessage?: string;
+  createdAt: string;
+}
+
+export interface CreateBackupScheduleRequest {
+  scheduleName: string;
+  scheduleType: 'Daily' | 'Weekly' | 'Monthly' | 'Custom';
+  cronExpression: string;
+  backupType: 'Full' | 'Incremental' | 'Differential';
+  includeDatabase?: boolean;
+  includeFiles?: boolean;
+  includeConfiguration?: boolean;
+  compress?: boolean;
+  encrypt?: boolean;
+  retentionDays?: number;
+}
+
+export type UpdateBackupScheduleRequest = CreateBackupScheduleRequest;
+
 export interface BackupFilters {
   pageNumber?: number;
   pageSize?: number;
@@ -82,6 +122,7 @@ export interface BackupFilters {
   toDate?: string;
   sortBy?: string;
   sortDescending?: boolean;
+  search?: string;
 }
 
 export interface PagedResult<T> {
@@ -158,6 +199,47 @@ export function getBackupTypeLabel(type: string): string {
   }
 }
 
+export function getScheduleTypeLabel(type: string): string {
+  switch (type) {
+    case 'Daily':
+      return 'Günlük';
+    case 'Weekly':
+      return 'Haftalık';
+    case 'Monthly':
+      return 'Aylık';
+    case 'Custom':
+      return 'Özel';
+    default:
+      return type;
+  }
+}
+
+export function getCronDescription(cron: string): string {
+  const parts = cron.split(' ');
+  if (parts.length < 5) return cron;
+
+  const [minute, hour, dayOfMonth, , dayOfWeek] = parts;
+
+  // Daily: 0 2 * * *
+  if (dayOfMonth === '*' && dayOfWeek === '*') {
+    return `Her gün saat ${hour}:${minute.padStart(2, '0')}`;
+  }
+
+  // Weekly: 0 3 * * 0
+  if (dayOfMonth === '*' && dayOfWeek !== '*') {
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    const dayIndex = parseInt(dayOfWeek);
+    return `Her ${days[dayIndex]} saat ${hour}:${minute.padStart(2, '0')}`;
+  }
+
+  // Monthly: 0 4 1 * *
+  if (dayOfMonth !== '*' && dayOfWeek === '*') {
+    return `Her ayın ${dayOfMonth}. günü saat ${hour}:${minute.padStart(2, '0')}`;
+  }
+
+  return cron;
+}
+
 // =====================================
 // SERVICE
 // =====================================
@@ -177,12 +259,13 @@ export const BackupService = {
     if (filters?.toDate) params.append('toDate', filters.toDate);
     if (filters?.sortBy) params.append('sortBy', filters.sortBy);
     if (filters?.sortDescending !== undefined) params.append('sortDescending', filters.sortDescending.toString());
+    if (filters?.search) params.append('search', filters.search);
 
     const queryString = params.toString();
     const url = `/api/tenant/Backup${queryString ? `?${queryString}` : ''}`;
 
     const response = await apiClient.get<ApiResponseWrapper<PagedResult<BackupDto>>>(url);
-    return (response as ApiResponseWrapper<PagedResult<BackupDto>>).data || response as PagedResult<BackupDto>;
+    return (response as unknown as ApiResponseWrapper<PagedResult<BackupDto>>).data || response as unknown as PagedResult<BackupDto>;
   },
 
   /**
@@ -192,7 +275,7 @@ export const BackupService = {
     const response = await apiClient.get<ApiResponseWrapper<BackupDetailDto>>(
       `/api/tenant/Backup/${id}`
     );
-    return (response as ApiResponseWrapper<BackupDetailDto>).data || response as BackupDetailDto;
+    return (response as unknown as ApiResponseWrapper<BackupDetailDto>).data || response as unknown as BackupDetailDto;
   },
 
   /**
@@ -202,7 +285,7 @@ export const BackupService = {
     const response = await apiClient.get<ApiResponseWrapper<BackupStatisticsDto>>(
       '/api/tenant/Backup/statistics'
     );
-    return (response as ApiResponseWrapper<BackupStatisticsDto>).data || response as BackupStatisticsDto;
+    return (response as unknown as ApiResponseWrapper<BackupStatisticsDto>).data || response as unknown as BackupStatisticsDto;
   },
 
   /**
@@ -213,7 +296,7 @@ export const BackupService = {
       '/api/tenant/Backup',
       request
     );
-    return (response as ApiResponseWrapper<BackupDto>).data || response as BackupDto;
+    return (response as unknown as ApiResponseWrapper<BackupDto>).data || response as unknown as BackupDto;
   },
 
   /**
@@ -228,6 +311,90 @@ export const BackupService = {
    */
   async restoreBackup(id: string, request?: RestoreBackupRequest): Promise<void> {
     await apiClient.post(`/api/tenant/Backup/${id}/restore`, request || {});
+  },
+
+  /**
+   * Get download URL for a backup
+   */
+  async getDownloadUrl(id: string, expiryMinutes = 60): Promise<{ downloadUrl: string; fileName: string; expiresAt: string }> {
+    const response = await apiClient.get<ApiResponseWrapper<{ downloadUrl: string; fileName: string; expiresAt: string }>>(
+      `/api/tenant/Backup/${id}/download?expiryMinutes=${expiryMinutes}`
+    );
+    return (response as unknown as ApiResponseWrapper<{ downloadUrl: string; fileName: string; expiresAt: string }>).data || response as unknown as { downloadUrl: string; fileName: string; expiresAt: string };
+  },
+
+  // =====================================
+  // SCHEDULE METHODS
+  // =====================================
+
+  /**
+   * Get all backup schedules
+   */
+  async getSchedules(): Promise<BackupScheduleDto[]> {
+    const response = await apiClient.get<ApiResponseWrapper<BackupScheduleDto[]>>(
+      '/api/tenant/Backup/schedules'
+    );
+    return (response as unknown as ApiResponseWrapper<BackupScheduleDto[]>).data || response as unknown as BackupScheduleDto[];
+  },
+
+  /**
+   * Get a specific schedule
+   */
+  async getScheduleById(id: string): Promise<BackupScheduleDto> {
+    const response = await apiClient.get<ApiResponseWrapper<BackupScheduleDto>>(
+      `/api/tenant/Backup/schedules/${id}`
+    );
+    return (response as unknown as ApiResponseWrapper<BackupScheduleDto>).data || response as unknown as BackupScheduleDto;
+  },
+
+  /**
+   * Create a new backup schedule
+   */
+  async createSchedule(request: CreateBackupScheduleRequest): Promise<BackupScheduleDto> {
+    const response = await apiClient.post<ApiResponseWrapper<BackupScheduleDto>>(
+      '/api/tenant/Backup/schedules',
+      request
+    );
+    return (response as unknown as ApiResponseWrapper<BackupScheduleDto>).data || response as unknown as BackupScheduleDto;
+  },
+
+  /**
+   * Update a backup schedule
+   */
+  async updateSchedule(id: string, request: UpdateBackupScheduleRequest): Promise<void> {
+    await apiClient.put(`/api/tenant/Backup/schedules/${id}`, request);
+  },
+
+  /**
+   * Delete a backup schedule
+   */
+  async deleteSchedule(id: string): Promise<void> {
+    await apiClient.delete(`/api/tenant/Backup/schedules/${id}`);
+  },
+
+  /**
+   * Enable a backup schedule
+   */
+  async enableSchedule(id: string): Promise<void> {
+    await apiClient.post(`/api/tenant/Backup/schedules/${id}/enable`, {});
+  },
+
+  /**
+   * Disable a backup schedule
+   */
+  async disableSchedule(id: string): Promise<void> {
+    await apiClient.post(`/api/tenant/Backup/schedules/${id}/disable`, {});
+  },
+
+  /**
+   * Trigger manual cleanup
+   */
+  async triggerCleanup(retentionDays = 30): Promise<{ jobId: string }> {
+    const response = await apiClient.post<ApiResponseWrapper<{ jobId: string }>>(
+      `/api/tenant/Backup/cleanup?retentionDays=${retentionDays}`,
+      {}
+    );
+    return (response as unknown as ApiResponseWrapper<{ jobId: string }>).data || response as unknown as { jobId: string };
   },
 };
 

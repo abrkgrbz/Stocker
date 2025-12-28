@@ -36,6 +36,7 @@ public interface IMasterDbContext
     DbSet<TenantRegistration> TenantRegistrations { get; }
     DbSet<TenantSettings> TenantSettings { get; }
     DbSet<SecurityAuditLog> SecurityAuditLogs { get; }
+    DbSet<BackupSchedule> BackupSchedules { get; }
 
     // Pricing & Setup entities
     DbSet<AddOn> AddOns { get; }

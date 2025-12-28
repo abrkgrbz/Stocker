@@ -106,3 +106,69 @@ public class BackupSettingsDto
     public bool EmailNotification { get; set; } = true;
     public string? NotificationEmail { get; set; }
 }
+
+/// <summary>
+/// DTO for backup schedule
+/// </summary>
+public class BackupScheduleDto
+{
+    public Guid Id { get; set; }
+    public string ScheduleName { get; set; } = string.Empty;
+    public string ScheduleType { get; set; } = string.Empty;
+    public string CronExpression { get; set; } = string.Empty;
+    public string BackupType { get; set; } = string.Empty;
+    public bool IncludeDatabase { get; set; }
+    public bool IncludeFiles { get; set; }
+    public bool IncludeConfiguration { get; set; }
+    public bool Compress { get; set; }
+    public bool Encrypt { get; set; }
+    public int RetentionDays { get; set; }
+    public bool IsEnabled { get; set; }
+    public DateTime? LastExecutedAt { get; set; }
+    public DateTime? NextExecutionAt { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public string? LastErrorMessage { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    // Computed properties
+    public string CronDescription => GetCronDescription(CronExpression);
+
+    private static string GetCronDescription(string cron)
+    {
+        return cron switch
+        {
+            "0 2 * * *" => "Her gün saat 02:00",
+            "0 3 * * 0" => "Her pazar saat 03:00",
+            "0 4 1 * *" => "Her ayın 1'i saat 04:00",
+            _ => cron
+        };
+    }
+}
+
+/// <summary>
+/// DTO for backup download
+/// </summary>
+public class BackupDownloadDto
+{
+    public Guid BackupId { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string DownloadUrl { get; set; } = string.Empty;
+    public long SizeInBytes { get; set; }
+    public DateTime ExpiresAt { get; set; }
+
+    public string SizeFormatted => FormatSize(SizeInBytes);
+
+    private static string FormatSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double len = bytes;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+}

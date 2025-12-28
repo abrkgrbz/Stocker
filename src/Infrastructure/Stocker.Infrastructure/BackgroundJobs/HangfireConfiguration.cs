@@ -54,7 +54,7 @@ public static class HangfireConfiguration
         {
             options.ServerName = $"Stocker-{Environment.MachineName}";
             options.WorkerCount = Environment.ProcessorCount * 2;
-            options.Queues = new[] { "critical", "default", "low" };
+            options.Queues = new[] { "critical", "default", "backups", "maintenance", "low" };
             options.ServerCheckInterval = TimeSpan.FromSeconds(30);
             options.ServerTimeout = TimeSpan.FromMinutes(5);
             options.SchedulePollingInterval = TimeSpan.FromSeconds(15);
@@ -113,6 +113,16 @@ public static class HangfireConfiguration
             "docker-stats-monitoring",
             job => job.CollectAndPushDockerStats(),
             "*/30 * * * * *", // Every 30 seconds
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.Utc
+            });
+
+        // Backup cleanup - runs daily at 3:00 AM UTC
+        RecurringJob.AddOrUpdate<BackupJob>(
+            "backup-cleanup-global",
+            job => job.CleanupAllExpiredBackupsAsync(CancellationToken.None),
+            "0 3 * * *", // Daily at 3:00 AM
             new RecurringJobOptions
             {
                 TimeZone = TimeZoneInfo.Utc

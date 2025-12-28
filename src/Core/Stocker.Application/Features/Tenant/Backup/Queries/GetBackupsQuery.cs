@@ -18,6 +18,7 @@ public class GetBackupsQuery : IRequest<Result<PagedResult<BackupDto>>>
     public DateTime? ToDate { get; init; }
     public string? SortBy { get; init; } = "CreatedAt";
     public bool SortDescending { get; init; } = true;
+    public string? Search { get; init; }
 }
 
 /// <summary>

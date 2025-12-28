@@ -162,6 +162,20 @@ public static class ServiceCollectionExtensions
         // Register Tenant Storage Service
         services.AddScoped<ITenantStorageService, MinioTenantStorageService>();
 
+        // Register Backup Storage Service
+        services.AddScoped<IBackupStorageService, MinioBackupStorageService>();
+
+        // Register Backup Execution Service
+        services.AddScoped<IBackupExecutionService, BackupExecutionService>();
+
+        // Register Backup Scheduling Service
+        services.AddScoped<IBackupSchedulingService, BackupSchedulingService>();
+
+        // Register Backup Notification Service
+        services.Configure<BackupNotificationSettings>(
+            configuration.GetSection(BackupNotificationSettings.SectionName));
+        services.AddScoped<IBackupNotificationService, BackupNotificationService>();
+
         return services;
     }
 

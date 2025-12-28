@@ -13,6 +13,9 @@ import type {
   CreateBackupRequest,
   RestoreBackupRequest,
   PagedResult,
+  BackupScheduleDto,
+  CreateBackupScheduleRequest,
+  UpdateBackupScheduleRequest,
 } from '../services/backup.service';
 
 // Query Keys
@@ -23,6 +26,8 @@ export const backupKeys = {
   details: () => [...backupKeys.all, 'detail'] as const,
   detail: (id: string) => [...backupKeys.details(), id] as const,
   statistics: () => [...backupKeys.all, 'statistics'] as const,
+  schedules: () => [...backupKeys.all, 'schedules'] as const,
+  schedule: (id: string) => [...backupKeys.schedules(), id] as const,
 };
 
 /**
@@ -107,10 +112,136 @@ export function useRestoreBackup() {
   });
 }
 
+/**
+ * Hook to get download URL for a backup
+ */
+export function useBackupDownload() {
+  return useMutation<{ downloadUrl: string; fileName: string; expiresAt: string }, Error, { id: string; expiryMinutes?: number }>({
+    mutationFn: ({ id, expiryMinutes }) => BackupService.getDownloadUrl(id, expiryMinutes),
+  });
+}
+
+// =====================================
+// SCHEDULE HOOKS
+// =====================================
+
+/**
+ * Hook to fetch all backup schedules
+ */
+export function useBackupSchedules() {
+  return useQuery<BackupScheduleDto[], Error>({
+    queryKey: backupKeys.schedules(),
+    queryFn: () => BackupService.getSchedules(),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+/**
+ * Hook to fetch a single schedule by ID
+ */
+export function useBackupSchedule(id: string) {
+  return useQuery<BackupScheduleDto, Error>({
+    queryKey: backupKeys.schedule(id),
+    queryFn: () => BackupService.getScheduleById(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new backup schedule
+ */
+export function useCreateSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation<BackupScheduleDto, Error, CreateBackupScheduleRequest>({
+    mutationFn: (request) => BackupService.createSchedule(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedules() });
+    },
+  });
+}
+
+/**
+ * Hook to update a backup schedule
+ */
+export function useUpdateSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { id: string; request: UpdateBackupScheduleRequest }>({
+    mutationFn: ({ id, request }) => BackupService.updateSchedule(id, request),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedules() });
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedule(variables.id) });
+    },
+  });
+}
+
+/**
+ * Hook to delete a backup schedule
+ */
+export function useDeleteSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => BackupService.deleteSchedule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedules() });
+    },
+  });
+}
+
+/**
+ * Hook to enable a backup schedule
+ */
+export function useEnableSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => BackupService.enableSchedule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedules() });
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedule(id) });
+    },
+  });
+}
+
+/**
+ * Hook to disable a backup schedule
+ */
+export function useDisableSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (id) => BackupService.disableSchedule(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedules() });
+      queryClient.invalidateQueries({ queryKey: backupKeys.schedule(id) });
+    },
+  });
+}
+
+/**
+ * Hook to trigger manual cleanup
+ */
+export function useTriggerCleanup() {
+  return useMutation<{ jobId: string }, Error, number | undefined>({
+    mutationFn: (retentionDays) => BackupService.triggerCleanup(retentionDays),
+  });
+}
+
 // Re-export utility functions
 export {
   formatBytes,
   getStatusColor,
   getStatusLabel,
   getBackupTypeLabel,
+  getScheduleTypeLabel,
+  getCronDescription,
+} from '../services/backup.service';
+
+// Re-export types
+export type {
+  BackupScheduleDto,
+  CreateBackupScheduleRequest,
+  UpdateBackupScheduleRequest,
 } from '../services/backup.service';

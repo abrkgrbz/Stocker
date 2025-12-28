@@ -20,6 +20,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
     public DbSet<TenantHealthCheck> TenantHealthChecks => Set<TenantHealthCheck>();
     public DbSet<TenantBackup> TenantBackups => Set<TenantBackup>();
+    public DbSet<BackupSchedule> BackupSchedules => Set<BackupSchedule>();
     public DbSet<TenantLimits> TenantLimits => Set<TenantLimits>();
     
     // Tenant Registration & Contracts (Stays in Master)

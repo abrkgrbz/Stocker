@@ -24,6 +24,11 @@ public class GetBackupsQueryHandler : IRequestHandler<GetBackupsQuery, Result<Pa
             .AsQueryable()
             .Where(b => b.TenantId == request.TenantId);
 
+        // Apply search filter
+        if (!string.IsNullOrEmpty(request.Search))
+            query = query.Where(b => b.BackupName.Contains(request.Search) ||
+                                    (b.Description != null && b.Description.Contains(request.Search)));
+
         // Apply filters
         if (!string.IsNullOrEmpty(request.Status))
             query = query.Where(b => b.Status == request.Status);
