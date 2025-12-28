@@ -44,7 +44,7 @@ function Verify2FAForm() {
       const response = await authService.verify2FA({
         email,
         code,
-        backupCode: useBackupCode,
+        isBackupCode: useBackupCode,
       });
 
       if (response.success && response.data) {

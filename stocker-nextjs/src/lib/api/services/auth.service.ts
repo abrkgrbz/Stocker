@@ -48,7 +48,7 @@ export interface LoginResponse {
 export interface Verify2FARequest {
   email: string;
   code: string;
-  backupCode?: boolean;
+  isBackupCode?: boolean;
 }
 
 export interface Verify2FAResponse {
