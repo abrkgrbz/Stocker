@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useTranslations } from '@/lib/i18n';
 import dynamic from 'next/dynamic';
 
@@ -19,10 +19,117 @@ const companyLogos = [
   'Teknosa', 'MediaMarkt', 'Boyner', 'Mavi'
 ];
 
+// Dashboard menu items with icons
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+  { id: 'stock', label: 'Stok', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+  { id: 'orders', label: 'Siparişler', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+  { id: 'customers', label: 'Müşteriler', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  { id: 'reports', label: 'Raporlar', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+];
+
+// Mock data for different pages
+const mockPageData = {
+  dashboard: {
+    stats: [
+      { label: 'Toplam Stok', value: '12,458', change: '+12%', color: 'emerald' },
+      { label: 'Siparişler', value: '847', change: '+8%', color: 'blue' },
+      { label: 'Gelir', value: '₺284K', change: '+23%', color: 'violet' },
+      { label: 'Müşteriler', value: '2,156', change: '+5%', color: 'amber' },
+    ],
+    chartTitle: 'Satış Trendi',
+    chartData: [32, 45, 38, 52, 48, 65, 58, 72, 68, 85, 78, 92],
+    activities: [
+      { product: 'iPhone 15 Pro', action: 'Stok güncellendi', qty: '+50', time: '2dk' },
+      { product: 'MacBook Air M3', action: 'Sipariş alındı', qty: '-3', time: '15dk' },
+      { product: 'AirPods Pro 2', action: 'Düşük stok uyarısı', qty: '12', time: '1s' },
+    ],
+    headerTitle: 'Genel Bakış',
+    headerSubtitle: 'Hoş geldiniz',
+    actionButton: '+ Yeni Ürün',
+  },
+  stock: {
+    stats: [
+      { label: 'Toplam Ürün', value: '3,847', change: '+5%', color: 'blue' },
+      { label: 'Düşük Stok', value: '23', change: '-8%', color: 'red' },
+      { label: 'Stok Değeri', value: '₺1.2M', change: '+15%', color: 'emerald' },
+      { label: 'Kategoriler', value: '48', change: '+2%', color: 'violet' },
+    ],
+    chartTitle: 'Stok Hareketleri',
+    chartData: [65, 72, 58, 85, 92, 78, 68, 55, 82, 90, 75, 88],
+    activities: [
+      { product: 'Samsung Galaxy S24', action: 'Stok eklendi', qty: '+100', time: '5dk' },
+      { product: 'Sony WH-1000XM5', action: 'Kritik stok seviyesi', qty: '5', time: '30dk' },
+      { product: 'iPad Pro 12.9', action: 'Stok transferi', qty: '+25', time: '2s' },
+    ],
+    headerTitle: 'Stok Yönetimi',
+    headerSubtitle: '3,847 ürün',
+    actionButton: '+ Stok Ekle',
+  },
+  orders: {
+    stats: [
+      { label: 'Bekleyen', value: '156', change: '+18%', color: 'amber' },
+      { label: 'Hazırlanan', value: '89', change: '+12%', color: 'blue' },
+      { label: 'Kargoda', value: '234', change: '+25%', color: 'violet' },
+      { label: 'Teslim Edildi', value: '1,458', change: '+8%', color: 'emerald' },
+    ],
+    chartTitle: 'Sipariş Trendi',
+    chartData: [45, 52, 68, 75, 82, 65, 78, 92, 85, 70, 88, 95],
+    activities: [
+      { product: '#SP-2847', action: 'Yeni sipariş alındı', qty: '₺2,450', time: '1dk' },
+      { product: '#SP-2846', action: 'Kargoya verildi', qty: '₺890', time: '10dk' },
+      { product: '#SP-2845', action: 'Teslim edildi', qty: '₺1,200', time: '45dk' },
+    ],
+    headerTitle: 'Siparişler',
+    headerSubtitle: '847 aktif sipariş',
+    actionButton: '+ Sipariş Oluştur',
+  },
+  customers: {
+    stats: [
+      { label: 'Toplam Müşteri', value: '2,156', change: '+5%', color: 'blue' },
+      { label: 'Aktif', value: '1,847', change: '+12%', color: 'emerald' },
+      { label: 'Yeni (Bu Ay)', value: '156', change: '+28%', color: 'violet' },
+      { label: 'Sadık Müşteri', value: '892', change: '+8%', color: 'amber' },
+    ],
+    chartTitle: 'Müşteri Büyümesi',
+    chartData: [25, 35, 42, 55, 48, 62, 58, 72, 78, 85, 82, 95],
+    activities: [
+      { product: 'Ahmet Yılmaz', action: 'Yeni kayıt', qty: 'Premium', time: '3dk' },
+      { product: 'Zeynep Kaya', action: 'Sipariş verdi', qty: '₺3,200', time: '20dk' },
+      { product: 'Mehmet Demir', action: 'Sadık müşteri oldu', qty: '10+ sipariş', time: '1s' },
+    ],
+    headerTitle: 'Müşteriler',
+    headerSubtitle: '2,156 kayıtlı müşteri',
+    actionButton: '+ Müşteri Ekle',
+  },
+  reports: {
+    stats: [
+      { label: 'Aylık Gelir', value: '₺847K', change: '+23%', color: 'emerald' },
+      { label: 'Kar Marjı', value: '%24.5', change: '+3%', color: 'blue' },
+      { label: 'Ortalama Sepet', value: '₺456', change: '+8%', color: 'violet' },
+      { label: 'Dönüşüm Oranı', value: '%12.8', change: '+2%', color: 'amber' },
+    ],
+    chartTitle: 'Gelir Analizi',
+    chartData: [55, 62, 58, 72, 68, 85, 78, 92, 88, 95, 90, 98],
+    activities: [
+      { product: 'Haftalık Rapor', action: 'Otomatik oluşturuldu', qty: 'PDF', time: '1s' },
+      { product: 'Stok Analizi', action: 'İnceleme bekliyor', qty: 'Excel', time: '2s' },
+      { product: 'Satış Özeti', action: 'Gönderildi', qty: 'Email', time: '1g' },
+    ],
+    headerTitle: 'Raporlar',
+    headerSubtitle: 'Analiz ve istatistikler',
+    actionButton: '+ Rapor Oluştur',
+  },
+};
+
 export default function HeroSection() {
   const { t, locale, setLocale } = useTranslations();
   const [scrolled, setScrolled] = useState(false);
+  const [activePage, setActivePage] = useState<keyof typeof mockPageData>('dashboard');
   const { scrollY } = useScroll();
+
+  // Get current page data
+  const currentPageData = mockPageData[activePage];
 
   // Parallax effect for dashboard mockup
   const mockupY = useTransform(scrollY, [0, 500], [0, 50]);
@@ -272,126 +379,171 @@ export default function HeroSection() {
             {/* Dashboard UI - Enhanced with micro-animations */}
             <div className="p-5 bg-gradient-to-br from-slate-50/80 to-white">
               <div className="flex gap-5">
-                {/* Sidebar */}
+                {/* Sidebar - Interactive */}
                 <div className="w-48 shrink-0 space-y-2">
                   <div className="h-8 bg-slate-900 rounded-lg mb-5 flex items-center justify-center">
                     <div className="w-20 h-3 bg-white/20 rounded" />
                   </div>
-                  {['Dashboard', 'Stok', 'Siparişler', 'Müşteriler', 'Raporlar'].map((item, i) => (
-                    <motion.div
-                      key={item}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + i * 0.1 }}
-                      className={`h-8 rounded-lg flex items-center px-3 gap-2 ${i === 0 ? 'bg-slate-200' : 'bg-slate-100/60'}`}
-                    >
-                      <div className={`w-4 h-4 rounded ${i === 0 ? 'bg-slate-400' : 'bg-slate-300'}`} />
-                      <span className={`text-[11px] ${i === 0 ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>{item}</span>
-                    </motion.div>
-                  ))}
+                  {menuItems.map((item, i) => {
+                    const isActive = activePage === item.id;
+                    return (
+                      <motion.button
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + i * 0.1 }}
+                        onClick={() => setActivePage(item.id as keyof typeof mockPageData)}
+                        className={`w-full h-8 rounded-lg flex items-center px-3 gap-2 transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? 'bg-slate-900 shadow-lg shadow-slate-900/20'
+                            : 'bg-slate-100/60 hover:bg-slate-200/80'
+                        }`}
+                      >
+                        <svg
+                          className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
+                        </svg>
+                        <span className={`text-[11px] ${isActive ? 'text-white font-medium' : 'text-slate-500'}`}>
+                          {item.label}
+                        </span>
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeIndicator"
+                            className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400"
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
 
-                {/* Main Content */}
-                <div className="flex-1 space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="h-5 w-32 bg-slate-200 rounded mb-1" />
-                      <div className="h-3 w-24 bg-slate-100 rounded" />
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-24 bg-white border border-slate-200 rounded-lg" />
-                      <div className="h-8 w-28 bg-slate-900 rounded-lg flex items-center justify-center">
-                        <span className="text-[10px] text-white">+ Yeni Ürün</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats Row - Staggered */}
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { label: 'Toplam Stok', value: '12,458', change: '+12%', color: 'emerald' },
-                      { label: 'Siparişler', value: '847', change: '+8%', color: 'blue' },
-                      { label: 'Gelir', value: '₺284K', change: '+23%', color: 'violet' },
-                      { label: 'Müşteriler', value: '2,156', change: '+5%', color: 'amber' },
-                    ].map((stat, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1 + i * 0.1 }}
-                        className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-sm"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] text-slate-400">{stat.label}</span>
-                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600">
-                            {stat.change}
-                          </span>
+                {/* Main Content - Dynamic based on active page */}
+                <div className="flex-1 space-y-4 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activePage}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="space-y-4"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-[14px] font-semibold text-slate-800">{currentPageData.headerTitle}</div>
+                          <div className="text-[11px] text-slate-400">{currentPageData.headerSubtitle}</div>
                         </div>
-                        <div className="text-[16px] font-semibold text-slate-900">{stat.value}</div>
-                      </motion.div>
-                    ))}
-                  </div>
+                        <div className="flex gap-2">
+                          <div className="h-8 w-24 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
+                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                          <div className="h-8 w-28 bg-slate-900 rounded-lg flex items-center justify-center cursor-pointer hover:bg-slate-800 transition-colors">
+                            <span className="text-[10px] text-white">{currentPageData.actionButton}</span>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Chart with animated bars */}
-                  <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-[11px] font-medium text-slate-700">Satış Trendi</span>
-                      <div className="flex gap-1">
-                        {['7G', '30G', '90G'].map((period, i) => (
-                          <span
-                            key={period}
-                            className={`text-[9px] px-2 py-1 rounded ${i === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}
+                      {/* Stats Row - Dynamic */}
+                      <div className="grid grid-cols-4 gap-3">
+                        {currentPageData.stats.map((stat, i) => (
+                          <motion.div
+                            key={`${activePage}-stat-${i}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-sm"
                           >
-                            {period}
-                          </span>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] text-slate-400">{stat.label}</span>
+                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
+                                stat.change.startsWith('+')
+                                  ? 'bg-emerald-50 text-emerald-600'
+                                  : 'bg-red-50 text-red-600'
+                              }`}>
+                                {stat.change}
+                              </span>
+                            </div>
+                            <div className="text-[16px] font-semibold text-slate-900">{stat.value}</div>
+                          </motion.div>
                         ))}
                       </div>
-                    </div>
-                    <div className="flex items-end gap-1 h-24">
-                      {[32, 45, 38, 52, 48, 65, 58, 72, 68, 85, 78, 92].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{ duration: 0.6, delay: 1.2 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                          className={`flex-1 rounded-t ${i === 11 ? 'bg-slate-900' : 'bg-slate-200'}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Recent Activity */}
-                  <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
-                    <span className="text-[11px] font-medium text-slate-700 mb-3 block">Son İşlemler</span>
-                    <div className="space-y-2">
-                      {[
-                        { product: 'iPhone 15 Pro', action: 'Stok güncellendi', qty: '+50', time: '2dk' },
-                        { product: 'MacBook Air M3', action: 'Sipariş alındı', qty: '-3', time: '15dk' },
-                        { product: 'AirPods Pro 2', action: 'Düşük stok uyarısı', qty: '12', time: '1s' },
-                      ].map((item, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 1.5 + i * 0.1 }}
-                          className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0"
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                            <div className="w-4 h-4 rounded bg-slate-300" />
+                      {/* Chart with animated bars - Dynamic */}
+                      <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-[11px] font-medium text-slate-700">{currentPageData.chartTitle}</span>
+                          <div className="flex gap-1">
+                            {['7G', '30G', '90G'].map((period, i) => (
+                              <span
+                                key={period}
+                                className={`text-[9px] px-2 py-1 rounded cursor-pointer transition-colors ${
+                                  i === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                              >
+                                {period}
+                              </span>
+                            ))}
                           </div>
-                          <div className="flex-1">
-                            <div className="text-[11px] text-slate-700 font-medium">{item.product}</div>
-                            <div className="text-[10px] text-slate-400">{item.action}</div>
-                          </div>
-                          <div className={`text-[10px] font-medium ${item.qty.startsWith('+') ? 'text-emerald-600' : item.qty.startsWith('-') ? 'text-red-500' : 'text-amber-500'}`}>
-                            {item.qty}
-                          </div>
-                          <div className="text-[9px] text-slate-400">{item.time}</div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                        </div>
+                        <div className="flex items-end gap-1 h-24">
+                          {currentPageData.chartData.map((h, i) => (
+                            <motion.div
+                              key={`${activePage}-chart-${i}`}
+                              initial={{ height: 0 }}
+                              animate={{ height: `${h}%` }}
+                              transition={{ duration: 0.4, delay: i * 0.03, ease: [0.16, 1, 0.3, 1] }}
+                              className={`flex-1 rounded-t transition-colors ${
+                                i === currentPageData.chartData.length - 1 ? 'bg-slate-900' : 'bg-slate-200 hover:bg-slate-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Recent Activity - Dynamic */}
+                      <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
+                        <span className="text-[11px] font-medium text-slate-700 mb-3 block">Son İşlemler</span>
+                        <div className="space-y-2">
+                          {currentPageData.activities.map((item, i) => (
+                            <motion.div
+                              key={`${activePage}-activity-${i}`}
+                              initial={{ opacity: 0, x: 10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.1 + i * 0.05 }}
+                              className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                                <div className="w-4 h-4 rounded bg-slate-300" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[11px] text-slate-700 font-medium">{item.product}</div>
+                                <div className="text-[10px] text-slate-400">{item.action}</div>
+                              </div>
+                              <div className={`text-[10px] font-medium ${
+                                item.qty.startsWith('+')
+                                  ? 'text-emerald-600'
+                                  : item.qty.startsWith('-')
+                                    ? 'text-red-500'
+                                    : item.qty.startsWith('₺')
+                                      ? 'text-blue-600'
+                                      : 'text-amber-500'
+                              }`}>
+                                {item.qty}
+                              </div>
+                              <div className="text-[9px] text-slate-400">{item.time}</div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
