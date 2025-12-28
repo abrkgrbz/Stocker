@@ -16,6 +16,7 @@ using Stocker.Application.Features.Identity.Commands.Enable2FA;
 using Stocker.Application.Features.Identity.Commands.Verify2FA;
 using Stocker.Application.Features.Identity.Commands.Disable2FA;
 using Stocker.Application.Features.Identity.Queries.Check2FALockout;
+using Stocker.Application.Features.Identity.Queries.Get2FAStatus;
 using Stocker.Application.Features.Identity.Queries.GetCurrentUser;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -628,6 +629,41 @@ public class AuthController : ControllerBase
             {
                 success = true,
                 message = "2FA disabled successfully"
+            });
+        }
+
+        return BadRequest(new
+        {
+            success = false,
+            message = result.Error.Description
+        });
+    }
+
+    /// <summary>
+    /// Get 2FA status for current user
+    /// </summary>
+    [HttpGet("2fa-status")]
+    [Authorize]
+    [ProducesResponseType(typeof(Get2FAStatusResponse), 200)]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Get2FAStatus()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            throw new Stocker.Application.Common.Exceptions.UnauthorizedException("User not found");
+
+        _logger.LogInformation("2FA status request for user: {UserId}", userId);
+
+        var query = new Get2FAStatusQuery { UserId = Guid.Parse(userId) };
+        var result = await _mediator.Send(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new
+            {
+                success = true,
+                data = result.Value
             });
         }
 

@@ -175,3 +175,59 @@ export function useUpdatePreferences() {
     },
   });
 }
+
+// Delete Account Types
+export interface DeleteAccountRequest {
+  confirmationText: string;
+  password: string;
+  confirmTenantDeletion?: boolean;
+}
+
+export interface DeleteAccountPreview {
+  username?: string;
+  email?: string;
+  isOwner: boolean;
+  willDeleteTenant: boolean;
+  tenantName?: string;
+  databaseName?: string;
+  userCount: number;
+  dataSizeMB: number;
+  warnings: string[];
+}
+
+export interface DeleteAccountResult {
+  userDeleted: boolean;
+  tenantDeleted: boolean;
+  databaseDeleted: boolean;
+}
+
+// Get Delete Preview
+export function useDeleteAccountPreview() {
+  return useQuery({
+    queryKey: [...profileKeys.all, 'delete-preview'] as const,
+    queryFn: async () => {
+      const response = await ApiService.get<{
+        success: boolean;
+        data: DeleteAccountPreview;
+        message?: string;
+      }>('/api/account/delete/preview');
+      return response;
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    enabled: false, // Only fetch when explicitly called
+  });
+}
+
+// Delete Account
+export function useDeleteAccount() {
+  return useMutation({
+    mutationFn: async (data: DeleteAccountRequest) => {
+      const response = await ApiService.delete<{
+        success: boolean;
+        data: DeleteAccountResult;
+        message?: string;
+      }>('/api/account/delete', { data });
+      return response;
+    },
+  });
+}

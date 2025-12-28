@@ -63,6 +63,11 @@ export interface Setup2FAResponse {
   backupCodes: string[];
 }
 
+export interface TwoFactorStatusResponse {
+  enabled: boolean;
+  backupCodesRemaining: number;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -134,6 +139,13 @@ export class AuthService {
    */
   async disable2FA(code: string): Promise<ApiResponse<{ success: boolean }>> {
     return apiClient.post('/api/auth/disable-2fa', { code });
+  }
+
+  /**
+   * Get 2FA status for current user
+   */
+  async get2FAStatus(): Promise<ApiResponse<TwoFactorStatusResponse>> {
+    return apiClient.get<TwoFactorStatusResponse>('/api/auth/2fa-status');
   }
 
   /**

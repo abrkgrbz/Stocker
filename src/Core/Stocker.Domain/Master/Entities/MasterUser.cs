@@ -560,6 +560,33 @@ public sealed class MasterUser : AggregateRoot
         // _tenants.Add(new UserTenant(Id, tenantId, UserType.Personel));
     }
 
+    /// <summary>
+    /// Marks the user account as deleted (soft delete).
+    /// Deactivates the account and revokes all tokens.
+    /// </summary>
+    public void Delete()
+    {
+        IsActive = false;
+        IsEmailVerified = false;
+        TwoFactorEnabled = false;
+        TwoFactorSecret = null;
+        BackupCodes = null;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiry = null;
+        EmailVerificationToken = null;
+
+        // Revoke all tokens for security
+        RevokeAllRefreshTokens();
+    }
+
+    /// <summary>
+    /// Verifies the password for account deletion confirmation.
+    /// </summary>
+    public bool VerifyPassword(string password)
+    {
+        return Password.Verify(password);
+    }
+
     // UserTenant collection moved to Tenant domain
     // public IReadOnlyList<UserTenant> UserTenants => _tenants.AsReadOnly();
 }

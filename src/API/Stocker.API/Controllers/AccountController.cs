@@ -22,6 +22,7 @@ public class AccountController : ApiController
     private readonly ICurrentUserService _currentUserService;
     private readonly IPasswordService _passwordService;
     private readonly IProfileImageStorageService _profileImageStorageService;
+    private readonly ITenantDeletionService _tenantDeletionService;
     private readonly MasterDbContext _masterContext;
     private readonly TenantDbContext _tenantContext;
 
@@ -30,6 +31,7 @@ public class AccountController : ApiController
         ICurrentUserService currentUserService,
         IPasswordService passwordService,
         IProfileImageStorageService profileImageStorageService,
+        ITenantDeletionService tenantDeletionService,
         MasterDbContext masterContext,
         TenantDbContext tenantContext)
     {
@@ -37,6 +39,7 @@ public class AccountController : ApiController
         _currentUserService = currentUserService;
         _passwordService = passwordService;
         _profileImageStorageService = profileImageStorageService;
+        _tenantDeletionService = tenantDeletionService;
         _masterContext = masterContext;
         _tenantContext = tenantContext;
     }
@@ -608,6 +611,299 @@ public class AccountController : ApiController
     }
 
     /// <summary>
+    /// Get deletion preview - shows what will be deleted (for tenant owners: entire tenant)
+    /// </summary>
+    [HttpGet("delete/preview")]
+    [ProducesResponseType(typeof(ApiResponse<DeleteAccountPreviewDto>), 200)]
+    public async Task<IActionResult> GetDeletePreview()
+    {
+        try
+        {
+            var userId = _currentUserService.UserId;
+            var tenantId = _currentUserService.TenantId;
+            var isMasterAdmin = _currentUserService.IsMasterAdmin;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Kullanici kimligi bulunamadi"
+                });
+            }
+
+            var preview = new DeleteAccountPreviewDto();
+
+            if (isMasterAdmin)
+            {
+                var masterUser = await _masterContext.MasterUsers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+
+                if (masterUser != null)
+                {
+                    preview.Username = masterUser.Username;
+                    preview.Email = masterUser.Email.Value;
+                    preview.IsOwner = false;
+                    preview.WillDeleteTenant = false;
+                    preview.Warnings = new List<string>
+                    {
+                        "Hesabiniz kalici olarak deaktive edilecek",
+                        "Tum oturumlariniz sonlandirilacak"
+                    };
+                }
+            }
+            else if (!string.IsNullOrEmpty(tenantId))
+            {
+                var tenantGuid = Guid.Parse(tenantId);
+                var userGuid = Guid.Parse(userId);
+
+                var tenantUser = await _tenantContext.TenantUsers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == userGuid);
+
+                if (tenantUser != null)
+                {
+                    preview.Username = tenantUser.Username;
+                    preview.Email = tenantUser.Email.Value;
+
+                    // Check if user is tenant owner
+                    var isOwner = await _tenantDeletionService.IsUserTenantOwnerAsync(userGuid, tenantGuid);
+                    preview.IsOwner = isOwner;
+
+                    if (isOwner)
+                    {
+                        // Get deletion summary for tenant
+                        var summary = await _tenantDeletionService.GetDeletionSummaryAsync(tenantGuid);
+                        preview.WillDeleteTenant = true;
+                        preview.TenantName = summary.TenantName;
+                        preview.DatabaseName = summary.DatabaseName;
+                        preview.UserCount = summary.UserCount;
+                        preview.DataSizeMB = summary.EstimatedDataSizeMB;
+                        preview.Warnings = summary.Warnings;
+                        preview.Warnings.Insert(0, "DIKKAT: Firma sahibi olarak hesabinizi sildiginizde TUM FIRMA VERILERI SILINECEKTIR!");
+                    }
+                    else
+                    {
+                        preview.WillDeleteTenant = false;
+                        preview.Warnings = new List<string>
+                        {
+                            "Hesabiniz kalici olarak deaktive edilecek",
+                            "Tum oturumlariniz sonlandirilacak"
+                        };
+                    }
+                }
+            }
+
+            return Ok(new ApiResponse<DeleteAccountPreviewDto>
+            {
+                Success = true,
+                Data = preview,
+                Message = "Silme onizlemesi yuklendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting delete preview");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Onizleme alinirken bir hata olustu"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Delete current user's account (GitHub-style confirmation required)
+    /// For tenant owners: this will delete the ENTIRE tenant and database!
+    /// </summary>
+    [HttpDelete("delete")]
+    [ProducesResponseType(typeof(ApiResponse<DeleteAccountResultDto>), 200)]
+    public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
+    {
+        try
+        {
+            var userId = _currentUserService.UserId;
+            var tenantId = _currentUserService.TenantId;
+            var isMasterAdmin = _currentUserService.IsMasterAdmin;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new ApiResponse<DeleteAccountResultDto>
+                {
+                    Success = false,
+                    Message = "Kullanici kimligi bulunamadi"
+                });
+            }
+
+            var result = new DeleteAccountResultDto();
+
+            // GitHub-style confirmation: user must type their username/email
+            if (isMasterAdmin)
+            {
+                var masterUser = await _masterContext.MasterUsers
+                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+
+                if (masterUser == null)
+                {
+                    return NotFound(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Kullanici bulunamadi"
+                    });
+                }
+
+                // Verify confirmation text matches username or email
+                var expectedConfirmation = masterUser.Username ?? masterUser.Email.Value;
+                if (!string.Equals(request.ConfirmationText, expectedConfirmation, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Onay metni eslesmiyor. Lutfen kullanici adinizi veya e-posta adresinizi dogru yazdığinizdan emin olun."
+                    });
+                }
+
+                // Verify password
+                if (!masterUser.Password.Verify(request.Password))
+                {
+                    return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Sifre hatali"
+                    });
+                }
+
+                // Soft delete - deactivate the user
+                masterUser.Delete();
+                await _masterContext.SaveChangesAsync();
+
+                result.UserDeleted = true;
+                result.TenantDeleted = false;
+
+                _logger.LogWarning("Master user account deleted: {UserId}, {Email}", userId, masterUser.Email.Value);
+            }
+            else
+            {
+                var tenantUser = await _tenantContext.TenantUsers
+                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+
+                if (tenantUser == null)
+                {
+                    return NotFound(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Kullanici bulunamadi"
+                    });
+                }
+
+                // Verify confirmation text matches username or email
+                var expectedConfirmation = tenantUser.Username ?? tenantUser.Email.Value;
+                if (!string.Equals(request.ConfirmationText, expectedConfirmation, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Onay metni eslesmiyor. Lutfen kullanici adinizi veya e-posta adresinizi dogru yazdığinizdan emin olun."
+                    });
+                }
+
+                // Verify password
+                var hashedPassword = HashedPassword.CreateFromHash(tenantUser.PasswordHash);
+                if (!_passwordService.VerifyPassword(hashedPassword, request.Password))
+                {
+                    return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                    {
+                        Success = false,
+                        Message = "Sifre hatali"
+                    });
+                }
+
+                // Check if user is tenant owner - if so, delete entire tenant
+                var userGuid = Guid.Parse(userId);
+                var tenantGuid = !string.IsNullOrEmpty(tenantId) ? Guid.Parse(tenantId) : Guid.Empty;
+
+                if (tenantGuid != Guid.Empty)
+                {
+                    var isOwner = await _tenantDeletionService.IsUserTenantOwnerAsync(userGuid, tenantGuid);
+
+                    if (isOwner && request.ConfirmTenantDeletion)
+                    {
+                        // Delete entire tenant
+                        var deletionResult = await _tenantDeletionService.DeleteTenantAsync(tenantGuid, userGuid);
+
+                        if (!deletionResult.Success)
+                        {
+                            return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                            {
+                                Success = false,
+                                Message = deletionResult.ErrorMessage ?? "Firma silinemedi"
+                            });
+                        }
+
+                        result.UserDeleted = true;
+                        result.TenantDeleted = true;
+                        result.DatabaseDeleted = deletionResult.DatabaseDropped;
+
+                        _logger.LogWarning(
+                            "TENANT DELETED by owner: TenantId={TenantId}, UserId={UserId}, Email={Email}",
+                            tenantId, userId, tenantUser.Email.Value);
+                    }
+                    else if (isOwner && !request.ConfirmTenantDeletion)
+                    {
+                        // Owner must confirm tenant deletion
+                        return BadRequest(new ApiResponse<DeleteAccountResultDto>
+                        {
+                            Success = false,
+                            Message = "Firma sahibi olarak hesabinizi silmek icin 'confirmTenantDeletion' alanini true olarak gondermelisiniz. Bu islem tum firma verilerini silecektir!"
+                        });
+                    }
+                    else
+                    {
+                        // Regular user - just delete their account
+                        tenantUser.Delete();
+                        await _tenantContext.SaveChangesAsync();
+
+                        result.UserDeleted = true;
+                        result.TenantDeleted = false;
+
+                        _logger.LogWarning("Tenant user account deleted: {UserId}, {Email}", userId, tenantUser.Email.Value);
+                    }
+                }
+                else
+                {
+                    // No tenant context - just delete user
+                    tenantUser.Delete();
+                    await _tenantContext.SaveChangesAsync();
+
+                    result.UserDeleted = true;
+                    result.TenantDeleted = false;
+
+                    _logger.LogWarning("Tenant user account deleted: {UserId}, {Email}", userId, tenantUser.Email.Value);
+                }
+            }
+
+            return Ok(new ApiResponse<DeleteAccountResultDto>
+            {
+                Success = true,
+                Data = result,
+                Message = result.TenantDeleted
+                    ? "Hesabiniz ve firmaniz basariyla silindi"
+                    : "Hesabiniz basariyla silindi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting account");
+            return StatusCode(500, new ApiResponse<DeleteAccountResultDto>
+            {
+                Success = false,
+                Message = "Hesap silinirken bir hata olustu"
+            });
+        }
+    }
+
+    /// <summary>
     /// Update user preferences
     /// </summary>
     [HttpPut("preferences")]
@@ -665,6 +961,341 @@ public class AccountController : ApiController
             });
         }
     }
+
+    #region Security Endpoints
+
+    /// <summary>
+    /// Get security overview for current user
+    /// </summary>
+    [HttpGet("security/overview")]
+    [ProducesResponseType(typeof(ApiResponse<SecurityOverviewDto>), 200)]
+    public async Task<IActionResult> GetSecurityOverview()
+    {
+        try
+        {
+            var userId = _currentUserService.UserId;
+            var isMasterAdmin = _currentUserService.IsMasterAdmin;
+            var tenantId = _currentUserService.TenantId;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Kullanici kimligi bulunamadi"
+                });
+            }
+
+            var overview = new SecurityOverviewDto();
+
+            if (isMasterAdmin)
+            {
+                var masterUser = await _masterContext.MasterUsers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+
+                if (masterUser != null)
+                {
+                    overview.TwoFactorEnabled = masterUser.TwoFactorEnabled;
+                    overview.LastLoginDate = masterUser.LastLoginAt;
+                    overview.PasswordLastChanged = masterUser.PasswordChangedAt;
+                }
+
+                // Get active sessions count from login history
+                var recentLogins = await _masterContext.UserLoginHistories
+                    .Where(h => h.UserId == Guid.Parse(userId) && h.IsSuccessful)
+                    .OrderByDescending(h => h.LoginAt)
+                    .Take(30)
+                    .ToListAsync();
+
+                // Simple session count estimate based on recent unique IPs
+                overview.ActiveSessions = recentLogins
+                    .Where(l => l.LoginAt > DateTime.UtcNow.AddDays(-7))
+                    .Select(l => l.IpAddress)
+                    .Distinct()
+                    .Count();
+            }
+            else if (!string.IsNullOrEmpty(tenantId))
+            {
+                var tenantUser = await _tenantContext.TenantUsers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+
+                if (tenantUser != null)
+                {
+                    // TenantUser doesn't have 2FA fields yet, default to false
+                    overview.TwoFactorEnabled = false;
+                    overview.LastLoginDate = tenantUser.LastLoginAt;
+                    overview.PasswordLastChanged = null; // TenantUser doesn't track password changes
+                }
+
+                // For tenant users, estimate from audit logs
+                var recentActivity = await _tenantContext.AuditLogs
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.Timestamp)
+                    .Take(30)
+                    .ToListAsync();
+
+                overview.ActiveSessions = recentActivity
+                    .Where(a => a.Timestamp > DateTime.UtcNow.AddDays(-7))
+                    .Select(a => a.IpAddress)
+                    .Distinct()
+                    .Count();
+            }
+
+            // Calculate security score
+            int score = 50; // Base score
+            if (overview.TwoFactorEnabled) score += 30;
+            if (overview.PasswordLastChanged.HasValue && overview.PasswordLastChanged.Value > DateTime.UtcNow.AddDays(-90)) score += 20;
+            overview.SecurityScore = Math.Min(score, 100);
+
+            return Ok(new ApiResponse<SecurityOverviewDto>
+            {
+                Success = true,
+                Data = overview,
+                Message = "Guvenlik bilgileri basariyla yuklendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting security overview");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Guvenlik bilgileri alinirken bir hata olustu"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get active sessions for current user
+    /// </summary>
+    [HttpGet("security/sessions")]
+    [ProducesResponseType(typeof(ApiResponse<List<ActiveSessionDto>>), 200)]
+    public async Task<IActionResult> GetActiveSessions()
+    {
+        try
+        {
+            var userId = _currentUserService.UserId;
+            var isMasterAdmin = _currentUserService.IsMasterAdmin;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Kullanici kimligi bulunamadi"
+                });
+            }
+
+            var sessions = new List<ActiveSessionDto>();
+
+            if (isMasterAdmin)
+            {
+                var loginHistory = await _masterContext.UserLoginHistories
+                    .AsNoTracking()
+                    .Where(h => h.UserId == Guid.Parse(userId) && h.IsSuccessful)
+                    .OrderByDescending(h => h.LoginAt)
+                    .Take(10)
+                    .ToListAsync();
+
+                var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                sessions = loginHistory
+                    .GroupBy(h => h.IpAddress)
+                    .Select(g => g.First())
+                    .Select(h => new ActiveSessionDto
+                    {
+                        Id = h.Id.ToString(),
+                        Device = ParseUserAgent(h.UserAgent),
+                        Browser = ParseBrowser(h.UserAgent),
+                        Location = "Bilinmiyor",
+                        IpAddress = h.IpAddress,
+                        LastActive = h.LoginAt,
+                        IsCurrent = h.IpAddress == currentIp,
+                        CreatedAt = h.LoginAt
+                    })
+                    .ToList();
+            }
+            else
+            {
+                // For tenant users, use audit logs as session proxy
+                var auditLogs = await _tenantContext.AuditLogs
+                    .AsNoTracking()
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.Timestamp)
+                    .Take(20)
+                    .ToListAsync();
+
+                var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                sessions = auditLogs
+                    .GroupBy(a => a.IpAddress)
+                    .Select(g => g.First())
+                    .Take(10)
+                    .Select(a => new ActiveSessionDto
+                    {
+                        Id = a.Id.ToString(),
+                        Device = ParseUserAgent(a.UserAgent),
+                        Browser = ParseBrowser(a.UserAgent),
+                        Location = "Bilinmiyor",
+                        IpAddress = a.IpAddress ?? "Bilinmiyor",
+                        LastActive = a.Timestamp,
+                        IsCurrent = a.IpAddress == currentIp,
+                        CreatedAt = a.Timestamp
+                    })
+                    .ToList();
+            }
+
+            return Ok(new ApiResponse<List<ActiveSessionDto>>
+            {
+                Success = true,
+                Data = sessions,
+                Message = "Aktif oturumlar basariyla yuklendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting active sessions");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Aktif oturumlar alinirken bir hata olustu"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get security events for current user
+    /// </summary>
+    [HttpGet("security/events")]
+    [ProducesResponseType(typeof(ApiResponse<SecurityEventsResponse>), 200)]
+    public async Task<IActionResult> GetSecurityEvents([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var userId = _currentUserService.UserId;
+            var isMasterAdmin = _currentUserService.IsMasterAdmin;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Kullanici kimligi bulunamadi"
+                });
+            }
+
+            var events = new List<SecurityEventDto>();
+            int totalItems = 0;
+
+            if (isMasterAdmin)
+            {
+                var query = _masterContext.UserLoginHistories
+                    .AsNoTracking()
+                    .Where(h => h.UserId == Guid.Parse(userId));
+
+                totalItems = await query.CountAsync();
+
+                var loginHistory = await query
+                    .OrderByDescending(h => h.LoginAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                events = loginHistory.Select(h => new SecurityEventDto
+                {
+                    Id = h.Id.ToString(),
+                    Action = h.IsSuccessful ? "Basarili giris" : "Basarisiz giris denemesi",
+                    Description = h.IsSuccessful ? "Hesaba basariyla giris yapildi" : h.FailureReason ?? "Giris basarisiz",
+                    IpAddress = h.IpAddress,
+                    Device = ParseUserAgent(h.UserAgent),
+                    Timestamp = h.LoginAt,
+                    Success = h.IsSuccessful
+                }).ToList();
+            }
+            else
+            {
+                var query = _tenantContext.AuditLogs
+                    .AsNoTracking()
+                    .Where(a => a.UserId == userId &&
+                           (a.Action.Contains("Login") || a.Action.Contains("Password") || a.Action.Contains("2FA")));
+
+                totalItems = await query.CountAsync();
+
+                var auditLogs = await query
+                    .OrderByDescending(a => a.Timestamp)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                events = auditLogs.Select(a => new SecurityEventDto
+                {
+                    Id = a.Id.ToString(),
+                    Action = a.Action,
+                    Description = $"{a.Action} - {a.EntityName}",
+                    IpAddress = a.IpAddress ?? "Bilinmiyor",
+                    Device = ParseUserAgent(a.UserAgent),
+                    Timestamp = a.Timestamp,
+                    Success = true
+                }).ToList();
+            }
+
+            var response = new SecurityEventsResponse
+            {
+                Items = events,
+                TotalItems = totalItems,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+            };
+
+            return Ok(new ApiResponse<SecurityEventsResponse>
+            {
+                Success = true,
+                Data = response,
+                Message = "Guvenlik etkinlikleri basariyla yuklendi"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting security events");
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Guvenlik etkinlikleri alinirken bir hata olustu"
+            });
+        }
+    }
+
+    private static string ParseUserAgent(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Bilinmeyen Cihaz";
+
+        if (userAgent.Contains("Windows")) return "Windows";
+        if (userAgent.Contains("Mac")) return "macOS";
+        if (userAgent.Contains("iPhone")) return "iPhone";
+        if (userAgent.Contains("iPad")) return "iPad";
+        if (userAgent.Contains("Android")) return "Android";
+        if (userAgent.Contains("Linux")) return "Linux";
+
+        return "Diger";
+    }
+
+    private static string ParseBrowser(string? userAgent)
+    {
+        if (string.IsNullOrEmpty(userAgent)) return "Bilinmeyen Tarayici";
+
+        if (userAgent.Contains("Chrome") && !userAgent.Contains("Edg")) return "Chrome";
+        if (userAgent.Contains("Firefox")) return "Firefox";
+        if (userAgent.Contains("Safari") && !userAgent.Contains("Chrome")) return "Safari";
+        if (userAgent.Contains("Edg")) return "Edge";
+        if (userAgent.Contains("Opera") || userAgent.Contains("OPR")) return "Opera";
+
+        return "Diger";
+    }
+
+    #endregion
 }
 
 #region DTOs
@@ -744,6 +1375,74 @@ public class UpdatePreferencesRequest
     public string? Language { get; set; }
     public string? Theme { get; set; }
     public bool? Notifications { get; set; }
+}
+
+public class DeleteAccountRequest
+{
+    public string ConfirmationText { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public bool ConfirmTenantDeletion { get; set; } = false;
+}
+
+public class DeleteAccountPreviewDto
+{
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public bool IsOwner { get; set; }
+    public bool WillDeleteTenant { get; set; }
+    public string? TenantName { get; set; }
+    public string? DatabaseName { get; set; }
+    public int UserCount { get; set; }
+    public long DataSizeMB { get; set; }
+    public List<string> Warnings { get; set; } = new();
+}
+
+public class DeleteAccountResultDto
+{
+    public bool UserDeleted { get; set; }
+    public bool TenantDeleted { get; set; }
+    public bool DatabaseDeleted { get; set; }
+}
+
+public class SecurityOverviewDto
+{
+    public bool TwoFactorEnabled { get; set; }
+    public DateTime? PasswordLastChanged { get; set; }
+    public DateTime? LastLoginDate { get; set; }
+    public int ActiveSessions { get; set; }
+    public int SecurityScore { get; set; }
+}
+
+public class ActiveSessionDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Device { get; set; } = string.Empty;
+    public string Browser { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = string.Empty;
+    public DateTime LastActive { get; set; }
+    public bool IsCurrent { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class SecurityEventDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = string.Empty;
+    public string? Device { get; set; }
+    public DateTime Timestamp { get; set; }
+    public bool Success { get; set; }
+}
+
+public class SecurityEventsResponse
+{
+    public List<SecurityEventDto> Items { get; set; } = new();
+    public int TotalItems { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalPages { get; set; }
 }
 
 #endregion

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useProfile, useUpdateProfile, useUploadProfileImage } from './hooks';
+import { DeleteAccountModal } from './DeleteAccountModal';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   React.useEffect(() => {
     if (profile?.data) {
@@ -54,6 +56,7 @@ export default function ProfilePage() {
 
   const profileInfo = profile?.data || {
     id: user?.id,
+    username: user?.email, // fallback to email if no username
     email: user?.email,
     firstName: user?.firstName,
     lastName: user?.lastName,
@@ -382,20 +385,23 @@ export default function ProfilePage() {
               </Link>
 
               {/* Danger Zone - Inside Security Card */}
-              <div className="px-6 py-3.5 flex items-center justify-between bg-red-50/50">
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="w-full px-6 py-3.5 flex items-center justify-between bg-red-50/50 hover:bg-red-100/50 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-red-100 rounded-lg">
                     <AlertTriangle className="w-4 h-4 text-red-600" />
                   </div>
-                  <div>
+                  <div className="text-left">
                     <p className="text-sm font-medium text-red-700">Hesabı Sil</p>
                     <p className="text-xs text-red-600/70">Bu işlem geri alınamaz</p>
                   </div>
                 </div>
-                <button className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors">
+                <span className="text-xs font-medium text-red-600">
                   Sil →
-                </button>
-              </div>
+                </span>
+              </button>
             </div>
           </div>
 
@@ -427,6 +433,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        userIdentifier={profileInfo.username || profileInfo.email || ''}
+      />
     </div>
   );
 }

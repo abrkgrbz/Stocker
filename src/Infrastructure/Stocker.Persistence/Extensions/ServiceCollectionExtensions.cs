@@ -149,6 +149,9 @@ public static class ServiceCollectionExtensions
         // Add Tenant Database Security Service (per-tenant PostgreSQL users, encrypted connection strings)
         services.AddScoped<ITenantDatabaseSecurityService, Services.TenantDatabaseSecurityService>();
 
+        // Add Tenant Deletion Service (for complete tenant and database removal)
+        services.AddScoped<ITenantDeletionService, Services.TenantDeletionService>();
+
         // Add TenantDbContext as scoped service for CQRS handlers
         services.AddScoped<TenantDbContext>(serviceProvider =>
         {

@@ -411,4 +411,13 @@ public sealed class TenantUser : TenantAggregateRoot
         PasswordHash = newPasswordHash;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Marks the user account as deleted (soft delete).
+    /// User will be terminated and all roles/permissions removed.
+    /// </summary>
+    public void Delete()
+    {
+        Terminate(DateTime.UtcNow);
+    }
 }
