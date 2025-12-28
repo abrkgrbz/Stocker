@@ -176,6 +176,9 @@ public static class ServiceCollectionExtensions
             configuration.GetSection(BackupNotificationSettings.SectionName));
         services.AddScoped<IBackupNotificationService, BackupNotificationService>();
 
+        // Register Profile Image Storage Service
+        services.AddScoped<IProfileImageStorageService, MinioProfileImageStorageService>();
+
         return services;
     }
 

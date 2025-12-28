@@ -21,6 +21,7 @@ public class AccountController : ApiController
     private readonly ILogger<AccountController> _logger;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPasswordService _passwordService;
+    private readonly IProfileImageStorageService _profileImageStorageService;
     private readonly MasterDbContext _masterContext;
     private readonly TenantDbContext _tenantContext;
 
@@ -28,12 +29,14 @@ public class AccountController : ApiController
         ILogger<AccountController> logger,
         ICurrentUserService currentUserService,
         IPasswordService passwordService,
+        IProfileImageStorageService profileImageStorageService,
         MasterDbContext masterContext,
         TenantDbContext tenantContext)
     {
         _logger = logger;
         _currentUserService = currentUserService;
         _passwordService = passwordService;
+        _profileImageStorageService = profileImageStorageService;
         _masterContext = masterContext;
         _tenantContext = tenantContext;
     }
@@ -526,6 +529,7 @@ public class AccountController : ApiController
 
             var userId = _currentUserService.UserId;
             var isMasterAdmin = _currentUserService.IsMasterAdmin;
+            var tenantId = _currentUserService.TenantId;
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -536,24 +540,34 @@ public class AccountController : ApiController
                 });
             }
 
-            var fileName = $"{userId}_{DateTime.UtcNow.Ticks}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine("wwwroot", "uploads", "profiles", fileName);
+            var userGuid = Guid.Parse(userId);
+            Guid? tenantGuid = !string.IsNullOrEmpty(tenantId) ? Guid.Parse(tenantId) : null;
 
-            // Ensure directory exists
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            // Upload to MinIO (tenant bucket or master bucket)
+            using var stream = file.OpenReadStream();
+            var uploadResult = await _profileImageStorageService.UploadProfileImageAsync(
+                isMasterAdmin ? null : tenantGuid,
+                userGuid,
+                stream,
+                file.ContentType,
+                file.FileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            if (uploadResult.IsFailure)
             {
-                await file.CopyToAsync(stream);
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = uploadResult.Error?.Description ?? "Profil resmi yuklenirken bir hata olustu"
+                });
             }
 
-            var imageUrl = $"/uploads/profiles/{fileName}";
+            var imageUrl = uploadResult.Value;
 
             // Update user profile image path in database
             if (isMasterAdmin)
             {
                 var masterUser = await _masterContext.MasterUsers
-                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+                    .FirstOrDefaultAsync(u => u.Id == userGuid);
                 if (masterUser != null)
                 {
                     masterUser.UpdateProfilePicture(imageUrl);
@@ -563,13 +577,17 @@ public class AccountController : ApiController
             else
             {
                 var tenantUser = await _tenantContext.TenantUsers
-                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+                    .FirstOrDefaultAsync(u => u.Id == userGuid);
                 if (tenantUser != null)
                 {
                     tenantUser.UpdateProfilePicture(imageUrl);
                     await _tenantContext.SaveChangesAsync();
                 }
             }
+
+            _logger.LogInformation(
+                "Profile image uploaded to MinIO. UserId: {UserId}, TenantId: {TenantId}, IsMasterAdmin: {IsMasterAdmin}",
+                userId, tenantId, isMasterAdmin);
 
             return Ok(new ApiResponse<ProfileImageResponse>
             {
