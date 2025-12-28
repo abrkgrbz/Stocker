@@ -52,15 +52,17 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
             if (masterUser != null)
             {
+                // Use DateTime.Now for Npgsql legacy timestamp behavior compatibility
+                // Database returns timestamps in local time when legacy mode is enabled
                 var isValid = masterUser.PasswordResetTokenExpiry.HasValue &&
-                              masterUser.PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+                              masterUser.PasswordResetTokenExpiry.Value > DateTime.Now;
 
                 _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
 
                 return Result.Success(new ValidateResetTokenResponse
                 {
                     Valid = isValid,
-                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? DateTime.UtcNow
+                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? DateTime.Now
                 });
             }
 
@@ -83,15 +85,16 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
                     if (tenantUser != null)
                     {
+                        // Use DateTime.Now for Npgsql legacy timestamp behavior compatibility
                         var isValid = tenantUser.PasswordResetTokenExpiry.HasValue &&
-                                      tenantUser.PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+                                      tenantUser.PasswordResetTokenExpiry.Value > DateTime.Now;
 
                         _logger.LogInformation("Password reset token found in Tenant {TenantId}, valid: {IsValid}", tenantId, isValid);
 
                         return Result.Success(new ValidateResetTokenResponse
                         {
                             Valid = isValid,
-                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? DateTime.UtcNow
+                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? DateTime.Now
                         });
                     }
                 }
@@ -107,7 +110,7 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
             return Result.Success(new ValidateResetTokenResponse
             {
                 Valid = false,
-                ExpiresAt = DateTime.UtcNow
+                ExpiresAt = DateTime.Now
             });
         }
         catch (Exception ex)

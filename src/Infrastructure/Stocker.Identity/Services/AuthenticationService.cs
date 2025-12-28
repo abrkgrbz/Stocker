@@ -782,8 +782,8 @@ public class AuthenticationService : IAuthenticationService
             var masterUser = await _userManagementService.FindMasterUserAsync(email);
             if (masterUser != null && (masterUser.PasswordResetToken == token || masterUser.PasswordResetToken == normalizedToken))
             {
-                // Check if token is expired
-                if (masterUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
+                // Check if token is expired (use DateTime.Now for Npgsql legacy timestamp behavior compatibility)
+                if (masterUser.PasswordResetTokenExpiry <= DateTime.Now)
                 {
                     return Stocker.SharedKernel.Results.Result.Failure(
                         Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));
@@ -824,8 +824,8 @@ public class AuthenticationService : IAuthenticationService
 
                     if (tenantUser != null)
                     {
-                        // Check if token is expired
-                        if (tenantUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
+                        // Check if token is expired (use DateTime.Now for Npgsql legacy timestamp behavior compatibility)
+                        if (tenantUser.PasswordResetTokenExpiry <= DateTime.Now)
                         {
                             return Stocker.SharedKernel.Results.Result.Failure(
                                 Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));
