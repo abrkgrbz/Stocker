@@ -58,6 +58,42 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 
             if (result.Success && result.User != null)
             {
+                // Check if 2FA is enabled for this user (check the MasterUser)
+                var masterUser = await _masterContext.MasterUsers
+                    .FirstOrDefaultAsync(u => u.Email.Value == email, cancellationToken);
+
+                if (masterUser != null && masterUser.TwoFactorEnabled)
+                {
+                    _logger.LogInformation("2FA required for tenant user {Email}", email);
+
+                    // Generate a temporary token for 2FA verification
+                    var tempToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + ":" + email;
+
+                    var response2FA = new AuthResponse
+                    {
+                        AccessToken = string.Empty,
+                        RefreshToken = string.Empty,
+                        ExpiresAt = DateTime.UtcNow,
+                        TokenType = "Bearer",
+                        Requires2FA = true,
+                        TempToken = tempToken,
+                        User = new Application.Features.Identity.Commands.Login.UserInfo
+                        {
+                            Id = result.User.Id,
+                            Email = result.User.Email,
+                            Username = result.User.Username,
+                            FullName = result.User.FullName,
+                            Roles = result.User.Roles ?? new List<string>(),
+                            TenantId = result.User.TenantId,
+                            TenantName = result.User.TenantName
+                        },
+                        RequiresOnboarding = false,
+                        RequiresSetup = false
+                    };
+
+                    return Result.Success(response2FA);
+                }
+
                 // Note: Onboarding status is checked separately by frontend after login
                 // via /api/onboarding/status endpoint, as it requires tenant-specific context
 
