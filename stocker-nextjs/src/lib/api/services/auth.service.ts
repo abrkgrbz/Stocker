@@ -131,14 +131,14 @@ export class AuthService {
    * Enable 2FA after verification
    */
   async enable2FA(code: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/api/auth/enable-2fa', { code });
+    return apiClient.post('/api/auth/enable-2fa', { verificationCode: code });
   }
 
   /**
    * Disable 2FA
    */
   async disable2FA(code: string): Promise<ApiResponse<{ success: boolean }>> {
-    return apiClient.post('/api/auth/disable-2fa', { code });
+    return apiClient.post('/api/auth/disable-2fa', { verificationCode: code });
   }
 
   /**
