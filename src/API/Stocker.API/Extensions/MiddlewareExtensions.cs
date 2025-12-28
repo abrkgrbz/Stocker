@@ -8,6 +8,8 @@ using Stocker.Infrastructure.Middleware.RateLimiting;
 using Stocker.Infrastructure.Middleware.Correlation;
 using Stocker.Infrastructure.BackgroundJobs;
 using Stocker.Infrastructure.RateLimiting;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.Text.Json;
 
 namespace Stocker.API.Extensions;
 
@@ -252,6 +254,34 @@ public static class MiddlewareExtensions
         .AllowAnonymous(); // Allow anonymous - setup happens before full auth
 
         // 21. Health Check Endpoints
+        // Main health endpoint for Docker/Kubernetes health checks
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            AllowCachingResponses = false,
+            ResponseWriter = async (context, report) =>
+            {
+                context.Response.ContentType = "application/json";
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    checks = report.Entries.Select(e => new
+                    {
+                        name = e.Key,
+                        status = e.Value.Status.ToString(),
+                        description = e.Value.Description,
+                        duration = e.Value.Duration.TotalMilliseconds
+                    }),
+                    totalDuration = report.TotalDuration.TotalMilliseconds
+                };
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true
+                }));
+            }
+        });
+
+        // SignalR specific health check
         app.MapGet("/health/signalr", () => Results.Ok(new { status = "Healthy", service = "SignalR" }))
            .WithName("SignalRHealthCheck")
            .WithTags("Health");
