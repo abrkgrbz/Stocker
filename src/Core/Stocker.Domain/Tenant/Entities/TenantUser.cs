@@ -371,7 +371,9 @@ public sealed class TenantUser : TenantAggregateRoot
             .Replace("+", "-")
             .Replace("/", "_")
             .TrimEnd('=');
-        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1); // Token expires in 1 hour
+        // Use local time for Npgsql legacy timestamp behavior compatibility
+        // The database uses timestamp with time zone and legacy mode converts local to UTC
+        PasswordResetTokenExpiry = DateTime.Now.AddHours(1);
         UpdatedAt = DateTime.UtcNow;
     }
 
