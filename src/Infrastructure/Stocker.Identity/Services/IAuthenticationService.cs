@@ -62,4 +62,23 @@ public interface IAuthenticationService
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A result containing the authentication response on success.</returns>
     Task<Result<AuthResponse>> GenerateAuthResponseForMasterUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generates a password reset token for the specified email.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="tenantCode">Optional tenant code to search within a specific tenant.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A result containing the reset token on success.</returns>
+    Task<Result<string>> GeneratePasswordResetTokenAsync(string email, string? tenantCode = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resets the password for a user using a valid reset token.
+    /// </summary>
+    /// <param name="email">The user's email address.</param>
+    /// <param name="token">The password reset token.</param>
+    /// <param name="newPassword">The new password to set.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A result indicating success or failure.</returns>
+    Task<Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default);
 }

@@ -341,37 +341,14 @@ public class AuthenticationServiceAdapter : Application.Services.IAuthentication
 
     public async Task<Result<string>> GeneratePasswordResetTokenAsync(string email, string? tenantCode = null, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            // This functionality needs to be implemented in the Identity service
-            // For now, returning a placeholder
-            _logger.LogWarning("Password reset token generation not yet implemented");
-            
-            // Generate a simple token for now
-            var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-            return Result.Success(token);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating password reset token for email {Email}", email);
-            return Result.Failure<string>(Error.Failure("Auth.ResetTokenError", "An error occurred while generating the reset token"));
-        }
+        // Delegate to the Identity service's implementation
+        return await _authenticationService.GeneratePasswordResetTokenAsync(email, tenantCode, cancellationToken);
     }
 
     public Task<Result> ResetPasswordAsync(string email, string token, string newPassword, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            // This functionality needs to be implemented in the Identity service
-            _logger.LogWarning("Password reset not yet implemented");
-            
-            return Task.FromResult(Result.Failure(Error.Failure("Auth.ResetNotImplemented", "Password reset functionality is not yet implemented")));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error resetting password for email {Email}", email);
-            return Task.FromResult(Result.Failure(Error.Failure("Auth.ResetError", "An error occurred while resetting the password")));
-        }
+        // Delegate to the Identity service's implementation
+        return _authenticationService.ResetPasswordAsync(email, token, newPassword, cancellationToken);
     }
 
 
