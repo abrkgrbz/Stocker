@@ -58,8 +58,10 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
             if (masterUser != null)
             {
-                // Validate token expiry (use DateTime.Now for Npgsql legacy timestamp behavior compatibility)
-                if (!masterUser.PasswordResetTokenExpiry.HasValue || masterUser.PasswordResetTokenExpiry.Value <= DateTime.Now)
+                // Validate token expiry (use Turkey timezone for consistent timestamp handling)
+                var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+                var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+                if (!masterUser.PasswordResetTokenExpiry.HasValue || masterUser.PasswordResetTokenExpiry.Value <= turkeyNow)
                 {
                     _logger.LogWarning("Password reset token expired for MasterUser: {UserId}", masterUser.Id);
                     return Result.Failure<ResetPasswordResponse>(
@@ -117,8 +119,10 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
                     if (tenantUser != null)
                     {
-                        // Validate token expiry (use DateTime.Now for Npgsql legacy timestamp behavior compatibility)
-                        if (!tenantUser.PasswordResetTokenExpiry.HasValue || tenantUser.PasswordResetTokenExpiry.Value <= DateTime.Now)
+                        // Validate token expiry (use Turkey timezone for consistent timestamp handling)
+                        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+                        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+                        if (!tenantUser.PasswordResetTokenExpiry.HasValue || tenantUser.PasswordResetTokenExpiry.Value <= turkeyNow)
                         {
                             _logger.LogWarning("Password reset token expired for TenantUser: {UserId} in Tenant: {TenantId}", tenantUser.Id, tenantId);
                             return Result.Failure<ResetPasswordResponse>(

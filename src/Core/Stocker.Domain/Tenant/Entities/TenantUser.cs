@@ -371,9 +371,11 @@ public sealed class TenantUser : TenantAggregateRoot
             .Replace("+", "-")
             .Replace("/", "_")
             .TrimEnd('=');
-        // Use local time for Npgsql legacy timestamp behavior compatibility
-        // The database uses timestamp with time zone and legacy mode converts local to UTC
-        PasswordResetTokenExpiry = DateTime.Now.AddHours(1);
+        // Use Turkey timezone for consistent timestamp handling
+        // Container runs in UTC but PostgreSQL stores in Europe/Istanbul (+03)
+        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+        PasswordResetTokenExpiry = turkeyNow.AddHours(1);
         UpdatedAt = DateTime.UtcNow;
     }
 

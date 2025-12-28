@@ -52,17 +52,20 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
             if (masterUser != null)
             {
-                // Use DateTime.Now for Npgsql legacy timestamp behavior compatibility
-                // Database returns timestamps in local time when legacy mode is enabled
+                // Use Turkey timezone for consistent timestamp handling
+                // Container runs in UTC but PostgreSQL stores in Europe/Istanbul (+03)
+                var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+                var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+
                 var isValid = masterUser.PasswordResetTokenExpiry.HasValue &&
-                              masterUser.PasswordResetTokenExpiry.Value > DateTime.Now;
+                              masterUser.PasswordResetTokenExpiry.Value > turkeyNow;
 
                 _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
 
                 return Result.Success(new ValidateResetTokenResponse
                 {
                     Valid = isValid,
-                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? DateTime.Now
+                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? turkeyNow
                 });
             }
 
@@ -85,16 +88,19 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
                     if (tenantUser != null)
                     {
-                        // Use DateTime.Now for Npgsql legacy timestamp behavior compatibility
+                        // Use Turkey timezone for consistent timestamp handling
+                        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+                        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+
                         var isValid = tenantUser.PasswordResetTokenExpiry.HasValue &&
-                                      tenantUser.PasswordResetTokenExpiry.Value > DateTime.Now;
+                                      tenantUser.PasswordResetTokenExpiry.Value > turkeyNow;
 
                         _logger.LogInformation("Password reset token found in Tenant {TenantId}, valid: {IsValid}", tenantId, isValid);
 
                         return Result.Success(new ValidateResetTokenResponse
                         {
                             Valid = isValid,
-                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? DateTime.Now
+                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? turkeyNow
                         });
                     }
                 }
