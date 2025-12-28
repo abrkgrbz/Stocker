@@ -42,11 +42,14 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
                     Error.Validation("Password.TooShort", "Password must be at least 8 characters"));
             }
 
-            // Normalize token - remove padding (=) that might come from URL
-            // Database stores tokens without trailing = (URL-safe format)
-            var normalizedToken = request.Token.TrimEnd('=');
+            // Normalize token to URL-safe Base64 format (as stored in database)
+            // Database stores tokens with: + -> -, / -> _, trailing = removed
+            var normalizedToken = request.Token
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .TrimEnd('=');
 
-            _logger.LogDebug("Searching for token: {Token} (normalized: {NormalizedToken})",
+            _logger.LogInformation("Searching for token. Original: {Token}, Normalized: {NormalizedToken}",
                 request.Token, normalizedToken);
 
             // First, try to find user by reset token in MasterUsers

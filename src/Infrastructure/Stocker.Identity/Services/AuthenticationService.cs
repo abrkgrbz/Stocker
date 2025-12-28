@@ -771,8 +771,12 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            // Normalize token - remove padding (=) that might come from URL
-            var normalizedToken = token.TrimEnd('=');
+            // Normalize token to URL-safe Base64 format (as stored in database)
+            // Database stores tokens with: + -> -, / -> _, trailing = removed
+            var normalizedToken = token
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .TrimEnd('=');
 
             // First try to find in master users
             var masterUser = await _userManagementService.FindMasterUserAsync(email);
