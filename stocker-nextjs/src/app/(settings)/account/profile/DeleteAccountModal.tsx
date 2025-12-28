@@ -43,7 +43,7 @@ export function DeleteAccountModal({ isOpen, onClose, userIdentifier }: DeleteAc
   useEffect(() => {
     if (isOpen) {
       setIsLoadingPreview(true);
-      ApiService.get<{ success: boolean; data: DeleteAccountPreview; message?: string }>('/api/account/delete/preview')
+      ApiService.get<{ success: boolean; data: DeleteAccountPreview; message?: string }>('/account/delete/preview')
         .then((response) => {
           if (response.success && response.data) {
             setPreview(response.data);

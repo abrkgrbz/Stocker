@@ -75,7 +75,7 @@ export function useProfile() {
         success: boolean;
         data: ProfileData;
         message?: string;
-      }>('/api/account/profile');
+      }>('/account/profile');
       return response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -92,7 +92,7 @@ export function useUpdateProfile() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/api/account/profile', data);
+      }>('/account/profile', data);
       return response;
     },
     onSuccess: () => {
@@ -109,7 +109,7 @@ export function useChangePassword() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/api/account/change-password', data);
+      }>('/account/change-password', data);
       return response;
     },
   });
@@ -124,7 +124,7 @@ export function useActivityLog(page: number = 1, pageSize: number = 20) {
         success: boolean;
         data: ActivityLogResponse;
         message?: string;
-      }>(`/api/account/activity-log?page=${page}&pageSize=${pageSize}`);
+      }>(`/account/activity-log?page=${page}&pageSize=${pageSize}`);
       return response;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -144,7 +144,7 @@ export function useUploadProfileImage() {
         success: boolean;
         data: { imageUrl: string };
         message?: string;
-      }>('/api/account/profile-image', formData, {
+      }>('/account/profile-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -167,7 +167,7 @@ export function useUpdatePreferences() {
         success: boolean;
         data: boolean;
         message?: string;
-      }>('/api/account/preferences', data);
+      }>('/account/preferences', data);
       return response;
     },
     onSuccess: () => {
@@ -210,7 +210,7 @@ export function useDeleteAccountPreview() {
         success: boolean;
         data: DeleteAccountPreview;
         message?: string;
-      }>('/api/account/delete/preview');
+      }>('/account/delete/preview');
       return response;
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -226,7 +226,7 @@ export function useDeleteAccount() {
         success: boolean;
         data: DeleteAccountResult;
         message?: string;
-      }>('/api/account/delete', { data });
+      }>('/account/delete', { data });
       return response;
     },
   });

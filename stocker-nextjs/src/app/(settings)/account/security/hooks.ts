@@ -111,7 +111,7 @@ export function useSecurityOverview() {
   return useQuery({
     queryKey: securityKeys.overview(),
     queryFn: async () => {
-      const response = await ApiService.get<ApiResponse<SecurityOverviewDto>>('/api/account/security/overview');
+      const response = await ApiService.get<ApiResponse<SecurityOverviewDto>>('/account/security/overview');
       return response;
     },
     staleTime: 60 * 1000, // 1 minute
@@ -123,7 +123,7 @@ export function useActiveSessions() {
   return useQuery({
     queryKey: securityKeys.sessions(),
     queryFn: async () => {
-      const response = await ApiService.get<ApiResponse<ActiveSessionDto[]>>('/api/account/security/sessions');
+      const response = await ApiService.get<ApiResponse<ActiveSessionDto[]>>('/account/security/sessions');
       return response;
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -136,7 +136,7 @@ export function useSecurityEvents(page: number = 1, pageSize: number = 10) {
     queryKey: securityKeys.events(page),
     queryFn: async () => {
       const response = await ApiService.get<ApiResponse<SecurityEventsResponse>>(
-        `/api/account/security/events?page=${page}&pageSize=${pageSize}`
+        `/account/security/events?page=${page}&pageSize=${pageSize}`
       );
       return response;
     },
@@ -151,7 +151,7 @@ export function useTerminateSession() {
   return useMutation({
     mutationFn: async (sessionId: string) => {
       // TODO: Add terminate session endpoint when available
-      const response = await ApiService.delete<ApiResponse<boolean>>(`/api/account/security/sessions/${sessionId}`);
+      const response = await ApiService.delete<ApiResponse<boolean>>(`/account/security/sessions/${sessionId}`);
       return response;
     },
     onSuccess: () => {
@@ -167,7 +167,7 @@ export function useTerminateAllSessions() {
   return useMutation({
     mutationFn: async () => {
       // TODO: Add terminate all sessions endpoint when available
-      const response = await ApiService.delete<ApiResponse<boolean>>('/api/account/security/sessions');
+      const response = await ApiService.delete<ApiResponse<boolean>>('/account/security/sessions');
       return response;
     },
     onSuccess: () => {
