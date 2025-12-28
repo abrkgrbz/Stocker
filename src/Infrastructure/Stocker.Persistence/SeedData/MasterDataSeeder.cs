@@ -919,88 +919,112 @@ public class MasterDataSeeder
 
     private async Task SeedEmailTemplatesAsync()
     {
-        if (await _context.EmailTemplates.AnyAsync())
-        {
-            _logger.LogInformation("Email templates already seeded.");
-            return;
-        }
+        // Get existing template keys to check for missing ones
+        var existingKeys = await _context.EmailTemplates
+            .Select(t => t.TemplateKey)
+            .ToListAsync();
 
         var templates = new List<EmailTemplate>();
 
         // Email Verification Template (Turkish)
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "email-verification",
-            name: "Email Doğrulama",
-            subject: "{{ appName }} - Email Adresinizi Doğrulayın",
-            htmlBody: GetEmailVerificationTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.Authentication,
-            variables: "[\"userName\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
-            description: "Yeni kayıt sonrası email doğrulama maili",
-            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("email-verification"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "email-verification",
+                name: "Email Doğrulama",
+                subject: "{{ appName }} - Email Adresinizi Doğrulayın",
+                htmlBody: GetEmailVerificationTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Authentication,
+                variables: "[\"userName\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
+                description: "Yeni kayıt sonrası email doğrulama maili",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        }
 
         // Tenant Email Verification with Code (Turkish)
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "tenant-email-verification",
-            name: "Tenant Email Doğrulama",
-            subject: "{{ appName }} - Email Doğrulama Kodunuz",
-            htmlBody: GetTenantEmailVerificationTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.Authentication,
-            variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
-            description: "Tenant kayıt sonrası 6 haneli doğrulama kodu ile email doğrulama",
-            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("tenant-email-verification"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "tenant-email-verification",
+                name: "Tenant Email Doğrulama",
+                subject: "{{ appName }} - Email Doğrulama Kodunuz",
+                htmlBody: GetTenantEmailVerificationTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Authentication,
+                variables: "[\"userName\", \"verificationCode\", \"verificationUrl\", \"appName\", \"email\", \"year\"]",
+                description: "Tenant kayıt sonrası 6 haneli doğrulama kodu ile email doğrulama",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"verificationCode\":\"123456\",\"verificationUrl\":\"https://stoocker.app/verify\",\"appName\":\"Stocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        }
 
         // Password Reset Template (Turkish)
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "password-reset",
-            name: "Şifre Sıfırlama",
-            subject: "{{ appName }} - Şifre Sıfırlama Talebi",
-            htmlBody: GetPasswordResetTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.Authentication,
-            variables: "[\"userName\", \"resetUrl\", \"appName\", \"email\", \"year\"]",
-            description: "Şifre sıfırlama talebi için gönderilen mail",
-            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("password-reset"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "password-reset",
+                name: "Şifre Sıfırlama",
+                subject: "{{ appName }} - Şifre Sıfırlama Talebi",
+                htmlBody: GetPasswordResetTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.Authentication,
+                variables: "[\"userName\", \"resetUrl\", \"appName\", \"email\", \"year\"]",
+                description: "Şifre sıfırlama talebi için gönderilen mail",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"resetUrl\":\"https://stoocker.app/reset\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        }
 
         // Welcome Email Template (Turkish)
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "welcome",
-            name: "Hoşgeldiniz",
-            subject: "{{ appName }} - Hoşgeldiniz!",
-            htmlBody: GetWelcomeTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.UserManagement,
-            variables: "[\"userName\", \"companyName\", \"loginUrl\", \"appName\", \"email\", \"year\"]",
-            description: "Kayıt tamamlandıktan sonra gönderilen hoşgeldiniz maili",
-            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("welcome"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "welcome",
+                name: "Hoşgeldiniz",
+                subject: "{{ appName }} - Hoşgeldiniz!",
+                htmlBody: GetWelcomeTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.UserManagement,
+                variables: "[\"userName\", \"companyName\", \"loginUrl\", \"appName\", \"email\", \"year\"]",
+                description: "Kayıt tamamlandıktan sonra gönderilen hoşgeldiniz maili",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"companyName\":\"ABC Ltd.\",\"loginUrl\":\"https://stoocker.app/login\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        }
 
         // Invitation Template (Turkish)
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "invitation",
-            name: "Davet",
-            subject: "{{ inviterName }} sizi {{ companyName }} şirketine davet ediyor",
-            htmlBody: GetInvitationTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.UserManagement,
-            variables: "[\"inviterName\", \"companyName\", \"inviteUrl\", \"appName\", \"email\", \"year\"]",
-            description: "Şirkete davet maili",
-            sampleData: "{\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"inviteUrl\":\"https://stoocker.app/invite\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("invitation"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "invitation",
+                name: "Davet",
+                subject: "{{ inviterName }} sizi {{ companyName }} şirketine davet ediyor",
+                htmlBody: GetInvitationTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.UserManagement,
+                variables: "[\"inviterName\", \"companyName\", \"inviteUrl\", \"appName\", \"email\", \"year\"]",
+                description: "Şirkete davet maili",
+                sampleData: "{\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"inviteUrl\":\"https://stoocker.app/invite\",\"appName\":\"Stoocker\",\"email\":\"ahmet@example.com\",\"year\":\"2024\"}"));
+        }
 
         // User Invitation Template (Turkish) - Most detailed
-        templates.Add(EmailTemplate.CreateSystem(
-            templateKey: "user-invitation",
-            name: "Kullanıcı Daveti",
-            subject: "Stocker'a Davet Edildiniz - {{ companyName }}",
-            htmlBody: GetUserInvitationTemplate(),
-            language: "tr",
-            category: EmailTemplateCategory.UserManagement,
-            variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"userId\", \"tenantId\", \"appName\", \"expirationDays\", \"year\"]",
-            description: "Admin tarafından oluşturulan kullanıcı için aktivasyon daveti",
-            sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"userId\":\"guid-here\",\"tenantId\":\"guid-here\",\"appName\":\"Stocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
+        if (!existingKeys.Contains("user-invitation"))
+        {
+            templates.Add(EmailTemplate.CreateSystem(
+                templateKey: "user-invitation",
+                name: "Kullanıcı Daveti",
+                subject: "Stocker'a Davet Edildiniz - {{ companyName }}",
+                htmlBody: GetUserInvitationTemplate(),
+                language: "tr",
+                category: EmailTemplateCategory.UserManagement,
+                variables: "[\"userName\", \"inviterName\", \"companyName\", \"activationUrl\", \"email\", \"userId\", \"tenantId\", \"appName\", \"expirationDays\", \"year\"]",
+                description: "Admin tarafından oluşturulan kullanıcı için aktivasyon daveti",
+                sampleData: "{\"userName\":\"Ahmet Yılmaz\",\"inviterName\":\"Mehmet Demir\",\"companyName\":\"ABC Ltd.\",\"activationUrl\":\"https://stoocker.app/setup-password\",\"email\":\"ahmet@example.com\",\"userId\":\"guid-here\",\"tenantId\":\"guid-here\",\"appName\":\"Stocker\",\"expirationDays\":7,\"year\":\"2024\"}"));
+        }
 
-        await _context.EmailTemplates.AddRangeAsync(templates);
-        _logger.LogInformation("Seeded {Count} email templates.", templates.Count);
+        if (templates.Count > 0)
+        {
+            await _context.EmailTemplates.AddRangeAsync(templates);
+            _logger.LogInformation("Seeded {Count} missing email templates.", templates.Count);
+        }
+        else
+        {
+            _logger.LogInformation("All email templates already exist.");
+        }
     }
 
     private static string GetEmailVerificationTemplate() => @"<!DOCTYPE html>

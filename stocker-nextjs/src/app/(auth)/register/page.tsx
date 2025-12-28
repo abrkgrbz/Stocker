@@ -41,7 +41,7 @@ const TESTIMONIALS = [
   },
 ]
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
-import { showAlert } from '@/lib/sweetalert-config'
+import { toast } from '@/lib/notifications/use-toast'
 import { authService } from '@/lib/api/services/auth.service'
 import { ApiClientError, handleApiError } from '@/lib/api/client'
 
@@ -266,14 +266,9 @@ export default function RegisterPage() {
       })
 
       if (response.success && response.data) {
-        await showAlert.success(
-          'Kayıt Başarılı!',
-          response.message || 'Lütfen email adresinizi kontrol edin ve doğrulama kodunu girin.'
-        )
+        // Doğrudan email doğrulama sayfasına yönlendir
         setCurrentStep('complete')
-        setTimeout(() => {
-          window.location.href = `/register/verify-email?email=${encodeURIComponent(email)}`
-        }, 1000)
+        window.location.href = `/register/verify-email?email=${encodeURIComponent(email)}`
       } else {
         const errorMessage = response.message || 'Kayıt işlemi başarısız oldu'
         if (errorMessage.includes('e-posta') || errorMessage.toLowerCase().includes('email')) {
@@ -285,7 +280,7 @@ export default function RegisterPage() {
           setTeamNameValid(false)
           setCurrentStep('teamName')
         } else {
-          await showAlert.error('Kayıt Başarısız', errorMessage)
+          toast.error(errorMessage)
         }
         setIsLoading(false)
       }
@@ -311,7 +306,7 @@ export default function RegisterPage() {
         }
       }
 
-      await showAlert.error('Kayıt Başarısız', errorMessage)
+      toast.error(errorMessage)
       setIsLoading(false)
     }
   }

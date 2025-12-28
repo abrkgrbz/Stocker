@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stocker.Application.DTOs.TenantRegistration;
 using Stocker.Application.Features.TenantRegistration.Commands.CreateTenantRegistration;
 using Stocker.Application.Features.TenantRegistration.Commands.VerifyEmail;
+using Stocker.Application.Features.TenantRegistration.Commands.ResendVerificationEmail;
 using Stocker.Application.Features.TenantRegistration.Queries.GetTenantRegistration;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupWizard;
 using Stocker.Application.Features.TenantRegistration.Queries.GetSetupChecklist;
@@ -173,6 +174,26 @@ public class TenantRegistrationController : ControllerBase
             success = result.Value!.Success,
             registrationId = result.Value!.RegistrationId,
             message = result.Value!.Message ?? "E-posta adresi doğrulandı."
+        });
+    }
+
+    /// <summary>
+    /// Resend verification email for registration
+    /// </summary>
+    [HttpPost("resend-verification-email")]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendTenantVerificationEmailCommand command)
+    {
+        _logger.LogInformation("Resend verification email requested for: {Email}", command.Email);
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            throw new BusinessRuleException(result.Error?.Description ?? "An error occurred");
+
+        return Ok(new
+        {
+            success = result.Value!.Success,
+            message = result.Value!.Message
         });
     }
 }

@@ -288,6 +288,21 @@ public sealed class TenantRegistration : Entity
     }
 
     /// <summary>
+    /// Regenerates the email verification code and token for resending verification email.
+    /// Returns the new verification code.
+    /// </summary>
+    public (string Code, string Token) RegenerateEmailVerificationCode()
+    {
+        if (EmailVerified)
+            throw new InvalidOperationException("Email already verified.");
+
+        EmailVerificationCode = GenerateVerificationCode();
+        EmailVerificationToken = GenerateVerificationToken();
+
+        return (EmailVerificationCode, EmailVerificationToken);
+    }
+
+    /// <summary>
     /// Clears the tenant reference when tenant creation fails and needs retry.
     /// This resets the registration to allow a fresh tenant creation attempt.
     /// </summary>

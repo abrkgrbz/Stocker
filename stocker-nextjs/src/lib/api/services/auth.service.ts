@@ -202,9 +202,8 @@ export class AuthService {
 
   /**
    * Resend verification email (for tenant registration)
-   * Note: Backend endpoint doesn't exist yet - needs to be implemented
    */
-  async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean }>> {
+  async resendVerificationEmail(email: string): Promise<ApiResponse<{ success: boolean; message?: string }>> {
     return apiClient.post('/api/public/tenant-registration/resend-verification-email', { email });
   }
 
