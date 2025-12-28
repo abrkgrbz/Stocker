@@ -352,7 +352,7 @@ const PackagesPage: React.FC = () => {
 
   const formatLimit = (value: number, type: 'users' | 'storage' | 'api' | 'projects') => {
     if (value === 2147483647 || value === 99999 || value === 99999999) {
-      return 'Unlimited';
+      return 'Sınırsız';
     }
     if (type === 'storage') return `${value} GB`;
     if (type === 'api') return value >= 1000000 ? `${(value / 1000000).toFixed(0)}M` : value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value.toString();
@@ -366,81 +366,81 @@ const PackagesPage: React.FC = () => {
         <div className={styles.headerLeft}>
           <span className={styles.packageTitle}>{pkg.displayName}</span>
           <span className={`${styles.statusBadge} ${styles[pkg.status]}`}>
-            {pkg.status === 'active' ? 'Active' : pkg.status === 'inactive' ? 'Inactive' : 'Deprecated'}
+            {pkg.status === 'active' ? 'Aktif' : pkg.status === 'inactive' ? 'Pasif' : 'Kullanım Dışı'}
           </span>
         </div>
         <div className={styles.headerRight}>
           <div className={styles.priceValue}>₺{pkg.price.toLocaleString()}</div>
           <div className={styles.pricePeriod}>
-            {pkg.billingCycle === 'monthly' ? '/mo' : pkg.billingCycle === 'yearly' ? '/yr' : 'one-time'}
+            {pkg.billingCycle === 'monthly' ? '/ay' : pkg.billingCycle === 'yearly' ? '/yıl' : 'tek seferlik'}
           </div>
         </div>
       </div>
 
-      {/* Limits Summary Grid */}
+      {/* Limit Özet Grid */}
       <div className={styles.limitsGrid}>
         <div className={styles.limitItem}>
           <div className={styles.limitIcon}><TeamOutlined /></div>
           <div className={styles.limitText}>
             <span className={styles.limitValue}>{formatLimit(pkg.limits.users, 'users')}</span>
-            <span className={styles.limitLabel}>Users</span>
+            <span className={styles.limitLabel}>Kullanıcı</span>
           </div>
         </div>
         <div className={styles.limitItem}>
           <div className={styles.limitIcon}><CloudServerOutlined /></div>
           <div className={styles.limitText}>
             <span className={styles.limitValue}>{formatLimit(pkg.limits.storage, 'storage')}</span>
-            <span className={styles.limitLabel}>Storage</span>
+            <span className={styles.limitLabel}>Depolama</span>
           </div>
         </div>
         <div className={styles.limitItem}>
           <div className={styles.limitIcon}><ApiOutlined /></div>
           <div className={styles.limitText}>
             <span className={styles.limitValue}>{formatLimit(pkg.limits.apiCalls, 'api')}</span>
-            <span className={styles.limitLabel}>API Calls</span>
+            <span className={styles.limitLabel}>API Çağrısı</span>
           </div>
         </div>
         <div className={styles.limitItem}>
           <div className={styles.limitIcon}><AppstoreOutlined /></div>
           <div className={styles.limitText}>
             <span className={styles.limitValue}>{formatLimit(pkg.limits.projects, 'projects')}</span>
-            <span className={styles.limitLabel}>Projects</span>
+            <span className={styles.limitLabel}>Proje</span>
           </div>
         </div>
       </div>
 
-      {/* Live Metrics */}
+      {/* Canlı Metrikler */}
       <div className={styles.metricsSection}>
         <div className={styles.metricItem}>
-          <div className={styles.metricLabel}>Subscribers</div>
+          <div className={styles.metricLabel}>Abone Sayısı</div>
           <div className={styles.metricValue}>{pkg.subscriberCount.toLocaleString()}</div>
         </div>
         <div className={styles.metricItem}>
-          <div className={styles.metricLabel}>MRR</div>
+          <div className={styles.metricLabel}>Aylık Gelir</div>
           <div className={styles.metricValue}>₺{pkg.revenue.toLocaleString()}</div>
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Aksiyonlar */}
       <div className={styles.cardActions}>
         <Button
           onClick={() => handleEdit(pkg)}
           icon={<EditOutlined />}
           className={styles.editButton}
         >
-          Edit Package
+          Düzenle
         </Button>
         <Dropdown
           menu={{
             items: [
               {
                 key: 'archive',
-                label: 'Archive',
+                label: 'Arşivle',
                 icon: <CloseCircleOutlined />,
               },
               {
                 key: 'delete',
-                label: 'Delete',
+                label: 'Sil',
                 danger: true,
                 icon: <DeleteOutlined />,
                 onClick: () => handleDelete(pkg),
@@ -570,13 +570,13 @@ const PackagesPage: React.FC = () => {
     >
       {activeTab === 'overview' && (
         <>
-          {/* Summary Stats Row */}
+          {/* Özet İstatistikler */}
           <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
               <Card className={styles.statsCard} bordered={false}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Total Packages</div>
+                    <div className={styles.statsCardLabel}>Toplam Paket</div>
                     <div className={styles.statsCardValue}>{packages.length}</div>
                   </div>
                   <AppstoreOutlined className={styles.statsCardIcon} />
@@ -587,7 +587,7 @@ const PackagesPage: React.FC = () => {
               <Card className={styles.statsCard} bordered={false}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Active</div>
+                    <div className={styles.statsCardLabel}>Aktif</div>
                     <div className={styles.statsCardValue} style={{ color: '#16a34a' }}>
                       {packages.filter(p => p.status === 'active').length}
                     </div>
@@ -600,7 +600,7 @@ const PackagesPage: React.FC = () => {
               <Card className={styles.statsCard} bordered={false}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Total Subscribers</div>
+                    <div className={styles.statsCardLabel}>Toplam Abone</div>
                     <div className={styles.statsCardValue}>
                       {packages.reduce((sum, p) => sum + p.subscriberCount, 0).toLocaleString()}
                     </div>
@@ -613,7 +613,7 @@ const PackagesPage: React.FC = () => {
               <Card className={styles.statsCard} bordered={false}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Total MRR</div>
+                    <div className={styles.statsCardLabel}>Aylık Gelir</div>
                     <div className={styles.statsCardValue}>
                       ₺{packages.reduce((sum, p) => sum + p.revenue, 0).toLocaleString()}
                     </div>
@@ -627,7 +627,7 @@ const PackagesPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Package Cards Grid - 3 columns with gap-6 (24px) */}
+          {/* Paket Kartları Grid - 3 kolon */}
           <Row gutter={[24, 24]}>
             {packages.map(pkg => (
               <Col xs={24} sm={12} lg={8} key={pkg.id}>
@@ -646,7 +646,7 @@ const PackagesPage: React.FC = () => {
               >
                 <div className={styles.addPackageContent}>
                   <PlusOutlined className={styles.addPackageIcon} />
-                  <span className={styles.addPackageTitle}>Add New Package</span>
+                  <span className={styles.addPackageTitle}>Yeni Paket Ekle</span>
                 </div>
               </div>
             </Col>
