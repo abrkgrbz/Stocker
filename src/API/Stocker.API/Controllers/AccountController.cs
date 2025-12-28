@@ -55,6 +55,10 @@ public class AccountController : ApiController
         {
             var userId = _currentUserService.UserId;
             var isMasterAdmin = _currentUserService.IsMasterAdmin;
+            var tenantId = _currentUserService.TenantId;
+
+            _logger.LogInformation("GetProfile called - UserId: {UserId}, IsMasterAdmin: {IsMasterAdmin}, TenantId: {TenantId}",
+                userId, isMasterAdmin, tenantId);
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -111,6 +115,14 @@ public class AccountController : ApiController
             }
             else
             {
+                // Debug: Check what database we're connected to
+                var dbName = _tenantContext.Database.GetDbConnection().Database;
+                _logger.LogInformation("Searching for user {UserId} in tenant database: {DbName}", userId, dbName);
+
+                // Also log all users in the database for debugging
+                var allUserIds = await _tenantContext.TenantUsers.Select(u => u.Id).Take(10).ToListAsync();
+                _logger.LogInformation("First 10 user IDs in database: {UserIds}", string.Join(", ", allUserIds));
+
                 var tenantUser = await _tenantContext.TenantUsers
                     .AsNoTracking()
                     .Include(u => u.UserRoles)
@@ -118,6 +130,7 @@ public class AccountController : ApiController
 
                 if (tenantUser == null)
                 {
+                    _logger.LogWarning("User {UserId} not found in tenant database {DbName}", userId, dbName);
                     return NotFound(new ApiResponse<object>
                     {
                         Success = false,
