@@ -532,10 +532,10 @@ export default function SecurityPage() {
             securityEvents.data.items.map((event, idx) => (
               <div key={event.id || idx} className="px-6 py-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${event.status === 'Success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                  <div className={`w-2 h-2 rounded-full ${event.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{event.description}</p>
-                    <p className="text-xs text-slate-500">IP: {event.ipAddress}</p>
+                    <p className="text-sm font-medium text-slate-900">{event.action}</p>
+                    <p className="text-xs text-slate-500">{event.description} - IP: {event.ipAddress}</p>
                   </div>
                 </div>
                 <span className="text-xs text-slate-500">

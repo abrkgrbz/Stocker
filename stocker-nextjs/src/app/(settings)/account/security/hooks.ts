@@ -28,9 +28,9 @@ export interface SecurityEventDto {
   action: string;
   description: string;
   ipAddress: string;
-  userAgent: string;
+  device?: string;
   timestamp: string;
-  status: 'Success' | 'Failed';
+  success: boolean;
 }
 
 export interface SecurityEventsResponse {

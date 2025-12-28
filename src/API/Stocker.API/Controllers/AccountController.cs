@@ -1095,6 +1095,7 @@ public class AccountController : ApiController
         {
             var userId = _currentUserService.UserId;
             var isMasterAdmin = _currentUserService.IsMasterAdmin;
+            var userEmail = _currentUserService.Email;
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -1106,6 +1107,12 @@ public class AccountController : ApiController
             }
 
             var sessions = new List<ActiveSessionDto>();
+            var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+            // Normalize current IP for comparison
+            if (!string.IsNullOrEmpty(currentIp) && System.Net.IPAddress.TryParse(currentIp, out var parsedIp))
+            {
+                currentIp = parsedIp.IsIPv4MappedToIPv6 ? parsedIp.MapToIPv4().ToString() : parsedIp.ToString();
+            }
 
             if (isMasterAdmin)
             {
@@ -1115,8 +1122,6 @@ public class AccountController : ApiController
                     .OrderByDescending(h => h.LoginAt)
                     .Take(10)
                     .ToListAsync();
-
-                var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString();
 
                 sessions = loginHistory
                     .GroupBy(h => h.IpAddress)
@@ -1136,17 +1141,15 @@ public class AccountController : ApiController
             }
             else
             {
-                // For tenant users, use audit logs as session proxy
-                var auditLogs = await _tenantContext.AuditLogs
+                // For tenant users, get from SecurityAuditLogs (login events are logged there)
+                var securityLogs = await _masterContext.SecurityAuditLogs
                     .AsNoTracking()
-                    .Where(a => a.UserId == userId)
+                    .Where(a => a.Email == userEmail && a.Event == "login_success")
                     .OrderByDescending(a => a.Timestamp)
                     .Take(20)
                     .ToListAsync();
 
-                var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-                sessions = auditLogs
+                sessions = securityLogs
                     .GroupBy(a => a.IpAddress)
                     .Select(g => g.First())
                     .Take(10)
@@ -1193,6 +1196,7 @@ public class AccountController : ApiController
         {
             var userId = _currentUserService.UserId;
             var isMasterAdmin = _currentUserService.IsMasterAdmin;
+            var userEmail = _currentUserService.Email;
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -1233,28 +1237,28 @@ public class AccountController : ApiController
             }
             else
             {
-                var query = _tenantContext.AuditLogs
+                // For tenant users, get from SecurityAuditLogs (login events are logged there)
+                var query = _masterContext.SecurityAuditLogs
                     .AsNoTracking()
-                    .Where(a => a.UserId == userId &&
-                           (a.Action.Contains("Login") || a.Action.Contains("Password") || a.Action.Contains("2FA")));
+                    .Where(a => a.Email == userEmail);
 
                 totalItems = await query.CountAsync();
 
-                var auditLogs = await query
+                var securityLogs = await query
                     .OrderByDescending(a => a.Timestamp)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
-                events = auditLogs.Select(a => new SecurityEventDto
+                events = securityLogs.Select(a => new SecurityEventDto
                 {
                     Id = a.Id.ToString(),
-                    Action = a.Action,
-                    Description = $"{a.Action} - {a.EntityName}",
+                    Action = MapEventToAction(a.Event),
+                    Description = MapEventToDescription(a.Event, a.Metadata),
                     IpAddress = a.IpAddress ?? "Bilinmiyor",
                     Device = ParseUserAgent(a.UserAgent),
                     Timestamp = a.Timestamp,
-                    Success = true
+                    Success = !a.Event.Contains("failed", StringComparison.OrdinalIgnoreCase)
                 }).ToList();
             }
 
@@ -1283,6 +1287,54 @@ public class AccountController : ApiController
                 Message = "Guvenlik etkinlikleri alinirken bir hata olustu"
             });
         }
+    }
+
+    private static string MapEventToAction(string eventType)
+    {
+        return eventType switch
+        {
+            "login_success" => "Basarili giris",
+            "login_failed" => "Basarisiz giris denemesi",
+            "login_error" => "Giris hatasi",
+            "master_admin_login_success" => "Basarili admin girisi",
+            "master_admin_login_failed" => "Basarisiz admin giris denemesi",
+            "password_changed" => "Sifre degistirildi",
+            "2fa_enabled" => "2FA etkinlestirildi",
+            "2fa_disabled" => "2FA devre disi birakildi",
+            _ => eventType
+        };
+    }
+
+    private static string MapEventToDescription(string eventType, string? metadata)
+    {
+        var baseDescription = eventType switch
+        {
+            "login_success" => "Hesaba basariyla giris yapildi",
+            "login_failed" => "Giris basarisiz",
+            "login_error" => "Giris sirasinda hata olustu",
+            "master_admin_login_success" => "Admin hesabina basariyla giris yapildi",
+            "master_admin_login_failed" => "Admin giris basarisiz",
+            "password_changed" => "Hesap sifresi degistirildi",
+            "2fa_enabled" => "Iki faktorlu dogrulama etkinlestirildi",
+            "2fa_disabled" => "Iki faktorlu dogrulama devre disi birakildi",
+            _ => eventType
+        };
+
+        // Try to extract additional info from metadata
+        if (!string.IsNullOrEmpty(metadata) && eventType == "login_failed")
+        {
+            try
+            {
+                var json = System.Text.Json.JsonDocument.Parse(metadata);
+                if (json.RootElement.TryGetProperty("reason", out var reason))
+                {
+                    baseDescription = reason.GetString() ?? baseDescription;
+                }
+            }
+            catch { /* Ignore parse errors */ }
+        }
+
+        return baseDescription;
     }
 
     private static string ParseUserAgent(string? userAgent)
