@@ -178,6 +178,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
         
         // Register DbContext interfaces for Application layer
         services.AddScoped<ITenantDbContext>(provider => 
