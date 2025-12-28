@@ -91,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         data: {
           user: User;
         };
-      }>('/auth/login', credentials);
+      }>('/api/auth/login', credentials);
 
       // ✅ NO TOKEN STORAGE - Backend sets HttpOnly cookies automatically
       // Just load user data
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logger.info('Logging out', { component: 'AuthContext' });
 
       // Call logout endpoint - backend will revoke refresh tokens
-      await ApiService.post('/auth/logout');
+      await ApiService.post('/api/auth/logout');
 
       logger.debug('Logout API call successful', { component: 'AuthContext' });
     } catch (error) {

@@ -15,7 +15,8 @@ function getApiUrl(): string {
   if (isProduction) {
     // Production: Always use api.stoocker.app for API requests
     // This avoids CORS issues with tenant subdomains
-    return 'https://api.stoocker.app/api';
+    // Note: Don't include /api here - endpoints already include it (e.g., /api/account/profile)
+    return 'https://api.stoocker.app';
   }
 
   // Development: use relative path for Next.js rewrites
@@ -204,9 +205,9 @@ apiClient.interceptors.response.use(
 
       try {
         // ✅ Try to refresh token using HttpOnly cookie
-        // Backend /auth/refresh endpoint will read refresh_token cookie
+        // Backend /api/auth/refresh endpoint will read refresh_token cookie
         const response = await axios.post(
-          `${API_URL}/auth/refresh`,
+          `${API_URL}/api/auth/refresh`,
           {}, // Empty body - token is in HttpOnly cookie
           { withCredentials: true } // Include cookies
         );
