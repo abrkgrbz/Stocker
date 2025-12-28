@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { signalRService, TenantCreationProgress as ProgressData } from '@/lib/signalr/signalr.service';
 import Swal from 'sweetalert2';
 
@@ -95,7 +96,7 @@ export default function TenantCreationProgress() {
   const [currentRegistrationId, setCurrentRegistrationId] = useState<string | null>(
     verificationParams.registrationId || storedRegId || null
   );
-  const [verificationStarted, setVerificationStarted] = useState(false);
+  const [, setVerificationStarted] = useState(false);
   // Use stored registrationId to determine if verification was already called
   const verificationCalledRef = useRef(!!storedRegId);
 
@@ -133,7 +134,7 @@ export default function TenantCreationProgress() {
         icon: 'success',
         title: 'Hesabınız Hazır! 🎉',
         html: `
-          <div class="text-gray-600">
+          <div class="text-slate-600">
             <p class="mb-2">Hesabınız başarıyla oluşturuldu.</p>
             <p class="text-sm">Giriş sayfasına yönlendiriliyorsunuz...</p>
           </div>
@@ -144,17 +145,16 @@ export default function TenantCreationProgress() {
         allowOutsideClick: false,
         allowEscapeKey: false,
         background: '#ffffff',
-        color: '#1f2937',
+        color: '#0f172a',
         customClass: {
-          popup: 'rounded-3xl shadow-2xl border border-[#2F70B5]/20',
-          title: 'text-2xl font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent',
-          timerProgressBar: 'bg-gradient-to-r from-[#28002D] to-[#2F70B5]',
+          popup: 'rounded-2xl shadow-2xl border border-slate-200',
+          title: 'text-2xl font-bold text-slate-900',
+          timerProgressBar: 'bg-slate-900',
         },
         didOpen: () => {
-          // Custom styling for timer progress bar
           const timerBar = Swal.getPopup()?.querySelector('.swal2-timer-progress-bar') as HTMLElement;
           if (timerBar) {
-            timerBar.style.background = 'linear-gradient(to right, #28002D, #2F70B5)';
+            timerBar.style.background = '#0f172a';
           }
         }
       }).then(() => {
@@ -310,72 +310,91 @@ export default function TenantCreationProgress() {
   const hasRequiredParams = verificationParams.registrationId ||
     (verificationParams.email && (verificationParams.code || verificationParams.token));
 
+  // Error states with new theme
   if (!hasRequiredParams) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
-            <span className="text-4xl">⚠️</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Hata</h1>
-          <p className="text-gray-600 mb-6">Geçersiz kayıt bilgisi</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-3">Hata</h1>
+          <p className="text-slate-600 mb-6">Geçersiz kayıt bilgisi</p>
           <button
             onClick={() => router.push('/register')}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
+            className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all duration-200"
           >
             Kayıt Sayfasına Dön
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   if (connectionError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30">
-            <span className="text-4xl">⚠️</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 bg-amber-100 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Bağlantı Hatası</h1>
-          <p className="text-gray-600 mb-6">{connectionError}</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-3">Bağlantı Hatası</h1>
+          <p className="text-slate-600 mb-6">{connectionError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
+            className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all duration-200"
           >
             Sayfayı Yenile
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   if (progress.hasError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
-        <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-md w-full text-center border border-[#2F70B5]/20">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30">
-            <span className="text-4xl">❌</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-200"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Hata Oluştu</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 mb-3">Hata Oluştu</h1>
+          <p className="text-slate-600 mb-6">
             {progress.errorMessage || 'Hesap oluşturulurken bir hata oluştu'}
           </p>
           <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-gradient-to-r from-[#28002D] to-[#2F70B5] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#2F70B5]/30 transition-all duration-300 hover:scale-105"
+              className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all duration-200"
             >
               Tekrar Dene
             </button>
             <button
               onClick={() => router.push('/register')}
-              className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all duration-300"
+              className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-all duration-200"
             >
               Kayıt Sayfasına Dön
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -386,35 +405,41 @@ export default function TenantCreationProgress() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#220430] via-[#28002D] to-[#1E1429] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black p-4 relative overflow-hidden">
       {/* Background decorations */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#2F70B5]/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#28002D]/30 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#2F70B5]/10 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-slate-800/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-slate-700/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-800/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl max-w-xl w-full border border-[#2F70B5]/20">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative bg-white p-8 rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200"
+      >
         {/* Header */}
         <div className="text-center mb-8">
           {progress.isCompleted ? (
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#28002D] to-[#2F70B5] rounded-full animate-pulse shadow-lg shadow-[#2F70B5]/40"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-5xl animate-bounce">🎉</span>
-              </div>
-            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-24 h-24 mx-auto mb-6 bg-emerald-100 rounded-full flex items-center justify-center"
+            >
+              <svg className="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </motion.div>
           ) : (
             <div className="relative w-24 h-24 mx-auto mb-6">
-              {/* Outer glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#28002D]/20 to-[#2F70B5]/20 rounded-full blur-md animate-pulse"></div>
-              {/* Progress ring background */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
+              {/* Progress ring */}
+              <svg className="w-full h-full -rotate-90">
                 <circle
                   cx="48"
                   cy="48"
                   r="44"
-                  stroke="#e5e7eb"
+                  stroke="#e2e8f0"
                   strokeWidth="6"
                   fill="none"
                 />
@@ -422,7 +447,7 @@ export default function TenantCreationProgress() {
                   cx="48"
                   cy="48"
                   r="44"
-                  stroke="url(#progressGradient)"
+                  stroke="#0f172a"
                   strokeWidth="6"
                   fill="none"
                   strokeLinecap="round"
@@ -430,26 +455,20 @@ export default function TenantCreationProgress() {
                   strokeDashoffset={276.46 - (276.46 * progress.percentage) / 100}
                   className="transition-all duration-500 ease-out"
                 />
-                <defs>
-                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#28002D" />
-                    <stop offset="100%" stopColor="#2F70B5" />
-                  </linearGradient>
-                </defs>
               </svg>
               {/* Center content */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent">
+                <span className="text-2xl font-bold text-slate-900">
                   {progress.percentage}%
                 </span>
               </div>
             </div>
           )}
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {progress.isCompleted ? 'Hesabınız Hazır! 🚀' : 'Hesabınız Oluşturuluyor'}
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            {progress.isCompleted ? 'Hesabınız Hazır!' : 'Hesabınız Oluşturuluyor'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-500 text-sm">
             {progress.isCompleted
               ? 'Başarıyla oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...'
               : 'Bu işlem birkaç dakika sürebilir, lütfen bekleyin'
@@ -460,135 +479,120 @@ export default function TenantCreationProgress() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <span>{stepConfig[progress.step]?.icon || '⏳'}</span>
               {stepConfig[progress.step]?.message || progress.step}
             </span>
-            <span className="text-sm font-bold bg-gradient-to-r from-[#28002D] to-[#2F70B5] bg-clip-text text-transparent">
+            <span className="text-sm font-bold text-slate-900">
               {progress.percentage}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-            <div
-              className="h-full bg-gradient-to-r from-[#28002D] to-[#2F70B5] rounded-full transition-all duration-500 ease-out relative overflow-hidden"
-              style={{ width: `${progress.percentage}%` }}
+          <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress.percentage}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="h-full bg-slate-900 rounded-full relative overflow-hidden"
             >
               {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+            </motion.div>
           </div>
         </div>
 
         {/* Current Step Message */}
-        <div className="bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border border-[#2F70B5]/20 rounded-2xl p-4 mb-6">
-          <p className="text-sm text-gray-700 text-center font-medium">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-slate-600 text-center">
             {progress.message}
           </p>
         </div>
 
         {/* Steps Checklist - Compact Grid View */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-2 mb-6">
           {visibleSteps.map(([stepKey, config]) => {
             const stepIndex = Object.keys(stepConfig).indexOf(stepKey);
             const currentStepIndex = Object.keys(stepConfig).indexOf(progress.step);
             const isCompleted = stepIndex < currentStepIndex || progress.isCompleted;
             const isCurrent = stepKey === progress.step;
 
-            // Calculate step-specific progress percentage
-            // Each step gets a portion of the total progress
-            const totalSteps = visibleSteps.length;
-            const stepPercentageRange = 100 / totalSteps;
-            const stepStartPercentage = stepIndex * stepPercentageRange;
-
-            let stepProgress = 0;
-            if (isCompleted) {
-              stepProgress = 100;
-            } else if (isCurrent) {
-              // Calculate how far we are within this step's range
-              const progressInStep = progress.percentage - stepStartPercentage;
-              stepProgress = Math.min(100, Math.max(0, (progressInStep / stepPercentageRange) * 100));
-            }
-
             return (
-              <div
+              <motion.div
                 key={stepKey}
-                className={`relative overflow-hidden flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: stepIndex * 0.05 }}
+                className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-300 ${
                   isCurrent
-                    ? 'bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border-2 border-[#2F70B5]/30 shadow-sm'
+                    ? 'bg-slate-900 text-white shadow-lg'
                     : isCompleted
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 shadow-sm'
-                    : 'bg-gray-50 border border-gray-100'
+                    ? 'bg-emerald-50 border border-emerald-200'
+                    : 'bg-slate-50 border border-slate-100'
                 }`}
               >
-                {/* Step progress bar background */}
                 <div
-                  className={`absolute inset-0 transition-all duration-500 ease-out ${
+                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm ${
                     isCompleted
-                      ? 'bg-gradient-to-r from-green-100/80 to-emerald-100/80'
+                      ? 'bg-emerald-500 text-white'
                       : isCurrent
-                      ? 'bg-gradient-to-r from-[#220430]/10 to-[#2F70B5]/20'
-                      : ''
-                  }`}
-                  style={{
-                    width: `${stepProgress}%`,
-                    opacity: stepProgress > 0 ? 1 : 0
-                  }}
-                />
-
-                {/* Content */}
-                <div
-                  className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg transition-all duration-300 ${
-                    isCompleted
-                      ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30'
-                      : isCurrent
-                      ? 'bg-gradient-to-br from-[#28002D] to-[#2F70B5] text-white shadow-sm animate-pulse'
-                      : 'bg-gray-200 text-gray-400'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200 text-slate-400'
                   }`}
                 >
                   {isCompleted ? (
-                    <svg
-                      className="w-5 h-5 text-white animate-scale-check"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={3}
-                        d="M5 13l4 4L19 7"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                  ) : config.icon}
+                  ) : (
+                    <span className="text-xs">{config.icon}</span>
+                  )}
                 </div>
                 <span
-                  className={`relative z-10 text-xs font-medium leading-tight ${
+                  className={`text-xs font-medium leading-tight ${
                     isCompleted
-                      ? 'text-green-700 font-semibold'
+                      ? 'text-emerald-700'
                       : isCurrent
-                      ? 'text-[#2F70B5] font-semibold'
-                      : 'text-gray-500'
+                      ? 'text-white'
+                      : 'text-slate-500'
                   }`}
                 >
                   {config.message}
                 </span>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Info Footer */}
         {!progress.isCompleted && (
-          <div className="p-4 bg-gradient-to-r from-[#220430]/5 to-[#2F70B5]/10 border border-[#2F70B5]/20 rounded-2xl">
-            <p className="text-xs text-[#28002D] text-center flex items-center justify-center gap-2">
-              <span className="text-base">💡</span>
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span>Bu sayfayı kapatmayın. İşlem tamamlandığında otomatik olarak yönlendirileceksiniz.</span>
             </p>
           </div>
         )}
-      </div>
 
-      {/* Add shimmer and checkmark animations */}
+        {/* Security badges */}
+        <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span className="text-xs">256-bit SSL</span>
+          </div>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span className="text-xs">Güvenli İşlem</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Add shimmer animation */}
       <style jsx>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -596,14 +600,6 @@ export default function TenantCreationProgress() {
         }
         .animate-shimmer {
           animation: shimmer 2s infinite;
-        }
-        @keyframes scale-check {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        :global(.animate-scale-check) {
-          animation: scale-check 0.4s ease-out forwards;
         }
       `}</style>
     </div>
