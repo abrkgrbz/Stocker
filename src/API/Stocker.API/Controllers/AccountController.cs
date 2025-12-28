@@ -119,24 +119,28 @@ public class AccountController : ApiController
                 var dbName = _tenantContext.Database.GetDbConnection().Database;
                 _logger.LogInformation("Searching for user {UserId} in tenant database: {DbName}", userId, dbName);
 
-                // Also log all users in the database for debugging
-                var allUserIds = await _tenantContext.TenantUsers.Select(u => u.Id).Take(10).ToListAsync();
-                _logger.LogInformation("First 10 user IDs in database: {UserIds}", string.Join(", ", allUserIds));
+                var userGuid = Guid.Parse(userId);
 
+                // Try to find by TenantUser.Id first (for users created directly)
+                // Then try by MasterUserId (for users created via tenant registration)
+                // This is needed because JWT token contains MasterUser.Id but TenantUser has its own Id
                 var tenantUser = await _tenantContext.TenantUsers
                     .AsNoTracking()
                     .Include(u => u.UserRoles)
-                    .FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+                    .FirstOrDefaultAsync(u => u.Id == userGuid || u.MasterUserId == userGuid);
 
                 if (tenantUser == null)
                 {
-                    _logger.LogWarning("User {UserId} not found in tenant database {DbName}", userId, dbName);
+                    _logger.LogWarning("User {UserId} not found by Id or MasterUserId in tenant database {DbName}", userId, dbName);
                     return NotFound(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "Kullanici bulunamadi"
                     });
                 }
+
+                _logger.LogInformation("Found TenantUser - Id: {TenantUserId}, MasterUserId: {MasterUserId}",
+                    tenantUser.Id, tenantUser.MasterUserId);
 
                 // Get role name separately since UserRole doesn't have navigation property
                 string? roleName = null;
