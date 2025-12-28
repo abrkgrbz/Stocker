@@ -44,21 +44,6 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
                 .Replace("/", "_")
                 .TrimEnd('=');
 
-            _logger.LogInformation("DEBUG TOKEN VALIDATE: Original='{Token}', OriginalLength={OriginalLength}, Normalized='{NormalizedToken}', NormalizedLength={NormalizedLength}",
-                request.Token, request.Token?.Length ?? 0, normalizedToken, normalizedToken?.Length ?? 0);
-
-            // Debug: List all existing tokens in MasterUsers
-            var allTokens = await _masterContext.MasterUsers
-                .Where(u => u.PasswordResetToken != null)
-                .Select(u => new { u.Email.Value, u.PasswordResetToken, u.PasswordResetTokenExpiry })
-                .ToListAsync(cancellationToken);
-
-            foreach (var t in allTokens)
-            {
-                _logger.LogInformation("DEBUG EXISTING TOKEN: Email={Email}, Token='{Token}', TokenLength={Length}, Expiry={Expiry}",
-                    t.Value, t.PasswordResetToken, t.PasswordResetToken?.Length ?? 0, t.PasswordResetTokenExpiry);
-            }
-
             // First, check in MasterUsers - try both original and normalized token
             var masterUser = await _masterContext.MasterUsers
                 .Where(u => u.PasswordResetToken == request.Token || u.PasswordResetToken == normalizedToken)

@@ -34,21 +34,15 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
     public async Task<Result<ForgotPasswordResponse>> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("DEBUG FORGOT PASSWORD HANDLER: Started for email: {Email}, TenantCode: {TenantCode}",
-            request.Email, request.TenantCode ?? "none");
+        _logger.LogInformation("Processing password reset request for email: {Email}", request.Email);
 
         try
         {
             // Generate password reset token with tenant code for direct lookup
-            _logger.LogInformation("DEBUG FORGOT PASSWORD HANDLER: Calling GeneratePasswordResetTokenAsync...");
-
             var tokenResult = await _authenticationService.GeneratePasswordResetTokenAsync(
                 request.Email,
                 request.TenantCode,
                 cancellationToken);
-
-            _logger.LogInformation("DEBUG FORGOT PASSWORD HANDLER: GeneratePasswordResetTokenAsync returned. IsSuccess={IsSuccess}, Token={Token}",
-                tokenResult.IsSuccess, tokenResult.IsSuccess ? tokenResult.Value?.Substring(0, Math.Min(10, tokenResult.Value?.Length ?? 0)) + "..." : "N/A");
 
             // Always return success message (security: don't reveal if email exists)
             var response = new ForgotPasswordResponse
