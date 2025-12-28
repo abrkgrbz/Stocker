@@ -601,7 +601,12 @@ public class AuthController : ControllerBase
         if (result.IsSuccess)
         {
             _logger.LogInformation("2FA verification successful for email: {Email}", command.Email);
-            return Ok(result.Value);
+            return Ok(new
+            {
+                success = true,
+                data = result.Value,
+                message = "2FA doğrulaması başarılı"
+            });
         }
 
         _logger.LogWarning("Failed 2FA verification for email: {Email}", command.Email);
