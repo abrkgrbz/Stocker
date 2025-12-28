@@ -18,19 +18,19 @@ public class EmailService : IEmailService
 {
     private readonly EmailSettings _emailSettings;
     private readonly ILogger<EmailService> _logger;
-    private readonly IEmailTemplateRepository? _templateRepository;
-    private readonly ILiquidTemplateService? _liquidTemplateService;
+    private readonly IEmailTemplateRepository _templateRepository;
+    private readonly ILiquidTemplateService _liquidTemplateService;
 
     public EmailService(
         IOptions<EmailSettings> emailSettings,
         ILogger<EmailService> logger,
-        IEmailTemplateRepository? templateRepository = null,
-        ILiquidTemplateService? liquidTemplateService = null)
+        IEmailTemplateRepository templateRepository,
+        ILiquidTemplateService liquidTemplateService)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
-        _templateRepository = templateRepository;
-        _liquidTemplateService = liquidTemplateService;
+        _templateRepository = templateRepository ?? throw new ArgumentNullException(nameof(templateRepository));
+        _liquidTemplateService = liquidTemplateService ?? throw new ArgumentNullException(nameof(liquidTemplateService));
     }
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
@@ -295,12 +295,6 @@ public class EmailService : IEmailService
         Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        if (_templateRepository == null || _liquidTemplateService == null)
-        {
-            _logger.LogError("Template repository or liquid service not available for template {TemplateKey}", templateKey);
-            throw new InvalidOperationException($"Email template service is not properly configured. Cannot render template '{templateKey}'.");
-        }
-
         // Try to get template from database
         var template = await _templateRepository.GetByKeyAsync(templateKey, language, tenantId, cancellationToken);
 
