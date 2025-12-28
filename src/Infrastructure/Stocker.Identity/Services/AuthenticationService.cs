@@ -748,7 +748,21 @@ public class AuthenticationService : IAuthenticationService
             {
                 // Generate reset token for MasterUser
                 masterUser.GeneratePasswordResetToken();
+
+                // Log token details for debugging
+                _logger.LogInformation("DEBUG TOKEN GENERATION: Email={Email}, Token='{Token}', TokenLength={Length}, Expiry={Expiry}",
+                    email, masterUser.PasswordResetToken, masterUser.PasswordResetToken?.Length ?? 0, masterUser.PasswordResetTokenExpiry);
+
                 await _masterContext.SaveChangesAsync(cancellationToken);
+
+                // Verify token was saved by re-querying
+                var savedUser = await _masterContext.MasterUsers
+                    .Where(u => u.Id == masterUser.Id)
+                    .Select(u => new { u.PasswordResetToken, u.PasswordResetTokenExpiry })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                _logger.LogInformation("DEBUG TOKEN SAVED: Email={Email}, SavedToken='{Token}', SavedExpiry={Expiry}",
+                    email, savedUser?.PasswordResetToken, savedUser?.PasswordResetTokenExpiry);
 
                 _logger.LogInformation("Password reset token generated for MasterUser: {Email}", email);
                 return Stocker.SharedKernel.Results.Result.Success(masterUser.PasswordResetToken!);
