@@ -350,176 +350,97 @@ const PackagesPage: React.FC = () => {
     }
   };
 
+  const formatLimit = (value: number, type: 'users' | 'storage' | 'api' | 'projects') => {
+    if (value === 2147483647 || value === 99999 || value === 99999999) {
+      return 'Unlimited';
+    }
+    if (type === 'storage') return `${value} GB`;
+    if (type === 'api') return value >= 1000000 ? `${(value / 1000000).toFixed(0)}M` : value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value.toString();
+    return value.toString();
+  };
+
   const renderPackageCard = (pkg: Package) => (
-    <ProCard
-      key={pkg.id}
-      className={styles.packageCard}
-      bordered={false}
-      bodyStyle={{ padding: 0 }}
-    >
-      {/* Popular/Best Value Ribbons */}
-      {pkg.isPopular && (
-        <div className={styles.popularBadge}>
-          <FireOutlined /> POPÜLER
-        </div>
-      )}
-      {pkg.isBestValue && (
-        <div className={styles.bestValueBadge}>
-          <TrophyOutlined /> EN İYİ DEĞER
-        </div>
-      )}
-
-      {/* Card Header */}
+    <div key={pkg.id} className={styles.packageCard}>
+      {/* Header: Name + Status | Price */}
       <div className={styles.cardHeader}>
-        <div className={`${styles.packageTier} ${styles[pkg.tier]}`}>
-          {tierIcons[pkg.tier]}
-          <span>{pkg.tier.toUpperCase()}</span>
-        </div>
-
-        <Title level={3} className={styles.packageTitle}>
-          {pkg.displayName}
-        </Title>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div className={styles.headerLeft}>
+          <span className={styles.packageTitle}>{pkg.displayName}</span>
           <span className={`${styles.statusBadge} ${styles[pkg.status]}`}>
-            {pkg.status === 'active' ? (
-              <>
-                <CheckCircleOutlined /> Aktif
-              </>
-            ) : pkg.status === 'inactive' ? (
-              <>
-                <CloseCircleOutlined /> İnaktif
-              </>
-            ) : (
-              <>
-                <WarningOutlined /> Kullanımdan Kaldırıldı
-              </>
-            )}
+            {pkg.status === 'active' ? 'Active' : pkg.status === 'inactive' ? 'Inactive' : 'Deprecated'}
           </span>
         </div>
-
-        <Paragraph className={styles.packageDescription}>
-          {pkg.description}
-        </Paragraph>
-      </div>
-
-      {/* Price Section */}
-      <div className={styles.priceSection}>
-        <div className={styles.priceContainer}>
-          {pkg.originalPrice && (
-            <span className={styles.originalPrice}>
-              ₺{pkg.originalPrice.toLocaleString()}
-            </span>
-          )}
-          <span className={styles.currentPrice}>
-            ₺{pkg.price.toLocaleString()}
-          </span>
-          <span className={styles.pricePeriod}>
-            / {pkg.billingCycle === 'monthly' ? 'ay' : pkg.billingCycle === 'yearly' ? 'yıl' : 'tek seferlik'}
-          </span>
-        </div>
-        {pkg.originalPrice && (
-          <div className={styles.discountBadge}>
-            <ThunderboltOutlined />
-            %{Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)} İndirim
+        <div className={styles.headerRight}>
+          <div className={styles.priceValue}>₺{pkg.price.toLocaleString()}</div>
+          <div className={styles.pricePeriod}>
+            {pkg.billingCycle === 'monthly' ? '/mo' : pkg.billingCycle === 'yearly' ? '/yr' : 'one-time'}
           </div>
-        )}
-      </div>
-
-      {/* Features List */}
-      <div className={styles.featuresList}>
-        {[
-          {
-            icon: <TeamOutlined className={styles.featureIcon} />,
-            label: 'Kullanıcı',
-            value: pkg.limits.users === 2147483647 || pkg.limits.users === 99999 ? '∞ Sınırsız' : pkg.limits.users
-          },
-          {
-            icon: <CloudServerOutlined className={styles.featureIcon} />,
-            label: 'Depolama',
-            value: pkg.limits.storage === 2147483647 || pkg.limits.storage === 99999 ? '∞ Sınırsız' : `${pkg.limits.storage} GB`
-          },
-          {
-            icon: <ApiOutlined className={styles.featureIcon} />,
-            label: 'API Çağrısı',
-            value: pkg.limits.apiCalls === 2147483647 || pkg.limits.apiCalls === 99999999 ? '∞ Sınırsız' : pkg.limits.apiCalls.toLocaleString()
-          },
-          {
-            icon: <AppstoreOutlined className={styles.featureIcon} />,
-            label: 'Proje',
-            value: pkg.limits.projects === 2147483647 || pkg.limits.projects === 99999 ? '∞ Sınırsız' : pkg.limits.projects
-          },
-        ].map((item, idx) => (
-          <div key={idx} className={styles.featureItem}>
-            {item.icon}
-            <span className={styles.featureText}>
-              <span className={styles.limitValue}>{item.value}</span> {item.label}
-            </span>
-          </div>
-        ))}
-
-        {pkg.features.slice(0, 3).map((feature, idx) => (
-          <div key={idx} className={styles.featureItem}>
-            <CheckCircleOutlined className={styles.featureIcon} style={{ color: '#51cf66' }} />
-            <span className={styles.featureText}>{feature}</span>
-          </div>
-        ))}
-
-        {pkg.features.length > 3 && (
-          <Text type="secondary" style={{ fontSize: 13, marginTop: 8, display: 'block', textAlign: 'center' }}>
-            +{pkg.features.length - 3} daha fazla özellik
-          </Text>
-        )}
-
-        {/* Support Tags */}
-        <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {pkg.limits.emailSupport && (
-            <Tag className={styles.supportTag} icon={<MailOutlined />} color="blue">E-posta</Tag>
-          )}
-          {pkg.limits.phoneSupport && (
-            <Tag className={styles.supportTag} icon={<CustomerServiceOutlined />} color="green">Telefon</Tag>
-          )}
-          {pkg.limits.prioritySupport && (
-            <Tag className={styles.supportTag} icon={<ThunderboltOutlined />} color="gold">Öncelikli</Tag>
-          )}
-          <Tag className={styles.supportTag} icon={<SafetyOutlined />}>SLA %{pkg.limits.sla}</Tag>
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className={styles.statsSection}>
-        <Row gutter={24}>
-          <Col span={12}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{pkg.subscriberCount}</span>
-              <span className={styles.statLabel}>Abone</span>
-            </div>
-          </Col>
-          <Col span={12}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>₺{pkg.revenue.toLocaleString()}</span>
-              <span className={styles.statLabel}>Gelir</span>
-            </div>
-          </Col>
-        </Row>
+      {/* Limits Summary Grid */}
+      <div className={styles.limitsGrid}>
+        <div className={styles.limitItem}>
+          <div className={styles.limitIcon}><TeamOutlined /></div>
+          <div className={styles.limitText}>
+            <span className={styles.limitValue}>{formatLimit(pkg.limits.users, 'users')}</span>
+            <span className={styles.limitLabel}>Users</span>
+          </div>
+        </div>
+        <div className={styles.limitItem}>
+          <div className={styles.limitIcon}><CloudServerOutlined /></div>
+          <div className={styles.limitText}>
+            <span className={styles.limitValue}>{formatLimit(pkg.limits.storage, 'storage')}</span>
+            <span className={styles.limitLabel}>Storage</span>
+          </div>
+        </div>
+        <div className={styles.limitItem}>
+          <div className={styles.limitIcon}><ApiOutlined /></div>
+          <div className={styles.limitText}>
+            <span className={styles.limitValue}>{formatLimit(pkg.limits.apiCalls, 'api')}</span>
+            <span className={styles.limitLabel}>API Calls</span>
+          </div>
+        </div>
+        <div className={styles.limitItem}>
+          <div className={styles.limitIcon}><AppstoreOutlined /></div>
+          <div className={styles.limitText}>
+            <span className={styles.limitValue}>{formatLimit(pkg.limits.projects, 'projects')}</span>
+            <span className={styles.limitLabel}>Projects</span>
+          </div>
+        </div>
       </div>
 
-      {/* Card Actions */}
+      {/* Live Metrics */}
+      <div className={styles.metricsSection}>
+        <div className={styles.metricItem}>
+          <div className={styles.metricLabel}>Subscribers</div>
+          <div className={styles.metricValue}>{pkg.subscriberCount.toLocaleString()}</div>
+        </div>
+        <div className={styles.metricItem}>
+          <div className={styles.metricLabel}>MRR</div>
+          <div className={styles.metricValue}>₺{pkg.revenue.toLocaleString()}</div>
+        </div>
+      </div>
+
+      {/* Actions */}
       <div className={styles.cardActions}>
         <Button
-          type="primary"
           onClick={() => handleEdit(pkg)}
           icon={<EditOutlined />}
           className={styles.editButton}
         >
-          Düzenle
+          Edit Package
         </Button>
         <Dropdown
           menu={{
             items: [
               {
+                key: 'archive',
+                label: 'Archive',
+                icon: <CloseCircleOutlined />,
+              },
+              {
                 key: 'delete',
-                label: 'Sil',
+                label: 'Delete',
                 danger: true,
                 icon: <DeleteOutlined />,
                 onClick: () => handleDelete(pkg),
@@ -531,7 +452,7 @@ const PackagesPage: React.FC = () => {
           <Button icon={<MoreOutlined />} className={styles.moreButton} />
         </Dropdown>
       </div>
-    </ProCard>
+    </div>
   );
 
   const renderComparisonTable = () => {
@@ -649,72 +570,73 @@ const PackagesPage: React.FC = () => {
     >
       {activeTab === 'overview' && (
         <>
-          <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+          {/* Summary Stats Row */}
+          <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
               <Card className={styles.statsCard} bordered={false}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Toplam Paket</div>
+                    <div className={styles.statsCardLabel}>Total Packages</div>
                     <div className={styles.statsCardValue}>{packages.length}</div>
                   </div>
-                  <AppstoreOutlined className={styles.statsCardIcon} style={{ color: '#667eea' }} />
+                  <AppstoreOutlined className={styles.statsCardIcon} />
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <Card className={styles.statsCard} bordered={false}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Aktif Paket</div>
-                    <div className={styles.statsCardValue} style={{ color: '#51cf66' }}>
+                    <div className={styles.statsCardLabel}>Active</div>
+                    <div className={styles.statsCardValue} style={{ color: '#16a34a' }}>
                       {packages.filter(p => p.status === 'active').length}
                     </div>
                   </div>
-                  <CheckCircleOutlined className={styles.statsCardIcon} style={{ color: '#51cf66' }} />
+                  <CheckCircleOutlined className={styles.statsCardIcon} />
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <Card className={styles.statsCard} bordered={false}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Toplam Abone</div>
+                    <div className={styles.statsCardLabel}>Total Subscribers</div>
                     <div className={styles.statsCardValue}>
-                      {packages.reduce((sum, p) => sum + p.subscriberCount, 0)}
+                      {packages.reduce((sum, p) => sum + p.subscriberCount, 0).toLocaleString()}
                     </div>
                   </div>
-                  <TeamOutlined className={styles.statsCardIcon} style={{ color: '#339af0' }} />
+                  <TeamOutlined className={styles.statsCardIcon} />
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <Card className={styles.statsCard} bordered={false}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div className={styles.statsCardLabel}>Aylık Gelir</div>
+                    <div className={styles.statsCardLabel}>Total MRR</div>
                     <div className={styles.statsCardValue}>
                       ₺{packages.reduce((sum, p) => sum + p.revenue, 0).toLocaleString()}
                     </div>
                     <div className={`${styles.growthIndicator} ${styles.positive}`}>
-                      ↗ +12.5%
+                      +12.5%
                     </div>
                   </div>
-                  <DollarOutlined className={styles.statsCardIcon} style={{ color: '#51cf66' }} />
+                  <DollarOutlined className={styles.statsCardIcon} />
                 </div>
               </Card>
             </Col>
           </Row>
 
-          <Row gutter={[16, 16]}>
+          {/* Package Cards Grid - 3 columns with gap-6 (24px) */}
+          <Row gutter={[24, 24]}>
             {packages.map(pkg => (
               <Col xs={24} sm={12} lg={8} key={pkg.id}>
                 {renderPackageCard(pkg)}
               </Col>
             ))}
             <Col xs={24} sm={12} lg={8}>
-              <ProCard
+              <div
                 className={styles.addPackageCard}
-                bordered={false}
                 onClick={() => {
                   setEditingPackage(null);
                   form.resetFields();
@@ -723,23 +645,10 @@ const PackagesPage: React.FC = () => {
                 }}
               >
                 <div className={styles.addPackageContent}>
-                  <ExperimentOutlined className={styles.addPackageIcon} />
-                  <Title level={4} className={styles.addPackageTitle}>
-                    Yeni Paket Ekle
-                  </Title>
-                  <Paragraph className={styles.addPackageDesc}>
-                    Müşterileriniz için yeni bir paket oluşturun
-                  </Paragraph>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    size="large"
-                    className={styles.addPackageButton}
-                  >
-                    Paket Oluştur
-                  </Button>
+                  <PlusOutlined className={styles.addPackageIcon} />
+                  <span className={styles.addPackageTitle}>Add New Package</span>
                 </div>
-              </ProCard>
+              </div>
             </Col>
           </Row>
         </>
