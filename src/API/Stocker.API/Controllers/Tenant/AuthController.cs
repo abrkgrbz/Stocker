@@ -495,7 +495,12 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            return Ok(new
+            {
+                success = true,
+                data = result.Value,
+                message = "2FA kurulumu basariyla tamamlandi"
+            });
         }
 
         return BadRequest(new
@@ -528,7 +533,12 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            return Ok(new
+            {
+                success = true,
+                data = result.Value,
+                message = "2FA basariyla etkinlestirildi"
+            });
         }
 
         return BadRequest(new

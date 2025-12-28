@@ -41,6 +41,12 @@ export interface SecurityEventsResponse {
   totalPages: number;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 // Query Keys
 export const securityKeys = {
   all: ['security'] as const,
@@ -172,6 +178,21 @@ export function useTerminateAllSessions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: securityKeys.sessions() });
+    },
+  });
+}
+
+// Change Password
+export function useChangePassword() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: ChangePasswordRequest) => {
+      const response = await ApiService.post<ApiResponse<boolean>>('/account/change-password', data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: securityKeys.overview() });
     },
   });
 }

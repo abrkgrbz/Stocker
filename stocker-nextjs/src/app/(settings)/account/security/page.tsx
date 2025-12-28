@@ -30,7 +30,9 @@ import {
   useSecurityOverview,
   useActiveSessions,
   useSecurityEvents,
+  useChangePassword,
   type ActiveSessionDto,
+  type ChangePasswordRequest,
 } from './hooks';
 import { useProfile } from '../profile/hooks';
 
@@ -86,15 +88,22 @@ export default function SecurityPage() {
   const { mutate: setup2FA, isPending: isSettingUp, data: setupData, reset: resetSetup } = useSetup2FA();
   const { mutate: enable2FA, isPending: isEnabling } = useEnable2FA();
   const { mutate: disable2FA, isPending: isDisabling } = useDisable2FA();
+  const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword();
 
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [setupStep, setSetupStep] = useState<'qr' | 'verify' | 'backup'>('qr');
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   // Get 2FA enabled status from API or profile
   const twoFactorEnabled = twoFactorStatus?.data?.enabled ?? securityOverview?.data?.twoFactorEnabled ?? profile?.data?.twoFactorEnabled ?? false;
@@ -225,6 +234,45 @@ export default function SecurityPage() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleChangePassword = () => {
+    // Validation
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setErrorMessage('Tum alanlari doldurun');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setErrorMessage('Yeni sifre en az 8 karakter olmalidir');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setErrorMessage('Yeni sifreler eslesmiyor');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+
+    changePassword(passwordForm, {
+      onSuccess: (response) => {
+        if (response.success) {
+          setShowPasswordModal(false);
+          setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+          setSuccessMessage('Sifreniz basariyla degistirildi');
+          setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+          setErrorMessage(response.message || 'Sifre degistirilemedi');
+          setTimeout(() => setErrorMessage(''), 3000);
+        }
+      },
+      onError: (error: any) => {
+        setErrorMessage(error?.message || 'Sifre degistirilemedi');
+        setTimeout(() => setErrorMessage(''), 3000);
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Toast */}
@@ -329,7 +377,10 @@ export default function SecurityPage() {
                     <p className="text-xs text-slate-500">Son degisiklik: {passwordLastChanged}</p>
                   </div>
                 </div>
-                <button className="px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                >
                   Degistir
                 </button>
               </div>
@@ -696,6 +747,78 @@ export default function SecurityPage() {
               className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDisabling ? 'Devre disi birakiliyor...' : 'Devre Disi Birak'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal
+        isOpen={showPasswordModal}
+        onClose={() => {
+          setShowPasswordModal(false);
+          setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        }}
+        title="Sifre Degistir"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Mevcut Sifre
+            </label>
+            <input
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+              placeholder="Mevcut sifrenizi girin"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Yeni Sifre
+            </label>
+            <input
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+              placeholder="Yeni sifrenizi girin"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="text-xs text-slate-500 mt-1">En az 8 karakter olmalidir</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Yeni Sifre (Tekrar)
+            </label>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+              placeholder="Yeni sifrenizi tekrar girin"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => {
+                setShowPasswordModal(false);
+                setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+              }}
+              className="flex-1 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Iptal
+            </button>
+            <button
+              onClick={handleChangePassword}
+              disabled={isChangingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+              className="flex-1 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isChangingPassword ? 'Degistiriliyor...' : 'Sifreyi Degistir'}
             </button>
           </div>
         </div>
