@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
+using Stocker.Domain.Migration.Entities;
 
 namespace Stocker.Application.Common.Interfaces;
 
@@ -37,6 +38,7 @@ public interface IMasterDbContext
     DbSet<TenantSettings> TenantSettings { get; }
     DbSet<SecurityAuditLog> SecurityAuditLogs { get; }
     DbSet<BackupSchedule> BackupSchedules { get; }
+    DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions { get; }
 
     // Pricing & Setup entities
     DbSet<AddOn> AddOns { get; }
@@ -45,6 +47,11 @@ public interface IMasterDbContext
     DbSet<Industry> Industries { get; }
     DbSet<IndustryRecommendedModule> IndustryRecommendedModules { get; }
     DbSet<UserTier> UserTiers { get; }
+
+    // Data Migration (ERP/CRM Import)
+    DbSet<MigrationSession> MigrationSessions { get; }
+    DbSet<MigrationChunk> MigrationChunks { get; }
+    DbSet<MigrationValidationResult> MigrationValidationResults { get; }
 
     // All entities requiring tenant isolation have been moved to Tenant DB
     

@@ -11,6 +11,7 @@ using Stocker.Infrastructure.BackgroundJobs.Jobs;
 using Stocker.Infrastructure.Configuration;
 using Stocker.Infrastructure.Middleware;
 using Stocker.Infrastructure.Services;
+using Stocker.Infrastructure.Services.Migration;
 using Stocker.SharedKernel.Interfaces;
 using Stocker.SharedKernel.Settings;
 
@@ -89,6 +90,15 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient("Iyzico");
         services.AddScoped<IPaymentService, PaymentService>();
 
+        // Add Lemon Squeezy Payment Service
+        services.Configure<LemonSqueezySettings>(configuration.GetSection(LemonSqueezySettings.SectionName));
+        services.AddHttpClient("LemonSqueezy", client =>
+        {
+            client.BaseAddress = new Uri("https://api.lemonsqueezy.com/");
+            client.DefaultRequestHeaders.Add("Accept", "application/vnd.api+json");
+        });
+        services.AddScoped<ILemonSqueezyService, LemonSqueezyService>();
+
         // Add Docker Management Service
         services.AddScoped<IDockerManagementService, DockerManagementService>();
 
@@ -113,12 +123,22 @@ public static class ServiceCollectionExtensions
             
             // Register Background Job Service
             services.AddScoped<IBackgroundJobService, HangfireBackgroundJobService>();
+
+            // Register Migration Job Scheduler
+            services.AddScoped<IMigrationJobScheduler, MigrationJobScheduler>();
+
+            // Register Migration Jobs
+            services.AddScoped<MigrationValidationJob>();
+            services.AddScoped<MigrationImportJob>();
         }
         else
         {
             // Register a mock background job service for testing
             services.AddScoped<IBackgroundJobService, MockBackgroundJobService>();
         }
+
+        // Add Migration Services (Excel Template Generator - available in all environments)
+        services.AddScoped<IExcelTemplateGenerator, ExcelTemplateGenerator>();
 
         // Add other infrastructure services here as needed
 

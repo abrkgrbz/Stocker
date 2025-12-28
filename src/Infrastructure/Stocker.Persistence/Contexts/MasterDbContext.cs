@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Stocker.Domain.Master.Entities;
 using Stocker.Domain.Entities.Settings;
 using Stocker.Domain.Entities.Migration;
+using Stocker.Domain.Migration.Entities;
 using Stocker.Application.Common.Interfaces;
 
 namespace Stocker.Persistence.Contexts;
@@ -55,6 +56,7 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<LemonSqueezySubscription> LemonSqueezySubscriptions => Set<LemonSqueezySubscription>();
 
     // User Management
     public DbSet<MasterUser> MasterUsers => Set<MasterUser>();
@@ -77,6 +79,11 @@ public class MasterDbContext : BaseDbContext, IMasterDbContext, IApplicationDbCo
 
     // Migration Management
     public DbSet<ScheduledMigration> ScheduledMigrations => Set<ScheduledMigration>();
+
+    // Data Migration (ERP/CRM Import)
+    public DbSet<MigrationSession> MigrationSessions => Set<MigrationSession>();
+    public DbSet<MigrationChunk> MigrationChunks => Set<MigrationChunk>();
+    public DbSet<MigrationValidationResult> MigrationValidationResults => Set<MigrationValidationResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

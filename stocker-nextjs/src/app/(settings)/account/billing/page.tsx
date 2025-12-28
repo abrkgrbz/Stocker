@@ -2,10 +2,10 @@
 
 /**
  * Billing Settings Page
- * Consistent with Profile Page Design Language
+ * Integrated with Lemon Squeezy via billing.service.ts
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CreditCard,
   FileText,
@@ -20,52 +20,382 @@ import {
   ChevronRight,
   Plus,
   Check,
+  Loader2,
+  AlertCircle,
+  ExternalLink,
+  Pause,
+  Play,
+  XCircle,
+  type LucideIcon,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { billingService, type SubscriptionDto, type PlanDto } from '@/lib/api/services/billing.service';
+import { showAlert } from '@/lib/utils/alerts';
 
-const invoices = [
-  { id: 'INV-2024-001', date: '2024-01-15', amount: '₺2,499.00', status: 'paid' },
-  { id: 'INV-2023-012', date: '2023-12-15', amount: '₺2,499.00', status: 'paid' },
-  { id: 'INV-2023-011', date: '2023-11-15', amount: '₺2,499.00', status: 'paid' },
-];
+// Plan features based on subscription
+const getPlanFeatures = (planName: string) => {
+  const features: { icon: LucideIcon; label: string; included: boolean }[] = [];
 
-const planFeatures = [
-  { icon: Users, label: '10 Kullanıcı', included: true },
-  { icon: HardDrive, label: '50GB Depolama', included: true },
-  { icon: Zap, label: 'API Erişimi', included: true },
-  { icon: FileText, label: 'Gelişmiş Raporlar', included: true },
-];
+  if (planName.toLowerCase().includes('starter') || planName.toLowerCase().includes('basic')) {
+    features.push(
+      { icon: Users, label: '5 Kullanıcı', included: true },
+      { icon: HardDrive, label: '10GB Depolama', included: true },
+      { icon: Zap, label: 'Temel API Erişimi', included: true },
+      { icon: FileText, label: 'Standart Raporlar', included: true },
+    );
+  } else if (planName.toLowerCase().includes('professional') || planName.toLowerCase().includes('pro')) {
+    features.push(
+      { icon: Users, label: '25 Kullanıcı', included: true },
+      { icon: HardDrive, label: '50GB Depolama', included: true },
+      { icon: Zap, label: 'Gelişmiş API Erişimi', included: true },
+      { icon: FileText, label: 'Gelişmiş Raporlar', included: true },
+    );
+  } else if (planName.toLowerCase().includes('enterprise') || planName.toLowerCase().includes('business')) {
+    features.push(
+      { icon: Users, label: 'Sınırsız Kullanıcı', included: true },
+      { icon: HardDrive, label: '500GB Depolama', included: true },
+      { icon: Zap, label: 'Tam API Erişimi', included: true },
+      { icon: FileText, label: 'Özel Raporlar', included: true },
+    );
+  } else {
+    features.push(
+      { icon: Users, label: '10 Kullanıcı', included: true },
+      { icon: HardDrive, label: '25GB Depolama', included: true },
+      { icon: Zap, label: 'API Erişimi', included: true },
+      { icon: FileText, label: 'Raporlar', included: true },
+    );
+  }
+
+  return features;
+};
+
+// Format currency
+const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const currencyMap: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    TRY: '₺',
+    GBP: '£',
+  };
+  const symbol = currencyMap[currency.toUpperCase()] || currency;
+  return `${symbol}${(amount / 100).toFixed(2)}`;
+};
+
+// Format date
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+// Status badge component
+const StatusBadge = ({ status, isPaused, isCancelled }: { status: string; isPaused?: boolean; isCancelled?: boolean }) => {
+  if (isCancelled) {
+    return (
+      <span className="px-2 py-0.5 text-xs font-medium bg-red-50 text-red-600 rounded-full">
+        İptal Edildi
+      </span>
+    );
+  }
+  if (isPaused) {
+    return (
+      <span className="px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-600 rounded-full">
+        Duraklatıldı
+      </span>
+    );
+  }
+
+  const statusMap: Record<string, { bg: string; text: string; label: string }> = {
+    active: { bg: 'bg-emerald-50', text: 'text-emerald-600', label: 'Aktif' },
+    on_trial: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'Deneme' },
+    past_due: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Ödeme Bekliyor' },
+    unpaid: { bg: 'bg-red-50', text: 'text-red-600', label: 'Ödenmedi' },
+    cancelled: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'İptal Edildi' },
+    expired: { bg: 'bg-slate-50', text: 'text-slate-600', label: 'Süresi Doldu' },
+  };
+
+  const statusStyle = statusMap[status.toLowerCase()] || statusMap.active;
+
+  return (
+    <span className={`px-2 py-0.5 text-xs font-medium ${statusStyle.bg} ${statusStyle.text} rounded-full`}>
+      {statusStyle.label}
+    </span>
+  );
+};
 
 export default function BillingPage() {
-  const [successMessage, setSuccessMessage] = useState('');
+  const [subscription, setSubscription] = useState<SubscriptionDto | null>(null);
+  const [plans, setPlans] = useState<PlanDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
-  const currentPlan = {
-    name: 'Professional',
-    price: '₺2,499',
-    period: 'ay',
-    nextBilling: '15 Şubat 2024',
-    status: 'active',
+  // Fetch subscription data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [subscriptionRes, plansRes] = await Promise.all([
+        billingService.getSubscription(),
+        billingService.getPlans(),
+      ]);
+
+      if (subscriptionRes.success && subscriptionRes.data?.subscription) {
+        setSubscription(subscriptionRes.data.subscription);
+      }
+
+      if (plansRes.success && plansRes.data?.plans) {
+        setPlans(plansRes.data.plans);
+      }
+    } catch (err) {
+      console.error('Failed to fetch billing data:', err);
+      setError('Fatura bilgileri yüklenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Show success toast
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const paymentMethod = {
-    type: 'visa',
-    last4: '4242',
-    expiry: '12/2025',
+  // Handle cancel subscription
+  const handleCancelSubscription = async () => {
+    const confirmed = await showAlert.confirm(
+      'Aboneliği İptal Et',
+      'Aboneliğinizi iptal etmek istediğinizden emin misiniz? Mevcut dönem sonuna kadar erişiminiz devam edecektir.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading('cancel');
+      const response = await billingService.cancelSubscription();
+
+      if (response.success) {
+        showSuccess('Abonelik başarıyla iptal edildi.');
+        await fetchData();
+      } else {
+        await showAlert.error('Hata', response.message || 'Abonelik iptal edilemedi.');
+      }
+    } catch (err) {
+      console.error('Cancel subscription error:', err);
+      await showAlert.error('Hata', 'Abonelik iptal edilirken bir hata oluştu.');
+    } finally {
+      setActionLoading(null);
+    }
   };
+
+  // Handle pause subscription
+  const handlePauseSubscription = async () => {
+    const confirmed = await showAlert.confirm(
+      'Aboneliği Duraklat',
+      'Aboneliğinizi duraklatmak istediğinizden emin misiniz?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActionLoading('pause');
+      const response = await billingService.pauseSubscription();
+
+      if (response.success) {
+        showSuccess('Abonelik başarıyla duraklatıldı.');
+        await fetchData();
+      } else {
+        await showAlert.error('Hata', response.message || 'Abonelik duraklatılamadı.');
+      }
+    } catch (err) {
+      console.error('Pause subscription error:', err);
+      await showAlert.error('Hata', 'Abonelik duraklatılırken bir hata oluştu.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle resume subscription
+  const handleResumeSubscription = async () => {
+    try {
+      setActionLoading('resume');
+      const response = await billingService.resumeSubscription();
+
+      if (response.success) {
+        showSuccess('Abonelik başarıyla devam ettirildi.');
+        await fetchData();
+      } else {
+        await showAlert.error('Hata', response.message || 'Abonelik devam ettirilemedi.');
+      }
+    } catch (err) {
+      console.error('Resume subscription error:', err);
+      await showAlert.error('Hata', 'Abonelik devam ettirilirken bir hata oluştu.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle open customer portal
+  const handleOpenPortal = async () => {
+    try {
+      setActionLoading('portal');
+
+      // First check if subscription has a portal URL
+      if (subscription?.customerPortalUrl) {
+        window.open(subscription.customerPortalUrl, '_blank');
+        return;
+      }
+
+      // Otherwise fetch from API
+      const response = await billingService.getCustomerPortal();
+
+      if (response.success && response.data?.portalUrl) {
+        window.open(response.data.portalUrl, '_blank');
+      } else {
+        await showAlert.error('Hata', 'Müşteri portalı açılamadı.');
+      }
+    } catch (err) {
+      console.error('Open portal error:', err);
+      await showAlert.error('Hata', 'Müşteri portalı açılırken bir hata oluştu.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle update payment method
+  const handleUpdatePayment = async () => {
+    if (subscription?.updatePaymentMethodUrl) {
+      window.open(subscription.updatePaymentMethodUrl, '_blank');
+    } else {
+      await handleOpenPortal();
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+          <p className="text-sm text-slate-500">Fatura bilgileri yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !subscription) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+          <p className="text-sm text-slate-600">{error}</p>
+          <button
+            onClick={fetchData}
+            className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No subscription state
+  if (!subscription) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center">
+          <Crown className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Henüz Bir Aboneliğiniz Yok</h2>
+          <p className="text-slate-500 mb-6">
+            Stocker&apos;ın tüm özelliklerinden yararlanmak için bir plan seçin.
+          </p>
+
+          {/* Available Plans */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {plans.map((plan) => (
+              <div
+                key={plan.variantId}
+                className="border border-slate-200 rounded-xl p-6 hover:border-slate-300 transition-colors"
+              >
+                <h3 className="text-lg font-semibold text-slate-900">{plan.productName}</h3>
+                <p className="text-sm text-slate-500 mt-1">{plan.variantName}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-4">
+                  {plan.priceFormatted || formatCurrency(plan.price)}
+                  <span className="text-sm font-normal text-slate-500">
+                    /{plan.interval === 'month' ? 'ay' : plan.interval === 'year' ? 'yıl' : plan.interval}
+                  </span>
+                </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      setActionLoading(`checkout-${plan.variantId}`);
+                      const response = await billingService.createCheckout({
+                        variantId: plan.variantId,
+                        successUrl: `${window.location.origin}/account/billing?success=true`,
+                        cancelUrl: `${window.location.origin}/account/billing?cancelled=true`,
+                      });
+
+                      if (response.success && response.data?.checkoutUrl) {
+                        window.location.href = response.data.checkoutUrl;
+                      } else {
+                        await showAlert.error('Hata', 'Ödeme sayfası açılamadı.');
+                      }
+                    } catch (err) {
+                      console.error('Checkout error:', err);
+                      await showAlert.error('Hata', 'Bir hata oluştu.');
+                    } finally {
+                      setActionLoading(null);
+                    }
+                  }}
+                  disabled={actionLoading === `checkout-${plan.variantId}`}
+                  className="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {actionLoading === `checkout-${plan.variantId}` ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Planı Seç'
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const planFeatures = getPlanFeatures(subscription.productName);
+  const billingIntervalText = subscription.billingInterval === 'month' ? 'ay' :
+                              subscription.billingInterval === 'year' ? 'yıl' :
+                              subscription.billingInterval;
 
   return (
     <div className="space-y-6">
       {/* Toast */}
-      {successMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-lg shadow-lg"
-        >
-          <Check className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm text-slate-900">{successMessage}</span>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-lg shadow-lg"
+          >
+            <Check className="w-4 h-4 text-emerald-600" />
+            <span className="text-sm text-slate-900">{successMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header Card - Plan Overview */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
@@ -76,25 +406,47 @@ export default function BillingPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-slate-900">{currentPlan.name}</h1>
-                <span className="px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-600 rounded-full">
-                  Aktif
-                </span>
+                <h1 className="text-xl font-semibold text-slate-900">
+                  {subscription.productName} - {subscription.variantName}
+                </h1>
+                <StatusBadge
+                  status={subscription.status}
+                  isPaused={subscription.isPaused}
+                  isCancelled={subscription.isCancelled}
+                />
               </div>
               <p className="text-sm text-slate-500 mt-0.5">
-                <span className="text-2xl font-bold text-slate-900">{currentPlan.price}</span>
-                <span className="text-slate-400">/{currentPlan.period}</span>
+                <span className="text-2xl font-bold text-slate-900">
+                  {formatCurrency(subscription.unitPrice, subscription.currency)}
+                </span>
+                <span className="text-slate-400">/{billingIntervalText}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-              Planları Karşılaştır
+            <button
+              onClick={handleOpenPortal}
+              disabled={actionLoading === 'portal'}
+              className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {actionLoading === 'portal' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <ExternalLink className="w-4 h-4" />
+                  Müşteri Portalı
+                </>
+              )}
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
-              Planı Yükselt
-            </button>
+            {!subscription.isCancelled && (
+              <button
+                onClick={handleOpenPortal}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Planı Yükselt
+              </button>
+            )}
           </div>
         </div>
 
@@ -113,15 +465,83 @@ export default function BillingPage() {
           })}
         </div>
 
-        {/* Next Billing */}
+        {/* Subscription Info & Actions */}
         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Calendar className="w-4 h-4" />
-            <span>Sonraki fatura: <span className="font-medium text-slate-700">{currentPlan.nextBilling}</span></span>
+          <div className="flex items-center gap-4 text-sm text-slate-500">
+            {subscription.trialEndsAt && (
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>Deneme bitiş: <span className="font-medium text-slate-700">{formatDate(subscription.trialEndsAt)}</span></span>
+              </div>
+            )}
+            {subscription.renewsAt && !subscription.isCancelled && (
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>Sonraki fatura: <span className="font-medium text-slate-700">{formatDate(subscription.renewsAt)}</span></span>
+              </div>
+            )}
+            {subscription.endsAt && (
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>Bitiş tarihi: <span className="font-medium text-slate-700">{formatDate(subscription.endsAt)}</span></span>
+              </div>
+            )}
           </div>
-          <button className="text-sm text-red-600 hover:text-red-700 font-medium">
-            Aboneliği İptal Et
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Pause/Resume Button */}
+            {!subscription.isCancelled && (
+              subscription.isPaused ? (
+                <button
+                  onClick={handleResumeSubscription}
+                  disabled={actionLoading === 'resume'}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 disabled:opacity-50"
+                >
+                  {actionLoading === 'resume' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Devam Ettir
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handlePauseSubscription}
+                  disabled={actionLoading === 'pause'}
+                  className="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 disabled:opacity-50"
+                >
+                  {actionLoading === 'pause' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Pause className="w-4 h-4" />
+                      Duraklat
+                    </>
+                  )}
+                </button>
+              )
+            )}
+
+            {/* Cancel Button */}
+            {!subscription.isCancelled && (
+              <button
+                onClick={handleCancelSubscription}
+                disabled={actionLoading === 'cancel'}
+                className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 disabled:opacity-50"
+              >
+                {actionLoading === 'cancel' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    Aboneliği İptal Et
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -134,40 +554,63 @@ export default function BillingPage() {
               <h2 className="text-sm font-semibold text-slate-900">Ödeme Yöntemi</h2>
               <p className="text-xs text-slate-500 mt-0.5">Aktif ödeme kartınız</p>
             </div>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            <button
+              onClick={handleUpdatePayment}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
               Düzenle
             </button>
           </div>
           <div className="p-6">
             {/* Current Card */}
-            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <div className="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
-                <CreditCard className="w-6 h-6 text-slate-600" />
+            {subscription.cardBrand && subscription.cardLastFour ? (
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                  <CreditCard className="w-6 h-6 text-slate-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900 capitalize">
+                    {subscription.cardBrand} •••• {subscription.cardLastFour}
+                  </p>
+                  <p className="text-xs text-slate-500">Kayıtlı kart</p>
+                </div>
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-900">•••• •••• •••• {paymentMethod.last4}</p>
-                <p className="text-xs text-slate-500">Son kullanma: {paymentMethod.expiry}</p>
+            ) : (
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                  <CreditCard className="w-6 h-6 text-slate-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-500">Kart bilgisi yok</p>
+                  <p className="text-xs text-slate-400">Lemon Squeezy portalından ekleyebilirsiniz</p>
+                </div>
               </div>
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
-            </div>
+            )}
 
-            {/* Add New Card */}
-            <button className="mt-4 w-full px-4 py-3 border border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-colors flex items-center justify-center gap-2">
+            {/* Add/Update Card via Portal */}
+            <button
+              onClick={handleUpdatePayment}
+              className="mt-4 w-full px-4 py-3 border border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-colors flex items-center justify-center gap-2"
+            >
               <Plus className="w-4 h-4" />
-              Yeni Kart Ekle
+              {subscription.cardLastFour ? 'Ödeme Yöntemini Güncelle' : 'Ödeme Yöntemi Ekle'}
             </button>
           </div>
         </div>
 
-        {/* Right: Billing Info */}
+        {/* Right: Subscription Info */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Fatura Bilgileri</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Faturalarınızda görünecek bilgiler</p>
+              <h2 className="text-sm font-semibold text-slate-900">Abonelik Bilgileri</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Abonelik detayları</p>
             </div>
-            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-              Düzenle
+            <button
+              onClick={handleOpenPortal}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            >
+              Portalda Görüntüle <ExternalLink className="w-3 h-3" />
             </button>
           </div>
           <div className="p-6 space-y-4">
@@ -176,8 +619,8 @@ export default function BillingPage() {
                 <Building className="w-4 h-4 text-slate-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">Örnek Şirket A.Ş.</p>
-                <p className="text-xs text-slate-500 mt-0.5">Vergi No: 1234567890</p>
+                <p className="text-sm font-medium text-slate-900">Abonelik ID</p>
+                <p className="text-xs text-slate-500 mt-0.5 font-mono">{subscription.id}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -185,102 +628,158 @@ export default function BillingPage() {
                 <FileText className="w-4 h-4 text-slate-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">İstanbul, Türkiye</p>
-                <p className="text-xs text-slate-500 mt-0.5">Örnek Mah. Test Sok. No: 1</p>
+                <p className="text-sm font-medium text-slate-900">Durum</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {subscription.statusFormatted || subscription.status}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <Calendar className="w-4 h-4 text-slate-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">Fatura Döngüsü</p>
+                <p className="text-xs text-slate-500 mt-0.5 capitalize">{billingIntervalText}lık</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Invoice History */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">Fatura Geçmişi</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{invoices.length} fatura bulundu</p>
-          </div>
-          <button className="text-sm text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1">
-            Tümünü Görüntüle <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {invoices.map((invoice) => (
-            <div key={invoice.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <FileText className="w-4 h-4 text-slate-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{invoice.id}</p>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(invoice.date).toLocaleDateString('tr-TR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-semibold text-slate-900">{invoice.amount}</span>
-                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                  invoice.status === 'paid'
-                    ? 'bg-emerald-50 text-emerald-600'
-                    : 'bg-amber-50 text-amber-600'
-                }`}>
-                  {invoice.status === 'paid' ? 'Ödendi' : 'Bekliyor'}
-                </span>
-                <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                  <Download className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Usage Stats */}
+      {/* Quick Actions */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
         <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-sm font-semibold text-slate-900">Kullanım Özeti</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Hızlı İşlemler</h2>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-3 gap-6">
-            {/* Users */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">Kullanıcılar</span>
-                <span className="text-sm font-medium text-slate-900">7/10</span>
+          <div className="grid grid-cols-3 gap-4">
+            <button
+              onClick={handleOpenPortal}
+              disabled={actionLoading === 'portal'}
+              className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <ExternalLink className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: '70%' }} />
+              <div className="text-left">
+                <p className="text-sm font-medium text-slate-900">Müşteri Portalı</p>
+                <p className="text-xs text-slate-500">Tüm fatura ve abonelik işlemleri</p>
               </div>
-            </div>
-            {/* Storage */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">Depolama</span>
-                <span className="text-sm font-medium text-slate-900">32/50 GB</span>
+            </button>
+
+            <button
+              onClick={handleUpdatePayment}
+              className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              <div className="p-2 bg-emerald-50 rounded-lg">
+                <CreditCard className="w-5 h-5 text-emerald-600" />
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '64%' }} />
+              <div className="text-left">
+                <p className="text-sm font-medium text-slate-900">Ödeme Yöntemi</p>
+                <p className="text-xs text-slate-500">Kart bilgilerini güncelle</p>
               </div>
-            </div>
-            {/* API Calls */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">API İstekleri</span>
-                <span className="text-sm font-medium text-slate-900">8,234/10,000</span>
+            </button>
+
+            <button
+              onClick={handleOpenPortal}
+              className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              <div className="p-2 bg-amber-50 rounded-lg">
+                <FileText className="w-5 h-5 text-amber-600" />
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: '82%' }} />
+              <div className="text-left">
+                <p className="text-sm font-medium text-slate-900">Fatura Geçmişi</p>
+                <p className="text-xs text-slate-500">Tüm faturaları görüntüle</p>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Available Plans for Upgrade */}
+      {plans.length > 0 && !subscription.isCancelled && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Mevcut Planlar</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Plan değiştirmek için bir seçenek seçin</p>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {plans.map((plan) => {
+                const isCurrentPlan = plan.variantId === subscription.id ||
+                                     (plan.productName === subscription.productName && plan.variantName === subscription.variantName);
+
+                return (
+                  <div
+                    key={plan.variantId}
+                    className={`border rounded-xl p-4 transition-colors ${
+                      isCurrentPlan
+                        ? 'border-emerald-300 bg-emerald-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-slate-900">{plan.productName}</h3>
+                      {isCurrentPlan && (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
+                          Mevcut
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500">{plan.variantName}</p>
+                    <p className="text-lg font-bold text-slate-900 mt-2">
+                      {plan.priceFormatted || formatCurrency(plan.price)}
+                      <span className="text-xs font-normal text-slate-500">
+                        /{plan.interval === 'month' ? 'ay' : plan.interval === 'year' ? 'yıl' : plan.interval}
+                      </span>
+                    </p>
+                    {!isCurrentPlan && (
+                      <button
+                        onClick={async () => {
+                          const confirmed = await showAlert.confirm(
+                            'Plan Değiştir',
+                            `${plan.productName} - ${plan.variantName} planına geçmek istediğinizden emin misiniz?`
+                          );
+
+                          if (!confirmed) return;
+
+                          try {
+                            setActionLoading(`change-${plan.variantId}`);
+                            const response = await billingService.changePlan({ newVariantId: plan.variantId });
+
+                            if (response.success) {
+                              showSuccess('Plan başarıyla değiştirildi.');
+                              await fetchData();
+                            } else {
+                              await showAlert.error('Hata', response.message || 'Plan değiştirilemedi.');
+                            }
+                          } catch (err) {
+                            console.error('Change plan error:', err);
+                            await showAlert.error('Hata', 'Plan değiştirilirken bir hata oluştu.');
+                          } finally {
+                            setActionLoading(null);
+                          }
+                        }}
+                        disabled={actionLoading === `change-${plan.variantId}`}
+                        className="mt-3 w-full px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                      >
+                        {actionLoading === `change-${plan.variantId}` ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          'Bu Plana Geç'
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
