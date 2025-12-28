@@ -42,6 +42,7 @@ const TESTIMONIALS = [
 ]
 import { useSignalRValidation } from '@/hooks/useSignalRValidation'
 import { toast } from '@/lib/notifications/use-toast'
+import { showAlert } from '@/lib/sweetalert-config'
 import { authService } from '@/lib/api/services/auth.service'
 import { ApiClientError, handleApiError } from '@/lib/api/client'
 
@@ -266,8 +267,12 @@ export default function RegisterPage() {
       })
 
       if (response.success && response.data) {
-        // Doğrudan email doğrulama sayfasına yönlendir
         setCurrentStep('complete')
+        // Alert kapandıktan sonra yönlendir
+        await showAlert.success(
+          'Kayıt Başarılı!',
+          response.message || 'Lütfen email adresinizi kontrol edin ve doğrulama kodunu girin.'
+        )
         window.location.href = `/register/verify-email?email=${encodeURIComponent(email)}`
       } else {
         const errorMessage = response.message || 'Kayıt işlemi başarısız oldu'
