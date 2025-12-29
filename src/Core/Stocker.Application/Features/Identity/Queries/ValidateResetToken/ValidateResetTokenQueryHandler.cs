@@ -60,7 +60,8 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
                 var isValid = masterUser.PasswordResetTokenExpiry.HasValue &&
                               masterUser.PasswordResetTokenExpiry.Value > turkeyNow;
 
-                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
+                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}, Expiry={Expiry}, ExpiryKind={ExpiryKind}, TurkeyNow={TurkeyNow}, UtcNow={UtcNow}",
+                    isValid, masterUser.PasswordResetTokenExpiry, masterUser.PasswordResetTokenExpiry?.Kind, turkeyNow, DateTime.UtcNow);
 
                 return Result.Success(new ValidateResetTokenResponse
                 {
