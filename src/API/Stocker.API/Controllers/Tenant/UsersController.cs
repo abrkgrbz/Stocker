@@ -19,13 +19,11 @@ public class UsersController : ApiController
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IConfiguration _configuration;
 
-    public UsersController(IMediator mediator, ICurrentUserService currentUserService, IConfiguration configuration)
+    public UsersController(IMediator mediator, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
-        _configuration = configuration;
     }
 
     [HttpGet]
@@ -349,83 +347,6 @@ public class UsersController : ApiController
     }
 
     /// <summary>
-    /// Setup password for an invited user (account activation).
-    /// This endpoint is used when a user clicks the activation link from their invitation email.
-    /// Returns authentication tokens for auto-login.
-    /// </summary>
-    [HttpPost("setup-password")]
-    [AllowAnonymous] // This endpoint must be accessible without authentication
-    [ProducesResponseType(typeof(ApiResponse<SetupPasswordResultDto>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-    public async Task<IActionResult> SetupPassword([FromBody] SetupPasswordDto dto)
-    {
-        if (!ModelState.IsValid)
-        {
-            var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
-            throw new ValidationException("Model", string.Join(", ", errors));
-        }
-
-        var command = new SetupPasswordCommand
-        {
-            TenantId = dto.TenantId,
-            UserId = dto.UserId,
-            Token = dto.Token,
-            Password = dto.Password,
-            ConfirmPassword = dto.ConfirmPassword
-        };
-
-        var result = await _mediator.Send(command);
-
-        if (result.IsFailure)
-        {
-            return BadRequest(new ApiResponse<object>
-            {
-                Success = false,
-                Message = result.Error?.Description ?? "Hesap aktifleştirilemedi"
-            });
-        }
-
-        // Set HttpOnly cookies for auto-login
-        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
-
-        return Ok(new ApiResponse<SetupPasswordResultDto>
-        {
-            Success = true,
-            Data = result.Value,
-            Message = "Hesabınız başarıyla aktifleştirildi."
-        });
-    }
-
-    /// <summary>
-    /// Helper method to set authentication cookies (for auto-login after password setup)
-    /// </summary>
-    private void SetAuthCookies(string accessToken, string refreshToken)
-    {
-        var isProduction = !string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
-        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
-
-        // Set access token cookie (short-lived)
-        Response.Cookies.Append("access_token", accessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
-            Domain = isProduction ? baseDomain : null,
-            Expires = DateTime.UtcNow.AddHours(1)
-        });
-
-        // Set refresh token cookie (long-lived)
-        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
-            Domain = isProduction ? baseDomain : null,
-            Expires = DateTime.UtcNow.AddDays(7)
-        });
-    }
-
-    /// <summary>
     /// Resend invitation email to a pending user.
     /// </summary>
     [HttpPost("{id}/resend-invitation")]
@@ -505,16 +426,4 @@ public class ResetPasswordDto
 public class AssignRoleDto
 {
     public Guid RoleId { get; set; }
-}
-
-/// <summary>
-/// DTO for setting up password during account activation.
-/// </summary>
-public class SetupPasswordDto
-{
-    public Guid TenantId { get; set; }
-    public Guid UserId { get; set; }
-    public string Token { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string ConfirmPassword { get; set; } = string.Empty;
 }

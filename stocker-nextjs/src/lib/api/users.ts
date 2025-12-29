@@ -234,7 +234,8 @@ export async function setupPassword(data: SetupPasswordRequest): Promise<SetupPa
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/tenant/users/setup-password`, {
+    // Note: This is a public endpoint that doesn't require tenant resolution
+    const response = await fetch(`${API_BASE_URL}/api/public/account/setup-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
