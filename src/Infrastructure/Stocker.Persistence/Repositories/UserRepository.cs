@@ -27,7 +27,7 @@ public class UserRepository : IUserRepository
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            query = query.Where(u => 
+            query = query.Where(u =>
                 u.FirstName.Contains(searchTerm) ||
                 u.LastName.Contains(searchTerm) ||
                 u.Email.Value.Contains(searchTerm) ||
@@ -202,7 +202,7 @@ public class UserRepository : IUserRepository
             user.Phone,
             user.Mobile,
             user.Title);
-        
+
         existingUser.UpdateEmployeeInfo(
             user.EmployeeCode,
             user.DepartmentId,
@@ -216,22 +216,43 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> DeleteTenantUserAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _tenantContext.TenantUsers
+        var tenantUser = await _tenantContext.TenantUsers
             .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-        if (user == null)
+        if (tenantUser == null)
             return false;
 
-        // Hard delete - remove user roles first, then the user
-        if (user.UserRoles != null && user.UserRoles.Any())
+        // Get the MasterUserId before deleting TenantUser
+        var masterUserId = tenantUser.MasterUserId;
+
+        // Hard delete - remove user roles first, then the tenant user
+        if (tenantUser.UserRoles != null && tenantUser.UserRoles.Any())
         {
-            _tenantContext.Set<Domain.Tenant.Entities.TenantUserRole>().RemoveRange(user.UserRoles);
+            _tenantContext.UserRoles.RemoveRange(tenantUser.UserRoles);
         }
 
-        _tenantContext.TenantUsers.Remove(user);
-
+        _tenantContext.TenantUsers.Remove(tenantUser);
         await _tenantContext.SaveChangesAsync(cancellationToken);
+
+        // Also delete the MasterUser from Identity database
+        var masterUser = await _masterContext.MasterUsers
+            .FirstOrDefaultAsync(u => u.Id == masterUserId, cancellationToken);
+
+        if (masterUser != null)
+        {
+            // Check if this MasterUser has any other TenantUser associations
+            var otherTenantAssociations = await _tenantContext.TenantUsers
+                .AnyAsync(tu => tu.MasterUserId == masterUserId, cancellationToken);
+
+            if (!otherTenantAssociations)
+            {
+                // No other tenant associations, safe to delete MasterUser
+                _masterContext.MasterUsers.Remove(masterUser);
+                await _masterContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         return true;
     }
 
@@ -392,7 +413,7 @@ public class UserRepository : IUserRepository
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            query = query.Where(u => 
+            query = query.Where(u =>
                 u.FirstName.Contains(searchTerm) ||
                 u.LastName.Contains(searchTerm) ||
                 u.Email.Value.Contains(searchTerm) ||
@@ -548,7 +569,7 @@ public class UserRepository : IUserRepository
             // This operation should be done through Tenant context
             return false;
         }
-        
+
         await _masterContext.SaveChangesAsync(cancellationToken);
 
         return true;
