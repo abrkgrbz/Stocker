@@ -58,10 +58,22 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
             if (masterUser != null)
             {
-                // Validate token expiry
-                if (!masterUser.PasswordResetTokenExpiry.HasValue || masterUser.PasswordResetTokenExpiry.Value <= DateTime.UtcNow)
+                // Validate token expiry with timezone correction
+                // Npgsql legacy mode timestamp handling issue:
+                // - Token saved with DateTime.UtcNow.AddHours(1), e.g., 07:32 UTC
+                // - Npgsql legacy mode treats DateTime as local time (Turkey +3)
+                // - Writes to DB: 07:32 - 3h = 04:32 UTC
+                // - Reads back: 04:32 UTC + local offset (container is UTC, so 0) = 04:32 with Kind=Local
+                // Fix: Add Turkey timezone offset (3 hours) to correct the stored value
+                var turkeyOffset = TimeSpan.FromHours(3);
+                var expiryValue = masterUser.PasswordResetTokenExpiry.HasValue
+                    ? masterUser.PasswordResetTokenExpiry.Value.Add(turkeyOffset)
+                    : (DateTime?)null;
+
+                if (!expiryValue.HasValue || expiryValue.Value <= DateTime.UtcNow)
                 {
-                    _logger.LogWarning("Password reset token expired for MasterUser: {UserId}", masterUser.Id);
+                    _logger.LogWarning("Password reset token expired for MasterUser: {UserId}. Expiry: {Expiry}, Now: {Now}",
+                        masterUser.Id, expiryValue?.ToString("O"), DateTime.UtcNow.ToString("O"));
                     return Result.Failure<ResetPasswordResponse>(
                         Error.Validation("Token.Expired", "Şifre sıfırlama bağlantısının süresi dolmuş"));
                 }
@@ -117,10 +129,16 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
                     if (tenantUser != null)
                     {
-                        // Validate token expiry
-                        if (!tenantUser.PasswordResetTokenExpiry.HasValue || tenantUser.PasswordResetTokenExpiry.Value <= DateTime.UtcNow)
+                        // Validate token expiry with timezone correction (same as MasterUser)
+                        var turkeyOffset = TimeSpan.FromHours(3);
+                        var expiryValue = tenantUser.PasswordResetTokenExpiry.HasValue
+                            ? tenantUser.PasswordResetTokenExpiry.Value.Add(turkeyOffset)
+                            : (DateTime?)null;
+
+                        if (!expiryValue.HasValue || expiryValue.Value <= DateTime.UtcNow)
                         {
-                            _logger.LogWarning("Password reset token expired for TenantUser: {UserId} in Tenant: {TenantId}", tenantUser.Id, tenantId);
+                            _logger.LogWarning("Password reset token expired for TenantUser: {UserId} in Tenant: {TenantId}. Expiry: {Expiry}, Now: {Now}",
+                                tenantUser.Id, tenantId, expiryValue?.ToString("O"), DateTime.UtcNow.ToString("O"));
                             return Result.Failure<ResetPasswordResponse>(
                                 Error.Validation("Token.Expired", "Şifre sıfırlama bağlantısının süresi dolmuş"));
                         }
