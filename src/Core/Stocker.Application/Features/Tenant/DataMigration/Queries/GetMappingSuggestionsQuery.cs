@@ -131,6 +131,18 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
                 new() { Name = "ParentCode", DisplayName = "Üst Kategori Kodu", DataType = "string", IsRequired = false, MaxLength = 50 },
                 new() { Name = "Description", DisplayName = "Açıklama", DataType = "string", IsRequired = false, MaxLength = 500 },
             },
+            MigrationEntityType.Brand => new List<TargetFieldDto>
+            {
+                new() { Name = "Code", DisplayName = "Marka Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Name", DisplayName = "Marka Adı", DataType = "string", IsRequired = true, MaxLength = 100 },
+                new() { Name = "Description", DisplayName = "Açıklama", DataType = "string", IsRequired = false, MaxLength = 500 },
+            },
+            MigrationEntityType.Unit => new List<TargetFieldDto>
+            {
+                new() { Name = "Code", DisplayName = "Birim Kodu", DataType = "string", IsRequired = true, MaxLength = 20 },
+                new() { Name = "Name", DisplayName = "Birim Adı", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Description", DisplayName = "Açıklama", DataType = "string", IsRequired = false, MaxLength = 200 },
+            },
             MigrationEntityType.Warehouse => new List<TargetFieldDto>
             {
                 new() { Name = "Code", DisplayName = "Depo Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
@@ -186,6 +198,10 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
             { "CategoryCode", new List<string> { "KATEGORI_KOD", "GRUP_KOD", "CATEGORY", "CATEGORY_CODE" } },
             { "WarehouseCode", new List<string> { "DEPO_KOD", "DEPO", "WAREHOUSE", "WAREHOUSE_CODE" } },
             { "ProductCode", new List<string> { "STOK_KODU", "URUN_KODU", "PRODUCT_CODE", "STOKKOD" } },
+            { "BrandCode", new List<string> { "MARKA_KODU", "MARKA_KOD", "BRAND_CODE", "MARKAKOD" } },
+            { "BrandName", new List<string> { "MARKA_ADI", "MARKA", "BRAND_NAME", "BRAND" } },
+            { "UnitCode", new List<string> { "BIRIM_KODU", "BIRIM_KOD", "UNIT_CODE", "BIRIMKOD" } },
+            { "UnitName", new List<string> { "BIRIM_ADI", "BIRIM", "UNIT_NAME" } },
         };
 
         foreach (var targetField in targetFields)
