@@ -49,18 +49,14 @@ function ResetPasswordContent() {
         const { authService } = await import('@/lib/api/services');
         const response = await authService.validateResetToken(token);
 
-        if (response.success && response.data) {
-          // Use the valid flag from API response directly
-          // API already handles timezone-aware validation
-          const valid = response.data.valid === true;
-          setTokenValid(valid);
+        // API returns { valid: boolean, expiresAt: string } directly (not wrapped)
+        // Cast to any to handle both wrapped and unwrapped responses
+        const data = (response as any);
+        const valid = data?.valid === true || data?.data?.valid === true;
+        setTokenValid(valid);
 
-          if (!valid) {
-            setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.');
-          }
-        } else {
-          setTokenValid(false);
-          setError('Geçersiz şifre sıfırlama bağlantısı.');
+        if (!valid) {
+          setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.');
         }
       } catch (err) {
         setError('Token doğrulama hatası. Lütfen tekrar deneyin.');
