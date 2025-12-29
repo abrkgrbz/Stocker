@@ -113,6 +113,19 @@ export interface ToggleUserStatusResult {
   message: string;
 }
 
+export interface SetupPasswordRequest {
+  tenantId: string;
+  userId: string;
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface SetupPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 /**
  * Get all users for current tenant with pagination
  */
@@ -200,6 +213,44 @@ export async function resendInvitation(userId: string): Promise<{ success: boole
     success: (response.data as any).success || response.success || false,
     message: (response.data as any).message || response.message || 'Davet e-postası gönderildi',
   };
+}
+
+/**
+ * Setup password for invited user (account activation)
+ * This is an unauthenticated endpoint called when user clicks invitation link
+ */
+export async function setupPassword(data: SetupPasswordRequest): Promise<SetupPasswordResponse> {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/tenant/users/setup-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result.message || result.detail || 'Hesap aktifleştirilemedi',
+      };
+    }
+
+    return {
+      success: result.success ?? true,
+      message: result.message || 'Hesabınız başarıyla aktifleştirildi',
+    };
+  } catch (error) {
+    console.error('Setup password error:', error);
+    return {
+      success: false,
+      message: 'Bağlantı hatası. Lütfen tekrar deneyin.',
+    };
+  }
 }
 
 /**
