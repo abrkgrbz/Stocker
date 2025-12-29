@@ -43,11 +43,14 @@ export default function ForgotPasswordPage() {
       // Pass workspace code for employees
       const response = await authService.forgotPassword(email, userType === 'employee' ? workspaceCode.trim().toLowerCase() : undefined)
 
-      if (response.success) {
-        setEmailSent(true)
-      } else {
-        setError(response.message || 'E-posta gönderilemedi. Lütfen tekrar deneyin.')
-      }
+      // Backend returns { emailSent: boolean, message: string }
+      // Handle both wrapped and unwrapped API responses
+      const data = response as any
+      const emailWasSent = data?.emailSent === true || data?.EmailSent === true
+
+      // For security, backend always returns success even if email doesn't exist
+      // So we always show success state to prevent email enumeration
+      setEmailSent(true)
     } catch (err) {
       console.error('Forgot password error:', err)
       const errorMessage = handleApiError(err)
