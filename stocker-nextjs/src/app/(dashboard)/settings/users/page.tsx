@@ -428,15 +428,17 @@ export default function UsersPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-slate-500 uppercase tracking-wide">Toplam</span>
-                {subscriptionInfo && (
+                {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
                   <Tooltip title={`Paket: ${subscriptionInfo.packageName}`}>
                     <CrownIcon className="w-3 h-3 text-amber-500" />
                   </Tooltip>
                 )}
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-semibold text-slate-900">{stats.total}</span>
-                {subscriptionInfo && (
+                <span className="text-2xl font-semibold text-slate-900">
+                  {subscriptionInfo?.currentUserCount ?? stats.total}
+                </span>
+                {subscriptionInfo && subscriptionInfo.maxUsers < 999999 && (
                   <span className="text-sm text-slate-400">/ {subscriptionInfo.maxUsers}</span>
                 )}
               </div>
