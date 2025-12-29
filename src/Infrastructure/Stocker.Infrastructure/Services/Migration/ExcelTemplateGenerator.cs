@@ -333,6 +333,42 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     ["ParentCode"] = "KAT-001"
                 }
             },
+            MigrationEntityType.Brand => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["Code"] = "MRK-001",
+                    ["Name"] = "Samsung",
+                    ["Description"] = "Güney Kore elektronik markası"
+                },
+                new()
+                {
+                    ["Code"] = "MRK-002",
+                    ["Name"] = "Apple",
+                    ["Description"] = "ABD teknoloji markası"
+                }
+            },
+            MigrationEntityType.Unit => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["Code"] = "AD",
+                    ["Name"] = "Adet",
+                    ["Description"] = "Sayılabilir birim"
+                },
+                new()
+                {
+                    ["Code"] = "KG",
+                    ["Name"] = "Kilogram",
+                    ["Description"] = "Ağırlık birimi"
+                },
+                new()
+                {
+                    ["Code"] = "LT",
+                    ["Name"] = "Litre",
+                    ["Description"] = "Hacim birimi"
+                }
+            },
             MigrationEntityType.Warehouse => new List<Dictionary<string, string>>
             {
                 new()
@@ -439,6 +475,28 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     new("Name", "Kategori Adı", "string", true, 100),
                     new("ParentCode", "Üst Kategori Kodu", "string", false, 50, "Hiyerarşik yapı için"),
                     new("Description", "Açıklama", "string", false, 500),
+                }
+            },
+            MigrationEntityType.Brand => new EntitySchema
+            {
+                DisplayName = "Markalar",
+                Description = "Ürün markaları için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("Code", "Marka Kodu", "string", true, 50, "Benzersiz marka kodu"),
+                    new("Name", "Marka Adı", "string", true, 100, "Markanın tam adı"),
+                    new("Description", "Açıklama", "string", false, 500, "Marka hakkında ek bilgi"),
+                }
+            },
+            MigrationEntityType.Unit => new EntitySchema
+            {
+                DisplayName = "Birimler",
+                Description = "Ürün birimleri için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("Code", "Birim Kodu", "string", true, 20, "Benzersiz birim kodu (örn: AD, KG, LT)"),
+                    new("Name", "Birim Adı", "string", true, 50, "Birim adı (örn: Adet, Kilogram, Litre)"),
+                    new("Description", "Açıklama", "string", false, 200),
                 }
             },
             MigrationEntityType.Warehouse => new EntitySchema

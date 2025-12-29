@@ -128,9 +128,17 @@ export default function SecurityPage() {
       setLoading(true);
       const response = await securitySettingsService.getSecuritySettings();
 
-      if (response.success && response.data) {
-        setSettings(response.data);
-        populateForms(response.data);
+      // Handle both wrapped ({ success, data }) and unwrapped responses
+      const responseData = response as any;
+      const settingsData = responseData?.data || responseData;
+      const isSuccess = responseData?.success !== false;
+
+      if (isSuccess && settingsData?.passwordPolicy) {
+        setSettings(settingsData);
+        populateForms(settingsData);
+      } else {
+        console.warn('Security settings response:', response);
+        showError(responseData?.message || 'Güvenlik ayarları yüklenemedi');
       }
     } catch (error) {
       showError('Güvenlik ayarları yüklenirken hata oluştu');
