@@ -579,15 +579,33 @@ export const MigrationService = {
 
   // Template Download
   async downloadTemplate(entityType: MigrationEntityType): Promise<Blob> {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tenant/data-migration/templates/${entityType}`, {
+    // Get auth token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+    // Get tenant code from cookie
+    const tenantCodeCookie = typeof document !== 'undefined'
+      ? document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='))
+      : null;
+    const tenantCode = tenantCodeCookie ? tenantCodeCookie.split('=')[1]?.trim() : '';
+
+    const headers: Record<string, string> = {
+      'X-Tenant-Code': tenantCode,
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Use correct endpoint path: /templates/excel/{entityType}
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tenant/data-migration/templates/excel/${entityType}`, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        'X-Tenant-Code': document.cookie.split(';').find(c => c.trim().startsWith('tenant-code='))?.split('=')[1] || '',
-      },
+      headers,
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error('Template download failed:', response.status, errorText);
       throw new Error('Şablon indirilemedi');
     }
 
