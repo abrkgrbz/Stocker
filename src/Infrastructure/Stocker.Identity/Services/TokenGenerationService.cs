@@ -35,7 +35,7 @@ public class TokenGenerationService : ITokenGenerationService
         user.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
         await _masterContext.SaveChangesAsync();
 
-        var tenantName = await GetTenantNameAsync(tenantId);
+        var tenantInfo = await GetTenantInfoAsync(tenantId);
 
         return new AuthenticationResult
         {
@@ -51,7 +51,8 @@ public class TokenGenerationService : ITokenGenerationService
                 Email = user.Email.Value,
                 FullName = user.GetFullName(),
                 TenantId = tenantId,
-                TenantName = tenantName,
+                TenantName = tenantInfo.Name,
+                TenantCode = tenantInfo.Code,
                 IsMasterUser = true,
                 Roles = GetRolesForUserType(user.UserType)
             }
@@ -69,7 +70,7 @@ public class TokenGenerationService : ITokenGenerationService
         masterUser.SetRefreshToken(refreshToken, _jwtTokenService.GetRefreshTokenExpiration());
         await _masterContext.SaveChangesAsync();
 
-        var tenantName = await GetTenantNameAsync(tenantUser.TenantId);
+        var tenantInfo = await GetTenantInfoAsync(tenantUser.TenantId);
 
         return new AuthenticationResult
         {
@@ -85,7 +86,8 @@ public class TokenGenerationService : ITokenGenerationService
                 Email = tenantUser.Email.Value,
                 FullName = tenantUser.GetFullName(),
                 TenantId = tenantUser.TenantId,
-                TenantName = tenantName,
+                TenantName = tenantInfo.Name,
+                TenantCode = tenantInfo.Code,
                 IsMasterUser = false,
                 Roles = tenantUser.UserRoles.Select(r => r.RoleId.ToString()).ToList()
             }
@@ -187,12 +189,12 @@ public class TokenGenerationService : ITokenGenerationService
         };
     }
 
-    private async Task<string?> GetTenantNameAsync(Guid? tenantId)
+    private async Task<(string? Name, string? Code)> GetTenantInfoAsync(Guid? tenantId)
     {
-        if (!tenantId.HasValue) return null;
-        
+        if (!tenantId.HasValue) return (null, null);
+
         var tenant = await _masterContext.Tenants.FindAsync(tenantId.Value);
-        return tenant?.Name;
+        return (tenant?.Name, tenant?.Code);
     }
 
 }

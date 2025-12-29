@@ -425,6 +425,7 @@ public class AuthenticationService : IAuthenticationService
                     FullName = authResult.User.FullName,
                     TenantId = authResult.User.TenantId,
                     TenantName = authResult.User.TenantName,
+                    TenantCode = authResult.User.TenantCode,
                     Roles = authResult.User.Roles ?? new List<string>()
                 },
                 Requires2FA = false,
@@ -482,6 +483,7 @@ public class AuthenticationService : IAuthenticationService
                     FullName = authResult.User.FullName,
                     TenantId = authResult.User.TenantId,
                     TenantName = authResult.User.TenantName,
+                    TenantCode = authResult.User.TenantCode,
                     Roles = authResult.User.Roles ?? new List<string>()
                 },
                 Requires2FA = false,
@@ -540,6 +542,7 @@ public class AuthenticationService : IAuthenticationService
                     FullName = authResult.User.FullName,
                     TenantId = authResult.User.TenantId,
                     TenantName = authResult.User.TenantName,
+                    TenantCode = authResult.User.TenantCode,
                     Roles = authResult.User.Roles ?? new List<string>()
                 },
                 Requires2FA = false,
@@ -594,6 +597,7 @@ public class AuthenticationService : IAuthenticationService
                     FullName = authResult.User.FullName,
                     TenantId = authResult.User.TenantId,
                     TenantName = authResult.User.TenantName,
+                    TenantCode = authResult.User.TenantCode,
                     Roles = authResult.User.Roles ?? new List<string>()
                 },
                 Requires2FA = false,

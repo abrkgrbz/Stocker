@@ -32,7 +32,7 @@ import {
   Ban,
 } from 'lucide-react';
 import { AdminOnly } from '@/components/auth/PermissionGate';
-import { useAuditLogs, useAuditLogStatistics, formatTimeAgo, getRiskLevelColor, getRiskLevelLabel } from '@/lib/api/hooks/useAuditLogs';
+import { useAuditLogs, useAuditLogStatistics, formatTimeAgo, getRiskLevelColor, getRiskLevelLabel, getEventLabel } from '@/lib/api/hooks/useAuditLogs';
 import type { AuditLogFilters, AuditLogListItem } from '@/lib/api/services';
 
 // Event type icons
@@ -308,7 +308,7 @@ export default function AuditLogsPage() {
                         <div className="md:col-span-3 flex items-center gap-2">
                           <IconComponent className="w-4 h-4 text-slate-400 flex-shrink-0" />
                           <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getEventBadgeStyle(log.event)}`}>
-                            {log.event}
+                            {getEventLabel(log.event)}
                           </span>
                           {log.blocked && (
                             <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
@@ -418,7 +418,7 @@ export default function AuditLogsPage() {
                         const IconComponent = getEventIcon(selectedLog.event);
                         return <IconComponent className="w-4 h-4" />;
                       })()}
-                      <span className="text-sm font-medium">{selectedLog.event}</span>
+                      <span className="text-sm font-medium">{getEventLabel(selectedLog.event)}</span>
                     </div>
                     {selectedLog.blocked && (
                       <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded">

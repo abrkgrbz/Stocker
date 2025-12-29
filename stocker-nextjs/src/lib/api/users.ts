@@ -124,6 +124,16 @@ export interface SetupPasswordRequest {
 export interface SetupPasswordResponse {
   success: boolean;
   message: string;
+  // Auth tokens for auto-login (returned on success)
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  tokenType?: string;
+  userId?: string;
+  tenantId?: string;
+  fullName?: string;
+  email?: string;
+  roles?: string[];
 }
 
 /**
@@ -218,6 +228,7 @@ export async function resendInvitation(userId: string): Promise<{ success: boole
 /**
  * Setup password for invited user (account activation)
  * This is an unauthenticated endpoint called when user clicks invitation link
+ * Returns auth tokens on success for auto-login
  */
 export async function setupPassword(data: SetupPasswordRequest): Promise<SetupPasswordResponse> {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -240,9 +251,22 @@ export async function setupPassword(data: SetupPasswordRequest): Promise<SetupPa
       };
     }
 
+    // Extract auth tokens from response.data (backend returns ApiResponse<SetupPasswordResultDto>)
+    const tokenData = result.data || result;
+
     return {
       success: result.success ?? true,
       message: result.message || 'Hesabınız başarıyla aktifleştirildi',
+      // Auth tokens for auto-login
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken,
+      expiresAt: tokenData.expiresAt,
+      tokenType: tokenData.tokenType || 'Bearer',
+      userId: tokenData.userId,
+      tenantId: tokenData.tenantId,
+      fullName: tokenData.fullName,
+      email: tokenData.email,
+      roles: tokenData.roles,
     };
   } catch (error) {
     console.error('Setup password error:', error);

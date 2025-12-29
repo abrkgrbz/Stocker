@@ -19,11 +19,13 @@ public class UsersController : ApiController
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IConfiguration _configuration;
 
-    public UsersController(IMediator mediator, ICurrentUserService currentUserService)
+    public UsersController(IMediator mediator, ICurrentUserService currentUserService, IConfiguration configuration)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _configuration = configuration;
     }
 
     [HttpGet]
@@ -349,10 +351,11 @@ public class UsersController : ApiController
     /// <summary>
     /// Setup password for an invited user (account activation).
     /// This endpoint is used when a user clicks the activation link from their invitation email.
+    /// Returns authentication tokens for auto-login.
     /// </summary>
     [HttpPost("setup-password")]
     [AllowAnonymous] // This endpoint must be accessible without authentication
-    [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<SetupPasswordResultDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     public async Task<IActionResult> SetupPassword([FromBody] SetupPasswordDto dto)
     {
@@ -382,11 +385,43 @@ public class UsersController : ApiController
             });
         }
 
-        return Ok(new ApiResponse<bool>
+        // Set HttpOnly cookies for auto-login
+        SetAuthCookies(result.Value.AccessToken, result.Value.RefreshToken);
+
+        return Ok(new ApiResponse<SetupPasswordResultDto>
         {
             Success = true,
-            Data = true,
-            Message = "Hesabınız başarıyla aktifleştirildi. Artık giriş yapabilirsiniz."
+            Data = result.Value,
+            Message = "Hesabınız başarıyla aktifleştirildi."
+        });
+    }
+
+    /// <summary>
+    /// Helper method to set authentication cookies (for auto-login after password setup)
+    /// </summary>
+    private void SetAuthCookies(string accessToken, string refreshToken)
+    {
+        var isProduction = !string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development", StringComparison.OrdinalIgnoreCase);
+        var baseDomain = _configuration.GetValue<string>("CookieBaseDomain") ?? ".stoocker.app";
+
+        // Set access token cookie (short-lived)
+        Response.Cookies.Append("access_token", accessToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
+            Domain = isProduction ? baseDomain : null,
+            Expires = DateTime.UtcNow.AddHours(1)
+        });
+
+        // Set refresh token cookie (long-lived)
+        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
+            Domain = isProduction ? baseDomain : null,
+            Expires = DateTime.UtcNow.AddDays(7)
         });
     }
 

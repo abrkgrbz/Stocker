@@ -81,10 +81,11 @@ function SetupPasswordContent() {
 
       if (response.success) {
         setSetupSuccess(true)
-        // Redirect to login after 3 seconds
+        // Auto-login: Backend has already set HttpOnly cookies
+        // Redirect to dashboard after 2 seconds (user is now authenticated)
         setTimeout(() => {
-          router.push('/login')
-        }, 3000)
+          router.push('/dashboard')
+        }, 2000)
       } else {
         setError(response.message || 'Hesap aktifleştirilemedi. Lütfen tekrar deneyin.')
       }
@@ -241,16 +242,16 @@ function SetupPasswordContent() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-slate-900 mb-2">Hesabınız Aktifleştirildi!</h1>
             <p className="text-slate-500">
-              Şifreniz başarıyla oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...
+              Şifreniz başarıyla oluşturuldu. Panele yönlendiriliyorsunuz...
             </p>
           </div>
 
           {/* Actions */}
           <Link
-            href="/login"
+            href="/dashboard"
             className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
           >
-            Giriş Yap
+            Panele Git
           </Link>
         </div>
       </div>

@@ -97,7 +97,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
                 {
                     Event = "login_success",
                     Email = request.Email,
-                    TenantCode = result.Value.User.TenantName, // or use TenantId to fetch code
+                    TenantCode = result.Value.User.TenantCode ?? result.Value.User.TenantName, // Prefer TenantCode, fallback to TenantName
                     UserId = result.Value.User.Id,
                     IpAddress = request.IpAddress,
                     UserAgent = request.UserAgent,

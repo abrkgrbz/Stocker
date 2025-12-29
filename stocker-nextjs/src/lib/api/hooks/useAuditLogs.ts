@@ -116,3 +116,57 @@ export function getRiskLevelLabel(riskLevel?: string): string {
       return 'Düşük';
   }
 }
+
+/**
+ * Event türlerini Türkçe'ye çevirir
+ */
+export function getEventLabel(event: string): string {
+  const eventLower = event.toLowerCase();
+
+  // Login events
+  if (eventLower === 'login_success') return 'Başarılı Giriş';
+  if (eventLower === 'login_failed') return 'Başarısız Giriş';
+  if (eventLower === 'login_error') return 'Giriş Hatası';
+  if (eventLower === 'logout') return 'Çıkış';
+  if (eventLower === 'master_admin_login_success') return 'Admin Girişi';
+  if (eventLower === 'master_admin_login_failed') return 'Başarısız Admin Girişi';
+
+  // Password events
+  if (eventLower === 'password_changed') return 'Şifre Değiştirildi';
+  if (eventLower === 'password_reset') return 'Şifre Sıfırlandı';
+  if (eventLower === 'password_reset_requested') return 'Şifre Sıfırlama Talebi';
+
+  // 2FA events
+  if (eventLower === '2fa_enabled') return '2FA Etkinleştirildi';
+  if (eventLower === '2fa_disabled') return '2FA Devre Dışı';
+
+  // Account events
+  if (eventLower === 'account_created') return 'Hesap Oluşturuldu';
+  if (eventLower === 'account_deleted') return 'Hesap Silindi';
+  if (eventLower === 'account_blocked') return 'Hesap Engellendi';
+  if (eventLower === 'account_unblocked') return 'Hesap Engeli Kaldırıldı';
+
+  // User events
+  if (eventLower === 'user_created') return 'Kullanıcı Oluşturuldu';
+  if (eventLower === 'user_updated') return 'Kullanıcı Güncellendi';
+  if (eventLower === 'user_deleted') return 'Kullanıcı Silindi';
+  if (eventLower === 'user_invited') return 'Kullanıcı Davet Edildi';
+
+  // Session events
+  if (eventLower === 'session_created') return 'Oturum Başlatıldı';
+  if (eventLower === 'session_terminated') return 'Oturum Sonlandırıldı';
+  if (eventLower === 'all_sessions_terminated') return 'Tüm Oturumlar Sonlandırıldı';
+
+  // Permission events
+  if (eventLower === 'role_assigned') return 'Rol Atandı';
+  if (eventLower === 'role_removed') return 'Rol Kaldırıldı';
+  if (eventLower === 'permission_changed') return 'Yetki Değiştirildi';
+
+  // Generic patterns
+  if (eventLower.includes('success')) return event.replace(/_/g, ' ').replace('success', 'Başarılı');
+  if (eventLower.includes('failed')) return event.replace(/_/g, ' ').replace('failed', 'Başarısız');
+  if (eventLower.includes('error')) return event.replace(/_/g, ' ').replace('error', 'Hata');
+
+  // Default: return as-is with underscores replaced
+  return event.replace(/_/g, ' ');
+}
