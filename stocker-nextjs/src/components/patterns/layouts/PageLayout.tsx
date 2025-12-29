@@ -18,6 +18,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Tooltip } from 'antd';
 import { cn } from '@/lib/cn';
 import { Spinner } from '@/components/primitives/feedback';
 
@@ -156,6 +157,8 @@ export interface ListPageHeaderProps {
     onClick: () => void;
     icon?: React.ReactNode;
     loading?: boolean;
+    disabled?: boolean;
+    tooltip?: string;
   };
   secondaryActions?: React.ReactNode;
   className?: string;
@@ -199,23 +202,27 @@ export function ListPageHeader({
       <div className="flex items-center gap-3">
         {secondaryActions}
         {primaryAction && (
-          <button
-            onClick={primaryAction.onClick}
-            disabled={primaryAction.loading}
-            className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium',
-              'text-white bg-slate-900 rounded-md',
-              'hover:bg-slate-800 transition-colors',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-          >
-            {primaryAction.loading ? (
-              <Spinner size="xs" color="white" />
-            ) : (
-              primaryAction.icon
-            )}
-            {primaryAction.label}
-          </button>
+          <Tooltip title={primaryAction.tooltip} placement="bottom">
+            <span>
+              <button
+                onClick={primaryAction.onClick}
+                disabled={primaryAction.loading || primaryAction.disabled}
+                className={cn(
+                  'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium',
+                  'text-white bg-slate-900 rounded-md',
+                  'hover:bg-slate-800 transition-colors',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {primaryAction.loading ? (
+                  <Spinner size="xs" color="white" />
+                ) : (
+                  primaryAction.icon
+                )}
+                {primaryAction.label}
+              </button>
+            </span>
+          </Tooltip>
         )}
       </div>
     </div>

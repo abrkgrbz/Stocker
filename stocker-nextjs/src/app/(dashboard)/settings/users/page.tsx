@@ -483,6 +483,24 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* User Limit Warning */}
+      {subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 && (
+        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+              <UsersIcon className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-amber-900">Kullanıcı Limitine Ulaşıldı</p>
+              <p className="text-xs text-amber-700">
+                Mevcut paketiniz ({subscriptionInfo.packageName}) en fazla {subscriptionInfo.maxUsers} kullanıcıya izin vermektedir.
+                Daha fazla kullanıcı eklemek için paketinizi yükseltmeniz gerekmektedir.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <ListPageHeader
         icon={<UserIcon className="w-5 h-5" />}
@@ -496,6 +514,10 @@ export default function UsersPage() {
                 label: 'Kullanıcı Davet Et',
                 onClick: handleCreateUser,
                 icon: <PaperAirplaneIcon className="w-4 h-4" />,
+                disabled: subscriptionInfo ? !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999 : false,
+                tooltip: subscriptionInfo && !subscriptionInfo.canAddUser && subscriptionInfo.maxUsers < 999999
+                  ? 'Kullanıcı limitine ulaşıldı. Paketinizi yükseltin.'
+                  : undefined,
               }
             : undefined
         }
