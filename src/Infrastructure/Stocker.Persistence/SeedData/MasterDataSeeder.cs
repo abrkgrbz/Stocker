@@ -1212,53 +1212,127 @@ public class MasterDataSeeder
 </html>";
 
     private static string GetUserInvitationTemplate() => @"<!DOCTYPE html>
-<html>
+<html lang=""tr"">
 <head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px; }
-        .info-box { background: #e8f4fd; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
-        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
-        .company-name { color: #667eea; font-weight: bold; }
-        .inviter-name { color: #764ba2; font-weight: bold; }
-    </style>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>{{ appName }} - Davet</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
 </head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>🎉 {{ appName }}'a Hoşgeldiniz!</h1>
-            <p style='margin: 0; opacity: 0.9;'>Hesap Aktivasyon Daveti</p>
-        </div>
-        <div class='content'>
-            <p>Merhaba <strong>{{ userName }}</strong>,</p>
-            <p><span class='inviter-name'>{{ inviterName }}</span> sizi <span class='company-name'>{{ companyName }}</span> şirketinin {{ appName }} hesabına davet etti!</p>
-            <div class='info-box'>
-                <strong>📋 Hesap Bilgileriniz:</strong>
-                <ul style='margin: 10px 0 0 0; padding-left: 20px;'>
-                    <li>E-posta: <strong>{{ email }}</strong></li>
-                    <li>Şirket: <strong>{{ companyName }}</strong></li>
-                </ul>
-            </div>
-            <p>Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:</p>
-            <div style='text-align: center;'>
-                <a href='{{ activationUrl }}' class='button'>Şifremi Belirle ve Hesabımı Aktifleştir</a>
-            </div>
-            <p style='font-size: 14px; color: #666;'>Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
-            <p style='word-break: break-all; color: #667eea; font-size: 12px; background: #f0f0f0; padding: 10px; border-radius: 5px;'>{{ activationUrl }}</p>
-            <div class='warning-box'>
-                <strong>⏰ Önemli:</strong> Bu link <strong>{{ expirationDays }} gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
-            </div>
-            <p style='font-size: 14px; color: #666;'>Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.</p>
-        </div>
-        <div class='footer'>
-            <p>© {{ year }} {{ appName }}. Tüm hakları saklıdır.</p>
-            <p style='color: #999;'>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.</p>
-        </div>
-    </div>
+<body style=""margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;"">
+    <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #f4f4f4;"">
+        <tr>
+            <td style=""padding: 20px 0;"">
+                <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""600"" style=""margin: 0 auto; max-width: 600px;"">
+                    <!-- Logo -->
+                    <tr>
+                        <td style=""text-align: center; padding: 20px 0;"">
+                            <img src=""https://stoocker.app/logo.png"" alt=""{{ appName }}"" width=""120"" style=""display: block; margin: 0 auto;"">
+                        </td>
+                    </tr>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style=""background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
+                            <!-- Greeting -->
+                            <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"">
+                                <tr>
+                                    <td style=""padding: 40px 40px 20px 40px;"">
+                                        <p style=""margin: 0 0 15px 0; font-size: 16px; line-height: 1.5; color: #333333;"">
+                                            Merhaba <strong>{{ userName }}</strong>,
+                                        </p>
+                                        <p style=""margin: 0 0 20px 0; font-size: 16px; line-height: 1.5; color: #333333;"">
+                                            <strong style=""color: #6366f1;"">{{ inviterName }}</strong> sizi <strong style=""color: #6366f1;"">{{ companyName }}</strong> şirketinin {{ appName }} hesabına davet etti!
+                                        </p>
+                                    </td>
+                                </tr>
+                                <!-- Info Box -->
+                                <tr>
+                                    <td style=""padding: 0 40px;"">
+                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #eff6ff; border-left: 4px solid #6366f1; border-radius: 0 6px 6px 0;"">
+                                            <tr>
+                                                <td style=""padding: 15px 20px;"">
+                                                    <p style=""margin: 0 0 10px 0; font-size: 14px; font-weight: bold; color: #1e40af;"">📋 Hesap Bilgileriniz:</p>
+                                                    <p style=""margin: 0; font-size: 14px; color: #374151;"">
+                                                        • E-posta: <strong>{{ email }}</strong><br>
+                                                        • Şirket: <strong>{{ companyName }}</strong>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- CTA -->
+                                <tr>
+                                    <td style=""padding: 30px 40px; text-align: center;"">
+                                        <p style=""margin: 0 0 20px 0; font-size: 16px; color: #333333;"">
+                                            Hesabınızı aktifleştirmek ve şifrenizi belirlemek için aşağıdaki butona tıklayın:
+                                        </p>
+                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" style=""margin: 0 auto;"">
+                                            <tr>
+                                                <td style=""border-radius: 6px; background-color: #6366f1;"">
+                                                    <a href=""{{ activationUrl }}"" target=""_blank"" style=""display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 6px;"">Şifremi Belirle ve Hesabımı Aktifleştir</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- Alternative Link -->
+                                <tr>
+                                    <td style=""padding: 0 40px 20px 40px;"">
+                                        <p style=""margin: 0 0 10px 0; font-size: 13px; color: #6b7280;"">Veya aşağıdaki linki tarayıcınıza kopyalayın:</p>
+                                        <p style=""margin: 0; font-size: 12px; color: #6366f1; word-break: break-all; background-color: #f3f4f6; padding: 12px; border-radius: 4px;"">
+                                            <a href=""{{ activationUrl }}"" style=""color: #6366f1; text-decoration: none;"">{{ activationUrl }}</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <!-- Warning Box -->
+                                <tr>
+                                    <td style=""padding: 0 40px 30px 40px;"">
+                                        <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 0 6px 6px 0;"">
+                                            <tr>
+                                                <td style=""padding: 15px 20px;"">
+                                                    <p style=""margin: 0; font-size: 14px; color: #92400e;"">
+                                                        <strong>⏰ Önemli:</strong> Bu link <strong>{{ expirationDays }} gün</strong> boyunca geçerlidir. Süre dolduktan sonra yöneticinizden yeni bir davet talep etmeniz gerekebilir.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- Note -->
+                                <tr>
+                                    <td style=""padding: 0 40px 40px 40px;"">
+                                        <p style=""margin: 0; font-size: 13px; color: #9ca3af;"">
+                                            Eğer bu daveti beklemiyorsanız, bu e-postayı görmezden gelebilirsiniz.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style=""padding: 30px 20px; text-align: center;"">
+                            <p style=""margin: 0 0 8px 0; font-size: 13px; color: #6b7280;"">
+                                © {{ year }} {{ appName }}. Tüm hakları saklıdır.
+                            </p>
+                            <p style=""margin: 0; font-size: 12px; color: #9ca3af; background-color: #e5e7eb; display: inline-block; padding: 6px 12px; border-radius: 4px;"">
+                                Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayınız.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>";
 }

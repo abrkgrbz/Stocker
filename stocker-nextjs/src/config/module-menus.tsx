@@ -357,6 +357,16 @@ export const MODULE_MENUS: Record<string, ModuleConfig> = {
         label: 'Güvenlik',
         children: [
           { key: '/settings/security', icon: <ShieldExclamationIcon className="w-4 h-4" />, label: 'Güvenlik Ayarları' },
+          { key: '/settings/audit-logs', icon: <ClipboardDocumentCheckIcon className="w-4 h-4" />, label: 'Denetim Kayıtları' },
+        ],
+      },
+      {
+        key: 'settings-system',
+        icon: <Cog6ToothIcon className="w-4 h-4" />,
+        label: 'Sistem',
+        children: [
+          { key: '/settings/backup', icon: <DocumentIcon className="w-4 h-4" />, label: 'Yedekleme' },
+          { key: '/settings/data-migration', icon: <ArrowsRightLeftIcon className="w-4 h-4" />, label: 'Veri Aktarımı' },
         ],
       },
     ],

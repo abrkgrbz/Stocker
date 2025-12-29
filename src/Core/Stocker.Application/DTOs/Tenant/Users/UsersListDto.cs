@@ -21,6 +21,10 @@ public class UserDto
     public string? Department { get; set; }
     public string? Branch { get; set; }
     public bool IsActive { get; set; }
+    /// <summary>
+    /// User status: Active, Inactive, PendingActivation, Suspended, OnLeave, Terminated
+    /// </summary>
+    public string Status { get; set; } = "Active";
     public DateTime? LastLoginDate { get; set; }
     public DateTime CreatedDate { get; set; }
 }

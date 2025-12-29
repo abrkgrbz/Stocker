@@ -68,6 +68,7 @@ public class UserRepository : IUserRepository
                 ? _tenantContext.Branches.Where(b => b.Id == item.User.BranchId.Value).Select(b => b.Name).FirstOrDefault()
                 : null,
             IsActive = item.User.Status == Domain.Tenant.Enums.TenantUserStatus.Active,
+            Status = item.User.Status.ToString(),
             LastLoginDate = item.User.LastLoginAt,
             CreatedDate = item.User.CreatedAt
         }).ToList();
