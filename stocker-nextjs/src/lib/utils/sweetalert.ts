@@ -1,26 +1,99 @@
 /**
  * Standardized SweetAlert2 Utilities
  * Consistent alerts across all CRUD operations
+ * Themed to match Stocker Design System
  */
 
 import Swal from 'sweetalert2';
 
-// Brand color for consistent styling
-const BRAND_COLOR = '#667eea';
+// =====================================
+// STOCKER DESIGN SYSTEM COLORS
+// =====================================
+// Synced with src/theme/colors.ts
+
+const COLORS = {
+  // Brand Primary (Indigo)
+  primary: {
+    main: '#6366f1',
+    hover: '#4f46e5',
+    active: '#4338ca',
+    light: '#eef2ff',
+  },
+  // Semantic Colors
+  success: {
+    main: '#10b981',
+    dark: '#047857',
+    light: '#ecfdf5',
+    text: '#065f46',
+  },
+  warning: {
+    main: '#f59e0b',
+    dark: '#d97706',
+    light: '#fffbeb',
+    text: '#92400e',
+  },
+  error: {
+    main: '#ef4444',
+    dark: '#dc2626',
+    light: '#fef2f2',
+    text: '#991b1b',
+  },
+  info: {
+    main: '#3b82f6',
+    dark: '#2563eb',
+    light: '#eff6ff',
+    text: '#1e40af',
+  },
+  // Neutral (Slate)
+  slate: {
+    50: '#f8fafc',
+    100: '#f1f5f9',
+    200: '#e2e8f0',
+    600: '#475569',
+    700: '#334155',
+    900: '#0f172a',
+  },
+} as const;
+
+// =====================================
+// BASE SWAL CONFIGURATION
+// =====================================
+
+const baseSwalConfig = {
+  customClass: {
+    popup: 'stocker-swal-popup',
+    title: 'stocker-swal-title',
+    htmlContainer: 'stocker-swal-text',
+    confirmButton: 'stocker-swal-confirm',
+    cancelButton: 'stocker-swal-cancel',
+    timerProgressBar: 'stocker-swal-timer',
+  },
+  buttonsStyling: true,
+  showClass: {
+    popup: 'animate__animated animate__fadeIn animate__faster',
+  },
+  hideClass: {
+    popup: 'animate__animated animate__fadeOut animate__faster',
+  },
+};
 
 /**
  * Success alert for create operations
  */
 export const showCreateSuccess = (entityName: string, itemName?: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'success',
     title: 'Başarılı!',
     text: itemName
       ? `${itemName} ${entityName} başarıyla oluşturuldu`
       : `${entityName} başarıyla oluşturuldu`,
-    confirmButtonColor: BRAND_COLOR,
-    timer: 2000,
+    confirmButtonColor: COLORS.success.main,
+    iconColor: COLORS.success.main,
+    timer: 2500,
     timerProgressBar: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -29,14 +102,18 @@ export const showCreateSuccess = (entityName: string, itemName?: string) => {
  */
 export const showUpdateSuccess = (entityName: string, itemName?: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'success',
-    title: 'Başarılı!',
+    title: 'Güncellendi!',
     text: itemName
       ? `${itemName} ${entityName} başarıyla güncellendi`
       : `${entityName} başarıyla güncellendi`,
-    confirmButtonColor: BRAND_COLOR,
-    timer: 2000,
+    confirmButtonColor: COLORS.success.main,
+    iconColor: COLORS.success.main,
+    timer: 2500,
     timerProgressBar: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -45,14 +122,18 @@ export const showUpdateSuccess = (entityName: string, itemName?: string) => {
  */
 export const showDeleteSuccess = (entityName: string, itemName?: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'success',
-    title: 'Başarılı!',
+    title: 'Silindi!',
     text: itemName
       ? `${itemName} ${entityName} başarıyla silindi`
       : `${entityName} başarıyla silindi`,
-    confirmButtonColor: BRAND_COLOR,
-    timer: 2000,
+    confirmButtonColor: COLORS.success.main,
+    iconColor: COLORS.success.main,
+    timer: 2500,
     timerProgressBar: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -61,12 +142,16 @@ export const showDeleteSuccess = (entityName: string, itemName?: string) => {
  */
 export const showSuccess = (title: string, message?: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'success',
     title,
     text: message,
-    confirmButtonColor: BRAND_COLOR,
-    timer: 2000,
+    confirmButtonColor: COLORS.success.main,
+    iconColor: COLORS.success.main,
+    timer: 2500,
     timerProgressBar: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -75,10 +160,14 @@ export const showSuccess = (title: string, message?: string) => {
  */
 export const showError = (message: string, title: string = 'Hata!') => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'error',
     title,
     text: message,
-    confirmButtonColor: BRAND_COLOR,
+    confirmButtonColor: COLORS.error.main,
+    iconColor: COLORS.error.main,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -91,18 +180,24 @@ export const confirmDelete = async (
   additionalWarning?: string
 ): Promise<boolean> => {
   const result = await Swal.fire({
+    ...baseSwalConfig,
     title: `${entityName} Sil`,
     html: `
-      <p><strong>${itemName}</strong> adlı ${entityName.toLowerCase()}yı silmek istediğinizden emin misiniz?</p>
-      ${additionalWarning ? `<p style="color: #ff4d4f; margin-top: 12px;">⚠️ ${additionalWarning}</p>` : ''}
+      <p style="color: ${COLORS.slate[700]}; margin: 0;">
+        <strong>${itemName}</strong> adlı ${entityName.toLowerCase()}yı silmek istediğinizden emin misiniz?
+      </p>
+      ${additionalWarning ? `<p style="color: ${COLORS.error.main}; margin-top: 12px; font-size: 14px;">⚠️ ${additionalWarning}</p>` : ''}
     `,
     icon: 'warning',
+    iconColor: COLORS.error.main,
     showCancelButton: true,
-    confirmButtonColor: '#ff4d4f',
-    cancelButtonColor: '#d9d9d9',
+    confirmButtonColor: COLORS.error.main,
+    cancelButtonColor: COLORS.slate[200],
     confirmButtonText: 'Evet, Sil',
     cancelButtonText: 'İptal',
     reverseButtons: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 
   return result.isConfirmed;
@@ -120,10 +215,10 @@ export const confirmAction = async (
   cancelText: string = 'İptal'
 ): Promise<boolean> => {
   const variantColors = {
-    success: '#10b981', // green
-    warning: '#f59e0b', // amber
-    danger: '#ef4444',  // red
-    info: BRAND_COLOR,  // brand blue
+    success: COLORS.success.main,
+    warning: COLORS.warning.main,
+    danger: COLORS.error.main,
+    info: COLORS.primary.main,
   };
 
   const variantIcons = {
@@ -134,15 +229,19 @@ export const confirmAction = async (
   };
 
   const result = await Swal.fire({
+    ...baseSwalConfig,
     title,
     text: message,
     icon: variantIcons[variant],
+    iconColor: variantColors[variant],
     showCancelButton: true,
     confirmButtonColor: variantColors[variant],
-    cancelButtonColor: '#d9d9d9',
+    cancelButtonColor: COLORS.slate[200],
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
     reverseButtons: true,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 
   return result.isConfirmed;
@@ -153,10 +252,14 @@ export const confirmAction = async (
  */
 export const showInfo = (title: string, message: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'info',
     title,
     text: message,
-    confirmButtonColor: BRAND_COLOR,
+    confirmButtonColor: COLORS.info.main,
+    iconColor: COLORS.info.main,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -165,10 +268,14 @@ export const showInfo = (title: string, message: string) => {
  */
 export const showWarning = (title: string, message: string) => {
   return Swal.fire({
+    ...baseSwalConfig,
     icon: 'warning',
     title,
     text: message,
-    confirmButtonColor: BRAND_COLOR,
+    confirmButtonColor: COLORS.warning.main,
+    iconColor: COLORS.warning.main,
+    background: '#ffffff',
+    color: COLORS.slate[900],
   });
 };
 
@@ -177,9 +284,12 @@ export const showWarning = (title: string, message: string) => {
  */
 export const showLoading = (message: string = 'İşlem yapılıyor...') => {
   return Swal.fire({
+    ...baseSwalConfig,
     title: message,
     allowOutsideClick: false,
     allowEscapeKey: false,
+    background: '#ffffff',
+    color: COLORS.slate[900],
     didOpen: () => {
       Swal.showLoading();
     },
