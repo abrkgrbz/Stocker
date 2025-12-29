@@ -443,24 +443,27 @@ export const MigrationService = {
   // Session Management
   async createSession(request: CreateSessionRequest): Promise<MigrationSessionDto> {
     const response = await apiClient.post<MigrationSessionDto>('/api/tenant/data-migration/sessions', request);
-    const data = response as unknown as MigrationSessionDto;
+    // Response is { success: true, data: { sessionId, ... } }
+    const data = (response as any)?.data || response;
     // Map sessionId to id for frontend compatibility
     return { ...data, id: data.sessionId };
   },
 
   async getSession(sessionId: string): Promise<MigrationSessionDto> {
     const response = await apiClient.get<MigrationSessionDto>(`/api/tenant/data-migration/sessions/${sessionId}`);
-    const data = response as unknown as MigrationSessionDto;
+    // Response is { success: true, data: { sessionId, ... } }
+    const data = (response as any)?.data || response;
     // Map sessionId to id for frontend compatibility
     return { ...data, id: data.sessionId };
   },
 
   async getSessions(): Promise<MigrationSessionDto[]> {
     const response = await apiClient.get<{ sessions: MigrationSessionDto[]; totalCount: number }>('/api/tenant/data-migration/sessions');
-    // Backend returns { data: { sessions: [...], totalCount, ... } }
-    const data = response as unknown as { sessions: MigrationSessionDto[] };
+    // Response is { success: true, data: { sessions: [...], totalCount, ... } }
+    const wrapper = response as any;
+    const sessions = wrapper?.data?.sessions || wrapper?.sessions || [];
     // Map sessionId to id for frontend compatibility
-    return (data?.sessions || []).map(s => ({ ...s, id: s.sessionId }));
+    return sessions.map((s: any) => ({ ...s, id: s.sessionId }));
   },
 
   async cancelSession(sessionId: string): Promise<void> {
@@ -474,12 +477,12 @@ export const MigrationService = {
   // Chunk Upload
   async uploadChunk(request: UploadChunkRequest): Promise<MigrationChunkDto> {
     const response = await apiClient.post<MigrationChunkDto>('/api/tenant/data-migration/upload', request);
-    return response as unknown as MigrationChunkDto;
+    return (response as any)?.data || response;
   },
 
   async getChunks(sessionId: string): Promise<MigrationChunkDto[]> {
     const response = await apiClient.get<MigrationChunkDto[]>(`/api/tenant/data-migration/sessions/${sessionId}/chunks`);
-    return response as unknown as MigrationChunkDto[];
+    return (response as any)?.data || response || [];
   },
 
   // Field Mapping
@@ -488,7 +491,7 @@ export const MigrationService = {
       entityType,
       sampleData,
     });
-    return response as unknown as AutoMappingSuggestion[];
+    return (response as any)?.data || response || [];
   },
 
   async saveMapping(request: SaveMappingRequest): Promise<void> {
@@ -497,7 +500,7 @@ export const MigrationService = {
 
   async getMappings(sessionId: string): Promise<MappingConfigDto[]> {
     const response = await apiClient.get<MappingConfigDto[]>(`/api/tenant/data-migration/sessions/${sessionId}/mappings`);
-    return response as unknown as MappingConfigDto[];
+    return (response as any)?.data || response || [];
   },
 
   // Validation
@@ -511,12 +514,12 @@ export const MigrationService = {
       `/api/tenant/data-migration/sessions/${sessionId}/validation-results`,
       params
     );
-    return response as unknown as PagedResult<MigrationValidationResultDto>;
+    return (response as any)?.data || response;
   },
 
   async getStatistics(sessionId: string): Promise<MigrationStatisticsDto> {
     const response = await apiClient.get<MigrationStatisticsDto>(`/api/tenant/data-migration/sessions/${sessionId}/statistics`);
-    return response as unknown as MigrationStatisticsDto;
+    return (response as any)?.data || response;
   },
 
   // Record Actions
@@ -526,7 +529,7 @@ export const MigrationService = {
       `/api/tenant/data-migration/sessions/${sessionId}/records/${recordId}/fix`,
       { fixedData }
     );
-    return response as unknown as MigrationValidationResultDto;
+    return (response as any)?.data || response;
   },
 
   async skipRecord(sessionId: string, recordId: string): Promise<void> {
@@ -543,12 +546,12 @@ export const MigrationService = {
       `/api/tenant/data-migration/sessions/${request.sessionId}/import`,
       request
     );
-    return response as unknown as { jobId: string };
+    return (response as any)?.data || response;
   },
 
   async getProgress(sessionId: string): Promise<MigrationProgressDto> {
     const response = await apiClient.get<MigrationProgressDto>(`/api/tenant/data-migration/sessions/${sessionId}/progress`);
-    return response as unknown as MigrationProgressDto;
+    return (response as any)?.data || response;
   },
 
   // Template Download
