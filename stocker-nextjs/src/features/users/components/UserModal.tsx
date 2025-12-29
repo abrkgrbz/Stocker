@@ -68,8 +68,10 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
   }, [open, user, form]);
 
   const handleSubmit = async () => {
+    console.log('[UserModal] handleSubmit called');
     try {
       const values = await form.validateFields();
+      console.log('[UserModal] Form validated:', values);
 
       // Auto-generate username from email (before @ symbol)
       // Modern SaaS best practice: use email for login, no separate username field
@@ -80,8 +82,11 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         username, // Add auto-generated username for backend compatibility
       };
 
+      console.log('[UserModal] Submitting data:', submissionData);
+
       if (onSubmit) {
         await onSubmit(submissionData);
+        console.log('[UserModal] onSubmit completed successfully');
         // onClose is handled by parent component after successful mutation
       } else {
         // Mock success for now
@@ -93,17 +98,14 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
         onClose();
       }
     } catch (error: any) {
-      // Don't silently swallow errors - show user feedback
-      console.error('Form submission failed:', error);
+      console.error('[UserModal] Form submission failed:', error);
       // If it's a form validation error, Ant Design already shows field-level errors
-      // If it's an API error, the parent's onError callback should handle it
-      // But if somehow it reaches here, show a generic message
       if (error?.errorFields) {
-        // Form validation error - Ant Design handles this
+        console.log('[UserModal] Form validation error - Ant Design will show field errors');
         return;
       }
-      // Re-throw so parent mutation's onError can handle it
-      throw error;
+      // For API errors, show an error message
+      message.error(error?.message || error?.error?.message || 'Bir hata oluştu');
     }
   };
 
