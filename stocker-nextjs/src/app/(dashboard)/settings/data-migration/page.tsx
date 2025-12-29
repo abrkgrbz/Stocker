@@ -103,31 +103,36 @@ export default function DataMigrationPage() {
   const cancelSession = useCancelSession();
 
   // Determine current step based on session status
+  // Only auto-navigate when loading an existing session on page load
+  // Don't navigate if we just created a session (currentStep is already set correctly)
   useEffect(() => {
-    if (currentSession) {
-      switch (currentSession.status) {
-        case 'Created':
-          setCurrentStep('source');
-          break;
-        case 'Uploading':
-        case 'Uploaded':
-          setCurrentStep('upload');
-          break;
-        case 'Validating':
-        case 'Validated':
-          // If validated, show validation preview; if validating, show progress
-          setCurrentStep('validation');
-          break;
-        case 'Importing':
-        case 'Completed':
-        case 'Failed':
-          setCurrentStep('import');
-          break;
-        default:
-          setCurrentStep('source');
-      }
+    // Skip if no session or if we're in the middle of creating a new session
+    if (!currentSession || !existingSessionId) return;
+
+    // Only update step for sessions that have progressed beyond creation
+    switch (currentSession.status) {
+      case 'Created':
+        // Created status means user should be uploading files
+        setCurrentStep('upload');
+        break;
+      case 'Uploading':
+      case 'Uploaded':
+        setCurrentStep('upload');
+        break;
+      case 'Validating':
+      case 'Validated':
+        // If validated, show validation preview; if validating, show progress
+        setCurrentStep('validation');
+        break;
+      case 'Importing':
+      case 'Completed':
+      case 'Failed':
+        setCurrentStep('import');
+        break;
+      default:
+        setCurrentStep('upload');
     }
-  }, [currentSession?.status]);
+  }, [currentSession?.status, existingSessionId]);
 
   // Handle starting a new wizard
   const handleStartNew = useCallback(() => {
@@ -140,9 +145,9 @@ export default function DataMigrationPage() {
   const handleSessionCreated = useCallback((newSessionId: string) => {
     setSessionId(newSessionId);
     setCurrentStep('upload');
-    // Update URL
-    router.push(`/settings/data-migration?session=${newSessionId}`);
-  }, [router]);
+    // Update URL without triggering navigation (for bookmarking/refresh support)
+    window.history.replaceState(null, '', `/settings/data-migration?session=${newSessionId}`);
+  }, []);
 
   // Handle step navigation
   const handleNextStep = useCallback(() => {
@@ -169,8 +174,30 @@ export default function DataMigrationPage() {
     }
     setSessionId(validId);
     setShowSessionList(false);
-    router.push(`/settings/data-migration?session=${validId}`);
-  }, [router]);
+
+    // Determine step based on session status
+    switch (session.status) {
+      case 'Created':
+      case 'Uploading':
+      case 'Uploaded':
+        setCurrentStep('upload');
+        break;
+      case 'Validating':
+      case 'Validated':
+        setCurrentStep('validation');
+        break;
+      case 'Importing':
+      case 'Completed':
+      case 'Failed':
+        setCurrentStep('import');
+        break;
+      default:
+        setCurrentStep('upload');
+    }
+
+    // Update URL without triggering navigation
+    window.history.replaceState(null, '', `/settings/data-migration?session=${validId}`);
+  }, []);
 
   // Handle deleting a session
   const handleDeleteSession = useCallback(async (id: string) => {
