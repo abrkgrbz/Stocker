@@ -204,11 +204,9 @@ public sealed class MasterUser : AggregateRoot
             .Replace("+", "-")
             .Replace("/", "_")
             .TrimEnd('=');
-        // Use Turkey timezone for consistent timestamp handling
-        // Container runs in UTC but PostgreSQL stores in Europe/Istanbul (+03)
-        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
-        PasswordResetTokenExpiry = turkeyNow.AddHours(1);
+        // Token expires in 1 hour from now
+        // Using UtcNow ensures consistent behavior regardless of server timezone
+        PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
     }
 
     public bool ValidatePasswordResetToken(string token)

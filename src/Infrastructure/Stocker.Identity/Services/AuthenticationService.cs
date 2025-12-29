@@ -782,10 +782,8 @@ public class AuthenticationService : IAuthenticationService
             var masterUser = await _userManagementService.FindMasterUserAsync(email);
             if (masterUser != null && (masterUser.PasswordResetToken == token || masterUser.PasswordResetToken == normalizedToken))
             {
-                // Check if token is expired (use Turkey timezone for consistent timestamp handling)
-                var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-                var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
-                if (masterUser.PasswordResetTokenExpiry <= turkeyNow)
+                // Check if token is expired
+                if (masterUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
                 {
                     return Stocker.SharedKernel.Results.Result.Failure(
                         Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));
@@ -826,10 +824,8 @@ public class AuthenticationService : IAuthenticationService
 
                     if (tenantUser != null)
                     {
-                        // Check if token is expired (use Turkey timezone for consistent timestamp handling)
-                        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-                        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
-                        if (tenantUser.PasswordResetTokenExpiry <= turkeyNow)
+                        // Check if token is expired
+                        if (tenantUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
                         {
                             return Stocker.SharedKernel.Results.Result.Failure(
                                 Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));

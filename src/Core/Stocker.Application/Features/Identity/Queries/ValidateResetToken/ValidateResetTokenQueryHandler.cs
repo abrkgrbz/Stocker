@@ -52,21 +52,20 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
             if (masterUser != null)
             {
-                // Use Turkey timezone for consistent timestamp handling
-                // Container runs in UTC but PostgreSQL stores in Europe/Istanbul (+03)
-                var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-                var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+                // Npgsql legacy mode returns timestamps with Kind=Local but the value is already UTC-adjusted
+                // We need to treat the raw value as-is and compare with current UTC time
+                // The expiry was saved as Turkey local time, Npgsql converts it to UTC on read
+                var expiryValue = masterUser.PasswordResetTokenExpiry;
+                var utcNow = DateTime.UtcNow;
 
-                var isValid = masterUser.PasswordResetTokenExpiry.HasValue &&
-                              masterUser.PasswordResetTokenExpiry.Value > turkeyNow;
+                var isValid = expiryValue.HasValue && expiryValue.Value > utcNow;
 
-                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}, Expiry={Expiry}, ExpiryKind={ExpiryKind}, TurkeyNow={TurkeyNow}, UtcNow={UtcNow}",
-                    isValid, masterUser.PasswordResetTokenExpiry, masterUser.PasswordResetTokenExpiry?.Kind, turkeyNow, DateTime.UtcNow);
+                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
 
                 return Result.Success(new ValidateResetTokenResponse
                 {
                     Valid = isValid,
-                    ExpiresAt = masterUser.PasswordResetTokenExpiry ?? turkeyNow
+                    ExpiresAt = expiryValue ?? utcNow
                 });
             }
 
@@ -89,19 +88,17 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
                     if (tenantUser != null)
                     {
-                        // Use Turkey timezone for consistent timestamp handling
-                        var turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
-                        var turkeyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
+                        var expiryValue = tenantUser.PasswordResetTokenExpiry;
+                        var utcNow = DateTime.UtcNow;
 
-                        var isValid = tenantUser.PasswordResetTokenExpiry.HasValue &&
-                                      tenantUser.PasswordResetTokenExpiry.Value > turkeyNow;
+                        var isValid = expiryValue.HasValue && expiryValue.Value > utcNow;
 
                         _logger.LogInformation("Password reset token found in Tenant {TenantId}, valid: {IsValid}", tenantId, isValid);
 
                         return Result.Success(new ValidateResetTokenResponse
                         {
                             Valid = isValid,
-                            ExpiresAt = tenantUser.PasswordResetTokenExpiry ?? turkeyNow
+                            ExpiresAt = expiryValue ?? utcNow
                         });
                     }
                 }
@@ -117,7 +114,7 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
             return Result.Success(new ValidateResetTokenResponse
             {
                 Valid = false,
-                ExpiresAt = DateTime.Now
+                ExpiresAt = DateTime.UtcNow
             });
         }
         catch (Exception ex)
