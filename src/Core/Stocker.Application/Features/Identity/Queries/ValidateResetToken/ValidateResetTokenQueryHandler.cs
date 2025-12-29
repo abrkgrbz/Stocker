@@ -52,15 +52,26 @@ public class ValidateResetTokenQueryHandler : IRequestHandler<ValidateResetToken
 
             if (masterUser != null)
             {
-                // Npgsql legacy mode returns timestamps with Kind=Local but the value is already UTC-adjusted
-                // We need to treat the raw value as-is and compare with current UTC time
-                // The expiry was saved as Turkey local time, Npgsql converts it to UTC on read
+                // Debug: Log exact values to understand Npgsql behavior
                 var expiryValue = masterUser.PasswordResetTokenExpiry;
                 var utcNow = DateTime.UtcNow;
+                var localNow = DateTime.Now;
 
+                _logger.LogInformation(
+                    "Token expiry debug: ExpiryValue={Expiry}, ExpiryKind={Kind}, UtcNow={UtcNow}, LocalNow={LocalNow}",
+                    expiryValue?.ToString("O"),
+                    expiryValue?.Kind,
+                    utcNow.ToString("O"),
+                    localNow.ToString("O"));
+
+                // Npgsql legacy mode with timestamptz: value is stored as UTC in DB
+                // When read back, Npgsql converts to local time (but container is UTC, so no change)
+                // The expiry was saved with DateTime.UtcNow.AddHours(1), so it's in UTC
+                // Compare with UTC now
                 var isValid = expiryValue.HasValue && expiryValue.Value > utcNow;
 
-                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}", isValid);
+                _logger.LogInformation("Password reset token found in MasterUsers, valid: {IsValid}, ExpiryValue > UtcNow = {Comparison}",
+                    isValid, expiryValue.HasValue ? $"{expiryValue.Value} > {utcNow}" : "null");
 
                 return Result.Success(new ValidateResetTokenResponse
                 {
