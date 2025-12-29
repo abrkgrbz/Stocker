@@ -782,8 +782,19 @@ public class AuthenticationService : IAuthenticationService
             var masterUser = await _userManagementService.FindMasterUserAsync(email);
             if (masterUser != null && (masterUser.PasswordResetToken == token || masterUser.PasswordResetToken == normalizedToken))
             {
-                // Check if token is expired
-                if (masterUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
+                // Check if token is expired with timezone correction
+                // Npgsql legacy mode timestamp handling issue:
+                // - Token saved with DateTime.UtcNow.AddHours(1), e.g., 07:32 UTC
+                // - Npgsql legacy mode treats DateTime as local time (Turkey +3)
+                // - Writes to DB: 07:32 - 3h = 04:32 UTC
+                // - Reads back: 04:32 UTC + local offset (container is UTC, so 0) = 04:32 with Kind=Local
+                // Fix: Add Turkey timezone offset (3 hours) to correct the stored value
+                var turkeyOffset = TimeSpan.FromHours(3);
+                var expiryValue = masterUser.PasswordResetTokenExpiry.HasValue
+                    ? masterUser.PasswordResetTokenExpiry.Value.Add(turkeyOffset)
+                    : (DateTime?)null;
+
+                if (!expiryValue.HasValue || expiryValue.Value <= DateTime.UtcNow)
                 {
                     return Stocker.SharedKernel.Results.Result.Failure(
                         Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));
@@ -824,8 +835,13 @@ public class AuthenticationService : IAuthenticationService
 
                     if (tenantUser != null)
                     {
-                        // Check if token is expired
-                        if (tenantUser.PasswordResetTokenExpiry <= DateTime.UtcNow)
+                        // Check if token is expired with timezone correction (same as MasterUser)
+                        var turkeyOffset = TimeSpan.FromHours(3);
+                        var expiryValue = tenantUser.PasswordResetTokenExpiry.HasValue
+                            ? tenantUser.PasswordResetTokenExpiry.Value.Add(turkeyOffset)
+                            : (DateTime?)null;
+
+                        if (!expiryValue.HasValue || expiryValue.Value <= DateTime.UtcNow)
                         {
                             return Stocker.SharedKernel.Results.Result.Failure(
                                 Stocker.SharedKernel.Results.Error.Validation("Token.Expired", "Şifre sıfırlama token'ı süresi dolmuş"));
