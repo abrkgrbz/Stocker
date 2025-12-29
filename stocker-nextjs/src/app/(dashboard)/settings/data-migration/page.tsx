@@ -91,7 +91,7 @@ export default function DataMigrationPage() {
   const [showSessionList, setShowSessionList] = useState(!existingSessionId);
 
   // Fetch existing sessions for the list view
-  const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useMigrationSessions();
+  const { data: sessions, isLoading: sessionsLoading, isError: sessionsError, refetch: refetchSessions } = useMigrationSessions();
 
   // Fetch current session if we have an ID
   const { data: currentSession, isLoading: sessionLoading } = useMigrationSession(sessionId || '', {
@@ -244,9 +244,25 @@ export default function DataMigrationPage() {
           {showSessionList ? (
             // Session List View
             <div className="space-y-6">
-              {sessionsLoading ? (
+              {sessionsLoading && !sessionsError ? (
                 <div className="flex items-center justify-center py-20">
                   <Spinner size="lg" />
+                </div>
+              ) : sessionsError || !sessions || sessions.length === 0 ? (
+                // Empty State - show when error or no sessions
+                <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+                  <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="text-sm font-medium text-slate-900 mb-1">Henüz Aktarım Yok</h3>
+                  <p className="text-xs text-slate-500 mb-4">
+                    Harici sistemlerinizden veri aktarmaya başlayın
+                  </p>
+                  <button
+                    onClick={handleStartNew}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    İlk Aktarımı Başlat
+                  </button>
                 </div>
               ) : (
                 <>
@@ -353,24 +369,6 @@ export default function DataMigrationPage() {
                           })}
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Empty State */}
-                  {sessions?.length === 0 && (
-                    <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-                      <FileSpreadsheet className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                      <h3 className="text-sm font-medium text-slate-900 mb-1">Henüz Aktarım Yok</h3>
-                      <p className="text-xs text-slate-500 mb-4">
-                        Harici sistemlerinizden veri aktarmaya başlayın
-                      </p>
-                      <button
-                        onClick={handleStartNew}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-md hover:bg-slate-800 transition-colors"
-                      >
-                        <FileSpreadsheet className="w-4 h-4" />
-                        İlk Aktarımı Başlat
-                      </button>
                     </div>
                   )}
                 </>
