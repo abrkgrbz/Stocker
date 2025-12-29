@@ -523,8 +523,8 @@ body {
 }
 
 .swal2-popup .swal2-icon.swal2-question {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #0f172a;
+  color: #0f172a;
 }
 
 /* Button styling */
@@ -544,16 +544,64 @@ body {
 }
 
 .swal2-popup .swal2-styled.swal2-confirm {
-  border: none;
+  border: none !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+/* Force override SweetAlert2 inline styles */
+.swal2-container .swal2-popup .swal2-styled.swal2-confirm {
+  background-color: #0f172a !important;
+  background: #0f172a !important;
+}
+
+button.swal2-confirm.swal2-styled {
+  background-color: #0f172a !important;
+  background: #0f172a !important;
 }
 
 .swal2-popup .swal2-styled.swal2-confirm:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
+  background-color: #1e293b !important;
 }
 
 .swal2-popup .swal2-styled.swal2-confirm:active {
   transform: translateY(0);
+  background-color: #334155 !important;
+}
+
+/* Override SweetAlert2 default purple/blue colors */
+.swal2-popup .swal2-styled.swal2-confirm:focus {
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.3) !important;
+}
+
+/* Danger/Delete confirm button - red styling */
+.swal2-popup .swal2-styled.swal2-confirm.swal2-styled--danger,
+.swal2-popup[class*="danger"] .swal2-styled.swal2-confirm {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.swal2-popup .swal2-styled.swal2-confirm.swal2-styled--danger:hover,
+.swal2-popup[class*="danger"] .swal2-styled.swal2-confirm:hover {
+  background-color: #dc2626 !important;
+}
+
+/* Override ALL potential purple/indigo colors from SweetAlert2 defaults */
+.swal2-popup .swal2-actions button {
+  outline: none !important;
+}
+
+.swal2-popup .swal2-actions button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.3) !important;
+}
+
+/* Ensure no purple border on buttons */
+.swal2-popup .swal2-styled:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.3) !important;
 }
 
 .swal2-popup .swal2-styled.swal2-cancel {
@@ -573,13 +621,13 @@ body {
 
 /* Timer progress bar */
 .swal2-popup .swal2-timer-progress-bar {
-  background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+  background: #0f172a;
   border-radius: 0 0 12px 12px;
 }
 
 /* Loading spinner */
 .swal2-popup .swal2-loader {
-  border-color: #6366f1 transparent #6366f1 transparent;
+  border-color: #0f172a transparent #0f172a transparent;
 }
 
 /* Backdrop */
@@ -619,8 +667,8 @@ body {
 
 .swal2-popup .swal2-input:focus,
 .swal2-popup .swal2-textarea:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
   outline: none;
 }
 

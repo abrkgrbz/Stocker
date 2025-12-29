@@ -12,12 +12,12 @@ import Swal from 'sweetalert2';
 // Synced with src/theme/colors.ts
 
 const COLORS = {
-  // Brand Primary (Indigo)
+  // Brand Primary (Slate/Dark)
   primary: {
-    main: '#6366f1',
-    hover: '#4f46e5',
-    active: '#4338ca',
-    light: '#eef2ff',
+    main: '#0f172a',
+    hover: '#1e293b',
+    active: '#334155',
+    light: '#f1f5f9',
   },
   // Semantic Colors
   success: {
@@ -88,6 +88,7 @@ export const showCreateSuccess = (entityName: string, itemName?: string) => {
     text: itemName
       ? `${itemName} ${entityName} başarıyla oluşturuldu`
       : `${entityName} başarıyla oluşturuldu`,
+    confirmButtonText: 'Tamam',
     confirmButtonColor: COLORS.success.main,
     iconColor: COLORS.success.main,
     timer: 2500,
@@ -108,6 +109,7 @@ export const showUpdateSuccess = (entityName: string, itemName?: string) => {
     text: itemName
       ? `${itemName} ${entityName} başarıyla güncellendi`
       : `${entityName} başarıyla güncellendi`,
+    confirmButtonText: 'Tamam',
     confirmButtonColor: COLORS.success.main,
     iconColor: COLORS.success.main,
     timer: 2500,
@@ -128,6 +130,7 @@ export const showDeleteSuccess = (entityName: string, itemName?: string) => {
     text: itemName
       ? `${itemName} ${entityName} başarıyla silindi`
       : `${entityName} başarıyla silindi`,
+    confirmButtonText: 'Tamam',
     confirmButtonColor: COLORS.success.main,
     iconColor: COLORS.success.main,
     timer: 2500,
@@ -146,6 +149,7 @@ export const showSuccess = (title: string, message?: string) => {
     icon: 'success',
     title,
     text: message,
+    confirmButtonText: 'Tamam',
     confirmButtonColor: COLORS.success.main,
     iconColor: COLORS.success.main,
     timer: 2500,
@@ -164,7 +168,8 @@ export const showError = (message: string, title: string = 'Hata!') => {
     icon: 'error',
     title,
     text: message,
-    confirmButtonColor: COLORS.error.main,
+    confirmButtonText: 'Tamam',
+    confirmButtonColor: COLORS.slate[900],
     iconColor: COLORS.error.main,
     background: '#ffffff',
     color: COLORS.slate[900],
@@ -205,7 +210,7 @@ export const confirmDelete = async (
 
 /**
  * Confirmation dialog for any operation
- * @param variant - 'success' | 'warning' | 'danger' | 'info' - determines button color and icon
+ * @param variant - 'success' | 'warning' | 'danger' | 'info' - determines icon color
  */
 export const confirmAction = async (
   title: string,
@@ -214,11 +219,18 @@ export const confirmAction = async (
   variant: 'success' | 'warning' | 'danger' | 'info' = 'info',
   cancelText: string = 'İptal'
 ): Promise<boolean> => {
-  const variantColors = {
+  const variantIconColors = {
     success: COLORS.success.main,
     warning: COLORS.warning.main,
     danger: COLORS.error.main,
-    info: COLORS.primary.main,
+    info: COLORS.slate[900],
+  };
+
+  const variantButtonColors = {
+    success: COLORS.success.main,
+    warning: COLORS.slate[900],
+    danger: COLORS.error.main,
+    info: COLORS.slate[900],
   };
 
   const variantIcons = {
@@ -233,9 +245,9 @@ export const confirmAction = async (
     title,
     text: message,
     icon: variantIcons[variant],
-    iconColor: variantColors[variant],
+    iconColor: variantIconColors[variant],
     showCancelButton: true,
-    confirmButtonColor: variantColors[variant],
+    confirmButtonColor: variantButtonColors[variant],
     cancelButtonColor: COLORS.slate[200],
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
@@ -256,7 +268,8 @@ export const showInfo = (title: string, message: string) => {
     icon: 'info',
     title,
     text: message,
-    confirmButtonColor: COLORS.info.main,
+    confirmButtonText: 'Tamam',
+    confirmButtonColor: COLORS.slate[900],
     iconColor: COLORS.info.main,
     background: '#ffffff',
     color: COLORS.slate[900],
@@ -272,7 +285,8 @@ export const showWarning = (title: string, message: string) => {
     icon: 'warning',
     title,
     text: message,
-    confirmButtonColor: COLORS.warning.main,
+    confirmButtonText: 'Tamam',
+    confirmButtonColor: COLORS.slate[900],
     iconColor: COLORS.warning.main,
     background: '#ffffff',
     color: COLORS.slate[900],

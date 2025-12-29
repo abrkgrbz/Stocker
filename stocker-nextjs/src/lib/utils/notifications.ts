@@ -56,8 +56,8 @@ export const showConfirm = (
     showCancelButton: true,
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
+    confirmButtonColor: '#0f172a',
+    cancelButtonColor: '#e2e8f0',
   });
 };
 
@@ -69,8 +69,8 @@ export const showDeleteConfirm = (itemName: string = 'bu öğeyi') => {
     showCancelButton: true,
     confirmButtonText: 'Evet, Sil',
     cancelButtonText: 'İptal',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#e2e8f0',
   });
 };
 

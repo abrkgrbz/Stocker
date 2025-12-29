@@ -1,19 +1,19 @@
 import Swal from 'sweetalert2';
 
-// Stocker brand colors - matching register page violet/purple theme
+// Stocker brand colors - Slate-based enterprise design system
 const brandColors = {
-  primary: '#7c3aed',      // violet-600
-  primaryHover: '#8b5cf6', // violet-500
-  success: '#16a34a',      // green-600
-  error: '#dc2626',        // red-600
-  warning: '#ea580c',      // orange-600
-  info: '#7c3aed',         // violet-600
-  neutral: '#9ca3af',      // gray-400
+  primary: '#0f172a',      // slate-900 (enterprise dark)
+  primaryHover: '#1e293b', // slate-800
+  success: '#10b981',      // emerald-500
+  error: '#ef4444',        // red-500
+  warning: '#f59e0b',      // amber-500
+  info: '#3b82f6',         // blue-500
+  neutral: '#e2e8f0',      // slate-200
 };
 
 /**
  * Custom SweetAlert2 configuration matching Stocker brand theme
- * Violet/Purple gradient design matching register page
+ * Slate-based enterprise design system
  */
 export const showAlert = {
   /**
@@ -93,7 +93,7 @@ export const showAlert = {
   },
 
   /**
-   * Info alert with violet brand color and gradient
+   * Info alert with blue brand color
    */
   info: (title: string, text?: string) => {
     return Swal.fire({
@@ -113,7 +113,7 @@ export const showAlert = {
   },
 
   /**
-   * Confirmation dialog with violet primary button
+   * Confirmation dialog with slate primary button
    */
   confirm: (title: string, text: string, confirmText = 'Evet', cancelText = 'Hayır') => {
     return Swal.fire({
@@ -154,7 +154,7 @@ export const showAlert = {
 };
 
 /**
- * Loading/Progress alerts with violet spinner
+ * Loading/Progress alerts
  */
 export const showLoading = {
   start: (title = 'Lütfen bekleyin...', text?: string) => {

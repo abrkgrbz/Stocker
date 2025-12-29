@@ -1,147 +1,160 @@
-/* SweetAlert2 Custom Theme - Stocker Brand (Violet/Purple Gradient) */
+/* SweetAlert2 Custom Theme - Stocker Design System (Slate-based Enterprise) */
 
 /* Container Styling */
 .swal2-popup {
-  border-radius: 1rem !important;
+  border-radius: 0.75rem !important;
   font-family: inherit !important;
-  box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.25) !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
 }
 
 /* Title Styling */
 .swal2-title {
-  color: #111827 !important; /* gray-900 */
+  color: #0f172a !important; /* slate-900 */
   font-size: 1.25rem !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   line-height: 1.75rem !important;
 }
 
 /* Content/HTML Container */
 .swal2-html-container {
-  color: #4b5563 !important; /* gray-600 */
+  color: #475569 !important; /* slate-600 */
   font-size: 0.875rem !important;
   line-height: 1.5rem !important;
 }
 
-/* Icon Customization with Violet Theme */
+/* Icon Customization - Stocker Design System */
 .swal2-icon.swal2-success {
-  border-color: #16a34a !important; /* green-600 */
-  color: #16a34a !important;
+  border-color: #10b981 !important; /* emerald-500 */
+  color: #10b981 !important;
 }
 
 .swal2-icon.swal2-success [class^='swal2-success-line'] {
-  background-color: #16a34a !important;
+  background-color: #10b981 !important;
 }
 
 .swal2-icon.swal2-success .swal2-success-ring {
-  border-color: rgba(22, 163, 74, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
 .swal2-icon.swal2-error {
-  border-color: #dc2626 !important; /* red-600 */
-  color: #dc2626 !important;
+  border-color: #ef4444 !important; /* red-500 */
+  color: #ef4444 !important;
 }
 
 .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
-  background-color: #dc2626 !important;
+  background-color: #ef4444 !important;
 }
 
 .swal2-icon.swal2-warning {
-  border-color: #ea580c !important; /* orange-600 */
-  color: #ea580c !important;
+  border-color: #f59e0b !important; /* amber-500 */
+  color: #f59e0b !important;
 }
 
 .swal2-icon.swal2-info {
-  border-color: #7c3aed !important; /* violet-600 */
-  color: #7c3aed !important;
+  border-color: #3b82f6 !important; /* blue-500 */
+  color: #3b82f6 !important;
 }
 
 .swal2-icon.swal2-question {
-  border-color: #7c3aed !important; /* violet-600 */
-  color: #7c3aed !important;
+  border-color: #0f172a !important; /* slate-900 */
+  color: #0f172a !important;
 }
 
-/* Confirm Button - Violet Gradient Theme */
+/* Confirm Button - Slate Enterprise Theme */
 .swal2-confirm {
-  background: linear-gradient(to right, #7c3aed, #c026d3) !important; /* violet-600 to fuchsia-600 */
+  background-color: #0f172a !important; /* slate-900 */
   border: none !important;
   border-radius: 0.5rem !important;
-  padding: 0.75rem 1.5rem !important;
-  font-weight: 600 !important;
+  padding: 0.625rem 1.25rem !important;
+  font-weight: 500 !important;
   font-size: 0.875rem !important;
-  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
   color: white !important;
 }
 
 .swal2-confirm:hover {
-  background: linear-gradient(to right, #8b5cf6, #d946ef) !important; /* violet-500 to fuchsia-500 */
-  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.4) !important;
+  background-color: #1e293b !important; /* slate-800 */
   transform: translateY(-1px) !important;
+}
+
+.swal2-confirm:active {
+  background-color: #334155 !important; /* slate-700 */
+  transform: translateY(0) !important;
 }
 
 .swal2-confirm:focus {
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.3) !important;
+  outline: none !important;
 }
 
-/* Cancel Button - Neutral Gray */
+/* Cancel Button - Neutral Slate */
 .swal2-cancel {
-  background-color: white !important;
-  border: 2px solid #d1d5db !important; /* gray-300 */
+  background-color: #f1f5f9 !important; /* slate-100 */
+  border: 1px solid #e2e8f0 !important; /* slate-200 */
   border-radius: 0.5rem !important;
-  padding: 0.75rem 1.5rem !important;
+  padding: 0.625rem 1.25rem !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
-  color: #374151 !important; /* gray-700 */
+  color: #475569 !important; /* slate-600 */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.15s ease !important;
 }
 
 .swal2-cancel:hover {
-  background-color: #f9fafb !important; /* gray-50 */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  background-color: #e2e8f0 !important; /* slate-200 */
   transform: translateY(-1px) !important;
 }
 
+.swal2-cancel:active {
+  transform: translateY(0) !important;
+}
+
 .swal2-cancel:focus {
-  box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(226, 232, 240, 0.5) !important;
+  outline: none !important;
 }
 
-/* Success Button - Green */
-.swal2-styled.swal2-confirm[style*="background-color: rgb(22, 163, 74)"] {
-  background: #16a34a !important; /* green-600 */
-  box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3) !important;
-}
-
-.swal2-styled.swal2-confirm[style*="background-color: rgb(22, 163, 74)"]:hover {
-  background: #15803d !important; /* green-700 */
-  box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.4) !important;
-}
-
-/* Error Button - Red */
+/* Danger/Delete Button - Red */
+.swal2-styled.swal2-confirm[style*="background-color: rgb(239, 68, 68)"],
 .swal2-styled.swal2-confirm[style*="background-color: rgb(220, 38, 38)"] {
-  background: #dc2626 !important; /* red-600 */
-  box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3) !important;
+  background-color: #ef4444 !important; /* red-500 */
+  box-shadow: 0 1px 2px 0 rgba(239, 68, 68, 0.2) !important;
 }
 
+.swal2-styled.swal2-confirm[style*="background-color: rgb(239, 68, 68)"]:hover,
 .swal2-styled.swal2-confirm[style*="background-color: rgb(220, 38, 38)"]:hover {
-  background: #b91c1c !important; /* red-700 */
-  box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4) !important;
+  background-color: #dc2626 !important; /* red-600 */
 }
 
-/* Warning Button - Orange */
+/* Success Button - Emerald (Stocker Design System) */
+.swal2-styled.swal2-confirm[style*="background-color: rgb(16, 185, 129)"],
+.swal2-styled.swal2-confirm[style*="background-color: rgb(22, 163, 74)"] {
+  background-color: #10b981 !important; /* emerald-500 - COLORS.success.main */
+  box-shadow: 0 1px 2px 0 rgba(16, 185, 129, 0.2) !important;
+  color: white !important;
+}
+
+.swal2-styled.swal2-confirm[style*="background-color: rgb(16, 185, 129)"]:hover,
+.swal2-styled.swal2-confirm[style*="background-color: rgb(22, 163, 74)"]:hover {
+  background-color: #047857 !important; /* emerald-700 - COLORS.success.dark */
+}
+
+/* Warning Button - Amber */
+.swal2-styled.swal2-confirm[style*="background-color: rgb(245, 158, 11)"],
 .swal2-styled.swal2-confirm[style*="background-color: rgb(234, 88, 12)"] {
-  background: #ea580c !important; /* orange-600 */
-  box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.3) !important;
+  background-color: #f59e0b !important; /* amber-500 */
+  box-shadow: 0 1px 2px 0 rgba(245, 158, 11, 0.2) !important;
 }
 
+.swal2-styled.swal2-confirm[style*="background-color: rgb(245, 158, 11)"]:hover,
 .swal2-styled.swal2-confirm[style*="background-color: rgb(234, 88, 12)"]:hover {
-  background: #c2410c !important; /* orange-700 */
-  box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.4) !important;
+  background-color: #d97706 !important; /* amber-600 */
 }
 
-/* Loading Spinner - Violet Theme */
+/* Loading Spinner - Slate Theme */
 .swal2-loader {
-  border-color: #7c3aed transparent #7c3aed transparent !important;
+  border-color: #0f172a transparent #0f172a transparent !important;
 }
 
 /* Validation Error List Styling */
@@ -163,7 +176,7 @@
   content: "•" !important;
   position: absolute !important;
   left: 0 !important;
-  color: #7c3aed !important; /* violet-600 bullet */
+  color: #0f172a !important; /* slate-900 bullet */
   font-weight: bold !important;
   font-size: 1.2em !important;
 }
@@ -183,63 +196,68 @@
 
 /* Footer */
 .swal2-footer {
-  border-top: 1px solid #e5e7eb !important; /* gray-200 */
-  color: #6b7280 !important; /* gray-500 */
+  border-top: 1px solid #e2e8f0 !important; /* slate-200 */
+  color: #64748b !important; /* slate-500 */
 }
 
 /* Backdrop */
 .swal2-container.swal2-backdrop-show {
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: rgba(15, 23, 42, 0.4) !important;
 }
 
 /* Close Button */
 .swal2-close {
-  color: #9ca3af !important; /* gray-400 */
+  color: #94a3b8 !important; /* slate-400 */
   font-size: 2rem !important;
   transition: color 0.2s ease !important;
 }
 
 .swal2-close:hover {
-  color: #7c3aed !important; /* violet-600 */
+  color: #0f172a !important; /* slate-900 */
 }
 
 /* Animation Enhancement */
 .swal2-popup.swal2-toast {
-  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.1) !important;
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1) !important;
 }
 
 /* Progress Steps (if used) */
 .swal2-progress-steps .swal2-progress-step {
-  background: #7c3aed !important; /* violet-600 */
+  background: #0f172a !important; /* slate-900 */
 }
 
 .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step {
-  background: #c026d3 !important; /* fuchsia-600 */
+  background: #334155 !important; /* slate-700 */
 }
 
 .swal2-progress-steps .swal2-progress-step-line {
-  background: #e9d5ff !important; /* violet-200 */
+  background: #e2e8f0 !important; /* slate-200 */
+}
+
+/* Timer Progress Bar */
+.swal2-timer-progress-bar {
+  background: #0f172a !important; /* slate-900 */
 }
 
 /* Input Fields (if used) */
 .swal2-input,
 .swal2-textarea {
-  border: 2px solid #e5e7eb !important; /* gray-200 */
+  border: 1px solid #e2e8f0 !important; /* slate-200 */
   border-radius: 0.5rem !important;
-  transition: border-color 0.2s ease !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .swal2-input:focus,
 .swal2-textarea:focus {
-  border-color: #7c3aed !important; /* violet-600 */
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
+  border-color: #0f172a !important; /* slate-900 */
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1) !important;
   outline: none !important;
 }
 
 /* Validation Message */
 .swal2-validation-message {
   background: #fef2f2 !important; /* red-50 */
-  color: #dc2626 !important; /* red-600 */
-  border-left: 4px solid #dc2626 !important;
+  color: #ef4444 !important; /* red-500 */
+  border-left: 4px solid #ef4444 !important;
   border-radius: 0.375rem !important;
 }
