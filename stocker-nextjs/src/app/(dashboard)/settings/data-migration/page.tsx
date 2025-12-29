@@ -30,7 +30,7 @@ import {
   XCircle,
   Play,
 } from 'lucide-react';
-import { AdminOnly } from '@/components/auth/PermissionGate';
+// import { AdminOnly } from '@/components/auth/PermissionGate';
 import {
   useMigrationSessions,
   useMigrationSession,
@@ -191,21 +191,6 @@ export default function DataMigrationPage() {
   const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
 
   return (
-    <AdminOnly
-      fallback={
-        <div className="min-h-screen bg-slate-50 p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-              <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Yetkisiz Erişim</h3>
-              <p className="text-sm text-slate-500">
-                Veri aktarımı işlemlerine erişim yetkiniz bulunmamaktadır.
-              </p>
-            </div>
-          </div>
-        </div>
-      }
-    >
       <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="bg-white border-b border-slate-200">
@@ -496,6 +481,5 @@ export default function DataMigrationPage() {
           )}
         </div>
       </div>
-    </AdminOnly>
   );
 }
