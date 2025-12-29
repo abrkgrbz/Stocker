@@ -56,10 +56,13 @@ export function useMigrationSessions() {
  * Hook to fetch a single session by ID
  */
 export function useMigrationSession(sessionId: string, options?: { enabled?: boolean; refetchInterval?: number }) {
+  // Ensure sessionId is a valid non-empty string (not 'undefined' or empty)
+  const isValidSessionId = !!sessionId && sessionId !== 'undefined' && sessionId.length > 0;
+
   return useQuery<MigrationSessionDto, Error>({
     queryKey: migrationKeys.session(sessionId),
     queryFn: () => MigrationService.getSession(sessionId),
-    enabled: !!sessionId && (options?.enabled !== false),
+    enabled: isValidSessionId && (options?.enabled !== false),
     refetchInterval: options?.refetchInterval,
   });
 }

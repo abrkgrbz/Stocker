@@ -161,9 +161,15 @@ export default function DataMigrationPage() {
 
   // Handle continuing an existing session
   const handleContinueSession = useCallback((session: MigrationSessionDto) => {
-    setSessionId(session.id);
+    // Use sessionId as fallback if id is not set
+    const validId = session.id || session.sessionId;
+    if (!validId) {
+      console.error('Session has no valid ID:', session);
+      return;
+    }
+    setSessionId(validId);
     setShowSessionList(false);
-    router.push(`/settings/data-migration?session=${session.id}`);
+    router.push(`/settings/data-migration?session=${validId}`);
   }, [router]);
 
   // Handle deleting a session
@@ -274,9 +280,10 @@ export default function DataMigrationPage() {
                         <div className="divide-y divide-slate-100">
                           {activeSessions.map((session) => {
                             const StatusIcon = getStatusIcon(session.status);
+                            const sessionKey = session.id || session.sessionId;
                             return (
                               <div
-                                key={session.id}
+                                key={sessionKey}
                                 className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
                               >
                                 <div className="flex items-center gap-3">
@@ -319,9 +326,10 @@ export default function DataMigrationPage() {
                         <div className="divide-y divide-slate-100">
                           {completedSessions.slice(0, 10).map((session) => {
                             const StatusIcon = getStatusIcon(session.status);
+                            const sessionKey = session.id || session.sessionId;
                             return (
                               <div
-                                key={session.id}
+                                key={sessionKey}
                                 className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
                               >
                                 <div className="flex items-center gap-3">
@@ -357,7 +365,7 @@ export default function DataMigrationPage() {
                                     <ChevronRight className="w-4 h-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteSession(session.id)}
+                                    onClick={() => handleDeleteSession(sessionKey || '')}
                                     className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                     title="Sil"
                                   >
