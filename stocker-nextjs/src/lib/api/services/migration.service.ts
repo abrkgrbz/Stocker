@@ -1,7 +1,7 @@
 /**
  * Data Migration Service
  * Handles data migration operations from external ERP/CRM systems
- * Uses /api/tenant/DataMigration endpoints
+ * Uses /api/tenant/data-migration endpoints
  */
 
 import { apiClient } from '../client';
@@ -439,42 +439,42 @@ export function getValidationStatusColor(status: ValidationStatus): string {
 export const MigrationService = {
   // Session Management
   async createSession(request: CreateSessionRequest): Promise<MigrationSessionDto> {
-    const response = await apiClient.post<MigrationSessionDto>('/api/tenant/DataMigration/sessions', request);
+    const response = await apiClient.post<MigrationSessionDto>('/api/tenant/data-migration/sessions', request);
     return response as unknown as MigrationSessionDto;
   },
 
   async getSession(sessionId: string): Promise<MigrationSessionDto> {
-    const response = await apiClient.get<MigrationSessionDto>(`/api/tenant/DataMigration/sessions/${sessionId}`);
+    const response = await apiClient.get<MigrationSessionDto>(`/api/tenant/data-migration/sessions/${sessionId}`);
     return response as unknown as MigrationSessionDto;
   },
 
   async getSessions(): Promise<MigrationSessionDto[]> {
-    const response = await apiClient.get<MigrationSessionDto[]>('/api/tenant/DataMigration/sessions');
+    const response = await apiClient.get<MigrationSessionDto[]>('/api/tenant/data-migration/sessions');
     return response as unknown as MigrationSessionDto[];
   },
 
   async cancelSession(sessionId: string): Promise<void> {
-    await apiClient.post(`/api/tenant/DataMigration/sessions/${sessionId}/cancel`);
+    await apiClient.post(`/api/tenant/data-migration/sessions/${sessionId}/cancel`);
   },
 
   async deleteSession(sessionId: string): Promise<void> {
-    await apiClient.delete(`/api/tenant/DataMigration/sessions/${sessionId}`);
+    await apiClient.delete(`/api/tenant/data-migration/sessions/${sessionId}`);
   },
 
   // Chunk Upload
   async uploadChunk(request: UploadChunkRequest): Promise<MigrationChunkDto> {
-    const response = await apiClient.post<MigrationChunkDto>('/api/tenant/DataMigration/upload', request);
+    const response = await apiClient.post<MigrationChunkDto>('/api/tenant/data-migration/upload', request);
     return response as unknown as MigrationChunkDto;
   },
 
   async getChunks(sessionId: string): Promise<MigrationChunkDto[]> {
-    const response = await apiClient.get<MigrationChunkDto[]>(`/api/tenant/DataMigration/sessions/${sessionId}/chunks`);
+    const response = await apiClient.get<MigrationChunkDto[]>(`/api/tenant/data-migration/sessions/${sessionId}/chunks`);
     return response as unknown as MigrationChunkDto[];
   },
 
   // Field Mapping
   async getAutoMappingSuggestions(sessionId: string, entityType: MigrationEntityType, sampleData: Record<string, any>[]): Promise<AutoMappingSuggestion[]> {
-    const response = await apiClient.post<AutoMappingSuggestion[]>(`/api/tenant/DataMigration/sessions/${sessionId}/auto-map`, {
+    const response = await apiClient.post<AutoMappingSuggestion[]>(`/api/tenant/data-migration/sessions/${sessionId}/auto-map`, {
       entityType,
       sampleData,
     });
@@ -482,30 +482,30 @@ export const MigrationService = {
   },
 
   async saveMapping(request: SaveMappingRequest): Promise<void> {
-    await apiClient.post(`/api/tenant/DataMigration/sessions/${request.sessionId}/mappings`, request);
+    await apiClient.post(`/api/tenant/data-migration/sessions/${request.sessionId}/mappings`, request);
   },
 
   async getMappings(sessionId: string): Promise<MappingConfigDto[]> {
-    const response = await apiClient.get<MappingConfigDto[]>(`/api/tenant/DataMigration/sessions/${sessionId}/mappings`);
+    const response = await apiClient.get<MappingConfigDto[]>(`/api/tenant/data-migration/sessions/${sessionId}/mappings`);
     return response as unknown as MappingConfigDto[];
   },
 
   // Validation
   async startValidation(sessionId: string): Promise<void> {
-    await apiClient.post(`/api/tenant/DataMigration/sessions/${sessionId}/validate`);
+    await apiClient.post(`/api/tenant/data-migration/sessions/${sessionId}/validate`);
   },
 
   async getValidationResults(filters: ValidationFilters): Promise<PagedResult<MigrationValidationResultDto>> {
     const { sessionId, ...params } = filters;
     const response = await apiClient.get<PagedResult<MigrationValidationResultDto>>(
-      `/api/tenant/DataMigration/sessions/${sessionId}/validation-results`,
+      `/api/tenant/data-migration/sessions/${sessionId}/validation-results`,
       params
     );
     return response as unknown as PagedResult<MigrationValidationResultDto>;
   },
 
   async getStatistics(sessionId: string): Promise<MigrationStatisticsDto> {
-    const response = await apiClient.get<MigrationStatisticsDto>(`/api/tenant/DataMigration/sessions/${sessionId}/statistics`);
+    const response = await apiClient.get<MigrationStatisticsDto>(`/api/tenant/data-migration/sessions/${sessionId}/statistics`);
     return response as unknown as MigrationStatisticsDto;
   },
 
@@ -513,37 +513,37 @@ export const MigrationService = {
   async fixRecord(request: FixRecordRequest): Promise<MigrationValidationResultDto> {
     const { sessionId, recordId, fixedData } = request;
     const response = await apiClient.post<MigrationValidationResultDto>(
-      `/api/tenant/DataMigration/sessions/${sessionId}/records/${recordId}/fix`,
+      `/api/tenant/data-migration/sessions/${sessionId}/records/${recordId}/fix`,
       { fixedData }
     );
     return response as unknown as MigrationValidationResultDto;
   },
 
   async skipRecord(sessionId: string, recordId: string): Promise<void> {
-    await apiClient.post(`/api/tenant/DataMigration/sessions/${sessionId}/records/${recordId}/skip`);
+    await apiClient.post(`/api/tenant/data-migration/sessions/${sessionId}/records/${recordId}/skip`);
   },
 
   async bulkAction(request: BulkActionRequest): Promise<void> {
-    await apiClient.post(`/api/tenant/DataMigration/sessions/${request.sessionId}/records/bulk-action`, request);
+    await apiClient.post(`/api/tenant/data-migration/sessions/${request.sessionId}/records/bulk-action`, request);
   },
 
   // Import
   async startImport(request: StartImportRequest): Promise<{ jobId: string }> {
     const response = await apiClient.post<{ jobId: string }>(
-      `/api/tenant/DataMigration/sessions/${request.sessionId}/import`,
+      `/api/tenant/data-migration/sessions/${request.sessionId}/import`,
       request
     );
     return response as unknown as { jobId: string };
   },
 
   async getProgress(sessionId: string): Promise<MigrationProgressDto> {
-    const response = await apiClient.get<MigrationProgressDto>(`/api/tenant/DataMigration/sessions/${sessionId}/progress`);
+    const response = await apiClient.get<MigrationProgressDto>(`/api/tenant/data-migration/sessions/${sessionId}/progress`);
     return response as unknown as MigrationProgressDto;
   },
 
   // Template Download
   async downloadTemplate(entityType: MigrationEntityType): Promise<Blob> {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tenant/DataMigration/templates/${entityType}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tenant/data-migration/templates/${entityType}`, {
       method: 'GET',
       credentials: 'include',
       headers: {
