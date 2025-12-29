@@ -150,7 +150,9 @@ export default function SourceSelection({ onSessionCreated, onCancel }: SourceSe
               key={type}
               onClick={() => {
                 setSelectedSource(type);
-                if (!sourceName) {
+                // Always update sourceName when source changes, unless user has customized it
+                const currentSourceLabel = selectedSource ? sourceTypeLabels[selectedSource] : '';
+                if (!sourceName || sourceName === currentSourceLabel) {
                   setSourceName(sourceTypeLabels[type]);
                 }
               }}
