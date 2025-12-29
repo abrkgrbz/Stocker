@@ -82,6 +82,7 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
 
       if (onSubmit) {
         await onSubmit(submissionData);
+        // onClose is handled by parent component after successful mutation
       } else {
         // Mock success for now
         message.success(
@@ -89,11 +90,20 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
             ? `${values.firstName} ${values.lastName} başarıyla güncellendi`
             : `${values.firstName} ${values.lastName} başarıyla oluşturuldu`
         );
+        onClose();
       }
-
-      onClose();
-    } catch (error) {
-      console.error('Form validation failed:', error);
+    } catch (error: any) {
+      // Don't silently swallow errors - show user feedback
+      console.error('Form submission failed:', error);
+      // If it's a form validation error, Ant Design already shows field-level errors
+      // If it's an API error, the parent's onError callback should handle it
+      // But if somehow it reaches here, show a generic message
+      if (error?.errorFields) {
+        // Form validation error - Ant Design handles this
+        return;
+      }
+      // Re-throw so parent mutation's onError can handle it
+      throw error;
     }
   };
 
