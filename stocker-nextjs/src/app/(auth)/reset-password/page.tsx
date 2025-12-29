@@ -50,8 +50,9 @@ function ResetPasswordContent() {
         const response = await authService.validateResetToken(token);
 
         if (response.success && response.data) {
-          const expiryDate = new Date(response.data.expiresAt);
-          const valid = isTokenValid(expiryDate);
+          // Use the valid flag from API response directly
+          // API already handles timezone-aware validation
+          const valid = response.data.valid === true;
           setTokenValid(valid);
 
           if (!valid) {
