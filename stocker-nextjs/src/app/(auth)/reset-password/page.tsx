@@ -1,340 +1,491 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { Card, Form, Input, Button, Typography, Alert, Space } from 'antd';
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  LockClosedIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import {
-  validatePasswordReset,
-  isTokenValid,
-  generateSecurePassword,
-} from '@/lib/auth/password-recovery';
-import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
-
-const { Title, Text, Paragraph } = Typography;
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { validatePasswordReset, generateSecurePassword, calculatePasswordStrength } from '@/lib/auth/password-recovery'
+import { handleApiError } from '@/lib/api/client'
 
 function ResetPasswordContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
 
-  const [loading, setLoading] = useState(false);
-  const [validatingToken, setValidatingToken] = useState(true);
-  const [tokenValid, setTokenValid] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [password, setPassword] = useState('');
-  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false)
+  const [validatingToken, setValidatingToken] = useState(true)
+  const [tokenValid, setTokenValid] = useState(false)
+  const [resetSuccess, setResetSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Calculate password strength
+  const passwordStrength = password ? calculatePasswordStrength(password) : null
 
   // Validate token on mount
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
-        setError('Geçersiz veya eksik şifre sıfırlama bağlantısı');
-        setTokenValid(false);
-        setValidatingToken(false);
-        return;
+        setError('Geçersiz veya eksik şifre sıfırlama bağlantısı')
+        setTokenValid(false)
+        setValidatingToken(false)
+        return
       }
 
       try {
-        // API call to validate token
-        const { authService } = await import('@/lib/api/services');
-        const response = await authService.validateResetToken(token);
+        const { authService } = await import('@/lib/api/services')
+        const response = await authService.validateResetToken(token)
 
         // API returns { valid: boolean, expiresAt: string } directly (not wrapped)
-        // Cast to any to handle both wrapped and unwrapped responses
-        const data = (response as any);
-        const valid = data?.valid === true || data?.data?.valid === true;
-        setTokenValid(valid);
+        const data = (response as any)
+        const valid = data?.valid === true || data?.data?.valid === true
+        setTokenValid(valid)
 
         if (!valid) {
-          setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.');
+          setError('Şifre sıfırlama bağlantısı süresi dolmuş. Lütfen yeni bir bağlantı isteyin.')
         }
       } catch (err) {
-        setError('Token doğrulama hatası. Lütfen tekrar deneyin.');
-        setTokenValid(false);
-        console.error('Token validation error:', err);
+        setError('Token doğrulama hatası. Lütfen tekrar deneyin.')
+        setTokenValid(false)
+        console.error('Token validation error:', err)
       } finally {
-        setValidatingToken(false);
+        setValidatingToken(false)
       }
-    };
+    }
 
-    validateToken();
-  }, [token]);
+    validateToken()
+  }, [token])
 
-  const handleSubmit = async (values: { password: string; confirmPassword: string }) => {
-    setLoading(true);
-    setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
 
     // Validate passwords
-    const validation = validatePasswordReset(values.password, values.confirmPassword);
+    const validation = validatePasswordReset(password, confirmPassword)
     if (!validation.valid) {
-      setError(validation.error || 'Geçersiz şifre');
-      setLoading(false);
-      return;
+      setError(validation.error || 'Geçersiz şifre')
+      setLoading(false)
+      return
     }
 
     try {
-      // API call to reset password
-      const { authService } = await import('@/lib/api/services');
+      const { authService } = await import('@/lib/api/services')
       const response = await authService.resetPassword({
         token: token!,
-        password: values.password,
-      });
+        newPassword: password,
+      })
 
-      if (response.success) {
-        setResetSuccess(true);
+      // Handle both wrapped and unwrapped responses
+      const data = (response as any)
+      const success = data?.success === true || data?.data?.success === true
 
+      if (success) {
+        setResetSuccess(true)
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+          router.push('/login')
+        }, 3000)
       } else {
-        setError('Şifre sıfırlama başarısız. Lütfen tekrar deneyin.');
+        setError(data?.message || 'Şifre sıfırlama başarısız. Lütfen tekrar deneyin.')
       }
     } catch (err) {
-      setError('Şifre sıfırlama başarısız. Lütfen tekrar deneyin.');
-      console.error('Reset password error:', err);
+      console.error('Reset password error:', err)
+      const errorMessage = handleApiError(err)
+      setError(errorMessage)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGeneratePassword = () => {
-    const generatedPassword = generateSecurePassword();
-    setPassword(generatedPassword);
-    form.setFieldsValue({
-      password: generatedPassword,
-      confirmPassword: generatedPassword,
-    });
-  };
+    const generatedPassword = generateSecurePassword()
+    setPassword(generatedPassword)
+    setConfirmPassword(generatedPassword)
+    setShowPassword(true)
+  }
 
   // Token validation in progress
   if (validatingToken) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-        }}
-      >
-        <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
-          <Space direction="vertical" size="large">
-            <ArrowPathIcon className="w-12 h-12 text-blue-500" />
-            <Title level={4}>Bağlantı Doğrulanıyor...</Title>
-          </Space>
-        </Card>
+      <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        {/* Dot Pattern Background */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        {/* Card */}
+        <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-10">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <svg viewBox="0 0 180 40" fill="none" className="h-8 w-auto" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
+              <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
+              <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
+            </svg>
+          </div>
+
+          {/* Loading */}
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="animate-spin h-10 w-10 border-3 border-slate-900 border-t-transparent rounded-full mb-4" />
+            <p className="text-slate-500">Bağlantı doğrulanıyor...</p>
+          </div>
+        </div>
       </div>
-    );
+    )
   }
 
   // Invalid or expired token
   if (!tokenValid) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-        }}
-      >
-        <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <XCircleIcon className="w-16 h-16 text-white/90" />
-            <div>
-              <Title level={3}>Geçersiz Bağlantı</Title>
-              <Paragraph type="secondary">{error}</Paragraph>
+      <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        {/* Dot Pattern Background */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        {/* Card */}
+        <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-10">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <svg viewBox="0 0 180 40" fill="none" className="h-8 w-auto" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
+              <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
+              <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
+            </svg>
+          </div>
+
+          {/* Error Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </div>
-            <Link href="/forgot-password">
-              <Button type="primary" size="large" block>
-                Yeni Bağlantı İste
-              </Button>
+          </div>
+
+          {/* Content */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Geçersiz Bağlantı</h1>
+            <p className="text-slate-500">{error || 'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.'}</p>
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-3">
+            <Link
+              href="/forgot-password"
+              className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
+            >
+              Yeni Bağlantı İste
             </Link>
-          </Space>
-        </Card>
+
+            <Link
+              href="/login"
+              className="flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 py-2 text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Giriş sayfasına dön</span>
+            </Link>
+          </div>
+        </div>
       </div>
-    );
+    )
   }
 
   // Password reset success
   if (resetSuccess) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-        }}
-      >
-        <Card style={{ width: '100%', maxWidth: '450px', textAlign: 'center' }}>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <CheckCircleIcon className="w-16 h-16 text-white/90" />
-            <div>
-              <Title level={3}>Şifre Başarıyla Sıfırlandı</Title>
-              <Paragraph type="secondary">
-                Şifreniz başarıyla güncellendi. Giriş sayfasına yönlendiriliyorsunuz...
-              </Paragraph>
+      <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        {/* Dot Pattern Background */}
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        {/* Card */}
+        <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-10">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <svg viewBox="0 0 180 40" fill="none" className="h-8 w-auto" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
+              <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
+              <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
+              <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
+            </svg>
+          </div>
+
+          {/* Success Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <Link href="/login">
-              <Button type="primary" size="large" block>
-                Giriş Yap
-              </Button>
-            </Link>
-          </Space>
-        </Card>
+          </div>
+
+          {/* Content */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Şifre Başarıyla Sıfırlandı</h1>
+            <p className="text-slate-500">
+              Şifreniz başarıyla güncellendi. Giriş sayfasına yönlendiriliyorsunuz...
+            </p>
+          </div>
+
+          {/* Actions */}
+          <Link
+            href="/login"
+            className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
+          >
+            Giriş Yap
+          </Link>
+        </div>
       </div>
-    );
+    )
   }
 
   // Password reset form
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
-    >
-      <Card style={{ width: '100%', maxWidth: '500px' }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center' }}>
-            <LockClosedIcon className="w-12 h-12 text-blue-500 mb-4"
-            />
-            <Title level={3} style={{ margin: 0 }}>
-              Yeni Şifre Oluştur
-            </Title>
-            <Paragraph type="secondary">
-              Güçlü ve unutulmayacak bir şifre seçin.
-            </Paragraph>
+    <div className="auth-page min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      {/* Dot Pattern Background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      {/* Card */}
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <svg viewBox="0 0 180 40" fill="none" className="h-8 w-auto" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="6" width="22" height="4" rx="2" fill="#0f172a"/>
+            <rect x="8" y="13" width="18" height="4" rx="2" fill="#0f172a"/>
+            <rect x="4" y="20" width="22" height="4" rx="2" fill="#0f172a"/>
+            <rect x="8" y="27" width="18" height="4" rx="2" fill="#0f172a"/>
+            <text x="38" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="600" fill="#0f172a">Stoocker</text>
+          </svg>
+        </div>
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Yeni Şifre Oluşturun</h1>
+          <p className="text-slate-500">
+            Güçlü ve unutulmayacak bir şifre seçin
+          </p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="text-sm text-red-600">{error}</p>
           </div>
+        )}
 
-          {/* Error Alert */}
-          {error && (
-            <Alert
-              message={error}
-              type="error"
-              showIcon
-              closable
-              onClose={() => setError(null)}
-            />
-          )}
-
-          {/* Form */}
-          <Form
-            form={form}
-            name="reset-password"
-            onFinish={handleSubmit}
-            layout="vertical"
-            requiredMark={false}
-          >
-            <Form.Item
-              label="Yeni Şifre"
-              name="password"
-              rules={[
-                { required: true, message: 'Şifre gerekli' },
-                { min: 8, message: 'Şifre en az 8 karakter olmalı' },
-              ]}
-            >
-              <Input.Password
-                prefix={<LockClosedIcon className="w-4 h-4" />}
-                placeholder="Yeni şifrenizi girin"
-                size="large"
-                iconRender={visible => (visible ? <EyeIcon className="w-4 h-4" /> : <EyeSlashIcon className="w-4 h-4" />)}
-                onChange={e => setPassword(e.target.value)}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+              Yeni Şifre
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-12 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                placeholder="••••••••"
+                required
+                autoFocus
+                autoComplete="new-password"
+                minLength={8}
               />
-            </Form.Item>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+              >
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
 
             {/* Password Strength Meter */}
-            {password && (
-              <PasswordStrengthMeter password={password} showFeedback style={{ marginBottom: '16px' }} />
+            {password && passwordStrength && (
+              <div className="mt-3">
+                <div className="flex gap-1 mb-2">
+                  {[0, 1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1.5 flex-1 rounded-full transition-colors ${
+                        level < passwordStrength.score
+                          ? level < 2
+                            ? 'bg-red-500'
+                            : level < 3
+                              ? 'bg-yellow-500'
+                              : 'bg-emerald-500'
+                          : 'bg-slate-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className={`text-xs ${
+                  passwordStrength.score < 2
+                    ? 'text-red-600'
+                    : passwordStrength.score < 3
+                      ? 'text-yellow-600'
+                      : 'text-emerald-600'
+                }`}>
+                  {passwordStrength.feedback[0]}
+                </p>
+              </div>
             )}
+          </div>
 
-            <Form.Item
-              label="Şifreyi Onayla"
-              name="confirmPassword"
-              dependencies={['password']}
-              rules={[
-                { required: true, message: 'Şifre onayı gerekli' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('password') === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error('Şifreler eşleşmiyor'));
-                  },
-                }),
-              ]}
-            >
-              <Input.Password
-                prefix={<LockClosedIcon className="w-4 h-4" />}
-                placeholder="Şifrenizi tekrar girin"
-                size="large"
-                iconRender={visible => (visible ? <EyeIcon className="w-4 h-4" /> : <EyeSlashIcon className="w-4 h-4" />)}
+          {/* Confirm Password Field */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
+              Şifreyi Onayla
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`w-full px-4 py-3 pr-12 bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all ${
+                  confirmPassword && password !== confirmPassword ? 'border-red-300' : 'border-slate-200'
+                }`}
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                minLength={8}
               />
-            </Form.Item>
-
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Button type="primary" htmlType="submit" loading={loading} block size="large">
-                Şifreyi Sıfırla
-              </Button>
-
-              <Button
-                type="dashed"
-                icon={<ArrowPathIcon className="w-4 h-4" />}
-                onClick={handleGeneratePassword}
-                block
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label={showConfirmPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
               >
-                Güçlü Şifre Öner
-              </Button>
-            </Space>
-          </Form>
+                {showConfirmPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-1.5 text-xs text-red-600">Şifreler eşleşmiyor</p>
+            )}
+          </div>
 
-          {/* Security Tips */}
-          <Alert
-            message="Güvenli Şifre İpuçları"
-            description={
-              <ul style={{ paddingLeft: '20px', margin: '8px 0' }}>
-                <li>En az 8 karakter kullanın (12+ daha güvenli)</li>
-                <li>Büyük/küçük harf, sayı ve özel karakter karıştırın</li>
-                <li>Yaygın kelimelerden ve desenlerde kaçının</li>
-                <li>Şifrenizi kimseyle paylaşmayın</li>
-              </ul>
-            }
-            type="info"
-            showIcon
-          />
-        </Space>
-      </Card>
+          {/* Generate Password Button */}
+          <button
+            type="button"
+            onClick={handleGeneratePassword}
+            className="w-full py-2.5 px-4 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Güçlü Şifre Öner</span>
+          </button>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading || !password || !confirmPassword || password !== confirmPassword}
+            className="w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>Şifre Sıfırlanıyor...</span>
+              </>
+            ) : (
+              <span>Şifreyi Sıfırla</span>
+            )}
+          </button>
+        </form>
+
+        {/* Security Tips */}
+        <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+          <h3 className="text-sm font-medium text-slate-700 mb-2">Güvenli Şifre İpuçları</h3>
+          <ul className="text-xs text-slate-500 space-y-1">
+            <li>• En az 8 karakter kullanın (12+ daha güvenli)</li>
+            <li>• Büyük/küçük harf, sayı ve özel karakter karıştırın</li>
+            <li>• Yaygın kelimelerden ve desenlerden kaçının</li>
+          </ul>
+        </div>
+
+        {/* Back to Login */}
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Giriş sayfasına dön</span>
+          </Link>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
 
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <ArrowPathIcon className="w-12 h-12 text-blue-500" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-slate-900 border-t-transparent rounded-full" />
       </div>
     }>
       <ResetPasswordContent />
     </Suspense>
-  );
+  )
 }
