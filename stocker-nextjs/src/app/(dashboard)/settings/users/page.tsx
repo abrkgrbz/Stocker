@@ -282,8 +282,9 @@ export default function UsersPage() {
     };
   };
 
-  // Only show active users (soft-deleted users are filtered out)
-  const users = (usersData?.items || []).filter((u) => u.isActive);
+  // Show all users except soft-deleted ones (Terminated status)
+  // PendingActivation users have isActive=false but should still be shown
+  const users = (usersData?.items || []).filter((u) => u.status !== 'Terminated');
 
   const filteredUsers = users.filter((user) => {
     const matchesRole =
