@@ -29,8 +29,6 @@ export const migrationKeys = {
   all: ['migration'] as const,
   sessions: () => [...migrationKeys.all, 'sessions'] as const,
   session: (id: string) => [...migrationKeys.sessions(), id] as const,
-  chunks: (sessionId: string) => [...migrationKeys.session(sessionId), 'chunks'] as const,
-  mappings: (sessionId: string) => [...migrationKeys.session(sessionId), 'mappings'] as const,
   validationResults: (sessionId: string, filters?: Partial<ValidationFilters>) =>
     [...migrationKeys.session(sessionId), 'validation', filters] as const,
   statistics: (sessionId: string) => [...migrationKeys.session(sessionId), 'statistics'] as const,
@@ -115,17 +113,6 @@ export function useDeleteSession() {
 // =====================================
 
 /**
- * Hook to get chunks for a session
- */
-export function useMigrationChunks(sessionId: string, options?: { enabled?: boolean }) {
-  return useQuery<MigrationChunkDto[], Error>({
-    queryKey: migrationKeys.chunks(sessionId),
-    queryFn: () => MigrationService.getChunks(sessionId),
-    enabled: !!sessionId && (options?.enabled !== false),
-  });
-}
-
-/**
  * Hook to upload a chunk
  */
 export function useUploadChunk() {
@@ -134,8 +121,21 @@ export function useUploadChunk() {
   return useMutation<MigrationChunkDto, Error, UploadChunkRequest>({
     mutationFn: (request) => MigrationService.uploadChunk(request),
     onSuccess: (_, request) => {
-      queryClient.invalidateQueries({ queryKey: migrationKeys.chunks(request.sessionId) });
       queryClient.invalidateQueries({ queryKey: migrationKeys.session(request.sessionId) });
+    },
+  });
+}
+
+/**
+ * Hook to complete upload
+ */
+export function useCompleteUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (sessionId) => MigrationService.completeUpload(sessionId),
+    onSuccess: (_, sessionId) => {
+      queryClient.invalidateQueries({ queryKey: migrationKeys.session(sessionId) });
     },
   });
 }
@@ -145,27 +145,16 @@ export function useUploadChunk() {
 // =====================================
 
 /**
- * Hook to get field mappings for a session
- */
-export function useMigrationMappings(sessionId: string, options?: { enabled?: boolean }) {
-  return useQuery<MappingConfigDto[], Error>({
-    queryKey: migrationKeys.mappings(sessionId),
-    queryFn: () => MigrationService.getMappings(sessionId),
-    enabled: !!sessionId && (options?.enabled !== false),
-  });
-}
-
-/**
  * Hook to get auto-mapping suggestions
  */
 export function useAutoMappingSuggestions() {
   return useMutation<
     AutoMappingSuggestion[],
     Error,
-    { sessionId: string; entityType: MigrationEntityType; sampleData: Record<string, any>[] }
+    { sessionId: string; entityType: MigrationEntityType }
   >({
-    mutationFn: ({ sessionId, entityType, sampleData }) =>
-      MigrationService.getAutoMappingSuggestions(sessionId, entityType, sampleData),
+    mutationFn: ({ sessionId, entityType }) =>
+      MigrationService.getAutoMappingSuggestions(sessionId, entityType),
   });
 }
 
@@ -178,7 +167,7 @@ export function useSaveMapping() {
   return useMutation<void, Error, SaveMappingRequest>({
     mutationFn: (request) => MigrationService.saveMapping(request),
     onSuccess: (_, request) => {
-      queryClient.invalidateQueries({ queryKey: migrationKeys.mappings(request.sessionId) });
+      queryClient.invalidateQueries({ queryKey: migrationKeys.session(request.sessionId) });
     },
   });
 }

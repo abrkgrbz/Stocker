@@ -295,7 +295,7 @@ export default function ValidationPreview({ sessionId, session, onNext, onBack }
             >
               <option value="all">Tüm Veri Türleri</option>
               {session?.entities.map(entity => (
-                <option key={entity} value={entity}>{entityTypeLabels[entity]}</option>
+                <option key={entity} value={entity}>{entityTypeLabels[entity as MigrationEntityType]}</option>
               ))}
             </select>
 

@@ -24,7 +24,7 @@ import {
 import {
   useUploadChunk,
   useDownloadTemplate,
-  useMigrationChunks,
+  useCompleteUpload,
   entityTypeLabels,
 } from '@/lib/api/hooks/useMigration';
 import type {
@@ -59,7 +59,7 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
 
   const uploadChunk = useUploadChunk();
   const downloadTemplate = useDownloadTemplate();
-  const { data: chunks, refetch: refetchChunks } = useMigrationChunks(sessionId);
+  const completeUpload = useCompleteUpload();
 
   // Parse Excel/CSV file
   const parseFile = async (file: File, entityType: MigrationEntityType): Promise<Record<string, any>[]> => {
@@ -144,8 +144,6 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
             : f
         )
       );
-
-      refetchChunks();
     } catch (error) {
       setUploadedFiles(prev =>
         prev.map(f =>
@@ -237,11 +235,11 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
               }`}
               onDragEnter={(e) => {
                 handleDrag(e);
-                setSelectedEntity(entityType);
+                setSelectedEntity(entityType as MigrationEntityType);
               }}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
-              onDrop={(e) => handleDrop(e, entityType)}
+              onDrop={(e) => handleDrop(e, entityType as MigrationEntityType)}
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -258,7 +256,7 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{entityTypeLabels[entityType]}</p>
+                      <p className="text-sm font-medium text-slate-900">{entityTypeLabels[entityType as MigrationEntityType]}</p>
                       {uploadedFile && (
                         <p className="text-xs text-slate-500">
                           {uploadedFile.fileName} • {uploadedFile.recordCount} kayıt
@@ -272,7 +270,7 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleDownloadTemplate(entityType)}
+                      onClick={() => handleDownloadTemplate(entityType as MigrationEntityType)}
                       disabled={downloadTemplate.isPending}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
                     >
@@ -282,7 +280,7 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
 
                     {isUploaded && (
                       <button
-                        onClick={() => handleRemoveFile(entityType)}
+                        onClick={() => handleRemoveFile(entityType as MigrationEntityType)}
                         className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -297,7 +295,7 @@ export default function FileUpload({ sessionId, session, onNext, onBack }: FileU
                     <input
                       type="file"
                       accept=".xlsx,.xls,.csv"
-                      onChange={(e) => handleFileSelect(e.target.files, entityType)}
+                      onChange={(e) => handleFileSelect(e.target.files, entityType as MigrationEntityType)}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       disabled={isUploading}
                     />

@@ -20,11 +20,9 @@ import {
   X,
 } from 'lucide-react';
 import {
-  useMigrationChunks,
-  useMigrationMappings,
-  useAutoMappingSuggestions,
   useSaveMapping,
   useStartValidation,
+  useAutoMappingSuggestions,
   entityTypeLabels,
   entityFields,
 } from '@/lib/api/hooks/useMigration';
@@ -33,6 +31,7 @@ import type {
   MigrationEntityType,
   MappingConfigDto,
   FieldMappingDto,
+  AutoMappingSuggestion,
 } from '@/lib/api/services/migration.service';
 
 interface FieldMappingProps {
@@ -99,52 +98,81 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
   const [mappings, setMappings] = useState<Record<MigrationEntityType, FieldMappingState[]>>({} as any);
   const [expandedEntity, setExpandedEntity] = useState<MigrationEntityType | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
-  // Fetch chunks to get source field names
-  const { data: chunks } = useMigrationChunks(sessionId);
   const saveMapping = useSaveMapping();
   const startValidation = useStartValidation();
+  const autoMappingSuggestions = useAutoMappingSuggestions();
 
-  // Initialize mappings when chunks are loaded
+  // Initialize mappings when session is loaded
   useEffect(() => {
-    if (chunks && session?.entities) {
-      const newMappings: Record<MigrationEntityType, FieldMappingState[]> = {} as any;
+    if (session?.entities && session.entities.length > 0) {
+      const initializeMappings = async () => {
+        setIsLoadingSuggestions(true);
+        const newMappings: Record<MigrationEntityType, FieldMappingState[]> = {} as any;
 
-      for (const entityType of session.entities) {
-        // Find chunks for this entity type
-        const entityChunks = chunks.filter(c => c.entityType === entityType);
-        if (entityChunks.length === 0) continue;
+        for (const entityType of session.entities) {
+          // Get target fields for this entity
+          const targetFields = entityFields[entityType as MigrationEntityType] || [];
 
-        // Get target fields for this entity
-        const targetFields = entityFields[entityType] || [];
+          try {
+            // Try to get auto-mapping suggestions from backend
+            const suggestions = await autoMappingSuggestions.mutateAsync({
+              sessionId,
+              entityType: entityType as MigrationEntityType,
+            });
 
-        // For now, we'll extract source fields from the first chunk's data
-        // In a real implementation, this would come from the parsed file data
-        // We'll use target field names as source field placeholders for demo
-        const sourceFields = targetFields.map(f => f.name);
+            if (suggestions && suggestions.length > 0) {
+              // Use backend suggestions
+              const entityMappings: FieldMappingState[] = suggestions.map((suggestion: AutoMappingSuggestion) => ({
+                sourceField: suggestion.sourceField,
+                targetField: suggestion.suggestedTarget,
+                confidence: suggestion.confidence,
+                isAutoMapped: suggestion.confidence > 0.5,
+              }));
+              newMappings[entityType as MigrationEntityType] = entityMappings;
+            } else {
+              // Fall back to using target fields as source fields with local auto-mapping
+              const sourceFields = targetFields.map(f => f.name);
+              const entityMappings: FieldMappingState[] = sourceFields.map(sourceField => {
+                const autoMap = autoMapField(sourceField, targetFields);
+                return {
+                  sourceField,
+                  targetField: autoMap?.target || '',
+                  confidence: autoMap?.confidence || 0,
+                  isAutoMapped: !!autoMap,
+                };
+              });
+              newMappings[entityType as MigrationEntityType] = entityMappings;
+            }
+          } catch {
+            // On error, fall back to using target fields as source fields with local auto-mapping
+            const sourceFields = targetFields.map(f => f.name);
+            const entityMappings: FieldMappingState[] = sourceFields.map(sourceField => {
+              const autoMap = autoMapField(sourceField, targetFields);
+              return {
+                sourceField,
+                targetField: autoMap?.target || '',
+                confidence: autoMap?.confidence || 0,
+                isAutoMapped: !!autoMap,
+              };
+            });
+            newMappings[entityType as MigrationEntityType] = entityMappings;
+          }
+        }
 
-        // Auto-map fields
-        const entityMappings: FieldMappingState[] = sourceFields.map(sourceField => {
-          const autoMap = autoMapField(sourceField, targetFields);
-          return {
-            sourceField,
-            targetField: autoMap?.target || '',
-            confidence: autoMap?.confidence || 0,
-            isAutoMapped: !!autoMap,
-          };
-        });
+        setMappings(newMappings);
+        setIsLoadingSuggestions(false);
 
-        newMappings[entityType] = entityMappings;
-      }
+        // Expand first entity by default
+        if (session.entities.length > 0) {
+          setExpandedEntity(session.entities[0] as MigrationEntityType);
+        }
+      };
 
-      setMappings(newMappings);
-
-      // Expand first entity by default
-      if (session.entities.length > 0) {
-        setExpandedEntity(session.entities[0]);
-      }
+      initializeMappings();
     }
-  }, [chunks, session?.entities]);
+  }, [sessionId, session?.entities]);
 
   // Update field mapping
   const updateMapping = (entityType: MigrationEntityType, sourceField: string, targetField: string) => {
@@ -227,7 +255,7 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
 
   // Check overall mapping status
   const hasAllRequiredMapped = session?.entities.every(entityType => {
-    const unmapped = getUnmappedRequiredFields(entityType);
+    const unmapped = getUnmappedRequiredFields(entityType as MigrationEntityType);
     return unmapped.length === 0;
   });
 
@@ -247,12 +275,21 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
         </div>
       </div>
 
+      {/* Loading State */}
+      {isLoadingSuggestions && (
+        <div className="flex items-center justify-center py-8">
+          <Spinner size="lg" />
+          <span className="ml-3 text-sm text-slate-600">Alan eşlemeleri yükleniyor...</span>
+        </div>
+      )}
+
       {/* Entity Mapping Cards */}
+      {!isLoadingSuggestions && (
       <div className="space-y-3">
         {session?.entities.map((entityType) => {
-          const entityMappings = mappings[entityType] || [];
-          const targetFields = entityFields[entityType] || [];
-          const unmappedRequired = getUnmappedRequiredFields(entityType);
+          const entityMappings = mappings[entityType as MigrationEntityType] || [];
+          const targetFields = entityFields[entityType as MigrationEntityType] || [];
+          const unmappedRequired = getUnmappedRequiredFields(entityType as MigrationEntityType);
           const isExpanded = expandedEntity === entityType;
           const mappedCount = entityMappings.filter(m => m.targetField).length;
           const autoMappedCount = entityMappings.filter(m => m.isAutoMapped && m.targetField).length;
@@ -268,7 +305,7 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
             >
               {/* Header */}
               <button
-                onClick={() => setExpandedEntity(isExpanded ? null : entityType)}
+                onClick={() => setExpandedEntity(isExpanded ? null : entityType as MigrationEntityType)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -278,7 +315,7 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   )}
                   <div className="text-left">
-                    <p className="text-sm font-medium text-slate-900">{entityTypeLabels[entityType]}</p>
+                    <p className="text-sm font-medium text-slate-900">{entityTypeLabels[entityType as MigrationEntityType]}</p>
                     <p className="text-xs text-slate-500">
                       {mappedCount} / {entityMappings.length} alan eşlendi
                       {autoMappedCount > 0 && (
@@ -396,6 +433,7 @@ export default function FieldMapping({ sessionId, session, onNext, onBack }: Fie
           );
         })}
       </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-4 border-t border-slate-200">
