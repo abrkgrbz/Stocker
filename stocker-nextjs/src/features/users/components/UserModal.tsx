@@ -332,9 +332,10 @@ export function UserModal({ open, user, onClose, onSubmit }: UserModalProps) {
               allowClear
               style={{ borderRadius: 8 }}
               notFoundContent={departmentsLoading ? <Spin size="small" /> : 'Departman bulunamadı'}
+              optionLabelProp="label"
             >
               {departments?.map((department) => (
-                <Option key={department.id} value={department.id}>
+                <Option key={department.id} value={department.id} label={department.name}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <UserGroupIcon className="w-4 h-4" style={{ color: '#64748b' }} />
                     <div>

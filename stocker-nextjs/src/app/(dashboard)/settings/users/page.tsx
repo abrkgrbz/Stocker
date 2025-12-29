@@ -130,7 +130,8 @@ export default function UsersPage() {
 
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[CreateUser] Success:', data);
       showCreateSuccess('kullanıcı');
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['subscription-info'] });
@@ -138,7 +139,8 @@ export default function UsersPage() {
       setEditingUser(null);
     },
     onError: (error: any) => {
-      showError(error?.message || 'Kullanıcı oluşturulurken bir hata oluştu');
+      console.error('[CreateUser] Error:', error);
+      showError(error?.message || error?.error?.message || 'Kullanıcı oluşturulurken bir hata oluştu');
     },
   });
 
