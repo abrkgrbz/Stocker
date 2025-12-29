@@ -59,20 +59,23 @@ export type ValidationStatus =
 // =====================================
 
 export interface MigrationSessionDto {
-  id: string;
+  sessionId: string;  // Backend uses SessionId
+  id: string;         // Alias for sessionId (computed in getter)
   tenantId: string;
-  createdByUserId: string;
-  sourceType: MigrationSourceType;
+  sourceType: string;
   sourceName: string;
   status: MigrationSessionStatus;
-  entities: MigrationEntityType[];
+  entities: string[];
   totalRecords: number;
   validRecords: number;
   warningRecords: number;
   errorRecords: number;
   importedRecords: number;
   skippedRecords: number;
+  validationProgress: number;
+  importProgress: number;
   errorMessage?: string;
+  importJobId?: string;
   createdAt: string;
   validatedAt?: string;
   importStartedAt?: string;
@@ -440,17 +443,24 @@ export const MigrationService = {
   // Session Management
   async createSession(request: CreateSessionRequest): Promise<MigrationSessionDto> {
     const response = await apiClient.post<MigrationSessionDto>('/api/tenant/data-migration/sessions', request);
-    return response as unknown as MigrationSessionDto;
+    const data = response as unknown as MigrationSessionDto;
+    // Map sessionId to id for frontend compatibility
+    return { ...data, id: data.sessionId };
   },
 
   async getSession(sessionId: string): Promise<MigrationSessionDto> {
     const response = await apiClient.get<MigrationSessionDto>(`/api/tenant/data-migration/sessions/${sessionId}`);
-    return response as unknown as MigrationSessionDto;
+    const data = response as unknown as MigrationSessionDto;
+    // Map sessionId to id for frontend compatibility
+    return { ...data, id: data.sessionId };
   },
 
   async getSessions(): Promise<MigrationSessionDto[]> {
-    const response = await apiClient.get<MigrationSessionDto[]>('/api/tenant/data-migration/sessions');
-    return response as unknown as MigrationSessionDto[];
+    const response = await apiClient.get<{ sessions: MigrationSessionDto[]; totalCount: number }>('/api/tenant/data-migration/sessions');
+    // Backend returns { data: { sessions: [...], totalCount, ... } }
+    const data = response as unknown as { sessions: MigrationSessionDto[] };
+    // Map sessionId to id for frontend compatibility
+    return (data?.sessions || []).map(s => ({ ...s, id: s.sessionId }));
   },
 
   async cancelSession(sessionId: string): Promise<void> {
