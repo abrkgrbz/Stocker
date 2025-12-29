@@ -147,20 +147,30 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
         tenantDbContext.TenantUsers.Update(user);
         await tenantDbContext.SaveChangesAsync(cancellationToken);
 
-        // 13. Send welcome email (async, don't wait)
+        // 13. Get tenant info for subdomain and welcome email
+        var tenantInfo = await _masterDbContext.Tenants
+            .Include(t => t.Domains)
+            .Where(t => t.Id == request.TenantId)
+            .Select(t => new { t.Name, Domains = t.Domains.ToList() })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // Get primary subdomain (or first available)
+        var tenantSubdomain = tenantInfo?.Domains
+            .Where(d => d.IsPrimary)
+            .Select(d => d.DomainName)
+            .FirstOrDefault()
+            ?? tenantInfo?.Domains.FirstOrDefault()?.DomainName
+            ?? string.Empty;
+
+        // Send welcome email (async, don't wait)
         _ = Task.Run(async () =>
         {
             try
             {
-                var tenant = await _masterDbContext.Tenants
-                    .Where(t => t.Id == request.TenantId)
-                    .Select(t => new { t.Name })
-                    .FirstOrDefaultAsync(CancellationToken.None);
-
                 await _emailService.SendWelcomeEmailAsync(
                     user.Email.Value,
                     user.GetFullName(),
-                    tenant?.Name ?? "Stocker",
+                    tenantInfo?.Name ?? "Stocker",
                     CancellationToken.None);
             }
             catch (Exception ex)
@@ -169,7 +179,7 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
             }
         });
 
-        // 14. Return result with auth tokens
+        // 14. Return result with auth tokens and tenant subdomain
         var result = new SetupPasswordResultDto
         {
             AccessToken = authToken.AccessToken,
@@ -180,7 +190,8 @@ public class SetupPasswordCommandHandler : IRequestHandler<SetupPasswordCommand,
             TenantId = request.TenantId,
             FullName = user.GetFullName(),
             Email = user.Email.Value,
-            Roles = roles
+            Roles = roles,
+            TenantSubdomain = tenantSubdomain
         };
 
         return Result<SetupPasswordResultDto>.Success(result);

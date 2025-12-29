@@ -134,6 +134,8 @@ export interface SetupPasswordResponse {
   fullName?: string;
   email?: string;
   roles?: string[];
+  // Tenant subdomain for redirect (e.g., "companyname" from "companyname.stoocker.app")
+  tenantSubdomain?: string;
 }
 
 /**
@@ -268,6 +270,7 @@ export async function setupPassword(data: SetupPasswordRequest): Promise<SetupPa
       fullName: tokenData.fullName,
       email: tokenData.email,
       roles: tokenData.roles,
+      tenantSubdomain: tokenData.tenantSubdomain,
     };
   } catch (error) {
     console.error('Setup password error:', error);

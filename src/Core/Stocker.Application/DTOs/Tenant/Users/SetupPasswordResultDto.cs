@@ -50,4 +50,9 @@ public class SetupPasswordResultDto
     /// User's roles.
     /// </summary>
     public List<string> Roles { get; set; } = new();
+
+    /// <summary>
+    /// Tenant's subdomain for redirect URL (e.g., "companyname" from "companyname.stoocker.app").
+    /// </summary>
+    public string TenantSubdomain { get; set; } = string.Empty;
 }

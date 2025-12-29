@@ -24,6 +24,7 @@ function SetupPasswordContent() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [tenantSubdomain, setTenantSubdomain] = useState('')
 
   // Calculate password strength
   const passwordStrength = password ? calculatePasswordStrength(password) : null
@@ -81,10 +82,20 @@ function SetupPasswordContent() {
 
       if (response.success) {
         setSetupSuccess(true)
+        // Store subdomain for redirect
+        const subdomain = response.tenantSubdomain || ''
+        setTenantSubdomain(subdomain)
+
         // Auto-login: Backend has already set HttpOnly cookies
-        // Redirect to dashboard after 2 seconds (user is now authenticated)
+        // Redirect to tenant subdomain dashboard after 2 seconds
         setTimeout(() => {
-          router.push('/dashboard')
+          if (subdomain) {
+            // Redirect to tenant subdomain (e.g., https://companyname.stoocker.app/dashboard)
+            window.location.href = `https://${subdomain}.stoocker.app/dashboard`
+          } else {
+            // Fallback to current domain if no subdomain available
+            router.push('/dashboard')
+          }
         }, 2000)
       } else {
         setError(response.message || 'Hesap aktifleştirilemedi. Lütfen tekrar deneyin.')
@@ -247,12 +258,21 @@ function SetupPasswordContent() {
           </div>
 
           {/* Actions */}
-          <Link
-            href="/dashboard"
-            className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
-          >
-            Panele Git
-          </Link>
+          {tenantSubdomain ? (
+            <a
+              href={`https://${tenantSubdomain}.stoocker.app/dashboard`}
+              className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
+            >
+              Panele Git
+            </a>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="block w-full bg-slate-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-slate-800 transition-colors text-center"
+            >
+              Panele Git
+            </Link>
+          )}
         </div>
       </div>
     )
