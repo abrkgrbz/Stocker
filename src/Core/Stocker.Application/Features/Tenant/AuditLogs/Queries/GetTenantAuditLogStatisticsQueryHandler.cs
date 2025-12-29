@@ -35,10 +35,10 @@ public class GetTenantAuditLogStatisticsQueryHandler : IRequestHandler<GetTenant
                 new Error("Tenant.NotFound", "Tenant bulunamadı", ErrorType.NotFound));
         }
 
-        // Query audit logs filtered by tenant code OR tenant name
+        // Query audit logs filtered by tenant code only
         var query = _unitOfWork.SecurityAuditLogs()
             .AsQueryable()
-            .Where(x => x.TenantCode == tenant.Code || x.TenantCode == tenant.Name);
+            .Where(x => x.TenantCode == tenant.Code);
 
         // Apply date filters
         if (request.FromDate.HasValue)

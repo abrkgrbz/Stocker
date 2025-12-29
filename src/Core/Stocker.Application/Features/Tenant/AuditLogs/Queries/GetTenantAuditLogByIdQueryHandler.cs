@@ -34,10 +34,10 @@ public class GetTenantAuditLogByIdQueryHandler : IRequestHandler<GetTenantAuditL
                 new Error("Tenant.NotFound", "Tenant bulunamadı", ErrorType.NotFound));
         }
 
-        // Get the audit log, ensuring it belongs to this tenant (check both Code and Name)
+        // Get the audit log, ensuring it belongs to this tenant
         var log = await _unitOfWork.SecurityAuditLogs()
             .AsQueryable()
-            .Where(x => x.Id == request.LogId && (x.TenantCode == tenant.Code || x.TenantCode == tenant.Name))
+            .Where(x => x.Id == request.LogId && x.TenantCode == tenant.Code)
             .Select(x => new SecurityAuditLogDto
             {
                 Id = x.Id,
