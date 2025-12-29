@@ -217,13 +217,19 @@ public class UserRepository : IUserRepository
     public async Task<bool> DeleteTenantUserAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _tenantContext.TenantUsers
+            .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
         if (user == null)
             return false;
 
-        // Soft delete - just deactivate the user
-        user.Deactivate();
+        // Hard delete - remove user roles first, then the user
+        if (user.UserRoles != null && user.UserRoles.Any())
+        {
+            _tenantContext.Set<Domain.Tenant.Entities.TenantUserRole>().RemoveRange(user.UserRoles);
+        }
+
+        _tenantContext.TenantUsers.Remove(user);
 
         await _tenantContext.SaveChangesAsync(cancellationToken);
         return true;
