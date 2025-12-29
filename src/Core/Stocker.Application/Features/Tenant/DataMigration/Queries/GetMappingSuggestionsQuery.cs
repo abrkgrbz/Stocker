@@ -167,6 +167,59 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
                 new() { Name = "UnitCost", DisplayName = "Birim Maliyet", DataType = "decimal", IsRequired = false },
                 new() { Name = "Date", DisplayName = "Tarih", DataType = "datetime", IsRequired = false },
             },
+            MigrationEntityType.Stock => new List<TargetFieldDto>
+            {
+                new() { Name = "ProductCode", DisplayName = "Ürün Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "WarehouseCode", DisplayName = "Depo Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Quantity", DisplayName = "Miktar", DataType = "decimal", IsRequired = true },
+                new() { Name = "UnitCost", DisplayName = "Birim Maliyet", DataType = "decimal", IsRequired = false },
+                new() { Name = "LotNumber", DisplayName = "Lot/Parti No", DataType = "string", IsRequired = false, MaxLength = 50 },
+                new() { Name = "ExpiryDate", DisplayName = "Son Kullanma Tarihi", DataType = "date", IsRequired = false },
+            },
+            MigrationEntityType.Invoice => new List<TargetFieldDto>
+            {
+                new() { Name = "InvoiceNo", DisplayName = "Fatura No", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "InvoiceType", DisplayName = "Fatura Tipi", DataType = "string", IsRequired = true, MaxLength = 20 },
+                new() { Name = "CustomerCode", DisplayName = "Cari Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Date", DisplayName = "Fatura Tarihi", DataType = "datetime", IsRequired = true },
+                new() { Name = "DueDate", DisplayName = "Vade Tarihi", DataType = "datetime", IsRequired = false },
+                new() { Name = "TotalAmount", DisplayName = "Toplam Tutar", DataType = "decimal", IsRequired = true },
+                new() { Name = "VatAmount", DisplayName = "KDV Tutarı", DataType = "decimal", IsRequired = false },
+                new() { Name = "DiscountAmount", DisplayName = "İskonto Tutarı", DataType = "decimal", IsRequired = false },
+                new() { Name = "Description", DisplayName = "Açıklama", DataType = "string", IsRequired = false, MaxLength = 500 },
+            },
+            MigrationEntityType.InvoiceItem => new List<TargetFieldDto>
+            {
+                new() { Name = "InvoiceNo", DisplayName = "Fatura No", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "LineNo", DisplayName = "Satır No", DataType = "int", IsRequired = false },
+                new() { Name = "ProductCode", DisplayName = "Ürün Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Quantity", DisplayName = "Miktar", DataType = "decimal", IsRequired = true },
+                new() { Name = "UnitPrice", DisplayName = "Birim Fiyat", DataType = "decimal", IsRequired = true },
+                new() { Name = "VatRate", DisplayName = "KDV Oranı", DataType = "decimal", IsRequired = false },
+                new() { Name = "DiscountRate", DisplayName = "İskonto Oranı", DataType = "decimal", IsRequired = false },
+                new() { Name = "TotalPrice", DisplayName = "Toplam Tutar", DataType = "decimal", IsRequired = false },
+                new() { Name = "WarehouseCode", DisplayName = "Depo Kodu", DataType = "string", IsRequired = false, MaxLength = 50 },
+            },
+            MigrationEntityType.AccountingEntry => new List<TargetFieldDto>
+            {
+                new() { Name = "EntryNo", DisplayName = "Fiş No", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Date", DisplayName = "Fiş Tarihi", DataType = "datetime", IsRequired = true },
+                new() { Name = "AccountCode", DisplayName = "Hesap Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Description", DisplayName = "Açıklama", DataType = "string", IsRequired = false, MaxLength = 500 },
+                new() { Name = "Debit", DisplayName = "Borç", DataType = "decimal", IsRequired = false },
+                new() { Name = "Credit", DisplayName = "Alacak", DataType = "decimal", IsRequired = false },
+                new() { Name = "DocumentNo", DisplayName = "Belge No", DataType = "string", IsRequired = false, MaxLength = 50 },
+                new() { Name = "DocumentType", DisplayName = "Belge Tipi", DataType = "string", IsRequired = false, MaxLength = 20 },
+            },
+            MigrationEntityType.PriceList => new List<TargetFieldDto>
+            {
+                new() { Name = "ProductCode", DisplayName = "Ürün Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "PriceListCode", DisplayName = "Fiyat Listesi Kodu", DataType = "string", IsRequired = true, MaxLength = 50 },
+                new() { Name = "Price", DisplayName = "Fiyat", DataType = "decimal", IsRequired = true },
+                new() { Name = "Currency", DisplayName = "Para Birimi", DataType = "string", IsRequired = false, MaxLength = 3 },
+                new() { Name = "ValidFrom", DisplayName = "Geçerlilik Başlangıcı", DataType = "date", IsRequired = false },
+                new() { Name = "ValidTo", DisplayName = "Geçerlilik Bitişi", DataType = "date", IsRequired = false },
+            },
             _ => new List<TargetFieldDto>()
         };
     }
@@ -202,6 +255,26 @@ public class GetMappingSuggestionsQueryHandler : IRequestHandler<GetMappingSugge
             { "BrandName", new List<string> { "MARKA_ADI", "MARKA", "BRAND_NAME", "BRAND" } },
             { "UnitCode", new List<string> { "BIRIM_KODU", "BIRIM_KOD", "UNIT_CODE", "BIRIMKOD" } },
             { "UnitName", new List<string> { "BIRIM_ADI", "BIRIM", "UNIT_NAME" } },
+            { "InvoiceNo", new List<string> { "FATURA_NO", "FATURANO", "INVOICE_NO", "BELGE_NO", "BELGENO" } },
+            { "InvoiceType", new List<string> { "FATURA_TIPI", "FATURATIPI", "INVOICE_TYPE", "TIP", "HAREKET_TIPI" } },
+            { "CustomerCode", new List<string> { "CARI_KOD", "CARIKOD", "MUSTERI_KOD", "CUSTOMER_CODE" } },
+            { "DueDate", new List<string> { "VADE_TARIHI", "VADE", "DUE_DATE", "VADETARIHI" } },
+            { "TotalAmount", new List<string> { "TOPLAM", "TOPLAM_TUTAR", "TOTAL", "TOTAL_AMOUNT", "GENEL_TOPLAM" } },
+            { "VatAmount", new List<string> { "KDV_TUTARI", "KDV", "VAT_AMOUNT", "KDVTUTAR" } },
+            { "DiscountAmount", new List<string> { "ISKONTO_TUTARI", "ISKONTO", "DISCOUNT", "INDIRIM" } },
+            { "UnitPrice", new List<string> { "BIRIM_FIYAT", "BIRIMFIYAT", "UNIT_PRICE", "FIYAT" } },
+            { "DiscountRate", new List<string> { "ISKONTO_ORANI", "ISKONTOORANI", "DISCOUNT_RATE" } },
+            { "TotalPrice", new List<string> { "SATIR_TOPLAMI", "SATIRTOPLAM", "LINE_TOTAL", "TUTAR" } },
+            { "EntryNo", new List<string> { "FIS_NO", "FISNO", "YEVMIYE_NO", "ENTRY_NO" } },
+            { "AccountCode", new List<string> { "HESAP_KODU", "HESAPKODU", "ACCOUNT_CODE", "MUHASEBE_KODU" } },
+            { "Debit", new List<string> { "BORC", "BORÇ", "DEBIT" } },
+            { "Credit", new List<string> { "ALACAK", "CREDIT" } },
+            { "DocumentNo", new List<string> { "BELGE_NO", "BELGENO", "DOCUMENT_NO", "EVRAK_NO" } },
+            { "DocumentType", new List<string> { "BELGE_TIPI", "BELGETIPI", "DOCUMENT_TYPE", "EVRAK_TIPI" } },
+            { "LotNumber", new List<string> { "LOT_NO", "PARTI_NO", "LOT_NUMBER", "SERI_NO" } },
+            { "ExpiryDate", new List<string> { "SKT", "SON_KULLANMA", "EXPIRY_DATE", "MIAD" } },
+            { "PriceListCode", new List<string> { "FIYAT_LISTESI", "LISTE_KODU", "PRICE_LIST", "FIYATLISTESI" } },
+            { "Currency", new List<string> { "DOVIZ", "PARA_BIRIMI", "CURRENCY", "DOVIZ_KODU" } },
         };
 
         foreach (var targetField in targetFields)

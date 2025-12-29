@@ -404,6 +404,62 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     ["Date"] = "15.01.2024"
                 }
             },
+            MigrationEntityType.Stock => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["ProductCode"] = "PRD-001",
+                    ["WarehouseCode"] = "DEP-01",
+                    ["Quantity"] = "100",
+                    ["UnitCost"] = "95,00"
+                }
+            },
+            MigrationEntityType.Invoice => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["InvoiceNo"] = "FTR-2024-001",
+                    ["InvoiceType"] = "Satis",
+                    ["CustomerCode"] = "MUS-001",
+                    ["Date"] = "15.01.2024",
+                    ["TotalAmount"] = "1.180,00",
+                    ["VatAmount"] = "180,00"
+                }
+            },
+            MigrationEntityType.InvoiceItem => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["InvoiceNo"] = "FTR-2024-001",
+                    ["ProductCode"] = "PRD-001",
+                    ["Quantity"] = "10",
+                    ["UnitPrice"] = "100,00",
+                    ["VatRate"] = "18",
+                    ["TotalPrice"] = "1.180,00"
+                }
+            },
+            MigrationEntityType.AccountingEntry => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["EntryNo"] = "YEV-2024-001",
+                    ["Date"] = "15.01.2024",
+                    ["AccountCode"] = "100.01",
+                    ["Description"] = "Kasa girişi",
+                    ["Debit"] = "1.000,00",
+                    ["Credit"] = "0,00"
+                }
+            },
+            MigrationEntityType.PriceList => new List<Dictionary<string, string>>
+            {
+                new()
+                {
+                    ["ProductCode"] = "PRD-001",
+                    ["PriceListCode"] = "PERAKENDE",
+                    ["Price"] = "150,00",
+                    ["Currency"] = "TRY"
+                }
+            },
             _ => new List<Dictionary<string, string>>()
         };
     }
@@ -553,6 +609,70 @@ public class ExcelTemplateGenerator : IExcelTemplateGenerator
                     new("Currency", "Para Birimi", "string", false, 3, null, "TRY"),
                     new("ValidFrom", "Geçerlilik Başlangıcı", "date", false),
                     new("ValidTo", "Geçerlilik Bitişi", "date", false),
+                }
+            },
+            MigrationEntityType.Stock => new EntitySchema
+            {
+                DisplayName = "Stok Miktarları",
+                Description = "Mevcut stok miktarları için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("ProductCode", "Ürün Kodu", "string", true, 50, "Sistemde kayıtlı ürün kodu"),
+                    new("WarehouseCode", "Depo Kodu", "string", true, 50, "Sistemde kayıtlı depo kodu"),
+                    new("Quantity", "Miktar", "decimal", true, null, "Stok miktarı"),
+                    new("UnitCost", "Birim Maliyet", "decimal", false, null, "Ortalama birim maliyet"),
+                    new("LotNumber", "Lot/Parti No", "string", false, 50),
+                    new("ExpiryDate", "Son Kullanma Tarihi", "date", false),
+                }
+            },
+            MigrationEntityType.Invoice => new EntitySchema
+            {
+                DisplayName = "Faturalar",
+                Description = "Satış ve alış faturaları için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("InvoiceNo", "Fatura No", "string", true, 50, "Benzersiz fatura numarası"),
+                    new("InvoiceType", "Fatura Tipi", "string", true, 20, "Satis, Alis, Iade"),
+                    new("CustomerCode", "Cari Kodu", "string", true, 50, "Müşteri veya tedarikçi kodu"),
+                    new("Date", "Fatura Tarihi", "datetime", true),
+                    new("DueDate", "Vade Tarihi", "datetime", false),
+                    new("TotalAmount", "Toplam Tutar", "decimal", true, null, "KDV dahil toplam"),
+                    new("VatAmount", "KDV Tutarı", "decimal", false),
+                    new("DiscountAmount", "İskonto Tutarı", "decimal", false),
+                    new("Description", "Açıklama", "string", false, 500),
+                }
+            },
+            MigrationEntityType.InvoiceItem => new EntitySchema
+            {
+                DisplayName = "Fatura Kalemleri",
+                Description = "Fatura detay satırları için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("InvoiceNo", "Fatura No", "string", true, 50, "İlgili fatura numarası"),
+                    new("LineNo", "Satır No", "int", false, null, "Fatura satır sırası"),
+                    new("ProductCode", "Ürün Kodu", "string", true, 50),
+                    new("Quantity", "Miktar", "decimal", true),
+                    new("UnitPrice", "Birim Fiyat", "decimal", true, null, "KDV hariç birim fiyat"),
+                    new("VatRate", "KDV Oranı", "decimal", false, null, "0, 1, 8, 10, 18, 20"),
+                    new("DiscountRate", "İskonto Oranı", "decimal", false),
+                    new("TotalPrice", "Toplam Tutar", "decimal", false, null, "KDV dahil satır toplamı"),
+                    new("WarehouseCode", "Depo Kodu", "string", false, 50),
+                }
+            },
+            MigrationEntityType.AccountingEntry => new EntitySchema
+            {
+                DisplayName = "Muhasebe Kayıtları",
+                Description = "Yevmiye/muhasebe fişleri için import şablonu",
+                Fields = new List<FieldSchema>
+                {
+                    new("EntryNo", "Fiş No", "string", true, 50, "Benzersiz fiş numarası"),
+                    new("Date", "Fiş Tarihi", "datetime", true),
+                    new("AccountCode", "Hesap Kodu", "string", true, 50, "Muhasebe hesap kodu"),
+                    new("Description", "Açıklama", "string", false, 500, "İşlem açıklaması"),
+                    new("Debit", "Borç", "decimal", false, null, "Borç tutarı"),
+                    new("Credit", "Alacak", "decimal", false, null, "Alacak tutarı"),
+                    new("DocumentNo", "Belge No", "string", false, 50, "İlişkili belge numarası"),
+                    new("DocumentType", "Belge Tipi", "string", false, 20, "Fatura, Makbuz, Virman vb."),
                 }
             },
             _ => new EntitySchema
