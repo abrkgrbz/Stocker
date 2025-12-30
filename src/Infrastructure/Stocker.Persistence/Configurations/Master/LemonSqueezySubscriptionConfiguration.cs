@@ -39,6 +39,17 @@ public class LemonSqueezySubscriptionConfiguration : BaseEntityTypeConfiguration
         builder.Property(s => s.LsOrderId)
             .HasMaxLength(50);
 
+        // Customer Info
+        builder.Property(s => s.CustomerEmail)
+            .HasMaxLength(256);
+
+        // Product/Plan Info
+        builder.Property(s => s.ProductName)
+            .HasMaxLength(200);
+
+        builder.Property(s => s.VariantName)
+            .HasMaxLength(200);
+
         // Status
         builder.Property(s => s.Status)
             .IsRequired()
@@ -118,5 +129,11 @@ public class LemonSqueezySubscriptionConfiguration : BaseEntityTypeConfiguration
 
         builder.HasIndex(s => new { s.TenantId, s.Status })
             .HasDatabaseName("IX_LemonSqueezySubscriptions_TenantId_Status");
+
+        // Relationships
+        builder.HasOne(s => s.Tenant)
+            .WithMany()
+            .HasForeignKey(s => s.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
