@@ -28,6 +28,9 @@ public interface ILemonSqueezyService
     // Products & Variants
     Task<Result<List<LsProduct>>> GetProductsAsync(CancellationToken cancellationToken = default);
     Task<Result<List<LsVariant>>> GetVariantsAsync(string productId, CancellationToken cancellationToken = default);
+
+    // Invoices
+    Task<Result<List<LsInvoice>>> GetSubscriptionInvoicesAsync(string subscriptionId, CancellationToken cancellationToken = default);
 }
 
 #region Request/Response DTOs
@@ -111,6 +114,20 @@ public record LsVariant
     public string? Interval { get; init; }
     public int? IntervalCount { get; init; }
     public bool IsSubscription { get; init; }
+}
+
+public record LsInvoice
+{
+    public string Id { get; init; } = string.Empty;
+    public string? InvoiceNumber { get; init; }
+    public string Status { get; init; } = string.Empty;
+    public int Subtotal { get; init; }
+    public int Tax { get; init; }
+    public int Total { get; init; }
+    public string Currency { get; init; } = string.Empty;
+    public string? InvoiceUrl { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime? PaidAt { get; init; }
 }
 
 #endregion

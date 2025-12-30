@@ -9,6 +9,7 @@ namespace Stocker.Domain.Master.Entities;
 public class LemonSqueezySubscription : Entity<Guid>
 {
     public Guid TenantId { get; private set; }
+    public Tenant Tenant { get; private set; } = null!;  // Navigation property
     public Guid? SubscriptionId { get; private set; }  // FK to internal Subscription
 
     // Lemon Squeezy External IDs
@@ -17,6 +18,13 @@ public class LemonSqueezySubscription : Entity<Guid>
     public string LsProductId { get; private set; } = string.Empty;
     public string LsVariantId { get; private set; } = string.Empty;
     public string? LsOrderId { get; private set; }
+
+    // Customer Info
+    public string CustomerEmail { get; private set; } = string.Empty;
+
+    // Product/Plan Info
+    public string? ProductName { get; private set; }
+    public string? VariantName { get; private set; }
 
     // Subscription Status from Lemon Squeezy
     public LemonSqueezyStatus Status { get; private set; }
@@ -143,6 +151,49 @@ public class LemonSqueezySubscription : Entity<Guid>
     public void MarkAsExpired()
     {
         Status = LemonSqueezyStatus.Expired;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Simplified update for sync operations.
+    /// </summary>
+    public void UpdateFromWebhook(
+        LemonSqueezyStatus status,
+        DateTime? renewsAt,
+        DateTime? endsAt,
+        DateTime? trialEndsAt)
+    {
+        Status = status;
+        RenewsAt = renewsAt;
+        EndsAt = endsAt;
+        TrialEndsAt = trialEndsAt;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePaymentInfo(string? cardBrand, string? cardLastFour)
+    {
+        CardBrand = cardBrand;
+        CardLastFour = cardLastFour;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePortalUrls(string? customerPortalUrl, string? updatePaymentMethodUrl)
+    {
+        CustomerPortalUrl = customerPortalUrl;
+        UpdatePaymentMethodUrl = updatePaymentMethodUrl;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCustomerEmail(string email)
+    {
+        CustomerEmail = email;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetProductInfo(string? productName, string? variantName)
+    {
+        ProductName = productName;
+        VariantName = variantName;
         UpdatedAt = DateTime.UtcNow;
     }
 

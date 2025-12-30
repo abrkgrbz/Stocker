@@ -976,6 +976,53 @@ public class LemonSqueezyService : ILemonSqueezyService
     }
 
     #endregion
+
+    #region Invoices
+
+    public async Task<Result<List<LsInvoice>>> GetSubscriptionInvoicesAsync(string subscriptionId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Getting invoices for subscription: {SubscriptionId}", subscriptionId);
+
+            var httpRequest = await CreateAuthorizedRequestAsync(HttpMethod.Get,
+                $"{BaseUrl}/subscription-invoices?filter[subscription_id]={subscriptionId}", cancellationToken);
+            var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Failed to get subscription invoices: {StatusCode} - {Response}",
+                    response.StatusCode, responseContent);
+                return Result.Failure<List<LsInvoice>>(
+                    Error.Failure("Invoices.Failed", "Faturalar alınamadı"));
+            }
+
+            var lsResponse = JsonSerializer.Deserialize<LsApiListResponse<LsInvoiceData>>(responseContent);
+
+            var invoices = lsResponse?.Data?.Select(i => new LsInvoice
+            {
+                Id = i.Id,
+                InvoiceNumber = i.Attributes?.BillingReason,
+                Status = i.Attributes?.Status ?? string.Empty,
+                Total = i.Attributes?.Total ?? 0,
+                Currency = i.Attributes?.Currency ?? "TRY",
+                InvoiceUrl = i.Attributes?.Urls?.InvoiceUrl,
+                CreatedAt = i.Attributes?.CreatedAt ?? DateTime.MinValue,
+                PaidAt = i.Attributes?.UpdatedAt
+            }).ToList() ?? new List<LsInvoice>();
+
+            return Result.Success(invoices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting invoices for subscription {SubscriptionId}", subscriptionId);
+            return Result.Failure<List<LsInvoice>>(
+                Error.Failure("Invoices.Error", "Faturalar alınırken bir hata oluştu"));
+        }
+    }
+
+    #endregion
 }
 
 #region Lemon Squeezy API DTOs
@@ -1224,6 +1271,45 @@ internal class LsWebhookData
 
     [JsonPropertyName("attributes")]
     public LsSubscriptionAttributes? Attributes { get; set; }
+}
+
+internal class LsInvoiceData
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("attributes")]
+    public LsInvoiceAttributes? Attributes { get; set; }
+}
+
+internal class LsInvoiceAttributes
+{
+    [JsonPropertyName("billing_reason")]
+    public string? BillingReason { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("total")]
+    public int? Total { get; set; }
+
+    [JsonPropertyName("currency")]
+    public string? Currency { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTime? CreatedAt { get; set; }
+
+    [JsonPropertyName("updated_at")]
+    public DateTime? UpdatedAt { get; set; }
+
+    [JsonPropertyName("urls")]
+    public LsInvoiceUrls? Urls { get; set; }
+}
+
+internal class LsInvoiceUrls
+{
+    [JsonPropertyName("invoice_url")]
+    public string? InvoiceUrl { get; set; }
 }
 
 #endregion
