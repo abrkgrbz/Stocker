@@ -261,8 +261,12 @@ const StoragePage: React.FC = () => {
   const handleUploadSystemAsset = async (assetType: SystemAssetType, file: File) => {
     setUploadingAsset(assetType);
     try {
-      // Delete existing asset if any
-      if (systemAssets[assetType]?.file) {
+      // Get file extension and create proper object name
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const objectName = `${assetType}.${ext}`;
+
+      // Delete existing asset if any (with different extension)
+      if (systemAssets[assetType]?.file && systemAssets[assetType].file !== objectName) {
         try {
           await storageService.deleteObject(SYSTEM_ASSETS_BUCKET, systemAssets[assetType].file!);
         } catch (e) {
@@ -270,25 +274,13 @@ const StoragePage: React.FC = () => {
         }
       }
 
-      // Get file extension
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-      const objectName = `${assetType}.${ext}`;
+      // Create a renamed file with the proper asset name
+      const renamedFile = new File([file], objectName, { type: file.type });
 
-      // Upload new asset
-      const response = await storageService.uploadFiles(SYSTEM_ASSETS_BUCKET, [file]);
+      // Upload with correct name directly
+      const response = await storageService.uploadFiles(SYSTEM_ASSETS_BUCKET, [renamedFile]);
 
       if (response.success && response.results[0]?.success) {
-        // Rename to proper asset name
-        // Since MinIO doesn't have rename, we need to re-upload with correct name
-        const blob = await storageService.downloadFile(SYSTEM_ASSETS_BUCKET, response.results[0].objectName!);
-        const renamedFile = new File([blob], objectName, { type: file.type });
-
-        // Delete the original uploaded file
-        await storageService.deleteObject(SYSTEM_ASSETS_BUCKET, response.results[0].objectName!);
-
-        // Upload with correct name
-        await storageService.uploadFiles(SYSTEM_ASSETS_BUCKET, [renamedFile]);
-
         message.success(`${SYSTEM_ASSETS.find(a => a.type === assetType)?.name} güncellendi`);
         fetchSystemAssets();
       } else {
