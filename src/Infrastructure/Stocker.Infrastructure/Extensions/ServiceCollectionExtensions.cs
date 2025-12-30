@@ -153,7 +153,7 @@ public static class ServiceCollectionExtensions
         // Configure MinIO settings
         services.Configure<MinioStorageSettings>(configuration.GetSection(MinioStorageSettings.SectionName));
 
-        // Register MinIO client as singleton
+        // Register MinIO client as singleton (for internal operations)
         services.AddSingleton<IMinioClient>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<MinioStorageSettings>>().Value;
@@ -163,6 +163,39 @@ public static class ServiceCollectionExtensions
                 .WithCredentials(settings.AccessKey, settings.SecretKey);
 
             if (settings.UseSSL)
+            {
+                minioClient.WithSSL();
+            }
+
+            return minioClient.Build();
+        });
+
+        // Register MinIO client for presigned URLs (uses public endpoint)
+        services.AddKeyedSingleton<IMinioClient>("PublicMinioClient", (sp, key) =>
+        {
+            var settings = sp.GetRequiredService<IOptions<MinioStorageSettings>>().Value;
+
+            // Use public endpoint if configured, otherwise fall back to internal endpoint
+            var endpoint = !string.IsNullOrEmpty(settings.PublicEndpoint)
+                ? settings.PublicEndpoint
+                : settings.Endpoint;
+
+            // Remove protocol prefix if present (MinIO client expects just host:port)
+            if (endpoint.StartsWith("https://"))
+            {
+                endpoint = endpoint.Substring(8);
+            }
+            else if (endpoint.StartsWith("http://"))
+            {
+                endpoint = endpoint.Substring(7);
+            }
+
+            var minioClient = new MinioClient()
+                .WithEndpoint(endpoint)
+                .WithCredentials(settings.AccessKey, settings.SecretKey);
+
+            // Public endpoint should always use SSL
+            if (!string.IsNullOrEmpty(settings.PublicEndpoint) || settings.UseSSL)
             {
                 minioClient.WithSSL();
             }

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -19,6 +20,7 @@ namespace Stocker.Infrastructure.Services;
 public class MinioTenantStorageService : ITenantStorageService
 {
     private readonly IMinioClient _minioClient;
+    private readonly IMinioClient _publicMinioClient;
     private readonly MinioStorageSettings _settings;
     private readonly ILogger<MinioTenantStorageService> _logger;
     private readonly HttpClient _httpClient;
@@ -27,11 +29,13 @@ public class MinioTenantStorageService : ITenantStorageService
 
     public MinioTenantStorageService(
         IMinioClient minioClient,
+        [FromKeyedServices("PublicMinioClient")] IMinioClient publicMinioClient,
         IOptions<MinioStorageSettings> settings,
         ILogger<MinioTenantStorageService> logger,
         IHttpClientFactory httpClientFactory)
     {
         _minioClient = minioClient;
+        _publicMinioClient = publicMinioClient;
         _settings = settings.Value;
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("MinioAdmin");
@@ -806,25 +810,8 @@ public class MinioTenantStorageService : ITenantStorageService
                 .WithObject(objectName)
                 .WithExpiry((int)expiresIn.TotalSeconds);
 
-            var url = await _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
-
-            // Replace internal endpoint with public endpoint if configured
-            if (!string.IsNullOrEmpty(_settings.PublicEndpoint))
-            {
-                // Build the full internal URL pattern to replace (including protocol)
-                var useSSL = _settings.UseSSL;
-                var internalProtocol = useSSL ? "https://" : "http://";
-                var internalUrl = $"{internalProtocol}{_settings.Endpoint}";
-
-                // Determine public URL (add https:// if no protocol specified)
-                var publicEndpoint = _settings.PublicEndpoint;
-                if (!publicEndpoint.StartsWith("http://") && !publicEndpoint.StartsWith("https://"))
-                {
-                    publicEndpoint = $"https://{publicEndpoint}";
-                }
-
-                url = url.Replace(internalUrl, publicEndpoint);
-            }
+            // Use public MinIO client for presigned URLs to ensure signature matches the public endpoint
+            var url = await _publicMinioClient.PresignedGetObjectAsync(presignedGetObjectArgs);
 
             return Result<string>.Success(url);
         }
