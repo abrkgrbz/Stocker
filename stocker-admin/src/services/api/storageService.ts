@@ -191,12 +191,7 @@ export const storageService = {
     const response = await apiClient.getClient().post<UploadResponse>(
       `/api/master/storage/buckets/${encodeURIComponent(bucketName)}/upload`,
       formData,
-      {
-        params,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      { params }
     );
     return response.data;
   },

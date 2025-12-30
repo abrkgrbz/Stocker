@@ -495,11 +495,25 @@ public class MinioTenantStorageService : ITenantStorageService
 
             if (objectsToDelete.Count > 0)
             {
-                var removeObjectsArgs = new RemoveObjectsArgs()
-                    .WithBucket(bucketName)
-                    .WithObjects(objectsToDelete);
+                _logger.LogInformation(
+                    "Deleting {Count} objects from bucket: {Bucket}",
+                    objectsToDelete.Count, bucketName);
 
-                await _minioClient.RemoveObjectsAsync(removeObjectsArgs, cancellationToken);
+                // Delete objects one by one to ensure they are deleted
+                foreach (var objectName in objectsToDelete)
+                {
+                    try
+                    {
+                        var removeObjectArgs = new RemoveObjectArgs()
+                            .WithBucket(bucketName)
+                            .WithObject(objectName);
+                        await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
+                    }
+                    catch (Exception objEx)
+                    {
+                        _logger.LogWarning(objEx, "Failed to delete object {ObjectName} from bucket {Bucket}", objectName, bucketName);
+                    }
+                }
 
                 _logger.LogInformation(
                     "Deleted {Count} objects from bucket: {Bucket}",
